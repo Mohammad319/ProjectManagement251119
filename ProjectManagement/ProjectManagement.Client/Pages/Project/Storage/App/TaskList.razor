@@ -11,7 +11,7 @@
 @inject AppState AppState
 
 @using ProjectManagement.Shared.Helper.ProjectAppStorage
-<div class="flex items-center gap-1.5">
+<div class="sticky top-0 z-10 flex items-center gap-1.5 bg-white dark:bg-slate-900">
     @Content
     @if (_tasks != null && _tasks.Any(x => x.Added))
     {

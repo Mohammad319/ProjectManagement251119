@@ -13,6 +13,7 @@ namespace ProjectManagement.Shared.Base.Calculation
         public string Name { get; set; } = string.Empty;
         public string Unit { get; set; } = string.Empty;
         public decimal Value { get; set; } = 1;
+        public bool IsActive { get; set; } = true;
     }
     public enum QuantityResourceAddon
     {
@@ -30,6 +31,7 @@ namespace ProjectManagement.Shared.Base.Calculation
             resourceQ * Factor: resourceQ / Factor;
         public decimal Cost { get; set; }
         public decimal BaseCost { get; set; }
+        public bool IsActive { get; set; } = true;
     }
 
     public class ResourceTime()
@@ -40,6 +42,7 @@ namespace ProjectManagement.Shared.Base.Calculation
         [JsonInclude]
         public decimal Quantity { get; private set; } = 1;
         public decimal Cost { get; set; } = 1;
+        public bool IsActive { get; set; } = true;
 
         public ResourceTime SetResolvedQuantity(decimal quantity)
         {
@@ -222,6 +225,7 @@ namespace ProjectManagement.Shared.Base.Calculation
                         Name = p.Name,
                         Unit = p.Unit,
                         Value = p.Value,
+                        IsActive = p.IsActive,
                     })],
 
                 AddOns = AddOns is null
@@ -233,8 +237,8 @@ namespace ProjectManagement.Shared.Base.Calculation
                         Cost = a.Cost,
                         Factor = a.Factor,
                         Type = a.Type,
-
                         BaseCost = a.BaseCost,
+                        IsActive = a.IsActive,
                     })],
 
                 Times = Times is null
@@ -245,6 +249,7 @@ namespace ProjectManagement.Shared.Base.Calculation
                         Unit = t.Unit,
                         Percentage = t.Percentage,
                         Cost = t.Cost,
+                        IsActive = t.IsActive,
                     }.SetResolvedQuantity(t.Quantity))],
                 PriceSub = PriceSub,
 

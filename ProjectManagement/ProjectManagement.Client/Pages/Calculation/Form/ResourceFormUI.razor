@@ -362,6 +362,7 @@
                 <table class="@TableClass">
                     <thead>
                         <tr>
+                            <th class="@TableHeadCellClass">@CalcResource.active</th>
                             <th class="@TableHeadCellClass">@CalcResource.name</th>
                             <th class="@TableHeadCellClass">@ResourceLoc.value</th>
                             <th class="@TableHeadCellClass">@CalcResource.unit</th>
@@ -373,6 +374,10 @@
                         {
                             int idx = i;
                             <tr>
+                                <td class="@TableCellClass w-12 text-center">
+                                    <InputCheckbox @bind-Value="ResourceUpdate.Data.Parameters[idx].IsActive"
+                                                   class="@CheckboxClass" />
+                                </td>
                                 <td class="@TableCellClass min-w-[18rem]">
                                     <InputText class="@InputClass"
                                                @bind-Value="ResourceUpdate.Data.Parameters[idx].Name" />
@@ -422,6 +427,7 @@
             <table class="@TableClass">
                 <thead>
                     <tr>
+                        <th class="@TableHeadCellClass">@CalcResource.active</th>
                         <th class="@TableHeadCellClass">@CalcResource.name</th>
                         <th class="@TableHeadCellClass">@CalcResource.type</th>
                         <th class="@TableHeadCellClass">@CalcResource.factor</th>
@@ -435,6 +441,7 @@
                 </thead>
                 <tbody>
                     <tr>
+                        <td class="@TableCellClass w-12"></td>
                         <td class="@TableCellClass min-w-[16rem]">
                             <input class="@DisabledInputClass" type="text" disabled value="@ResourceUpdate.Name" />
                         </td>
@@ -465,6 +472,10 @@
                     {
                         int idx = i;
                         <tr>
+                            <td class="@TableCellClass w-12 text-center">
+                                <InputCheckbox @bind-Value="ResourceUpdate.Data.AddOns[idx].IsActive"
+                                               class="@CheckboxClass" />
+                            </td>
                             <td class="@TableCellClass min-w-[16rem]">
                                 <InputText class="@InputClass"
                                            @bind-Value="ResourceUpdate.Data.AddOns[idx].Name" />
@@ -515,6 +526,7 @@
                         </tr>
                     }
                     <tr>
+                        <td class="@TableCellClass w-12"></td>
                         <td class="@TableCellClass min-w-[16rem]"></td>
                         <td class="@TableCellClass min-w-[3.5rem]"></td>
                         <td class="@TableCellClass min-w-[4rem]"></td>
@@ -570,12 +582,13 @@
                     <table class="@TableClass">
                         <thead>
                             <tr>
+                                <th class="@TableHeadCellClass">@CalcResource.active</th>
                                 <th class="@TableHeadCellClass">@CalcResource.name</th>
                                 <th class="@TableHeadCellClass">@ResourceLoc.timeShare</th>
                                 <th class="@TableHeadCellClass">@CalcResource.quantity</th>
                                 <th class="@TableHeadCellClass">@CalcResource.cost</th>
                                 <th class="@TableHeadCellClass">@CalcResource.unit</th>
-                                    <th class="@TableHeadCellClass w-12"></th>
+                                <th class="@TableHeadCellClass w-12"></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -583,6 +596,10 @@
                             {
                                 int idx = i;
                                 <tr>
+                                    <td class="@TableCellClass w-12 text-center">
+                                        <InputCheckbox @bind-Value="ResourceUpdate.Data.Times[idx].IsActive"
+                                                       class="@CheckboxClass" />
+                                    </td>
                                     <td class="@TableCellClass min-w-[18rem]">
                                         <InputText class="@InputClass"
                                                    @bind-Value="ResourceUpdate.Data.Times[idx].Name" />

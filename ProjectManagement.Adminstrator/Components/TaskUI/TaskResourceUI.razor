@@ -37,10 +37,7 @@
     {
 
         <section class="@SectionClass">
-            <div class="@HeaderClass">
-                <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Settings</h4>
-            </div>
-
+    
             <div class="@BodyClass">
                 <div class="overflow-x-auto">
                     <div class="flex min-w-max flex-nowrap items-start gap-2">
@@ -75,7 +72,7 @@
                                    @oninput="OnMenuIdInput" />
                         </div>
 
-                        <div class="w-[180px] shrink-0">
+                        @*              <div class="w-[180px] shrink-0">
                             <label for="cf1" class="@LabelClass">@CalcResource.changeFactor1</label>
                             <input id="cf1"
                                    type="text"
@@ -84,7 +81,7 @@
                                    value="@ChangeFactor1Text"
                                    @oninput="OnChangeFactor1Input" />
                         </div>
-@*
+
                         <div class="w-[180px] shrink-0">
                             <label for="cf2" class="@LabelClass">@CalcResource.changeFactor2</label>
                             <input id="cf2"
@@ -218,6 +215,7 @@
                             <thead>
                                 <tr class="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60">
                                     <th class="w-10 px-1 py-1.5"></th>
+                                    <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.active</th>
                                     <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.name</th>
                                     <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Value</th>
                                     <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.unit</th>
@@ -231,6 +229,12 @@
                                         <td class="px-1 py-0.5 w-10">
                                             <button type="button" class="@DangerButtonClass h-8 w-8 !px-0"
                                                     @onclick="() => TaskResource.Parameters.RemoveAt(idx)">×</button>
+                                        </td>
+                                        <td class="px-1 py-0.5 w-12 text-center">
+                                            <input type="checkbox"
+                                                   class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                                                   checked="@TaskResource.Parameters[idx].IsActive"
+                                                   @onchange="e => TaskResource.Parameters[idx].IsActive = (bool)(e.Value ?? true)" />
                                         </td>
                                         <td class="px-1 py-0.5 min-w-[14rem]">
                                             <input type="text" class="@InputClass"
@@ -278,6 +282,7 @@
                             <thead>
                                 <tr class="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60">
                                     <th class="w-10 px-1 py-1.5"></th>
+                                    <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.active</th>
                                     <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.name</th>
                                     <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.type</th>
                                     <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Factor</th>
@@ -294,6 +299,12 @@
                                         <td class="px-1 py-0.5 w-10">
                                             <button type="button" class="@DangerButtonClass h-8 w-8 !px-0"
                                                     @onclick="() => TaskResource.AddOns.RemoveAt(idx)">×</button>
+                                        </td>
+                                        <td class="px-1 py-0.5 w-12 text-center">
+                                            <input type="checkbox"
+                                                   class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                                                   checked="@TaskResource.AddOns[idx].IsActive"
+                                                   @onchange="e => TaskResource.AddOns[idx].IsActive = (bool)(e.Value ?? true)" />
                                         </td>
                                         <td class="px-1 py-0.5 min-w-[12rem]">
                                             <input type="text" class="@InputClass"
@@ -361,6 +372,7 @@
                                 <thead>
                                     <tr class="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60">
                                         <th class="w-10 px-1 py-1.5"></th>
+                                        <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.active</th>
                                         <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.name</th>
                                         <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Time share %</th>
                                         <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.cost</th>
@@ -375,6 +387,12 @@
                                             <td class="px-1 py-0.5 w-10">
                                                 <button type="button" class="@DangerButtonClass h-8 w-8 !px-0"
                                                         @onclick="() => TaskResource.Times.RemoveAt(idx)">×</button>
+                                            </td>
+                                            <td class="px-1 py-0.5 w-12 text-center">
+                                                <input type="checkbox"
+                                                       class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                                                       checked="@TaskResource.Times[idx].IsActive"
+                                                       @onchange="e => TaskResource.Times[idx].IsActive = (bool)(e.Value ?? true)" />
                                             </td>
                                             <td class="px-1 py-0.5 min-w-[14rem]">
                                                 <input type="text" class="@InputClass"

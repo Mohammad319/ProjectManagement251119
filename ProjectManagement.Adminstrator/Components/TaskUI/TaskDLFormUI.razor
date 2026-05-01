@@ -25,24 +25,20 @@
         <section class="@PanelClass">
             <div class="@PanelHeaderClass">
                 <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Task definition</h3>
-                <p class="mt-0.5 text-xs text-slate-600 dark:text-slate-400">Configure the action, catalog grouping, quantities, and visibility of this task blueprint.</p>
             </div>
 
-            <div class="grid grid-cols-1 gap-2 px-3 py-2 md:grid-cols-2 xl:grid-cols-3">
+            <div class="space-y-1">
                 <div class="space-y-1">
                     <label class="@LabelClass">@CalcResource.code</label>
                     <InputText @bind-Value="UpdateForm.Code" class="@InputClass" />
                 </div>
 
-                <div class="space-y-1">
+                    <div class="grid grid-cols-1 gap-2 px-3 py-2 md:grid-cols-2 xl:grid-cols-3">
                     <label class="@LabelClass">@CalcResource.name</label>
                     <InputText @bind-Value="UpdateForm.DisplayName" class="@InputClass" />
                 </div>
 
-                <div class="space-y-1">
-                    <label class="@LabelClass">@CalcResource.responsible</label>
-                    <InputText @bind-Value="UpdateForm.Responsible" class="@InputClass" />
-                </div>
+
 
                 <div class="space-y-1">
                     <label class="@LabelClass">Groups</label>
@@ -82,24 +78,10 @@
                         <option value="@TaskStatusEnum.Ready" selected="@(UpdateForm.Status == TaskStatusEnum.Ready)">@TaskStatusEnum.Ready</option>
                     </InputSelect>
                 </div>
-
                 <div class="space-y-1">
-                    <label class="@LabelClass">@CalcResource.quantity</label>
-                    <input type="text"
-                           inputmode="decimal"
-                           class="@InputClass"
-                           value="@QuantityText"
-                           @oninput="OnQuantityInput" />
+                    <label class="@LabelClass">@CalcResource.responsible</label>
+                    <InputText @bind-Value="UpdateForm.Responsible" class="@InputClass" />
                 </div>
-
-@*                 <div class="space-y-1">
-                    <label class="@LabelClass">@CalcResource.changeFactor1</label>
-                    <input type="text"
-                           inputmode="decimal"
-                           class="@InputClass"
-                           value="@ChangeFactor1Text"
-                           @oninput="OnChangeFactor1Input" />
-                </div> *@
 
                 <div class="space-y-1">
                     <label class="@LabelClass">@CalcResource.changeFactor2</label>
@@ -109,7 +91,7 @@
                            value="@ChangeFactor2Text"
                            @oninput="OnChangeFactor2Input" />
                 </div>
-
+@* 
                 <div class="space-y-1">
                     <label class="@LabelClass">Thickness</label>
                     <InputNumber @bind-Value="UpdateForm.Thickness" class="@InputClass" />
@@ -124,7 +106,7 @@
                     <label class="@LabelClass">Length</label>
                     <InputNumber @bind-Value="UpdateForm.Length" class="@InputClass" />
                 </div>
-
+ *@
                 <div class="md:col-span-2 xl:col-span-3">
                     <label class="@ToggleRowClass">
                         <InputCheckbox @bind-Value="UpdateForm.IsActive" class="@CheckboxClass" />
@@ -138,7 +120,102 @@
                         <span class="leading-5">Hide the resource and show the total cost only (UE).</span>
                     </label>
                 </div>
+                <div class="space-y-1 md:col-span-2 xl:col-span-3">
+                    @if (StateGroups?.Count > 0)
+                    {
+                        <section class="@PanelClass">
+                            <div class="@PanelHeaderClass">
+                                <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">State groups</h3>
+                                <p class="mt-0.5 text-xs text-slate-600 dark:text-slate-400">Link this task to one state per group.</p>
+                            </div>
 
+                            <div class="grid grid-cols-1 gap-2 px-3 py-2 md:grid-cols-2 xl:grid-cols-3">
+                                @foreach (var group in StateGroups)
+                                {
+                                    var selectedStateId = UpdateForm.SelectedStateIds
+                                        .FirstOrDefault(id => group.States.Any(s => s.Id == id));
+                                    <div class="space-y-1">
+                                        <label class="@LabelClass">@group.Name</label>
+                                        <select class="@SelectClass"
+                                                @onchange="(e) => OnStateGroupChanged(group, e)">
+                                            <option value="">— None —</option>
+                                            @foreach (var state in group.States.OrderBy(s => s.SortOrder).ThenBy(s => s.Name))
+                                            {
+                                                <option value="@state.Id" selected="@(selectedStateId == state.Id)">@state.Name</option>
+                                            }
+                                        </select>
+                                    </div>
+                                }
+                            </div>
+                        </section>
+                    }
+
+                    <section class="@PanelClass">
+                        <div class="@PanelHeaderClass">
+                            <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Conversion parameters</h3>
+                        </div>
+
+                        <div class="px-3 py-2">
+                            <div class="mb-2 flex justify-end">
+                                <button type="button"
+                                        class="inline-flex items-center justify-center rounded-lg border border-sky-600 px-3 py-1.5 text-xs font-medium text-sky-600 transition hover:bg-sky-600 hover:text-white dark:border-sky-400 dark:text-sky-300"
+                                        @onclick="AddConversionParameter">
+                                    + Add parameter
+                                </button>
+                            </div>
+
+                            @if (!UpdateForm.ConversionParameters.Any())
+                            {
+                                <div class="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 py-4 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
+                                    No conversion parameters
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
+                                    <table class="min-w-full border-collapse text-sm">
+                                        <thead>
+                                            <tr class="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60">
+                                                <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.name</th>
+                                                <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.factor</th>
+                                                <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.unit</th>
+                                                <th class="w-12 px-3 py-2"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @for (int i = 0; i < UpdateForm.ConversionParameters.Count; i++)
+                                            {
+                                                int idx = i;
+                                                <tr class="border-b border-slate-200 last:border-0 dark:border-slate-700">
+                                                    <td class="px-2 py-1">
+                                                        <InputText @bind-Value="UpdateForm.ConversionParameters[idx].Name"
+                                                                   class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                                                    </td>
+                                                    <td class="px-2 py-1">
+                                                        <InputNumber @bind-Value="UpdateForm.ConversionParameters[idx].Value"
+                                                                     class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                                                    </td>
+                                                    <td class="px-2 py-1">
+                                                        <InputText @bind-Value="UpdateForm.ConversionParameters[idx].Unit"
+                                                                   class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                                                    </td>
+                                                    <td class="px-2 py-1 text-right">
+                                                        <button type="button"
+                                                                class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-rose-600 text-white hover:bg-rose-700 dark:bg-rose-500"
+                                                                @onclick="() => UpdateForm.ConversionParameters.RemoveAt(idx)">
+                                                            x
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                        </div>
+                    </section>
+
+                </div>
                 <div class="space-y-1 md:col-span-2 xl:col-span-3">
                     <label class="@LabelClass">@CalcResource.note</label>
                     <InputTextArea @bind-Value="UpdateForm.Note" class="@TextAreaClass" />
@@ -151,99 +228,6 @@
             </div>
         </section>
 
-        @if (StateGroups?.Count > 0)
-        {
-            <section class="@PanelClass">
-                <div class="@PanelHeaderClass">
-                    <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">State groups</h3>
-                    <p class="mt-0.5 text-xs text-slate-600 dark:text-slate-400">Link this task to one state per group.</p>
-                </div>
-
-                <div class="grid grid-cols-1 gap-2 px-3 py-2 md:grid-cols-2 xl:grid-cols-3">
-                    @foreach (var group in StateGroups)
-                    {
-                        var selectedStateId = UpdateForm.SelectedStateIds
-                            .FirstOrDefault(id => group.States.Any(s => s.Id == id));
-                        <div class="space-y-1">
-                            <label class="@LabelClass">@group.Name</label>
-                            <select class="@SelectClass"
-                                    @onchange="(e) => OnStateGroupChanged(group, e)">
-                                <option value="">— None —</option>
-                                @foreach (var state in group.States.OrderBy(s => s.SortOrder).ThenBy(s => s.Name))
-                                {
-                                    <option value="@state.Id" selected="@(selectedStateId == state.Id)">@state.Name</option>
-                                }
-                            </select>
-                        </div>
-                    }
-                </div>
-            </section>
-        }
-
-        <section class="@PanelClass">
-            <div class="@PanelHeaderClass">
-                <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Conversion parameters</h3>
-            </div>
-
-            <div class="px-3 py-2">
-                <div class="mb-2 flex justify-end">
-                    <button type="button"
-                            class="inline-flex items-center justify-center rounded-lg border border-sky-600 px-3 py-1.5 text-xs font-medium text-sky-600 transition hover:bg-sky-600 hover:text-white dark:border-sky-400 dark:text-sky-300"
-                            @onclick="AddConversionParameter">
-                        + Add parameter
-                    </button>
-                </div>
-
-                @if (!UpdateForm.ConversionParameters.Any())
-                {
-                    <div class="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 py-4 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
-                        No conversion parameters
-                    </div>
-                }
-                else
-                {
-                    <div class="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
-                        <table class="min-w-full border-collapse text-sm">
-                            <thead>
-                                <tr class="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60">
-                                    <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.name</th>
-                                    <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.factor</th>
-                                    <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.unit</th>
-                                    <th class="w-12 px-3 py-2"></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @for (int i = 0; i < UpdateForm.ConversionParameters.Count; i++)
-                                {
-                                    int idx = i;
-                                    <tr class="border-b border-slate-200 last:border-0 dark:border-slate-700">
-                                        <td class="px-2 py-1">
-                                            <InputText @bind-Value="UpdateForm.ConversionParameters[idx].Name"
-                                                       class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
-                                        </td>
-                                        <td class="px-2 py-1">
-                                            <InputNumber @bind-Value="UpdateForm.ConversionParameters[idx].Value"
-                                                         class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
-                                        </td>
-                                        <td class="px-2 py-1">
-                                            <InputText @bind-Value="UpdateForm.ConversionParameters[idx].Unit"
-                                                       class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
-                                        </td>
-                                        <td class="px-2 py-1 text-right">
-                                            <button type="button"
-                                                    class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-rose-600 text-white hover:bg-rose-700 dark:bg-rose-500"
-                                                    @onclick="() => UpdateForm.ConversionParameters.RemoveAt(idx)">
-                                                x
-                                            </button>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                }
-            </div>
-        </section>
 
         <div class="flex flex-wrap items-center justify-end gap-2 pt-1">
             <button type="submit"

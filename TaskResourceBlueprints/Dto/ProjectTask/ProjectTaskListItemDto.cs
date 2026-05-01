@@ -1,15 +1,20 @@
 ﻿namespace TaskResourceBlueprints.Dto.ProjectTask
 {
+    public sealed record TaskStateLinkDto(int StateId, string StateName, int GroupId, string GroupName);
+
     public sealed record ProjectTaskListItemDto(
         int Id,
         string? Code,
         string DisplayName,
         string? UnitCode,
         decimal? Quantity,
-        bool IsActive
+        bool IsActive,
+        string? Responsible,
+        bool Uncontrollable
     )
     {
         public List<ResourceTaskIndexDto> ResourceTasks { get; set; } = [];
+        public List<TaskStateLinkDto> StateLinks { get; set; } = [];
     };
 
     public sealed record ResourceTaskIndexDto(

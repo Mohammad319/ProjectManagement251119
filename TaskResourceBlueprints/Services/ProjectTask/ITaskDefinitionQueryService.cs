@@ -27,8 +27,21 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                     t.Name,
                     t.UnitCode,
                     t.Quantity,
-                    t.IsActive
-                ))
+                    t.IsActive,
+                    t.Responsible,
+                    t.Uncontrollable
+                )
+                {
+                    StateLinks = t.StateLinks
+                        .OrderBy(sl => sl.State!.Group!.Name)
+                        .ThenBy(sl => sl.State!.Name)
+                        .Select(sl => new TaskStateLinkDto(
+                            sl.TaskStateId,
+                            sl.State!.Name,
+                            sl.State.TaskStateGroupId,
+                            sl.State.Group!.Name))
+                        .ToList()
+                })
                 .ToListAsync(ct);
         }
 

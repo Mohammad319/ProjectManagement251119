@@ -32,26 +32,20 @@ else
                     <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[60px]">@CalcResource.active</th>
                     <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.account</th>
                     <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[450px]">@ResourceLoc.resource</th>
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.co2</th>
                     <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[65px]">@CalcResource.changeFactor1</th>
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.quantity</th>
                     <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.cap / @CalcResource.waste</th>
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[70px]">Vars</th>
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.type</th>
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.resourceSort</th>
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.status</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.quantity</th>
                     <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.unit</th>
                     <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.baseCost</th>
                     <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.cost</th>
                     <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.totalNetCost</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[70px]">Vars</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.type</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.resourceSort</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.status</th>
 
-                    @if (_propColumns.Count > 0)
-                    {
-                        @foreach (var col in _propColumns)
-                        {
-                            <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[90px]">@col.DisplayName</th>
-                        }
-                    }
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.co2</th>
+     
                 </tr>
             </thead>
 
@@ -128,6 +122,18 @@ else
                             <input type="checkbox"
                                    class="h-4 w-4 text-blue-600 rounded focus:ring-blue-500 dark:text-blue-400"
                                    checked="@current.Active" disabled />
+
+                            <button type="button"
+                                    class="@VariablesButtonClass(hasResourceVariables, variablesExpanded)"
+                                    disabled="@(!hasResourceVariables)"
+                                    title="Parameters / AddOns / Times"
+                                    @onclick="() => ToggleVariables(variablesKey)">
+                                @(variablesExpanded ? "Hide" : "Show")
+                                @if (hasResourceVariables)
+                                {
+                                    <span class="ml-1 tabular-nums">@GetResourceVariablesCount(current)</span>
+                                }
+                            </button>
                         </td>
 
                         <!-- Account -->
@@ -185,14 +191,7 @@ else
                             </div>
                         </td>
 
-                        <!-- CO2 / ChangeFactor / Quantity / CapWaste -->
-                        <td class="px-1 py-0.5">
-                            <TrimmedNumberInput TValue="double?"
-                                                @bind-Value="current.Data.CO2"
-                                                MaxFractionDigits="@MaxFractionDigits"
-                                                step="any"
-                                                class="@St" />
-                        </td>
+                   
                         <td class="px-1 py-0.5">
                             <input type="text"
                                    inputmode="decimal"
@@ -203,33 +202,52 @@ else
                         </td>
                         <td class="px-1 py-0.5">
                             <input type="text"
-                                   inputmode="decimal" disabled
-                                   value="@GetResourceInputValue(current, ResourceFieldQuantity)"
-                                   @oninput="e => OnResourceNumberChanged(current, ResourceFieldQuantity, e)"
-                                   @onblur="() => OnResourceNumberBlur(current, ResourceFieldQuantity)"
-                                   class="@St" />
-                        </td>
-                        <td class="px-1 py-0.5">
-                            <input type="text"
                                    inputmode="decimal"
                                    value="@GetResourceInputValue(current, ResourceFieldCapWaste)"
                                    @oninput="e => OnResourceNumberChanged(current, ResourceFieldCapWaste, e)"
                                    @onblur="() => OnResourceNumberBlur(current, ResourceFieldCapWaste)"
                                    class="@St" />
                         </td>
-
                         <td class="px-1 py-0.5">
-                            <button type="button"
-                                    class="@VariablesButtonClass(hasResourceVariables, variablesExpanded)"
-                                    disabled="@(!hasResourceVariables)"
-                                    title="Parameters / AddOns / Times"
-                                    @onclick="() => ToggleVariables(variablesKey)">
-                                @(variablesExpanded ? "Hide" : "Show")
-                                @if (hasResourceVariables)
-                                {
-                                    <span class="ml-1 tabular-nums">@GetResourceVariablesCount(current)</span>
-                                }
-                            </button>
+                            <input type="text"
+                                   inputmode="decimal" disabled
+                                   value="@GetResourceInputValue(current, ResourceFieldQuantity)"
+                                   @oninput="e => OnResourceNumberChanged(current, ResourceFieldQuantity, e)"
+                                   @onblur="() => OnResourceNumberBlur(current, ResourceFieldQuantity)"
+                                   class="@St" />
+                        </td>
+                        <!-- Unit / BaseCost / Cost / TotalCost -->
+                        <td class="px-1 py-0.5">
+                            <input type="text" @bind="current.Data.Unit" class="@St" />
+                        </td>
+                        <td class="px-1 py-0.5">
+                            <input type="text"
+                                   inputmode="decimal"
+                                   value="@GetResourceInputValue(current, ResourceFieldBaseCost)"
+                                   @oninput="e => OnResourceNumberChanged(current, ResourceFieldBaseCost, e)"
+                                   @onblur="() => OnResourceNumberBlur(current, ResourceFieldBaseCost)"
+                                   class="@St"
+                                   disabled="@baseCostIsDerived" />
+                        </td>
+                        <td class="px-1 py-0.5">
+                            <input type="text"
+                                   inputmode="decimal"
+                                   value="@GetResourceInputValue(current, ResourceFieldCost)"
+                                   @oninput="e => OnResourceNumberChanged(current, ResourceFieldCost, e)"
+                                   @onblur="() => OnResourceNumberBlur(current, ResourceFieldCost)"
+                                   class="@St"
+                                   disabled="@costIsDerived" />
+                        </td>
+                        <td class="px-1 py-0.5">
+                            @if (current.Id < 0)
+                            {
+                                <span>*</span>
+                                <input type="text" value="@FormatNumber(TotalCost)" class="@St" disabled />
+                            }
+                            else
+                            {
+                                <input type="text" value="@FormatNumber(current.TotalCost)" class="@St" disabled />
+                            }
                         </td>
 
                         <!-- Type -->
@@ -277,73 +295,15 @@ else
                             </select>
                         </td>
 
-                        <!-- Unit / BaseCost / Cost / TotalCost -->
-                        <td class="px-1 py-0.5">
-                            <input type="text" @bind="current.Data.Unit" class="@St" />
-                        </td>
-                        <td class="px-1 py-0.5">
-                            <input type="text"
-                                   inputmode="decimal"
-                                   value="@GetResourceInputValue(current, ResourceFieldBaseCost)"
-                                   @oninput="e => OnResourceNumberChanged(current, ResourceFieldBaseCost, e)"
-                                   @onblur="() => OnResourceNumberBlur(current, ResourceFieldBaseCost)"
-                                   class="@St"
-                                   disabled="@baseCostIsDerived" />
-                        </td>
-                        <td class="px-1 py-0.5">
-                            <input type="text"
-                                   inputmode="decimal"
-                                   value="@GetResourceInputValue(current, ResourceFieldCost)"
-                                   @oninput="e => OnResourceNumberChanged(current, ResourceFieldCost, e)"
-                                   @onblur="() => OnResourceNumberBlur(current, ResourceFieldCost)"
-                                   class="@St"
-                                   disabled="@costIsDerived" />
-                        </td>
-                        <td class="px-1 py-0.5">
-                            @if (current.Id < 0)
-                            {
-                                <span>*</span>
-                                <input type="text" value="@FormatNumber(TotalCost)" class="@St" disabled />
-                            }
-                            else
-                            {
-                                <input type="text" value="@FormatNumber(current.TotalCost)" class="@St" disabled />
-                            }
-                        </td>
 
-                        @if (_propColumns.Count > 0)
-                        {
-                            @foreach (var col in _propColumns)
-                            {
-                                var p = current.Properties?.FirstOrDefault(x => NormalizeName(x.DisplayName) == col.NameKey);
-                                <td class="px-1 py-0.5">
-                                    @if (p is null)
-                                    {
-                                        <span class="block h-7 rounded border border-dashed border-slate-200 bg-slate-50 text-center leading-7 text-[11px] text-slate-400 dark:border-slate-800 dark:bg-slate-900/50">-</span>
-                                    }
-                                    else if (p.DataType == DataType.Number)
-                                    {
-                                        <input type="text"
-                                               inputmode="decimal"
-                                               value="@GetPropertyInputValue(current, p)"
-                                               @oninput="e => OnPropertyNumberChanged(current, p, e)"
-                                               @onblur="() => OnPropertyNumberBlur(current, p)"
-                                               max="@p.MaxNumericValue"
-                                               class="@St"
-                                               disabled="@(!p.IsUserEditable)" />
-                                    }
-                                    else
-                                    {
-                                        <input type="text"
-                                               value="@GetPropertyInputValue(current, p)"
-                                               @oninput="e => OnPropertyTextChanged(current, p, e)"
-                                               @onblur="() => OnPropertyBlur(current, p)"
-                                               class="@St"
-                                               disabled="@(!p.IsUserEditable)" />
-                                    }
-                                </td>
-                            }
-                        }
+                        <!-- CO2 / ChangeFactor / Quantity / CapWaste -->
+                        <td class="px-1 py-0.5">
+                            <TrimmedNumberInput TValue="double?"
+                                                @bind-Value="current.Data.CO2"
+                                                MaxFractionDigits="@MaxFractionDigits"
+                                                step="any"
+                                                class="@St" />
+                        </td>
                     </tr>
 
                     @if (hasResourceVariables && variablesExpanded)
@@ -355,26 +315,31 @@ else
                                     {
                                         <section class="min-w-0 rounded border border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-950">
                                             <div class="mb-1 text-[12px] font-semibold text-slate-700 dark:text-slate-200">Parameters</div>
-                                            <div class="space-y-1">
-                                                @foreach (var parameter in current.Data.Parameters)
-                                                {
-                                                    <div class="@VariableRowGridClass">
-                                                        <span></span>
-                                                        <span></span>
-                                                        <input class="@St" value="@parameter.Name" readonly />
-                                                        <span></span>
-                                                        <span></span>
-                                                        <span></span>
-                                                        <span></span>
-                                                        <span></span>
-                                                        <span></span>
-                                                        <span></span>
-                                                        <span></span>
-                                                        <input class="@St" value="@parameter.Unit" readonly />
-                                                        <input class="@St" value="@FormatNumber(parameter.Value)" readonly />
-                                                    </div>
-                                                }
-                                            </div>
+                                            <table class="w-full border-collapse text-[11px]">
+                                                <thead>
+                                                    <tr class="bg-slate-100/95 text-slate-700 dark:bg-slate-900/95 dark:text-slate-200">
+                                                        <th class="border border-slate-200 px-1.5 py-0.5 text-left font-semibold dark:border-slate-700">@ResourceLoc.resource</th>
+                                                        <th class="border border-slate-200 px-1.5 py-0.5 text-left font-semibold w-[75px] dark:border-slate-700">@CalcResource.unit</th>
+                                                        <th class="border border-slate-200 px-1.5 py-0.5 text-left font-semibold w-[75px] dark:border-slate-700">@CalcResource.baseCost</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                                                    @foreach (var parameter in current.Data.Parameters)
+                                                    {
+                                                        <tr class="hover:bg-amber-50/60 dark:hover:bg-amber-900/20">
+                                                            <td class="border border-slate-200 px-1 py-0.5 dark:border-slate-700">
+                                                                <input class="@St" value="@parameter.Name" readonly />
+                                                            </td>
+                                                            <td class="border border-slate-200 px-1 py-0.5 dark:border-slate-700">
+                                                                <input class="@St" value="@parameter.Unit" readonly />
+                                                            </td>
+                                                            <td class="border border-slate-200 px-1 py-0.5 dark:border-slate-700">
+                                                                <input class="@St" value="@FormatNumber(parameter.Value)" readonly />
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
                                         </section>
                                     }
 
@@ -382,28 +347,39 @@ else
                                     {
                                         <section class="min-w-0 rounded border border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-950">
                                             <div class="mb-1 text-[12px] font-semibold text-slate-700 dark:text-slate-200">AddOns</div>
-                                            <div class="space-y-1">
-                                                @foreach (var addOn in current.Data.AddOns)
-                                                {
-                                                    <div class="@VariableRowGridClass">
-                                                        <span></span>
-                                                        <span></span>
-                                                        <input class="@St" value="@addOn.Name" readonly />
-                                                        <span></span>
-                                                        <span></span>
-                                                        <span></span>
-                                                        <span></span>
-                                                        <span></span>
-                                                        <span></span>
-                                                        <span></span>
-                                                        <span></span>
-                                                        <input class="@St" value="@addOn.Unit" readonly />
-                                                        <input class="@St" value="@FormatNumber(addOn.Factor)" readonly />
-                                                        <input class="@St" value="@FormatNumber(addOn.Quantity(current.Data.Quantity.GetValueOrDefault()))" readonly />
-                                                        <input class="@St" value="@FormatNumber(addOn.Cost)" readonly />
-                                                    </div>
-                                                }
-                                            </div>
+                                            <table class="w-full border-collapse text-[11px]">
+                                                <thead>
+                                                    <tr class="bg-slate-100/95 text-slate-700 dark:bg-slate-900/95 dark:text-slate-200">
+                                                        <th class="border border-slate-200 px-1.5 py-0.5 text-left font-semibold dark:border-slate-700">@ResourceLoc.resource</th>
+                                                        <th class="border border-slate-200 px-1.5 py-0.5 text-left font-semibold w-[75px] dark:border-slate-700">@CalcResource.unit</th>
+                                                        <th class="border border-slate-200 px-1.5 py-0.5 text-left font-semibold w-[65px] dark:border-slate-700">@CalcResource.changeFactor1</th>
+                                                        <th class="border border-slate-200 px-1.5 py-0.5 text-left font-semibold w-[75px] dark:border-slate-700">@CalcResource.quantity</th>
+                                                        <th class="border border-slate-200 px-1.5 py-0.5 text-left font-semibold w-[75px] dark:border-slate-700">@CalcResource.cost</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                                                    @foreach (var addOn in current.Data.AddOns)
+                                                    {
+                                                        <tr class="hover:bg-amber-50/60 dark:hover:bg-amber-900/20">
+                                                            <td class="border border-slate-200 px-1 py-0.5 dark:border-slate-700">
+                                                                <input class="@St" value="@addOn.Name" readonly />
+                                                            </td>
+                                                            <td class="border border-slate-200 px-1 py-0.5 dark:border-slate-700">
+                                                                <input class="@St" value="@addOn.Unit" readonly />
+                                                            </td>
+                                                            <td class="border border-slate-200 px-1 py-0.5 dark:border-slate-700">
+                                                                <input class="@St" value="@FormatNumber(addOn.Factor)" readonly />
+                                                            </td>
+                                                            <td class="border border-slate-200 px-1 py-0.5 dark:border-slate-700">
+                                                                <input class="@St" value="@FormatNumber(addOn.Quantity(current.Data.Quantity.GetValueOrDefault()))" readonly />
+                                                            </td>
+                                                            <td class="border border-slate-200 px-1 py-0.5 dark:border-slate-700">
+                                                                <input class="@St" value="@FormatNumber(addOn.Cost)" readonly />
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
                                         </section>
                                     }
 
@@ -411,28 +387,39 @@ else
                                     {
                                         <section class="min-w-0 rounded border border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-950">
                                             <div class="mb-1 text-[12px] font-semibold text-slate-700 dark:text-slate-200">Times</div>
-                                            <div class="space-y-1">
-                                                @foreach (var time in current.Data.Times)
-                                                {
-                                                    <div class="@VariableRowGridClass">
-                                                        <span></span>
-                                                        <span></span>
-                                                        <input class="@St" value="@time.Name" readonly />
-                                                        <span></span>
-                                                        <span></span>
-                                                        <span></span>
-                                                        <span></span>
-                                                        <span></span>
-                                                        <span></span>
-                                                        <span></span>
-                                                        <span></span>
-                                                        <input class="@St" value="@time.Unit" readonly />
-                                                        <input class="@St" value="@FormatNullableNumber(time.Percentage)" readonly />
-                                                        <input class="@St" value="@FormatNumber(time.Quantity)" readonly />
-                                                        <input class="@St" value="@FormatNumber(time.Cost)" readonly />
-                                                    </div>
-                                                }
-                                            </div>
+                                            <table class="w-full border-collapse text-[11px]">
+                                                <thead>
+                                                    <tr class="bg-slate-100/95 text-slate-700 dark:bg-slate-900/95 dark:text-slate-200">
+                                                        <th class="border border-slate-200 px-1.5 py-0.5 text-left font-semibold dark:border-slate-700">@ResourceLoc.resource</th>
+                                                        <th class="border border-slate-200 px-1.5 py-0.5 text-left font-semibold w-[75px] dark:border-slate-700">@CalcResource.unit</th>
+                                                        <th class="border border-slate-200 px-1.5 py-0.5 text-left font-semibold w-[65px] dark:border-slate-700">%</th>
+                                                        <th class="border border-slate-200 px-1.5 py-0.5 text-left font-semibold w-[75px] dark:border-slate-700">@CalcResource.quantity</th>
+                                                        <th class="border border-slate-200 px-1.5 py-0.5 text-left font-semibold w-[75px] dark:border-slate-700">@CalcResource.cost</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                                                    @foreach (var time in current.Data.Times)
+                                                    {
+                                                        <tr class="hover:bg-amber-50/60 dark:hover:bg-amber-900/20">
+                                                            <td class="border border-slate-200 px-1 py-0.5 dark:border-slate-700">
+                                                                <input class="@St" value="@time.Name" readonly />
+                                                            </td>
+                                                            <td class="border border-slate-200 px-1 py-0.5 dark:border-slate-700">
+                                                                <input class="@St" value="@time.Unit" readonly />
+                                                            </td>
+                                                            <td class="border border-slate-200 px-1 py-0.5 dark:border-slate-700">
+                                                                <input class="@St" value="@FormatNullableNumber(time.Percentage)" readonly />
+                                                            </td>
+                                                            <td class="border border-slate-200 px-1 py-0.5 dark:border-slate-700">
+                                                                <input class="@St" value="@FormatNumber(time.Quantity)" readonly />
+                                                            </td>
+                                                            <td class="border border-slate-200 px-1 py-0.5 dark:border-slate-700">
+                                                                <input class="@St" value="@FormatNumber(time.Cost)" readonly />
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
                                         </section>
                                     }
                                 </div>

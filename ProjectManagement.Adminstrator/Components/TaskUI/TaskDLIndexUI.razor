@@ -64,8 +64,10 @@
                             <th class="px-1 py-1 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@CalcResource.code</th>
                             <th class="px-1 py-1 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@CalcResource.name</th>
                             <th class="px-1 py-1 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@CalcResource.unit</th>
-                            <th class="px-1 py-1 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@CalcResource.quantity</th>
-                            <th class="px-1 py-1 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Status</th>
+                            <th class="px-1 py-1 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Responsible</th>
+                            <th class="px-1 py-1 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Uncontrollable</th>
+                            <th class="px-1 py-1 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@CalcResource.status</th>
+                            <th class="px-1 py-1 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">States</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -74,6 +76,10 @@
                             <tr>
                                 <td class="px-1 py-1 align-top text-sm text-slate-700 dark:text-slate-200">
                                     <div class="flex flex-wrap items-center gap-1">
+                                        <button @onclick="async () => await Collspan(item)" class="inline-flex items-center justify-center gap-2 rounded-xl px-1 py-1 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-1 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-800 px-1 py-1 text-xs">
+                                            @(ColspanTaskIDs.Any(x => x == item.Id) ? "-" : "+")
+                                        </button>
+
                                         <button @onclick="() => OpenEditor(item.Id)" class="inline-flex items-center justify-center gap-1 rounded-xl px-1 py-1 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-1 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-800 px-1 py-1 text-xs" title="Edit">
                                             @Icons.Edit
                                         </button>
@@ -81,9 +87,6 @@
                                             @Icons.Delete 
                                         </button>
                                         <button @onclick="() => OpenTaskFolders(item.Id, item.DisplayName)" class="inline-flex items-center justify-center gap-2 rounded-xl px-1 py-1 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-1 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 px-1 py-1 text-xs">@ResourceLoc.resource</button>
-                                        <button @onclick="async () => await Collspan(item)" class="inline-flex items-center justify-center gap-2 rounded-xl px-1 py-1 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-1 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-800 px-1 py-1 text-xs">
-                                            @(ColspanTaskIDs.Any(x => x == item.Id) ?"-" :"+")
-                                        </button>
                                     </div>
                                 </td>
                                 <td class="px-1 py-1 align-top text-sm text-slate-700 dark:text-slate-200">@item.Code</td>
@@ -91,7 +94,13 @@
                                     <div class="font-medium text-slate-900 dark:text-slate-100">@item.DisplayName</div>
                                 </td>
                                 <td class="px-1 py-1 align-top text-sm text-slate-700 dark:text-slate-200">@item.UnitCode</td>
-                                <td class="px-1 py-1 align-top text-sm text-slate-700 dark:text-slate-200">@FormatNullableDecimal(item.Quantity)</td>
+                                <td class="px-1 py-1 align-top text-sm text-slate-700 dark:text-slate-200">@item.Responsible</td>
+                                <td class="px-1 py-1 align-top text-center">
+                                    @if (item.Uncontrollable)
+                                    {
+                                        <span class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">Yes</span>
+                                    }
+                                </td>
                                 <td class="px-1 py-1 align-top text-sm text-slate-700 dark:text-slate-200">
                                     @if (item.IsActive)
                                     {
@@ -100,6 +109,20 @@
                                     else
                                     {
                                         <span class="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">Inactive</span>
+                                    }
+                                </td>
+                                <td class="px-1 py-1 align-top">
+                                    @if (item.StateLinks.Count > 0)
+                                    {
+                                        <div class="flex flex-wrap gap-1">
+                                            @foreach (var sl in item.StateLinks)
+                                            {
+                                                <span class="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[11px] font-medium text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-200"
+                                                      title="@sl.GroupName">
+                                                    @sl.GroupName: @sl.StateName
+                                                </span>
+                                            }
+                                        </div>
                                     }
                                 </td>
                             </tr>
@@ -138,16 +161,7 @@
                                                 </span>
                                             </div>
                                         </td>
-                                        <td class="px-1 py-1 align-top text-sm text-slate-700 dark:text-slate-200">
-                                            @if (res.IsActive)
-                                            {
-                                                <span class="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200">Assigned</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">Disabled</span>
-                                            }
-                                        </td>
+                                     
                                     </tr>
                                 }
                             }
