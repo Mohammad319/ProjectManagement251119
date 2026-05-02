@@ -41,33 +41,9 @@
 
 
                 <div class="space-y-1">
-                    <label class="@LabelClass">Groups</label>
-                    <select class="@SelectClass"
-                            @onchange="ChangeGroup">
-                        <option value="">Select Group</option>
-                        @if (Groups != null)
-                        {
-                            foreach (var action in Groups)
-                            {
-                                <option value="@action.Id" selected="@(UpdateForm.UnitGroupId == action.Id)">@action.DisplayName</option>
-                            }
-                        }
-                    </select>
+                    <label class="@LabelClass">@CalcResource.unit</label>
+                    <InputText @bind-Value="UpdateForm.UnitCode" class="@InputClass" />
                 </div>
-
-                @if (SelectedGroup != null && UpdateForm.UnitGroupId.HasValue)
-                {
-                    <div class="space-y-1">
-                        <label class="@LabelClass">Units</label>
-                        <InputSelect @bind-Value="UpdateForm.UnitCode" class="@SelectClass">
-                            <option value="">Select Unit</option>
-                            @foreach (var item in SelectedGroup.Keys)
-                            {
-                                <option value="@item">@item</option>
-                            }
-                        </InputSelect>
-                    </div>
-                }
 
                 <div class="space-y-1">
                     <label class="@LabelClass">Status</label>
@@ -276,44 +252,20 @@
         "h-4 w-4 shrink-0 rounded border-slate-300 bg-white text-sky-600 accent-sky-500 focus:ring-2 focus:ring-sky-500/30 " +
         "dark:border-slate-600 dark:bg-slate-950 dark:[color-scheme:dark]";
 
-    void ChangeGroup(ChangeEventArgs e)
-    {
-        if (int.TryParse(e.Value?.ToString(), out int groupId))
-        {
-            UpdateForm.UnitGroupId = groupId;
-            var selectedGroup = Groups.FirstOrDefault(g => g.Id == groupId);
-            if (selectedGroup is null || string.IsNullOrWhiteSpace(UpdateForm.UnitCode) || !selectedGroup.Keys.Contains(UpdateForm.UnitCode))
-            {
-                UpdateForm.UnitCode = selectedGroup?.Keys.FirstOrDefault();
-            }
-        }
-        else
-        {
-            UpdateForm.UnitGroupId = null;
-            UpdateForm.UnitCode = null;
-        }
-    }
-
     [Parameter] public int? TaskId { get; set; }
     [Parameter] public EventCallback<bool> Saved { get; set; }
 
     private TaskDefinitionEditDto UpdateForm { get; set; } = new();
 
-    private List<TaskUnitGroup> Groups = new();
     private List<TaskResourceBlueprints.Entities.Lookups.TaskStateGroup> StateGroups = new();
     private string QuantityText { get; set; } = string.Empty;
     private string ChangeFactor2Text { get; set; } = "1";
     private string? FormErrorMessage { get; set; }
 
-    private TaskUnitGroup? SelectedGroup => Groups.FirstOrDefault(g => g.Id == UpdateForm.UnitGroupId);
     [Inject] private ITaskDefinitionQueryService TaskQueries { get; set; } = default!;
 
     protected override async Task OnInitializedAsync()
     {
-        var (unitGroups, _) =
-            await TaskService.GetLookupsAsync(CancellationToken.None);
-
-        Groups = unitGroups.ToList();
         StateGroups = await StateGroupService.GetGroupsWithStatesAsync();
         if (TaskId is > 0)
             UpdateForm = await TaskQueries.GetForEditAsync(TaskId.Value, CancellationToken.None);

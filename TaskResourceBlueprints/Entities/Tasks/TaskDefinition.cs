@@ -44,8 +44,6 @@ namespace TaskResourceBlueprints.Entities.Tasks
 
         public List<decimal> WorkloadThresholds { get; set; } = new() { 0m, 0m, 0m };
 
-        public int? TaskUnitGroupId { get; set; }
-
         public List<string> RowNotes { get; set; } = [];
         public List<int> VisibleFolderIds { get; set; } = [];
 
@@ -53,8 +51,6 @@ namespace TaskResourceBlueprints.Entities.Tasks
 
         [NotMapped]
         public string? NewUnitCode { get; set; }
-
-        public TaskUnitGroup? TaskUnitGroup { get; set; }
 
         public List<TaskConversionParameter> ConversionParameters { get; set; } = [];
 

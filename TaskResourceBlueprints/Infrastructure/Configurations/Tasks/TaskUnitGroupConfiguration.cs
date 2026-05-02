@@ -1,13 +1,2 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using TaskResourceBlueprints.Entities;
-
 namespace TaskResourceBlueprints.Infrastructure.Configurations.Tasks;
-
-public class TaskUnitGroupConfiguration : IEntityTypeConfiguration<TaskUnitGroup>
-{
-    public void Configure(EntityTypeBuilder<TaskUnitGroup> builder)
-    {
-        // لا يوجد شيء خاص الآن، لكن الملف جاهز للتوسعة مستقبلاً
-    }
-}
+// TaskUnitGroup removed — unit conversions are now driven by UnitRulesCatalog (static catalog).

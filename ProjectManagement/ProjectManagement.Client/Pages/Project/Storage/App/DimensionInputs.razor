@@ -101,10 +101,19 @@
     }
 
     private List<string> GetUnitOptions()
-        => (Task.UnitGroup?.Keys ?? [])
-            .Where(x => !string.IsNullOrWhiteSpace(x))
+    {
+        var toKey = UnitRulesCatalog.BuildKey(Task.UnitCode);
+        if (string.IsNullOrWhiteSpace(toKey))
+            return [];
+
+        return UnitRulesCatalog.Rules
+            .Where(kvp =>
+                string.Equals(UnitRulesCatalog.BuildKey(kvp.Key.To), toKey, StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(UnitRulesCatalog.BuildKey(kvp.Key.From), toKey, StringComparison.OrdinalIgnoreCase))
+            .Select(kvp => kvp.Key.From)
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
+    }
 
     private decimal GetWorkloadThreshold(int index)
         => Task.WorkloadThresholds is not null && Task.WorkloadThresholds.Count > index

@@ -27,7 +27,6 @@ namespace ProjectManagement.Shared.Base.ProjectAppStorage
         public int? LocationId { get; set; }
         public int? ActionTypeId { get; set; }
         public int? FallId { get; set; }
-        public int? UnitGroupId { get; set; }
 
         public List<int> VisibleFolderIds { get; set; } = [];
 

@@ -50,10 +50,7 @@ public class ProjectTaskDto
     public decimal ChangeFactor2 { get; set; } = 1m;
 
     public bool IsActive { get; set; } = true;
-    public int? UnitGroupId { get; set; }
     public int? CapacityResourceId { get; set; }
-
-    public UnitGroupDto UnitGroup { get; set; } = new();
 
     public List<decimal> WorkloadThresholds { get; set; } = [0m, 0m, 0m];
 

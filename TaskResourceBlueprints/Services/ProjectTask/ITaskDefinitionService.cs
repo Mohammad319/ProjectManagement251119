@@ -58,29 +58,18 @@ namespace TaskResourceBlueprints.Services.ProjectTask
         Task<int> CreateAsync(TaskDefinitionEditDto dto, CancellationToken ct);
         Task UpdateAsync(TaskDefinitionEditDto dto, CancellationToken ct);
         Task DeleteAsync(int id, CancellationToken ct);
-        Task<(IReadOnlyList<TaskUnitGroup> unitGroups,
-      IReadOnlyList<ResourceCategory> folders)> GetLookupsAsync(CancellationToken ct);
+        Task<IReadOnlyList<ResourceCategory>> GetLookupsAsync(CancellationToken ct);
         Task UpdateVisibleFoldersAsync(int taskId, List<int> folderIds, CancellationToken ct = default);
     }
 
     public sealed class ProjectTaskService(IDbContextFactory<TaskResourceBlueprintsContext> factory) : ITaskDefinitionService
     {
-        public async Task<( IReadOnlyList<TaskUnitGroup>,
-                   IReadOnlyList<ResourceCategory>)> GetLookupsAsync(CancellationToken ct)
+        public async Task<IReadOnlyList<ResourceCategory>> GetLookupsAsync(CancellationToken ct)
         {
-            async Task<List<T>> Run<T>(Func<TaskResourceBlueprintsContext, IQueryable<T>> query) where T : class
-            {
-                await using var db = await factory.CreateDbContextAsync(ct);
-                return await query(db).AsNoTracking().ToListAsync(ct);
-            }
-
-
-            var unitGroupsTask = Run(db => db.TaskUnitGroups.OrderBy(x => x.DisplayName));
-            var foldersTask = Run(db => db.ResourceCategories.OrderBy(x => x.SortOrder).ThenBy(x => x.DisplayName));
-
-            await Task.WhenAll(unitGroupsTask, foldersTask);
-
-            return ( await unitGroupsTask, await foldersTask);
+            await using var db = await factory.CreateDbContextAsync(ct);
+            return await db.ResourceCategories.AsNoTracking()
+                .OrderBy(x => x.SortOrder).ThenBy(x => x.DisplayName)
+                .ToListAsync(ct);
         }
         public async Task<List<TaskWithResourcesMDto>?> GetTasksWithAdjustedResources(int? ActionId, int? LocationId, int? FallId, int? ActionTypeId)
         {
@@ -229,7 +218,6 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                 AdminNote = d.AdminNote,
                 Code = d.Code,
                 Name = d.DisplayName,
-                TaskUnitGroupId = d.UnitGroupId,
                 UnitCode = d.UnitCode,
                 Quantity = d.Quantity,
                 PriceProduction = d.PriceProduction,
@@ -280,7 +268,6 @@ namespace TaskResourceBlueprints.Services.ProjectTask
             e.Uncontrollable = d.Uncontrollable;
             e.Code = d.Code;
             e.Name = d.DisplayName;
-            e.TaskUnitGroupId = d.UnitGroupId;
             e.UnitCode = d.UnitCode;
             e.Quantity = d.Quantity;
             e.PriceProduction = d.PriceProduction;

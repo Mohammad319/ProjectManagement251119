@@ -6,8 +6,6 @@ using TaskResourceBlueprints.Services.Import;
 using TaskResourceBlueprints.Services.ProjectTask;
 using TaskResourceBlueprints.Services.Resource;
 using TaskResourceBlueprints.Services.StateGroups;
-using TaskResourceBlueprints.Services.UnitGroups;
-
 namespace TaskResourceBlueprints
 {
     public static class ServiceRegistration
@@ -23,7 +21,6 @@ namespace TaskResourceBlueprints
 
             services.AddScoped<ITasksUserComputationServiceWasm, TasksUserComputationServiceWasm>();
 
-            services.AddScoped<ITaskUnitGroupService, TaskUnitGroupService>();
             services.AddScoped<IResourceBlueprintsService, ResourceBlueprintsService>();
             services.AddScoped<IResourceCategoryService, ResourceCategoryService>();
             services.AddScoped<ITaskStateGroupService, TaskStateGroupService>();

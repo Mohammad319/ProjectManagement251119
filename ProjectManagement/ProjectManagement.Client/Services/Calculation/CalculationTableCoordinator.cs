@@ -162,11 +162,11 @@ namespace ProjectManagement.Client.Services.Calculation
 
         public void ShowResourceSuggestions(TaskListMVVM task) =>
             dialogService.ShowComponent<TaskResourceSuggestionsDialog>(
-                $"Suggest resources ({task.Name} - {task.Code})",
+                $"Suggest resources ({task.Name} ({CalcResource.code}: {task.Code}) ({CalcResource.quantity}: {task.Quantity}) ({CalcResource.unit}: {task.Unit}))",
                 Icons.NewResource,
                 new Dictionary<string, object>
                 {
-                    [nameof(TaskResourceSuggestionsDialog.TaskItem)] = task
+                    [nameof(TaskResourceSuggestionsDialog.TaskItem)] = task 
                 },
                 DialogSize.ExtraLarge);
 

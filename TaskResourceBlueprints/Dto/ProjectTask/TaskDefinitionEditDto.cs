@@ -12,7 +12,6 @@ namespace TaskResourceBlueprints.Dto.ProjectTask
         public string? Code { get; set; }
         public string DisplayName { get; set; } = string.Empty;
 
-        public int? UnitGroupId { get; set; }
         public string? UnitCode { get; set; }
 
         public decimal? Quantity { get; set; }

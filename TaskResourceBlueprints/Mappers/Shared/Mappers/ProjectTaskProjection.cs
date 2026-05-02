@@ -16,7 +16,6 @@ public static class ProjectTaskProjection
                 SortOrder = t.SortOrder,
                 IsVisible = t.IsVisible,
                 CapacityResourceId = t.CapacityResourceId,
-                UnitGroupId = t.TaskUnitGroupId,
                 Code = t.Code,
                 NewUnitCode = t.NewUnitCode,
                 Note = t.FieldNotes,
@@ -27,12 +26,6 @@ public static class ProjectTaskProjection
                 ChangeFactor1 = t.ChangeFactor1,
                 ChangeFactor2 = t.ChangeFactor2,
                 Uncontrollable = t.Uncontrollable,
-                UnitGroup = t.TaskUnitGroup == null ? null : new UnitGroupDto
-                {
-                    Id = t.TaskUnitGroup.Id,
-                    DisplayName = t.TaskUnitGroup.DisplayName,
-                    Keys = t.TaskUnitGroup.Keys,
-                },
                 StateLinks = t.StateLinks.Select(sl => new TaskStateLinkDto
                 {
                     GroupId = sl.State!.TaskStateGroupId,
@@ -55,7 +48,6 @@ public static class ProjectTaskProjection
                 SortOrder = t.SortOrder,
                 IsVisible = t.IsVisible,
                 CapacityResourceId = t.CapacityResourceId,
-                UnitGroupId = t.TaskUnitGroupId,
                 Code = t.Code,
                 NewUnitCode = t.NewUnitCode,
                 Note = t.FieldNotes,
@@ -67,12 +59,6 @@ public static class ProjectTaskProjection
                 ChangeFactor2 = t.ChangeFactor2,
                 Uncontrollable = t.Uncontrollable,
                 UpperNote = t.RowNotes,
-                UnitGroup = t.TaskUnitGroup == null ? null : new UnitGroupDto
-                {
-                    Id = t.TaskUnitGroup.Id,
-                    DisplayName = t.TaskUnitGroup.DisplayName,
-                    Keys = t.TaskUnitGroup.Keys,
-                },
                 StateLinks = t.StateLinks.Select(sl => new TaskStateLinkDto
                 {
                     GroupId = sl.State!.TaskStateGroupId,

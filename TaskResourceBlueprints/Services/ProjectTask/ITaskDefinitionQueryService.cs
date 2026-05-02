@@ -59,7 +59,6 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                 Id = e.Id,
                 Code = e.Code,
                 DisplayName = e.Name,
-                UnitGroupId = e.TaskUnitGroupId,
                 UnitCode = e.UnitCode,
                 Quantity = e.Quantity,
                 PriceProduction = e.PriceProduction,

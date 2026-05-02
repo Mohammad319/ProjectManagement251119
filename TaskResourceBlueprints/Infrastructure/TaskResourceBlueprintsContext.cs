@@ -17,7 +17,6 @@ public class TaskResourceBlueprintsContext : DbContext
     }
 
     // === Core ===
-    public DbSet<TaskUnitGroup> TaskUnitGroups { get; set; }
     public DbSet<ResourceDefinition> Resources { get; set; }
     public DbSet<TaskDefinition> Tasks { get; set; }
     public DbSet<ResourceCategory> ResourceCategories { get; set; }
@@ -42,6 +41,7 @@ public class TaskResourceBlueprintsContext : DbContext
         base.OnModelCreating(modelBuilder);
 
         // Ignore non-entity types
+        modelBuilder.Ignore<TaskUnitGroup>();
         modelBuilder.Ignore<RoleDTO>();
         modelBuilder.Ignore<ResourceMetadata>();
         modelBuilder.Ignore<ExternalVariable>();
