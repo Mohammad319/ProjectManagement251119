@@ -1,6 +1,5 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace ProjectManagement.Shared.Helper.ProjectAppStorage
 {
@@ -10,155 +9,145 @@ namespace ProjectManagement.Shared.Helper.ProjectAppStorage
             IEqualityComparer<T1> c1, IEqualityComparer<T2> c2) =>
             new Impl<T1, T2>(c1, c2);
 
-        private sealed class Impl<T1, T2>(IEqualityComparer<T1> c1, IEqualityComparer<T2> c2) : IEqualityComparer<(T1, T2)>
+        private sealed class Impl<T1, T2>(IEqualityComparer<T1> c1, IEqualityComparer<T2> c2)
+            : IEqualityComparer<(T1, T2)>
         {
-            public bool Equals((T1, T2) x, (T1, T2) y) => c1.Equals(x.Item1, y.Item1) && c2.Equals(x.Item2, y.Item2);
-            public int GetHashCode((T1, T2) obj) => System.HashCode.Combine(c1.GetHashCode(obj.Item1!), c2.GetHashCode(obj.Item2!));
+            public bool Equals((T1, T2) x, (T1, T2) y)
+                => c1.Equals(x.Item1, y.Item1) && c2.Equals(x.Item2, y.Item2);
+            public int GetHashCode((T1, T2) obj)
+                => System.HashCode.Combine(c1.GetHashCode(obj.Item1!), c2.GetHashCode(obj.Item2!));
         }
     }
 
     public static class UnitRulesCatalog
     {
-        public static readonly Dictionary<(string From, string To), UnitRule> Rules =
-            new(TupleComparer.Create<string, string>(StringComparer.OrdinalIgnoreCase, StringComparer.OrdinalIgnoreCase))
+        public static readonly Dictionary<(string From, string To), UnitRule> Rules = CreateRules();
+
+        private static Dictionary<(string From, string To), UnitRule> CreateRules()
+        {
+            var ic = StringComparer.OrdinalIgnoreCase;
+            var rules = new Dictionary<(string, string), UnitRule>(
+                TupleComparer.Create<string, string>(ic, ic));
+
+            void Add(UnitRule unitRule)
             {
-                [(Units.CubicMeter, Units.CubicMeter)] = new UnitRule
-                {
-                    FromUnit = Units.CubicMeter,
-                    ToUnit = Units.CubicMeter,
-                    Compute = (Q, _) => Q
-                },
-                [(Units.SquareMeter, Units.CubicMeter)] = new UnitRule
-                {
-                    FromUnit = Units.SquareMeter,
-                    ToUnit = Units.CubicMeter,
-                    Params = { new ParamDef { Key = ParamName.Thickness, Source = ParamSource.User } },
-                    Compute = (Q, p) => Q * p[ParamName.Thickness]
-                },
+                rules[(unitRule.FromUnit, unitRule.ToUnit)] = unitRule;
 
-                [(Units.Meter, Units.CubicMeter)] = new UnitRule
-                {
-                    FromUnit = Units.Meter,
-                    ToUnit = Units.CubicMeter,
-                    Params =
-                        {
-                        new ParamDef { Key = ParamName.Thickness, Source = ParamSource.User },
-                        new ParamDef { Key = ParamName.Width,     Source = ParamSource.User }
-                        },
-                    Compute = (Q, p) => Q * p[ParamName.Thickness] * p[ParamName.Width]
-                },
+                var reverse = unitRule.Reverse();
+                if (reverse is null)
+                    return;
 
-                [(Units.Piece, Units.CubicMeter)] = new UnitRule
-                {
-                    FromUnit = Units.Piece,
-                    ToUnit = Units.CubicMeter,
-                    Params =
-                    {
-                        new ParamDef { Key = ParamName.Thickness, Source = ParamSource.User },
-                        new ParamDef { Key = ParamName.Width,     Source = ParamSource.User },
-                        new ParamDef { Key = ParamName.Length,    Source = ParamSource.User }
-                    },
-                    Compute = (Q, p) => Q
-                    * p[ParamName.Thickness]
-                    * p[ParamName.Width]
-                    * p[ParamName.Length]
-                },
-                [(Units.Ton, Units.CubicMeter)] = new UnitRule
-                {
-                    FromUnit = Units.Ton,
-                    ToUnit = Units.CubicMeter,
-                    Params = { new ParamDef { Key = ParamName.Density, Source = ParamSource.Resource } },
-                    Compute = (Q, p) => Q / p[ParamName.Density]
-                },
-                [(Units.Kilogram, Units.CubicMeter)] = new UnitRule
-                {
-                    FromUnit = Units.Kilogram,
-                    ToUnit = Units.CubicMeter,
-                    Params = { new ParamDef { Key = ParamName.Density, Source = ParamSource.Resource } },
-                    Compute = (Q, p) => Q / p[ParamName.Density]
-                },
-                [(Units.CubicMeter, Units.Ton)] = new UnitRule
-                {
-                    FromUnit = Units.CubicMeter,
-                    ToUnit = Units.Ton,
-                    Params = { new ParamDef { Key = ParamName.Density, Source = ParamSource.Resource } },
-                    Compute = (Q, p) => Q * p[ParamName.Density]
-                },
-                [(Units.SquareMeter, Units.Ton)] = new UnitRule
-                {
-                    FromUnit = Units.SquareMeter,
-                    ToUnit = Units.Ton,
-                    Params =
-                    {
-                        new ParamDef { Key = ParamName.Thickness, Source = ParamSource.User },
-                        new ParamDef { Key = ParamName.Density,   Source = ParamSource.Resource }
-                    },
-                    Compute = (Q, p) => Q * p[ParamName.Thickness] * p[ParamName.Density]
-                },
-                [(Units.Meter, Units.Ton)] = new UnitRule
-                {
-                    FromUnit = Units.Meter,
-                    ToUnit = Units.Ton,
-                    Params =
-                    {
-                        new ParamDef { Key = ParamName.Thickness, Source = ParamSource.User },
-                        new ParamDef { Key = ParamName.Width,     Source = ParamSource.User },
-                        new ParamDef { Key = ParamName.Density,   Source = ParamSource.Resource }
-                    },
-                    Compute = (Q, p) => Q * p[ParamName.Thickness] * p[ParamName.Width] * p[ParamName.Density]
-                },
-                [(Units.Piece, Units.Ton)] = new UnitRule
-                {
-                    FromUnit = Units.Piece,
-                    ToUnit = Units.Ton,
-                    Params =
-                    {
-                        new ParamDef { Key = ParamName.Thickness, Source = ParamSource.User },
-                        new ParamDef { Key = ParamName.Width,     Source = ParamSource.User },
-                        new ParamDef { Key = ParamName.Length,    Source = ParamSource.User },
-                        new ParamDef { Key = ParamName.Density,   Source = ParamSource.Resource }
-                    },
-                    Compute = (Q, p) => Q
-                        * p[ParamName.Thickness]
-                        * p[ParamName.Width]
-                        * p[ParamName.Length]
-                        * p[ParamName.Density]
-                },
-                //معدلات لا تحتاج الى مدخلات خارجية
-                [(Units.Kilometer, Units.Meter)] = new UnitRule { FromUnit = Units.Kilometer, ToUnit = Units.Meter, Compute = (Q, _) => Q * 1000m },
-                [(Units.Centimeter, Units.Meter)] = new UnitRule { FromUnit = Units.Centimeter, ToUnit = Units.Meter, Compute = (Q, _) => Q / 100m },
-                [(Units.Millimeter, Units.Meter)] = new UnitRule { FromUnit = Units.Millimeter, ToUnit = Units.Meter, Compute = (Q, _) => Q / 1000m },
-                [(Units.Gram, Units.Kilogram)] = new UnitRule { FromUnit = Units.Gram, ToUnit = Units.Kilogram, Compute = (Q, _) => Q / 1000m },
-                [(Units.Kilogram, Units.Kilogram)] = new UnitRule { FromUnit = Units.Kilogram, ToUnit = Units.Kilogram, Compute = (Q, _) => Q },
-                [(Units.Ton, Units.Ton)] = new UnitRule { FromUnit = Units.Ton, ToUnit = Units.Ton, Compute = (Q, _) => Q },
-                [(Units.Meter, Units.Meter)] = new UnitRule { FromUnit = Units.Meter, ToUnit = Units.Meter, Compute = (Q, _) => Q },
-            };
+                var reverseKey = (reverse.FromUnit, reverse.ToUnit);
+                if (!rules.ContainsKey(reverseKey))
+                    rules[reverseKey] = reverse;
+            }
+
+            Add(UnitRule.Identity(Units.CubicMeter));
+            Add(UnitRule.Identity(Units.SquareMeter));
+            Add(UnitRule.Identity(Units.Meter));
+            Add(UnitRule.Identity(Units.Ton));
+            Add(UnitRule.Identity(Units.Kilogram));
+
+            // Thickness/Width/Length inputs are meters.
+            Add(UnitRule.TwoWay(
+                Units.SquareMeter,
+                Units.CubicMeter,
+                (Q, p) => Q * p[ParamName.Thickness],
+                (Q, p) => Q / p[ParamName.Thickness],
+                ParamDef.User(ParamName.Thickness)));
+
+            Add(UnitRule.TwoWay(
+                Units.Meter,
+                Units.CubicMeter,
+                (Q, p) => Q * p[ParamName.Thickness] * p[ParamName.Width],
+                (Q, p) => Q / (p[ParamName.Thickness] * p[ParamName.Width]),
+                ParamDef.User(ParamName.Thickness),
+                ParamDef.User(ParamName.Width)));
+
+            Add(UnitRule.TwoWay(
+                Units.Piece,
+                Units.CubicMeter,
+                (Q, p) => Q * p[ParamName.Thickness] * p[ParamName.Width] * p[ParamName.Length],
+                (Q, p) => Q / (p[ParamName.Thickness] * p[ParamName.Width] * p[ParamName.Length]),
+                ParamDef.User(ParamName.Thickness),
+                ParamDef.User(ParamName.Width),
+                ParamDef.User(ParamName.Length)));
+
+            Add(UnitRule.TwoWay(
+                Units.Ton,
+                Units.CubicMeter,
+                (Q, p) => Q / p[ParamName.Density],
+                (Q, p) => Q * p[ParamName.Density],
+                ParamDef.Resource(ParamName.Density)));
+
+            Add(UnitRule.TwoWay(
+                Units.Kilogram,
+                Units.CubicMeter,
+                (Q, p) => Q / p[ParamName.Density],
+                (Q, p) => Q * p[ParamName.Density],
+                ParamDef.Resource(ParamName.Density)));
+
+            Add(UnitRule.TwoWay(
+                Units.SquareMeter,
+                Units.Ton,
+                (Q, p) => Q * p[ParamName.Thickness] * p[ParamName.Density],
+                (Q, p) => Q / (p[ParamName.Thickness] * p[ParamName.Density]),
+                ParamDef.User(ParamName.Thickness),
+                ParamDef.Resource(ParamName.Density)));
+
+            Add(UnitRule.TwoWay(
+                Units.Meter,
+                Units.Ton,
+                (Q, p) => Q * p[ParamName.Thickness] * p[ParamName.Width] * p[ParamName.Density],
+                (Q, p) => Q / (p[ParamName.Thickness] * p[ParamName.Width] * p[ParamName.Density]),
+                ParamDef.User(ParamName.Thickness),
+                ParamDef.User(ParamName.Width),
+                ParamDef.Resource(ParamName.Density)));
+
+            Add(UnitRule.TwoWay(
+                Units.Piece,
+                Units.Ton,
+                (Q, p) => Q * p[ParamName.Thickness] * p[ParamName.Width] * p[ParamName.Length] * p[ParamName.Density],
+                (Q, p) => Q / (p[ParamName.Thickness] * p[ParamName.Width] * p[ParamName.Length] * p[ParamName.Density]),
+                ParamDef.User(ParamName.Thickness),
+                ParamDef.User(ParamName.Width),
+                ParamDef.User(ParamName.Length),
+                ParamDef.Resource(ParamName.Density)));
+
+            Add(UnitRule.TwoWay(Units.Kilometer, Units.Meter, (Q, _) => Q * 1000m, (Q, _) => Q / 1000m));
+            Add(UnitRule.TwoWay(Units.Centimeter, Units.Meter, (Q, _) => Q / 100m, (Q, _) => Q * 100m));
+            Add(UnitRule.TwoWay(Units.Millimeter, Units.Meter, (Q, _) => Q / 1000m, (Q, _) => Q * 1000m));
+            Add(UnitRule.TwoWay(Units.Gram, Units.Kilogram, (Q, _) => Q / 1000m, (Q, _) => Q * 1000m));
+
+            return rules;
+        }
 
         public static bool TryGet(string from, string to, out UnitRule rule)
         {
-            if (Rules.TryGetValue((from, to), out var foundRule))
+            var fromKey = BuildKey(from);
+            var toKey   = BuildKey(to);
+
+            if (Rules.TryGetValue((fromKey, toKey), out var found))
             {
-                rule = foundRule;
+                rule = found;
                 return true;
             }
-
             rule = null!;
             return false;
         }
 
         public static string BuildKey(string u) => (u ?? "").Trim().ToLowerInvariant() switch
         {
-
-            "meter" or "metre" => "m",
-            "m1" => "m",
-            "kilometer" or "kilometre" or "km." => "km",
+            "meter" or "metre"                    => "m",
+            "m1"                                  => "m",
+            "kilometer" or "kilometre" or "km."   => "km",
             "centimeter" or "centimetre" or "cm." => "cm",
-            "millimeter" or "millimetre" or "mm." or "mil" => "mm", // mil = mm هنا
-            "gram" => "g",
-            "kilogram" => "kg",
-            "tonne" or "metric ton" => "ton",
-            _ => (u ?? "").Trim().ToLowerInvariant()
+            "millimeter" or "millimetre"
+                or "mm." or "mil"                 => "mm",
+            "gram"                                => "g",
+            "kilogram"                            => "kg",
+            "tonne" or "metric ton"               => "ton",
+            _                                     => (u ?? "").Trim().ToLowerInvariant()
         };
     }
-
 }

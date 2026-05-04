@@ -2,6 +2,7 @@
 @using ProjectManagement.Client.Shared.ResourceFiles.Calculation
 @using ProjectManagement.Shared.DTO.Calculation
 @using ProjectManagement.Shared.Enums
+@using ProjectManagement.Shared.Helper.ProjectAppStorage
 @using System.Globalization
 @inherits AppComponentBase
 
@@ -23,8 +24,15 @@
         <div class="flex flex-col gap-3">
             @foreach (var state in _states)
             {
+                var convRule    = state.GetConversionRule(TaskItem.Unit);
+                var userParams  = convRule?.Params.Where(p => p.Source == ParamSource.User).ToList() ?? [];
+                var hasResParam = convRule?.Params.Any(p => p.Source == ParamSource.Resource) ?? false;
+                var canCompute  = convRule == null || (!hasResParam && userParams.All(p => state.ConversionParams.ContainsKey(p.Key)));
+                var convertedQty = state.GetConvertedQty(TaskItem);
+
                 <div class="overflow-hidden rounded border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
 
+                    <!-- ── Suggestion header ── -->
                     <div class="flex min-w-0 items-center justify-between gap-2 border-b border-gray-100 px-2 py-1.5 dark:border-gray-800">
 
                         <button class="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-gray-300 text-base leading-none text-gray-700 hover:bg-gray-50 disabled:opacity-40 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
@@ -48,6 +56,14 @@
                                     </span>
                                 }
 
+                                @if (convRule is not null)
+                                {
+                                    <span class="shrink-0 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
+                                          title="Unit conversion required">
+                                        @UnitRulesCatalog.BuildKey(TaskItem.Unit) → @UnitRulesCatalog.BuildKey(state.Suggestion.SourceTaskUnit ?? "")
+                                    </span>
+                                }
+
                                 <span class="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-300">
                                     @state.Suggestion.Source
                                 </span>
@@ -62,7 +78,6 @@
                                              style="width:@((state.Suggestion.Score * 100).ToString("0", CultureInfo.InvariantCulture))%">
                                         </div>
                                     </div>
-
                                     <span class="text-xs font-medium @GetScoreTextClass(state.Suggestion.Score)">
                                         @state.Suggestion.Score.ToString("0%", CultureInfo.InvariantCulture)
                                     </span>
@@ -94,6 +109,49 @@
                         }
                         else
                         {
+                            <!-- ── Conversion panel (when units differ) ── -->
+                            @if (convRule is not null)
+                            {
+                                <div class="border-b border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-900/40 dark:bg-amber-950/20">
+                                    <div class="flex flex-wrap items-center gap-3">
+
+                                        <span class="shrink-0 text-xs font-semibold text-amber-700 dark:text-amber-400">
+                                            ⚠ @UnitRulesCatalog.BuildKey(TaskItem.Unit) → @UnitRulesCatalog.BuildKey(state.Suggestion.SourceTaskUnit ?? "")
+                                        </span>
+
+                                        <span class="shrink-0 rounded bg-amber-100 px-2 py-0.5 font-mono text-[11px] font-semibold text-amber-800 ring-1 ring-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-800">
+                                            @BuildFormulaText(TaskItem.Quantity ?? 0m, TaskItem.Unit, convRule)
+                                        </span>
+
+                                        @foreach (var param in userParams)
+                                        {
+                                            var p = param;
+                                            <div class="flex items-center gap-1">
+                                                <label class="shrink-0 text-xs text-amber-700 dark:text-amber-400">@GetParamLabel(p.Key)</label>
+                                                <input type="number" step="0.001" placeholder="0"
+                                                       value="@(state.ConversionParams.TryGetValue(p.Key, out var pv) ? pv.ToString("0.###", CultureInfo.InvariantCulture) : "")"
+                                                       @onchange="e => OnConvParamChanged(state, p.Key, e.Value?.ToString())"
+                                                       class="w-20 rounded border border-amber-300 bg-white px-1.5 py-0.5 text-xs text-gray-900 focus:border-amber-500 focus:outline-none dark:border-amber-700 dark:bg-gray-800 dark:text-gray-100" />
+                                            </div>
+                                        }
+
+                                        @if (canCompute && convertedQty != (TaskItem.Quantity ?? 0m))
+                                        {
+                                            <span class="rounded bg-amber-200 px-2 py-0.5 text-xs font-bold text-amber-900 dark:bg-amber-900/50 dark:text-amber-200">
+                                                = @convertedQty.ToString("0.###", CultureInfo.InvariantCulture) @UnitRulesCatalog.BuildKey(state.Suggestion.SourceTaskUnit ?? "")
+                                            </span>
+                                        }
+
+                                        @if (hasResParam)
+                                        {
+                                            <span class="text-[11px] italic text-amber-600 dark:text-amber-500">* density comes from resource</span>
+                                        }
+
+                                    </div>
+                                </div>
+                            }
+
+                            <!-- ── Resources table ── -->
                             <div class="overflow-x-auto">
                                 <table class="w-full text-sm">
                                     <thead class="border-b border-gray-100 bg-gray-50 text-xs dark:border-gray-800 dark:bg-gray-950">
@@ -137,24 +195,22 @@
                                                     <input type="number"
                                                            value="@row.Quantity.ToString("0.00", CultureInfo.InvariantCulture)"
                                                            step="0.01"
-                                                           @onchange="e =>
-                                                                                                       {
-                                                                                                           if (decimal.TryParse(e.Value?.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var v))
-                                                                                                               row.Quantity = RoundQuantity(v);
-                                                                                                       }"
+                                                           @onchange="e => { if (decimal.TryParse(e.Value?.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var v)) row.Quantity = RoundQuantity(v); }"
                                                            class="w-28 rounded border border-gray-200 bg-transparent px-2 py-0.5 text-right text-gray-900 focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:text-gray-100" />
                                                 </td>
 
                                                 <td class="px-2 py-1">
-                                                    <input type="number"
-                                                           value="@row.Cost.ToString("0.00", CultureInfo.InvariantCulture)"
-                                                           step="0.01"
-                                                           @onchange="e =>
-                                                                                                       {
-                                                                                                           if (decimal.TryParse(e.Value?.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var v))
-                                                                                                               row.Cost = v;
-                                                                                                       }"
-                                                           class="w-28 rounded border border-gray-200 bg-transparent px-2 py-0.5 text-right text-gray-900 focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:text-gray-100" />
+                                                    <div class="flex items-center gap-1">
+                                                        <input type="number"
+                                                               value="@row.Cost.ToString("0.00", CultureInfo.InvariantCulture)"
+                                                               step="0.01"
+                                                               @onchange="e => { if (decimal.TryParse(e.Value?.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var v)) row.Cost = v; }"
+                                                               class="w-28 rounded border border-gray-200 bg-transparent px-2 py-0.5 text-right text-gray-900 focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:text-gray-100" />
+                                                        @if (row.Resource.CostRole.Count > 0)
+                                                        {
+                                                            <span class="shrink-0 rounded bg-blue-50 px-1 py-0.5 text-[10px] font-semibold text-blue-600 dark:bg-blue-950 dark:text-blue-400" title="Cost from tiered role table">R</span>
+                                                        }
+                                                    </div>
                                                 </td>
                                             </tr>
                                         }
@@ -214,7 +270,6 @@
                     existing.UpdateSuggestion(s);
                     return existing;
                 }
-
                 return new SuggestionState(s, TaskItem);
             })
             .ToList();
@@ -230,19 +285,12 @@
 
     private async Task ToggleResourcesAsync(SuggestionState state)
     {
-        if (state.IsLoadingResources)
-            return;
+        if (state.IsLoadingResources) return;
 
-        if (state.IsExpanded)
-        {
-            state.IsExpanded = false;
-            return;
-        }
+        if (state.IsExpanded) { state.IsExpanded = false; return; }
 
         state.IsExpanded = true;
-
-        if (state.HasLoadedResources)
-            return;
+        if (state.HasLoadedResources) return;
 
         state.IsLoadingResources = true;
         StateHasChanged();
@@ -252,7 +300,6 @@
             var resources = await Repo.Resource.GetSuggestionResourcesAsync(
                 state.Suggestion.SourceTaskId,
                 state.Suggestion.Source);
-
             state.SetResources(resources, TaskItem);
         }
         finally
@@ -261,12 +308,21 @@
         }
     }
 
+    private void OnConvParamChanged(SuggestionState state, ParamName paramKey, string? rawValue)
+    {
+        if (decimal.TryParse(rawValue, NumberStyles.Any, CultureInfo.InvariantCulture, out var v))
+            state.ConversionParams[paramKey] = v;
+        else
+            state.ConversionParams.Remove(paramKey);
+
+        state.RecalculateQuantities(TaskItem);
+        StateHasChanged();
+    }
+
     private async Task ApplySuggestionAsync(SuggestionState state)
     {
         var selectedRows = state.Rows.Where(r => r.Selected).ToList();
-
-        if (state.IsApplying || selectedRows.Count == 0)
-            return;
+        if (state.IsApplying || selectedRows.Count == 0) return;
 
         state.IsApplying = true;
         StateHasChanged();
@@ -275,9 +331,9 @@
         {
             foreach (var row in selectedRows)
             {
-                row.Resource.Name = row.Name;
+                row.Resource.Name     = row.Name;
                 row.Resource.Quantity = row.Quantity;
-                row.Resource.Cost = row.Cost;
+                row.Resource.Cost     = row.Cost;
             }
 
             var result = await Repo.Resource.CreateAsync(
@@ -285,9 +341,7 @@
                 TaskItem.Id);
 
             MHD.Notifications(ToastType.Add, result);
-
-            if (result)
-                Modal.Close();
+            if (result) Modal.Close();
         }
         finally
         {
@@ -295,18 +349,46 @@
         }
     }
 
+    private static string GetParamLabel(ParamName p) => p switch
+    {
+        ParamName.Thickness => "Depth/Thickness (m)",
+        ParamName.Width     => "Width (m)",
+        ParamName.Length    => "Length (m)",
+        ParamName.Density   => "Density (t/m³)",
+        _                   => p.ToString()
+    };
+
+    private static string BuildFormulaText(decimal taskQuantity, string taskUnit, UnitRule rule)
+    {
+        var parts = new List<string>
+        {
+            $"{taskQuantity.ToString("0.###", CultureInfo.InvariantCulture)} {UnitRulesCatalog.BuildKey(taskUnit)}"
+        };
+
+        parts.AddRange(rule.Params.Select(p => p.Key switch
+        {
+            ParamName.Thickness => "Depth",
+            ParamName.Width     => "Width",
+            ParamName.Length    => "Length",
+            ParamName.Density   => "Density",
+            _                   => p.Key.ToString()
+        }));
+
+        return string.Join(" x ", parts);
+    }
+
     private static string GetScoreColorClass(double score) => score switch
     {
         >= 0.80 => "bg-green-500",
         >= 0.55 => "bg-yellow-400",
-        _ => "bg-red-400"
+        _       => "bg-red-400"
     };
 
     private static string GetScoreTextClass(double score) => score switch
     {
         >= 0.80 => "text-green-600 dark:text-green-400",
         >= 0.55 => "text-yellow-600 dark:text-yellow-400",
-        _ => "text-red-500 dark:text-red-400"
+        _       => "text-red-500 dark:text-red-400"
     };
 
     private static bool HasTaskQuantityInfo(TaskResourceSuggestionDTO suggestion)
@@ -315,86 +397,128 @@
     private static string FormatTaskQuantity(TaskResourceSuggestionDTO suggestion)
     {
         var quantity = suggestion.SourceTaskQuantity?.ToString("0.###", CultureInfo.InvariantCulture);
-        var unit = suggestion.SourceTaskUnit?.Trim();
-
+        var unit     = suggestion.SourceTaskUnit?.Trim();
         if (!string.IsNullOrWhiteSpace(quantity) && !string.IsNullOrWhiteSpace(unit))
             return $"{quantity} {unit}";
-
         return quantity ?? unit ?? string.Empty;
     }
+
+    // ── Models ───────────────────────────────────────────────────────────────
 
     private sealed class SuggestionState
     {
         public TaskResourceSuggestionDTO Suggestion { get; private set; }
-        public List<ResourceEditRow> Rows { get; private set; }
-        public bool IsApplying { get; set; }
-        public bool IsExpanded { get; set; }
-        public bool IsLoadingResources { get; set; }
-        public bool HasLoadedResources { get; private set; }
-        public string Key => BuildKey(Suggestion);
+        public List<ResourceEditRow>     Rows        { get; private set; }
+        public bool   IsApplying          { get; set; }
+        public bool   IsExpanded          { get; set; }
+        public bool   IsLoadingResources  { get; set; }
+        public bool   HasLoadedResources  { get; private set; }
+        public string Key                 => BuildKey(Suggestion);
+
+        public Dictionary<ParamName, decimal> ConversionParams { get; } = new();
 
         public SuggestionState(TaskResourceSuggestionDTO suggestion, TaskListMVVM task)
         {
             Suggestion = suggestion;
-            Rows = suggestion.Resources.Select(r => new ResourceEditRow(r, task)).ToList();
+            Rows = suggestion.Resources.Select(r => new ResourceEditRow(r, task, GetConvertedQty(task))).ToList();
             HasLoadedResources = suggestion.Resources.Count > 0;
         }
 
         public static string BuildKey(TaskResourceSuggestionDTO suggestion)
             => $"{suggestion.Source}:{suggestion.SourceTaskId}";
 
-        public void UpdateSuggestion(TaskResourceSuggestionDTO suggestion)
-        {
-            Suggestion = suggestion;
-        }
+        public void UpdateSuggestion(TaskResourceSuggestionDTO suggestion) => Suggestion = suggestion;
 
         public void SetResources(IEnumerable<ResourcePostDTO> resources, TaskListMVVM task)
         {
-            Rows = resources.Select(r => new ResourceEditRow(r, task)).ToList();
+            var converted = GetConvertedQty(task);
+            Rows = resources.Select(r => new ResourceEditRow(r, task, converted)).ToList();
             HasLoadedResources = true;
+        }
+
+        public void RecalculateQuantities(TaskListMVVM task)
+        {
+            var converted = GetConvertedQty(task);
+            foreach (var row in Rows)
+                row.Recalc(task, converted);
+        }
+
+        public UnitRule? GetConversionRule(string taskUnit)
+        {
+            var from = UnitRulesCatalog.BuildKey(taskUnit);
+            var to   = UnitRulesCatalog.BuildKey(Suggestion.SourceTaskUnit ?? "");
+            if (string.IsNullOrWhiteSpace(from) || string.IsNullOrWhiteSpace(to)) return null;
+            if (string.Equals(from, to, StringComparison.OrdinalIgnoreCase)) return null;
+            return UnitRulesCatalog.TryGet(from, to, out var rule) ? rule : null;
+        }
+
+        public decimal GetConvertedQty(TaskListMVVM task)
+        {
+            var raw  = task.Quantity ?? 0m;
+            var rule = GetConversionRule(task.Unit);
+            if (rule == null) return raw;
+            if (rule.Params.Any(p => p.Source == ParamSource.Resource)) return raw;
+
+            var d = new Dictionary<ParamName, decimal>();
+            foreach (var p in rule.Params.Where(x => x.Source == ParamSource.User))
+            {
+                if (!ConversionParams.TryGetValue(p.Key, out var v)) return raw;
+                d[p.Key] = v;
+            }
+            try   { return rule.Compute(raw, d); }
+            catch { return raw; }
         }
     }
 
     private sealed class ResourceEditRow
     {
-        public bool Selected { get; set; } = true;
+        public bool           Selected  { get; set; } = true;
         public ResourcePostDTO Resource { get; }
-
-        public string Name { get; set; }
+        public string  Name     { get; set; }
         public decimal Quantity { get; set; }
-        public decimal Cost { get; set; }
+        public decimal Cost     { get; set; }
 
-        public ResourceEditRow(ResourcePostDTO resource, TaskListMVVM task)
+        public ResourceEditRow(ResourcePostDTO resource, TaskListMVVM task, decimal convertedTaskQty)
         {
             Resource = resource;
-            Name = resource.Name;
-            Quantity = RoundQuantity(CalculateQuantity(resource, task));
-            resource.Quantity = Quantity;
-            Cost = resource.Cost;
+            Name     = resource.Name;
+            Recalc(task, convertedTaskQty);
         }
 
-        private static decimal CalculateQuantity(ResourcePostDTO resource, TaskListMVVM task)
+        public void Recalc(TaskListMVVM task, decimal convertedTaskQty)
         {
-            var effectiveTaskQuantity = task.Quantity ?? 0m;
-            var effectiveCapWaste = IsCapResource(resource) && resource.Data.CapFromTask && task.Cap.HasValue
+            Quantity = RoundQuantity(CalcQuantity(Resource, task, convertedTaskQty));
+            Resource.Quantity = Quantity;
+            Cost = GetEffectiveCost(Resource, convertedTaskQty);
+        }
+
+        private static decimal CalcQuantity(ResourcePostDTO r, TaskListMVVM task, decimal convertedQty)
+        {
+            var capWaste = IsCapRes(r) && r.Data.CapFromTask && task.Cap.HasValue
                 ? task.Cap.Value
-                : resource.Data.CapWaste;
-            var baseCalc = effectiveTaskQuantity * resource.Data.ChangeFactor1 * resource.Data.ChangeFactor2;
+                : r.Data.CapWaste;
+            var baseCalc = convertedQty * r.Data.ChangeFactor1 * r.Data.ChangeFactor2;
 
-            if (IsWasteResource(resource) && effectiveCapWaste != 0)
-                return baseCalc * (1 + effectiveCapWaste / 100);
-
-            if (IsCapResource(resource) && effectiveCapWaste != 0)
-                return baseCalc / effectiveCapWaste;
-
+            if (IsWasteRes(r) && capWaste != 0) return baseCalc * (1 + capWaste / 100);
+            if (IsCapRes(r)   && capWaste != 0) return baseCalc / capWaste;
             return baseCalc;
         }
 
-        private static bool IsCapResource(ResourcePostDTO resource)
-            => resource.ResType is ResourceTypesEnum.MachinesAndEquipments or ResourceTypesEnum.Worker;
+        private static decimal GetEffectiveCost(ResourcePostDTO r, decimal convertedQty)
+        {
+            if (r.CostRole is { Count: > 0 })
+            {
+                var role = r.CostRole.FirstOrDefault(x => x.Min <= convertedQty && convertedQty <= x.Max);
+                if (role?.Value is not null) return role.Value.Value;
+            }
+            return r.Cost;
+        }
 
-        private static bool IsWasteResource(ResourcePostDTO resource)
-            => resource.ResType is ResourceTypesEnum.Materials;
+        private static bool IsCapRes(ResourcePostDTO r)
+            => r.ResType is ResourceTypesEnum.MachinesAndEquipments or ResourceTypesEnum.Worker;
+
+        private static bool IsWasteRes(ResourcePostDTO r)
+            => r.ResType is ResourceTypesEnum.Materials;
     }
 
     private static decimal RoundQuantity(decimal value)

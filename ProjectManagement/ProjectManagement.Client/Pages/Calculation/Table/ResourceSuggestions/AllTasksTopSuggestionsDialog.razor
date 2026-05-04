@@ -2,6 +2,7 @@
 @using ProjectManagement.Client.Shared.ResourceFiles.Calculation
 @using ProjectManagement.Shared.DTO.Calculation
 @using ProjectManagement.Shared.Base.Calculation
+@using ProjectManagement.Shared.Helper.ProjectAppStorage
 @using System.Globalization
 @inherits AppComponentBase
 
@@ -146,6 +147,53 @@
                         }
                         else if (selRows is not null)
                         {
+                            var convRule   = selSug is not null ? GetConversionRule(entry.Task.Unit, selSug.SourceTaskUnit) : null;
+                            var userParams = convRule?.Params.Where(p => p.Source == ParamSource.User).ToList() ?? [];
+                            var hasResPrm  = convRule?.Params.Any(p => p.Source == ParamSource.Resource) ?? false;
+                            var canCompute = convRule == null || (!hasResPrm && userParams.All(p => entry.ConversionParams.ContainsKey(p.Key)));
+                            var convQty    = selSug is not null ? GetConvertedQty(entry, selSug.SourceTaskUnit) : (entry.Task.Quantity ?? 0m);
+
+                            <!-- ── Unit conversion panel ── -->
+                            @if (convRule is not null)
+                            {
+                                <div class="border-b border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-900/40 dark:bg-amber-950/20">
+                                    <div class="flex flex-wrap items-center gap-3">
+
+                                        <span class="shrink-0 text-xs font-semibold text-amber-700 dark:text-amber-400">
+                                            ⚠ @UnitRulesCatalog.BuildKey(entry.Task.Unit) → @UnitRulesCatalog.BuildKey(selSug!.SourceTaskUnit)
+                                        </span>
+
+                                        <span class="shrink-0 rounded bg-amber-100 px-2 py-0.5 font-mono text-[11px] font-semibold text-amber-800 ring-1 ring-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-800">
+                                            @BuildFormulaText(entry.Task.Quantity ?? 0m, entry.Task.Unit, convRule)
+                                        </span>
+
+                                        @foreach (var param in userParams)
+                                        {
+                                            var p = param;
+                                            <div class="flex items-center gap-1">
+                                                <label class="shrink-0 text-xs text-amber-700 dark:text-amber-400">@GetParamLabel(p.Key)</label>
+                                                <input type="number" step="0.001" placeholder="0"
+                                                       value="@(entry.ConversionParams.TryGetValue(p.Key, out var pv) ? pv.ToString("0.###", CultureInfo.InvariantCulture) : "")"
+                                                       @onchange="e => OnConvParamChanged(entry, p.Key, e.Value?.ToString(), selSug!.SourceTaskUnit)"
+                                                       class="w-20 rounded border border-amber-300 bg-white px-1.5 py-0.5 text-xs text-gray-900 focus:border-amber-500 focus:outline-none dark:border-amber-700 dark:bg-gray-800 dark:text-gray-100" />
+                                            </div>
+                                        }
+
+                                        @if (canCompute && convQty != (entry.Task.Quantity ?? 0m))
+                                        {
+                                            <span class="rounded bg-amber-200 px-2 py-0.5 text-xs font-bold text-amber-900 dark:bg-amber-900/50 dark:text-amber-200">
+                                                = @convQty.ToString("0.###", CultureInfo.InvariantCulture) @UnitRulesCatalog.BuildKey(selSug!.SourceTaskUnit)
+                                            </span>
+                                        }
+
+                                        @if (hasResPrm)
+                                        {
+                                            <span class="text-[11px] italic text-amber-600 dark:text-amber-500">* density comes from resource</span>
+                                        }
+
+                                    </div>
+                                </div>
+                            }
                             <div class="overflow-x-auto border-t border-gray-100 dark:border-gray-800">
                                 <table class="w-full text-sm">
                                     <thead class="border-b border-slate-200 bg-slate-50 text-xs dark:border-slate-800 dark:bg-slate-950">
@@ -379,6 +427,80 @@
 
     private static string GetResourceRowStyle() => "box-shadow: inset 3px 0 0 rgba(34,197,94,0.35);";
 
+    private static UnitRule? GetConversionRule(string taskUnit, string sourceUnit)
+    {
+        var from = UnitRulesCatalog.BuildKey(taskUnit);
+        var to   = UnitRulesCatalog.BuildKey(sourceUnit);
+        if (string.IsNullOrWhiteSpace(from) || string.IsNullOrWhiteSpace(to)) return null;
+        if (string.Equals(from, to, StringComparison.OrdinalIgnoreCase)) return null;
+        return UnitRulesCatalog.TryGet(from, to, out var rule) ? rule : null;
+    }
+
+    private static decimal GetConvertedQty(TaskEntry entry, string sourceUnit)
+    {
+        var raw  = entry.Task.Quantity ?? 0m;
+        var rule = GetConversionRule(entry.Task.Unit, sourceUnit);
+        if (rule == null) return raw;
+        if (rule.Params.Any(p => p.Source == ParamSource.Resource)) return raw;
+
+        var d = new Dictionary<ParamName, decimal>();
+        foreach (var p in rule.Params.Where(x => x.Source == ParamSource.User))
+        {
+            if (!entry.ConversionParams.TryGetValue(p.Key, out var v)) return raw;
+            d[p.Key] = v;
+        }
+        try   { return rule.Compute(raw, d); }
+        catch { return raw; }
+    }
+
+    private void OnConvParamChanged(TaskEntry entry, ParamName key, string? rawValue, string sourceUnit)
+    {
+        if (decimal.TryParse(rawValue, NumberStyles.Any, CultureInfo.InvariantCulture, out var v))
+            entry.ConversionParams[key] = v;
+        else
+            entry.ConversionParams.Remove(key);
+
+        if (entry.SelectedIndex.HasValue)
+        {
+            var rows = entry.GetRows(entry.SelectedIndex.Value);
+            if (rows is not null)
+            {
+                var convQty = GetConvertedQty(entry, sourceUnit);
+                foreach (var row in rows)
+                    row.ApplyCostRole(convQty);
+            }
+        }
+        StateHasChanged();
+    }
+
+    private static string GetParamLabel(ParamName p) => p switch
+    {
+        ParamName.Thickness => "Depth/Thickness (m)",
+        ParamName.Width     => "Width (m)",
+        ParamName.Length    => "Length (m)",
+        ParamName.Density   => "Density (t/m³)",
+        _                   => p.ToString()
+    };
+
+    private static string BuildFormulaText(decimal taskQuantity, string taskUnit, UnitRule rule)
+    {
+        var parts = new List<string>
+        {
+            $"{taskQuantity.ToString("0.###", CultureInfo.InvariantCulture)} {UnitRulesCatalog.BuildKey(taskUnit)}"
+        };
+
+        parts.AddRange(rule.Params.Select(p => p.Key switch
+        {
+            ParamName.Thickness => "Depth",
+            ParamName.Width     => "Width",
+            ParamName.Length    => "Length",
+            ParamName.Density   => "Density",
+            _                   => p.Key.ToString()
+        }));
+
+        return string.Join(" x ", parts);
+    }
+
     protected override Task OnInitializedAsync() => Task.CompletedTask;
 
     private async Task LoadAsync()
@@ -419,7 +541,10 @@
 
         var sug = entry.Suggestions[index];
         var resources = await Repo.Resource.GetSuggestionResourcesAsync(sug.SourceTaskId, sug.Source);
-        entry.ResourceCache[index] = resources.Select(r => new ResourceRow(r)).ToList();
+        var rows = resources.Select(r => new ResourceRow(r)).ToList();
+        var convertedQty = GetConvertedQty(entry, sug.SourceTaskUnit);
+        foreach (var row in rows) row.ApplyCostRole(convertedQty);
+        entry.ResourceCache[index] = rows;
         entry.LoadingSet.Remove(index);
         StateHasChanged();
     }
@@ -537,11 +662,12 @@
     {
         public TaskListMVVM Task { get; }
         public List<TaskResourceSuggestionDTO> Suggestions { get; }
-        public int?  SelectedIndex    { get; set; }
+        public int?  SelectedIndex     { get; set; }
         public bool  ResourcesExpanded { get; set; }
 
-        public Dictionary<int, List<ResourceRow>> ResourceCache { get; } = [];
-        public HashSet<int>                       LoadingSet    { get; } = [];
+        public Dictionary<ParamName, decimal>     ConversionParams { get; } = new();
+        public Dictionary<int, List<ResourceRow>> ResourceCache    { get; } = [];
+        public HashSet<int>                       LoadingSet       { get; } = [];
 
         public List<ResourceRow>? GetRows(int index) => ResourceCache.TryGetValue(index, out var r) ? r : null;
 
@@ -568,6 +694,15 @@
         public bool HasParameters => Resource.Data.Parameters.Count > 0;
         public bool HasAddOns     => Resource.Data.AddOns.Count > 0;
         public bool HasTimes      => Resource.Data.Times.Count > 0;
+
+        public void ApplyCostRole(decimal convertedTaskQty)
+        {
+            if (Resource.CostRole is { Count: > 0 })
+            {
+                var role = Resource.CostRole.FirstOrDefault(r => r.Min <= convertedTaskQty && convertedTaskQty <= r.Max);
+                if (role?.Value is not null) Cost = role.Value.Value;
+            }
+        }
 
         public ResourceRow(ResourcePostDTO resource)
         {

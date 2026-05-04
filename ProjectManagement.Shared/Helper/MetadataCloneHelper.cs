@@ -1,7 +1,5 @@
 using ProjectManagement.Shared.Base.Organisation;
 using ProjectManagement.Shared.DTO.App;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace ProjectManagement.Shared.Helper
 {

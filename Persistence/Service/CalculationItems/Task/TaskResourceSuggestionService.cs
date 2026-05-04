@@ -356,6 +356,7 @@ public sealed class TaskResourceSuggestionService(
                     AccountId = tenantLink?.AccountId,
                     SortOrder = res.SortOrder,
                     Data = data,
+                    CostRole = res.CostRoles,
                 };
             })
             .ToList();

@@ -1,3 +1,4 @@
+using ProjectManagement.Shared.Base.AppTenant;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Offer;
@@ -111,6 +112,8 @@ public ResourceTypesEnum ResType { get; set; }
             get => Data.ChangeFactor2;
             set => Data.ChangeFactor2 = value;
         }
+
+        public List<RoleDTO> CostRole { get; set; } = [];
 
         // kept for UI state / formulas
         public decimal ActuallyQuantity { get; set; } = 0;
