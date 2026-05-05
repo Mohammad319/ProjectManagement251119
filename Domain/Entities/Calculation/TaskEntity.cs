@@ -92,6 +92,8 @@ namespace Domain.Entities.Calculation
                 Name = source.Name,
                 NormalizedTextSv = source.NormalizedTextSv,
                 StatusId = source.StatusId,
+                Unit = source.Unit,
+                Quantity = source.Quantity,
                 Metadata = source.GetMetadataSnapshot(),
             };
 
@@ -111,10 +113,12 @@ namespace Domain.Entities.Calculation
             ArgumentNullException.ThrowIfNull(dto);
 
             Name = NormalizeRequired(dto.Name, "Task name is required.", FieldLengths.TaskName, nameof(dto.Name));
+            Unit = NormalizeOptional(dto.Unit);
+            Quantity = NormalizeQuantity(dto.Quantity);
             Metadata = CalculationItemMetadataMapper.BuildTaskMetadata(
                 dto.Metadata,
                 dto.Note,
-                dto.Unit,
+                null,
                 dto.Code,
                 dto.IsActive,
                 dto.Type,
@@ -127,7 +131,12 @@ namespace Domain.Entities.Calculation
         }
 
         public TaskMetadata GetMetadataSnapshot()
-            => CalculationItemMetadataMapper.BuildTaskMetadata(_metadata, Note, Unit, Code, IsActive, Type, IsOH);
+        {
+            var snapshot = CalculationItemMetadataMapper.BuildTaskMetadata(_metadata, Note, Unit, Code, IsActive, Type, IsOH);
+            snapshot.Unit = Unit ?? string.Empty;
+            snapshot.Quantity = Quantity;
+            return snapshot;
+        }
 
         public void UpdateMetadata(Action<TaskMetadata> update)
         {
@@ -201,12 +210,14 @@ namespace Domain.Entities.Calculation
             var snapshot = NormalizeMetadata(metadata);
             _metadata = snapshot;
             Note = NormalizeOptional(snapshot.Note);
-            Unit = NormalizeOptional(snapshot.Unit);
+            Unit ??= NormalizeOptional(snapshot.Unit);
             Code = NormalizeOptional(snapshot.Code);
             IsActive = snapshot.IsActive;
             Type = snapshot.Type;
             IsOH = snapshot.IsOH;
-            Quantity = snapshot.Quantity;
+            Quantity ??= NormalizeQuantity(snapshot.Quantity);
+            snapshot.Unit = string.Empty;
+            snapshot.Quantity = null;
         }
 
         private static TaskMetadata NormalizeMetadata(TaskMetadata? metadata)
@@ -224,6 +235,15 @@ namespace Domain.Entities.Calculation
 
         private static string? NormalizeOptional(string? value)
             => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+        private static decimal? NormalizeQuantity(decimal? value)
+        {
+            if (!value.HasValue)
+                return null;
+
+            var rounded = Math.Round(value.Value, 3, MidpointRounding.AwayFromZero);
+            return rounded < 0m ? 0m : rounded;
+        }
 
         private static void ValidateSortOrder(int sortOrder)
         {

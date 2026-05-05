@@ -50,7 +50,7 @@ public sealed class TaskResourceSuggestionService(
             targetNormalized,
             target.Unit,
             target.Code,
-            target.Metadata.Quantity,
+            target.Quantity,
             maxResults,
             includeResources,
             cancellationToken);
@@ -61,7 +61,7 @@ public sealed class TaskResourceSuggestionService(
             targetNormalized,
             target.Unit,
             target.Code,
-            target.Metadata.Quantity,
+            target.Quantity,
             maxResults,
             includeResources,
             cancellationToken);
@@ -139,7 +139,7 @@ public sealed class TaskResourceSuggestionService(
                     targetCode,
                     task.Code,
                     targetQuantity,
-                    task.Metadata.Quantity,
+                    task.Quantity,
                     targetName,
                     task.Name);
 
@@ -147,7 +147,7 @@ public sealed class TaskResourceSuggestionService(
                 {
                     SourceTaskId = task.Id,
                     SourceTaskName = task.Name,
-                    SourceTaskQuantity = task.Metadata.Quantity,
+                    SourceTaskQuantity = task.Quantity,
                     SourceTaskUnit = task.Unit ?? string.Empty,
                     Source = TaskResourceSuggestionSource.TenantTask,
                     Score = score,
@@ -469,6 +469,8 @@ public sealed class TaskResourceSuggestionService(
             Name = resource.Name,
             IsActive = resource.IsActive,
             ResType = resource.ResType,
+            Quantity = resource.Quantity ?? 0m,
+            Unit = resource.Unit,
             AccountId = resource.AccountId,
             StatusId = resource.StatusId,
             ResourceSortId = resource.ResourceSortId,

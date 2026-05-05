@@ -95,6 +95,8 @@ namespace Domain.Entities.Calculation
                 Name = source.Name,
                 ResType = source.ResType,
                 IsActive = source.IsActive,
+                Unit = source.Unit,
+                Quantity = source.Quantity,
                 Metadata = source.GetMetadataSnapshot(),
                 AccountId = source.AccountId,
                 StatusId = source.StatusId,
@@ -113,11 +115,13 @@ namespace Domain.Entities.Calculation
             Name = NormalizeRequired(dto.Name, "Resource name is required.");
             ResType = dto.ResType;
             IsActive = dto.IsActive;
+            Unit = NormalizeOptional(dto.Unit);
+            Quantity = NormalizeQuantity(dto.Quantity);
 
             Metadata = CalculationItemMetadataMapper.BuildResourceMetadata(
                 dto.Data,
                 dto.Note,
-                dto.Unit);
+                null);
 
             SetSortOrder(dto.SortOrder);
 
@@ -130,7 +134,12 @@ namespace Domain.Entities.Calculation
         }
 
         public ResourceMetadata GetMetadataSnapshot()
-            => CalculationItemMetadataMapper.BuildResourceMetadata(_metadata, Note, Unit);
+        {
+            var snapshot = CalculationItemMetadataMapper.BuildResourceMetadata(_metadata, Note, Unit);
+            snapshot.Unit = Unit ?? string.Empty;
+            snapshot.Quantity = Quantity;
+            return snapshot;
+        }
 
         public void UpdateMetadata(Action<ResourceMetadata> update)
         {
@@ -202,8 +211,10 @@ namespace Domain.Entities.Calculation
             var snapshot = NormalizeMetadata(metadata);
             _metadata = snapshot;
             Note = NormalizeOptional(snapshot.Note);
-            Unit = NormalizeOptional(snapshot.Unit);
-            Quantity = snapshot.Quantity;
+            Unit ??= NormalizeOptional(snapshot.Unit);
+            Quantity ??= NormalizeQuantity(snapshot.Quantity);
+            snapshot.Unit = string.Empty;
+            snapshot.Quantity = null;
         }
 
         private static ResourceMetadata NormalizeMetadata(ResourceMetadata? metadata)
@@ -219,6 +230,15 @@ namespace Domain.Entities.Calculation
 
         private static string? NormalizeOptional(string? value)
             => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+        private static decimal? NormalizeQuantity(decimal? value)
+        {
+            if (!value.HasValue)
+                return null;
+
+            var rounded = Math.Round(value.Value, 3, MidpointRounding.AwayFromZero);
+            return rounded < 0m ? 0m : rounded;
+        }
 
         private static void ValidateSortOrder(int sortOrder)
         {

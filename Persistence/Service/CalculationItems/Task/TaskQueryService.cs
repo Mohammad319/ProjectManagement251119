@@ -26,10 +26,12 @@ namespace Persistence.Service.CalculationItems.Task
                 .Select(x => new TaskListDTO
                 {
                     Id = x.Id,
+                    Quantity = x.Quantity,
+                    Unit = x.Unit ?? string.Empty,
                     Metadata = CalculationItemMetadataMapper.BuildTaskMetadata(
                         x.Metadata,
                         x.Note,
-                        x.Unit,
+                        null,
                         x.Code,
                         x.IsActive,
                         x.Type,

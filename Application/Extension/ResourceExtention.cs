@@ -25,6 +25,8 @@ namespace Application.Extention
                 StatusId = r.StatusId,
                 OfferId = r.PrimaryOfferId,
                 SortOrder = r.SortOrder,
+                Quantity = r.Quantity,
+                Unit = r.Unit ?? string.Empty,
                 OpportunityId = r.OpportunityId,
                 Data = data,
                 Opportunity = r.Opportunity?.OpportunityType ?? string.Empty,
@@ -49,7 +51,7 @@ namespace Application.Extention
             res.Data = CalculationItemMetadataMapper.BuildResourceMetadata(
                 res.Data,
                 res.Note,
-                res.Unit);
+                null);
 
             return ResourceEntity.Create(res, res.SortOrder, taskID > 0 ? taskID : null);
         }

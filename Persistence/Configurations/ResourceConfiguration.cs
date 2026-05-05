@@ -108,15 +108,10 @@ internal sealed class ResourceConfiguration : IEntityTypeConfiguration<ResourceE
                 stored: true);
 
         builder.Property(x => x.Unit)
-            .HasComputedColumnSql(
-                CalculationMetadataComputedColumns.JsonString(nameof(ResourceEntity.Unit), FieldLengths.Unit),
-                stored: true);
+            .HasMaxLength(FieldLengths.Unit);
 
         builder.Property(x => x.Quantity)
-            .HasColumnType("decimal(18,3)")
-            .HasComputedColumnSql(
-                CalculationMetadataComputedColumns.JsonDecimal(nameof(ResourceEntity.Quantity)),
-                stored: true);
+            .HasColumnType("decimal(18,3)");
 
         builder.HasIndex(x => new { x.TenantId, x.TaskId, x.SortOrder })
             .HasDatabaseName("IX_Resources_Tenant_Task_Sort");
@@ -188,9 +183,7 @@ internal sealed class TaskConfiguration : IEntityTypeConfiguration<TaskEntity>
                 stored: true);
 
         builder.Property(x => x.Unit)
-            .HasComputedColumnSql(
-                CalculationMetadataComputedColumns.JsonString(nameof(TaskEntity.Unit), FieldLengths.Unit),
-                stored: true);
+            .HasMaxLength(FieldLengths.Unit);
 
         builder.Property(x => x.Code)
             .HasComputedColumnSql(
@@ -213,10 +206,7 @@ internal sealed class TaskConfiguration : IEntityTypeConfiguration<TaskEntity>
                 stored: true);
 
         builder.Property(x => x.Quantity)
-            .HasColumnType("decimal(18,3)")
-            .HasComputedColumnSql(
-                CalculationMetadataComputedColumns.JsonDecimal(nameof(TaskEntity.Quantity)),
-                stored: true);
+            .HasColumnType("decimal(18,3)");
 
         builder.HasOne(x => x.Status)
             .WithMany(x => x.Tasks)

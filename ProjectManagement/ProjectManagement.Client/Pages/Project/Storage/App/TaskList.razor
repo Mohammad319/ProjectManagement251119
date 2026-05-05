@@ -390,6 +390,7 @@ else if (_tasks != null)
                     Code = Task.Code,
                     UpperNote = Task.UpperNote,
                     Unit = !string.IsNullOrEmpty(Task.NewUnitCode) ? Task.NewUnitCode : Task.UnitCode,
+                    BaseUnit = Task.UnitCode ?? string.Empty,
                     Note = Task.Note,
                     IsOH = Calc.OHFactors,
                     ConversionParameters = Task.ParameterValues
@@ -397,7 +398,7 @@ else if (_tasks != null)
                         {
                             Name = kv.Key.ToString(),
                             Value = kv.Value,
-                            Unit = "m"
+                            Unit = Task.UnitCode ?? string.Empty
                         }).ToList(),
                 },
                 Resources = Task.BaseResources.Concat(Task.ResultResources).Where(r => r.IsAdded).Select(res => new ResourcePostDTO

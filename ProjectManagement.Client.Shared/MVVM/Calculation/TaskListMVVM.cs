@@ -39,6 +39,8 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
     public class TaskListMVVM : TaskBase
     {
         private TaskMetadata? _metadata = new();
+        private decimal? _quantity;
+        private string _unit = string.Empty;
         [JsonIgnore] public TaskUiState Ui { get; } = new();
         [JsonIgnore] public TaskComputedState Computed { get; } = new();
 
@@ -49,7 +51,14 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
                 _metadata ??= new TaskMetadata();
                 return _metadata;
             }
-            set { _metadata = CalculationItemMetadataMapper.CloneTaskMetadata(value); }
+            set
+            {
+                _metadata = CalculationItemMetadataMapper.CloneTaskMetadata(value);
+                _quantity ??= _metadata.Quantity;
+                if (string.IsNullOrWhiteSpace(_unit))
+                    _unit = _metadata.Unit ?? string.Empty;
+                SyncMetadataQuantityUnit();
+            }
         }
 
         public string Note => Metadata.Note;
@@ -57,8 +66,25 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public string QuantityParam => Metadata.QuantityParam;
         public IReadOnlyList<TaskConversionParameter> ConversionParameters => Metadata.ConversionParameters;
         public decimal? BaseQuantity => Metadata.BaseQuantity;
-        public decimal? Quantity => Metadata.Quantity;
-        public string Unit => Metadata.Unit;
+        public decimal? Quantity
+        {
+            get => _quantity ?? _metadata?.Quantity;
+            set
+            {
+                _quantity = value;
+                SyncMetadataQuantityUnit();
+            }
+        }
+
+        public string Unit
+        {
+            get => string.IsNullOrWhiteSpace(_unit) ? _metadata?.Unit ?? string.Empty : _unit;
+            set
+            {
+                _unit = value ?? string.Empty;
+                SyncMetadataQuantityUnit();
+            }
+        }
         public decimal ChangeFactor1 => Metadata.ChangeFactor1;
         public decimal ChangeFactor2 => Metadata.ChangeFactor2;
         public decimal ActuallyQuantity => Metadata.ActuallyQuantity;
@@ -162,5 +188,12 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 
         public int? StatusId { get; set; }
         public int? OpportunityId { get; set; }
+
+        private void SyncMetadataQuantityUnit()
+        {
+            _metadata ??= new TaskMetadata();
+            _metadata.Quantity = _quantity;
+            _metadata.Unit = _unit ?? string.Empty;
+        }
     }
 }

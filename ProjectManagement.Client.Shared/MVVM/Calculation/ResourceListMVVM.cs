@@ -8,6 +8,8 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
     public class ResFromData : ResourceBase
     {
         private ResourceMetadata? _data = new();
+        private decimal? _quantity;
+        private string _unit = string.Empty;
 
         public ResourceMetadata Data
         {
@@ -16,12 +18,36 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
                 _data ??= new ResourceMetadata();
                 return _data;
             }
-            set { _data = CalculationItemMetadataMapper.CloneResourceMetadata(value); }
+            set
+            {
+                _data = CalculationItemMetadataMapper.CloneResourceMetadata(value);
+                _quantity ??= _data.Quantity;
+                if (string.IsNullOrWhiteSpace(_unit))
+                    _unit = _data.Unit ?? string.Empty;
+                SyncDataQuantityUnit();
+            }
         }
 
         public string QuantityParam => Data.QuantityParam;
-        public decimal? Quantity => Data.Quantity;
-        public string Unit => Data.Unit;
+        public decimal? Quantity
+        {
+            get => _quantity ?? _data?.Quantity;
+            set
+            {
+                _quantity = value;
+                SyncDataQuantityUnit();
+            }
+        }
+
+        public string Unit
+        {
+            get => string.IsNullOrWhiteSpace(_unit) ? _data?.Unit ?? string.Empty : _unit;
+            set
+            {
+                _unit = value ?? string.Empty;
+                SyncDataQuantityUnit();
+            }
+        }
         public decimal ChangeFactor1 => Data.ChangeFactor1;
         public decimal ChangeFactor2 => Data.ChangeFactor2;
 
@@ -31,6 +57,13 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public double? CO2 => Data.CO2;
 
         [JsonIgnore] public decimal PriceSubTotal => Data.PriceSub.HasValue && Quantity.HasValue ? Data.PriceSub.Value * Quantity.Value : 0;
+
+        private void SyncDataQuantityUnit()
+        {
+            _data ??= new ResourceMetadata();
+            _data.Quantity = _quantity;
+            _data.Unit = _unit ?? string.Empty;
+        }
     }
 
     public class ResourceListMVVM : ResFromData

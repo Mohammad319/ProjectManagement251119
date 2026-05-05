@@ -24,6 +24,8 @@ namespace Application.Mapping.CalcItems
                 Name = t.Name,
                 OpportunityId = t.OpportunityId,
                 SortOrder = t.SortOrder,
+                Quantity = t.Quantity,
+                Unit = t.Unit ?? string.Empty,
                 StatusId = t.StatusId,
                 Status = t.Status?.Name ?? string.Empty,
                 StatusColor = t.Status?.Color ?? string.Empty,

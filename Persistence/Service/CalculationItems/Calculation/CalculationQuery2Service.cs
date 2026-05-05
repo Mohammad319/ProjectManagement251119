@@ -45,6 +45,7 @@ namespace Persistence.Service.CalculationItems.Calculation
             public int? OpportunityId { get; set; }
             public string Note { get; set; } = string.Empty;
             public string Unit { get; set; } = string.Empty;
+            public decimal? Quantity { get; set; }
             public string Opportunity { get; set; } = string.Empty;
             public string Status { get; set; } = string.Empty;
             public string StatusColor { get; set; } = string.Empty;
@@ -118,6 +119,8 @@ namespace Persistence.Service.CalculationItems.Calculation
                     TaskId = t.ParentTaskId,
                     Name = t.Name,
                     SortOrder = t.SortOrder,
+                    Quantity = t.Quantity,
+                    Unit = t.Unit ?? string.Empty,
                     StatusId = t.StatusId,
                     Status = t.Status == null ? string.Empty : (t.Status.Name ?? string.Empty),
                     StatusColor = t.Status == null ? string.Empty : (t.Status.Color ?? string.Empty),
@@ -126,7 +129,7 @@ namespace Persistence.Service.CalculationItems.Calculation
                     Metadata = CalculationItemMetadataMapper.BuildTaskMetadata(
                         t.Metadata,
                         t.Note,
-                        t.Unit,
+                        null,
                         t.Code,
                         t.IsActive,
                         t.Type,
@@ -163,6 +166,7 @@ namespace Persistence.Service.CalculationItems.Calculation
                     OpportunityId = r.OpportunityId,
                     Note = r.Note ?? string.Empty,
                     Unit = r.Unit ?? string.Empty,
+                    Quantity = r.Quantity,
 
                     Opportunity = r.Opportunity == null ? string.Empty : (r.Opportunity.OpportunityType ?? string.Empty),
                     Status = r.Status == null ? string.Empty : (r.Status.Name ?? string.Empty),
@@ -288,7 +292,9 @@ namespace Persistence.Service.CalculationItems.Calculation
                 Data = CalculationItemMetadataMapper.BuildResourceMetadata(
                     row.Metadata,
                     row.Note,
-                    row.Unit),
+                    null),
+                Quantity = row.Quantity,
+                Unit = row.Unit,
                 Offers = []
             };
         }
