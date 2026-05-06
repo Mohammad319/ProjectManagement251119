@@ -20,7 +20,8 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
         ContextMenuService ContextMenuService,
         IContextMenuBuilderService context,
         DialogService dialogService,
-        CalculationInteractionState interactionState)
+        CalculationInteractionState interactionState,
+        CalculationService calculationService)
     {
         private static bool TaskAffectsCalculation(TaskListMVVM oldT, TaskListMVVM newT)
         {
@@ -83,7 +84,10 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
             Mhd.Notifications(ToastType.Add, result);
 
             if (result)
+            {
                 interactionState.ResetSelection();
+                await calculationService.RefreshCurrentCalculationAsync();
+            }
         }
 
         public void Remove(TaskListMVVM task)
@@ -200,6 +204,7 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
                 return;
 
             interactionState.ResetSelection();
+            await calculationService.RefreshCurrentCalculationAsync();
             dialogService.Close();
         }
     }

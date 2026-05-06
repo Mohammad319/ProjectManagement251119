@@ -72,11 +72,7 @@
 
     protected override void OnInitialized()
     {
-        Tasks = Task != null
-            ? Task.Tasks.OrderByDescending(x => x.Order).ToList()
-            : Calc.Tasks.Where(x => x.TaskId == null)
-                        .OrderByDescending(x => x.Order)
-                        .ToList();
+        Tasks = GetOrderedTasks();
     }
 
     private string GetTaskItemClasses(TaskListMVVM task)
@@ -109,35 +105,70 @@
 
             taskDraging.Ui.IsDragOver = false;
             landingModel.Ui.IsDragOver = false;
-            if (Tasks == null) return;
-            int index = Tasks.IndexOf(landingModel);
+            if (Tasks == null || ReferenceEquals(taskDraging, landingModel))
+                return;
 
-            if (index == 0)
-            {
-                taskDraging.Order = landingModel.Order + 100;
-            }
-            else if (taskDraging.Order < landingModel.Order)
-            {
-                taskDraging.Order = (landingModel.Order + Tasks[index - 1].Order) / 2;
-            }
-            else if (taskDraging.Order > landingModel.Order && (index + 1) < Tasks.Count)
-            {
-                taskDraging.Order = (Tasks[index + 1].Order + landingModel.Order) / 2;
-            }
-            else
-            {
-                taskDraging.Order = landingModel.Order - 100;
-            }
+            var orderedTasks = GetOrderedTasks();
+            var newOrder = CalculateDropOrder(orderedTasks, taskDraging, landingModel, x => x.Order);
+            if (newOrder == taskDraging.Order)
+                return;
+
+            taskDraging.Order = newOrder;
 
             await Repo.Task.ReOrderAsync(taskDraging.Id, taskDraging.Order);
-            Tasks = Tasks.Where(x => x.Ui.FilterVisible)
-                         .OrderByDescending(x => x.Order)
-                         .ToList();
+            Tasks = GetOrderedTasks();
+            Calc.NotifyGridRefresh(flatListDirty: true, structureFlatListDirty: true);
         }
         finally
         {
             taskDraging = null;
             await InvokeAsync(StateHasChanged);
         }
+    }
+
+    private List<TaskListMVVM> GetOrderedTasks()
+    {
+        var source = Task is { Id: > 0 }
+            ? Task.Tasks
+            : Calc.Tasks.Where(x => x.TaskId == null);
+
+        return source
+            .Where(x => x.Ui.FilterVisible)
+            .OrderByDescending(x => x.Order)
+            .ThenBy(x => x.Id)
+            .ToList();
+    }
+
+    private static int CalculateDropOrder<TItem>(
+        IReadOnlyList<TItem> orderedItems,
+        TItem dragging,
+        TItem landing,
+        Func<TItem, int> orderSelector)
+    {
+        const int step = 100;
+
+        var items = orderedItems
+            .Where(x => !EqualityComparer<TItem>.Default.Equals(x, dragging))
+            .ToList();
+
+        var landingIndex = items.IndexOf(landing);
+        if (landingIndex < 0)
+            return orderSelector(dragging);
+
+        var landingOrder = orderSelector(landing);
+        var draggingOrder = orderSelector(dragging);
+
+        if (draggingOrder < landingOrder)
+        {
+            if (landingIndex == 0)
+                return landingOrder + step;
+
+            return (orderSelector(items[landingIndex - 1]) + landingOrder) / 2;
+        }
+
+        if (landingIndex + 1 < items.Count)
+            return (orderSelector(items[landingIndex + 1]) + landingOrder) / 2;
+
+        return Math.Max(0, landingOrder - step);
     }
 }

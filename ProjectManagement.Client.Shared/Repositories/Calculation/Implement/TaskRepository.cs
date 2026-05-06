@@ -18,9 +18,10 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
             return await _httpRepository.GetAsync<bool>(TaskURLBase + URLConst.ReOrder + $"/{Id}/{newOrder}");
         }
 
-        public async Task<bool> CreateAsync(List<TaskPostDTO> model, int groupId)
+        public async Task<List<TaskListMVVM>> CreateAsync(List<TaskPostDTO> model, int groupId)
         {
-            return await _httpRepository.PostAsync<bool, List<TaskPostDTO>>(model, TaskURLBase + $"{groupId}");
+            var dtos = await _httpRepository.PostAsync<List<TaskListDTO>, List<TaskPostDTO>>(model, TaskURLBase + $"{groupId}");
+            return dtos.Select(x => x.ToTaskListMVVM()).ToList();
         }
         public async Task<bool> UpdateAsync(TaskPostDTO model, int id)
         {

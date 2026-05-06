@@ -4,11 +4,11 @@ using ProjectManagement.Shared.DTO.Project;
 
 namespace Application.Feature.Calculation.Task.Commands
 {
-    public sealed record CreateTaskCommand(List<TaskPostDTO> Tasks,int NewNetCalcId) : IRequest<bool>;
+    public sealed record CreateTaskCommand(List<TaskPostDTO> Tasks,int NewNetCalcId) : IRequest<List<TaskListDTO>>;
 
-    public class CreateTaskCommandHandler(ITaskService taskService) : IRequestHandler<CreateTaskCommand, bool>
+    public class CreateTaskCommandHandler(ITaskService taskService) : IRequestHandler<CreateTaskCommand, List<TaskListDTO>>
     {
-        public async Task<bool> Handle(CreateTaskCommand request, CancellationToken ct)
+        public async Task<List<TaskListDTO>> Handle(CreateTaskCommand request, CancellationToken ct)
         {
             return await taskService.CreateAsync(request.Tasks,request.NewNetCalcId,ct);
         }

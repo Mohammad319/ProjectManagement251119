@@ -24,7 +24,8 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
         IContextMenuBuilderService context,
         IOfferRepository Offer,
         DialogService dialogService,
-        CalculationInteractionState interactionState) : IDisposable
+        CalculationInteractionState interactionState,
+        CalculationService calculationService) : IDisposable
     {
         public event Action<int>? OfferStateChanged;
 
@@ -426,6 +427,7 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
                 return;
 
             interactionState.ResetSelection();
+            await calculationService.RefreshCurrentCalculationAsync();
             dialogService.Close();
         }
 

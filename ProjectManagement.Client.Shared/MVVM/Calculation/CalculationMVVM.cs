@@ -537,7 +537,9 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         private static IEnumerable<TaskListMVVM> ApplyTaskSort(IList<TaskListMVVM> tasks, SortConfig? sort)
         {
             if (sort?.TaskColumn is not NetColumnId col)
-                return tasks;
+                return tasks
+                    .OrderByDescending(t => t.Order)
+                    .ThenBy(t => t.Id);
 
             Func<TaskListMVVM, IComparable> key = col switch
             {
@@ -556,14 +558,16 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
             };
 
             return sort.TaskDescending
-                ? tasks.OrderByDescending(key)
-                : tasks.OrderBy(key);
+                ? tasks.OrderByDescending(key).ThenByDescending(t => t.Order).ThenBy(t => t.Id)
+                : tasks.OrderBy(key).ThenByDescending(t => t.Order).ThenBy(t => t.Id);
         }
 
         private static IEnumerable<ResourceListMVVM> ApplyResourceSort(IList<ResourceListMVVM> resources, SortConfig? sort)
         {
             if (sort?.ResourceColumn is not NetColumnId col)
-                return resources;
+                return resources
+                    .OrderByDescending(r => r.Order)
+                    .ThenBy(r => r.Id);
 
             Func<ResourceListMVVM, IComparable> key = col switch
             {
@@ -580,8 +584,8 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
             };
 
             return sort.ResourceDescending
-                ? resources.OrderByDescending(key)
-                : resources.OrderBy(key);
+                ? resources.OrderByDescending(key).ThenByDescending(r => r.Order).ThenBy(r => r.Id)
+                : resources.OrderBy(key).ThenByDescending(r => r.Order).ThenBy(r => r.Id);
         }
 
         private void ReindexFlatItems(List<FlatItem> flatItems, int startIndex)

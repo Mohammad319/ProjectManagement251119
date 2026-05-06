@@ -282,6 +282,9 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
                     hasSuccess = await Repo.Resource.CreateAsync([ResourceUpdate], resource.TaskId);
                 }
                 MHD.Notifications(resource.Id == 0 ? ToastType.Add : ToastType.Update, hasSuccess);
+
+                if (hasSuccess)
+                    await CalcService.RefreshCurrentCalculationAsync();
             }
             catch (Exception ex)
             {

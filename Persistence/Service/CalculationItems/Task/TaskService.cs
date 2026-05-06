@@ -72,13 +72,13 @@ namespace Persistence.Service.CalculationItems.Task
         // -----------------------------------------------------
         // Create tasks
         // -----------------------------------------------------
-        public async Task<bool> CreateAsync(
+        public async Task<List<TaskListDTO>> CreateAsync(
             IReadOnlyList<TaskPostDTO> tasks,
             int targetCalcId,
             CancellationToken ct = default)
         {
             if (tasks is null || tasks.Count == 0)
-                return false;
+                return [];
 
             var safeTasks = tasks;
             await using var context = await dbFactory.CreateDbContextAsync(ct);
@@ -91,11 +91,11 @@ namespace Persistence.Service.CalculationItems.Task
                     .FirstOrDefaultAsync(x => x.Id == parentTaskId && x.CalculationId == targetCalcId, ct);
 
                 if (parentTask == null)
-                    return false;
+                    return [];
 
                 // كل التاسكات تابعة لنفس الـ Parent
                 if (safeTasks.Any(t => t.ParentTaskId != parentTask.Id))
-                    return false;
+                    return [];
 
                 // توحيد IsOH بناء على Parent
                 foreach (var task in safeTasks)
@@ -107,7 +107,7 @@ namespace Persistence.Service.CalculationItems.Task
                     .AnyAsync(x => x.Id == targetCalcId, ct);
 
                 if (!calcExists)
-                    return false;
+                    return [];
             }
 
             var entities = safeTasks
@@ -149,7 +149,7 @@ namespace Persistence.Service.CalculationItems.Task
                 ObjectTypHub.task,
                 OperationType.AddRange,
                 dtos);
-            return true;
+            return dtos;
         }
 
         // -----------------------------------------------------

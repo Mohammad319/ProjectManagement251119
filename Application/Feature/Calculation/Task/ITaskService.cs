@@ -14,7 +14,7 @@ namespace Application.Feature.Calculation.Task
             bool deleteOriginal = false,
             CancellationToken cancellationToken = default);
 
-        Task<bool> CreateAsync(
+        Task<List<TaskListDTO>> CreateAsync(
             IReadOnlyList<TaskPostDTO> tasks,
             int targetCalcId,
             CancellationToken cancellationToken = default);

@@ -39,6 +39,7 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
     private int _lastRound;
     private string _lastColumnSignature = string.Empty;
     private bool _reloadPending;
+    private bool _reloadRequestedWhilePending;
     private bool _jsSyncPending = true;
     private bool _collapseScrollClampPending;
     private int _virtualizeRenderKey;
@@ -73,7 +74,7 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
     {
         _onChangeHandler = () => _ = InvokeAsync(ForceReload);
 
-        if (!ObserveCalculation())
+        if (!ObserveCalculation(out _))
             throw new InvalidOperationException("CalcDataGrid requires an active calculation.");
 
         _lastTax = Calc.Tax;
@@ -90,10 +91,13 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
         if (_disposed)
             return;
 
-        ObserveCalculation();
+        if (ObserveCalculation(out var calculationChanged) && calculationChanged)
+            CalcService.RequestGridRefresh(CalculationGridRefreshKind.FlatList);
     }
-    private bool ObserveCalculation()
+
+    private bool ObserveCalculation(out bool calculationChanged)
     {
+        calculationChanged = false;
         var currentCalculation = FolderState.Calculation;
         if (ReferenceEquals(_observedCalculation, currentCalculation))
             return SyncObservedTemplate();
@@ -103,6 +107,7 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
 
         _observedCalculation = currentCalculation;
         _observedTemplate = currentCalculation?.Template;
+        calculationChanged = true;
 
         if (_observedCalculation is not null && _onChangeHandler is not null)
             _observedCalculation.OnChangeInCalculation += _onChangeHandler;
@@ -159,7 +164,10 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
             return;
 
         if (_reloadPending)
+        {
+            _reloadRequestedWhilePending = true;
             return;
+        }
 
         _reloadPending = true;
 
@@ -196,6 +204,12 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
         finally
         {
             _reloadPending = false;
+
+            if (_reloadRequestedWhilePending && !_disposed)
+            {
+                _reloadRequestedWhilePending = false;
+                _ = InvokeAsync(ForceReload);
+            }
         }
     }
 

@@ -1261,7 +1261,7 @@ public class CalculationComponentRenderTests : BunitContext
     {
         public Task<List<ListOrderDTO>> GetAsync(int? id = null) => Task.FromResult(new List<ListOrderDTO>());
         public Task<bool> ReOrderAsync(int Id, int newOrder) => Task.FromResult(true);
-        public Task<bool> CreateAsync(List<TaskPostDTO> model, int NetCalc) => Task.FromResult(true);
+        public Task<List<TaskListMVVM>> CreateAsync(List<TaskPostDTO> model, int NetCalc) => Task.FromResult(new List<TaskListMVVM>());
         public Task<List<TaskListMVVM>> GetByFilterAsync(FilterCalculationItemsDto offer) => Task.FromResult(new List<TaskListMVVM>());
         public Task<bool> UpdateAsync(TaskPostDTO model, int id) => Task.FromResult(true);
         public Task<bool> DeleteAsync(int calcID, IEnumerable<int> items) => Task.FromResult(true);

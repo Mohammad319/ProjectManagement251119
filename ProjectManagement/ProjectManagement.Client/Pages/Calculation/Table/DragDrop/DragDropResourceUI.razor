@@ -4,8 +4,7 @@
 
 @if (Task?.Resources != null && Task.Resources.Any())
 {
-    @foreach (var resource in Task.Resources.Where(x => x.Ui.FilterVisible)
-                                                .OrderByDescending(x => x.Order))
+    @foreach (var resource in GetOrderedResources())
     {
         <div class="@GetResourceItemClasses(resource)"
              @ondrop="@(() => HandleDropAsync(resource))"
@@ -79,35 +78,22 @@ else
 
             landingModel.Ui.IsDragOver = false;
 
-            if (resourceDraging is not null)
+            if (resourceDraging is not null && !ReferenceEquals(resourceDraging, landingModel))
             {
-                int index = Task.Resources.IndexOf(landingModel);
+                var orderedResources = GetOrderedResources();
+                var newOrder = CalculateDropOrder(orderedResources, resourceDraging, landingModel, x => x.Order);
+                if (newOrder == resourceDraging.Order)
+                    return;
 
-                if (index == 0)
-                {
-                    resourceDraging.Order = landingModel.Order + 100;
-                }
-                else if (resourceDraging.Order < landingModel.Order)
-                {
-                    resourceDraging.Order =
-                        (landingModel.Order + Task.Resources[index - 1].Order) / 2;
-                }
-                else if (resourceDraging.Order > landingModel.Order && (index + 1) < Task.Resources.Count)
-                {
-                    resourceDraging.Order =
-                        (Task.Resources[index + 1].Order + landingModel.Order) / 2;
-                }
-                else
-                {
-                    resourceDraging.Order = landingModel.Order - 100;
-                }
+                resourceDraging.Order = newOrder;
 
                 Task.Resources = Task.Resources
-                    .Where(x => x.Ui.FilterVisible)
                     .OrderByDescending(x => x.Order)
+                    .ThenBy(x => x.Id)
                     .ToList();
 
                 await Repo.Resource.ReOrderAsync(resourceDraging.Id, resourceDraging.Order);
+                Calc.NotifyGridRefresh(flatListDirty: true, structureFlatListDirty: true);
             }
         }
         finally
@@ -115,5 +101,45 @@ else
             resourceDraging = null;
             await InvokeAsync(StateHasChanged);
         }
+    }
+
+    private List<ResourceListMVVM> GetOrderedResources() =>
+        Task.Resources
+            .Where(x => x.Ui.FilterVisible)
+            .OrderByDescending(x => x.Order)
+            .ThenBy(x => x.Id)
+            .ToList();
+
+    private static int CalculateDropOrder<TItem>(
+        IReadOnlyList<TItem> orderedItems,
+        TItem dragging,
+        TItem landing,
+        Func<TItem, int> orderSelector)
+    {
+        const int step = 100;
+
+        var items = orderedItems
+            .Where(x => !EqualityComparer<TItem>.Default.Equals(x, dragging))
+            .ToList();
+
+        var landingIndex = items.IndexOf(landing);
+        if (landingIndex < 0)
+            return orderSelector(dragging);
+
+        var landingOrder = orderSelector(landing);
+        var draggingOrder = orderSelector(dragging);
+
+        if (draggingOrder < landingOrder)
+        {
+            if (landingIndex == 0)
+                return landingOrder + step;
+
+            return (orderSelector(items[landingIndex - 1]) + landingOrder) / 2;
+        }
+
+        if (landingIndex + 1 < items.Count)
+            return (orderSelector(items[landingIndex + 1]) + landingOrder) / 2;
+
+        return Math.Max(0, landingOrder - step);
     }
 }

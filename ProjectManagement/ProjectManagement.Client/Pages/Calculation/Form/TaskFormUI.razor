@@ -873,6 +873,8 @@
 
         btnSubmitDisabled = true;
         bool hasSuccess = false;
+        var calcId = Calc.Id;
+        List<TaskListMVVM> createdTasks = [];
         try
         {
             if (Task.Id > 0)
@@ -897,9 +899,18 @@
                     maxOrder += 100;
                     item.Metadata.IsOH = Calc.OHFactors;
                 }
-                hasSuccess = await Repo.Task.CreateAsync(PostList, Calc.Id);
+                createdTasks = await Repo.Task.CreateAsync(PostList, Calc.Id);
+                hasSuccess = createdTasks.Count > 0;
             }
             MHD.Notifications(Task.Id == 0 ? ToastType.Add : ToastType.Update, hasSuccess);
+
+            if (hasSuccess && calcId > 0)
+            {
+                if (createdTasks.Count > 0)
+                    CalcService.AddCreatedTasks(createdTasks);
+                else
+                    await CalcService.RefreshCurrentCalculationAsync();
+            }
         }
         catch (Exception ex)
         {

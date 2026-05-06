@@ -10,7 +10,7 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation
     {
         Task<List<ListOrderDTO>> GetAsync(int? id = null);
         Task<bool> ReOrderAsync(int Id, int newOrder);
-        Task<bool> CreateAsync(List<TaskPostDTO> model, int NetCalc);
+        Task<List<TaskListMVVM>> CreateAsync(List<TaskPostDTO> model, int NetCalc);
         Task<List<TaskListMVVM>> GetByFilterAsync(FilterCalculationItemsDto offer);
         Task<bool> UpdateAsync(TaskPostDTO model, int id);
         Task<bool> DeleteAsync(int calcID, IEnumerable<int> items);
