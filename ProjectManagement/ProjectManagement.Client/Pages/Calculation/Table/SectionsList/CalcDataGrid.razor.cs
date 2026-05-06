@@ -256,7 +256,7 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
 
     protected void HandleKeyDown(KeyboardEventArgs e)
     {
-        if (e.Key is "Control" or "Shift" or "Alt")
+        if (e.Key is "Control" or "Shift" or "Alt" or "Meta")
             InteractionState.SetModifierKey(e.Key);
     }
 

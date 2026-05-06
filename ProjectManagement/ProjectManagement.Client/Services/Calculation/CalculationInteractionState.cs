@@ -48,7 +48,7 @@ public sealed class CalculationInteractionState
     {
         var before = CaptureSelection();
 
-        if (ModifierKey == "Control")
+        if (ModifierKey is "Control" or "Meta")
             ToggleSelection(id, value, type);
         else
             ResetSelectionCore();
