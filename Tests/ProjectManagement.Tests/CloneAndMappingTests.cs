@@ -18,9 +18,7 @@ public class CloneAndMappingTests
         var source = new TaskMetadata
         {
             Note = "task-note",
-            Unit = "m",
             Code = "T-01",
-            Quantity = 2.5m,
             PriceProductionDB = 12.34m,
             UpperNote = ["line-1"]
         };
@@ -49,7 +47,6 @@ public class CloneAndMappingTests
         var source = new ResourceMetadata
         {
             Note = "resource-note",
-            Unit = "kg",
             Cost = 15m,
             UpperNote = ["upper-1"],
             Parameters =

@@ -129,7 +129,6 @@ namespace Persistence.Service.CalculationItems.Calculation
                     Metadata = CalculationItemMetadataMapper.BuildTaskMetadata(
                         t.Metadata,
                         t.Note,
-                        null,
                         t.Code,
                         t.IsActive,
                         t.Type,
@@ -291,8 +290,7 @@ namespace Persistence.Service.CalculationItems.Calculation
                 AccountCode = row.AccountCode ?? string.Empty,
                 Data = CalculationItemMetadataMapper.BuildResourceMetadata(
                     row.Metadata,
-                    row.Note,
-                    null),
+                    row.Note),
                 Quantity = row.Quantity,
                 Unit = row.Unit,
                 Offers = []

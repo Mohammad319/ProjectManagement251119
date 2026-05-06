@@ -136,10 +136,10 @@ public class CalcultationExtensionsTests
         {
             Id = 1,
             Name = "Converted Task",
+            Quantity = 10m,
+            Unit = "m2",
             Metadata = new TaskMetadata
             {
-                Quantity = 10m,
-                Unit = "m2",
                 BaseQuantity = 100m,
                 BaseUnit = "kg",
                 ConversionParameters =
@@ -210,9 +210,9 @@ public class CalcultationExtensionsTests
             Id = 2,
             TaskId = root.Id,
             Name = "Inactive Child",
+            Quantity = 10m,
             Metadata = new TaskMetadata
             {
-                Quantity = 10m,
                 Type = TaskType.Task
             },
             Resources = [inactiveResource],
@@ -236,9 +236,9 @@ public class CalcultationExtensionsTests
     {
         var task = new TaskListMVVM
         {
+            Quantity = 10m,
             Metadata = new TaskMetadata
             {
-                Quantity = 10m,
                 PriceSubDB = 100m
             }
         };
@@ -275,10 +275,10 @@ public class CalcultationExtensionsTests
     public void ResourceService_AffectsCalculation_DetectsParameterDrivenChange()
     {
         var oldResource = CreateResource(parameters: [2m, 3m], times: [], changeFactor2: 4m);
-        oldResource.Data.Quantity = 240m;
+        oldResource.Quantity = 240m;
 
         var newResource = CreateResource(parameters: [2m, 4m], times: [], changeFactor2: 4m);
-        newResource.Data.Quantity = 240m;
+        newResource.Quantity = 240m;
 
         Assert.True(ResourceService.AffectsCalculation(oldResource, newResource));
     }
@@ -294,7 +294,7 @@ public class CalcultationExtensionsTests
                 (1m, 120m)
             ],
             changeFactor2: 1m);
-        oldResource.Data.Quantity = 240m;
+        oldResource.Quantity = 240m;
 
         var newResource = CreateResource(
             parameters: [],
@@ -304,7 +304,7 @@ public class CalcultationExtensionsTests
                 (1m, 240m)
             ],
             changeFactor2: 1m);
-        newResource.Data.Quantity = 240m;
+        newResource.Quantity = 240m;
 
         Assert.True(ResourceService.AffectsCalculation(oldResource, newResource));
     }
@@ -320,7 +320,7 @@ public class CalcultationExtensionsTests
             [
                 (4m, 3m, 1m)
             ]);
-        oldResource.Data.Quantity = 10m;
+        oldResource.Quantity = 10m;
         oldResource.Data.Cost = 5m;
         oldResource.Data.BaseCost = 2m;
 
@@ -332,7 +332,7 @@ public class CalcultationExtensionsTests
             [
                 (4m, 4m, 1m)
             ]);
-        newResource.Data.Quantity = 10m;
+        newResource.Quantity = 10m;
         newResource.Data.Cost = 5m;
         newResource.Data.BaseCost = 2m;
 

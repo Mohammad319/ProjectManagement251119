@@ -100,7 +100,7 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                     l.Resource.Data.ChangeFactor2,
                     l.Resource.Data.CapWaste,
                     l.Resource.Data.BaseCost,
-                    l.Resource.Data.Unit ?? string.Empty,
+                    l.Resource.Unit ?? string.Empty,
                     l.Resource.IsActive
                 ))
                 .ToListAsync(ct);

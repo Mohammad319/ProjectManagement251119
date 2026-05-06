@@ -337,7 +337,6 @@ public sealed class TaskResourceSuggestionService(
                 var tenantLink = res.TenantLinks.FirstOrDefault();
                 var data = res.Data.Clone();
 
-                data.Quantity = link.Quantity;
                 data.Parameters = link.Parameters;
                 data.AddOns = link.AddOns;
                 data.Times = link.Times;
@@ -355,6 +354,7 @@ public sealed class TaskResourceSuggestionService(
                     ResourceSortId = tenantLink?.ResourceSortId,
                     AccountId = tenantLink?.AccountId,
                     SortOrder = res.SortOrder,
+                    Quantity = link.Quantity,
                     Data = data,
                     CostRole = res.CostRoles,
                 };

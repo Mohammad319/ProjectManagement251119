@@ -76,7 +76,7 @@
     <div class="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 pl-[52px]">
         @Row2Content
         <span class="text-sm font-semibold text-slate-800 dark:text-slate-100 whitespace-nowrap">
-            @FormatNumber(Task.TotalCost)<span class="opacity-70">/ @(!string.IsNullOrEmpty(Task.NewUnitCode) ? Task.NewUnitCode : Task.UnitCode)</span>
+            @FormatNumber(Task.TotalCost)<span class="opacity-70">/ @SelectedInputUnitCode</span>
         </span>
         <div class="w-[175px] shrink-0">
             <select @bind="Task.StatusId" class="w-full h-[25px] border border-gray-300 rounded px-2 text-[13px] leading-tight bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600">
@@ -131,7 +131,10 @@
     private string? _computeError;
     private string? _resultText;
     private string? _resultFullText;
-    private string ResultUnit => !string.IsNullOrWhiteSpace(Task.NewUnitCode) ? Task.NewUnitCode : Task.UnitCode;
+    private string ResultUnit => Task.UnitCode;
+    private string SelectedInputUnitCode => string.IsNullOrWhiteSpace(Task.NewUnitCode)
+        ? Task.UnitCode
+        : Task.NewUnitCode;
     private void ToggleResources() => _showResources = !_showResources;
     private bool IsSummary(ResourceDto r) => r?.Id == SummaryId;
     private IEnumerable<ResourceDto> GetVisibleRows()
@@ -215,17 +218,25 @@
         StateHasChanged();
     }
 
-    private void Apply()
+    private async Task Apply()
     {
         _computeError = null;
         _resultText = null;
         try
         {
+            var inputUnit = SelectedInputUnitCode;
+            var taskUnit = Task.UnitCode!;
+            var rule = GetActiveConversionRule(inputUnit, taskUnit);
+
+            if (rule?.Params.Any(p => p.Source == ParamSource.Resource) == true && !Task.IsLoading)
+                await LoadingTask();
+
+            var parameters = BuildConversionParameters(rule);
             var value = Compute.ComputeOrThrow(
-                toUnit: Task.NewUnitCode!,
-                fromUnit: Task.UnitCode!,
+                toUnit: inputUnit,
+                fromUnit: taskUnit,
                 quantity: Task.Quantity ?? 0,
-                parameters: Task.ParameterValues);
+                parameters: parameters);
             _resultText = value.ToString("N3", CultureInfo.CurrentCulture);
             _resultFullText = value.ToString("G", CultureInfo.CurrentCulture);
 
@@ -239,6 +250,81 @@
             _computeError = ex.Message;
         }
     }
+
+    private static UnitRule? GetActiveConversionRule(string? inputUnit, string? taskUnit)
+    {
+        var from = UnitRulesCatalog.BuildKey(inputUnit ?? string.Empty);
+        var to = UnitRulesCatalog.BuildKey(taskUnit ?? string.Empty);
+
+        if (string.IsNullOrWhiteSpace(from) || string.IsNullOrWhiteSpace(to))
+            return null;
+
+        if (string.Equals(from, to, StringComparison.OrdinalIgnoreCase))
+            return null;
+
+        return UnitRulesCatalog.TryGet(from, to, out var rule) ? rule : null;
+    }
+
+    private IReadOnlyDictionary<ParamName, decimal> BuildConversionParameters(UnitRule? rule)
+    {
+        if (rule is null || rule.Params.All(p => p.Source == ParamSource.User))
+            return Task.ParameterValues;
+
+        var parameters = new Dictionary<ParamName, decimal>(Task.ParameterValues);
+        foreach (var param in rule.Params.Where(p => p.Source == ParamSource.Resource))
+        {
+            if (!parameters.ContainsKey(param.Key) && TryGetResourceParameter(param.Key, out var value))
+                parameters[param.Key] = value;
+        }
+
+        return parameters;
+    }
+
+    private bool TryGetResourceParameter(ParamName key, out decimal value)
+    {
+        value = default;
+        if (key != ParamName.Density)
+            return false;
+
+        foreach (var parameter in Task.Resources.SelectMany(r => r.Data.Parameters).Where(p => p.IsActive))
+        {
+            if (!IsDensityParameter(parameter.Name, parameter.Unit))
+                continue;
+
+            value = NormalizeDensityValue(parameter.Value, parameter.Unit);
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool IsDensityParameter(string? name, string? unit)
+    {
+        var normalizedName = NormalizeUnitToken(name);
+        var normalizedUnit = NormalizeUnitToken(unit);
+
+        return normalizedName.Contains("density", StringComparison.Ordinal)
+            || normalizedName.Contains("densitet", StringComparison.Ordinal)
+            || normalizedUnit.Contains("t/m3", StringComparison.Ordinal)
+            || normalizedUnit.Contains("ton/m3", StringComparison.Ordinal)
+            || normalizedUnit.Contains("kg/m3", StringComparison.Ordinal);
+    }
+
+    private static decimal NormalizeDensityValue(decimal value, string? unit)
+    {
+        var normalizedUnit = NormalizeUnitToken(unit);
+        return normalizedUnit.Contains("kg/m3", StringComparison.Ordinal)
+            ? value / 1000m
+            : value;
+    }
+
+    private static string NormalizeUnitToken(string? value)
+        => (value ?? string.Empty)
+            .Trim()
+            .ToLowerInvariant()
+            .Replace(" ", string.Empty)
+            .Replace("^", string.Empty)
+            .Replace("\u00b3", "3");
 
     public void RefreshBaseResources()
         => Compute.RefreshResources(Task.BaseResources, Task.Quantity, Task.ParameterValues);
@@ -284,10 +370,10 @@
                 ResourceSource = ResourceSource.Base,
                 CostStorageValue = totalStorageCost,
                 CostUserValue = totalUserCost,
+                Quantity = Task.Quantity ?? 0,
+                Unit = Task.UnitCode ?? string.Empty,
                 Data = new ProjectManagement.Shared.Base.Calculation.ResourceMetadata
                 {
-                    Unit = Task.UnitCode ?? string.Empty,
-                    Quantity = Task.Quantity ?? 0,
                     BaseCost = totalBaseCost,
                     Cost = totalCost,
                     CO2 = co2,

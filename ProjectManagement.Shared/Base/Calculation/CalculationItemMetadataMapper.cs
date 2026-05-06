@@ -6,7 +6,6 @@ namespace ProjectManagement.Shared.Base.Calculation
         {
             var clone = metadata?.Clone() ?? new TaskMetadata();
             clone.Note = NormalizeOptional(clone.Note);
-            clone.Unit = NormalizeOptional(clone.Unit);
             clone.BaseUnit = string.IsNullOrWhiteSpace(clone.BaseUnit) ? null : clone.BaseUnit.Trim();
             clone.Code = NormalizeOptional(clone.Code);
             clone.Responsible = NormalizeOptional(clone.Responsible);
@@ -18,7 +17,6 @@ namespace ProjectManagement.Shared.Base.Calculation
         public static TaskMetadata BuildTaskMetadata(
             TaskMetadata? metadata,
             string? note,
-            string? unit,
             string? code,
             bool isActive,
             TaskType type,
@@ -26,7 +24,6 @@ namespace ProjectManagement.Shared.Base.Calculation
         {
             var clone = CloneTaskMetadata(metadata);
             clone.Note = NormalizeOptional(note);
-            clone.Unit = NormalizeOptional(unit);
             clone.Code = NormalizeOptional(code);
             clone.IsActive = isActive;
             clone.Type = type;
@@ -39,7 +36,6 @@ namespace ProjectManagement.Shared.Base.Calculation
         {
             var clone = metadata?.Clone() ?? new ResourceMetadata();
             clone.Note = NormalizeOptional(clone.Note);
-            clone.Unit = NormalizeOptional(clone.Unit);
             clone.QuantityParam = NormalizeOptional(clone.QuantityParam);
             clone.Normalize();
             return clone;
@@ -47,12 +43,10 @@ namespace ProjectManagement.Shared.Base.Calculation
 
         public static ResourceMetadata BuildResourceMetadata(
             ResourceMetadata? metadata,
-            string? note,
-            string? unit)
+            string? note)
         {
             var clone = CloneResourceMetadata(metadata);
             clone.Note = NormalizeOptional(note);
-            clone.Unit = NormalizeOptional(unit);
             clone.Normalize();
             return clone;
         }

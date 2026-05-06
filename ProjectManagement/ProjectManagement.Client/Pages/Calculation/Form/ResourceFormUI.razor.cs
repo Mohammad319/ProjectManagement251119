@@ -65,7 +65,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
             var quantityParam = ResourceUpdate.Data.QuantityParam;
 
             if (quantityParam == ConstValues.FixedQ)
-                return ResourceUpdate.Data.Quantity;
+                return ResourceUpdate.Quantity;
 
             if (!string.IsNullOrEmpty(quantityParam))
                 return Calc?.QuanityList?.FirstOrDefault(x => x.Name == quantityParam)?.Quantity;
@@ -89,14 +89,14 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
         private void SyncResolvedResourceQuantity()
         {
             var resolvedQuantity = GetResolvedResourceQuantity();
-            ResourceUpdate.Data.Quantity = resolvedQuantity;
+            ResourceUpdate.Quantity = resolvedQuantity ?? 0m;
             ResourceUpdate.ActuallyQuantity = resolvedQuantity ?? 0m;
         }
 
         private void SyncResolvedResourceAndTimes()
         {
             SyncResolvedResourceQuantity();
-            ResourceUpdate.Data.SyncTimesWithQuantity();
+            ResourceUpdate.Data.SyncTimesWithQuantity(ResourceUpdate.Quantity);
         }
 
         private void AddAddOn()
@@ -104,7 +104,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
             ResourceUpdate.Data.AddOns.Add(new ResourceAddon
             {
                 Name = string.Empty,
-                Unit = ResourceUpdate.Data.Unit,
+                Unit = ResourceUpdate.Unit,
                 Factor = 1m,
                 Type = QuantityResourceAddon.Multiplication,
                 Cost = 0m,
@@ -170,8 +170,8 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
             ResourceUpdate.Data.CapWaste = CapWaste;
             ResourceUpdate.Data.CO2 = CO2;
             ResourceUpdate.Data.Cost = Cost;
-            ResourceUpdate.Data.Quantity = FixedQ.HasValue ? FixedQ.Value : null;
-            ResourceUpdate.Data.Unit = Unit;
+            ResourceUpdate.Quantity = FixedQ ?? 0m;
+            ResourceUpdate.Unit = Unit;
             ResourceUpdate.ResourceTypeId = resTypeId;
             ResourceUpdate.ResourceSortId = resTypeSortId;
             NormalizeCapFromTaskState();
@@ -325,7 +325,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
         bool Refresh = false;
         private EditContext? editContext;
         private ValidationMessageStore? messageStore;
-        private FieldIdentifier FixedQuantityField => new(ResourceUpdate.Data, nameof(ResourceMetadata.Quantity));
+        private FieldIdentifier FixedQuantityField => new(ResourceUpdate, nameof(ResourcePostDTO.Quantity));
 
         private bool IsFixedQuantityRequired()
             => string.Equals(ResourceUpdate.Data.QuantityParam, ConstValues.FixedQ, StringComparison.OrdinalIgnoreCase);
@@ -335,7 +335,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
 
         private void ValidateFixedQuantity()
         {
-            if (IsFixedQuantityRequired() && !ResourceUpdate.Data.Quantity.HasValue)
+            if (IsFixedQuantityRequired() && ResourceUpdate.Quantity == 0m)
             {
                 messageStore?.Add(
                     FixedQuantityField,
@@ -358,12 +358,13 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
 
         private void HandleFieldChanged(object? sender, FieldChangedEventArgs args)
         {
-            if (ReferenceEquals(args.FieldIdentifier.Model, ResourceUpdate.Data)
+            if ((ReferenceEquals(args.FieldIdentifier.Model, ResourceUpdate.Data)
+                    || ReferenceEquals(args.FieldIdentifier.Model, ResourceUpdate))
                 && IsResourceQuantityDriver(args.FieldIdentifier.FieldName))
             {
                 SyncResolvedResourceAndTimes();
 
-                if (args.FieldIdentifier.FieldName is nameof(ResourceMetadata.Quantity) or nameof(ResourceMetadata.QuantityParam))
+                if (args.FieldIdentifier.FieldName is nameof(ResourcePostDTO.Quantity) or nameof(ResourceMetadata.QuantityParam))
                 {
                     ClearFixedQuantityValidation();
                     editContext?.NotifyValidationStateChanged();
@@ -375,12 +376,12 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
             if (args.FieldIdentifier.Model is ResourceTime
                 && args.FieldIdentifier.FieldName == nameof(ResourceTime.Percentage))
             {
-                ResourceUpdate.Data.SyncTimesWithQuantity();
+                ResourceUpdate.Data.SyncTimesWithQuantity(ResourceUpdate.Quantity);
             }
         }
 
         private static bool IsResourceQuantityDriver(string fieldName)
-            => fieldName is nameof(ResourceMetadata.Quantity)
+            => fieldName is nameof(ResourcePostDTO.Quantity)
                 or nameof(ResourceMetadata.QuantityParam)
                 or nameof(ResourceMetadata.ChangeFactor1)
                 or nameof(ResourceMetadata.ChangeFactor2)

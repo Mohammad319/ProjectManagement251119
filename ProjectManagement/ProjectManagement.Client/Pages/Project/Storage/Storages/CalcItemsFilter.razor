@@ -140,15 +140,15 @@
                     @if (Post.Type == CalculationItemType.task){
                         foreach (var task in (List as IEnumerable<TaskListMVVM> ?? Enumerable.Empty<TaskListMVVM>())) {
                         <tr class="@UiStyles.ClassTask">
-                                <td><span @onclick="() => AddAsync(task.Id, task.Metadata.Quantity)" class="@(Post.Items.Any(x => x.Id == task.Id) ? "text-danger" : "text-primary")">
+                                <td><span @onclick="() => AddAsync(task.Id, task.Quantity)" class="@(Post.Items.Any(x => x.Id == task.Id) ? "text-danger" : "text-primary")">
                                     @((MarkupString)(Post.Items.Any(x => x.Id == task.Id) ? Icons.Minus : Icons.Plus))
                     </span>
                 </td>
                                 <td>@task.Metadata.Code</td>
                                 <td><input type="checkbox" disabled checked="@task.Metadata.IsActive" /></td>
                                 <td>@task.Name</td>
-                                <td>@FormatNumber(task.Metadata.Quantity) / @FormatNumber(task.BaseCost)</td>
-                                <td>@task.Metadata.Unit</td>
+                                <td>@FormatNumber(task.Quantity) / @FormatNumber(task.BaseCost)</td>
+                                <td>@task.Unit</td>
                                 <td>@FormatNumber(task.Metadata.ChangeFactor1)</td>
                                 <td>@FormatNumber(task.Metadata.ChangeFactor2)</td>
                                 <td>@FormatNumber(task.Metadata.Cap)</td>

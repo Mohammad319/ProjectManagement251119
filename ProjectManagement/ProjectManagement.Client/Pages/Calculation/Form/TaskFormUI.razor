@@ -1,9 +1,11 @@
 @using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Client.Helper
 @using ProjectManagement.Client.Shared.Model.Project.Calculation;
 @using ProjectManagement.Client.Shared.Repositories.Calculation
 @using ProjectManagement.Shared.Base.Calculation
 @using ProjectManagement.Shared.DTO.Calculation
 @using Microsoft.Extensions.Localization
+@using System.Globalization
 @attribute [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
 @inherits AppComponentBase
 @implements IDisposable
@@ -80,7 +82,7 @@
                                          @bind-Value:set="(value) => ChangeQuantityParam(value)">
                                 @if (!ParentIsOnlyCodeText)
                                 {
-                                    <option>@ResourceLoc.DependsOnParentItem</option>
+                                    <option value="">@ResourceLoc.DependsOnParentItem</option>
                                 }
                                 <option value="@ConstValues.FixedQ">@CalcResource.fixedQ</option>
                                 @if (Calc.QuanityList != null)
@@ -94,11 +96,14 @@
 
                             @if (TaskUpdate.Metadata.QuantityParam == ConstValues.FixedQ)
                             {
-                                <TrimmedNumberInput TValue="decimal?" @bind-Value="TaskUpdate.Metadata.BaseQuantity" class="@InputClass" />
+                                <TrimmedNumberInput TValue="decimal?"
+                                                    @bind-Value="TaskUpdate.Metadata.BaseQuantity"
+                                                    @bind-Value:after="SyncConvertedQuantity"
+                                                    class="@InputClass" />
                             }
                             else
                             {
-                                <input type="number" value="@TaskUpdate.ActuallyQuantity" disabled />
+                                <input type="number" value="@SourceQuantityText" class="@DisabledInputClass" disabled />
                             }
                         </div>
                     }
@@ -106,7 +111,10 @@
                     {
                         <div class="grid items-start gap-1.5 grid-cols-[7.25rem_minmax(0,1fr)]">
                             <input class="@DisabledInputClass" value="@CalcResource.fixedQ" disabled />
-                            <TrimmedNumberInput TValue="decimal?" @bind-Value="TaskUpdate.Metadata.BaseQuantity" class="@InputClass" />
+                            <TrimmedNumberInput TValue="decimal?"
+                                                @bind-Value="TaskUpdate.Metadata.BaseQuantity"
+                                                @bind-Value:after="SyncConvertedQuantity"
+                                                class="@InputClass" />
                         </div>
                     }
                 </div>
@@ -121,7 +129,7 @@
                 {
                     <div class="min-w-0 md:col-span-4 xl:col-span-3">
                         <label class="@LabelClass">@(TaskUpdate.Metadata.ConversionParameters.Any() ? CalcResource.newUnit : CalcResource.unit)</label>
-                        <InputText @bind-Value="TaskUpdate.Metadata.Unit" class="@InputClass" />
+                        <InputText @bind-Value="TaskUpdate.Unit" class="@InputClass" />
                     </div>
                 }
               
@@ -140,22 +148,28 @@
                     <label class="@LabelClass">@CalcResource.changeFactor2 </label>
                     @if (TaskUpdate.Metadata.ConversionParameters.Any())
                     {
-                        <TrimmedNumberInput TValue="decimal" @bind-Value="TaskUpdate.Metadata.ChangeFactor2" class="@DisabledInputClass" disabled />
+                        <TrimmedNumberInput TValue="decimal"
+                                            @bind-Value="TaskUpdate.Metadata.ChangeFactor2"
+                                            class="@DisabledInputClass"
+                                            disabled />
                     }
                     else
                     {
-                        <TrimmedNumberInput TValue="decimal" @bind-Value="TaskUpdate.Metadata.ChangeFactor2" class="@InputClass" />
+                        <TrimmedNumberInput TValue="decimal"
+                                            @bind-Value="TaskUpdate.Metadata.ChangeFactor2"
+                                            @bind-Value:after="SyncConvertedQuantity"
+                                            class="@InputClass" />
                     }
                 </div>
                 @if (TaskUpdate.Metadata.ConversionParameters.Any())
                 {
                     <div class="min-w-0 md:col-span-3 xl:col-span-2">
                         <label class="@LabelClass">@ResourceLoc.convertedQuantity</label>
-                        <input type="number" value="@(TaskUpdate.Metadata.ChangeFactor2 * TaskUpdate.Metadata.BaseQuantity)" class="@InputClass" />
+                        <input type="number" value="@ConvertedQuantityText" class="@DisabledInputClass" disabled />
                     </div>
                     <div class="min-w-0 md:col-span-4 xl:col-span-3">
                         <label class="@LabelClass">@CalcResource.newUnit</label>
-                        <InputText @bind-Value="TaskUpdate.Metadata.Unit" class="@InputClass" />
+                        <InputText @bind-Value="TaskUpdate.Unit" class="@InputClass" />
                     </div>
                 }
                 @if (ShowTaskCapInput || true)
@@ -458,6 +472,10 @@
     private bool ShowExpandedTaskQuantity => !HasTaskAbove || TaskUpdate.Metadata.QuantityParam == ConstValues.FixedQ;
     private bool ShowTaskCapInput => CanEditTaskCap(Task?.Resources);
     private FieldIdentifier BaseQuantityField => new(TaskUpdate.Metadata, nameof(TaskMetadata.BaseQuantity));
+    private decimal? SourceQuantity => ResolveSourceQuantity(TaskUpdate);
+    private decimal? ConvertedQuantity => ResolveConvertedQuantity(TaskUpdate);
+    private string SourceQuantityText => FormatQuantity(SourceQuantity);
+    private string ConvertedQuantityText => FormatQuantity(ConvertedQuantity);
 
     void NewSP()
     {
@@ -468,11 +486,9 @@
         EnsureBaseQuantity(p);
 
         if (p.Metadata.ConversionParameters.Any() && string.IsNullOrWhiteSpace(p.Metadata.BaseUnit))
-            p.Metadata.BaseUnit = p.Metadata.Unit;
+            p.Metadata.BaseUnit = p.Unit;
 
-        if (p.Metadata.ConversionParameters.Any())
-            p.Metadata.SyncConversionFactorFromParameters();
-
+        RecalculateConversionFactor(p);
         PostList.Insert(0, p);
         SetActiveTask(p);
     }
@@ -514,11 +530,13 @@
 
         TaskUpdate.Metadata.QuantityParam = qp;
         if (string.IsNullOrEmpty(qp))
-            TaskUpdate.Metadata.Quantity = null;
+            TaskUpdate.Quantity = ResolveParentQuantity(TaskUpdate);
         else if (qp != ConstValues.FixedQ)
-            TaskUpdate.Metadata.Quantity = Calc.QuanityList?.FirstOrDefault(x => x.Name == qp)?.Quantity;
+            TaskUpdate.Quantity = Calc.QuanityList?.FirstOrDefault(x => x.Name == qp)?.Quantity;
         else if (!TaskUpdate.Metadata.BaseQuantity.HasValue)
-            TaskUpdate.Metadata.BaseQuantity = TaskUpdate.Metadata.Quantity;
+            TaskUpdate.Metadata.BaseQuantity = TaskUpdate.Quantity;
+
+        SyncConvertedQuantity();
     }
 
     private static void EnsureConversionParameters(TaskPostDTO task)
@@ -528,8 +546,73 @@
 
     private static void EnsureBaseQuantity(TaskPostDTO task)
     {
-        if (!task.Metadata.BaseQuantity.HasValue && task.Metadata.Quantity.HasValue)
-            task.Metadata.BaseQuantity = task.Metadata.Quantity;
+        if (!task.Metadata.BaseQuantity.HasValue && task.Quantity.HasValue)
+            task.Metadata.BaseQuantity = task.Quantity;
+    }
+
+    private decimal? ResolveParentQuantity(TaskPostDTO task)
+    {
+        if (!task.ParentTaskId.HasValue || task.ParentTaskId <= 0)
+            return null;
+
+        if (Calc?.TaskById?.TryGetValue(task.ParentTaskId.Value, out var indexedParent) == true)
+            return indexedParent?.Quantity;
+
+        return Calc?.Tasks?.FirstOrDefault(item => item.Id == task.ParentTaskId.Value)?.Quantity;
+    }
+
+    private decimal? ResolveSourceQuantity(TaskPostDTO task)
+    {
+        var metadata = task.Metadata;
+        if (metadata.Type == TaskType.CodeName || task.OnlyCodeText)
+            return null;
+
+        if (string.Equals(metadata.QuantityParam, ConstValues.FixedQ, StringComparison.OrdinalIgnoreCase))
+            return metadata.BaseQuantity ?? task.Quantity;
+
+        if (!string.IsNullOrWhiteSpace(metadata.QuantityParam))
+            return Calc.QuanityList?.FirstOrDefault(x => x.Name == metadata.QuantityParam)?.Quantity
+                ?? task.Quantity;
+
+        return ResolveParentQuantity(task) ?? metadata.BaseQuantity ?? task.Quantity;
+    }
+
+    private static decimal ResolveConversionFactor(TaskMetadata metadata) => metadata.ChangeFactor2;
+
+    private decimal? ResolveConvertedQuantity(TaskPostDTO task)
+    {
+        var sourceQuantity = ResolveSourceQuantity(task);
+        if (!sourceQuantity.HasValue)
+            return null;
+
+        var factor = task.Metadata.ChangeFactor1 * ResolveConversionFactor(task.Metadata);
+        return Math.Round(sourceQuantity.Value * factor, 3, MidpointRounding.AwayFromZero);
+    }
+
+    private void SyncConvertedQuantity() => SyncConvertedQuantity(TaskUpdate);
+
+    private void SyncConvertedQuantity(TaskPostDTO task)
+    {
+        var metadata = task.Metadata;
+        var sourceQuantity = ResolveSourceQuantity(task);
+        var hasParameters = metadata.ConversionParameters is { Count: > 0 };
+
+        if (hasParameters)
+        {
+            NormalizeConversionUnits(task);
+            metadata.BaseQuantity = sourceQuantity;
+
+            if (string.IsNullOrWhiteSpace(metadata.BaseUnit))
+                metadata.BaseUnit = task.Unit;
+
+            task.Quantity = ResolveConvertedQuantity(task);
+            return;
+        }
+
+        if (string.Equals(metadata.QuantityParam, ConstValues.FixedQ, StringComparison.OrdinalIgnoreCase))
+            task.Quantity = metadata.BaseQuantity;
+        else
+            task.Quantity = sourceQuantity;
     }
 
     private void AddConversionParameter()
@@ -541,10 +624,10 @@
         EnsureConversionParameters(TaskUpdate);
 
         if (!TaskUpdate.Metadata.BaseQuantity.HasValue)
-            TaskUpdate.Metadata.BaseQuantity = TaskUpdate.Metadata.Quantity;
+            TaskUpdate.Metadata.BaseQuantity = TaskUpdate.Quantity;
 
         if (string.IsNullOrWhiteSpace(TaskUpdate.Metadata.BaseUnit))
-            TaskUpdate.Metadata.BaseUnit = TaskUpdate.Metadata.Unit;
+            TaskUpdate.Metadata.BaseUnit = TaskUpdate.Unit;
 
         TaskUpdate.Metadata.ConversionParameters.Add(new TaskConversionParameter
         {
@@ -554,7 +637,7 @@
         });
 
         RecalculateConversionFactor();
-        if (ch) TaskUpdate.Metadata.Unit = string.Empty;
+        if (ch) TaskUpdate.Unit = string.Empty;
     }
     private void RemoveConversionParameter(int index)
     {
@@ -569,42 +652,46 @@
             TaskUpdate.Metadata.BaseUnit = string.Empty;
 
         RecalculateConversionFactor();
+        SyncConvertedQuantity();
     }
 
     private void RecalculateConversionFactor()
-    {
-        if (TaskUpdate.Metadata.ConversionParameters is not { Count: > 0 })
-            return;
+        => RecalculateConversionFactor(TaskUpdate);
 
-        TaskUpdate.Metadata.SyncConversionFactorFromParameters();
+    private void RecalculateConversionFactor(TaskPostDTO task)
+    {
+        if (task.Metadata.ConversionParameters is { Count: > 0 })
+            task.Metadata.SyncConversionFactorFromParameters();
+
+        SyncConvertedQuantity(task);
     }
-    private static void SyncQuantityForSave(TaskPostDTO task)
+
+    private void SyncQuantityForSave(TaskPostDTO task)
     {
-        if (task.Metadata is null)
+        var metadata = task.Metadata;
+        if (metadata is null)
             return;
 
-        var metadata = task.Metadata;
         var hasParameters = metadata.ConversionParameters is { Count: > 0 };
+        var sourceQuantity = ResolveSourceQuantity(task);
 
         if (hasParameters)
         {
-            if (!metadata.BaseQuantity.HasValue)
-                metadata.BaseQuantity = metadata.Quantity;
+            metadata.BaseQuantity = sourceQuantity;
 
             if (string.IsNullOrWhiteSpace(metadata.BaseUnit))
-                metadata.BaseUnit = metadata.Unit;
+                metadata.BaseUnit = task.Unit;
 
             metadata.SyncConversionFactorFromParameters();
-
-            var baseQty = metadata.BaseQuantity ?? 0m;
-            metadata.Quantity = Math.Round(
-                baseQty * metadata.ChangeFactor1 * metadata.ChangeFactor2,
-                3,
-                MidpointRounding.AwayFromZero);
+            task.Quantity = ResolveConvertedQuantity(task);
         }
         else if (string.Equals(metadata.QuantityParam, ConstValues.FixedQ, StringComparison.OrdinalIgnoreCase))
         {
-            metadata.Quantity = metadata.BaseQuantity;
+            task.Quantity = metadata.BaseQuantity;
+        }
+        else
+        {
+            task.Quantity = sourceQuantity;
         }
     }
     protected async override Task OnInitializedAsync()
@@ -615,7 +702,8 @@
         EnsureConversionParameters(TaskUpdate);
         EnsureBaseQuantity(TaskUpdate);
         if (TaskUpdate.Metadata.ConversionParameters.Any() && string.IsNullOrWhiteSpace(TaskUpdate.Metadata.BaseUnit))
-            TaskUpdate.Metadata.BaseUnit = TaskUpdate.Metadata.Unit;
+            TaskUpdate.Metadata.BaseUnit = TaskUpdate.Unit;
+        NormalizeConversionUnits(TaskUpdate);
         RecalculateConversionFactor();
         ConfigureEditContext();
 
@@ -639,7 +727,7 @@
         {
             po.Metadata.Type = TaskType.CodeName;
             po.Metadata.QuantityParam = string.Empty;
-            po.Metadata.Quantity = null;
+            po.Quantity = null;
         }
         else po.Metadata.Type = TaskType.Task;
 
@@ -687,6 +775,16 @@
         if (!ShowTaskCapInput)
             task.Metadata.Cap = null;
     }
+
+    private static void NormalizeConversionUnits(TaskPostDTO task)
+    {
+        if (task.Metadata.ConversionParameters is not { Count: > 0 })
+            return;
+
+        var units = TaskConversionUnitDisplayHelper.Resolve(task.Metadata, task.Unit);
+        task.Metadata.BaseUnit = units.BaseUnit;
+        task.Unit = units.ConvertedUnit;
+    }
     private string HeaderGridClass =>
     TaskUpdate.OnlyCodeText
         ? "grid grid-cols-[max-content_150px_minmax(260px,1fr)] items-end justify-start gap-x-1.5 gap-y-1"
@@ -703,6 +801,11 @@
         //     .GroupBy(resource => resource.Data.CapWaste)
         //     .Any(group => group.Count() >= 2);
     }
+
+    private static string FormatQuantity(decimal? value)
+        => value.HasValue
+            ? value.Value.ToString("0.###", CultureInfo.InvariantCulture)
+            : string.Empty;
 
     private void ConfigureEditContext()
     {

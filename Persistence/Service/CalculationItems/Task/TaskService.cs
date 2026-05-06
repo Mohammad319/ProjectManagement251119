@@ -294,11 +294,8 @@ namespace Persistence.Service.CalculationItems.Task
                         root.UpdateMetadata(m => m.QuantityParam = PMValuesConst.FixedQ);
                     }
 
-                    root.UpdateMetadata(m =>
-                    {
-                        m.Quantity = item.Value;
-                        m.IsOH = isOH;
-                    });
+                    root.SetQuantity(item.Value);
+                    root.SetIsOH(isOH);
 
                     root.SetCalculation(targetCalcId);
                     root.SetSortOrder(maxOrder.Value);
@@ -512,8 +509,8 @@ namespace Persistence.Service.CalculationItems.Task
                 {
                     IsOH = dto.Metadata.IsOH,
                     Type = TaskType.CodeName,
-                    Quantity = null,
                 };
+                dto.Quantity = null;
             }
 
             task.Update(dto);

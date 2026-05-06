@@ -15,12 +15,8 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
                 ParentTaskId = task.TaskId,
                 StatusId = task.StatusId,
                 OpportunityId = task.OpportunityId,
-                Note = task.Note,
                 Quantity = task.Quantity,
                 Unit = task.Unit,
-                ChangeFactor1 = task.ChangeFactor1,
-                ChangeFactor2 = task.ChangeFactor2,
-                Cap = task.Cap,
                 IsActive = task.Metadata.IsActive,
                 Code = task.Code,
                 Type = task.Type,
@@ -54,10 +50,6 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
             set
             {
                 _metadata = CalculationItemMetadataMapper.CloneTaskMetadata(value);
-                _quantity ??= _metadata.Quantity;
-                if (string.IsNullOrWhiteSpace(_unit))
-                    _unit = _metadata.Unit ?? string.Empty;
-                SyncMetadataQuantityUnit();
             }
         }
 
@@ -68,22 +60,14 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public decimal? BaseQuantity => Metadata.BaseQuantity;
         public decimal? Quantity
         {
-            get => _quantity ?? _metadata?.Quantity;
-            set
-            {
-                _quantity = value;
-                SyncMetadataQuantityUnit();
-            }
+            get => _quantity;
+            set => _quantity = value;
         }
 
         public string Unit
         {
-            get => string.IsNullOrWhiteSpace(_unit) ? _metadata?.Unit ?? string.Empty : _unit;
-            set
-            {
-                _unit = value ?? string.Empty;
-                SyncMetadataQuantityUnit();
-            }
+            get => _unit;
+            set => _unit = value ?? string.Empty;
         }
         public decimal ChangeFactor1 => Metadata.ChangeFactor1;
         public decimal ChangeFactor2 => Metadata.ChangeFactor2;
@@ -113,8 +97,8 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 
         [JsonIgnore]
         public decimal PriceQ =>
-            (Metadata.Quantity.HasValue && Metadata.Quantity.Value > 0)
-                ? (this.GetComputedApriceTotally() / Metadata.Quantity.Value)
+            (_quantity.HasValue && _quantity.Value > 0)
+                ? (this.GetComputedApriceTotally() / _quantity.Value)
                 : 0;
 
         [JsonIgnore] public double? TotalCO2 => this.GetComputedTotalCO2();
@@ -122,7 +106,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 
         // هذه بقيت “خفيفة” (ما فيها LINQ)
         [JsonIgnore] public decimal PriceSub => Metadata.PriceSubDB ?? Math.Round(PriceQ);
-        [JsonIgnore] public decimal PriceSubTotal => Metadata.Quantity.HasValue ? PriceSub * Metadata.Quantity.Value : 0;
+        [JsonIgnore] public decimal PriceSubTotal => _quantity.HasValue ? PriceSub * _quantity.Value : 0;
         [JsonIgnore] public decimal Diff => PriceSubTotal - this.GetComputedApriceTotally();
 
         private static decimal TaxFactor(decimal taxPercent) => 1m + (taxPercent / 100m);
@@ -152,11 +136,11 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
             return Id == other.Id &&
                    Ui.CollSpan == other.Ui.CollSpan &&
                    (Metadata?.IsActive == other.Metadata?.IsActive) &&
-                   (Metadata?.Quantity == other.Metadata?.Quantity);
+                   (Quantity == other.Quantity);
         }
 
         public override int GetHashCode() =>
-            HashCode.Combine(Id, Ui.CollSpan, Metadata?.IsActive, Metadata?.Quantity);
+            HashCode.Combine(Id, Ui.CollSpan, Metadata?.IsActive, Quantity);
 
         public TaskListMVVM()
         {
@@ -189,11 +173,5 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public int? StatusId { get; set; }
         public int? OpportunityId { get; set; }
 
-        private void SyncMetadataQuantityUnit()
-        {
-            _metadata ??= new TaskMetadata();
-            _metadata.Quantity = _quantity;
-            _metadata.Unit = _unit ?? string.Empty;
-        }
     }
 }

@@ -11,6 +11,7 @@ using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Client.Shared.Repositories.Calculation;
 using ProjectManagement.Client.Shared.ResourceFiles;
 using ProjectManagement.Client.Shared.ResourceFiles.Calculation;
+using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.Project;
 
 namespace ProjectManagement.Client.Services.Calculation
@@ -28,6 +29,7 @@ namespace ProjectManagement.Client.Services.Calculation
         void ShowTaskForm(TaskListMVVM model);
         void ShowResourceForm(ResourceListMVVM model);
         void ShowResourceSuggestions(TaskListMVVM task);
+        void ShowResourceSuggestions(IEnumerable<TaskListMVVM> tasks);
         void ShowImportDialog();
         void ShowTemplateDialog();
         void ShowTaskReorderDialog(TaskListMVVM? task = null);
@@ -160,7 +162,15 @@ namespace ProjectManagement.Client.Services.Calculation
                 DialogButtonsHelper.CreateSaveCancelButtons(ResourceFormUI.DialogFormId));
         }
 
-        public void ShowResourceSuggestions(TaskListMVVM task) =>
+        public void ShowResourceSuggestions(TaskListMVVM task)
+        {
+            var selectedTasks = GetSelectedTasksForSuggestion(task);
+            if (selectedTasks.Count > 1)
+            {
+                ShowResourceSuggestions(selectedTasks);
+                return;
+            }
+
             dialogService.ShowComponent<TaskResourceSuggestionsDialog>(
                 $"Suggest resources ({task.Name} ({CalcResource.code}: {task.Code}) ({CalcResource.quantity}: {task.Quantity}) ({CalcResource.unit}: {task.Unit}))",
                 Icons.NewResource,
@@ -169,6 +179,63 @@ namespace ProjectManagement.Client.Services.Calculation
                     [nameof(TaskResourceSuggestionsDialog.TaskItem)] = task 
                 },
                 DialogSize.ExtraLarge);
+        }
+
+        public void ShowResourceSuggestions(IEnumerable<TaskListMVVM> tasks)
+        {
+            var calculation = CurrentCalculation;
+            if (calculation is null)
+                return;
+
+            var taskList = tasks
+                .Where(CanSuggestResourcesForTask)
+                .DistinctBy(x => x.Id)
+                .ToList();
+
+            if (taskList.Count == 0)
+                return;
+
+            if (taskList.Count == 1)
+            {
+                ShowResourceSuggestions(taskList[0]);
+                return;
+            }
+
+            dialogService.ShowComponent<AllTasksTopSuggestionsDialog>(
+                $"Top Resource Suggestions ({taskList.Count})",
+                Icons.NewResource,
+                new Dictionary<string, object>
+                {
+                    [nameof(AllTasksTopSuggestionsDialog.CalcModel)] = calculation,
+                    [nameof(AllTasksTopSuggestionsDialog.Tasks)] = taskList,
+                },
+                DialogSize.FullScreen);
+        }
+
+        private List<TaskListMVVM> GetSelectedTasksForSuggestion(TaskListMVVM task)
+        {
+            var calculation = CurrentCalculation;
+            if (calculation is null
+                || !interactionState.IsSelected(CalculationItemType.task, task.Id))
+                return [task];
+
+            var tasks = new List<TaskListMVVM>();
+            foreach (var selected in interactionState.SelectedItems)
+            {
+                if (calculation.TryGetTask(selected.Id, out var selectedTask)
+                    && selectedTask is not null
+                    && CanSuggestResourcesForTask(selectedTask))
+                {
+                    tasks.Add(selectedTask);
+                }
+            }
+
+            return tasks.Count == 0 ? [task] : tasks;
+        }
+
+        private static bool CanSuggestResourcesForTask(TaskListMVVM task)
+            => task.Metadata.Type != TaskType.CodeName
+                && (task.Tasks == null || task.Tasks.Count == 0);
 
         public void ShowImportDialog() =>
             dialogService.ShowComponent<CSVUI>(ResourceApp.importFromFile, Icons.ImportFromFile, null, DialogSize.ExtraLarge);

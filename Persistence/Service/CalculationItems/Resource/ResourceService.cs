@@ -59,7 +59,7 @@ namespace Persistence.Service.CalculationItems.Resource
                 {
                     copy.ClearCrossCalculationState(resetQuantityParam: true);
                     if (valueById.TryGetValue(sourceId, out var v))
-                        copy.UpdateMetadata(m => m.Quantity = v);
+                        copy.SetQuantity(v);
                 }
                 else
                 {

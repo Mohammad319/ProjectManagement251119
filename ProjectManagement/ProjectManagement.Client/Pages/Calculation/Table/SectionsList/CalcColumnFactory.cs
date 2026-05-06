@@ -120,7 +120,7 @@ public static class CalcColumnFactory
             },
             [NetColumnId.Unit] = new()
             {
-                TaskRender = (b, t) => TableRenderHelpers.RenderTextTd(b, t.Unit),
+                TaskRender = (b, t) => TableRenderHelpers.RenderTextTd(b, TaskConversionUnitDisplayHelper.Resolve(t.Metadata, t.Unit).ConvertedUnit),
                 ResRender = (b, r) => TableRenderHelpers.RenderTextTd(b, r.Unit)
             },
             [NetColumnId.Cost] = new()

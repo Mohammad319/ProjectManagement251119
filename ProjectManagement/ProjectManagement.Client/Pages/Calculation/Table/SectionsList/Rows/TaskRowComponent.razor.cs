@@ -27,7 +27,7 @@ public partial class TaskRowComponent : CalculationSelectableRowComponentBase
 
     protected override CalculationItemType SelectionItemType => CalculationItemType.task;
     protected override int SelectionItemId => Task.Id;
-    protected override decimal? SelectionQuantity => Task.Metadata?.Quantity;
+    protected override decimal? SelectionQuantity => Task.Quantity;
 
     private string ResolvedColor => Task.Type == TaskType.CodeName
         ? (Colors?.TaskCodeName ?? TemplateConstBase.TaskCodeName)

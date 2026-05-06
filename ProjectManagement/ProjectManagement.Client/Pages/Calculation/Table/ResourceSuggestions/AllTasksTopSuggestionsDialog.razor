@@ -410,6 +410,7 @@
 
 @code {
     [Parameter, EditorRequired] public CalculationMVVM CalcModel { get; set; } = default!;
+    [Parameter] public IReadOnlyList<TaskListMVVM>? Tasks { get; set; }
 
     private bool _showSystem = true;
     private bool _showTenant = true;
@@ -604,6 +605,13 @@
 
     private List<TaskListMVVM> GetLeafTasksInOrder()
     {
+        if (Tasks is { Count: > 0 })
+            return Tasks
+                .Where(task => task.Type != TaskType.CodeName && task.Tasks.Count == 0)
+                .DistinctBy(task => task.Id)
+                .OrderBy(task => task.SortOrder)
+                .ToList();
+
         var result = new List<TaskListMVVM>();
         foreach (var root in CalcModel.RootTasks)
             CollectLeaves(root, result);

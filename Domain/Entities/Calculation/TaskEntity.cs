@@ -118,7 +118,6 @@ namespace Domain.Entities.Calculation
             Metadata = CalculationItemMetadataMapper.BuildTaskMetadata(
                 dto.Metadata,
                 dto.Note,
-                null,
                 dto.Code,
                 dto.IsActive,
                 dto.Type,
@@ -132,10 +131,7 @@ namespace Domain.Entities.Calculation
 
         public TaskMetadata GetMetadataSnapshot()
         {
-            var snapshot = CalculationItemMetadataMapper.BuildTaskMetadata(_metadata, Note, Unit, Code, IsActive, Type, IsOH);
-            snapshot.Unit = Unit ?? string.Empty;
-            snapshot.Quantity = Quantity;
-            return snapshot;
+            return CalculationItemMetadataMapper.BuildTaskMetadata(_metadata, Note, Code, IsActive, Type, IsOH);
         }
 
         public void UpdateMetadata(Action<TaskMetadata> update)
@@ -148,6 +144,12 @@ namespace Domain.Entities.Calculation
         }
 
         public void SetIsOH(bool isOH) => UpdateMetadata(x => x.IsOH = isOH);
+
+        public void SetQuantity(decimal? value)
+        {
+            Quantity = NormalizeQuantity(value);
+            RefreshNormalizedTextSv();
+        }
 
         public void SetSortOrder(int sortOrder)
         {
@@ -210,14 +212,10 @@ namespace Domain.Entities.Calculation
             var snapshot = NormalizeMetadata(metadata);
             _metadata = snapshot;
             Note = NormalizeOptional(snapshot.Note);
-            Unit ??= NormalizeOptional(snapshot.Unit);
             Code = NormalizeOptional(snapshot.Code);
             IsActive = snapshot.IsActive;
             Type = snapshot.Type;
             IsOH = snapshot.IsOH;
-            Quantity ??= NormalizeQuantity(snapshot.Quantity);
-            snapshot.Unit = string.Empty;
-            snapshot.Quantity = null;
         }
 
         private static TaskMetadata NormalizeMetadata(TaskMetadata? metadata)

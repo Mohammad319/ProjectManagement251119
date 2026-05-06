@@ -8,6 +8,22 @@ namespace ProjectManagement.Tests;
 public class TaskCardTests
 {
     [Fact]
+    public void SelectedInputUnitCode_WhenNewUnitIsEmpty_FallsBackToTaskUnit()
+    {
+        var task = new ProjectTaskDto
+        {
+            UnitCode = "m3",
+            NewUnitCode = string.Empty
+        };
+        var component = new TaskCard();
+        SetTask(component, task);
+
+        var selectedUnit = GetSelectedInputUnitCode(component);
+
+        Assert.Equal("m3", selectedUnit);
+    }
+
+    [Fact]
     public void EnsureUncontrollableSummary_WhenTaskIsControllable_DoesNotCopyResultResourcesIntoBaseResources()
     {
         var task = new ProjectTaskDto
@@ -32,10 +48,18 @@ public class TaskCardTests
 
     private static void InvokeEnsureUncontrollableSummary(TaskCard component)
     {
-        var method = typeof(TaskCard).GetMethod("EnsureUncontrollableSummary", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        var method = typeof(TaskCard).GetMethod("EnsureUncontrollableSummary", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
         Assert.NotNull(method);
 
         method.Invoke(component, null);
+    }
+
+    private static string GetSelectedInputUnitCode(TaskCard component)
+    {
+        var property = typeof(TaskCard).GetProperty("SelectedInputUnitCode", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        Assert.NotNull(property);
+
+        return Assert.IsType<string>(property.GetValue(component));
     }
 
     private static void SetTask(TaskCard component, ProjectTaskDto task)
@@ -50,11 +74,11 @@ public class TaskCardTests
     {
         Id = id,
         Name = name,
+        Unit = "m",
+        Quantity = 2m,
         Data = new ResourceMetadata
         {
-            Unit = "m",
-            Cost = 10m,
-            Quantity = 2m
+            Cost = 10m
         }
     };
 }

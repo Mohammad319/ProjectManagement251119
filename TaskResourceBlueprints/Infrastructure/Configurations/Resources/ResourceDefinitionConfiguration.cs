@@ -16,6 +16,9 @@ public class ResourceDefinitionConfiguration : IEntityTypeConfiguration<Resource
         b.Property(x => x.Name)
             .HasMaxLength(Lengths.DisplayName);
 
+        b.Property(x => x.Unit)
+            .HasMaxLength(30);
+
         b.Property(e => e.CostRoles)
             .HasJsonListComparer<RoleDTO>();
 

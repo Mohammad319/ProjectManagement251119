@@ -25,7 +25,7 @@ public class TaskResourceAssignmentDto
 
     public decimal? CalcCap()
     {
-        decimal? q = Resource.Data.Quantity;
+        decimal? q = Resource.Quantity;
         if (q.HasValue)
             foreach (var item in CapRole)
                 if (q.Value >= item.Min && q.Value <= item.Max)

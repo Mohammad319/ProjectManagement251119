@@ -50,8 +50,7 @@ namespace Application.Extention
         {
             res.Data = CalculationItemMetadataMapper.BuildResourceMetadata(
                 res.Data,
-                res.Note,
-                null);
+                res.Note);
 
             return ResourceEntity.Create(res, res.SortOrder, taskID > 0 ? taskID : null);
         }

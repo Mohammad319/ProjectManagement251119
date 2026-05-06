@@ -4,6 +4,7 @@ using System.Reflection;
 using Microsoft.AspNetCore.Components.Forms;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Constant;
+using ProjectManagement.Shared.DTO.Calculation;
 
 namespace ProjectManagement.Client.Shared.Components;
 
@@ -72,7 +73,7 @@ internal sealed class RequiredFieldCssClassProvider : FieldCssClassProvider
                     StringComparison.Ordinal)) == true)
             return true;
 
-        return modelType == typeof(ResourceMetadata) && fieldName == nameof(ResourceMetadata.Quantity)
+        return modelType == typeof(ResourcePostDTO) && fieldName == nameof(ResourcePostDTO.Quantity)
             || modelType == typeof(TaskMetadata) && fieldName == nameof(TaskMetadata.BaseQuantity);
     }
 

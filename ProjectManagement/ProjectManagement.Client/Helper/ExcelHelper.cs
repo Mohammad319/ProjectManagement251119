@@ -140,10 +140,10 @@ namespace ProjectManagement.Client.Helper
                         Name = !string.IsNullOrWhiteSpace(importedName) ? importedName : "Task",
                         Tasks = new(),
                         Colspan = false,
+                        Unit = importedUnit,
                         Metadata = new TaskMetadata
                         {
                             Code = importedCode,
-                            Unit = importedUnit,
                             Type = TaskType.Task,
                             IsOH = isOH
                         }
@@ -155,19 +155,19 @@ namespace ProjectManagement.Client.Helper
                     if (string.IsNullOrWhiteSpace(unit) && string.IsNullOrWhiteSpace(priceStr) && string.IsNullOrWhiteSpace(quantityStr))
                     {
                         task.Metadata.Type = TaskType.CodeName;
-                        task.Metadata.Quantity = null;
+                        task.Quantity = null;
                     }
                     else if (unit == "-" && quantityStr == "-" && priceStr == "-")
                     {
                         task.Metadata.Type = TaskType.Minus;
-                        task.Metadata.Quantity = belopStr == "-" ? 0 : 1;
+                        task.Quantity = belopStr == "-" ? 0 : 1;
                     }
                     else
                     {
                         task.Metadata.QuantityParam = ConstValues.FixedQ;
                         _ = TryReadDecimal(quantityStr, out decimal quantity);
                         _ = TryReadDecimal(priceStr, out decimal price);
-                        task.Metadata.Quantity = quantity;
+                        task.Quantity = quantity;
                         task.Metadata.PriceSubDB = price;
                     }
 

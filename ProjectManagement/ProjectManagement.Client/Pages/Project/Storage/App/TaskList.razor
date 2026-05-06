@@ -372,25 +372,39 @@ else if (_tasks != null)
     public async Task<bool> SaveAsync()
     {
         List<TaskPostDTO> Tasks = new();
-        Tasks = _tasks.Where(x => x.Added).Select(Task => new TaskPostDTO
+        Tasks = _tasks.Where(x => x.Added).Select(Task =>
+        {
+            var hasConversionParameters = Task.ParameterValues.Count > 0;
+            var baseQuantity = Task.Quantity;
+            var conversionFactor = ResolveTaskConversionFactor(Task);
+            var quantity = hasConversionParameters && baseQuantity.HasValue
+                ? Math.Round(baseQuantity.Value * Task.ChangeFactor1 * conversionFactor, 3, MidpointRounding.AwayFromZero)
+                : baseQuantity;
+            var unit = Task.UnitCode ?? string.Empty;
+            var baseUnit = !string.IsNullOrWhiteSpace(Task.NewUnitCode)
+                ? Task.NewUnitCode
+                : Task.UnitCode;
+
+            return new TaskPostDTO
             {
                 Id = Task.Id,
                 Name = Task.DisplayName,
                 Order = Task.SortOrder,
                 StatusId = Task.StatusId,
+                Quantity = quantity,
+                Unit = unit,
 
                 Metadata = new ProjectManagement.Shared.Base.Calculation.TaskMetadata
                 {
                     QuantityParam = ConstValues.FixedQ,
-                    Quantity = (Task.Quantity ?? 0),
+                    BaseQuantity = hasConversionParameters ? baseQuantity : null,
                     ChangeFactor1 = Task.ChangeFactor1,
-                    ChangeFactor2 = Task.ChangeFactor2,
+                    ChangeFactor2 = conversionFactor,
                     IsActive = Task.IsActive,
                     Type = ProjectManagement.Shared.Base.Calculation.TaskType.Task,
                     Code = Task.Code,
                     UpperNote = Task.UpperNote,
-                    Unit = !string.IsNullOrEmpty(Task.NewUnitCode) ? Task.NewUnitCode : Task.UnitCode,
-                    BaseUnit = Task.UnitCode ?? string.Empty,
+                    BaseUnit = hasConversionParameters ? baseUnit ?? string.Empty : string.Empty,
                     Note = Task.Note,
                     IsOH = Calc.OHFactors,
                     ConversionParameters = Task.ParameterValues
@@ -398,7 +412,7 @@ else if (_tasks != null)
                         {
                             Name = kv.Key.ToString(),
                             Value = kv.Value,
-                            Unit = Task.UnitCode ?? string.Empty
+                            Unit = ResolveTaskParameterUnit(kv.Key, Task.UnitCode)
                         }).ToList(),
                 },
                 Resources = Task.BaseResources.Concat(Task.ResultResources).Where(r => r.IsAdded).Select(res => new ResourcePostDTO
@@ -409,6 +423,8 @@ else if (_tasks != null)
                     AccountId = res.AccountId,
                     IsActive = res.Active,
                     StatusId = res.StatusId,
+                    Quantity = res.Quantity ?? 0m,
+                    Unit = res.Unit,
                     Data = new ResourceMetadata()
                     {
                         Note = res.Data.Note,
@@ -418,7 +434,6 @@ else if (_tasks != null)
                         CO2 = res.Data.CO2,
                         Cost = res.Data.Cost,
                         BaseCost = res.Data.BaseCost,
-                        Unit = res.Data.Unit,
                         Parameters = res.Data.Parameters,
                         AddOns = res.Data.AddOns,
                         Times = res.Data.Times,
@@ -426,7 +441,8 @@ else if (_tasks != null)
                     ResType = res.ResType,
                     Name = AppState.StorageApp.Name ? res.NameUserValue : res.Name,
                 }).ToList()
-            }).ToList();
+            };
+        }).ToList();
         foreach (var ts in Tasks)
         {
             ts.Id = 0;
@@ -468,4 +484,21 @@ else if (_tasks != null)
             _loading = false;
         }
     }
+
+    private static decimal ResolveTaskConversionFactor(ProjectTaskDto task)
+    {
+        if (task.ParameterValues.Count == 0)
+            return task.ChangeFactor2;
+
+        decimal product = 1m;
+        foreach (var value in task.ParameterValues.Values)
+            product *= value;
+
+        return Math.Round(product, 4, MidpointRounding.AwayFromZero);
+    }
+
+    private static string ResolveTaskParameterUnit(ParamName parameter, string? fallbackUnit)
+        => parameter is ParamName.Thickness or ParamName.Width or ParamName.Length
+            ? "m"
+            : fallbackUnit ?? string.Empty;
 }

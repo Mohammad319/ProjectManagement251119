@@ -51,13 +51,13 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
             var baseCalc = taskQuantity.Value * resource.Data.ChangeFactor1 * resource.Data.ChangeFactor2;
 
             if (resource.HasWast && resource.Data.CapWaste != 0)
-                resource.Data.Quantity = baseCalc * (1m + resource.Data.CapWaste / 100m);
+                resource.Quantity = baseCalc * (1m + resource.Data.CapWaste / 100m);
             else if (resource.HasCap && resource.Data.CapWaste != 0)
-                resource.Data.Quantity = baseCalc / resource.Data.CapWaste;
+                resource.Quantity = baseCalc / resource.Data.CapWaste;
             else
-                resource.Data.Quantity = baseCalc;
+                resource.Quantity = baseCalc;
 
-            ApplyResourceTimedCost(resource.Data);
+            ApplyResourceTimedCost(resource.Data, resource.Quantity);
         }
     }
 
@@ -65,8 +65,8 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
     {
         foreach (var res in resources)
         {
-            if (!res.Data.Quantity.HasValue) continue;
-            var q = res.Data.Quantity.Value;
+            if (!res.Quantity.HasValue) continue;
+            var q = res.Quantity.Value;
             foreach (var item in res.CostRole)
                 if (q >= item.Min && q <= item.Max && item.Value.HasValue)
                 {
@@ -80,9 +80,9 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
     {
         foreach (var res in resources)
         {
-            if (!res.HasCap || !res.Data.Quantity.HasValue)
+            if (!res.HasCap || !res.Quantity.HasValue)
                 continue;
-            var q = res.Data.Quantity.Value;
+            var q = res.Quantity.Value;
             foreach (var item in res.CapRole)
                 if (q >= item.Min && q <= item.Max && item.Value.HasValue)
                 {
@@ -107,6 +107,14 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
             throw new ArgumentException(SharedText("SelectUnitsFirst", "Select the conversion units first."));
         if (quantity <= 0)
             throw new ArgumentException(SharedText("InvalidQuantity", "Invalid quantity."));
+
+        if (string.Equals(
+            UnitRulesCatalog.BuildKey(toUnit),
+            UnitRulesCatalog.BuildKey(fromUnit),
+            StringComparison.OrdinalIgnoreCase))
+        {
+            return quantity;
+        }
 
         if (!UnitRulesCatalog.TryGet(toUnit, fromUnit, out var rule))
             throw new ArgumentException(string.Format(
@@ -191,22 +199,22 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
             4, MidpointRounding.AwayFromZero);
     }
 
-    private static void ApplyResourceTimedCost(ResourceMetadata data)
+    private static void ApplyResourceTimedCost(ResourceMetadata data, decimal? quantity)
     {
-        data.SyncTimesWithQuantity();
+        data.SyncTimesWithQuantity(quantity);
         var times = data.Times;
         if (times is null || times.Count == 0)
             return;
 
-        var quantity = data.Quantity ?? 0m;
-        if (quantity <= 0m)
+        var resolvedQuantity = quantity ?? 0m;
+        if (resolvedQuantity <= 0m)
         {
             data.Cost = 0m;
             return;
         }
 
         data.Cost = Math.Round(
-            times.Sum(t => t.Quantity * t.Cost) / quantity,
+            times.Sum(t => t.Quantity * t.Cost) / resolvedQuantity,
             2, MidpointRounding.AwayFromZero);
     }
 

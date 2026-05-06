@@ -38,8 +38,6 @@ public ResourceTypesEnum ResType { get; set; }
         /// ✅ مصدر واحد للحقيقة لكل بيانات الحساب (Quantity/Cost/Factors/...)
         /// </summary>
         private ResourceMetadata? data = new();
-        private decimal? quantity;
-        private string unit = string.Empty;
 
         public ResourceMetadata Data
         {
@@ -48,14 +46,7 @@ public ResourceTypesEnum ResType { get; set; }
                 data ??= new ResourceMetadata();
                 return data;
             }
-            set
-            {
-                data = CalculationItemMetadataMapper.CloneResourceMetadata(value);
-                quantity ??= data.Quantity;
-                if (string.IsNullOrWhiteSpace(unit))
-                    unit = data.Unit ?? string.Empty;
-                SyncDataQuantityUnit();
-            }
+            set { data = CalculationItemMetadataMapper.CloneResourceMetadata(value); }
         }
 
         public int? OfferId { get; set; }
@@ -67,10 +58,6 @@ public ResourceTypesEnum ResType { get; set; }
 
         public int SortOrder { get; set; }
 
-        // -----------------------------
-        // ✅ Proxy properties (منع التكرار/التناقض بين الحقول و Data)
-        // -----------------------------
-
         [MaxLength(FieldLengths.Comment)]
         public string? Note
         {
@@ -79,30 +66,10 @@ public ResourceTypesEnum ResType { get; set; }
         }
 
         [MaxLength(FieldLengths.Unit)]
-        public string? Unit
-        {
-            get
-            {
-                var value = string.IsNullOrWhiteSpace(unit) ? data?.Unit : unit;
-                return string.IsNullOrWhiteSpace(value) ? null : value;
-            }
-            set
-            {
-                unit = value ?? string.Empty;
-                SyncDataQuantityUnit();
-            }
-        }
+        public string? Unit { get; set; }
 
         [Required]
-        public decimal Quantity
-        {
-            get => quantity ?? data?.Quantity ?? 0m;
-            set
-            {
-                quantity = value;
-                SyncDataQuantityUnit();
-            }
-        }
+        public decimal Quantity { get; set; }
 
         public double? CO2
         {
@@ -144,21 +111,12 @@ public ResourceTypesEnum ResType { get; set; }
         [JsonIgnore] public bool IsAdded { get; set; }
         [JsonIgnore] public int? GroupId { get; set; } = null;
         [JsonIgnore] public List<ResourcePropertyBindDto> Properties { get; set; } = [];
-
-        private void SyncDataQuantityUnit()
-        {
-            data ??= new ResourceMetadata();
-            data.Quantity = quantity;
-            data.Unit = unit ?? string.Empty;
-        }
     }
 
     public class ResourceStorageListDTO : ResourceBase
     {
         public int Id { get; set; }
         public int GroupId { get; set; }
-        private decimal? quantity;
-        private string unit = string.Empty;
 
         private ResourceMetadata? data = new();
 
@@ -169,50 +127,18 @@ public ResourceTypesEnum ResType { get; set; }
                 data ??= new ResourceMetadata();
                 return data;
             }
-            set
-            {
-                data = CalculationItemMetadataMapper.CloneResourceMetadata(value);
-                quantity ??= data.Quantity;
-                if (string.IsNullOrWhiteSpace(unit))
-                    unit = data.Unit ?? string.Empty;
-                SyncDataQuantityUnit();
-            }
-        }
-        public decimal? Quantity
-        {
-            get => quantity ?? data?.Quantity;
-            set
-            {
-                quantity = value;
-                SyncDataQuantityUnit();
-            }
+            set { data = CalculationItemMetadataMapper.CloneResourceMetadata(value); }
         }
 
-        public string Unit
-        {
-            get => string.IsNullOrWhiteSpace(unit) ? data?.Unit ?? string.Empty : unit;
-            set
-            {
-                unit = value ?? string.Empty;
-                SyncDataQuantityUnit();
-            }
-        }
+        public decimal? Quantity { get; set; }
+        public string Unit { get; set; } = string.Empty;
 
         [JsonIgnore] public bool Colspan = false;
-
-        private void SyncDataQuantityUnit()
-        {
-            data ??= new ResourceMetadata();
-            data.Quantity = quantity;
-            data.Unit = unit ?? string.Empty;
-        }
     }
 
     public class ResourceListDTO : ResourceBase
     {
         public byte[] RowVersion { get; set; } = Array.Empty<byte>();
-        private decimal? quantity;
-        private string unit = string.Empty;
 
         private ResourceMetadata? data = new();
 
@@ -223,34 +149,11 @@ public ResourceTypesEnum ResType { get; set; }
                 data ??= new ResourceMetadata();
                 return data;
             }
-            set
-            {
-                data = CalculationItemMetadataMapper.CloneResourceMetadata(value);
-                quantity ??= data.Quantity;
-                if (string.IsNullOrWhiteSpace(unit))
-                    unit = data.Unit ?? string.Empty;
-                SyncDataQuantityUnit();
-            }
-        }
-        public decimal? Quantity
-        {
-            get => quantity ?? data?.Quantity;
-            set
-            {
-                quantity = value;
-                SyncDataQuantityUnit();
-            }
+            set { data = CalculationItemMetadataMapper.CloneResourceMetadata(value); }
         }
 
-        public string Unit
-        {
-            get => string.IsNullOrWhiteSpace(unit) ? data?.Unit ?? string.Empty : unit;
-            set
-            {
-                unit = value ?? string.Empty;
-                SyncDataQuantityUnit();
-            }
-        }
+        public decimal? Quantity { get; set; }
+        public string Unit { get; set; } = string.Empty;
 
         public int TaskId { get; set; }
         public int? OfferId { get; set; }
@@ -268,12 +171,5 @@ public ResourceTypesEnum ResType { get; set; }
         public string ResName { get; set; } = string.Empty;
         public string Sort { get; set; } = string.Empty;
         public List<ListOfferDTO> Offers { get; set; } = [];
-
-        private void SyncDataQuantityUnit()
-        {
-            data ??= new ResourceMetadata();
-            data.Quantity = quantity;
-            data.Unit = unit ?? string.Empty;
-        }
     }
 }

@@ -29,9 +29,9 @@
             <td class="p-1 text-sm text-gray-800 dark:text-gray-300">@task.Metadata.Code</td>
             <td class="p-1 text-sm text-gray-800 dark:text-gray-300"><input type="checkbox" disabled checked="@task.Metadata.IsActive" /></td>
             <td class="p-1 text-sm text-gray-800 dark:text-gray-300">@task.Name</td>
-            <td class="p-1 text-sm text-gray-800 dark:text-gray-300">@FormatNumber(task.Metadata.Quantity)</td>
+            <td class="p-1 text-sm text-gray-800 dark:text-gray-300">@FormatNumber(task.Quantity)</td>
             <td class="p-1 text-sm text-gray-800 dark:text-gray-300"></td>
-            <td class="p-1 text-sm text-gray-800 dark:text-gray-300">@task.Metadata.Unit</td>
+            <td class="p-1 text-sm text-gray-800 dark:text-gray-300">@task.Unit</td>
             <td class="p-1 text-sm text-gray-800 dark:text-gray-300">@FormatNumber(task.Metadata.ChangeFactor1) / @FormatNumber(task.Metadata.ChangeFactor2)</td>
             <td class="p-1 text-sm text-gray-800 dark:text-gray-300">@FormatNumber(task.Metadata.Cap)</td>
             <td class="p-1 text-sm text-gray-800 dark:text-gray-300"></td>

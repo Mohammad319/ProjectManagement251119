@@ -274,13 +274,13 @@ public class CalculationComponentRenderTests : BunitContext
         var task = new TaskListMVVM
         {
             Id = 42,
+            Quantity = 5,
             Resources = [],
             Tasks = []
         };
         task.Metadata = new()
         {
-            IsActive = true,
-            Quantity = 5
+            IsActive = true
         };
 
         var cut = Render<TaskRowComponent>(parameters => parameters
@@ -350,15 +350,15 @@ public class CalculationComponentRenderTests : BunitContext
         {
             Id = 8,
             Name = "Task with variables",
+            Quantity = 12,
+            Unit = "m2",
             Resources = [],
             Tasks = []
         };
         task.Metadata = new()
         {
             IsActive = true,
-            Quantity = 12,
             BaseQuantity = 3,
-            Unit = "m2",
             BaseUnit = "m",
             ConversionParameters =
             [
@@ -402,13 +402,13 @@ public class CalculationComponentRenderTests : BunitContext
         {
             Id = 11,
             Name = "Converted Task",
+            Quantity = 10m,
+            Unit = "m2",
             Resources = [],
             Tasks = []
         };
         task.Metadata = new()
         {
-            Quantity = 10m,
-            Unit = "m2",
             BaseQuantity = 100m,
             BaseUnit = "kg",
             ConversionParameters =
@@ -454,11 +454,11 @@ public class CalculationComponentRenderTests : BunitContext
         {
             Id = 12,
             TaskId = 3,
-            Active = true
+            Active = true,
+            Quantity = 2
         };
         resource.Data = new()
         {
-            Quantity = 2,
             UpperNote = []
         };
 
@@ -1002,14 +1002,14 @@ public class CalculationComponentRenderTests : BunitContext
         {
             Id = 1,
             Name = "Task 1",
+            Quantity = 3,
             Resources = [],
             Tasks = []
         };
         task.Metadata = new TaskMetadata
         {
             IsActive = true,
-            Code = "T-1",
-            Quantity = 3
+            Code = "T-1"
         };
 
         var resource = new ResourceListMVVM
@@ -1018,12 +1018,12 @@ public class CalculationComponentRenderTests : BunitContext
             TaskId = 1,
             Name = "Resource 1",
             Active = true,
+            Quantity = 2,
             Status = "Has Offer",
             StatusColor = "#00aa00"
         };
         resource.Data = new ResourceMetadata
         {
-            Quantity = 2,
             Cost = 10
         };
 
@@ -1037,14 +1037,14 @@ public class CalculationComponentRenderTests : BunitContext
             {
                 Id = 2,
                 Name = "Task 2",
+                Quantity = 4,
                 Resources = [],
                 Tasks = []
             };
             task2.Metadata = new TaskMetadata
             {
                 IsActive = true,
-                Code = "T-2",
-                Quantity = 4
+                Code = "T-2"
             };
 
             tasks.Add(task2);
@@ -1178,6 +1178,7 @@ public class CalculationComponentRenderTests : BunitContext
 
         public void ShowResourceForm(ResourceListMVVM model) { }
         public void ShowResourceSuggestions(TaskListMVVM task) { }
+        public void ShowResourceSuggestions(IEnumerable<TaskListMVVM> tasks) { }
         public void ShowImportDialog() { }
         public void ShowTemplateDialog() { }
         public void ShowTaskReorderDialog(TaskListMVVM? task = null) { }

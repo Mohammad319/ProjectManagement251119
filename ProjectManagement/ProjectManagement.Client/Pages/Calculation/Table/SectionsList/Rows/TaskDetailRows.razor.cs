@@ -30,9 +30,10 @@ public partial class TaskDetailRows
             if (metadata is null || parameters is not { Count: > 0 })
                 yield break;
 
-            var baseUnit = string.IsNullOrWhiteSpace(metadata.BaseUnit)
-                ? (metadata.Unit ?? string.Empty)
-                : metadata.BaseUnit;
+            var units = TaskConversionUnitDisplayHelper.Resolve(metadata, Task?.Unit);
+            var baseUnit = string.IsNullOrWhiteSpace(units.BaseUnit)
+                ? (Task?.Unit ?? string.Empty)
+                : units.BaseUnit;
 
             yield return new DetailLine
             {
@@ -53,10 +54,22 @@ public partial class TaskDetailRows
                     Kind = DetailKind.ConversionParameter,
                     Name = parameter.Name,
                     ChangeFactor2Text = FormatDecimal(parameter.Value),
-                    Unit = parameter.Unit
+                    Unit = ResolveConversionParameterUnit(parameter.Name, parameter.Unit)
                 };
             }
         }
+    }
+
+    private static string ResolveConversionParameterUnit(string? name, string? unit)
+    {
+        if (string.Equals(name, "Thickness", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(name, "Width", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(name, "Length", StringComparison.OrdinalIgnoreCase))
+        {
+            return "m";
+        }
+
+        return unit ?? string.Empty;
     }
 
     private void RenderDetailCells(RenderTreeBuilder builder, DetailLine line)

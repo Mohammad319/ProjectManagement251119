@@ -34,7 +34,7 @@ public class ResourceDto : ResourceDLBase
 
     [JsonIgnore]
     public decimal TotalCost =>
-        (Data.Cost * Data.Quantity.GetValueOrDefault()) + Data.BaseCost.GetValueOrDefault();
+        (Data.Cost * Quantity.GetValueOrDefault()) + Data.BaseCost.GetValueOrDefault();
 
     [JsonIgnore] public ResourceSource ResourceSource = ResourceSource.Base;
     [JsonIgnore] public bool IsAdded { get; set; }

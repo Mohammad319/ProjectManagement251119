@@ -28,8 +28,6 @@ public int? ParentTaskId { get; set; }
         // -----------------------------
 
         private TaskMetadata? data = new();
-        private decimal? quantity;
-        private string unit = string.Empty;
 
         public TaskMetadata Metadata
         {
@@ -38,14 +36,7 @@ public int? ParentTaskId { get; set; }
                 data ??= new TaskMetadata();
                 return data;
             }
-            set
-            {
-                data = CalculationItemMetadataMapper.CloneTaskMetadata(value);
-                quantity ??= data.Quantity;
-                if (string.IsNullOrWhiteSpace(unit))
-                    unit = data.Unit ?? string.Empty;
-                SyncMetadataQuantityUnit();
-            }
+            set => data = CalculationItemMetadataMapper.CloneTaskMetadata(value);
         }
 
         public string Note
@@ -54,26 +45,10 @@ public int? ParentTaskId { get; set; }
             set => Metadata.Note = value ?? string.Empty;
         }
 
-        public decimal? Quantity
-        {
-            get => quantity ?? data?.Quantity;
-            set
-            {
-                quantity = value;
-                SyncMetadataQuantityUnit();
-            }
-        }
+        public decimal? Quantity { get; set; }
 
         [MaxLength(25, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Unit
-        {
-            get => string.IsNullOrWhiteSpace(unit) ? data?.Unit ?? string.Empty : unit;
-            set
-            {
-                unit = value ?? string.Empty;
-                SyncMetadataQuantityUnit();
-            }
-        }
+        public string Unit { get; set; } = string.Empty;
 
         public decimal ChangeFactor1
         {
@@ -133,13 +108,6 @@ public int? ParentTaskId { get; set; }
         public List<ResourcePostDTO> Resources { get; set; } = [];
         public List<TaskPostDTO> Tasks { get; set; } = [];
         [JsonIgnore] public bool Colspan { get; set; }
-
-        private void SyncMetadataQuantityUnit()
-        {
-            data ??= new TaskMetadata();
-            data.Quantity = quantity;
-            data.Unit = unit ?? string.Empty;
-        }
     }
 
     public class TaskStorageDTO : TaskBase
@@ -167,8 +135,6 @@ public int? ParentTaskId { get; set; }
     public class TaskListDTO : TaskBase
     {
         private TaskMetadata? metadata = new();
-        private decimal? quantity;
-        private string unit = string.Empty;
 
         public TaskMetadata Metadata
         {
@@ -177,37 +143,14 @@ public int? ParentTaskId { get; set; }
                 metadata ??= new TaskMetadata();
                 return metadata;
             }
-            set
-            {
-                metadata = CalculationItemMetadataMapper.CloneTaskMetadata(value);
-                quantity ??= metadata.Quantity;
-                if (string.IsNullOrWhiteSpace(unit))
-                    unit = metadata.Unit ?? string.Empty;
-                SyncMetadataQuantityUnit();
-            }
+            set => metadata = CalculationItemMetadataMapper.CloneTaskMetadata(value);
         }
+
         public int Id { get; set; }
         public int? TaskId { get; set; }
         public byte[] RowVersion { get; set; } = Array.Empty<byte>();
-        public decimal? Quantity
-        {
-            get => quantity ?? metadata?.Quantity;
-            set
-            {
-                quantity = value;
-                SyncMetadataQuantityUnit();
-            }
-        }
-
-        public string Unit
-        {
-            get => string.IsNullOrWhiteSpace(unit) ? metadata?.Unit ?? string.Empty : unit;
-            set
-            {
-                unit = value ?? string.Empty;
-                SyncMetadataQuantityUnit();
-            }
-        }
+        public decimal? Quantity { get; set; }
+        public string Unit { get; set; } = string.Empty;
 
         public int? StatusId { get; set; }
         public string Status { get; set; } = string.Empty;
@@ -216,12 +159,5 @@ public int? ParentTaskId { get; set; }
         public int? OpportunityId { get; set; }
 
         public List<ResourceListDTO> Resources { get; set; } = [];
-
-        private void SyncMetadataQuantityUnit()
-        {
-            metadata ??= new TaskMetadata();
-            metadata.Quantity = quantity;
-            metadata.Unit = unit ?? string.Empty;
-        }
     }
 }

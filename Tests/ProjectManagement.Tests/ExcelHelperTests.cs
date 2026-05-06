@@ -43,6 +43,6 @@ public class ExcelHelperTests
 
         var task = Assert.Single(tasks);
         Assert.Equal(FieldLengths.Code, task.Metadata.Code.Length);
-        Assert.Equal(FieldLengths.Unit, task.Metadata.Unit.Length);
+        Assert.Equal(FieldLengths.Unit, task.Unit.Length);
     }
 }

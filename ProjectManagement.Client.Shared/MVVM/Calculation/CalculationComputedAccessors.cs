@@ -12,7 +12,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 
         public static double? GetComputedCO2PerQuantity(this TaskListMVVM task)
         {
-            var quantity = task.Metadata?.Quantity;
+            var quantity = task.Quantity;
             var totalCO2 = task.GetComputedTotalCO2();
 
             return totalCO2.HasValue && quantity.HasValue && quantity.Value > 0m

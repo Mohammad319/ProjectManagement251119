@@ -218,7 +218,7 @@ else
                         </td>
                         <!-- Unit / BaseCost / Cost / TotalCost -->
                         <td class="px-1 py-0.5">
-                            <input type="text" @bind="current.Data.Unit" class="@St" />
+                            <input type="text" @bind="current.Unit" class="@St" />
                         </td>
                         <td class="px-1 py-0.5">
                             <input type="text"
@@ -371,7 +371,7 @@ else
                                                                 <input class="@St" value="@FormatNumber(addOn.Factor)" readonly />
                                                             </td>
                                                             <td class="border border-slate-200 px-1 py-0.5 dark:border-slate-700">
-                                                                <input class="@St" value="@FormatNumber(addOn.Quantity(current.Data.Quantity.GetValueOrDefault()))" readonly />
+                                                                <input class="@St" value="@FormatNumber(addOn.Quantity(current.Quantity.GetValueOrDefault()))" readonly />
                                                             </td>
                                                             <td class="border border-slate-200 px-1 py-0.5 dark:border-slate-700">
                                                                 <input class="@St" value="@FormatNumber(addOn.Cost)" readonly />
@@ -684,7 +684,7 @@ else
             : field switch
             {
                 ResourceFieldBaseCost => FormatNullableNumber(resource.Data.BaseCost),
-                ResourceFieldQuantity => FormatNullableNumber(resource.Data.Quantity),
+                ResourceFieldQuantity => FormatNullableNumber(resource.Quantity),
                 ResourceFieldCost => FormatNumber(resource.Data.Cost),
                 ResourceFieldChangeFactor1 => FormatNumber(resource.Data.ChangeFactor1),
                 ResourceFieldChangeFactor2 => FormatNumber(resource.Data.ChangeFactor2),
@@ -700,7 +700,7 @@ else
                 resource.Data.BaseCost = value;
                 return true;
             case ResourceFieldQuantity:
-                resource.Data.Quantity = value;
+                resource.Quantity = value;
                 return true;
             case ResourceFieldCost when value.HasValue:
                 resource.Data.Cost = value.Value;

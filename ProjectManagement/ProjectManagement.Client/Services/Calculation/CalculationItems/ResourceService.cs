@@ -36,7 +36,6 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
             if (oldR.ResourceTypeId != newR.ResourceTypeId) return true;
             //if (oldR.ResourceSortId != newR.ResourceSortId) return true;
 
-            if (oldR.Data?.Quantity != newR.Data?.Quantity) return true;
             if (oldR.Data?.Cost != newR.Data?.Cost) return true;
             if (oldR.Data?.BaseCost != newR.Data?.BaseCost) return true;
             if (oldR.Data?.CapWaste != newR.Data?.CapWaste) return true;
@@ -109,9 +108,9 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
 
             var quantity = resource.Quantity ?? 0m;
             if (quantity <= 0m)
-                return GetEffectiveBaseUnitCost(resource.Data);
+                return GetEffectiveBaseUnitCost(resource.Data, quantity);
 
-            decimal totalVariable = quantity * GetEffectiveBaseUnitCost(resource.Data);
+            decimal totalVariable = quantity * GetEffectiveBaseUnitCost(resource.Data, quantity);
             var addOns = resource.Data.AddOns;
 
             if (addOns is not null)
@@ -123,17 +122,16 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
             return totalVariable / quantity;
         }
 
-        private static decimal GetEffectiveBaseUnitCost(ResourceMetadata? data)
+        private static decimal GetEffectiveBaseUnitCost(ResourceMetadata? data, decimal quantity)
         {
             if (data is null)
                 return 0m;
 
-            data.SyncTimesWithQuantity();
+            data.SyncTimesWithQuantity(quantity > 0m ? quantity : (decimal?)null);
             var times = data.Times;
             if (times is null || times.Count == 0)
                 return data.Cost;
 
-            var quantity = data.Quantity ?? 0m;
             if (quantity <= 0m)
                 return 0m;
 

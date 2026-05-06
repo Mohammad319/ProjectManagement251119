@@ -75,8 +75,8 @@
 
                     @if (ResourceUpdate.Data.QuantityParam == ConstValues.FixedQ)
                     {
-                        <TrimmedNumberInput TValue="decimal?"
-                                            @bind-Value="ResourceUpdate.Data.Quantity"
+                        <TrimmedNumberInput TValue="decimal"
+                                            @bind-Value="ResourceUpdate.Quantity"
                                             MaxFractionDigits="@QuantityFractionDigits"
                                             class="@InputClass" />
                     }
@@ -116,7 +116,7 @@
 
             <div class="min-w-0 md:col-span-4 xl:col-span-3">
                 <label class="@LabelClass">@CalcResource.unit</label>
-                <InputText @bind-Value="ResourceUpdate.Data.Unit" class="@InputClass" />
+                <InputText @bind-Value="ResourceUpdate.Unit" class="@InputClass" />
             </div>
 
             <div class="min-w-0 md:col-span-4 xl:col-span-2">
@@ -455,7 +455,7 @@
                             <input class="@DisabledInputClass" type="text" disabled value="@FormatNumericDisplay(ResourceUpdate.Data.Cost)" />
                         </td>
                         <td class="@TableCellClass min-w-[4rem]">
-                            <input class="@DisabledInputClass" type="text" disabled value="@ResourceUpdate.Data.Unit" />
+                            <input class="@DisabledInputClass" type="text" disabled value="@ResourceUpdate.Unit" />
                         </td>
                         <td class="@TableCellClass min-w-[4rem]">
                             <input class="@DisabledInputClass" type="text" disabled value="@FormatNumericDisplay(PrimaryAddOnBaseCost)" />
@@ -624,7 +624,7 @@
                                     </td>
                                     <td class="@TableCellClass min-w-[5rem]">
                                         <input class="@DisabledInputClass" disabled
-                                               value="@ResourceUpdate.Data.Unit" />
+                                               value="@ResourceUpdate.Unit" />
                                     </td>
                                     <td class="@TableCellClass w-12 text-right">
                                         <button type="button"
@@ -735,8 +735,8 @@
     {
         get
         {
-            var quantity = ResourceUpdate?.Data?.Quantity;
-            var unit = ResourceUpdate?.Data?.Unit;
+            var quantity = ResourceUpdate?.Quantity;
+            var unit = ResourceUpdate?.Unit;
 
             if (!quantity.HasValue)
                 return "-";
@@ -808,19 +808,19 @@
         ResourceUpdate.Data.Times.Add(new ResourceTime
         {
             Name = string.Empty,
-            Unit = ResourceUpdate.Data.Unit,
+            Unit = ResourceUpdate.Unit,
             Percentage = GetSuggestedTimePercentage(),
             Cost = 1
         }.SetResolvedQuantity(0));
 
-        ResourceUpdate.Data.SyncTimesWithQuantity();
+        ResourceUpdate.Data.SyncTimesWithQuantity(ResourceUpdate.Quantity);
     }
 
     private void RemoveTime(int index)
     {
         if (index < 0 || index >= ResourceUpdate.Data.Times.Count) return;
         ResourceUpdate.Data.Times.RemoveAt(index);
-        ResourceUpdate.Data.SyncTimesWithQuantity();
+        ResourceUpdate.Data.SyncTimesWithQuantity(ResourceUpdate.Quantity);
     }
 
     private decimal GetSuggestedTimePercentage()

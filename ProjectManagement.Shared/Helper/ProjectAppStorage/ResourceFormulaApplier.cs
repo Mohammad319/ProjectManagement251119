@@ -72,7 +72,7 @@ namespace ProjectManagement.Shared.Helper.ProjectAppStorage
             {
                 [BaseCost] = row.Data.BaseCost ?? 0m,
                 [Cost] = row.Data.Cost,
-                [Quantity] = row.Data.Quantity ?? 0m,
+                [Quantity] = row.Quantity ?? 0m,
                 [Cap] = capValue,
                 [Waste] = wasteValue,
                 [CapWaste] = row.Data.CapWaste,
@@ -119,7 +119,7 @@ namespace ProjectManagement.Shared.Helper.ProjectAppStorage
             // write back
             if (vars.TryGetValue(BaseCost, out var b)) row.Data.BaseCost = b;
             if (vars.TryGetValue(Cost, out var c)) row.Data.Cost = c;
-            if (vars.TryGetValue(Quantity, out var q)) row.Data.Quantity = q;
+            if (vars.TryGetValue(Quantity, out var q)) row.Quantity = q;
 
             if (vars.TryGetValue(Cap, out var cap)) row.Data.Cap = cap;
             if (vars.TryGetValue(Waste, out var waste)) row.Data.Waste = waste;
@@ -148,7 +148,7 @@ namespace ProjectManagement.Shared.Helper.ProjectAppStorage
                     row.Data.Cost = value; vars[Cost] = value; break;
 
                 case Quantity:
-                    row.Data.Quantity = value; vars[Quantity] = value; break;
+                    row.Quantity = value; vars[Quantity] = value; break;
 
                 // توافق: cap/waste تاريخيًا كانت تعني CapWaste
                 case Cap:

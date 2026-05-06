@@ -31,7 +31,7 @@
                     aria-label="@CalcResource.unit"
                     title="@CalcResource.unit"
                     class="h-[24px] w-full border border-gray-300 dark:border-gray-600 rounded px-1 py-0 text-[11px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    value="@Task.NewUnitCode"
+                    value="@SelectedUnitCode"
                     @onchange="OnUnitChanged">
                 <option value=""> --- </option>
                 @foreach (var to in unitOptions)
@@ -47,7 +47,8 @@
         {
             ("Thickness (m)", ParamName.Thickness, 0),
             ("Width (m)",     ParamName.Width,     1),
-            ("Length (m)",    ParamName.Length,    2)
+            ("Length (m)",    ParamName.Length,    2),
+            ("Density (t/m3)", ParamName.Density,  3)
         };
     }
 
@@ -83,12 +84,16 @@
     private readonly DimensionValueModel _dimensionValues = new();
     private string? _taskQuantityDraft;
     private readonly Dictionary<ParamName, string> _parameterDrafts = new();
+    private string SelectedUnitCode => string.IsNullOrWhiteSpace(Task.NewUnitCode)
+        ? Task.UnitCode
+        : Task.NewUnitCode;
 
     protected override void OnParametersSet()
     {
         _dimensionValues.Thickness = ReadParameterValue(ParamName.Thickness);
         _dimensionValues.Width = ReadParameterValue(ParamName.Width);
         _dimensionValues.Length = ReadParameterValue(ParamName.Length);
+        _dimensionValues.Density = ReadParameterValue(ParamName.Density);
     }
 
     // ========== تغيّر الوحدة ==========
@@ -102,15 +107,20 @@
 
     private List<string> GetUnitOptions()
     {
-        var toKey = UnitRulesCatalog.BuildKey(Task.UnitCode);
+        var unitCode = Task.UnitCode?.Trim() ?? string.Empty;
+        var toKey = UnitRulesCatalog.BuildKey(unitCode);
         if (string.IsNullOrWhiteSpace(toKey))
             return [];
 
-        return UnitRulesCatalog.Rules
+        var options = new List<string> { unitCode };
+        options.AddRange(UnitRulesCatalog.Rules
             .Where(kvp =>
                 string.Equals(UnitRulesCatalog.BuildKey(kvp.Key.To), toKey, StringComparison.OrdinalIgnoreCase) &&
                 !string.Equals(UnitRulesCatalog.BuildKey(kvp.Key.From), toKey, StringComparison.OrdinalIgnoreCase))
-            .Select(kvp => kvp.Key.From)
+            .Select(kvp => kvp.Key.From));
+
+        return options
+            .Where(unit => !string.IsNullOrWhiteSpace(unit))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
     }
@@ -130,6 +140,7 @@
             ParamName.Thickness => _dimensionValues.Thickness,
             ParamName.Width => _dimensionValues.Width,
             ParamName.Length => _dimensionValues.Length,
+            ParamName.Density => _dimensionValues.Density,
             _ => ReadParameterValue(name)
         };
 
@@ -139,6 +150,7 @@
             ParamName.Thickness => () => _dimensionValues.Thickness,
             ParamName.Width => () => _dimensionValues.Width,
             ParamName.Length => () => _dimensionValues.Length,
+            ParamName.Density => () => _dimensionValues.Density,
             _ => () => _dimensionValues.Thickness
         };
 
@@ -205,6 +217,9 @@
             case ParamName.Length:
                 _dimensionValues.Length = value;
                 break;
+            case ParamName.Density:
+                _dimensionValues.Density = value;
+                break;
         }
 
         if (value.HasValue)
@@ -239,5 +254,6 @@
         public decimal? Thickness { get; set; }
         public decimal? Width { get; set; }
         public decimal? Length { get; set; }
+        public decimal? Density { get; set; }
     }
 }

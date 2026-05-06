@@ -107,6 +107,12 @@ namespace ProjectManagement.Client.Services.Calculation
 
         public List<MenuItem> BuildTaskContextMenu(TaskListMVVM item, Action remove, Action duplicate)
         {
+            bool isMultiSelected = interactionState.SelectedItems.Count > 1
+                && interactionState.IsSelected(CalculationItemType.task, item.Id);
+
+            if (isMultiSelected)
+                return BuildMultiTaskContextMenu(item, remove);
+
             var list = new List<MenuItem>();
 
             if (item.Metadata.Type != TaskType.CodeName && (item.Tasks == null || item.Tasks.Count == 0))
@@ -157,7 +163,7 @@ namespace ProjectManagement.Client.Services.Calculation
                     () => interactionState.Copy(
                         folderState.Calculation?.Id ?? 0,
                         item.Id,
-                        item.Metadata?.Quantity ?? 0,
+                        item.Quantity ?? 0,
                         CalculationItemType.task)
                 ),
             ]);
@@ -191,6 +197,34 @@ namespace ProjectManagement.Client.Services.Calculation
 
             return list;
         }
+
+        private List<MenuItem> BuildMultiTaskContextMenu(TaskListMVVM item, Action remove) =>
+        [
+            NewMenuItem(
+                Icons.Delete,
+                ResourceApp.delete,
+                remove
+            ),
+            NewMenuItem(
+                Icons.Copy,
+                ResourceApp.copy,
+                () => interactionState.Copy(
+                    folderState.Calculation?.Id ?? 0,
+                    item.Id,
+                    item.Quantity ?? 0,
+                    CalculationItemType.task)
+            ),
+            NewMenuItem(
+                Icons.SaveCloud,
+                ResourceLoc.saveCloud,
+                () => tableCoordinator.ShowSaveToStorage(item)
+            ),
+            NewMenuItem(
+                Icons.NewResource,
+                "Suggest resources",
+                () => tableCoordinator.ShowResourceSuggestions(item)
+            ),
+        ];
 
         public List<MenuItem> BuildResourceContextMenu(
             ResourceListMVVM item,

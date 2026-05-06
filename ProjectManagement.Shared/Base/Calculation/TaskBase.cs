@@ -58,10 +58,6 @@ namespace ProjectManagement.Shared.Base.Calculation
         }
 
         public decimal? BaseQuantity { get; set; }
-        public decimal? Quantity { get; set; }
-
-        [MaxLength(25, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Unit { get; set; } = string.Empty;
 
         public decimal ChangeFactor1 { get; set; } = 1;
         public decimal ChangeFactor2 { get; set; } = 1;
@@ -93,8 +89,6 @@ namespace ProjectManagement.Shared.Base.Calculation
             WorkedQ = RoundQuantity(WorkedQ);
             BaseQuantity = BaseQuantity.HasValue ? RoundQuantity(BaseQuantity.Value) : null;
             BaseUnit = NormalizeText(BaseUnit);
-            Quantity = Quantity.HasValue ? RoundQuantity(Quantity.Value) : null;
-            Unit = NormalizeText(Unit);
             ChangeFactor1 = RoundFactor(ChangeFactor1);
             ChangeFactor2 = RoundFactor(ChangeFactor2);
 
@@ -112,9 +106,6 @@ namespace ProjectManagement.Shared.Base.Calculation
                 parameter.Value = RoundFactor(parameter.Value);
             }
 
-            if (!BaseQuantity.HasValue && Quantity.HasValue && QuantityParam == "FQ" && ConversionParameters.Count == 0)
-                BaseQuantity = Quantity;
-
             PriceProductionDB = PriceProductionDB.HasValue ? RoundMoney(PriceProductionDB.Value) : null;
             PriceSubDB = PriceSubDB.HasValue ? RoundMoney(PriceSubDB.Value) : null;
             PriceSubTaxDB = PriceSubTaxDB.HasValue ? RoundMoney(PriceSubTaxDB.Value) : null;
@@ -123,7 +114,6 @@ namespace ProjectManagement.Shared.Base.Calculation
 
             if (WorkedQ < 0m) WorkedQ = 0m;
             if (BaseQuantity.HasValue && BaseQuantity.Value < 0m) BaseQuantity = 0m;
-            if (Quantity.HasValue && Quantity.Value < 0m) Quantity = 0m;
             if (PriceProductionDB.HasValue && PriceProductionDB.Value < 0m) PriceProductionDB = 0m;
             if (PriceSubDB.HasValue && PriceSubDB.Value < 0m) PriceSubDB = 0m;
             if (PriceSubTaxDB.HasValue && PriceSubTaxDB.Value < 0m) PriceSubTaxDB = 0m;
@@ -168,8 +158,6 @@ namespace ProjectManagement.Shared.Base.Calculation
                         })]
                 },
                 BaseQuantity = BaseQuantity,
-                Quantity = Quantity,
-                Unit = Unit ?? string.Empty,
                 ChangeFactor1 = ChangeFactor1,
                 ChangeFactor2 = ChangeFactor2,
                 ActuallyQuantity = ActuallyQuantity,

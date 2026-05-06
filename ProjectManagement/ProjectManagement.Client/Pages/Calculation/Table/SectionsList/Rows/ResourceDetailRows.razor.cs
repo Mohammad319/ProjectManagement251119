@@ -31,7 +31,7 @@ public partial class ResourceDetailRows
 
     protected override void OnParametersSet()
     {
-        Resource?.Data?.SyncTimesWithQuantity();
+        Resource?.Data?.SyncTimesWithQuantity(Resource.Quantity);
     }
 
     private IEnumerable<DetailLine> DetailLines

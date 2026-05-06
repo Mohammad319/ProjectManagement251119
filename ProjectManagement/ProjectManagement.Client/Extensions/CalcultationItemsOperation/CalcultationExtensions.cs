@@ -130,7 +130,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
                     }
                 }
 
-                var quantity = t.Metadata?.Quantity;
+                var quantity = t.Quantity;
                 decimal netQ = quantity.HasValue && quantity.Value > 0
                     ? netTot / quantity.Value
                     : 0;
@@ -278,7 +278,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
                 if (resList is null || resList.Count == 0)
                     continue;
 
-                var taskQty = task.Metadata?.Quantity;
+                var taskQty = task.Quantity;
                 var taskCap = task.Metadata?.Cap;
                 bool taskIsOH = task.Metadata?.IsOH == true;
                 bool taskBranchActive = !activeTaskBranches.TryGetValue(task.Id, out var branchActive) || branchActive;
@@ -473,12 +473,10 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
 
             if (meta.Type == TaskType.CodeName)
             {
-                meta.Quantity = null;
+                task.Quantity = null;
             }
             else
             {
-                meta.SyncConversionFactorFromParameters();
-
                 decimal? baseQuantity = null;
                 var hasConversionParameters = meta.ConversionParameters is { Count: > 0 };
 
@@ -487,7 +485,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
                     if (string.Equals(meta.QuantityParam, ConstValues.FixedQ, StringComparison.OrdinalIgnoreCase))
                     {
                         // المهمة تعتمد على قيمة المستخدم المباشرة
-                        baseQuantity = meta.BaseQuantity ?? meta.Quantity;
+                        baseQuantity = meta.BaseQuantity ?? task.Quantity;
                     }
                     else if (qIndex.TryGetValue(meta.QuantityParam, out var param))
                     {
@@ -498,7 +496,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
                     {
                         // fallback
                         meta.QuantityParam = ConstValues.FixedQ;
-                        baseQuantity = meta.BaseQuantity ?? meta.Quantity;
+                        baseQuantity = meta.BaseQuantity ?? task.Quantity;
                     }
                 }
                 else if (parentQuantity.HasValue)
@@ -509,19 +507,20 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
                 else
                 {
                     // fallback للمهمة العليا
-                    baseQuantity = meta.BaseQuantity ?? meta.Quantity;
+                    baseQuantity = meta.BaseQuantity ?? task.Quantity;
                 }
 
                 if (hasConversionParameters)
                 {
                     // نحفظ الكمية الأساسية كما هي قبل الحساب
                     meta.BaseQuantity = baseQuantity;
+                    meta.SyncConversionFactorFromParameters();
 
                     if (string.IsNullOrWhiteSpace(meta.BaseUnit))
-                        meta.BaseUnit = meta.Unit;
+                        meta.BaseUnit = task.Unit;
                 }
 
-                meta.Quantity = baseQuantity.HasValue
+                task.Quantity = baseQuantity.HasValue
                     ? Math.Round(
                         baseQuantity.Value * meta.ChangeFactor1 * meta.ChangeFactor2,
                         3,
@@ -532,7 +531,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
             if (task.Tasks is null || task.Tasks.Count == 0)
                 return;
 
-            var nextParent = meta.Quantity ?? parentQuantity;
+            var nextParent = task.Quantity ?? parentQuantity;
             for (int i = 0; i < task.Tasks.Count; i++)
                 CalcTaskVariablesRecursive(task.Tasks[i], qIndex, nextParent);
         }
@@ -559,7 +558,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
             {
                 if (qIndex.TryGetValue(resource.QuantityParam, out var matched))
                 {
-                    data.Quantity = matched.Quantity;
+                    resource.Quantity = matched.Quantity;
                 }
                 else
                 {
@@ -572,14 +571,14 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
                 var capWaste = effectiveCapWaste;
 
                 if (resource.HasWast && capWaste != 0)
-                    data.Quantity = baseCalc * (1 + capWaste / 100);
+                    resource.Quantity = baseCalc * (1 + capWaste / 100);
                 else if (resource.HasCap && capWaste != 0)
-                    data.Quantity = baseCalc / capWaste;
+                    resource.Quantity = baseCalc / capWaste;
                 else
-                    data.Quantity = baseCalc;
+                    resource.Quantity = baseCalc;
             }
 
-            ApplyResourceTimedCost(data);
+            ApplyResourceTimedCost(data, resource.Quantity);
         }
 
         private static decimal ResolveEffectiveCapWaste(ResourceListMVVM resource, decimal? taskCap)
@@ -603,15 +602,15 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
             data.ChangeFactor1 = RoundFactor(product);
         }
 
-        private static void ApplyResourceTimedCost(ResourceMetadata data)
+        private static void ApplyResourceTimedCost(ResourceMetadata data, decimal? quantity)
         {
-            data.SyncTimesWithQuantity();
+            data.SyncTimesWithQuantity(quantity);
             var times = data.Times;
             if (times is null || times.Count == 0)
                 return;
 
-            var quantity = data.Quantity ?? 0m;
-            if (quantity <= 0m)
+            var resolvedQuantity = quantity ?? 0m;
+            if (resolvedQuantity <= 0m)
             {
                 data.Cost = 0m;
                 return;
@@ -621,7 +620,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
             for (int i = 0; i < times.Count; i++)
                 total += times[i].Quantity * times[i].Cost;
 
-            data.Cost = RoundMoney(total / quantity);
+            data.Cost = RoundMoney(total / resolvedQuantity);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -631,5 +630,6 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static decimal RoundFactor(decimal value) =>
             Math.Round(value, 4, MidpointRounding.AwayFromZero);
+
     }
 }

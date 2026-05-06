@@ -3,14 +3,12 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.Web.Virtualization;
 using Microsoft.JSInterop;
 using ProjectManagement.Client.Helper;
+using ProjectManagement.Client.Services.Calculation;
 using ProjectManagement.Client.Services.Calculation.CalculationItems;
 using ProjectManagement.Client.Services.Folder;
-using ProjectManagement.Client.Services.Calculation;
 using ProjectManagement.Client.Shared.Calculation;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Client.Shared.Repositories.Calculation;
-using ProjectManagement.Client.Shared.ViewModel;
-using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.Constants;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Calculation.Template;
@@ -280,7 +278,6 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
             Calc.FilterVM = null;
         }
     }
-    private bool HasActivePreset => DisplayOptionsPresetState.GetActivePreset(Calc.DisplayPresets) is not null;
 
     private async Task ToggleTaskActiveById(int taskId)
     {

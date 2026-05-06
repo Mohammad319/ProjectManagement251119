@@ -19,6 +19,8 @@ namespace ProjectManagement.Shared.DTO.App.Dataloader
         public ResourceTypesEnum ResType { get; set; }
         public string Name { get; set; } = null!;
         [Range(0, int.MaxValue)] public int SortOrder { get; set; }
+        public decimal? Quantity { get; set; }
+        public string Unit { get; set; } = string.Empty;
         private ResourceMetadata _data = new();
         public ResourceMetadata Data
         {
@@ -64,7 +66,7 @@ namespace ProjectManagement.Shared.DTO.App.Dataloader
 
             return new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase)
             {
-                ["quantity"] = Data.Quantity ?? 0m,
+                ["quantity"] = Quantity ?? 0m,
                 ["basecost"] = Data.BaseCost ?? 0m,
                 ["cost"] = Data.Cost,
                 ["chf1"] = Data.ChangeFactor1,
@@ -79,7 +81,7 @@ namespace ProjectManagement.Shared.DTO.App.Dataloader
         {
             switch (name.ToLowerInvariant())
             {
-                case "quantity": Data.Quantity = value; break;
+                case "quantity": Quantity = value; break;
                 case "chf1": Data.ChangeFactor1 = value; break;
                 case "chf2": Data.ChangeFactor2 = value; break;
 

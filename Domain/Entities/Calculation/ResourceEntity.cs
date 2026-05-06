@@ -120,8 +120,7 @@ namespace Domain.Entities.Calculation
 
             Metadata = CalculationItemMetadataMapper.BuildResourceMetadata(
                 dto.Data,
-                dto.Note,
-                null);
+                dto.Note);
 
             SetSortOrder(dto.SortOrder);
 
@@ -135,10 +134,7 @@ namespace Domain.Entities.Calculation
 
         public ResourceMetadata GetMetadataSnapshot()
         {
-            var snapshot = CalculationItemMetadataMapper.BuildResourceMetadata(_metadata, Note, Unit);
-            snapshot.Unit = Unit ?? string.Empty;
-            snapshot.Quantity = Quantity;
-            return snapshot;
+            return CalculationItemMetadataMapper.BuildResourceMetadata(_metadata, Note);
         }
 
         public void UpdateMetadata(Action<ResourceMetadata> update)
@@ -148,6 +144,11 @@ namespace Domain.Entities.Calculation
             var snapshot = GetMetadataSnapshot();
             update(snapshot);
             Metadata = snapshot;
+        }
+
+        public void SetQuantity(decimal? value)
+        {
+            Quantity = NormalizeQuantity(value);
         }
 
         public void SetTask(int taskId)
@@ -211,10 +212,6 @@ namespace Domain.Entities.Calculation
             var snapshot = NormalizeMetadata(metadata);
             _metadata = snapshot;
             Note = NormalizeOptional(snapshot.Note);
-            Unit ??= NormalizeOptional(snapshot.Unit);
-            Quantity ??= NormalizeQuantity(snapshot.Quantity);
-            snapshot.Unit = string.Empty;
-            snapshot.Quantity = null;
         }
 
         private static ResourceMetadata NormalizeMetadata(ResourceMetadata? metadata)

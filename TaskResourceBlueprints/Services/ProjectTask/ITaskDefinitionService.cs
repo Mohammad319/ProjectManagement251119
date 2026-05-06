@@ -134,9 +134,6 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                     var tenantLink = resource.TenantLinks.FirstOrDefault(t => t.TenantId == tenantId);
                     var data = resource.Data.Clone();
 
-                    if (l.Quantity > 0)
-                        data.Quantity = l.Quantity;
-
                     ApplyResourceLinkMetadata(data, l);
 
                     return new ResourceDto
@@ -149,6 +146,7 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                         SortOrder = resource.SortOrder,
                         ResType = resource.ResType,
                         ResourceSource = ResourceSource.Base,
+                        Quantity = l.Quantity > 0 ? l.Quantity : null,
                         Data = data,
                         CostRole = resource.CostRoles,
                         CostStorageValue = resource.Data.Cost,

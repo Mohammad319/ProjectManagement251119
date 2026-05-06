@@ -126,7 +126,7 @@ namespace ProjectManagement.Client.Shared.Calculation
             if (filter.Name.Count != 0 && Filter(filter.Name, filter.NameFilterType, task.Name))
                 return true;
 
-            if (filter.Unit.Count != 0 && Filter(filter.Unit, filter.UnitFilterType, task.Metadata.Unit))
+            if (filter.Unit.Count != 0 && Filter(filter.Unit, filter.UnitFilterType, task.Unit))
                 return true;
 
             return false;

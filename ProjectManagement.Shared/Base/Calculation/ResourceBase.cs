@@ -60,9 +60,6 @@ namespace ProjectManagement.Shared.Base.Calculation
         public string Note { get; set; } = string.Empty;
         public List<string> UpperNote { get; set; } = [];
         public string QuantityParam { get; set; } = string.Empty;
-        public decimal? Quantity { get; set; }
-        [MaxLength(25, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Unit { get; set; } = string.Empty;
         public decimal ChangeFactor1 { get; set; } = 1;
         public decimal ChangeFactor2 { get; set; } = 1;
 
@@ -86,9 +83,6 @@ namespace ProjectManagement.Shared.Base.Calculation
             BaseCost = BaseCost.HasValue ? RoundMoney(BaseCost.Value) : null;
             PriceSub = PriceSub.HasValue ? RoundMoney(PriceSub.Value) : null;
 
-            // quantity
-            Quantity = Quantity.HasValue ? RoundQuantity(Quantity.Value) : null;
-
             // factors (cap/waste/change factors)
             ChangeFactor1 = RoundFactor(ChangeFactor1);
             ChangeFactor2 = RoundFactor(ChangeFactor2);
@@ -100,7 +94,6 @@ namespace ProjectManagement.Shared.Base.Calculation
             if (Cost < 0m) Cost = 0m;
             if (BaseCost.HasValue && BaseCost.Value < 0m) BaseCost = 0m;
             if (PriceSub.HasValue && PriceSub.Value < 0m) PriceSub = 0m;
-            if (Quantity.HasValue && Quantity.Value < 0m) Quantity = 0m;
 
             if (AddOns is not null)
             {
@@ -120,21 +113,20 @@ namespace ProjectManagement.Shared.Base.Calculation
                 }
             }
 
-            SyncTimesWithQuantity();
+            SyncTimesWithQuantity(null);
         }
 
-        public void SyncTimesWithQuantity()
+        public void SyncTimesWithQuantity(decimal? quantity)
         {
             if (Times is null)
                 return;
 
-            var resourceQuantity = Quantity ?? 0m;
+            var resourceQuantity = quantity ?? 0m;
 
             for (int i = 0; i < Times.Count; i++)
             {
                 var t = Times[i];
                 t.Name = NormalizeText(t.Name);
-                t.Unit = NormalizeText(Unit);
                 t.Cost = RoundMoney(t.Cost);
                 t.Percentage = t.Percentage.HasValue ? RoundFactor(t.Percentage.Value) : null;
 
@@ -257,8 +249,6 @@ namespace ProjectManagement.Shared.Base.Calculation
                 UpperNote = UpperNote is null ? new() : [.. UpperNote],
 
                 QuantityParam = QuantityParam ?? string.Empty,
-                Quantity = Quantity,
-                Unit = Unit ?? string.Empty,
 
                 ChangeFactor1 = ChangeFactor1,
                 ChangeFactor2 = ChangeFactor2,

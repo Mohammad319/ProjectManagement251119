@@ -31,7 +31,6 @@ namespace Persistence.Service.CalculationItems.Task
                     Metadata = CalculationItemMetadataMapper.BuildTaskMetadata(
                         x.Metadata,
                         x.Note,
-                        null,
                         x.Code,
                         x.IsActive,
                         x.Type,

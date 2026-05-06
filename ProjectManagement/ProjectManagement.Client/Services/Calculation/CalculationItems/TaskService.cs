@@ -1,4 +1,5 @@
-﻿using BlazorMHD.UI.Core.Services;
+﻿using BlazorMHD.UI.Core.DesignSystem;
+using BlazorMHD.UI.Core.Services;
 using Microsoft.AspNetCore.Components;
 using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Services.Folder;
@@ -23,7 +24,7 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
     {
         private static bool TaskAffectsCalculation(TaskListMVVM oldT, TaskListMVVM newT)
         {
-            if (oldT.Metadata?.Quantity != newT.Metadata?.Quantity) return true;
+            if (oldT.Quantity != newT.Quantity) return true;
             if (oldT.Metadata?.ChangeFactor1 != newT.Metadata?.ChangeFactor1) return true;
             if (GetEffectiveChangeFactor2(oldT.Metadata) != GetEffectiveChangeFactor2(newT.Metadata)) return true;
             if (oldT.Metadata?.Cap != newT.Metadata?.Cap) return true;
@@ -54,31 +55,75 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
 
         public async Task Duplicate(TaskListMVVM dusection)
         {
-            if (CalcContainer.Calculation is null)
+            var calculation = CalcContainer.Calculation;
+            if (calculation is null)
                 return;
 
-            PostStorygeDTO post = new()
-            {
-                Items = [new ResourceTaskItemDTO(dusection.Id, dusection.Metadata?.Quantity ?? 0)],
-                Type = CalculationItemType.task,
-                copyType = CopyType.Copy,
-                WithCildren = true,
-                ParentID = dusection.TaskId ?? 0,
-                NewCalcID = CalcContainer.Calculation.Id,
-                OldCalcID = CalcContainer.Calculation.Id,
-                IsOH = CalcContainer.Calculation.OHFactors
-            };
+            var tasks = GetSelectedOrSingleTasks(dusection);
+            var groups = tasks.GroupBy(x => x.TaskId ?? 0).ToList();
+            var result = true;
 
-            bool result = await storage.CreateItem(post);
+            foreach (var group in groups)
+            {
+                PostStorygeDTO post = new()
+                {
+                    Items = [.. group.Select(x => new ResourceTaskItemDTO(x.Id, x.Quantity ?? 0))],
+                    Type = CalculationItemType.task,
+                    copyType = CopyType.Copy,
+                    WithCildren = true,
+                    ParentID = group.Key,
+                    NewCalcID = calculation.Id,
+                    OldCalcID = calculation.Id,
+                    IsOH = calculation.OHFactors
+                };
+
+                result &= await storage.CreateItem(post);
+            }
+
             Mhd.Notifications(ToastType.Add, result);
+
+            if (result)
+                interactionState.ResetSelection();
         }
 
         public void Remove(TaskListMVVM task)
         {
             if (!interactionState.IsSelected(CalculationItemType.task, task.Id))
+            {
                 Mhd.DeleteMessage(task.Name ?? string.Empty, EventCallback.Factory.Create(this, () => ConfirmedRemoveAsync([task.Id])));
-            else
-                Mhd.DeleteMessage(task.Name ?? string.Empty, EventCallback.Factory.Create(this, () => ConfirmedRemoveAsync([.. interactionState.SelectedItems.Select(x => x.Id)])));
+                return;
+            }
+
+            var count = interactionState.SelectedItems.Count;
+            var ids = interactionState.SelectedItems.Select(x => x.Id).ToArray();
+            Mhd.MessageYesNo(
+                "Delete",
+                $"Are you sure you want to delete {count} items?",
+                MhdState.Danger,
+                EventCallback.Factory.Create(this, () => ConfirmedRemoveAsync([.. ids])));
+        }
+
+        private List<TaskListMVVM> GetSelectedOrSingleTasks(TaskListMVVM task)
+        {
+            var calculation = CalcContainer.Calculation;
+            if (calculation is not null
+                && interactionState.IsSelected(CalculationItemType.task, task.Id))
+            {
+                var tasks = new List<TaskListMVVM>();
+                foreach (var selected in interactionState.SelectedItems)
+                {
+                    if (calculation.TryGetTask(selected.Id, out var selectedTask)
+                        && selectedTask is not null)
+                    {
+                        tasks.Add(selectedTask);
+                    }
+                }
+
+                if (tasks.Count > 0)
+                    return tasks;
+            }
+
+            return [task];
         }
 
         public void FromHub(OperationType ot, object obj)

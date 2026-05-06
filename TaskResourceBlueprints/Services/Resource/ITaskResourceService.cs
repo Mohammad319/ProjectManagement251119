@@ -43,8 +43,8 @@ namespace TaskResourceBlueprints.Services.Resource
                     r.Id,
                     r.Name,
                     r.ResType.ToString(),
-                    r.Data.Unit,
-                    r.Data.Quantity,
+                    r.Unit,
+                    r.Quantity,
                     r.Data.ChangeFactor1,
                     r.Data.ChangeFactor2,
                     r.Data.CapWaste,
@@ -104,7 +104,7 @@ namespace TaskResourceBlueprints.Services.Resource
 
             var resource = await db.Resources.AsNoTracking()
                 .Where(r => r.Id == resourceId)
-                .Select(r => new { r.ResType, r.Data.Unit })
+                .Select(r => new { r.ResType, r.Unit })
                 .FirstOrDefaultAsync(ct);
 
             if (resource is null)

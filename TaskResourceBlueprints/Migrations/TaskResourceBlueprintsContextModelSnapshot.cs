@@ -131,11 +131,18 @@ namespace TaskResourceBlueprints.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
+                    b.Property<decimal?>("Quantity")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<int>("ResType")
                         .HasColumnType("int");
 
                     b.Property<int>("SortOrder")
                         .HasColumnType("int");
+
+                    b.Property<string>("Unit")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.HasKey("Id");
 

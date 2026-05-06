@@ -455,8 +455,8 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
         resource.IsVisible = true;
         resource.AdminNote = BuildAdminNote(fileName, account: Get(row, map, "Account"), category: Get(row, map, "Category"), rowNumber);
         resource.Data ??= new ResourceMetadata();
-        resource.Data.Unit = Get(row, map, "Unit", fallbackIndex: FallbackUnitIndex).Trim();
-        resource.Data.Quantity = null;
+        resource.Unit = Get(row, map, "Unit", fallbackIndex: FallbackUnitIndex).Trim();
+        resource.Quantity = null;
         resource.Data.ChangeFactor1 = factor;
         resource.Data.ChangeFactor2 = 1m;
         resource.Data.CapWaste = capWaste;
