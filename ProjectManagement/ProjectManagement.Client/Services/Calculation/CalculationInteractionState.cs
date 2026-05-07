@@ -44,11 +44,11 @@ public sealed class CalculationInteractionState
 
     public void ClearModifierKey() => ModifierKey = string.Empty;
 
-    public void HandleItemSelected(int id, decimal? value, CalculationItemType type)
+    public void HandleItemSelected(int id, decimal? value, CalculationItemType type, bool additiveSelection = false)
     {
         var before = CaptureSelection();
 
-        if (ModifierKey is "Control" or "Meta")
+        if (additiveSelection || ModifierKey is "Control" or "Meta")
             ToggleSelection(id, value, type);
         else
             ResetSelectionCore();

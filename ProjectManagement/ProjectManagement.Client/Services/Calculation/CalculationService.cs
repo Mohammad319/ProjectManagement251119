@@ -133,22 +133,34 @@ namespace ProjectManagement.Client.Services.Calculation
             RequestGridRefresh(CalculationGridRefreshKind.Structure);
         }
 
-        public void AddCreatedTasks(IEnumerable<TaskListMVVM> tasks)
+        public Task RefreshAfterStructuralMutationAsync()
+            => RefreshCurrentCalculationAsync();
+
+        public async Task AddCreatedTasksOrRefreshAsync(IEnumerable<TaskListMVVM> tasks)
+        {
+            if (AddCreatedTasks(tasks))
+                return;
+
+            await RefreshAfterStructuralMutationAsync();
+        }
+
+        public bool AddCreatedTasks(IEnumerable<TaskListMVVM> tasks)
         {
             var calculation = folderState.Calculation;
             if (calculation is null)
-                return;
+                return false;
 
             var createdTasks = tasks
                 .Where(task => task.Id > 0 && !calculation.TaskById.ContainsKey(task.Id))
                 .ToList();
 
             if (createdTasks.Count == 0)
-                return;
+                return false;
 
             calculation.AddTasks(createdTasks);
             calculation.ExecuteCalculation();
             RequestGridRefresh(CalculationGridRefreshKind.Structure);
+            return true;
         }
 
         public async Task SetCalc(int id, ListProjectMVVM project, FolderMVVM folder)

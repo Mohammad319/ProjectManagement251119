@@ -36,5 +36,11 @@ namespace ProjectManagement.SignalR
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, id.ToString());
         }
+
+        [HubMethodName("RemoveFromGroup")]
+        public async Task RemoveFromGroup(int id)
+        {
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, id.ToString());
+        }
     }
 }

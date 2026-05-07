@@ -16,6 +16,9 @@ namespace ProjectManagement.Client.Pages.Calculation
         private HubConnection? hubConnection;
         private IDisposable? _calcSubscription;
         private bool _disposed;
+        private int _joinedCalculationId;
+        private int _observedCalculationId;
+        private Action? _onFolderStateChanged;
 
         // Batching + debounce for bursts of hub events.
         private readonly object _hubBatchLock = new();
@@ -41,6 +44,8 @@ namespace ProjectManagement.Client.Pages.Calculation
 
             _calcSubscription?.Dispose();
             _calcSubscription = null;
+            if (_onFolderStateChanged is not null)
+                Folder.State.OnChange -= _onFolderStateChanged;
 
             if (hubConnection is not null)
             {
@@ -52,13 +57,34 @@ namespace ProjectManagement.Client.Pages.Calculation
 
         protected override async Task OnInitializedAsync()
         {
-            Calc.Opportunities = await Repo.Opportunity.GetAsync(Calc.Id);
-            await TryInitializeHubConnectionAsync();
+            _onFolderStateChanged = () => _ = InvokeAsync(HandleCalculationChangedAsync);
+            Folder.State.OnChange += _onFolderStateChanged;
+
+            await HandleCalculationChangedAsync();
         }
 
-        private async Task TryInitializeHubConnectionAsync()
+        private async Task HandleCalculationChangedAsync()
         {
-            if (_disposed || Calc.Id <= 0)
+            if (_disposed)
+                return;
+
+            var calculation = Folder.State.Calculation;
+            if (calculation is null || calculation.Id <= 0)
+                return;
+
+            if (_observedCalculationId != calculation.Id)
+            {
+                _observedCalculationId = calculation.Id;
+                calculation.Opportunities = await Repo.Opportunity.GetAsync(calculation.Id);
+            }
+
+            await EnsureHubConnectionAsync();
+            await JoinCurrentCalculationGroupAsync();
+        }
+
+        private async Task EnsureHubConnectionAsync()
+        {
+            if (_disposed || hubConnection is not null)
                 return;
 
             hubConnection = new HubConnectionBuilder()
@@ -72,7 +98,6 @@ namespace ProjectManagement.Client.Pages.Calculation
             try
             {
                 await hubConnection.StartAsync();
-                await AddToGroup();
             }
             catch (Exception ex)
             {
@@ -85,19 +110,28 @@ namespace ProjectManagement.Client.Pages.Calculation
             }
         }
 
-        private async Task AddToGroup()
+        private async Task JoinCurrentCalculationGroupAsync()
         {
-            if (_disposed || hubConnection is null || hubConnection.State != HubConnectionState.Connected || Calc.Id <= 0)
+            var calculationId = Folder.State.Calculation?.Id ?? 0;
+            if (_disposed || hubConnection is null || hubConnection.State != HubConnectionState.Connected || calculationId <= 0)
                 return;
 
-            await hubConnection.SendAsync("AddToGroup", Calc.Id);
+            if (_joinedCalculationId == calculationId)
+                return;
+
+            if (_joinedCalculationId > 0)
+                await hubConnection.SendAsync("RemoveFromGroup", _joinedCalculationId);
+
+            await hubConnection.SendAsync("AddToGroup", calculationId);
+            _joinedCalculationId = calculationId;
         }
 
         private async Task OnHubReconnected(string? _)
         {
             try
             {
-                await AddToGroup();
+                _joinedCalculationId = 0;
+                await JoinCurrentCalculationGroupAsync();
             }
             catch (Exception ex)
             {

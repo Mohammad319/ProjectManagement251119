@@ -124,7 +124,7 @@ namespace ProjectManagement.Client.Services.Calculation
             if (result)
             {
                 interactionState.ResetSelection();
-                await calculationService.RefreshCurrentCalculationAsync();
+                await calculationService.RefreshAfterStructuralMutationAsync();
                 mhd.Notifications(ToastType.Info, result);
                 return;
             }

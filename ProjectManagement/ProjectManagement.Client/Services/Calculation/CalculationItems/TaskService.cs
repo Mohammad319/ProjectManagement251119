@@ -86,7 +86,7 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
             if (result)
             {
                 interactionState.ResetSelection();
-                await calculationService.RefreshCurrentCalculationAsync();
+                await calculationService.RefreshAfterStructuralMutationAsync();
             }
         }
 
@@ -174,7 +174,13 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
                 if (taskDtos is null)
                     return;
 
-                var tasks = taskDtos.Select(x => x.ToTaskListMVVM()).ToList();
+                var tasks = taskDtos
+                    .Select(x => x.ToTaskListMVVM())
+                    .Where(task => !calc.TaskById.ContainsKey(task.Id))
+                    .ToList();
+
+                if (tasks.Count == 0)
+                    return;
 
                 calc.AddTasks(tasks);
                 calc.LastHubChangeAffectsCalc = true;
@@ -204,7 +210,7 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
                 return;
 
             interactionState.ResetSelection();
-            await calculationService.RefreshCurrentCalculationAsync();
+            await calculationService.RefreshAfterStructuralMutationAsync();
             dialogService.Close();
         }
     }

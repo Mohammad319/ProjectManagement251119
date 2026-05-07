@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.Rendering;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Shared.Base.Calculation;
@@ -40,9 +41,9 @@ public partial class TaskRowComponent : CalculationSelectableRowComponentBase
     private bool CanToggle => HasDescendants || HasConversionParameters;
     private bool CanShowConversionParameters => HasConversionParameters && Task.Ui.CollSpan;
 
-    private void RowClick()
+    private void RowClick(MouseEventArgs e)
     {
-        SelectCurrentItem();
+        SelectCurrentItem(e);
     }
 
     private System.Threading.Tasks.Task RowContext() => Task.Ui.ContextClick?.Invoke() ?? System.Threading.Tasks.Task.CompletedTask;

@@ -240,7 +240,7 @@
         var createdTasks = await Repo.Task.CreateAsync(Sections, Calc.Id);
         bool result = createdTasks.Count > 0;
         if (result)
-            CalcService.AddCreatedTasks(createdTasks);
+            await CalcService.AddCreatedTasksOrRefreshAsync(createdTasks);
 
         MHD.Notifications(ToastType.Add, result);
         workbook?.Dispose();

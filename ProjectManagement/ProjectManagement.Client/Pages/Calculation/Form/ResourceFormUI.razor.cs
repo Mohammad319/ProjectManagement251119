@@ -284,7 +284,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
                 MHD.Notifications(resource.Id == 0 ? ToastType.Add : ToastType.Update, hasSuccess);
 
                 if (hasSuccess)
-                    await CalcService.RefreshCurrentCalculationAsync();
+                    await CalcService.RefreshAfterStructuralMutationAsync();
             }
             catch (Exception ex)
             {

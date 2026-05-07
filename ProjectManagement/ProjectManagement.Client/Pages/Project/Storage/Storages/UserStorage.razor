@@ -65,9 +65,9 @@ else
                     {
                 tasks.ForEach(x => x.Metadata.IsOH = Calc.OHFactors);
                         if(ParentID>0)
-                        tasks.ForEach(x => x.ParentTaskId = ParentID);
+                tasks.ForEach(x => x.ParentTaskId = ParentID);
                 var createdTasks = await Repo.Task.CreateAsync(tasks, Calc.Id);
-                CalcService.AddCreatedTasks(createdTasks);
+                await CalcService.AddCreatedTasksOrRefreshAsync(createdTasks);
                 return createdTasks.Count > 0;
                     }
                 }

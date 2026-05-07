@@ -354,7 +354,7 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
                 if (list == null) return false;
 
                 var resDto = list.GetData<ResourceListDTO>();
-                if (resDto != null)
+                if (resDto != null && !calc.ResourceById.ContainsKey(resDto.Id))
                     calc.Add(resDto.ToResourceListMVVM());
             }
             else if (ot == OperationType.AddRange)
@@ -365,7 +365,13 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
                 var resourceDtos = list.GetData<List<ResourceListDTO>>();
                 if (resourceDtos == null) return false;
 
-                var resources = resourceDtos.Select(x => x.ToResourceListMVVM()).ToList();
+                var resources = resourceDtos
+                    .Where(resource => !calc.ResourceById.ContainsKey(resource.Id))
+                    .Select(x => x.ToResourceListMVVM())
+                    .ToList();
+
+                if (resources.Count == 0)
+                    return false;
 
                 // ✅ إصلاح bug + أسرع
                 calc.AddRangeResources(resources);
@@ -427,7 +433,7 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
                 return;
 
             interactionState.ResetSelection();
-            await calculationService.RefreshCurrentCalculationAsync();
+            await calculationService.RefreshAfterStructuralMutationAsync();
             dialogService.Close();
         }
 

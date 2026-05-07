@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.Rendering;
 using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Services.Calculation;
@@ -52,7 +53,7 @@ public partial class ResourceRowComponent : CalculationSelectableRowComponentBas
         ResourceService.OfferStateChanged += HandleOfferStateChanged;
     }
 
-    private void Click() => SelectCurrentItem();
+    private void Click(MouseEventArgs e) => SelectCurrentItem(e);
 
     private Task Context() => Resource.Ui.ContextClick?.Invoke() ?? Task.CompletedTask;
 

@@ -455,7 +455,7 @@ else if (_tasks != null)
         if (createdTasks.Count == 0)
             return false;
 
-        CalcService.AddCreatedTasks(createdTasks);
+        await CalcService.AddCreatedTasksOrRefreshAsync(createdTasks);
 
         foreach (var ts in _tasks)
         {

@@ -907,9 +907,9 @@
             if (hasSuccess && calcId > 0)
             {
                 if (createdTasks.Count > 0)
-                    CalcService.AddCreatedTasks(createdTasks);
+                    await CalcService.AddCreatedTasksOrRefreshAsync(createdTasks);
                 else
-                    await CalcService.RefreshCurrentCalculationAsync();
+                    await CalcService.RefreshAfterStructuralMutationAsync();
             }
         }
         catch (Exception ex)

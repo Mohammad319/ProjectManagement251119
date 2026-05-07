@@ -138,7 +138,7 @@ else
 
         else result = UserStorage is not null && await UserStorage.SaveAsync();
         if (result && (Post.AuthoritySelected == AuthorityStorage.ImportFromOtherCalc || Post.Type == CalculationItemType.resource))
-            await CalcService.RefreshCurrentCalculationAsync();
+            await CalcService.RefreshAfterStructuralMutationAsync();
 
         MHD.Notifications(ToastType.Info, result);
         Modal.Close();

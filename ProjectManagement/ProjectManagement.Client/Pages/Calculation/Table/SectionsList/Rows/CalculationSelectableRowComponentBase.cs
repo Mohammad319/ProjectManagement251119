@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using ProjectManagement.Client.Services.Calculation;
 using ProjectManagement.Shared.DTO.Project;
 
@@ -26,8 +27,12 @@ public abstract class CalculationSelectableRowComponentBase : ComponentBase, IDi
         _isSelected = InteractionState.IsSelected(SelectionItemType, SelectionItemId);
     }
 
-    protected void SelectCurrentItem() =>
-        InteractionState.HandleItemSelected(SelectionItemId, SelectionQuantity, SelectionItemType);
+    protected void SelectCurrentItem(MouseEventArgs? e = null) =>
+        InteractionState.HandleItemSelected(
+            SelectionItemId,
+            SelectionQuantity,
+            SelectionItemType,
+            e?.CtrlKey == true || e?.MetaKey == true);
 
     private void HandleSelectionChanged(SelectionChangedEventArgs change)
     {

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 
 namespace ProjectManagement.Client.Pages.Calculation.Table.SectionsList.Rows;
 
@@ -9,7 +10,7 @@ public partial class CalculationDataRow
     [Parameter] public bool CanToggle { get; set; }
     [Parameter] public bool IsExpanded { get; set; }
     [Parameter] public bool ShowHierarchyPlaceholder { get; set; }
-    [Parameter] public EventCallback OnClick { get; set; }
+    [Parameter] public EventCallback<MouseEventArgs> OnClick { get; set; }
     [Parameter] public EventCallback OnContextMenu { get; set; }
     [Parameter] public EventCallback OnToggle { get; set; }
     [Parameter] public RenderFragment? Cells { get; set; }
