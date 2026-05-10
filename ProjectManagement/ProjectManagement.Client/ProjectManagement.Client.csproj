@@ -21,20 +21,20 @@
 
 	<ItemGroup>
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
+    <PackageReference Include="BlazorMHD.UI" Version="1.2.9" />
     <PackageReference Include="ClosedXML" Version="0.105.0" />
-    <PackageReference Include="ContextMenuMHD" Version="1.4.5" />
+    <PackageReference Include="ContextMenuMHD" Version="1.4.6" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.7" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="10.0.7" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.7" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.7" />
     <PackageReference Include="Microsoft.Extensions.Localization" Version="10.0.7" />
     <PackageReference Include="Microsoft.Extensions.Localization.Abstractions" Version="10.0.7" />
-    <PackageReference Include="pax.BlazorChartJs" Version="0.8.6" />
+    <PackageReference Include="pax.BlazorChartJs" Version="0.8.7" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\ProjectManagement.Client.Shared\ProjectManagement.Client.Shared.csproj" />
-    <ProjectReference Include="D:\Library\3\BlazorMHD\BlazorMHD.UI\BlazorMHD.UI.csproj" />
   </ItemGroup>
 
 

@@ -23,7 +23,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="ContextMenuMHD" Version="1.4.5" />
+    <PackageReference Include="BlazorMHD.UI" Version="1.2.9" />
+    <PackageReference Include="ContextMenuMHD" Version="1.4.6" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.7" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.7" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.7" />
@@ -46,7 +47,6 @@
     <ProjectReference Include="..\AuthPermissions\AuthPermissions.csproj" />
     <ProjectReference Include="..\TaskResourceBlueprints\TaskResourceBlueprints.csproj" />
     <ProjectReference Include="..\Persistence\Persistence.csproj" />
-    <ProjectReference Include="D:\Library\3\BlazorMHD\BlazorMHD.UI\BlazorMHD.UI.csproj" />
   </ItemGroup>
 
   <ItemGroup>
