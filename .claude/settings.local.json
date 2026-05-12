@@ -14,7 +14,9 @@
       "Bash(dotnet ef *)",
       "Bash(sqlcmd *)",
       "Bash(npm install *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Read(//c/Library/BlazorMHD/BlazorMHD.UI/**)",
+      "Read(//c/Library/ContextMenuMHD/ContextMenuMHD/**)"
     ]
   }
 }

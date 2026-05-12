@@ -23,8 +23,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BlazorMHD.UI" Version="1.2.9" />
-    <PackageReference Include="ContextMenuMHD" Version="1.4.6" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.7" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.7" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.7" />
@@ -44,6 +42,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\..\..\Library\BlazorMHD\BlazorMHD.UI\BlazorMHD.UI.csproj" />
+    <ProjectReference Include="..\..\..\..\..\..\..\Library\ContextMenuMHD\ContextMenuMHD\ContextMenuMHD.csproj" />
     <ProjectReference Include="..\AuthPermissions\AuthPermissions.csproj" />
     <ProjectReference Include="..\TaskResourceBlueprints\TaskResourceBlueprints.csproj" />
     <ProjectReference Include="..\Persistence\Persistence.csproj" />
@@ -52,8 +52,6 @@
   <ItemGroup>
     <Content Update="**\package.json" CopyToPublishDirectory="Never" />
     <Content Update="**\package-lock.json" CopyToPublishDirectory="Never" />
-    <Content Update="**\tailwind.config.js" CopyToPublishDirectory="Never" />
-    <Content Update="**\postcss.config.js" CopyToPublishDirectory="Never" />
   </ItemGroup>
 
 
