@@ -22,4 +22,6 @@
   <Folder Name="/Tests/">
     <Project Path="Tests/ProjectManagement.Tests/ProjectManagement.Tests.csproj" />
   </Folder>
+  <Project Path="D:/Library/3/BlazorMHD/BlazorMHD.UI/BlazorMHD.UI.csproj" />
+  <Project Path="D:/Library/ContextMenuMHD/ContextMenuMHD/ContextMenuMHD.csproj" />
 </Solution>

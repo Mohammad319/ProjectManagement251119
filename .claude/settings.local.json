@@ -12,7 +12,9 @@
       "Bash(awk -F: '{print $1}')",
       "Bash(del *)",
       "Bash(dotnet ef *)",
-      "Bash(sqlcmd *)"
+      "Bash(sqlcmd *)",
+      "Bash(npm install *)",
+      "Bash(npm run *)"
     ]
   }
 }
