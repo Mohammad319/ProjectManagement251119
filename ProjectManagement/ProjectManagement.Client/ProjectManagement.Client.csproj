@@ -32,9 +32,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\..\..\..\Library\BlazorMHD\BlazorMHD.UI\BlazorMHD.UI.csproj" />
+    <ProjectReference Include="..\..\..\..\..\..\..\..\Library\ContextMenuMHD\ContextMenuMHD\ContextMenuMHD.csproj" />
     <ProjectReference Include="..\..\ProjectManagement.Client.Shared\ProjectManagement.Client.Shared.csproj" />
-    <ProjectReference Include="D:\Library\3\BlazorMHD\BlazorMHD.UI\BlazorMHD.UI.csproj" />
-    <ProjectReference Include="D:\Library\ContextMenuMHD\ContextMenuMHD\ContextMenuMHD.csproj" />
   </ItemGroup>
 
 

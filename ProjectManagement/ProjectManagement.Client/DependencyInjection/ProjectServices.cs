@@ -12,7 +12,7 @@ namespace ProjectManagement.Client.DependencyInjection
             services.AddApplicationServices();
             services.AddBlazoredLocalStorage();
             services.AddLocalization();
-            services.AddSingleton<ContextMenuService>();
+            services.AddContextMenuMHD();
             services.AddChartJs(options =>
             {
                 options.ChartJsLocation = "https://cdn.jsdelivr.net/npm/chart.js";
