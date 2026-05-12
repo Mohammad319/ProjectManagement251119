@@ -1,4 +1,4 @@
-﻿@using BlazorMHD.UI.Components.Data.Table
+@using BlazorMHD.UI.Components.Data.Table
 @using Domain.Entities.Project
 @using ProjectManagement.Client.Shared.Model.Project
 @using Microsoft.AspNetCore.Authorization
@@ -12,63 +12,76 @@
 {
     <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
 }
-else if (FilteredContractList.Count > 0)
-{
-    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
-    <MhdTable TItem="ContractEntity" Items="FilteredContractList" ShowFilter="false">
-        <HeaderTemplate>
-            <th style="width:180px;" class="px-2.5 py-1 text-right text-sm font-semibold text-slate-600 dark:text-slate-200">
-                <div class="flex items-center gap-1.5">
-                    <button @onclick="CreateForm"
-                            class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-emerald-300 bg-emerald-50 text-emerald-600 transition hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50"
-                            title="@AppLoc[LocalizerConst.New, CalcResource.projectContract]"
-                            aria-label="@AppLoc[LocalizerConst.New, CalcResource.projectContract]">
-                        @Icons.Plus2
-                    </button>
-                    <button @onclick="ToggleVisibleFilter"
-                            class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-                            title="@AppLoc[nameof(ResourceApp.isVisible)]"
-                            aria-label="@AppLoc[nameof(ResourceApp.isVisible)]">
-                        @((MarkupString)Icons.GetVisibleIcon(IsVisible))
-                    </button>
-                </div>
-            </th>
-            <th></th>
-        </HeaderTemplate>
-        <ChildContent>
-            <MhdTableColumn>
-                <Template Context="item">
-                    <div class="flex items-center gap-1.5">
-                        <button @onclick="() => UpdateForm(item)"
-                                class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-amber-300 bg-amber-50 text-amber-600 transition hover:bg-amber-100 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-300 dark:hover:bg-amber-900/50"
-                                title="@AppLoc[LocalizerConst.Update, item.Name]"
-                                aria-label="@AppLoc[LocalizerConst.Update, item.Name]">
-                            @Icons.Edit
-                        </button>
-                        <button @onclick="() => Remove(item)"
-                                class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-red-300 bg-red-50 text-red-600 transition hover:bg-red-100 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50"
-                                title="@AppLoc[nameof(ResourceApp.delete)]"
-                                aria-label="@AppLoc[nameof(ResourceApp.delete)]">
-                            @((MarkupString)Icons.DeleteSVG)
-                        </button>
-                    </div>
-                </Template>
-            </MhdTableColumn>
-            <MhdTableColumn Title="@CalcResource.name">
-                <Template Context="item">
-                    <div class="flex items-center gap-1.5 py-0.5 leading-tight">
-                        <span style="background-color:@item.Color" class="inline-block h-4 w-4 rounded-full border border-slate-200 dark:border-slate-700"></span>
-                        <span class="text-sm text-slate-800 dark:text-slate-100">@item.Name</span>
-                    </div>
-                </Template>
-            </MhdTableColumn>
-        </ChildContent>
-    </MhdTable>
-    </div>
-}
 else
 {
-    <div class="rounded-2xl border border-dashed border-slate-200 bg-white/50 px-6 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
-        @AppLoc[nameof(ResourceApp.ThereAreNoItemsToDisplay)]
+    <div class="space-y-3">
+        <div class="pm-toolbar">
+            <div class="flex items-center gap-2">
+                <button @onclick="CreateForm"
+                        class="pm-btn pm-btn-success"
+                        title="@AppLoc[LocalizerConst.New, CalcResource.projectContract]"
+                        aria-label="@AppLoc[LocalizerConst.New, CalcResource.projectContract]">
+                    <span class="flex items-center gap-1.5">
+                        @Icons.Plus2
+                        <span>@AppLoc[LocalizerConst.New, CalcResource.projectContract]</span>
+                    </span>
+                </button>
+                <button @onclick="ToggleVisibleFilter"
+                        class="pm-icon-btn"
+                        title="@AppLoc[nameof(ResourceApp.isVisible)]"
+                        aria-label="@AppLoc[nameof(ResourceApp.isVisible)]">
+                    @((MarkupString)Icons.GetVisibleIcon(IsVisible))
+                </button>
+            </div>
+            @if (FilteredContractList.Count > 0)
+            {
+                <span class="pm-subtitle">@FilteredContractList.Count</span>
+            }
+        </div>
+
+        @if (FilteredContractList.Count > 0)
+        {
+            <div class="pm-table-wrap">
+                <MhdTable TItem="ContractEntity" Items="FilteredContractList" ShowFilter="false">
+                    <HeaderTemplate>
+                        <th style="width:80px;"></th>
+                        <th></th>
+                    </HeaderTemplate>
+                    <ChildContent>
+                        <MhdTableColumn>
+                            <Template Context="item">
+                                <div class="flex items-center gap-2 py-2">
+                                    <button @onclick="() => UpdateForm(item)"
+                                            class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-amber-300 bg-amber-50 text-amber-600 transition hover:bg-amber-100 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-300 dark:hover:bg-amber-900/50"
+                                            title="@AppLoc[LocalizerConst.Update, item.Name]"
+                                            aria-label="@AppLoc[LocalizerConst.Update, item.Name]">
+                                        @Icons.Edit
+                                    </button>
+                                    <button @onclick="() => Remove(item)"
+                                            class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-red-300 bg-red-50 text-red-600 transition hover:bg-red-100 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50"
+                                            title="@AppLoc[nameof(ResourceApp.delete)]"
+                                            aria-label="@AppLoc[nameof(ResourceApp.delete)]">
+                                        @((MarkupString)Icons.DeleteSVG)
+                                    </button>
+                                </div>
+                            </Template>
+                        </MhdTableColumn>
+                        <MhdTableColumn Title="@CalcResource.name">
+                            <Template Context="item">
+                                <div class="flex items-center gap-2 py-2">
+                                    <span style="background-color:@item.Color"
+                                          class="inline-block h-3.5 w-3.5 shrink-0 rounded-full border border-slate-200 dark:border-slate-700"></span>
+                                    <span class="text-sm text-slate-800 dark:text-slate-100">@item.Name</span>
+                                </div>
+                            </Template>
+                        </MhdTableColumn>
+                    </ChildContent>
+                </MhdTable>
+            </div>
+        }
+        else
+        {
+            <div class="pm-empty">@AppLoc[nameof(ResourceApp.ThereAreNoItemsToDisplay)]</div>
+        }
     </div>
 }

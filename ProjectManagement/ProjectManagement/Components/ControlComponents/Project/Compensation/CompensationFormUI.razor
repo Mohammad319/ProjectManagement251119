@@ -1,4 +1,4 @@
-﻿@using ProjectManagement.Client.Shared.Model.Project
+@using ProjectManagement.Client.Shared.Model.Project
 @using ProjectManagement.Shared.DTO.Project
 @using ProjectManagement.Shared.Base.Project
 @inject ICommandDispatcher MicroBus
@@ -7,38 +7,36 @@
 @inject IStringLocalizer<ResourceApp> AppLoc
 
 <EditForm id="compensationForm"
-          class="space-y-2 p-3 text-sm"
+          class="px-3 pt-3 pb-1"
           Model="@CompensationUpdate"
           OnValidSubmit="HandleSubmitAsync">
     <DataAnnotationsValidator />
 
-    <div class="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3 lg:items-end">
-        <div class="flex min-w-0 flex-col">
-            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.name:</label>
-            <InputText class="h-9 w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="@CompensationUpdate.Name" />
-            <ValidationMessage For="@(() => CompensationUpdate.Name)" />
+    <div class="flex flex-wrap items-end gap-3">
+        <div class="flex min-w-[180px] flex-1 flex-col gap-1">
+            <label class="pm-label">@CalcResource.name</label>
+            <InputText class="pm-input" @bind-Value="@CompensationUpdate.Name" />
+            <ValidationMessage For="@(() => CompensationUpdate.Name)" class="text-xs text-rose-600 dark:text-rose-400" />
         </div>
 
-        <div class="flex h-9 items-center gap-2 rounded-md border border-slate-200 px-2.5 dark:border-slate-700">
-            <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 dark:border-slate-600 dark:bg-slate-800" type="checkbox" @bind-Value="@CompensationUpdate.IsVisible" />
-            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
-                @ResourceApp.visible
-            </label>
+        <div class="flex w-20 flex-col gap-1">
+            <label class="pm-label">@ResourceLoc.color</label>
+            <InputText type="color"
+                       class="h-9 w-full rounded-lg border border-slate-300 bg-white p-1 shadow-sm dark:border-slate-700 dark:bg-slate-950"
+                       @bind-Value="@CompensationUpdate.Color" />
         </div>
 
-        <div class="flex min-w-0 flex-col">
-            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceLoc.color:</label>
-            <InputText type="color" class="h-9 w-full rounded-md border border-slate-300 bg-white p-1 dark:border-slate-600 dark:bg-slate-800" @bind-Value="@CompensationUpdate.Color" />
-            <ValidationMessage For="@(() => CompensationUpdate.Color)" />
-        </div>
+        <label for="compensationVisible"
+               class="flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 dark:border-slate-700 dark:bg-slate-800/50">
+            <InputCheckbox id="compensationVisible"
+                           class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900"
+                           @bind-Value="@CompensationUpdate.IsVisible" />
+            <span class="pm-label">@ResourceApp.isVisible</span>
+        </label>
     </div>
 </EditForm>
 
-<div class="mt-2 flex items-center justify-end gap-1.5 border-t border-slate-200 pt-2 dark:border-slate-700">
-    <button type="submit" class="inline-flex items-center justify-center rounded-md border border-emerald-400 px-3 py-1.5 text-sm font-medium text-emerald-600 transition hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-900/30" form="compensationForm" disabled="@IsLoading">
-        @ResourceApp.save
-    </button>
-    <button type="button" class="inline-flex items-center justify-center rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800" @onclick="Close">
-        @ResourceApp.cancel
-    </button>
+<div class="flex items-center justify-end gap-2 border-t border-slate-200 px-3 py-2 dark:border-slate-700">
+    <button type="button" class="pm-btn pm-btn-neutral" @onclick="Close">@ResourceApp.cancel</button>
+    <button type="submit" class="pm-btn pm-btn-success" form="compensationForm" disabled="@IsLoading">@ResourceApp.save</button>
 </div>
