@@ -2,6 +2,7 @@
 using Domain.Entities.Calculation;
 using Domain.Entities.Folder;
 using Domain.Entities.Organisation;
+using Domain.Entities.PriceLists;
 using Domain.Entities.Project;
 using Domain.Entities.ResourceType;
 using Domain.Entities.Users;
@@ -45,6 +46,11 @@ public partial class ShardingSingleDbContext
     public DbSet<UserEntity> User { get; set; } = default!;
     public DbSet<TenderAttributeDefinitionEntity> AttributeNameTender { get; set; } = default!;
     public DbSet<TenderAttributeBindEntity> TenderAttributeBind { get; set; } = default!;
+    public DbSet<PriceList> PriceLists => Set<PriceList>();
+    public DbSet<PriceListItem> PriceListItems => Set<PriceListItem>();
+    public DbSet<PriceImportJob> PriceImportJobs => Set<PriceImportJob>();
+    public DbSet<PriceImportCandidate> PriceImportCandidates => Set<PriceImportCandidate>();
+    public DbSet<PriceImportMapping> PriceImportMappings => Set<PriceImportMapping>();
 
     #endregion
 }

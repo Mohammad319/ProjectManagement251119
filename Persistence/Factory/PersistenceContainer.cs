@@ -10,6 +10,7 @@ using Application.Feature.Offer;
 using Application.Feature.Organisation.Organisation;
 using Application.Feature.Organisation.OrganisationCategory;
 using Application.Feature.Organisation.OrganisationType;
+using Application.Feature.PriceImport;
 using Application.Feature.Project.Folder;
 using Application.Feature.Project.Project;
 using Application.Feature.ResourceType;
@@ -36,6 +37,7 @@ using Persistence.Service.Department;
 using Persistence.Service.Folder;
 using Persistence.Service.Offer;
 using Persistence.Service.Organisation;
+using Persistence.Service.PriceImport;
 using Persistence.Service.Project;
 using Persistence.Service.ResourceAccount;
 using Persistence.Service.ResourceType;
@@ -78,6 +80,7 @@ namespace Persistence.Factory
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<IResourceTypeService, ResourceTypeService>();
             services.AddScoped<IApplicationService, ApplicationService>();
+            services.AddScoped<IPriceImportService, PriceImportService>();
 
             // وبما أنك تستخدمه مع:
             services.AddScoped<ILookupStatusCommandService<TaskStatusEntity>, LookupStatusCommandService<TaskStatusEntity>>();

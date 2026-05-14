@@ -1,4 +1,5 @@
 ﻿using Application;
+using Application.Feature.PriceImport;
 using AuthPermissions;
 using AuthPermissions.Context;
 using BlazorMHD.UI.Core.Services;
@@ -55,6 +56,36 @@ public static class ServiceCollectionExtensions
 
         // UI/tenant/services
         services.AddProjectServices();
+        services.Configure<PriceImportStorageOptions>(builder.Configuration.GetSection("PriceImport"));
+        services.PostConfigure<PriceImportStorageOptions>(options =>
+        {
+            var configuredRoot = !string.IsNullOrWhiteSpace(options.StorageRoot)
+                ? options.StorageRoot
+                : options.RootPath;
+
+            options.RootPath = Path.IsPathRooted(configuredRoot)
+                ? configuredRoot
+                : Path.Combine(builder.Environment.ContentRootPath, configuredRoot);
+
+            if (options.MaxUploadSizeMb <= 0)
+                options.MaxUploadSizeMb = 20;
+
+            options.MaxFileSizeBytes = options.MaxUploadSizeMb * 1024L * 1024L;
+
+            if (options.AllowedExtensions.Length == 0)
+                options.AllowedExtensions = [".xlsx", ".xls", ".docx", ".pdf"];
+        });
+        services.Configure<PriceImportAiOptions>(builder.Configuration.GetSection("PriceImportAi"));
+        services.AddHttpClient<IPriceImportExtractionClient, PriceImportExtractionClient>(client =>
+        {
+            var baseUrl = builder.Configuration["PriceImportPythonApi:BaseUrl"] ?? "http://127.0.0.1:8005";
+            client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
+            client.Timeout = TimeSpan.FromMinutes(2);
+        });
+        services.AddHttpClient<IPriceImportAiExtractionService, PriceImportAiExtractionService>(client =>
+        {
+            client.Timeout = TimeSpan.FromMinutes(2);
+        });
 
         services.Configure<RequestLocalizationOptions>(options =>
         {
