@@ -1,12 +1,8 @@
 @page "/"
 @using ProjectManagement.Adminstrator.Components.AppUser
 @using ProjectManagement.Adminstrator.Components.Folder
-@using ProjectManagement.Adminstrator.Components.Question
 @using ProjectManagement.Adminstrator.Components.TaskStatus
 @using ProjectManagement.Adminstrator.Components.TaskUI
-@using ProjectManagement.Adminstrator.Components.Tenant
-@using ProjectManagement.Adminstrator.Components.Units
-@using ProjectManagement.Shared.DTO.Tenant
 @rendermode InteractiveServer
 @attribute [Authorize(Roles = PMRolesConst.APP.AdminManger)]
 
@@ -19,7 +15,6 @@
             <button type="button" class="@NavButtonClass(typeof(ControlTaskStatusUI))" @onclick="() => Component = typeof(ControlTaskStatusUI)">Actions &amp; States</button>
             <button type="button" class="@NavButtonClass(typeof(TaskDLIndexUI))" @onclick="() => Component = typeof(TaskDLIndexUI)">Task &amp; Question</button>
             <button type="button" class="@NavButtonClass(typeof(TaskResourceCsvImportUI))" @onclick="() => Component = typeof(TaskResourceCsvImportUI)">CSV Import</button>
-            <button type="button" class="@NavButtonClass(typeof(UnitsGroupIndexUI))" @onclick="() => Component = typeof(UnitsGroupIndexUI)">Units</button>
             <button type="button" class="@NavButtonClass(typeof(UserAppUI))" @onclick="() => Component = typeof(AppUser.UserAppUI)">Site Administrators</button>
             <button type="button" class="@NavButtonClass(typeof(Tenant.IndexUI))" @onclick="() => Component = typeof(Tenant.IndexUI)">@AppControll.tenant</button>
             <button type="button" class="@NavButtonClass(typeof(LogUI))" @onclick="() => Component = typeof(LogUI)">Logs</button>
