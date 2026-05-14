@@ -1,0 +1,250 @@
+@page "/price-lists"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = PMRolesConst.Tenant.Users)]
+@rendermode InteractiveServer
+
+@inject IPriceImportService PriceImportService
+@inject NavigationManager Nav
+
+<div class="h-[calc(100vh-37px)] overflow-auto bg-slate-50 p-2 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+    <div class="mb-2 flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div class="min-w-0">
+            <h1 class="text-base font-semibold">Price Lists</h1>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Approved prices created from Smart Price Import.</p>
+        </div>
+
+        <button type="button"
+                class="inline-flex h-8 items-center rounded-md border border-sky-300 bg-sky-50 px-3 text-xs font-semibold text-sky-700 transition hover:bg-sky-100 dark:border-sky-900 dark:bg-sky-950/50 dark:text-sky-300"
+                @onclick="BackToImport">
+            Prisimport
+        </button>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Message))
+    {
+        <div class="@MessageClass">@Message</div>
+    }
+
+    <div class="mb-2 border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <input class="h-8 w-full max-w-md rounded-md border border-slate-300 bg-white px-2 text-xs outline-none focus:border-sky-500 dark:border-slate-700 dark:bg-slate-950"
+               placeholder="Search name, supplier, source file..."
+               @bind="SearchText"
+               @bind:event="oninput" />
+    </div>
+
+    @if (IsBusy)
+    {
+        <div class="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">Loading price lists...</div>
+    }
+    else if (FilteredPriceLists.Count == 0)
+    {
+        <div class="rounded-md border border-dashed border-slate-300 bg-white px-3 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
+            No price lists found.
+        </div>
+    }
+    else
+    {
+        <div class="overflow-hidden border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div class="overflow-x-auto">
+                <table class="min-w-[1220px] text-left text-xs">
+                    <thead class="border-b border-slate-200 bg-slate-100 text-[11px] uppercase text-slate-600 dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-400">
+                        <tr>
+                            <th class="px-2 py-2">Name</th>
+                            <th class="px-2 py-2">Supplier</th>
+                            <th class="px-2 py-2">Currency</th>
+                            <th class="px-2 py-2 text-right">Items</th>
+                            <th class="px-2 py-2">SourceFile</th>
+                            <th class="px-2 py-2">ImportedAt</th>
+                            <th class="px-2 py-2">Status</th>
+                            <th class="px-2 py-2 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                        @foreach (var priceList in FilteredPriceLists)
+                        {
+                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60">
+                                <td class="max-w-[280px] truncate px-2 py-2 font-medium">@priceList.Name</td>
+                                <td class="max-w-[180px] truncate px-2 py-2">@priceList.SupplierName</td>
+                                <td class="px-2 py-2">@priceList.Currency</td>
+                                <td class="px-2 py-2 text-right">@priceList.ItemCount</td>
+                                <td class="max-w-[220px] truncate px-2 py-2">@priceList.SourceFileName</td>
+                                <td class="whitespace-nowrap px-2 py-2">@FormatDate(priceList.ImportedAt)</td>
+                                <td class="px-2 py-2">
+                                    <span class="@ActiveClass(priceList.IsActive)">@(priceList.IsActive ? "Active" : "Inactive")</span>
+                                </td>
+                                <td class="px-2 py-2 text-right">
+                                    <div class="flex justify-end gap-1">
+                                        <button type="button" class="h-7 rounded-md border border-sky-300 bg-sky-50 px-2 text-xs font-semibold text-sky-700 transition hover:bg-sky-100 dark:border-sky-800 dark:bg-sky-950/50 dark:text-sky-300" @onclick="() => OpenPriceList(priceList.Id)">Open</button>
+                                        <button type="button" class="h-7 rounded-md border border-slate-300 bg-white px-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" @onclick="() => OpenEdit(priceList)">Edit</button>
+                                        <button type="button" class="@ToggleButtonClass(priceList.IsActive)" @onclick="() => ToggleActiveAsync(priceList)">
+                                            @(priceList.IsActive ? "Deactivate" : "Activate")
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+@if (EditModel is not null)
+{
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4">
+        <div class="w-full max-w-3xl rounded-lg border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900">
+            <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
+                <h2 class="text-sm font-semibold">Edit price list</h2>
+                <button type="button" class="text-sm text-slate-500 hover:text-slate-900 dark:hover:text-slate-100" @onclick="CloseEdit">Close</button>
+            </div>
+
+            <div class="grid gap-3 p-4 text-xs md:grid-cols-2">
+                <label class="space-y-1 md:col-span-2">
+                    <span class="text-slate-500 dark:text-slate-400">Name</span>
+                    <input class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 dark:border-slate-700 dark:bg-slate-950" @bind="EditModel.Name" />
+                </label>
+                <label class="space-y-1">
+                    <span class="text-slate-500 dark:text-slate-400">SupplierName</span>
+                    <input class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 dark:border-slate-700 dark:bg-slate-950" @bind="EditModel.SupplierName" />
+                </label>
+                <label class="space-y-1">
+                    <span class="text-slate-500 dark:text-slate-400">Currency</span>
+                    <input class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 dark:border-slate-700 dark:bg-slate-950" @bind="EditModel.Currency" />
+                </label>
+                <label class="space-y-1">
+                    <span class="text-slate-500 dark:text-slate-400">ValidFrom</span>
+                    <InputDate class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 dark:border-slate-700 dark:bg-slate-950" @bind-Value="EditModel.ValidFrom" />
+                </label>
+                <label class="space-y-1">
+                    <span class="text-slate-500 dark:text-slate-400">ValidTo</span>
+                    <InputDate class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 dark:border-slate-700 dark:bg-slate-950" @bind-Value="EditModel.ValidTo" />
+                </label>
+                <label class="flex items-center gap-2 md:col-span-2">
+                    <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-sky-600 dark:border-slate-700 dark:bg-slate-950" @bind="EditModel.IsActive" />
+                    <span class="text-slate-600 dark:text-slate-300">Active</span>
+                </label>
+                <label class="space-y-1 md:col-span-2">
+                    <span class="text-slate-500 dark:text-slate-400">Note</span>
+                    <textarea class="h-24 w-full rounded-md border border-slate-300 bg-white p-2 text-xs dark:border-slate-700 dark:bg-slate-950" @bind="EditModel.Note"></textarea>
+                </label>
+            </div>
+
+            <div class="flex justify-end gap-2 border-t border-slate-200 px-4 py-3 dark:border-slate-800">
+                <button type="button" class="h-8 rounded-md border border-slate-300 px-3 text-xs font-semibold dark:border-slate-700" @onclick="CloseEdit">Cancel</button>
+                <button type="button" class="h-8 rounded-md bg-blue-600 px-3 text-xs font-semibold text-white disabled:opacity-50" disabled="@IsBusy" @onclick="SaveEditAsync">Save</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<PriceListListItemDto> PriceLists { get; set; } = [];
+    private PriceListUpdateDto? EditModel;
+    private bool IsBusy;
+    private bool MessageIsError;
+    private string? Message;
+    private string SearchText = "";
+
+    private string MessageClass => MessageIsError
+        ? "mb-2 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-800 dark:border-rose-900 dark:bg-rose-950/50 dark:text-rose-200"
+        : "mb-2 rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800 dark:border-sky-900 dark:bg-sky-950/50 dark:text-sky-200";
+
+    private IReadOnlyList<PriceListListItemDto> FilteredPriceLists => PriceLists
+        .Where(MatchesSearch)
+        .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        IsBusy = true;
+        try
+        {
+            PriceLists = (await PriceImportService.GetPriceListsAsync()).ToList();
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private bool MatchesSearch(PriceListListItemDto priceList)
+    {
+        if (string.IsNullOrWhiteSpace(SearchText))
+            return true;
+
+        var term = SearchText.Trim();
+        return Contains(priceList.Name, term)
+            || Contains(priceList.SupplierName, term)
+            || Contains(priceList.SourceFileName, term);
+    }
+
+    private void OpenEdit(PriceListListItemDto priceList)
+    {
+        EditModel = new PriceListUpdateDto
+        {
+            Id = priceList.Id,
+            Name = priceList.Name,
+            SupplierName = priceList.SupplierName,
+            Currency = priceList.Currency,
+            ValidFrom = priceList.ValidFrom,
+            ValidTo = priceList.ValidTo,
+            IsActive = priceList.IsActive
+        };
+    }
+
+    private async Task SaveEditAsync()
+    {
+        if (EditModel is null)
+            return;
+
+        if (string.IsNullOrWhiteSpace(EditModel.Name))
+        {
+            MessageIsError = true;
+            Message = "Name is required.";
+            return;
+        }
+
+        var ok = await PriceImportService.UpdatePriceListAsync(EditModel);
+        MessageIsError = !ok;
+        Message = ok ? "Price list updated." : "Price list could not be updated.";
+        EditModel = null;
+        await LoadAsync();
+    }
+
+    private async Task ToggleActiveAsync(PriceListListItemDto priceList)
+    {
+        var ok = await PriceImportService.SetPriceListActiveAsync(priceList.Id, !priceList.IsActive);
+        MessageIsError = !ok;
+        Message = ok
+            ? (priceList.IsActive ? "Price list deactivated." : "Price list activated.")
+            : "Price list could not be updated.";
+        await LoadAsync();
+    }
+
+    private void CloseEdit() => EditModel = null;
+
+    private void OpenPriceList(Guid id) => Nav.NavigateTo($"/price-lists/{id}");
+
+    private void BackToImport() => Nav.NavigateTo("/price-import");
+
+    private static bool Contains(string? value, string term)
+        => !string.IsNullOrWhiteSpace(value) && value.Contains(term, StringComparison.OrdinalIgnoreCase);
+
+    private static string FormatDate(DateTime? value)
+        => value.HasValue ? value.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm") : "-";
+
+    private static string ActiveClass(bool isActive)
+        => isActive
+            ? "inline-flex rounded bg-emerald-100 px-1.5 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+            : "inline-flex rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-400";
+
+    private static string ToggleButtonClass(bool isActive)
+        => isActive
+            ? "h-7 rounded-md border border-rose-300 bg-rose-50 px-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 dark:border-rose-900 dark:bg-rose-950/50 dark:text-rose-300"
+            : "h-7 rounded-md border border-emerald-300 bg-emerald-50 px-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300";
+}

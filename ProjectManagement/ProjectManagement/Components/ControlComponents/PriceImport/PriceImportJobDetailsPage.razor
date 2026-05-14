@@ -7,8 +7,8 @@
 @inject NavigationManager Nav
 @inject Microsoft.Extensions.Options.IOptions<PriceImportAiOptions> AiOptions
 
-<div class="h-[calc(100vh-37px)] overflow-auto bg-slate-50 p-2 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-    <div class="mb-2 flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+<div class="flex h-[calc(100vh-37px)] flex-col overflow-hidden bg-slate-50 p-2 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+    <div class="mb-2 flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div class="min-w-0">
             <button type="button" class="mb-1 text-xs font-semibold text-sky-700 hover:underline dark:text-sky-300" @onclick="BackToJobs">Back to jobs</button>
             <h1 class="truncate text-base font-semibold">@Job?.SourceFileName</h1>
@@ -21,7 +21,7 @@
             </div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-1">
+        <div class="flex shrink-0 flex-wrap items-center gap-1">
             @if (CanRunAiExtraction)
             {
                 <button type="button"
@@ -43,7 +43,7 @@
 
     @if (Job is not null && HasSourceText && !AiOptions.Value.Enabled)
     {
-        <div class="mb-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-950/50 dark:text-amber-200">
+        <div class="mb-2 shrink-0 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-950/50 dark:text-amber-200">
             AI extraction is disabled. Enable PriceImportAi:Enabled in configuration.
         </div>
     }
@@ -67,68 +67,70 @@
     }
     else
     {
-        <div class="mb-2 grid grid-cols-2 gap-2 text-xs md:grid-cols-5">
-            @foreach (var metric in Metrics)
-            {
-                <div class="border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                    <div class="text-[11px] uppercase text-slate-500 dark:text-slate-400">@metric.Label</div>
-                    <div class="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-100">@metric.Value</div>
-                </div>
-            }
-        </div>
+        <div class="flex min-h-0 flex-1 flex-col gap-2">
+            <div class="grid shrink-0 grid-cols-2 gap-2 text-xs md:grid-cols-5">
+                @foreach (var metric in Metrics)
+                {
+                    <div class="border border-slate-200 bg-white px-3 py-1.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                        <div class="text-[10px] uppercase leading-4 text-slate-500 dark:text-slate-400">@metric.Label</div>
+                        <div class="text-base font-semibold leading-5 text-slate-900 dark:text-slate-100">@metric.Value</div>
+                    </div>
+                }
+            </div>
 
-        <div class="mb-2 border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <div class="flex flex-wrap items-center gap-2">
-                <input class="h-8 w-72 rounded-md border border-slate-300 bg-white px-2 text-xs outline-none focus:border-sky-500 dark:border-slate-700 dark:bg-slate-950"
-                       placeholder="Search name, article, supplier, source..."
-                       @bind="SearchText"
-                       @bind:event="oninput" />
+            <div class="shrink-0 border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <div class="flex flex-wrap items-center gap-2">
+                    <input class="h-8 w-full max-w-[360px] rounded-md border border-slate-300 bg-white px-2 text-xs outline-none focus:border-sky-500 dark:border-slate-700 dark:bg-slate-950"
+                           placeholder="Search name, article, supplier, source..."
+                           @bind="SearchText"
+                           @bind:event="oninput" />
 
-                <div class="flex flex-wrap gap-1">
-                    @foreach (var option in StatusFilters)
-                    {
-                        <button type="button"
-                                class="@StatusFilterClass(option.Status)"
-                                @onclick="() => SetStatusFilter(option.Status)">
-                            @option.Label
-                        </button>
-                    }
-                </div>
+                    <div class="flex flex-wrap gap-1">
+                        @foreach (var option in StatusFilters)
+                        {
+                            <button type="button"
+                                    class="@StatusFilterClass(option.Status)"
+                                    @onclick="() => SetStatusFilter(option.Status)">
+                                @option.Label
+                            </button>
+                        }
+                    </div>
 
-                <div class="ml-auto flex flex-wrap items-center gap-1">
-                    <span class="mr-1 text-[11px] text-slate-500 dark:text-slate-400">@SelectedCandidateIds.Count selected / @FilteredCandidates.Count shown</span>
-                    <button type="button" class="h-8 rounded-md border border-emerald-300 bg-emerald-50 px-2 text-[11px] font-semibold text-emerald-700 hover:bg-emerald-100 disabled:opacity-50 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300" disabled="@(IsBusy || SelectedCandidateIds.Count == 0)" @onclick="ApproveSelectedAsync">Approve selected</button>
-                    <button type="button" class="h-8 rounded-md border border-slate-300 bg-slate-50 px-2 text-[11px] font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200" disabled="@(IsBusy || SelectedCandidateIds.Count == 0)" @onclick="IgnoreSelectedAsync">Ignore selected</button>
-                    <button type="button" class="h-8 rounded-md border border-amber-300 bg-amber-50 px-2 text-[11px] font-semibold text-amber-700 hover:bg-amber-100 disabled:opacity-50 dark:border-amber-900 dark:bg-amber-950/50 dark:text-amber-300" disabled="@(IsBusy || SelectedCandidateIds.Count == 0)" @onclick="NeedsReviewSelectedAsync">NeedsReview selected</button>
-                    <button type="button" class="h-8 rounded-md bg-emerald-600 px-2 text-[11px] font-semibold text-white hover:bg-emerald-700 disabled:opacity-50" disabled="@(IsBusy || Job.ReadyCount == 0)" @onclick="ApproveAllReadyAsync">Approve all Ready</button>
+                    <div class="ml-auto flex flex-wrap items-center gap-1">
+                        <span class="mr-1 whitespace-nowrap text-[11px] text-slate-500 dark:text-slate-400">@SelectedCandidateIds.Count selected / @FilteredCandidates.Count shown</span>
+                        <button type="button" class="h-8 rounded-md border border-emerald-300 bg-emerald-50 px-2 text-[11px] font-semibold text-emerald-700 hover:bg-emerald-100 disabled:opacity-50 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300" disabled="@(IsBusy || SelectedCandidateIds.Count == 0)" @onclick="ApproveSelectedAsync">Approve selected</button>
+                        <button type="button" class="h-8 rounded-md border border-slate-300 bg-slate-50 px-2 text-[11px] font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200" disabled="@(IsBusy || SelectedCandidateIds.Count == 0)" @onclick="IgnoreSelectedAsync">Ignore selected</button>
+                        <button type="button" class="h-8 rounded-md border border-amber-300 bg-amber-50 px-2 text-[11px] font-semibold text-amber-700 hover:bg-amber-100 disabled:opacity-50 dark:border-amber-900 dark:bg-amber-950/50 dark:text-amber-300" disabled="@(IsBusy || SelectedCandidateIds.Count == 0)" @onclick="NeedsReviewSelectedAsync">NeedsReview selected</button>
+                        <button type="button" class="h-8 rounded-md bg-emerald-600 px-2 text-[11px] font-semibold text-white hover:bg-emerald-700 disabled:opacity-50" disabled="@(IsBusy || Job.ReadyCount == 0)" @onclick="ApproveAllReadyAsync">Approve all Ready</button>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="overflow-hidden border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <div class="overflow-x-auto">
-                <table class="min-w-[1640px] text-left text-xs">
-                    <thead class="border-b border-slate-200 bg-slate-100 text-[11px] uppercase text-slate-600 dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-400">
+            <div class="min-h-0 flex-1 overflow-hidden border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <div class="h-full overflow-auto">
+                    <table class="min-w-[1540px] table-fixed text-left text-xs">
+                        <thead class="sticky top-0 z-20 border-b border-slate-200 bg-slate-100 text-[11px] uppercase text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
                         <tr>
-                            <th class="w-9 px-2 py-2">
+                            <th class="w-10 px-2 py-2">
                                 <input type="checkbox"
                                        class="h-4 w-4 rounded border-slate-300 text-sky-600 dark:border-slate-700 dark:bg-slate-950"
-                                       checked="@AllFilteredSelected"
+                                       checked="@AllSelectableFilteredSelected"
+                                       disabled="@(SelectableFilteredCandidates.Count == 0)"
                                        @onchange="ToggleAllFiltered" />
                             </th>
-                            <th class="px-2 py-2">Status</th>
-                            <th class="px-2 py-2">ArticleNumber</th>
-                            <th class="px-2 py-2">ProductCode</th>
-                            <th class="px-2 py-2">Name</th>
-                            <th class="px-2 py-2 text-right">BasePrice</th>
-                            <th class="px-2 py-2 text-right">DiscountPercent</th>
-                            <th class="px-2 py-2 text-right">NetPrice</th>
-                            <th class="px-2 py-2">Unit</th>
-                            <th class="px-2 py-2">SupplierName</th>
-                            <th class="px-2 py-2 text-right">Confidence</th>
-                            <th class="px-2 py-2">Source</th>
-                            <th class="px-2 py-2">ErrorMessage</th>
-                            <th class="px-2 py-2 text-right">Actions</th>
+                            <th class="w-28 px-2 py-2">Status</th>
+                            <th class="w-32 px-2 py-2">Article</th>
+                            <th class="w-32 px-2 py-2">Product</th>
+                            <th class="w-72 px-2 py-2">Name</th>
+                            <th class="w-24 px-2 py-2 text-right">Base</th>
+                            <th class="w-24 px-2 py-2 text-right">Discount</th>
+                            <th class="w-24 px-2 py-2 text-right">Net</th>
+                            <th class="w-20 px-2 py-2">Unit</th>
+                            <th class="w-44 px-2 py-2">Supplier</th>
+                            <th class="w-24 px-2 py-2 text-right">Confidence</th>
+                            <th class="w-24 px-2 py-2">Source</th>
+                            <th class="w-48 px-2 py-2">Error</th>
+                            <th class="sticky right-0 z-30 w-72 bg-slate-100 px-2 py-2 text-right dark:bg-slate-900">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -147,25 +149,27 @@
                                         <input type="checkbox"
                                                class="h-4 w-4 rounded border-slate-300 text-sky-600 dark:border-slate-700 dark:bg-slate-950"
                                                checked="@SelectedCandidateIds.Contains(candidate.Id)"
+                                               disabled="@(!CanSelectCandidate(candidate))"
+                                               title="@SelectionTitle(candidate)"
                                                @onchange="args => ToggleCandidate(candidate.Id, args)" />
                                     </td>
                                     <td class="px-2 py-2"><span class="@CandidateStatusClass(candidate.Status)">@candidate.Status</span></td>
-                                    <td class="max-w-[120px] truncate px-2 py-2">@candidate.ArticleNumber</td>
-                                    <td class="max-w-[120px] truncate px-2 py-2">@candidate.ProductCode</td>
-                                    <td class="max-w-[220px] truncate px-2 py-2 font-medium">@candidate.Name</td>
+                                    <td class="truncate px-2 py-2">@candidate.ArticleNumber</td>
+                                    <td class="truncate px-2 py-2">@candidate.ProductCode</td>
+                                    <td class="truncate px-2 py-2 font-medium" title="@candidate.Name">@candidate.Name</td>
                                     <td class="px-2 py-2 text-right">@Money(candidate.BasePrice)</td>
                                     <td class="px-2 py-2 text-right">@Percent(candidate.DiscountPercent)</td>
                                     <td class="px-2 py-2 text-right">@Money(candidate.NetPrice)</td>
                                     <td class="px-2 py-2">@candidate.Unit</td>
-                                    <td class="max-w-[160px] truncate px-2 py-2">@candidate.SupplierName</td>
+                                    <td class="truncate px-2 py-2" title="@candidate.SupplierName">@candidate.SupplierName</td>
                                     <td class="px-2 py-2 text-right">@candidate.Confidence.ToString("0.0000")</td>
-                                    <td class="max-w-[120px] px-2 py-2">
+                                    <td class="px-2 py-2">
                                         <button type="button" class="text-[11px] font-semibold text-sky-700 hover:underline disabled:text-slate-400 dark:text-sky-300" disabled="@string.IsNullOrWhiteSpace(candidate.SourceText)" @onclick="() => ShowSource(candidate)">
                                             Show source
                                         </button>
                                     </td>
-                                    <td class="max-w-[220px] truncate px-2 py-2 text-rose-700 dark:text-rose-300" title="@candidate.ErrorMessage">@candidate.ErrorMessage</td>
-                                    <td class="px-2 py-2">
+                                    <td class="truncate px-2 py-2 text-rose-700 dark:text-rose-300" title="@candidate.ErrorMessage">@candidate.ErrorMessage</td>
+                                    <td class="sticky right-0 bg-white px-2 py-2 shadow-[-8px_0_12px_-12px_rgba(15,23,42,0.45)] dark:bg-slate-900">
                                         <div class="flex justify-end gap-1">
                                             <button type="button" class="h-7 rounded-md border border-emerald-300 bg-emerald-50 px-2 text-[11px] font-semibold text-emerald-700 hover:bg-emerald-100 disabled:opacity-50 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300" disabled="@IsBusy" @onclick="() => ApproveAsync(candidate)">Approve</button>
                                             <button type="button" class="h-7 rounded-md border border-amber-300 bg-amber-50 px-2 text-[11px] font-semibold text-amber-700 hover:bg-amber-100 disabled:opacity-50 dark:border-amber-900 dark:bg-amber-950/50 dark:text-amber-300" disabled="@IsBusy" @onclick="() => NeedsReviewAsync(candidate.Id)">Needs review</button>
@@ -179,6 +183,7 @@
                     </tbody>
                 </table>
             </div>
+        </div>
         </div>
     }
 </div>
@@ -289,6 +294,7 @@
         ("Ready", PriceImportCandidateStatus.Ready),
         ("NeedsReview", PriceImportCandidateStatus.NeedsReview),
         ("Approved", PriceImportCandidateStatus.Approved),
+        ("Imported", PriceImportCandidateStatus.Imported),
         ("Ignored", PriceImportCandidateStatus.Ignored),
         ("Error", PriceImportCandidateStatus.Error)
     ];
@@ -299,7 +305,12 @@
             .Where(MatchesSearch)
             .ToList() ?? [];
 
-    private bool AllFilteredSelected => FilteredCandidates.Count > 0 && FilteredCandidates.All(x => SelectedCandidateIds.Contains(x.Id));
+    private IReadOnlyList<PriceImportCandidateDto> SelectableFilteredCandidates =>
+        FilteredCandidates
+            .Where(CanSelectCandidate)
+            .ToList();
+
+    private bool AllSelectableFilteredSelected => SelectableFilteredCandidates.Count > 0 && SelectableFilteredCandidates.All(x => SelectedCandidateIds.Contains(x.Id));
 
     private IReadOnlyList<(string Label, string Value)> Metrics =>
         Job is null
@@ -310,7 +321,8 @@
                 ("Ready", Job.ReadyCount.ToString()),
                 ("Review", Job.ReviewCount.ToString()),
                 ("Error", Job.ErrorCount.ToString()),
-                ("Approved", Job.ApprovedCount.ToString())
+                ("Approved", Job.ApprovedCount.ToString()),
+                ("Imported", Job.Candidates.Count(x => x.Status == PriceImportCandidateStatus.Imported).ToString())
             ];
 
     protected override async Task OnParametersSetAsync()
@@ -356,6 +368,13 @@
 
     private void ToggleCandidate(Guid candidateId, ChangeEventArgs args)
     {
+        var candidate = Job?.Candidates.FirstOrDefault(x => x.Id == candidateId);
+        if (candidate is null || !CanSelectCandidate(candidate))
+        {
+            SelectedCandidateIds.Remove(candidateId);
+            return;
+        }
+
         if (args.Value is bool selected && selected)
             SelectedCandidateIds.Add(candidateId);
         else
@@ -366,12 +385,12 @@
     {
         if (args.Value is bool selected && selected)
         {
-            foreach (var candidate in FilteredCandidates)
+            foreach (var candidate in SelectableFilteredCandidates)
                 SelectedCandidateIds.Add(candidate.Id);
         }
         else
         {
-            foreach (var candidate in FilteredCandidates)
+            foreach (var candidate in SelectableFilteredCandidates)
                 SelectedCandidateIds.Remove(candidate.Id);
         }
     }
@@ -544,23 +563,14 @@
             if (Job?.ApprovedCount <= 0)
             {
                 MessageIsError = true;
-                Message = Job?.Status == PriceImportJobStatus.Completed
-                    ? "This import job has already been converted."
-                    : "No approved candidates to convert.";
-                return;
-            }
-
-            if (Job?.Status == PriceImportJobStatus.Completed)
-            {
-                MessageIsError = true;
-                Message = "This import job has already been converted.";
+                Message = "No approved candidates to convert.";
                 return;
             }
 
             var priceListId = await PriceImportService.CreatePriceListFromApprovedCandidatesAsync(JobId);
             if (priceListId.HasValue)
             {
-                Message = $"Created PriceList {priceListId.Value} from approved candidates.";
+                Message = $"Approved candidates were converted to PriceList {priceListId.Value}.";
             }
             else
             {
@@ -602,7 +612,10 @@
             return;
         }
 
-        var validIds = Job.Candidates.Select(x => x.Id).ToHashSet();
+        var validIds = Job.Candidates
+            .Where(CanSelectCandidate)
+            .Select(x => x.Id)
+            .ToHashSet();
         SelectedCandidateIds.RemoveWhere(id => !validIds.Contains(id));
     }
 
@@ -648,6 +661,14 @@
     private static bool Contains(string? value, string term)
         => !string.IsNullOrWhiteSpace(value) && value.Contains(term, StringComparison.OrdinalIgnoreCase);
 
+    private static bool CanSelectCandidate(PriceImportCandidateDto candidate)
+        => candidate.Status == PriceImportCandidateStatus.Approved;
+
+    private static string SelectionTitle(PriceImportCandidateDto candidate)
+        => CanSelectCandidate(candidate)
+            ? "Selectable"
+            : "Only Approved candidates can be selected.";
+
     private static string Money(decimal? value) => value.HasValue ? value.Value.ToString("0.####") : "-";
 
     private static string Percent(decimal? value) => value.HasValue ? value.Value.ToString("0.####") : "-";
@@ -663,6 +684,7 @@
     private static string CandidateStatusClass(PriceImportCandidateStatus status) => status switch
     {
         PriceImportCandidateStatus.Approved => "inline-flex rounded bg-emerald-100 px-1.5 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
+        PriceImportCandidateStatus.Imported => "inline-flex rounded bg-violet-100 px-1.5 py-0.5 text-[11px] font-semibold text-violet-700 dark:bg-violet-950 dark:text-violet-300",
         PriceImportCandidateStatus.Error => "inline-flex rounded bg-rose-100 px-1.5 py-0.5 text-[11px] font-semibold text-rose-700 dark:bg-rose-950 dark:text-rose-300",
         PriceImportCandidateStatus.NeedsReview => "inline-flex rounded bg-amber-100 px-1.5 py-0.5 text-[11px] font-semibold text-amber-700 dark:bg-amber-950 dark:text-amber-300",
         PriceImportCandidateStatus.Ignored => "inline-flex rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-400",

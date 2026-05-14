@@ -15,7 +15,8 @@ public enum PriceImportCandidateStatus
     NeedsReview = 2,
     Approved = 3,
     Ignored = 4,
-    Error = 5
+    Error = 5,
+    Imported = 6
 }
 
 public enum PriceImportFileType

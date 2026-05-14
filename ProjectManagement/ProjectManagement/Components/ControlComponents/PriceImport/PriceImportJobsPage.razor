@@ -114,11 +114,20 @@
                                 <td class="whitespace-nowrap px-2 py-2">@FormatDate(job.StartedAt)</td>
                                 <td class="whitespace-nowrap px-2 py-2">@FormatDate(job.CompletedAt)</td>
                                 <td class="px-2 py-2 text-right">
-                                    <button type="button"
-                                            class="h-7 rounded-md border border-sky-300 bg-sky-50 px-2 text-xs font-semibold text-sky-700 transition hover:bg-sky-100 dark:border-sky-800 dark:bg-sky-950/50 dark:text-sky-300"
-                                            @onclick="() => OpenJob(job.Id)">
-                                        Open
-                                    </button>
+                                    <div class="flex justify-end gap-1">
+                                        <button type="button"
+                                                class="h-7 rounded-md border border-sky-300 bg-sky-50 px-2 text-xs font-semibold text-sky-700 transition hover:bg-sky-100 disabled:opacity-50 dark:border-sky-800 dark:bg-sky-950/50 dark:text-sky-300"
+                                                disabled="@IsBusy"
+                                                @onclick="() => OpenJob(job.Id)">
+                                            Open
+                                        </button>
+                                        <button type="button"
+                                                class="h-7 rounded-md border border-rose-300 bg-rose-50 px-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 disabled:opacity-50 dark:border-rose-900 dark:bg-rose-950/50 dark:text-rose-300"
+                                                disabled="@IsBusy"
+                                                @onclick="() => DeleteClickedAsync(job)">
+                                            @(DeleteTarget?.Id == job.Id ? "Confirm" : "Delete")
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         }
@@ -142,6 +151,7 @@
     private string AllowedExtensionsText => string.Join(", ", AllowedExtensions.OrderBy(x => x));
 
     private IBrowserFile? SelectedFile;
+    private PriceImportJobListItemDto? DeleteTarget;
     private string? SupplierName;
     private string? UploadMessage;
     private bool UploadMessageIsError;
@@ -266,6 +276,41 @@
     }
 
     private void OpenJob(Guid id) => Nav.NavigateTo($"/price-import/{id}");
+
+    private async Task DeleteClickedAsync(PriceImportJobListItemDto job)
+    {
+        if (DeleteTarget?.Id == job.Id)
+        {
+            await DeleteConfirmedAsync();
+            return;
+        }
+
+        DeleteTarget = job;
+        UploadMessage = $"Delete import '{job.SourceFileName}'? Click Delete again to confirm.";
+        UploadMessageIsError = true;
+    }
+
+    private async Task DeleteConfirmedAsync()
+    {
+        if (DeleteTarget is null)
+            return;
+
+        IsBusy = true;
+        UploadMessage = null;
+        UploadMessageIsError = false;
+        try
+        {
+            var result = await PriceImportService.DeleteImportJobAsync(DeleteTarget.Id);
+            UploadMessage = result.Message;
+            UploadMessageIsError = !result.Ok;
+            DeleteTarget = null;
+            await LoadAsync();
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
 
     private static string FormatDate(DateTime? value)
         => value.HasValue ? value.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm") : "-";

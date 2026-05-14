@@ -112,6 +112,173 @@ public sealed class PriceImportService(
             candidates);
     }
 
+    public async Task<IReadOnlyList<PriceListListItemDto>> GetPriceListsAsync(CancellationToken ct = default)
+    {
+        await using var db = await dbFactory.CreateDbContextAsync(ct);
+
+        return await db.PriceLists
+            .AsNoTracking()
+            .Where(x => x.TenantId == db.TenantId)
+            .OrderByDescending(x => x.ImportedAt ?? x.CreatedAt)
+            .Select(x => new PriceListListItemDto(
+                x.Id,
+                x.Name,
+                x.SupplierName,
+                x.Currency,
+                x.ValidFrom,
+                x.ValidTo,
+                x.SourceFileName,
+                x.CreatedAt,
+                x.ImportedAt,
+                x.IsActive,
+                db.PriceListItems.Count(i => i.TenantId == db.TenantId && i.PriceListId == x.Id)))
+            .ToListAsync(ct);
+    }
+
+    public async Task<PriceListDetailsDto?> GetPriceListDetailsAsync(Guid priceListId, CancellationToken ct = default)
+    {
+        await using var db = await dbFactory.CreateDbContextAsync(ct);
+
+        var priceList = await db.PriceLists
+            .AsNoTracking()
+            .Where(x => x.Id == priceListId && x.TenantId == db.TenantId)
+            .Select(x => new
+            {
+                x.Id,
+                x.Name,
+                x.SupplierName,
+                x.Currency,
+                x.ValidFrom,
+                x.ValidTo,
+                x.SourceFileName,
+                x.SourceFilePath,
+                x.SourceFileHash,
+                x.CreatedAt,
+                x.ImportedAt,
+                x.IsActive,
+                x.Note
+            })
+            .FirstOrDefaultAsync(ct);
+
+        if (priceList is null)
+            return null;
+
+        var items = await db.PriceListItems
+            .AsNoTracking()
+            .Where(x => x.PriceListId == priceListId && x.TenantId == db.TenantId)
+            .OrderBy(x => x.CategoryName)
+            .ThenBy(x => x.Name)
+            .Select(x => new PriceListItemDto(
+                x.Id,
+                x.ArticleNumber,
+                x.ProductCode,
+                x.Name,
+                x.Description,
+                x.CategoryName,
+                x.ClassificationPath,
+                x.BasePrice,
+                x.DiscountPercent,
+                x.NetPrice,
+                x.Unit,
+                x.Currency,
+                x.SupplierName,
+                x.ConsumptionFactor,
+                x.WastePercent,
+                x.SourceFileName,
+                x.SourcePageNumber,
+                x.SourceSheetName,
+                x.SourceCellRange,
+                x.SourceText,
+                x.Confidence,
+                x.CreatedAt,
+                x.IsActive,
+                x.UserNote))
+            .ToListAsync(ct);
+
+        return new PriceListDetailsDto(
+            priceList.Id,
+            priceList.Name,
+            priceList.SupplierName,
+            priceList.Currency,
+            priceList.ValidFrom,
+            priceList.ValidTo,
+            priceList.SourceFileName,
+            priceList.SourceFilePath,
+            priceList.SourceFileHash,
+            priceList.CreatedAt,
+            priceList.ImportedAt,
+            priceList.IsActive,
+            priceList.Note,
+            items);
+    }
+
+    public async Task<bool> UpdatePriceListAsync(PriceListUpdateDto priceListUpdate, CancellationToken ct = default)
+    {
+        await using var db = await dbFactory.CreateDbContextAsync(ct);
+
+        var updated = await db.PriceLists
+            .Where(x => x.Id == priceListUpdate.Id && x.TenantId == db.TenantId)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(x => x.Name, Truncate(priceListUpdate.Name, 300) ?? "")
+                .SetProperty(x => x.SupplierName, Truncate(NormalizeOptional(priceListUpdate.SupplierName), 300))
+                .SetProperty(x => x.Currency, Truncate(string.IsNullOrWhiteSpace(priceListUpdate.Currency) ? "SEK" : priceListUpdate.Currency.Trim(), 10)!)
+                .SetProperty(x => x.ValidFrom, priceListUpdate.ValidFrom)
+                .SetProperty(x => x.ValidTo, priceListUpdate.ValidTo)
+                .SetProperty(x => x.IsActive, priceListUpdate.IsActive)
+                .SetProperty(x => x.Note, NormalizeOptional(priceListUpdate.Note)), ct);
+
+        return updated > 0;
+    }
+
+    public async Task<bool> SetPriceListActiveAsync(Guid priceListId, bool isActive, CancellationToken ct = default)
+    {
+        await using var db = await dbFactory.CreateDbContextAsync(ct);
+
+        var updated = await db.PriceLists
+            .Where(x => x.Id == priceListId && x.TenantId == db.TenantId)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.IsActive, isActive), ct);
+
+        return updated > 0;
+    }
+
+    public async Task<bool> UpdatePriceListItemAsync(PriceListItemUpdateDto itemUpdate, CancellationToken ct = default)
+    {
+        await using var db = await dbFactory.CreateDbContextAsync(ct);
+
+        var updated = await db.PriceListItems
+            .Where(x => x.Id == itemUpdate.Id && x.TenantId == db.TenantId)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(x => x.ArticleNumber, Truncate(NormalizeOptional(itemUpdate.ArticleNumber), 150))
+                .SetProperty(x => x.ProductCode, Truncate(NormalizeOptional(itemUpdate.ProductCode), 150))
+                .SetProperty(x => x.Name, Truncate(itemUpdate.Name, 500) ?? "")
+                .SetProperty(x => x.Description, NormalizeOptional(itemUpdate.Description))
+                .SetProperty(x => x.CategoryName, NormalizeOptional(itemUpdate.CategoryName))
+                .SetProperty(x => x.ClassificationPath, NormalizeOptional(itemUpdate.ClassificationPath))
+                .SetProperty(x => x.BasePrice, itemUpdate.BasePrice)
+                .SetProperty(x => x.DiscountPercent, itemUpdate.DiscountPercent)
+                .SetProperty(x => x.NetPrice, itemUpdate.NetPrice)
+                .SetProperty(x => x.Unit, Truncate(NormalizeOptional(itemUpdate.Unit), 50))
+                .SetProperty(x => x.Currency, Truncate(string.IsNullOrWhiteSpace(itemUpdate.Currency) ? "SEK" : itemUpdate.Currency.Trim(), 10)!)
+                .SetProperty(x => x.SupplierName, Truncate(NormalizeOptional(itemUpdate.SupplierName), 300))
+                .SetProperty(x => x.ConsumptionFactor, itemUpdate.ConsumptionFactor)
+                .SetProperty(x => x.WastePercent, itemUpdate.WastePercent)
+                .SetProperty(x => x.IsActive, itemUpdate.IsActive)
+                .SetProperty(x => x.UserNote, NormalizeOptional(itemUpdate.UserNote)), ct);
+
+        return updated > 0;
+    }
+
+    public async Task<bool> SetPriceListItemActiveAsync(Guid itemId, bool isActive, CancellationToken ct = default)
+    {
+        await using var db = await dbFactory.CreateDbContextAsync(ct);
+
+        var updated = await db.PriceListItems
+            .Where(x => x.Id == itemId && x.TenantId == db.TenantId)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.IsActive, isActive), ct);
+
+        return updated > 0;
+    }
+
     public async Task<Guid> CreateManualTestJobAsync(
         string? supplierName = null,
         string? sourceFileName = null,
@@ -403,16 +570,24 @@ public sealed class PriceImportService(
         await using var db = await dbFactory.CreateDbContextAsync(ct);
 
         var candidate = await db.PriceImportCandidates
+            .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == candidateId && x.TenantId == db.TenantId, ct);
 
         if (candidate is null)
             return false;
 
-        candidate.Status = status == PriceImportCandidateStatus.Approved && !CanApproveCandidate(candidate, out _)
+        var newStatus = status == PriceImportCandidateStatus.Approved && !CanApproveCandidate(candidate, out _)
             ? PriceImportCandidateStatus.NeedsReview
             : status;
+
+        var updated = await db.PriceImportCandidates
+            .Where(x => x.Id == candidateId && x.TenantId == db.TenantId)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.Status, newStatus), ct);
+
+        if (updated == 0)
+            return false;
+
         await RefreshJobCountsAsync(db, candidate.ImportJobId, ct);
-        await db.SaveChangesAsync(ct);
         return true;
     }
 
@@ -442,8 +617,8 @@ public sealed class PriceImportService(
         if (candidate.Status == PriceImportCandidateStatus.Approved && !CanApproveCandidate(candidate, out _))
             candidate.Status = PriceImportCandidateStatus.NeedsReview;
 
-        await RefreshJobCountsAsync(db, candidate.ImportJobId, ct);
         await db.SaveChangesAsync(ct);
+        await RefreshJobCountsAsync(db, candidate.ImportJobId, ct);
         return true;
     }
 
@@ -459,6 +634,7 @@ public sealed class PriceImportService(
 
         var ids = candidateIds.Distinct().ToList();
         var candidates = await db.PriceImportCandidates
+            .AsNoTracking()
             .Where(x => ids.Contains(x.Id) && x.TenantId == db.TenantId)
             .ToListAsync(ct);
 
@@ -475,14 +651,17 @@ public sealed class PriceImportService(
                 candidate.Status = status;
             }
 
-            changed++;
+            var updated = await db.PriceImportCandidates
+                .Where(x => x.Id == candidate.Id && x.TenantId == db.TenantId)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.Status, candidate.Status), ct);
+
+            changed += updated;
             jobIds.Add(candidate.ImportJobId);
         }
 
         foreach (var jobId in jobIds)
             await RefreshJobCountsAsync(db, jobId, ct);
 
-        await db.SaveChangesAsync(ct);
         return changed;
     }
 
@@ -491,6 +670,7 @@ public sealed class PriceImportService(
         await using var db = await dbFactory.CreateDbContextAsync(ct);
 
         var candidates = await db.PriceImportCandidates
+            .AsNoTracking()
             .Where(x => x.ImportJobId == jobId && x.TenantId == db.TenantId && x.Status == PriceImportCandidateStatus.Ready)
             .ToListAsync(ct);
 
@@ -499,16 +679,18 @@ public sealed class PriceImportService(
         {
             if (!CanApproveCandidate(candidate, out _))
             {
-                candidate.Status = PriceImportCandidateStatus.NeedsReview;
+                await db.PriceImportCandidates
+                    .Where(x => x.Id == candidate.Id && x.TenantId == db.TenantId)
+                    .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.Status, PriceImportCandidateStatus.NeedsReview), ct);
                 continue;
             }
 
-            candidate.Status = PriceImportCandidateStatus.Approved;
-            approved++;
+            approved += await db.PriceImportCandidates
+                .Where(x => x.Id == candidate.Id && x.TenantId == db.TenantId)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.Status, PriceImportCandidateStatus.Approved), ct);
         }
 
         await RefreshJobCountsAsync(db, jobId, ct);
-        await db.SaveChangesAsync(ct);
         return approved;
     }
 
@@ -523,17 +705,24 @@ public sealed class PriceImportService(
         await using var db = await dbFactory.CreateDbContextAsync(ct);
 
         var candidate = await db.PriceImportCandidates
+            .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == candidateId && x.TenantId == db.TenantId, ct);
 
         if (candidate is null)
             return false;
 
-        candidate.Status = CanApproveCandidate(candidate, out _)
+        var status = CanApproveCandidate(candidate, out _)
             ? PriceImportCandidateStatus.Approved
             : PriceImportCandidateStatus.NeedsReview;
 
+        var updated = await db.PriceImportCandidates
+            .Where(x => x.Id == candidateId && x.TenantId == db.TenantId)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.Status, status), ct);
+
+        if (updated == 0)
+            return false;
+
         await RefreshJobCountsAsync(db, candidate.ImportJobId, ct);
-        await db.SaveChangesAsync(ct);
         return true;
     }
 
@@ -541,14 +730,14 @@ public sealed class PriceImportService(
     {
         await using var db = await dbFactory.CreateDbContextAsync(ct);
 
-        var job = await db.PriceImportJobs.FirstOrDefaultAsync(x => x.Id == jobId && x.TenantId == db.TenantId, ct);
+        var job = await db.PriceImportJobs
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == jobId && x.TenantId == db.TenantId, ct);
         if (job is null)
             return null;
 
-        if (job.Status == PriceImportJobStatus.Completed)
-            return null;
-
         var approvedCandidates = await db.PriceImportCandidates
+            .AsNoTracking()
             .Where(x => x.ImportJobId == jobId && x.TenantId == db.TenantId && x.Status == PriceImportCandidateStatus.Approved)
             .OrderBy(x => x.Name)
             .ToListAsync(ct);
@@ -556,73 +745,101 @@ public sealed class PriceImportService(
         if (approvedCandidates.Count == 0)
             return null;
 
-        var existingPriceList = await db.PriceLists
-            .AsNoTracking()
-            .AnyAsync(x => x.TenantId == db.TenantId
-                && x.SourceFileHash == job.SourceFileHash
-                && x.SourceFileHash != null, ct);
-
-        if (existingPriceList)
-        {
-            job.Status = PriceImportJobStatus.Completed;
-            job.CompletedAt ??= DateTime.UtcNow;
-            await db.SaveChangesAsync(ct);
-            return null;
-        }
-
         var now = DateTime.UtcNow;
-        var priceList = new PriceList
-        {
-            Id = Guid.NewGuid(),
-            TenantId = db.TenantId,
-            Name = $"{job.SupplierName ?? "Imported"} - {job.SourceFileName}",
-            SupplierName = job.SupplierName,
-            Currency = approvedCandidates.FirstOrDefault(x => !string.IsNullOrWhiteSpace(x.Currency))?.Currency ?? "SEK",
-            SourceFileName = job.SourceFileName,
-            SourceFilePath = job.SourceFilePath,
-            SourceFileHash = job.SourceFileHash,
-            CreatedAt = now,
-            ImportedAt = now,
-            IsActive = true,
-            Note = "Created from approved smart price import candidates."
-        };
-
-        foreach (var candidate in approvedCandidates)
-        {
-            priceList.Items.Add(new PriceListItem
+        var priceListInfo = await db.PriceLists
+            .AsNoTracking()
+            .Where(x => x.TenantId == db.TenantId
+                && x.SourceFileHash == job.SourceFileHash
+                && x.SourceFileHash != null)
+            .Select(x => new
             {
-                Id = Guid.NewGuid(),
+                x.Id
+            })
+            .FirstOrDefaultAsync(ct);
+
+        var priceListId = priceListInfo?.Id ?? Guid.NewGuid();
+        if (priceListInfo is null)
+        {
+            db.PriceLists.Add(new PriceList
+            {
+                Id = priceListId,
                 TenantId = db.TenantId,
-                PriceListId = priceList.Id,
-                ArticleNumber = candidate.ArticleNumber,
-                ProductCode = candidate.ProductCode,
-                Name = candidate.Name,
-                Description = candidate.Description,
-                CategoryName = candidate.CategoryName,
-                BasePrice = candidate.BasePrice,
-                DiscountPercent = candidate.DiscountPercent,
-                NetPrice = candidate.NetPrice,
-                Unit = candidate.Unit,
-                Currency = candidate.Currency,
-                SupplierName = candidate.SupplierName ?? job.SupplierName,
+                Name = $"{job.SupplierName ?? "Imported"} - {job.SourceFileName}",
+                SupplierName = job.SupplierName,
+                Currency = approvedCandidates.FirstOrDefault(x => !string.IsNullOrWhiteSpace(x.Currency))?.Currency ?? "SEK",
                 SourceFileName = job.SourceFileName,
-                SourcePageNumber = candidate.PageNumber,
-                SourceSheetName = candidate.SheetName,
-                SourceCellRange = candidate.CellRange,
-                SourceText = candidate.SourceText,
-                Confidence = candidate.Confidence,
+                SourceFilePath = job.SourceFilePath,
+                SourceFileHash = job.SourceFileHash,
                 CreatedAt = now,
-                IsActive = true
+                ImportedAt = now,
+                IsActive = true,
+                Note = "Created from approved smart price import candidates."
             });
         }
 
-        job.Status = PriceImportJobStatus.Completed;
-        job.CompletedAt = now;
+        var existingItems = await db.PriceListItems
+            .AsNoTracking()
+            .Where(x => x.TenantId == db.TenantId && x.PriceListId == priceListId)
+            .Select(x => new
+            {
+                x.ArticleNumber,
+                x.ProductCode,
+                x.Name,
+                x.BasePrice,
+                x.NetPrice,
+                x.Unit
+            })
+            .ToListAsync(ct);
+
+        var newItems = new List<PriceListItem>();
+        foreach (var candidate in approvedCandidates)
+        {
+            var duplicate = existingItems.Any(x => IsSamePriceListItem(x.ArticleNumber, x.ProductCode, x.Name, x.BasePrice, x.NetPrice, x.Unit, candidate))
+                || newItems.Any(x => IsSamePriceListItem(x.ArticleNumber, x.ProductCode, x.Name, x.BasePrice, x.NetPrice, x.Unit, candidate));
+
+            if (!duplicate)
+                newItems.Add(CreatePriceListItemFromCandidate(candidate, job, priceListId, db.TenantId, now));
+        }
+
+        if (newItems.Count > 0)
+            db.PriceListItems.AddRange(newItems);
+
+        try
+        {
+            await db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            logger.LogWarning(
+                ex,
+                "Concurrency error while converting approved candidates. ImportJobId={ImportJobId}, TenantId={TenantId}, PriceListId={PriceListId}",
+                jobId,
+                db.TenantId,
+                priceListId);
+
+            return null;
+        }
+
+        await db.PriceImportJobs
+            .Where(x => x.Id == jobId && x.TenantId == db.TenantId)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(x => x.Status, PriceImportJobStatus.Completed)
+                .SetProperty(x => x.CompletedAt, now), ct);
+
+        await db.PriceImportCandidates
+            .Where(x => x.ImportJobId == jobId && x.TenantId == db.TenantId && x.Status == PriceImportCandidateStatus.Approved)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.Status, PriceImportCandidateStatus.Imported), ct);
+
         await RefreshJobCountsAsync(db, jobId, ct);
 
-        db.PriceLists.Add(priceList);
-        await db.SaveChangesAsync(ct);
-        return priceList.Id;
+        logger.LogInformation(
+            "Converted approved candidates to price list. ImportJobId={ImportJobId}, TenantId={TenantId}, PriceListId={PriceListId}, CreatedItems={CreatedItems}",
+            jobId,
+            db.TenantId,
+            priceListId,
+            newItems.Count);
+
+        return priceListId;
     }
 
     public async Task<PriceImportAiRunResultDto> RunAiExtractionForJobAsync(Guid importJobId, CancellationToken ct = default)
@@ -738,6 +955,91 @@ public sealed class PriceImportService(
             aiResult.Items.Count,
             newCandidates.Count,
             $"AI extraction completed. Created {newCandidates.Count} new candidates.");
+    }
+
+    private static PriceListItem CreatePriceListItemFromCandidate(
+        PriceImportCandidate candidate,
+        PriceImportJob job,
+        Guid priceListId,
+        int tenantId,
+        DateTime now)
+    {
+        return new PriceListItem
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            PriceListId = priceListId,
+            ArticleNumber = candidate.ArticleNumber,
+            ProductCode = candidate.ProductCode,
+            Name = candidate.Name,
+            Description = candidate.Description,
+            CategoryName = candidate.CategoryName,
+            BasePrice = candidate.BasePrice,
+            DiscountPercent = candidate.DiscountPercent,
+            NetPrice = candidate.NetPrice,
+            Unit = candidate.Unit,
+            Currency = candidate.Currency,
+            SupplierName = candidate.SupplierName ?? job.SupplierName,
+            SourceFileName = job.SourceFileName,
+            SourcePageNumber = candidate.PageNumber,
+            SourceSheetName = candidate.SheetName,
+            SourceCellRange = candidate.CellRange,
+            SourceText = candidate.SourceText,
+            Confidence = candidate.Confidence,
+            CreatedAt = now,
+            IsActive = true
+        };
+    }
+
+    private static bool IsSamePriceListItem(
+        string? articleNumber,
+        string? productCode,
+        string name,
+        decimal? basePrice,
+        decimal? netPrice,
+        string? unit,
+        PriceImportCandidate candidate)
+    {
+        return SameText(articleNumber, candidate.ArticleNumber)
+            && SameText(productCode, candidate.ProductCode)
+            && SameText(name, candidate.Name)
+            && basePrice == candidate.BasePrice
+            && netPrice == candidate.NetPrice
+            && SameText(unit, candidate.Unit);
+    }
+
+    public async Task<PriceImportDeleteResultDto> DeleteImportJobAsync(Guid jobId, CancellationToken ct = default)
+    {
+        await using var db = await dbFactory.CreateDbContextAsync(ct);
+
+        var job = await db.PriceImportJobs
+            .FirstOrDefaultAsync(x => x.Id == jobId && x.TenantId == db.TenantId, ct);
+
+        if (job is null)
+            return new PriceImportDeleteResultDto(false, "Import job was not found.");
+
+        var sourcePath = job.SourceFilePath;
+        var sourceFileName = job.SourceFileName;
+        var status = job.Status;
+
+        db.PriceImportJobs.Remove(job);
+        await db.SaveChangesAsync(ct);
+
+        var fileDeleted = TryDeleteStoredImportFile(sourcePath);
+
+        logger.LogInformation(
+            "Deleted price import job. ImportJobId={ImportJobId}, TenantId={TenantId}, FileName={FileName}, Status={Status}, FileDeleted={FileDeleted}",
+            jobId,
+            db.TenantId,
+            sourceFileName,
+            status,
+            fileDeleted);
+
+        return new PriceImportDeleteResultDto(
+            true,
+            fileDeleted
+                ? "Import job and stored file were deleted."
+                : "Import job was deleted. Stored file was not found or could not be deleted.");
     }
 
     private static void RefreshJobCounts(PriceImportJob job)
@@ -885,6 +1187,31 @@ public sealed class PriceImportService(
         catch
         {
             // Best-effort cleanup only; the import is still blocked by hash.
+        }
+    }
+
+    private static bool TryDeleteStoredImportFile(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            return false;
+
+        try
+        {
+            var fullPath = Path.GetFullPath(path);
+            if (!File.Exists(fullPath))
+                return false;
+
+            File.Delete(fullPath);
+
+            var folder = Path.GetDirectoryName(fullPath);
+            if (!string.IsNullOrWhiteSpace(folder) && Directory.Exists(folder) && !Directory.EnumerateFileSystemEntries(folder).Any())
+                Directory.Delete(folder);
+
+            return true;
+        }
+        catch
+        {
+            return false;
         }
     }
 
@@ -1222,6 +1549,15 @@ public sealed class PriceImportService(
         return normalized.Length <= 80 ? normalized : normalized[..80];
     }
 
+    private static string? Truncate(string? value, int maxLength)
+    {
+        var normalized = NormalizeOptional(value);
+        if (normalized is null)
+            return null;
+
+        return normalized.Length <= maxLength ? normalized : normalized[..maxLength];
+    }
+
     private static string? NormalizeOptional(string? value)
         => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
@@ -1245,10 +1581,6 @@ public sealed class PriceImportService(
         Guid jobId,
         CancellationToken ct)
     {
-        var job = await db.PriceImportJobs.FirstOrDefaultAsync(x => x.Id == jobId && x.TenantId == db.TenantId, ct);
-        if (job is null)
-            return;
-
         var counts = await db.PriceImportCandidates
             .Where(x => x.ImportJobId == jobId && x.TenantId == db.TenantId)
             .GroupBy(x => 1)
@@ -1262,10 +1594,19 @@ public sealed class PriceImportService(
             })
             .FirstOrDefaultAsync(ct);
 
-        job.TotalCandidates = counts?.Total ?? 0;
-        job.ReadyCount = counts?.Ready ?? 0;
-        job.ReviewCount = counts?.Review ?? 0;
-        job.ErrorCount = counts?.Error ?? 0;
-        job.ApprovedCount = counts?.Approved ?? 0;
+        var total = counts?.Total ?? 0;
+        var ready = counts?.Ready ?? 0;
+        var review = counts?.Review ?? 0;
+        var error = counts?.Error ?? 0;
+        var approved = counts?.Approved ?? 0;
+
+        await db.PriceImportJobs
+            .Where(x => x.Id == jobId && x.TenantId == db.TenantId)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(x => x.TotalCandidates, total)
+                .SetProperty(x => x.ReadyCount, ready)
+                .SetProperty(x => x.ReviewCount, review)
+                .SetProperty(x => x.ErrorCount, error)
+                .SetProperty(x => x.ApprovedCount, approved), ct);
     }
 }
