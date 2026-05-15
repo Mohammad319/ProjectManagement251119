@@ -241,6 +241,43 @@ public sealed class PriceImportService(
         return updated > 0;
     }
 
+    public async Task<PriceImportDeleteResultDto> DeletePriceListAsync(Guid priceListId, CancellationToken ct = default)
+    {
+        await using var db = await dbFactory.CreateDbContextAsync(ct);
+
+        var priceList = await db.PriceLists
+            .AsNoTracking()
+            .Where(x => x.Id == priceListId && x.TenantId == db.TenantId)
+            .Select(x => new
+            {
+                x.Id,
+                x.Name
+            })
+            .FirstOrDefaultAsync(ct);
+
+        if (priceList is null)
+            return new PriceImportDeleteResultDto(false, "Price list was not found.");
+
+        var deletedItems = await db.PriceListItems
+            .Where(x => x.PriceListId == priceListId && x.TenantId == db.TenantId)
+            .ExecuteDeleteAsync(ct);
+
+        var deletedLists = await db.PriceLists
+            .Where(x => x.Id == priceListId && x.TenantId == db.TenantId)
+            .ExecuteDeleteAsync(ct);
+
+        if (deletedLists == 0)
+            return new PriceImportDeleteResultDto(false, "Price list could not be deleted.");
+
+        logger.LogInformation(
+            "Deleted price list. PriceListId={PriceListId}, TenantId={TenantId}, DeletedItems={DeletedItems}",
+            priceListId,
+            db.TenantId,
+            deletedItems);
+
+        return new PriceImportDeleteResultDto(true, $"Deleted price list '{priceList.Name}' and {deletedItems} item(s).");
+    }
+
     public async Task<bool> UpdatePriceListItemAsync(PriceListItemUpdateDto itemUpdate, CancellationToken ct = default)
     {
         await using var db = await dbFactory.CreateDbContextAsync(ct);
@@ -277,6 +314,38 @@ public sealed class PriceImportService(
             .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.IsActive, isActive), ct);
 
         return updated > 0;
+    }
+
+    public async Task<PriceImportDeleteResultDto> DeletePriceListItemAsync(Guid itemId, CancellationToken ct = default)
+    {
+        await using var db = await dbFactory.CreateDbContextAsync(ct);
+
+        var item = await db.PriceListItems
+            .AsNoTracking()
+            .Where(x => x.Id == itemId && x.TenantId == db.TenantId)
+            .Select(x => new
+            {
+                x.Id,
+                x.Name
+            })
+            .FirstOrDefaultAsync(ct);
+
+        if (item is null)
+            return new PriceImportDeleteResultDto(false, "Price item was not found.");
+
+        var deleted = await db.PriceListItems
+            .Where(x => x.Id == itemId && x.TenantId == db.TenantId)
+            .ExecuteDeleteAsync(ct);
+
+        if (deleted == 0)
+            return new PriceImportDeleteResultDto(false, "Price item could not be deleted.");
+
+        logger.LogInformation(
+            "Deleted price list item. PriceListItemId={PriceListItemId}, TenantId={TenantId}",
+            itemId,
+            db.TenantId);
+
+        return new PriceImportDeleteResultDto(true, $"Deleted price item '{item.Name}'.");
     }
 
     public async Task<Guid> CreateManualTestJobAsync(

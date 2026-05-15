@@ -1,330 +1,37 @@
 @page "/price-import"
+@using BlazorMHD.UI.Components.Navigation.Tabs
+@using BlazorMHD.UI.Core.Navigation
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize(Roles = PMRolesConst.Tenant.Users)]
 @rendermode InteractiveServer
 
-@inject IPriceImportService PriceImportService
-@inject NavigationManager Nav
-@inject Microsoft.Extensions.Options.IOptions<PriceImportStorageOptions> StorageOptions
-
-<div class="h-[calc(100vh-37px)] overflow-auto bg-slate-50 p-2 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-    <div class="mb-2 flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <div class="min-w-0">
-            <h1 class="text-base font-semibold">Smart Price Import</h1>
-            <p class="text-xs text-slate-500 dark:text-slate-400">Review imported price candidates before they become calculation prices.</p>
-        </div>
-
-        <div class="flex items-center gap-1">
-            <button type="button"
-                    class="inline-flex h-8 items-center rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-                    @onclick="CreateTestJobAsync"
-                    disabled="@IsBusy">
-                Create test job
-            </button>
-        </div>
-    </div>
-
-    <div class="mb-2 border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <div class="grid gap-2 lg:grid-cols-[minmax(180px,260px)_minmax(260px,1fr)_auto] lg:items-end">
-            <label class="block">
-                <span class="mb-1 block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">SupplierName</span>
-                <input class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs text-slate-900 outline-none transition focus:border-sky-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
-                       @bind="SupplierName"
-                       disabled="@IsBusy"
-                       placeholder="Optional supplier" />
-            </label>
-
-            <label class="block">
-                <span class="mb-1 block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">File upload</span>
-                <InputFile OnChange="OnFileSelected"
-                           disabled="@IsBusy"
-                           accept=".xlsx,.xls,.docx,.pdf"
-                           class="block h-8 w-full cursor-pointer rounded-md border border-slate-300 bg-white text-xs text-slate-700 file:mr-2 file:h-8 file:border-0 file:bg-slate-100 file:px-3 file:text-xs file:font-semibold file:text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:file:bg-slate-800 dark:file:text-slate-200" />
-            </label>
-
-            <button type="button"
-                    class="inline-flex h-8 items-center justify-center rounded-md bg-blue-600 px-3 text-xs font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-                    @onclick="StartImportAsync"
-                    disabled="@(IsBusy || SelectedFile is null)">
-                @(IsImporting ? "Import is running..." : "Start import")
-            </button>
-        </div>
-
-        <div class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-            Tillåtna filtyper: @AllowedExtensionsText. Maxstorlek: @MaxUploadSizeMb MB.
-        </div>
-
-        <div class="mt-2 flex flex-wrap items-center gap-2 text-xs">
-            @if (SelectedFile is not null)
-            {
-                <span class="rounded bg-slate-100 px-2 py-1 text-slate-700 dark:bg-slate-800 dark:text-slate-200">@SelectedFile.Name (@FormatSize(SelectedFile.Size))</span>
-            }
-
-            @if (!string.IsNullOrWhiteSpace(UploadMessage))
-            {
-                <span class="@UploadMessageClass">@UploadMessage</span>
-            }
-        </div>
-    </div>
-
-    @if (IsBusy && Jobs.Count == 0)
-    {
-        <div class="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">Loading...</div>
-    }
-    else if (Jobs.Count == 0)
-    {
-        <div class="rounded-md border border-dashed border-slate-300 bg-white px-3 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
-            No import jobs yet.
-        </div>
-    }
-    else
-    {
-        <div class="overflow-hidden border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <div class="overflow-x-auto">
-                <table class="min-w-full text-left text-xs">
-                    <thead class="border-b border-slate-200 bg-slate-100 text-[11px] uppercase text-slate-600 dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-400">
-                        <tr>
-                            <th class="px-2 py-2">SourceFileName</th>
-                            <th class="px-2 py-2">SupplierName</th>
-                            <th class="px-2 py-2">FileType</th>
-                            <th class="px-2 py-2">Status</th>
-                            <th class="px-2 py-2 text-right">Total</th>
-                            <th class="px-2 py-2 text-right">Ready</th>
-                            <th class="px-2 py-2 text-right">Review</th>
-                            <th class="px-2 py-2 text-right">Error</th>
-                            <th class="px-2 py-2 text-right">Approved</th>
-                            <th class="px-2 py-2">StartedAt</th>
-                            <th class="px-2 py-2">CompletedAt</th>
-                            <th class="px-2 py-2 text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                        @foreach (var job in Jobs)
-                        {
-                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60">
-                                <td class="max-w-[220px] truncate px-2 py-2 font-medium">@job.SourceFileName</td>
-                                <td class="max-w-[180px] truncate px-2 py-2">@job.SupplierName</td>
-                                <td class="px-2 py-2">@job.FileType</td>
-                                <td class="px-2 py-2"><span class="@StatusClass(job.Status)">@job.Status</span></td>
-                                <td class="px-2 py-2 text-right">@job.TotalCandidates</td>
-                                <td class="px-2 py-2 text-right">@job.ReadyCount</td>
-                                <td class="px-2 py-2 text-right">@job.ReviewCount</td>
-                                <td class="px-2 py-2 text-right">@job.ErrorCount</td>
-                                <td class="px-2 py-2 text-right">@job.ApprovedCount</td>
-                                <td class="whitespace-nowrap px-2 py-2">@FormatDate(job.StartedAt)</td>
-                                <td class="whitespace-nowrap px-2 py-2">@FormatDate(job.CompletedAt)</td>
-                                <td class="px-2 py-2 text-right">
-                                    <div class="flex justify-end gap-1">
-                                        <button type="button"
-                                                class="h-7 rounded-md border border-sky-300 bg-sky-50 px-2 text-xs font-semibold text-sky-700 transition hover:bg-sky-100 disabled:opacity-50 dark:border-sky-800 dark:bg-sky-950/50 dark:text-sky-300"
-                                                disabled="@IsBusy"
-                                                @onclick="() => OpenJob(job.Id)">
-                                            Open
-                                        </button>
-                                        <button type="button"
-                                                class="h-7 rounded-md border border-rose-300 bg-rose-50 px-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 disabled:opacity-50 dark:border-rose-900 dark:bg-rose-950/50 dark:text-rose-300"
-                                                disabled="@IsBusy"
-                                                @onclick="() => DeleteClickedAsync(job)">
-                                            @(DeleteTarget?.Id == job.Id ? "Confirm" : "Delete")
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    }
+<div class="h-[calc(100vh-37px)] overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+    <MhdTabs Items="@_tabs" @bind-ActiveKey="_activeKey" Size="MhdSize.Sm" />
 </div>
 
 @code {
-    private List<PriceImportJobListItemDto> Jobs { get; set; } = [];
-    private bool IsBusy;
-    private bool IsImporting;
-    private long MaxUploadSize => Math.Max(1, StorageOptions.Value.MaxUploadSizeMb) * 1024L * 1024L;
-    private int MaxUploadSizeMb => Math.Max(1, StorageOptions.Value.MaxUploadSizeMb);
-    private HashSet<string> AllowedExtensions => StorageOptions.Value.AllowedExtensions
-        .Where(x => !string.IsNullOrWhiteSpace(x))
-        .Select(x => x.Trim().StartsWith('.') ? x.Trim() : "." + x.Trim())
-        .ToHashSet(StringComparer.OrdinalIgnoreCase);
-    private string AllowedExtensionsText => string.Join(", ", AllowedExtensions.OrderBy(x => x));
+    private string? _activeKey;
+    private List<TabItem> _tabs = [];
 
-    private IBrowserFile? SelectedFile;
-    private PriceImportJobListItemDto? DeleteTarget;
-    private string? SupplierName;
-    private string? UploadMessage;
-    private bool UploadMessageIsError;
-    private string UploadMessageClass => UploadMessageIsError
-        ? "rounded bg-rose-100 px-2 py-1 font-medium text-rose-700 dark:bg-rose-950 dark:text-rose-300"
-        : "rounded bg-sky-100 px-2 py-1 font-medium text-sky-700 dark:bg-sky-950 dark:text-sky-300";
-
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        await LoadAsync();
-    }
-
-    private async Task LoadAsync()
-    {
-        IsBusy = true;
-        try
-        {
-            Jobs = (await PriceImportService.GetImportJobsAsync()).ToList();
-        }
-        finally
-        {
-            IsBusy = false;
-        }
-    }
-
-    private async Task CreateTestJobAsync()
-    {
-        IsBusy = true;
-        try
-        {
-            var id = await PriceImportService.CreateManualTestJobAsync();
-            Nav.NavigateTo($"/price-import/{id}");
-        }
-        finally
-        {
-            IsBusy = false;
-        }
-    }
-
-    private void OnFileSelected(InputFileChangeEventArgs e)
-    {
-        UploadMessage = null;
-        UploadMessageIsError = false;
-        SelectedFile = e.File;
-
-        var validation = ValidateFile(SelectedFile);
-        if (validation is null)
-            return;
-
-        UploadMessage = validation;
-        UploadMessageIsError = true;
-        SelectedFile = null;
-    }
-
-    private async Task StartImportAsync()
-    {
-        UploadMessage = null;
-        UploadMessageIsError = false;
-
-        var validation = ValidateFile(SelectedFile);
-        if (validation is not null)
-        {
-            UploadMessage = validation;
-            UploadMessageIsError = true;
-            return;
-        }
-
-        IsBusy = true;
-        IsImporting = true;
-        try
-        {
-            UploadMessage = "Uploading...";
-            await using var stream = SelectedFile!.OpenReadStream(MaxUploadSize);
-
-            UploadMessage = "Analyzing...";
-            var result = await PriceImportService.StartImportFromUploadedFileAsync(
-                stream,
-                SelectedFile.Name,
-                SelectedFile.Size,
-                SelectedFile.ContentType,
-                SupplierName);
-
-            if (result.Ok)
+        _tabs =
+        [
+            new TabItem
             {
-                UploadMessage = result.Message;
-                Nav.NavigateTo($"/price-import/{result.JobId}");
-                return;
+                Key = "jobs",
+                Text = "Import Jobs",
+                Icon = "fa fa-file-import",
+                Content = @<PriceImportJobsTabUI />
+            },
+            new TabItem
+            {
+                Key = "price-lists",
+                Text = "Price Lists",
+                Icon = "fa fa-list",
+                Content = @<PriceListsTabUI />
             }
-
-            UploadMessage = result.Message;
-            UploadMessageIsError = true;
-            await LoadAsync();
-        }
-        catch (Exception ex)
-        {
-            UploadMessage = ex.Message;
-            UploadMessageIsError = true;
-        }
-        finally
-        {
-            IsImporting = false;
-            IsBusy = false;
-        }
+        ];
+        _activeKey = "jobs";
     }
-
-    private string? ValidateFile(IBrowserFile? file)
-    {
-        if (file is null)
-            return "File is required.";
-
-        var extension = Path.GetExtension(file.Name);
-        if (!AllowedExtensions.Contains(extension))
-            return $"Filtypen stöds inte. Tillåtna filtyper är: {AllowedExtensionsText}";
-
-        if (file.Size <= 0)
-            return "File is empty.";
-
-        if (file.Size > MaxUploadSize)
-            return $"Max file size is {MaxUploadSizeMb} MB.";
-
-        return null;
-    }
-
-    private void OpenJob(Guid id) => Nav.NavigateTo($"/price-import/{id}");
-
-    private async Task DeleteClickedAsync(PriceImportJobListItemDto job)
-    {
-        if (DeleteTarget?.Id == job.Id)
-        {
-            await DeleteConfirmedAsync();
-            return;
-        }
-
-        DeleteTarget = job;
-        UploadMessage = $"Delete import '{job.SourceFileName}'? Click Delete again to confirm.";
-        UploadMessageIsError = true;
-    }
-
-    private async Task DeleteConfirmedAsync()
-    {
-        if (DeleteTarget is null)
-            return;
-
-        IsBusy = true;
-        UploadMessage = null;
-        UploadMessageIsError = false;
-        try
-        {
-            var result = await PriceImportService.DeleteImportJobAsync(DeleteTarget.Id);
-            UploadMessage = result.Message;
-            UploadMessageIsError = !result.Ok;
-            DeleteTarget = null;
-            await LoadAsync();
-        }
-        finally
-        {
-            IsBusy = false;
-        }
-    }
-
-    private static string FormatDate(DateTime? value)
-        => value.HasValue ? value.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm") : "-";
-
-    private static string FormatSize(long bytes)
-        => bytes < 1024 * 1024
-            ? $"{bytes / 1024m:0.#} KB"
-            : $"{bytes / 1024m / 1024m:0.#} MB";
-
-    private static string StatusClass(PriceImportJobStatus status) => status switch
-    {
-        PriceImportJobStatus.Completed => "inline-flex rounded bg-emerald-100 px-1.5 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
-        PriceImportJobStatus.Failed => "inline-flex rounded bg-rose-100 px-1.5 py-0.5 text-[11px] font-semibold text-rose-700 dark:bg-rose-950 dark:text-rose-300",
-        PriceImportJobStatus.ReadyForReview => "inline-flex rounded bg-sky-100 px-1.5 py-0.5 text-[11px] font-semibold text-sky-700 dark:bg-sky-950 dark:text-sky-300",
-        _ => "inline-flex rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300"
-    };
 }

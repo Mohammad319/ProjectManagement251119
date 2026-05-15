@@ -1,34 +1,20 @@
-@page "/price-import/jobs/{JobId:guid}"
 @using Microsoft.AspNetCore.Authorization
 @using ProjectManagement.Shared.Helper.Text
-@attribute [Authorize(Roles = PMRolesConst.Tenant.Users)]
-@rendermode InteractiveServer
 
 @inject IPriceImportService PriceImportService
+@inject MhdServices MHD
 @inject Microsoft.Extensions.Options.IOptions<PriceImportAiOptions> AiOptions
-@inject NavigationManager NavigationManager
 
-<div class="flex h-[calc(100vh-37px)] flex-col overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-
-    <div class="shrink-0 flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <div class="flex min-w-0 items-center gap-3">
-            <button type="button"
-                    class="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-                    @onclick='() => NavigationManager.NavigateTo("/price-import")'>
-                <i class="fa fa-arrow-left text-[10px]"></i> Back
-            </button>
-            <div class="min-w-0">
-                <h1 class="truncate text-base font-semibold">@Job?.SourceFileName</h1>
-                <div class="mt-0.5 flex flex-wrap gap-1 text-[11px] text-slate-500 dark:text-slate-400">
-                    @if (!string.IsNullOrWhiteSpace(Job?.SupplierName))
-                    {
-                        <span>@Job.SupplierName</span>
-                        <span>|</span>
-                    }
-                    <span>@Job?.FileType</span>
-                    <span>|</span>
-                    <span>@Job?.Status</span>
-                </div>
+<div class="flex flex-col gap-2 bg-slate-50 p-2 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+    <div class="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div class="min-w-0">
+            <h1 class="truncate text-base font-semibold">@Job?.SourceFileName</h1>
+            <div class="mt-1 flex flex-wrap gap-1 text-[11px] text-slate-500 dark:text-slate-400">
+                <span>@Job?.SupplierName</span>
+                <span>|</span>
+                <span>@Job?.FileType</span>
+                <span>|</span>
+                <span>@Job?.Status</span>
             </div>
         </div>
 
@@ -42,6 +28,7 @@
                     Run AI extraction
                 </button>
             }
+
             <button type="button"
                     class="inline-flex h-8 items-center rounded-md bg-blue-600 px-3 text-xs font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                     @onclick="ConvertApprovedAsync"
@@ -53,31 +40,30 @@
 
     @if (Job is not null && HasSourceText && !AiOptions.Value.Enabled)
     {
-        <div class="shrink-0 mx-2 mt-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-950/50 dark:text-amber-200">
+        <div class="shrink-0 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-950/50 dark:text-amber-200">
             AI extraction is disabled. Enable PriceImportAi:Enabled in configuration.
         </div>
     }
 
     @if (!string.IsNullOrWhiteSpace(Message))
     {
-        <div class="@MessageClass mx-2 mt-2">@Message</div>
+        <div class="@MessageClass">@Message</div>
     }
 
     @if (IsBusy && Job is null)
     {
-        <div class="m-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">Loading...</div>
+        <div class="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">Loading...</div>
     }
     else if (Job is null)
     {
-        <div class="m-2 rounded-md border border-dashed border-slate-300 bg-white px-3 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
+        <div class="rounded-md border border-dashed border-slate-300 bg-white px-3 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
             Import job was not found.
         </div>
     }
     else
     {
-        <div class="flex flex-1 min-h-0 flex-col gap-2 p-2">
-
-            <div class="grid shrink-0 grid-cols-2 gap-2 text-xs md:grid-cols-6">
+        <div class="flex flex-col gap-2">
+            <div class="grid shrink-0 grid-cols-2 gap-2 text-xs md:grid-cols-5">
                 @foreach (var metric in Metrics)
                 {
                     <div class="border border-slate-200 bg-white px-3 py-1.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
@@ -97,16 +83,16 @@
                     <div class="flex flex-wrap gap-1">
                         @foreach (var option in StatusFilters)
                         {
-                            <button type="button" class="@StatusFilterClass(option.Status)" @onclick="() => SetStatusFilter(option.Status)">
+                            <button type="button"
+                                    class="@StatusFilterClass(option.Status)"
+                                    @onclick="() => SetStatusFilter(option.Status)">
                                 @option.Label
                             </button>
                         }
                     </div>
 
                     <div class="ml-auto flex flex-wrap items-center gap-1">
-                        <span class="mr-1 whitespace-nowrap text-[11px] text-slate-500 dark:text-slate-400">
-                            @SelectedCandidateIds.Count selected / @FilteredCandidates.Count shown
-                        </span>
+                        <span class="mr-1 whitespace-nowrap text-[11px] text-slate-500 dark:text-slate-400">@SelectedCandidateIds.Count selected / @FilteredCandidates.Count shown</span>
                         <button type="button" class="h-8 rounded-md border border-emerald-300 bg-emerald-50 px-2 text-[11px] font-semibold text-emerald-700 hover:bg-emerald-100 disabled:opacity-50 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300" disabled="@(IsBusy || SelectedCandidateIds.Count == 0)" @onclick="ApproveSelectedAsync">Approve selected</button>
                         <button type="button" class="h-8 rounded-md border border-slate-300 bg-slate-50 px-2 text-[11px] font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200" disabled="@(IsBusy || SelectedCandidateIds.Count == 0)" @onclick="IgnoreSelectedAsync">Ignore selected</button>
                         <button type="button" class="h-8 rounded-md border border-amber-300 bg-amber-50 px-2 text-[11px] font-semibold text-amber-700 hover:bg-amber-100 disabled:opacity-50 dark:border-amber-900 dark:bg-amber-950/50 dark:text-amber-300" disabled="@(IsBusy || SelectedCandidateIds.Count == 0)" @onclick="NeedsReviewSelectedAsync">NeedsReview selected</button>
@@ -115,7 +101,7 @@
                 </div>
             </div>
 
-            <div class="flex-1 min-h-0 overflow-hidden border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div class="max-h-[62vh] overflow-hidden border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
                 <div class="h-full overflow-auto">
                     <table class="min-w-[1540px] table-fixed text-left text-xs">
                         <thead class="sticky top-0 z-20 border-b border-slate-200 bg-slate-100 text-[11px] uppercase text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
@@ -184,10 +170,7 @@
                                         <td class="truncate px-2 py-2" title="@candidate.SupplierName">@candidate.SupplierName</td>
                                         <td class="px-2 py-2 text-right">@candidate.Confidence.ToString("0.0000")</td>
                                         <td class="px-2 py-2">
-                                            <button type="button"
-                                                    class="text-[11px] font-semibold text-sky-700 hover:underline disabled:text-slate-400 dark:text-sky-300"
-                                                    disabled="@string.IsNullOrWhiteSpace(candidate.SourceText)"
-                                                    @onclick="() => ShowSource(candidate)">
+                                            <button type="button" class="text-[11px] font-semibold text-sky-700 hover:underline disabled:text-slate-400 dark:text-sky-300" disabled="@string.IsNullOrWhiteSpace(candidate.SourceText)" @onclick="() => ShowSource(candidate)">
                                                 Show source
                                             </button>
                                         </td>
@@ -207,33 +190,70 @@
                     </table>
                 </div>
             </div>
-
         </div>
     }
 </div>
 
 @if (EditModel is not null)
 {
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4">
+    <div class="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/60 p-4">
         <div class="max-h-[90vh] w-full max-w-5xl overflow-auto rounded-lg border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900">
             <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
                 <h2 class="text-sm font-semibold">Edit candidate</h2>
                 <button type="button" class="text-sm text-slate-500 hover:text-slate-900 dark:hover:text-slate-100" @onclick="CloseEdit">Close</button>
             </div>
+
             <div class="grid gap-3 p-4 text-xs md:grid-cols-4">
-                <label class="space-y-1"><span class="text-slate-500 dark:text-slate-400">ArticleNumber</span><input class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 dark:border-slate-700 dark:bg-slate-950" @bind="EditModel.ArticleNumber" /></label>
-                <label class="space-y-1"><span class="text-slate-500 dark:text-slate-400">ProductCode</span><input class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 dark:border-slate-700 dark:bg-slate-950" @bind="EditModel.ProductCode" /></label>
-                <label class="space-y-1 md:col-span-2"><span class="text-slate-500 dark:text-slate-400">Name</span><input class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 dark:border-slate-700 dark:bg-slate-950" @bind="EditModel.Name" /></label>
-                <label class="space-y-1 md:col-span-2"><span class="text-slate-500 dark:text-slate-400">Description</span><input class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 dark:border-slate-700 dark:bg-slate-950" @bind="EditModel.Description" /></label>
-                <label class="space-y-1"><span class="text-slate-500 dark:text-slate-400">CategoryName</span><input class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 dark:border-slate-700 dark:bg-slate-950" @bind="EditModel.CategoryName" /></label>
-                <label class="space-y-1"><span class="text-slate-500 dark:text-slate-400">SupplierName</span><input class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 dark:border-slate-700 dark:bg-slate-950" @bind="EditModel.SupplierName" /></label>
-                <label class="space-y-1"><span class="text-slate-500 dark:text-slate-400">BasePrice</span><input type="number" step="0.0001" class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 dark:border-slate-700 dark:bg-slate-950" @bind="EditModel.BasePrice" /></label>
-                <label class="space-y-1"><span class="text-slate-500 dark:text-slate-400">DiscountPercent</span><input type="number" step="0.0001" class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 dark:border-slate-700 dark:bg-slate-950" @bind="EditModel.DiscountPercent" /></label>
-                <label class="space-y-1"><span class="text-slate-500 dark:text-slate-400">NetPrice</span><input type="number" step="0.0001" class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 dark:border-slate-700 dark:bg-slate-950" @bind="EditModel.NetPrice" /></label>
-                <label class="space-y-1"><span class="text-slate-500 dark:text-slate-400">Unit</span><input class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 dark:border-slate-700 dark:bg-slate-950" @bind="EditModel.Unit" /></label>
-                <label class="space-y-1"><span class="text-slate-500 dark:text-slate-400">Currency</span><input class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 dark:border-slate-700 dark:bg-slate-950" @bind="EditModel.Currency" /></label>
-                <label class="space-y-1 md:col-span-4"><span class="text-slate-500 dark:text-slate-400">SourceText</span><textarea class="h-32 w-full rounded-md border border-slate-300 bg-white p-2 font-mono text-[11px] dark:border-slate-700 dark:bg-slate-950" @bind="EditModel.SourceText"></textarea></label>
+                <label class="space-y-1">
+                    <span class="text-slate-500 dark:text-slate-400">ArticleNumber</span>
+                    <input class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 dark:border-slate-700 dark:bg-slate-950" @bind="EditModel.ArticleNumber" />
+                </label>
+                <label class="space-y-1">
+                    <span class="text-slate-500 dark:text-slate-400">ProductCode</span>
+                    <input class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 dark:border-slate-700 dark:bg-slate-950" @bind="EditModel.ProductCode" />
+                </label>
+                <label class="space-y-1 md:col-span-2">
+                    <span class="text-slate-500 dark:text-slate-400">Name</span>
+                    <input class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 dark:border-slate-700 dark:bg-slate-950" @bind="EditModel.Name" />
+                </label>
+                <label class="space-y-1 md:col-span-2">
+                    <span class="text-slate-500 dark:text-slate-400">Description</span>
+                    <input class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 dark:border-slate-700 dark:bg-slate-950" @bind="EditModel.Description" />
+                </label>
+                <label class="space-y-1">
+                    <span class="text-slate-500 dark:text-slate-400">CategoryName</span>
+                    <input class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 dark:border-slate-700 dark:bg-slate-950" @bind="EditModel.CategoryName" />
+                </label>
+                <label class="space-y-1">
+                    <span class="text-slate-500 dark:text-slate-400">SupplierName</span>
+                    <input class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 dark:border-slate-700 dark:bg-slate-950" @bind="EditModel.SupplierName" />
+                </label>
+                <label class="space-y-1">
+                    <span class="text-slate-500 dark:text-slate-400">BasePrice</span>
+                    <input type="number" step="0.0001" class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 dark:border-slate-700 dark:bg-slate-950" @bind="EditModel.BasePrice" />
+                </label>
+                <label class="space-y-1">
+                    <span class="text-slate-500 dark:text-slate-400">DiscountPercent</span>
+                    <input type="number" step="0.0001" class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 dark:border-slate-700 dark:bg-slate-950" @bind="EditModel.DiscountPercent" />
+                </label>
+                <label class="space-y-1">
+                    <span class="text-slate-500 dark:text-slate-400">NetPrice</span>
+                    <input type="number" step="0.0001" class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 dark:border-slate-700 dark:bg-slate-950" @bind="EditModel.NetPrice" />
+                </label>
+                <label class="space-y-1">
+                    <span class="text-slate-500 dark:text-slate-400">Unit</span>
+                    <input class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 dark:border-slate-700 dark:bg-slate-950" @bind="EditModel.Unit" />
+                </label>
+                <label class="space-y-1">
+                    <span class="text-slate-500 dark:text-slate-400">Currency</span>
+                    <input class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 dark:border-slate-700 dark:bg-slate-950" @bind="EditModel.Currency" />
+                </label>
+                <label class="space-y-1 md:col-span-4">
+                    <span class="text-slate-500 dark:text-slate-400">SourceText</span>
+                    <textarea class="h-32 w-full rounded-md border border-slate-300 bg-white p-2 font-mono text-[11px] dark:border-slate-700 dark:bg-slate-950" @bind="EditModel.SourceText"></textarea>
+                </label>
             </div>
+
             <div class="flex justify-end gap-2 border-t border-slate-200 px-4 py-3 dark:border-slate-800">
                 <button type="button" class="h-8 rounded-md border border-slate-300 px-3 text-xs font-semibold dark:border-slate-700" @onclick="CloseEdit">Cancel</button>
                 <button type="button" class="h-8 rounded-md bg-blue-600 px-3 text-xs font-semibold text-white disabled:opacity-50" disabled="@IsBusy" @onclick="SaveEditAsync">Save</button>
@@ -244,7 +264,7 @@
 
 @if (SourceCandidate is not null)
 {
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4">
+    <div class="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/60 p-4">
         <div class="max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900">
             <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
                 <h2 class="truncate text-sm font-semibold">@SourceCandidate.Name</h2>
@@ -257,6 +277,7 @@
 
 @code {
     [Parameter] public Guid JobId { get; set; }
+    [Parameter] public EventCallback OnClosed { get; set; }
 
     private PriceImportJobDetailsDto? Job;
     private PriceImportCandidateUpdateDto? EditModel;
@@ -271,8 +292,8 @@
     private bool HasSourceText => Job?.Candidates.Any(x => !string.IsNullOrWhiteSpace(x.SourceText)) == true;
     private bool CanRunAiExtraction => Job is not null && HasSourceText && AiOptions.Value.Enabled;
     private string MessageClass => MessageIsError
-        ? "rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-800 dark:border-rose-900 dark:bg-rose-950/50 dark:text-rose-200"
-        : "rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800 dark:border-sky-900 dark:bg-sky-950/50 dark:text-sky-200";
+        ? "shrink-0 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-800 dark:border-rose-900 dark:bg-rose-950/50 dark:text-rose-200"
+        : "shrink-0 rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800 dark:border-sky-900 dark:bg-sky-950/50 dark:text-sky-200";
 
     private IReadOnlyList<(string Label, PriceImportCandidateStatus? Status)> StatusFilters =>
     [
@@ -313,21 +334,25 @@
     private IReadOnlyList<PriceImportCandidateDto> SelectableFilteredCandidates =>
         FilteredCandidates.Where(CanSelectCandidate).ToList();
 
-    private bool AllSelectableFilteredSelected =>
-        SelectableFilteredCandidates.Count > 0 && SelectableFilteredCandidates.All(x => SelectedCandidateIds.Contains(x.Id));
+    private bool AllSelectableFilteredSelected => SelectableFilteredCandidates.Count > 0 && SelectableFilteredCandidates.All(x => SelectedCandidateIds.Contains(x.Id));
 
     private IReadOnlyList<(string Label, string Value)> Metrics =>
-        Job is null ? [] :
-        [
-            ("Total",    Job.TotalCandidates.ToString()),
-            ("Ready",    Job.ReadyCount.ToString()),
-            ("Review",   Job.ReviewCount.ToString()),
-            ("Error",    Job.ErrorCount.ToString()),
-            ("Approved", Job.ApprovedCount.ToString()),
-            ("Imported", Job.Candidates.Count(x => x.Status == PriceImportCandidateStatus.Imported).ToString())
-        ];
+        Job is null
+            ? []
+            :
+            [
+                ("Total", Job.TotalCandidates.ToString()),
+                ("Ready", Job.ReadyCount.ToString()),
+                ("Review", Job.ReviewCount.ToString()),
+                ("Error", Job.ErrorCount.ToString()),
+                ("Approved", Job.ApprovedCount.ToString()),
+                ("Imported", Job.Candidates.Count(x => x.Status == PriceImportCandidateStatus.Imported).ToString())
+            ];
 
-    protected override async Task OnParametersSetAsync() => await LoadAsync();
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadAsync();
+    }
 
     private async Task LoadAsync()
     {
@@ -337,7 +362,10 @@
             Job = await PriceImportService.GetImportJobDetailsAsync(JobId);
             PruneSelection();
         }
-        finally { IsBusy = false; }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
     private void OnSearchInput(ChangeEventArgs e)
@@ -346,24 +374,42 @@
         RebuildCandidateScores();
     }
 
-    private bool MatchesStatus(PriceImportCandidateDto c) => StatusFilter is null || c.Status == StatusFilter.Value;
+    private bool MatchesStatus(PriceImportCandidateDto candidate)
+        => StatusFilter is null || candidate.Status == StatusFilter.Value;
 
-    private void SetStatusFilter(PriceImportCandidateStatus? status) { StatusFilter = status; PruneSelection(); }
+    private void SetStatusFilter(PriceImportCandidateStatus? status)
+    {
+        StatusFilter = status;
+        PruneSelection();
+    }
 
     private void ToggleCandidate(Guid candidateId, ChangeEventArgs args)
     {
         var candidate = Job?.Candidates.FirstOrDefault(x => x.Id == candidateId);
-        if (candidate is null || !CanSelectCandidate(candidate)) { SelectedCandidateIds.Remove(candidateId); return; }
-        if (args.Value is bool selected && selected) SelectedCandidateIds.Add(candidateId);
-        else SelectedCandidateIds.Remove(candidateId);
+        if (candidate is null || !CanSelectCandidate(candidate))
+        {
+            SelectedCandidateIds.Remove(candidateId);
+            return;
+        }
+
+        if (args.Value is bool selected && selected)
+            SelectedCandidateIds.Add(candidateId);
+        else
+            SelectedCandidateIds.Remove(candidateId);
     }
 
     private void ToggleAllFiltered(ChangeEventArgs args)
     {
         if (args.Value is bool selected && selected)
-            foreach (var c in SelectableFilteredCandidates) SelectedCandidateIds.Add(c.Id);
+        {
+            foreach (var candidate in SelectableFilteredCandidates)
+                SelectedCandidateIds.Add(candidate.Id);
+        }
         else
-            foreach (var c in SelectableFilteredCandidates) SelectedCandidateIds.Remove(c.Id);
+        {
+            foreach (var candidate in SelectableFilteredCandidates)
+                SelectedCandidateIds.Remove(candidate.Id);
+        }
     }
 
     private async Task ApproveAsync(PriceImportCandidateDto candidate)
@@ -376,38 +422,67 @@
             await LoadAsync();
             return;
         }
+
         await ChangeStatusAsync(candidate.Id, PriceImportCandidateStatus.Approved);
     }
 
-    private Task NeedsReviewAsync(Guid id) => ChangeStatusAsync(id, PriceImportCandidateStatus.NeedsReview);
-    private Task IgnoreAsync(Guid id) => ChangeStatusAsync(id, PriceImportCandidateStatus.Ignored);
-    private Task ApproveSelectedAsync() => BulkChangeStatusAsync(PriceImportCandidateStatus.Approved, "Approved selected candidates.");
-    private Task IgnoreSelectedAsync() => BulkChangeStatusAsync(PriceImportCandidateStatus.Ignored, "Ignored selected candidates.");
-    private Task NeedsReviewSelectedAsync() => BulkChangeStatusAsync(PriceImportCandidateStatus.NeedsReview, "Moved selected candidates to NeedsReview.");
+    private async Task NeedsReviewAsync(Guid candidateId)
+        => await ChangeStatusAsync(candidateId, PriceImportCandidateStatus.NeedsReview);
+
+    private async Task IgnoreAsync(Guid candidateId)
+        => await ChangeStatusAsync(candidateId, PriceImportCandidateStatus.Ignored);
+
+    private Task ApproveSelectedAsync()
+        => BulkChangeStatusAsync(PriceImportCandidateStatus.Approved, "Approved selected candidates.");
+
+    private Task IgnoreSelectedAsync()
+        => BulkChangeStatusAsync(PriceImportCandidateStatus.Ignored, "Ignored selected candidates.");
+
+    private Task NeedsReviewSelectedAsync()
+        => BulkChangeStatusAsync(PriceImportCandidateStatus.NeedsReview, "Moved selected candidates to NeedsReview.");
 
     private async Task BulkChangeStatusAsync(PriceImportCandidateStatus status, string successMessage)
     {
-        if (SelectedCandidateIds.Count == 0) return;
-        IsBusy = true; Message = null; MessageIsError = false;
+        if (SelectedCandidateIds.Count == 0)
+            return;
+
+        IsBusy = true;
+        Message = null;
+        MessageIsError = false;
         try
         {
             var selectedIds = SelectedCandidateIds.ToList();
             if (status == PriceImportCandidateStatus.Approved)
             {
-                var invalid = Job?.Candidates.Where(x => selectedIds.Contains(x.Id)).FirstOrDefault(x => !ValidateForApproval(x, out _));
-                if (invalid is not null) { ValidateForApproval(invalid, out var w); MessageIsError = true; Message = w; return; }
+                var invalid = Job?.Candidates
+                    .Where(x => selectedIds.Contains(x.Id))
+                    .FirstOrDefault(x => !ValidateForApproval(x, out _));
+
+                if (invalid is not null)
+                {
+                    ValidateForApproval(invalid, out var warning);
+                    MessageIsError = true;
+                    Message = warning;
+                    return;
+                }
             }
+
             var changed = await PriceImportService.BulkUpdateCandidateStatusAsync(selectedIds, status);
             Message = $"{successMessage} ({changed})";
             SelectedCandidateIds.Clear();
             await LoadAsync();
         }
-        finally { IsBusy = false; }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
     private async Task ApproveAllReadyAsync()
     {
-        IsBusy = true; Message = null; MessageIsError = false;
+        IsBusy = true;
+        Message = null;
+        MessageIsError = false;
         try
         {
             var changed = await PriceImportService.ApproveAllReadyCandidatesAsync(JobId);
@@ -415,59 +490,121 @@
             SelectedCandidateIds.Clear();
             await LoadAsync();
         }
-        finally { IsBusy = false; }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
     private async Task ChangeStatusAsync(Guid candidateId, PriceImportCandidateStatus status)
     {
-        IsBusy = true; Message = null; MessageIsError = false;
-        try { await PriceImportService.UpdateCandidateStatusAsync(candidateId, status); await LoadAsync(); }
-        finally { IsBusy = false; }
+        IsBusy = true;
+        Message = null;
+        MessageIsError = false;
+        try
+        {
+            await PriceImportService.UpdateCandidateStatusAsync(candidateId, status);
+            await LoadAsync();
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
-    private void OpenEdit(PriceImportCandidateDto candidate) => EditModel = new PriceImportCandidateUpdateDto
+    private void OpenEdit(PriceImportCandidateDto candidate)
     {
-        Id = candidate.Id, ArticleNumber = candidate.ArticleNumber, ProductCode = candidate.ProductCode,
-        Name = candidate.Name, Description = candidate.Description, CategoryName = candidate.CategoryName,
-        BasePrice = candidate.BasePrice, DiscountPercent = candidate.DiscountPercent, NetPrice = candidate.NetPrice,
-        Unit = candidate.Unit, Currency = candidate.Currency, SupplierName = candidate.SupplierName, SourceText = candidate.SourceText
-    };
+        EditModel = new PriceImportCandidateUpdateDto
+        {
+            Id = candidate.Id,
+            ArticleNumber = candidate.ArticleNumber,
+            ProductCode = candidate.ProductCode,
+            Name = candidate.Name,
+            Description = candidate.Description,
+            CategoryName = candidate.CategoryName,
+            BasePrice = candidate.BasePrice,
+            DiscountPercent = candidate.DiscountPercent,
+            NetPrice = candidate.NetPrice,
+            Unit = candidate.Unit,
+            Currency = candidate.Currency,
+            SupplierName = candidate.SupplierName,
+            SourceText = candidate.SourceText
+        };
+    }
 
     private async Task SaveEditAsync()
     {
-        if (EditModel is null) return;
-        if (string.IsNullOrWhiteSpace(EditModel.Name)) { MessageIsError = true; Message = "Name is required."; return; }
-        IsBusy = true; Message = null; MessageIsError = false;
-        try { await PriceImportService.UpdateCandidateAsync(EditModel); EditModel = null; Message = "Candidate updated."; await LoadAsync(); }
-        finally { IsBusy = false; }
+        if (EditModel is null)
+            return;
+
+        if (string.IsNullOrWhiteSpace(EditModel.Name))
+        {
+            MessageIsError = true;
+            Message = "Name is required.";
+            return;
+        }
+
+        IsBusy = true;
+        Message = null;
+        MessageIsError = false;
+        try
+        {
+            await PriceImportService.UpdateCandidateAsync(EditModel);
+            EditModel = null;
+            Message = "Candidate updated.";
+            await LoadAsync();
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
     private void CloseEdit() => EditModel = null;
+
     private void ShowSource(PriceImportCandidateDto candidate) => SourceCandidate = candidate;
+
     private void CloseSource() => SourceCandidate = null;
 
     private async Task ConvertApprovedAsync()
     {
-        IsBusy = true; Message = null; MessageIsError = false;
+        IsBusy = true;
+        Message = null;
+        MessageIsError = false;
         try
         {
-            if (Job?.ApprovedCount <= 0) { MessageIsError = true; Message = "No approved candidates to convert."; return; }
+            if (Job?.ApprovedCount <= 0)
+            {
+                MessageIsError = true;
+                Message = "No approved candidates to convert.";
+                return;
+            }
+
             var priceListId = await PriceImportService.CreatePriceListFromApprovedCandidatesAsync(JobId);
             if (priceListId.HasValue)
             {
-                NavigationManager.NavigateTo($"/price-import/price-lists/{priceListId.Value}");
-                return;
+                Message = $"Approved candidates were converted to PriceList {priceListId.Value}.";
+                await OnClosed.InvokeAsync();
             }
-            MessageIsError = true;
-            Message = "No approved candidates to convert.";
+            else
+            {
+                MessageIsError = true;
+                Message = "No approved candidates to convert.";
+            }
+
             await LoadAsync();
         }
-        finally { IsBusy = false; }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
     private async Task RunAiExtractionAsync()
     {
-        IsBusy = true; Message = null; MessageIsError = false;
+        IsBusy = true;
+        Message = null;
+        MessageIsError = false;
         try
         {
             var result = await PriceImportService.RunAiExtractionForJobAsync(JobId);
@@ -475,47 +612,91 @@
             Message = result.Message;
             await LoadAsync();
         }
-        finally { IsBusy = false; }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
     private void PruneSelection()
     {
-        if (Job is null) { SelectedCandidateIds.Clear(); return; }
-        var validIds = Job.Candidates.Where(CanSelectCandidate).Select(x => x.Id).ToHashSet();
+        if (Job is null)
+        {
+            SelectedCandidateIds.Clear();
+            return;
+        }
+
+        var validIds = Job.Candidates
+            .Where(CanSelectCandidate)
+            .Select(x => x.Id)
+            .ToHashSet();
         SelectedCandidateIds.RemoveWhere(id => !validIds.Contains(id));
     }
 
     private static bool ValidateForApproval(PriceImportCandidateDto candidate, out string message)
     {
-        if (string.IsNullOrWhiteSpace(candidate.Name)) { message = "Name is required before approval."; return false; }
+        if (string.IsNullOrWhiteSpace(candidate.Name))
+        {
+            message = "Name is required before approval.";
+            return false;
+        }
+
         var price = candidate.BasePrice ?? candidate.NetPrice;
-        if (!price.HasValue) { message = $"Candidate '{candidate.Name}' needs BasePrice or NetPrice before approval."; return false; }
-        if (price.Value <= 0) { message = $"Candidate '{candidate.Name}' has a price that must be greater than zero."; return false; }
-        if (string.IsNullOrWhiteSpace(candidate.Unit)) { message = $"Candidate '{candidate.Name}' needs Unit before approval."; return false; }
-        if (string.IsNullOrWhiteSpace(candidate.Currency)) { message = $"Candidate '{candidate.Name}' needs Currency before approval."; return false; }
-        message = ""; return true;
+        if (!price.HasValue)
+        {
+            message = $"Candidate '{candidate.Name}' needs BasePrice or NetPrice before approval.";
+            return false;
+        }
+
+        if (price.Value <= 0)
+        {
+            message = $"Candidate '{candidate.Name}' has a price that must be greater than zero.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(candidate.Unit))
+        {
+            message = $"Candidate '{candidate.Name}' needs Unit before approval.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(candidate.Currency))
+        {
+            message = $"Candidate '{candidate.Name}' needs Currency before approval.";
+            return false;
+        }
+
+        message = "";
+        return true;
     }
 
-    private static bool CanSelectCandidate(PriceImportCandidateDto c) => c.Status == PriceImportCandidateStatus.Approved;
+    private static bool CanSelectCandidate(PriceImportCandidateDto candidate)
+        => candidate.Status == PriceImportCandidateStatus.Approved;
 
-    private static string SelectionTitle(PriceImportCandidateDto c) =>
-        CanSelectCandidate(c) ? "Selectable" : "Only Approved candidates can be selected.";
+    private static string SelectionTitle(PriceImportCandidateDto candidate)
+        => CanSelectCandidate(candidate)
+            ? "Selectable"
+            : "Only Approved candidates can be selected.";
 
-    private static string Money(decimal? v) => v.HasValue ? v.Value.ToString("0.####") : "-";
-    private static string Percent(decimal? v) => v.HasValue ? v.Value.ToString("0.####") : "-";
+    private static string Money(decimal? value) => value.HasValue ? value.Value.ToString("0.####") : "-";
 
-    private string StatusFilterClass(PriceImportCandidateStatus? status) =>
-        StatusFilter == status
+    private static string Percent(decimal? value) => value.HasValue ? value.Value.ToString("0.####") : "-";
+
+    private string StatusFilterClass(PriceImportCandidateStatus? status)
+    {
+        var active = StatusFilter == status;
+        return active
             ? "h-8 rounded-md bg-sky-600 px-2 text-[11px] font-semibold text-white"
             : "h-8 rounded-md border border-slate-300 bg-white px-2 text-[11px] font-semibold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-800";
+    }
 
     private static string CandidateStatusClass(PriceImportCandidateStatus status) => status switch
     {
-        PriceImportCandidateStatus.Approved    => "inline-flex rounded bg-emerald-100 px-1.5 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
-        PriceImportCandidateStatus.Imported    => "inline-flex rounded bg-violet-100 px-1.5 py-0.5 text-[11px] font-semibold text-violet-700 dark:bg-violet-950 dark:text-violet-300",
-        PriceImportCandidateStatus.Error       => "inline-flex rounded bg-rose-100 px-1.5 py-0.5 text-[11px] font-semibold text-rose-700 dark:bg-rose-950 dark:text-rose-300",
+        PriceImportCandidateStatus.Approved => "inline-flex rounded bg-emerald-100 px-1.5 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
+        PriceImportCandidateStatus.Imported => "inline-flex rounded bg-violet-100 px-1.5 py-0.5 text-[11px] font-semibold text-violet-700 dark:bg-violet-950 dark:text-violet-300",
+        PriceImportCandidateStatus.Error => "inline-flex rounded bg-rose-100 px-1.5 py-0.5 text-[11px] font-semibold text-rose-700 dark:bg-rose-950 dark:text-rose-300",
         PriceImportCandidateStatus.NeedsReview => "inline-flex rounded bg-amber-100 px-1.5 py-0.5 text-[11px] font-semibold text-amber-700 dark:bg-amber-950 dark:text-amber-300",
-        PriceImportCandidateStatus.Ignored     => "inline-flex rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-400",
-        _                                      => "inline-flex rounded bg-sky-100 px-1.5 py-0.5 text-[11px] font-semibold text-sky-700 dark:bg-sky-950 dark:text-sky-300"
+        PriceImportCandidateStatus.Ignored => "inline-flex rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-400",
+        _ => "inline-flex rounded bg-sky-100 px-1.5 py-0.5 text-[11px] font-semibold text-sky-700 dark:bg-sky-950 dark:text-sky-300"
     };
 }

@@ -17,7 +17,14 @@ public static partial class SwedishTaskTextNormalizer
         // Generic construction filler
         "arbete", "arbeten", "utförande", "åtgärd", "åtgärder",
         // Single-letter abbreviation fragments (from "m m", "o d", "e d")
-        "m", "o", "e"
+        "m", "o", "e",
+        // Generic English/multilingual words common in material price lists
+        "standard", "normal", "general", "type", "quality", "class", "grade",
+        "product", "material", "item", "article", "unit", "piece", "set",
+        "new", "used", "various", "other", "misc", "general",
+        // Dutch/German filler common in European supplier catalogues
+        "van", "de", "het", "voor", "met", "und", "der", "die", "das",
+        "für", "mit", "von"
     };
 
     private static readonly Dictionary<string, string> PhraseMap = new(StringComparer.OrdinalIgnoreCase)
@@ -281,20 +288,34 @@ public static partial class SwedishTaskTextNormalizer
         if (string.Equals(leftNormalizedText, rightNormalizedText, StringComparison.OrdinalIgnoreCase))
             return 1d;
 
-        var leftTokens = Tokenize(leftNormalizedText);
-        var rightTokens = Tokenize(rightNormalizedText);
+        var leftWeights  = TokenizeWeighted(leftNormalizedText);
+        var rightWeights = TokenizeWeighted(rightNormalizedText);
 
-        if (leftTokens.Count == 0 || rightTokens.Count == 0)
+        if (leftWeights.Count == 0 || rightWeights.Count == 0)
             return 0d;
 
-        if (leftTokens.SetEquals(rightTokens))
+        var leftSet  = leftWeights.Keys.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var rightSet = rightWeights.Keys.ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        if (leftSet.SetEquals(rightSet))
             return 1d;
 
-        var intersectionCount = leftTokens.Intersect(rightTokens, StringComparer.OrdinalIgnoreCase).Count();
-        var unionCount = leftTokens.Union(rightTokens, StringComparer.OrdinalIgnoreCase).Count();
+        // Weighted Jaccard: tokens that look like codes/numbers count more
+        var sharedTokens = leftSet.Intersect(rightSet, StringComparer.OrdinalIgnoreCase).ToList();
+        var allTokens    = leftSet.Union(rightSet, StringComparer.OrdinalIgnoreCase).ToList();
 
-        var jaccard = unionCount == 0 ? 0d : (double)intersectionCount / unionCount;
-        var coverage = (double)intersectionCount / Math.Min(leftTokens.Count, rightTokens.Count);
+        var intersectionWeight = sharedTokens.Sum(t =>
+            Math.Max(leftWeights.GetValueOrDefault(t, 1d), rightWeights.GetValueOrDefault(t, 1d)));
+        var unionWeight = allTokens.Sum(t =>
+            Math.Max(leftWeights.GetValueOrDefault(t, 0d), rightWeights.GetValueOrDefault(t, 0d)));
+
+        var jaccard = unionWeight == 0d ? 0d : intersectionWeight / unionWeight;
+
+        var minTotalWeight = Math.Min(
+            leftWeights.Values.Sum(),
+            rightWeights.Values.Sum());
+        var coverage = minTotalWeight == 0d ? 0d : intersectionWeight / minTotalWeight;
+
         var containsBonus =
             leftNormalizedText.Contains(rightNormalizedText, StringComparison.OrdinalIgnoreCase) ||
             rightNormalizedText.Contains(leftNormalizedText, StringComparison.OrdinalIgnoreCase)
@@ -302,6 +323,21 @@ public static partial class SwedishTaskTextNormalizer
                 : 0d;
 
         return Math.Round(Math.Min((0.60d * jaccard) + (0.30d * coverage) + (0.10d * containsBonus), 1d), 4);
+    }
+
+    /// <summary>
+    /// Assigns importance weight to a token.
+    /// Alphanumeric codes (VA-100, C25) → 3×, pure numbers → 2×, long words → 1.2×, rest → 1×.
+    /// </summary>
+    private static double TokenImportance(string token)
+    {
+        var hasDigit  = token.Any(char.IsDigit);
+        var hasLetter = token.Any(char.IsLetter);
+
+        if (hasDigit && hasLetter) return 3.0d; // article codes, standards: "VA100", "C25", "M16"
+        if (hasDigit)              return 2.0d; // pure dimensions: "110", "220"
+        if (token.Length >= 6)     return 1.2d; // specific long words are more discriminating
+        return 1.0d;
     }
 
     /// <summary>
@@ -384,6 +420,14 @@ public static partial class SwedishTaskTextNormalizer
         normalizedText
             .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+    private static Dictionary<string, double> TokenizeWeighted(string normalizedText)
+    {
+        var result = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+        foreach (var token in normalizedText.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            result.TryAdd(token, TokenImportance(token));
+        return result;
+    }
 
     private static string? FormatQuantity(decimal? quantity)
         => quantity.HasValue

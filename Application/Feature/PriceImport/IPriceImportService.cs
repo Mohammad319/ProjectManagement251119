@@ -10,8 +10,10 @@ public interface IPriceImportService
     Task<PriceListDetailsDto?> GetPriceListDetailsAsync(Guid priceListId, CancellationToken ct = default);
     Task<bool> UpdatePriceListAsync(PriceListUpdateDto priceList, CancellationToken ct = default);
     Task<bool> SetPriceListActiveAsync(Guid priceListId, bool isActive, CancellationToken ct = default);
+    Task<PriceImportDeleteResultDto> DeletePriceListAsync(Guid priceListId, CancellationToken ct = default);
     Task<bool> UpdatePriceListItemAsync(PriceListItemUpdateDto item, CancellationToken ct = default);
     Task<bool> SetPriceListItemActiveAsync(Guid itemId, bool isActive, CancellationToken ct = default);
+    Task<PriceImportDeleteResultDto> DeletePriceListItemAsync(Guid itemId, CancellationToken ct = default);
     Task<Guid> CreateManualTestJobAsync(string? supplierName = null, string? sourceFileName = null, CancellationToken ct = default);
     Task<PriceImportStartResultDto> StartImportFromUploadedFileAsync(
         Stream fileStream,

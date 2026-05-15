@@ -11,6 +11,7 @@
 @inject AppState AppState
 
 @using ProjectManagement.Shared.Helper.ProjectAppStorage
+@using ProjectManagement.Shared.Helper.Text
 <div class="sticky top-0 z-10 flex items-center gap-1.5 bg-white dark:bg-slate-900">
     @Content
     @if (_tasks != null && _tasks.Any(x => x.Added))
@@ -23,7 +24,8 @@
     <div class="w-[320px] shrink-0">
         <input type="text"
                class="@($"{InputClass} w-full")"
-               @bind="filterDto.NameOrCode"
+               value="@_rawSearchQuery"
+               @oninput="OnSearchInput"
                placeholder="@ResourceLoc.EnterPartOfCodeOrName" />
     </div>
 
@@ -55,13 +57,22 @@
 }
 else if (_tasks != null)
 {
-    foreach (var group in _taskGroups)
+    foreach (var (group, score) in GetScoredGroups())
     {
         var stateGroups = group.StateGroupNames;
         var selectedStates = _selectedStates[group.Key];
         var matched = MatchTask(group, selectedStates);
 
         <div class="mb-2" @key="group.Key">
+            @if (!string.IsNullOrWhiteSpace(_rawSearchQuery) && score < 1.0)
+            {
+                <div class="flex items-center gap-1 mb-0.5">
+                    <div class="h-1 w-16 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+                        <div class="h-full rounded-full @FuzzySearchHelper.BarColorClass(score)" style="width:@((score * 100).ToString("0", System.Globalization.CultureInfo.InvariantCulture))%"></div>
+                    </div>
+                    <span class="text-[10px] @FuzzySearchHelper.TextColorClass(score)">@score.ToString("0%", System.Globalization.CultureInfo.InvariantCulture)</span>
+                </div>
+            }
             @if (stateGroups.Count > 0 && matched is not null)
             {
                 <TaskCard @key="matched.Id" Task="matched" ToAdded="TaskToAdd" Config="Config"
@@ -172,6 +183,64 @@ else if (_tasks != null)
 @code {
     private const int PageSize = 25;
     private string InputClass => "border border-gray-300 rounded px-2 py-1 text-[13px] leading-tight h-[25px] bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white";
+
+    // ── Fuzzy search (via FuzzySearchHelper → SwedishTaskTextNormalizer) ──────
+
+    private string _rawSearchQuery = string.Empty;
+    private CancellationTokenSource? _searchCts;
+
+    private async Task OnSearchInput(ChangeEventArgs e)
+    {
+        _rawSearchQuery = e.Value?.ToString() ?? string.Empty;
+        // Server gets the single most distinctive token so it returns broad results;
+        // stop words removed from the phrase (e.g. "Schakt planteringsyta" from "Schakt för planteringsyta")
+        // still hit the server via the longest meaningful word.
+        filterDto.NameOrCode = BestServerToken(_rawSearchQuery);
+        StateHasChanged();
+
+        _searchCts?.Cancel();
+        _searchCts = new CancellationTokenSource();
+        var token = _searchCts.Token;
+        try
+        {
+            await Task.Delay(450, token);
+            if (!token.IsCancellationRequested)
+                await Refresh();
+        }
+        catch (TaskCanceledException) { }
+    }
+
+    private IEnumerable<(TaskGroup Group, double Score)> GetScoredGroups()
+    {
+        var q = _rawSearchQuery.Trim();
+        if (string.IsNullOrWhiteSpace(q))
+            return _taskGroups.Select(g => (g, 1.0));
+
+        return _taskGroups
+            .Select(g => (Group: g, Score: FuzzySearchHelper.Score(q, $"{g.Code} {g.DisplayName}")))
+            .Where(x => x.Score >= FuzzySearchHelper.Threshold)
+            .OrderByDescending(x => x.Score);
+    }
+
+    // Returns the single token best suited for a server-side Contains search.
+    // Prefers tokens with digits (article codes), then longest word, so the server
+    // returns a broad but relevant result set for client-side fuzzy ranking.
+    private static string BestServerToken(string rawQuery)
+    {
+        if (string.IsNullOrWhiteSpace(rawQuery))
+            return string.Empty;
+
+        var normalized = SwedishTaskTextNormalizer.Normalize(rawQuery);
+        var tokens = (string.IsNullOrWhiteSpace(normalized) ? rawQuery : normalized)
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        if (tokens.Length == 0) return rawQuery.Trim();
+        if (tokens.Length == 1) return tokens[0];
+
+        return tokens
+            .OrderByDescending(t => t.Any(char.IsDigit) ? 1000 + t.Length : t.Length)
+            .First();
+    }
 
     private sealed class TaskGroup
     {

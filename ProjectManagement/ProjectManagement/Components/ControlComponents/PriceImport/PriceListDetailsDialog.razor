@@ -1,44 +1,26 @@
-@page "/price-import/price-lists/{PriceListId:guid}"
 @using Microsoft.AspNetCore.Authorization
 @using ProjectManagement.Shared.Helper.Text
-@attribute [Authorize(Roles = PMRolesConst.Tenant.Users)]
-@rendermode InteractiveServer
 
 @inject IPriceImportService PriceImportService
-@inject NavigationManager NavigationManager
+@inject MhdServices MHD
 
-<div class="flex h-[calc(100vh-37px)] flex-col overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-
-    <div class="shrink-0 flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <div class="flex min-w-0 items-center gap-3">
-            <button type="button"
-                    class="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-                    @onclick='() => NavigationManager.NavigateTo("/price-import")'>
-                <i class="fa fa-arrow-left text-[10px]"></i> Back
-            </button>
-            <div class="min-w-0">
-                <h1 class="truncate text-base font-semibold">@PriceList?.Name</h1>
-                <div class="mt-0.5 flex flex-wrap gap-1 text-[11px] text-slate-500 dark:text-slate-400">
-                    @if (!string.IsNullOrWhiteSpace(PriceList?.SupplierName))
-                    {
-                        <span>@PriceList.SupplierName</span>
-                        <span>|</span>
-                    }
-                    <span>@PriceList?.Currency</span>
-                    <span>|</span>
-                    <span>@(PriceList?.IsActive == true ? "Active" : "Inactive")</span>
-                </div>
+<div class="flex flex-col gap-2 bg-slate-50 p-2 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+    <div class="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div class="min-w-0">
+            <h1 class="truncate text-base font-semibold">@PriceList?.Name</h1>
+            <div class="mt-1 flex flex-wrap gap-1 text-[11px] text-slate-500 dark:text-slate-400">
+                <span>@PriceList?.SupplierName</span>
+                <span>|</span>
+                <span>@PriceList?.Currency</span>
+                <span>|</span>
+                <span>@(PriceList?.IsActive == true ? "Active" : "Inactive")</span>
             </div>
         </div>
 
         @if (PriceList is not null)
         {
-            <div class="flex shrink-0 flex-wrap gap-1">
-                <button type="button"
-                        class="h-8 rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
-                        @onclick="OpenPriceListEdit">
-                    Edit list
-                </button>
+            <div class="flex gap-1">
+                <button type="button" class="h-8 rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" @onclick="OpenPriceListEdit">Edit list</button>
                 <button type="button" class="@ToggleListButtonClass(PriceList.IsActive)" @onclick="TogglePriceListActiveAsync">
                     @(PriceList.IsActive ? "Deactivate list" : "Activate list")
                 </button>
@@ -54,23 +36,22 @@
 
     @if (!string.IsNullOrWhiteSpace(Message))
     {
-        <div class="@MessageClass mx-2 mt-2">@Message</div>
+        <div class="@MessageClass">@Message</div>
     }
 
     @if (IsBusy && PriceList is null)
     {
-        <div class="m-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">Loading price list...</div>
+        <div class="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">Loading price list...</div>
     }
     else if (PriceList is null)
     {
-        <div class="m-2 rounded-md border border-dashed border-slate-300 bg-white px-3 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
+        <div class="rounded-md border border-dashed border-slate-300 bg-white px-3 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
             Price list was not found.
         </div>
     }
     else
     {
-        <div class="flex flex-1 min-h-0 flex-col gap-2 p-2">
-
+        <div class="flex flex-col gap-2">
             <div class="grid shrink-0 grid-cols-2 gap-2 text-xs md:grid-cols-5">
                 @foreach (var metric in Metrics)
                 {
@@ -98,7 +79,7 @@
                 </div>
             </div>
 
-            <div class="flex-1 min-h-0 overflow-hidden border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div class="max-h-[62vh] overflow-hidden border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
                 <div class="h-full overflow-auto">
                     <table class="min-w-[1660px] table-fixed text-left text-xs">
                         <thead class="sticky top-0 z-20 border-b border-slate-200 bg-slate-100 text-[11px] uppercase text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
@@ -177,7 +158,7 @@
 
             @if (_visibleCount < _scoredItems.Count)
             {
-                <div class="shrink-0 flex items-center justify-between gap-3 border border-slate-200 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-900">
+                <div class="shrink-0 flex items-center justify-between gap-3 border border-t-0 border-slate-200 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-900">
                     <span class="text-[11px] text-slate-500 dark:text-slate-400">
                         Showing @_visibleCount of @_scoredItems.Count items
                     </span>
@@ -188,14 +169,13 @@
                     </button>
                 </div>
             }
-
         </div>
     }
 </div>
 
 @if (ListEditModel is not null)
 {
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4">
+    <div class="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/60 p-4">
         <div class="w-full max-w-3xl rounded-lg border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900">
             <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
                 <h2 class="text-sm font-semibold">Edit price list</h2>
@@ -220,7 +200,7 @@
 
 @if (ItemEditModel is not null)
 {
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4">
+    <div class="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/60 p-4">
         <div class="max-h-[90vh] w-full max-w-5xl overflow-auto rounded-lg border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900">
             <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
                 <h2 class="text-sm font-semibold">Edit price item</h2>
@@ -253,6 +233,7 @@
 
 @code {
     [Parameter] public Guid PriceListId { get; set; }
+    [Parameter] public EventCallback OnClosed { get; set; }
 
     private PriceListDetailsDto? PriceList;
     private PriceListUpdateDto? ListEditModel;
@@ -273,7 +254,8 @@
     {
         _searchText = e.Value?.ToString() ?? "";
         _debounceTimer?.Dispose();
-        _debounceTimer = new Timer(_ => InvokeAsync(() => { RebuildScored(); StateHasChanged(); }), null, 350, Timeout.Infinite);
+        _debounceTimer = new Timer(_ => InvokeAsync(() => { RebuildScored(); StateHasChanged(); }),
+            null, 350, Timeout.Infinite);
     }
 
     private void RebuildScored()
@@ -286,7 +268,8 @@
             return;
         }
         _scoredItems = PriceList?.Items
-            .Select(i => (Item: i, Score: FuzzySearchHelper.Score(q, $"{i.Name} {i.ArticleNumber} {i.ProductCode} {i.CategoryName} {i.SupplierName}")))
+            .Select(i => (Item: i, Score: FuzzySearchHelper.Score(q,
+                $"{i.Name} {i.ArticleNumber} {i.ProductCode} {i.CategoryName} {i.SupplierName}")))
             .Where(x => x.Score >= FuzzySearchHelper.Threshold)
             .OrderByDescending(x => x.Score)
             .ToList() ?? [];
@@ -295,52 +278,84 @@
     private void LoadMore() => _visibleCount += WindowSize;
 
     private string MessageClass => MessageIsError
-        ? "rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-800 dark:border-rose-900 dark:bg-rose-950/50 dark:text-rose-200"
-        : "rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800 dark:border-sky-900 dark:bg-sky-950/50 dark:text-sky-200";
+        ? "shrink-0 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-800 dark:border-rose-900 dark:bg-rose-950/50 dark:text-rose-200"
+        : "shrink-0 rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800 dark:border-sky-900 dark:bg-sky-950/50 dark:text-sky-200";
 
     private IReadOnlyList<(string Label, string Value)> Metrics =>
-        PriceList is null ? [] :
-        [
-            ("Items",      PriceList.Items.Count.ToString()),
-            ("Active",     PriceList.Items.Count(x => x.IsActive).ToString()),
-            ("ImportedAt", FormatDate(PriceList.ImportedAt)),
-            ("Source",     PriceList.SourceFileName ?? "-"),
-            ("Currency",   PriceList.Currency)
-        ];
+        PriceList is null
+            ? []
+            :
+            [
+                ("Items", PriceList.Items.Count.ToString()),
+                ("Active", PriceList.Items.Count(x => x.IsActive).ToString()),
+                ("ImportedAt", FormatDate(PriceList.ImportedAt)),
+                ("Source", PriceList.SourceFileName ?? "-"),
+                ("Currency", PriceList.Currency)
+            ];
 
     protected override async Task OnParametersSetAsync() => await LoadAsync();
 
     private async Task LoadAsync()
     {
         IsBusy = true;
-        try { PriceList = await PriceImportService.GetPriceListDetailsAsync(PriceListId); RebuildScored(); }
-        finally { IsBusy = false; }
+        try
+        {
+            PriceList = await PriceImportService.GetPriceListDetailsAsync(PriceListId);
+            RebuildScored();
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
     private void OpenPriceListEdit()
     {
-        if (PriceList is null) return;
+        if (PriceList is null)
+            return;
+
         ListEditModel = new PriceListUpdateDto
         {
-            Id = PriceList.Id, Name = PriceList.Name, SupplierName = PriceList.SupplierName,
-            Currency = PriceList.Currency, ValidFrom = PriceList.ValidFrom, ValidTo = PriceList.ValidTo,
-            IsActive = PriceList.IsActive, Note = PriceList.Note
+            Id = PriceList.Id,
+            Name = PriceList.Name,
+            SupplierName = PriceList.SupplierName,
+            Currency = PriceList.Currency,
+            ValidFrom = PriceList.ValidFrom,
+            ValidTo = PriceList.ValidTo,
+            IsActive = PriceList.IsActive,
+            Note = PriceList.Note
         };
     }
 
-    private void OpenItemEdit(PriceListItemDto item) => ItemEditModel = new PriceListItemUpdateDto
+    private void OpenItemEdit(PriceListItemDto item)
     {
-        Id = item.Id, ArticleNumber = item.ArticleNumber, ProductCode = item.ProductCode,
-        Name = item.Name, Description = item.Description, CategoryName = item.CategoryName,
-        ClassificationPath = item.ClassificationPath, BasePrice = item.BasePrice,
-        DiscountPercent = item.DiscountPercent, NetPrice = item.NetPrice, Unit = item.Unit,
-        Currency = item.Currency, SupplierName = item.SupplierName, ConsumptionFactor = item.ConsumptionFactor,
-        WastePercent = item.WastePercent, IsActive = item.IsActive, UserNote = item.UserNote
-    };
+        ItemEditModel = new PriceListItemUpdateDto
+        {
+            Id = item.Id,
+            ArticleNumber = item.ArticleNumber,
+            ProductCode = item.ProductCode,
+            Name = item.Name,
+            Description = item.Description,
+            CategoryName = item.CategoryName,
+            ClassificationPath = item.ClassificationPath,
+            BasePrice = item.BasePrice,
+            DiscountPercent = item.DiscountPercent,
+            NetPrice = item.NetPrice,
+            Unit = item.Unit,
+            Currency = item.Currency,
+            SupplierName = item.SupplierName,
+            ConsumptionFactor = item.ConsumptionFactor,
+            WastePercent = item.WastePercent,
+            IsActive = item.IsActive,
+            UserNote = item.UserNote
+        };
+    }
 
     private async Task SaveListEditAsync()
     {
-        if (ListEditModel is null) return;
+        if (ListEditModel is null)
+            return;
+
         var ok = await PriceImportService.UpdatePriceListAsync(ListEditModel);
         MessageIsError = !ok;
         Message = ok ? "Price list updated." : "Price list could not be updated.";
@@ -350,8 +365,16 @@
 
     private async Task SaveItemEditAsync()
     {
-        if (ItemEditModel is null) return;
-        if (string.IsNullOrWhiteSpace(ItemEditModel.Name)) { MessageIsError = true; Message = "Name is required."; return; }
+        if (ItemEditModel is null)
+            return;
+
+        if (string.IsNullOrWhiteSpace(ItemEditModel.Name))
+        {
+            MessageIsError = true;
+            Message = "Name is required.";
+            return;
+        }
+
         var ok = await PriceImportService.UpdatePriceListItemAsync(ItemEditModel);
         MessageIsError = !ok;
         Message = ok ? "Price item updated." : "Price item could not be updated.";
@@ -361,7 +384,9 @@
 
     private async Task TogglePriceListActiveAsync()
     {
-        if (PriceList is null) return;
+        if (PriceList is null)
+            return;
+
         ConfirmDeleteList = false;
         var ok = await PriceImportService.SetPriceListActiveAsync(PriceList.Id, !PriceList.IsActive);
         MessageIsError = !ok;
@@ -380,7 +405,9 @@
 
     private async Task DeletePriceListAsync()
     {
-        if (PriceList is null) return;
+        if (PriceList is null)
+            return;
+
         if (!ConfirmDeleteList)
         {
             ConfirmDeleteList = true;
@@ -388,16 +415,27 @@
             Message = $"Click Confirm delete list to permanently delete '{PriceList.Name}' and its {PriceList.Items.Count} item(s).";
             return;
         }
+
         IsBusy = true;
         try
         {
             var result = await PriceImportService.DeletePriceListAsync(PriceList.Id);
-            if (result.Ok) { NavigationManager.NavigateTo("/price-import"); return; }
-            MessageIsError = true;
+            MessageIsError = !result.Ok;
             Message = result.Message;
+
+            if (result.Ok)
+            {
+                await OnClosed.InvokeAsync();
+                MHD.Modal.Close();
+                return;
+            }
+
             ConfirmDeleteList = false;
         }
-        finally { IsBusy = false; }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
     private async Task DeletePriceListItemAsync(PriceListItemDto item)
@@ -409,6 +447,7 @@
             Message = $"Click Confirm to permanently delete '{item.Name}'.";
             return;
         }
+
         IsBusy = true;
         try
         {
@@ -418,47 +457,56 @@
             DeleteItemTargetId = null;
             await LoadAsync();
         }
-        finally { IsBusy = false; }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
     private void CloseListEdit() => ListEditModel = null;
+
     private void CloseItemEdit() => ItemEditModel = null;
 
-    private static string FormatDate(DateTime? value) =>
-        value.HasValue ? value.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm") : "-";
+    private static string FormatDate(DateTime? value)
+        => value.HasValue ? value.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm") : "-";
 
-    private static string Money(decimal? v) => v.HasValue ? v.Value.ToString("0.####") : "-";
-    private static string Percent(decimal? v) => v.HasValue ? v.Value.ToString("0.####") : "-";
+    private static string Money(decimal? value) => value.HasValue ? value.Value.ToString("0.####") : "-";
+
+    private static string Percent(decimal? value) => value.HasValue ? value.Value.ToString("0.####") : "-";
 
     private static string SourceLabel(PriceListItemDto item)
     {
-        if (!string.IsNullOrWhiteSpace(item.SourceSheetName)) return $"{item.SourceSheetName} {item.SourceCellRange}";
-        if (item.SourcePageNumber.HasValue) return $"Page {item.SourcePageNumber.Value}";
+        if (!string.IsNullOrWhiteSpace(item.SourceSheetName))
+            return $"{item.SourceSheetName} {item.SourceCellRange}";
+
+        if (item.SourcePageNumber.HasValue)
+            return $"Page {item.SourcePageNumber.Value}";
+
         return item.SourceFileName ?? "-";
     }
 
-    private static string ActiveClass(bool isActive) =>
-        isActive
+    private static string ActiveClass(bool isActive)
+        => isActive
             ? "inline-flex rounded bg-emerald-100 px-1.5 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
             : "inline-flex rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-400";
 
-    private static string ToggleListButtonClass(bool isActive) =>
-        isActive
+    private static string ToggleListButtonClass(bool isActive)
+        => isActive
             ? "h-8 rounded-md border border-rose-300 bg-rose-50 px-3 text-xs font-semibold text-rose-700 hover:bg-rose-100 dark:border-rose-900 dark:bg-rose-950/50 dark:text-rose-300"
             : "h-8 rounded-md border border-emerald-300 bg-emerald-50 px-3 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300";
 
-    private static string ToggleItemButtonClass(bool isActive) =>
-        isActive
+    private static string ToggleItemButtonClass(bool isActive)
+        => isActive
             ? "h-7 rounded-md border border-rose-300 bg-rose-50 px-2 text-xs font-semibold text-rose-700 hover:bg-rose-100 dark:border-rose-900 dark:bg-rose-950/50 dark:text-rose-300"
             : "h-7 rounded-md border border-emerald-300 bg-emerald-50 px-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300";
 
-    private static string DeleteListButtonClass(bool confirming) =>
-        confirming
+    private static string DeleteListButtonClass(bool confirming)
+        => confirming
             ? "h-8 rounded-md bg-rose-600 px-3 text-xs font-semibold text-white hover:bg-rose-700 disabled:opacity-50"
             : "h-8 rounded-md border border-rose-300 bg-rose-50 px-3 text-xs font-semibold text-rose-700 hover:bg-rose-100 disabled:opacity-50 dark:border-rose-900 dark:bg-rose-950/50 dark:text-rose-300";
 
-    private static string DeleteItemButtonClass(bool confirming) =>
-        confirming
+    private static string DeleteItemButtonClass(bool confirming)
+        => confirming
             ? "h-7 rounded-md bg-rose-600 px-2 text-xs font-semibold text-white hover:bg-rose-700 disabled:opacity-50"
             : "h-7 rounded-md border border-rose-300 bg-rose-50 px-2 text-xs font-semibold text-rose-700 hover:bg-rose-100 disabled:opacity-50 dark:border-rose-900 dark:bg-rose-950/50 dark:text-rose-300";
 }
