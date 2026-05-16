@@ -5,6 +5,209 @@ namespace ProjectManagement.Shared.Helper.Text;
 
 public static partial class SwedishTaskTextNormalizer
 {
+    // ── Compound word splitting ───────────────────────────────────────────────
+    // Swedish construction terms are heavily compounded (vattenledning, planteringsyta…).
+    // These roots cover the LEFT and RIGHT parts of the most common compounds.
+    // Only meaningful construction-domain roots — short ambiguous words (dag, ny…) excluded.
+    private static readonly HashSet<string> CompoundRoots = new(StringComparer.OrdinalIgnoreCase)
+    {
+        // Water & pipe systems
+        "vatten", "dagvatten", "spillvatten", "avlopp", "dricksvatten",
+        "ledning", "rörledning",
+        "rör", "kabel", "slang",
+        "brunn", "pump", "ventil", "lucka",
+        "kulvert", "kanal", "dike", "ränna", "dräner",
+
+        // Excavation & earthworks
+        "schakt", "schaktning",
+        "grav", "rörgrav", "ledningsgrav",
+        "fyll", "fyllning", "återfyll",
+        "terrass", "pål", "plint",
+        "jord", "berg", "lera", "sand", "grus", "mark", "mull",
+        "sprängning", "kross", "block",
+
+        // Concrete & reinforcement
+        "betong", "armering", "stål", "järn",
+        "gjut", "gjutning",
+        "puts",
+
+        // Structural elements
+        "grund", "grundlägg",
+        "pelare", "balk", "bjälk", "bjälklag",
+        "platta", "mur", "murverk",
+        "vägg", "tak", "golv", "fasad",
+        "trapp", "räck", "dörr", "fönster",
+
+        // Foundation & piling
+        "spont", "borr", "spets",
+
+        // Road & surface materials
+        "väg", "gata", "torg",
+        "gång", "cykel",
+        "asfalt", "belägg", "beläggning",
+        "marksten", "gatsten", "kantsten", "kantband",
+        "parkering",
+
+        // Areas & surfaces
+        "plan", "plats", "yta", "area", "zon", "sektion",
+        "park", "grön",
+
+        // Green & landscape
+        "plantering", "gräs", "träd", "buske", "häck",
+        "lekplats", "sport",
+
+        // Stormwater & water management
+        "fördröjning", "magasin", "infiltrat", "perkolat",
+
+        // Heating & energy
+        "fjärrvärme", "fjärrkyla", "värme", "energi",
+
+        // Telecom & fiber
+        "fiber", "tele", "signal",
+
+        // Piping & sealing
+        "anslutning", "fogning",
+        "tätning", "isolering", "membran",
+
+        // Electrical
+        "belysning", "stolpe", "elledning",
+
+        // Waste & containers
+        "avfall", "container",
+
+        // Misc
+        "montering", "demonter",
+        "riv", "röj", "saner",
+        "målning", "rostskydd",
+        "kant", "fog",
+        "trall", "brygga", "sten",
+        "staket",
+    };
+
+    // Linking morphemes between compound parts (s is by far the most common in Swedish).
+    private static readonly string[] LinkingMorphemes = ["nings", "ings", "s", "e", ""];
+
+    // ── Semantic synonyms (Swedish ↔ Swedish) ─────────────────────────────
+    // Maps conceptually equivalent but lexically different Swedish terms to a
+    // shared canonical form so queries and task names meet even when different
+    // professional vocabulary is used.
+    // Values may contain a space to expand into two tokens.
+    private static readonly Dictionary<string, string> SynonymMap = new(StringComparer.OrdinalIgnoreCase)
+    {
+        // ── Vatten (water variants) ──────────────────────────────────────
+        ["regnvatten"]        = "dagvatten",
+        ["ytvatten"]          = "dagvatten",
+        ["stormwater"]        = "dagvatten",
+        ["lod"]               = "dagvatten infiltrat",  // Lokal Omhändertagande av Dagvatten
+
+        // ── Avlopp / Avvattning ──────────────────────────────────────────
+        ["kanalisation"]      = "avlopp",
+        ["kloakering"]        = "avlopp",
+        ["avvattning"]        = "dränering",
+        ["bortledning"]       = "avlopp ledning",
+        ["dränage"]           = "dränering",
+        ["avvattningsarbete"] = "avvattning dränering",
+
+        // ── Schakt / Markarbete ──────────────────────────────────────────
+        ["markarbete"]        = "schakt",
+        ["markberedning"]     = "schakt",
+        ["jordarbete"]        = "schakt",
+        ["markrörning"]       = "schakt",
+        ["sprängarbete"]      = "sprängning riv",
+
+        // ── Betong (concrete variants) ───────────────────────────────────
+        ["sprutbetong"]       = "betong",
+        ["lättbetong"]        = "betong",
+        ["cellbetong"]        = "betong",
+        ["skumbetong"]        = "betong",
+        ["gjutbetong"]        = "betong gjut",
+        ["prefabricerat"]     = "betong element",
+        ["prefab"]            = "betong element",
+
+        // ── Armering (reinforcement variants) ────────────────────────────
+        ["nätarmering"]       = "armering",
+        ["fiberarmering"]     = "armering",
+        ["stålarmering"]      = "armering stål",
+
+        // ── Grund / Fundament ────────────────────────────────────────────
+        ["fundamentering"]    = "grundlägg",
+        ["undergrund"]        = "grund",
+        ["underbyggnad"]      = "grund",
+        ["spontning"]         = "spont",
+
+        // ── Isolering ────────────────────────────────────────────────────
+        ["värmeisolering"]    = "isolering",
+        ["ljudisolering"]     = "isolering",
+        ["fuktskydd"]         = "tätning",
+        ["fuktspärr"]         = "tätning membran",
+
+        // ── Mur / Vägg ───────────────────────────────────────────────────
+        ["stödmur"]           = "mur",
+        ["stödvägg"]          = "vägg",
+        ["stödkonstruktion"]  = "mur",
+
+        // ── Väg / Yta ────────────────────────────────────────────────────
+        ["vägbana"]           = "väg",
+        ["körbana"]           = "väg",
+        ["gångbana"]          = "gång belägg",
+        ["cykelbanor"]        = "cykel",
+        ["vägarbete"]         = "väg",
+        ["gatuarbete"]        = "väg schakt",
+
+        // ── Asfalt ───────────────────────────────────────────────────────
+        ["asfaltering"]       = "asfalt belägg",
+        ["asfaltbeläggning"]  = "asfalt belägg",
+        ["asfaltläggning"]    = "asfalt belägg",
+        ["vägmarkering"]      = "belägg målning",
+        ["vägmålning"]        = "belägg målning",
+
+        // ── Plantering / Vegetation ──────────────────────────────────────
+        ["vegetation"]        = "plantering",
+        ["beplantning"]       = "plantering",
+        ["grönområde"]        = "grön plantering",
+        ["grästorv"]          = "gräs",
+        ["gräsmatta"]         = "gräs",
+        ["rabatt"]            = "plantering",
+        ["blomsterplantering"] = "plantering",
+        ["regnbädd"]          = "dagvatten plantering",
+
+        // ── Fyll / Underlag ──────────────────────────────────────────────
+        ["underlag"]          = "fyll",
+        ["bärlager"]          = "fyll grus",
+        ["förstärkningslager"] = "fyll grus",
+        ["geotextil"]         = "fyll förstärkning",
+
+        // ── Rör / Ledning ────────────────────────────────────────────────
+        ["rörsystem"]         = "rör ledning",
+        ["ledningsnät"]       = "ledning",
+        ["servisledning"]     = "ledning",
+        ["anläggningsledning"] = "ledning",
+
+        // ── Fjärrvärme / Heating ─────────────────────────────────────────
+        ["fjärrvärmearbete"]  = "fjärrvärme ledning",
+        ["värmeledning"]      = "fjärrvärme ledning",
+
+        // ── Fiber / Tele ─────────────────────────────────────────────────
+        ["fiberarbete"]       = "fiber kabel",
+        ["telearbete"]        = "tele kabel",
+        ["telekabel"]         = "tele kabel",
+        ["bredbandskabel"]    = "fiber kabel",
+
+        // ── El / Belysning ───────────────────────────────────────────────
+        ["elarbete"]          = "kabel belysning",
+        ["elinstallation"]    = "kabel",
+        ["gatubelysning"]     = "belysning stolpe",
+        ["vägbelysning"]      = "belysning stolpe",
+
+        // ── Staket / Fencing ─────────────────────────────────────────────
+        ["stängsling"]        = "staket",
+        ["inhägnad"]          = "staket",
+
+        // ── Parkering ────────────────────────────────────────────────────
+        ["parkeringsyta"]     = "parkering yta",
+        ["parkeringsplats"]   = "parkering",
+    };
+
     private static readonly HashSet<string> StopWords = new(StringComparer.OrdinalIgnoreCase)
     {
         // Swedish function words
@@ -59,6 +262,25 @@ public static partial class SwedishTaskTextNormalizer
         ["vattenledning"]                = "vatten ledning",
         ["avloppsledning"]               = "avlopp ledning",
         ["spillvattenledning"]           = "spillvatten ledning",
+        // Stormwater
+        ["lod-anläggning"]               = "dagvatten infiltrat",
+        ["lokalt omhändertagande"]       = "dagvatten infiltrat",
+        // Asphalt
+        ["asfaltbeläggning av"]          = "asfalt belägg",
+        ["asfaltering av"]               = "asfalt belägg",
+        ["ny asfalt"]                    = "asfalt",
+        // Fiber / Infra
+        ["va-ledning"]                   = "vatten avlopp ledning",
+        ["va-arbete"]                    = "vatten avlopp",
+        ["va ledning"]                   = "vatten avlopp ledning",
+        ["fiber och tele"]               = "fiber tele kabel",
+        // Heating
+        ["fjärrvärme och fjärrkyla"]     = "fjärrvärme fjärrkyla",
+        // Marking
+        ["horisontell signering"]        = "belägg målning",
+        ["vägmarkeringar"]               = "belägg målning",
+        // Demolition / Remediation
+        ["rivning och schakt"]           = "riv schakt",
     };
 
     private static readonly Dictionary<string, string> TokenMap = new(StringComparer.OrdinalIgnoreCase)
@@ -188,6 +410,64 @@ public static partial class SwedishTaskTextNormalizer
         // ── Platta / Slab ─────────────────────────────────────────────────
         ["plattor"]            = "platta",
 
+        // ── Sprängning / Blasting ──────────────────────────────────────────
+        ["sprängningar"]       = "sprängning",
+        ["bergsprängning"]     = "berg sprängning",
+        ["lössprängt"]         = "sprängning",
+
+        // ── Spont / Sheet piling ───────────────────────────────────────────
+        ["spontar"]            = "spont",
+        ["spontning"]          = "spont",
+        ["stålspont"]          = "spont stål",
+
+        // ── Borrning / Drilling ────────────────────────────────────────────
+        ["borrning"]           = "borr",
+        ["borrningar"]         = "borr",
+        ["borrarbete"]         = "borr",
+        ["kärnborrning"]       = "borr",
+
+        // ── Fjärrvärme / District heating ─────────────────────────────────
+        ["fjärrvärmeledning"]  = "fjärrvärme ledning",
+        ["fjärrvärmerör"]      = "fjärrvärme rör",
+        ["fjärrkylerör"]       = "fjärrkyla rör",
+
+        // ── Fiber / Tele ───────────────────────────────────────────────────
+        ["fiberledning"]       = "fiber ledning",
+        ["fiberrör"]           = "fiber rör",
+        ["tomrör"]             = "fiber rör kabel",
+
+        // ── Gräs / Grass ──────────────────────────────────────────────────
+        ["gräsytor"]           = "gräs yta",
+        ["gräsyta"]            = "gräs yta",
+        ["gräsmattor"]         = "gräs",
+        ["gräsetablering"]     = "gräs plantering",
+
+        // ── Parkering / Parking ────────────────────────────────────────────
+        ["parkeringsplatser"]  = "parkering",
+        ["parkeringsytor"]     = "parkering yta",
+        ["p-platser"]          = "parkering",
+        ["p-yta"]              = "parkering yta",
+
+        // ── Staket / Stängsling ────────────────────────────────────────────
+        ["stängslar"]          = "staket",
+        ["staketen"]           = "staket",
+
+        // ── Trappa / Stairs ────────────────────────────────────────────────
+        ["trappor"]            = "trapp",
+        ["trappsteg"]          = "trapp",
+        ["trappstenar"]        = "trapp sten",
+
+        // ── Dagvatten / Stormwater ─────────────────────────────────────────
+        ["dagvattenhantering"] = "dagvatten",
+        ["dagvattensystem"]    = "dagvatten ledning",
+        ["dagvattenanläggning"] = "dagvatten",
+        ["dagvattenmagasin"]   = "dagvatten magasin",
+        ["dagvattenbädd"]      = "dagvatten plantering",
+
+        // ── Beläggning / Markbeläggning ────────────────────────────────────
+        ["gångbanor"]          = "gång belägg",
+        ["gångbana"]           = "gång belägg",
+
         // ── Övriga ────────────────────────────────────────────────────────
         ["ledningar"]          = "ledning",
         ["rören"]              = "rör",
@@ -231,6 +511,7 @@ public static partial class SwedishTaskTextNormalizer
                 RegexOptions.IgnoreCase);
         }
 
+        var primaryTokens = new List<string>(); // original-order tokens for bigram generation
         var tokens = new List<string>();
         var rawTokens = text.Split(
             ' ',
@@ -253,14 +534,62 @@ public static partial class SwedishTaskTextNormalizer
                 StopWords.Contains(token))
                 continue;
 
+            // Track primary word (first word of possibly multi-word mapped value)
+            var primaryWord = token.Split(' ', 2)[0];
+            if (!string.IsNullOrWhiteSpace(primaryWord) && !StopWords.Contains(primaryWord))
+                primaryTokens.Add(primaryWord);
+
             tokens.Add(token);
+
+            // Semantic synonym expansion: adds canonical Swedish equivalent.
+            // Applied on BOTH query and target so "regnvatten" ↔ "dagvatten" meet.
+            if (SynonymMap.TryGetValue(token, out var synonym))
+            {
+                foreach (var st in synonym.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                {
+                    if (!string.IsNullOrWhiteSpace(st) && !StopWords.Contains(st))
+                        tokens.Add(st);
+                }
+            }
+
+            // Decompose long tokens that may be Swedish compound words.
+            // Parts go through the same pipeline so "schaktning" → "schakt" via TokenMap.
+            if (token.Length >= 6)
+            {
+                foreach (var part in SplitSwedishCompound(token))
+                {
+                    var p = part;
+                    if (string.IsNullOrWhiteSpace(p) || StopWords.Contains(p)) continue;
+                    if (TokenMap.TryGetValue(p, out var pm)) p = pm;
+                    p = NormalizeToken(p);
+                    if (!string.IsNullOrWhiteSpace(p) && !StopWords.Contains(p))
+                        tokens.Add(p);
+                }
+            }
         }
 
+        // Adjacent bigrams (a_b and b_a) for symmetric phrase-level matching.
+        // Stored with _ separator so Contains("schakt_planteringsyta") is exact.
+        // Both orderings added so the client can search either way.
+        for (int i = 0; i < primaryTokens.Count - 1; i++)
+        {
+            var a = primaryTokens[i];
+            var b = primaryTokens[i + 1];
+            if (!string.IsNullOrWhiteSpace(a) && !string.IsNullOrWhiteSpace(b) && a != b)
+            {
+                tokens.Add($"{a}_{b}");
+                tokens.Add($"{b}_{a}");
+            }
+        }
+
+        // Individual tokens first, bigrams last — ensures the 800-char limit
+        // truncates bigrams before individual tokens when the field gets long.
         var normalized = string.Join(
             " ",
             tokens
                 .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(x => x, StringComparer.OrdinalIgnoreCase));
+                .OrderBy(t => t.Contains('_') ? 1 : 0)
+                .ThenBy(t => t, StringComparer.OrdinalIgnoreCase));
 
         return normalized.Length <= FieldLengths.NormalizedText
             ? normalized
@@ -300,20 +629,53 @@ public static partial class SwedishTaskTextNormalizer
         if (leftSet.SetEquals(rightSet))
             return 1d;
 
-        // Weighted Jaccard: tokens that look like codes/numbers count more
+        // ── Exact weighted Jaccard ────────────────────────────────────────────
         var sharedTokens = leftSet.Intersect(rightSet, StringComparer.OrdinalIgnoreCase).ToList();
         var allTokens    = leftSet.Union(rightSet, StringComparer.OrdinalIgnoreCase).ToList();
 
-        var intersectionWeight = sharedTokens.Sum(t =>
+        var exactIntersection = sharedTokens.Sum(t =>
             Math.Max(leftWeights.GetValueOrDefault(t, 1d), rightWeights.GetValueOrDefault(t, 1d)));
         var unionWeight = allTokens.Sum(t =>
             Math.Max(leftWeights.GetValueOrDefault(t, 0d), rightWeights.GetValueOrDefault(t, 0d)));
 
+        // ── Fuzzy intersection: character-level similarity for unmatched tokens ──
+        // Handles typos: "betnog"↔"betong", "scahkt"↔"schakt", "lednnig"↔"ledning".
+        // Only for tokens ≥ 4 chars to avoid false matches on short words.
+        // Threshold 0.70 = max 1 edit per ~3 chars (e.g. distance ≤ 2 for 7-char word).
+        var unmatchedLeft  = leftSet.Except(rightSet, StringComparer.OrdinalIgnoreCase)
+                                    .Where(t => t.Length >= 4).ToList();
+        var unmatchedRight = rightSet.Except(leftSet, StringComparer.OrdinalIgnoreCase)
+                                     .Where(t => t.Length >= 4).ToList();
+
+        var fuzzyIntersection = 0d;
+        if (unmatchedLeft.Count > 0 && unmatchedRight.Count > 0)
+        {
+            foreach (var lt in unmatchedLeft)
+            {
+                var best = unmatchedRight
+                    .Where(rt => Math.Abs(lt.Length - rt.Length) <= 2)
+                    .Select(rt => (rt, sim: CharacterSimilarity(lt, rt)))
+                    .Where(x => x.sim >= 0.70d)
+                    .OrderByDescending(x => x.sim)
+                    .FirstOrDefault();
+
+                if (best.rt is null) continue;
+
+                // Partial credit: scaled by character similarity × token importance weight
+                var weight = Math.Max(
+                    leftWeights.GetValueOrDefault(lt, 1d),
+                    rightWeights.GetValueOrDefault(best.rt, 1d));
+                fuzzyIntersection += best.sim * weight;
+            }
+        }
+
+        var intersectionWeight = exactIntersection + fuzzyIntersection;
+
         var jaccard = unionWeight == 0d ? 0d : intersectionWeight / unionWeight;
 
-        var minTotalWeight = Math.Min(
-            leftWeights.Values.Sum(),
-            rightWeights.Values.Sum());
+        var leftTotal  = leftWeights.Values.Sum();
+        var rightTotal = rightWeights.Values.Sum();
+        var minTotalWeight = Math.Min(leftTotal, rightTotal);
         var coverage = minTotalWeight == 0d ? 0d : intersectionWeight / minTotalWeight;
 
         var containsBonus =
@@ -322,7 +684,53 @@ public static partial class SwedishTaskTextNormalizer
                 ? 0.10d
                 : 0d;
 
-        return Math.Round(Math.Min((0.60d * jaccard) + (0.30d * coverage) + (0.10d * containsBonus), 1d), 4);
+        // Coverage (= fraction of query tokens found in target) is the primary signal
+        // for search: a short query fully contained in a longer task name should score high.
+        // Jaccard is kept as a secondary signal to rank more specific matches above broad ones.
+        return Math.Round(Math.Min((0.30d * jaccard) + (0.60d * coverage) + (0.10d * containsBonus), 1d), 4);
+    }
+
+    /// <summary>
+    /// Normalised character-level similarity using Damerau-Levenshtein distance.
+    /// Returns 1.0 for identical strings, 0.0 for completely different ones.
+    /// Handles transpositions (betnog↔betong) as a single edit, not two.
+    /// </summary>
+    private static double CharacterSimilarity(string a, string b)
+    {
+        var distance = DamerauLevenshtein(a, b);
+        return 1.0d - (double)distance / Math.Max(a.Length, b.Length);
+    }
+
+    /// <summary>
+    /// Optimal String Alignment variant of Damerau-Levenshtein.
+    /// Counts insertions, deletions, substitutions, and adjacent transpositions.
+    /// </summary>
+    private static int DamerauLevenshtein(string a, string b)
+    {
+        int m = a.Length, n = b.Length;
+        var d = new int[m + 1, n + 1];
+
+        for (int i = 0; i <= m; i++) d[i, 0] = i;
+        for (int j = 0; j <= n; j++) d[0, j] = j;
+
+        for (int i = 1; i <= m; i++)
+        for (int j = 1; j <= n; j++)
+        {
+            int cost = char.ToLowerInvariant(a[i - 1]) == char.ToLowerInvariant(b[j - 1]) ? 0 : 1;
+            d[i, j] = Math.Min(
+                Math.Min(d[i - 1, j] + 1, d[i, j - 1] + 1),
+                d[i - 1, j - 1] + cost);
+
+            // Transposition: swap adjacent characters counts as 1 edit
+            if (i > 1 && j > 1
+                && char.ToLowerInvariant(a[i - 1]) == char.ToLowerInvariant(b[j - 2])
+                && char.ToLowerInvariant(a[i - 2]) == char.ToLowerInvariant(b[j - 1]))
+            {
+                d[i, j] = Math.Min(d[i, j], d[i - 2, j - 2] + cost);
+            }
+        }
+
+        return d[m, n];
     }
 
     /// <summary>
@@ -374,6 +782,90 @@ public static partial class SwedishTaskTextNormalizer
             1    => 0.05d,
             _    => 0d
         };
+    }
+
+    /// <summary>
+    /// Splits a (already-normalized) token into its Swedish compound parts.
+    /// Yields the meaningful sub-roots — NOT the original token itself.
+    /// Caller is responsible for running the yielded parts through TokenMap + NormalizeToken.
+    ///
+    /// Examples:
+    ///   "vattenledning"     → ["vatten", "ledning"]
+    ///   "planteringsyta"    → ["plantering", "yta"]
+    ///   "spillvattenledning"→ ["spillvatten", "ledning"]
+    ///   "dagvattenledningsgrav" → ["dagvatten", "ledning", "grav"]
+    ///   "schaktningsarbete" → ["schaktning"]  (arbete = stop word, prefix still extracted)
+    ///   "betongarbete"      → ["betong"]
+    /// </summary>
+    private static IEnumerable<string> SplitSwedishCompound(string token)
+    {
+        if (token.Length < 6) yield break;
+
+        foreach (var root in CompoundRoots
+            .Where(r => r.Length >= 3
+                     && r.Length < token.Length
+                     && token.StartsWith(r, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(r => r.Length))
+        {
+            foreach (var link in LinkingMorphemes)
+            {
+                var remainder = token[root.Length..];
+                if (!remainder.StartsWith(link, StringComparison.OrdinalIgnoreCase)) continue;
+
+                var tail = remainder[link.Length..];
+                if (tail.Length < 3) continue;
+
+                // ── 2-part compound: tail is a known root ──────────────────
+                if (CompoundRoots.Contains(tail))
+                {
+                    yield return root;
+                    yield return tail;
+                    yield break;
+                }
+
+                // ── tail is a stop word: prefix is still meaningful ────────
+                // e.g. "betongarbete" → "betong" + arbete(stop) → extract "betong"
+                if (StopWords.Contains(tail))
+                {
+                    yield return root;
+                    yield break;
+                }
+
+                // ── 3-part compound ────────────────────────────────────────
+                // e.g. "dagvattenledningsgrav" → dagvatten + ledning + grav
+                foreach (var root2 in CompoundRoots
+                    .Where(r => r.Length >= 3
+                             && r.Length < tail.Length
+                             && tail.StartsWith(r, StringComparison.OrdinalIgnoreCase))
+                    .OrderByDescending(r => r.Length))
+                {
+                    var tail2 = tail[root2.Length..];
+
+                    foreach (var link2 in LinkingMorphemes)
+                    {
+                        if (!tail2.StartsWith(link2, StringComparison.OrdinalIgnoreCase)) continue;
+                        var tail3 = tail2[link2.Length..];
+                        if (tail3.Length < 3) continue;
+
+                        if (CompoundRoots.Contains(tail3) || StopWords.Contains(tail3))
+                        {
+                            yield return root;
+                            yield return root2;
+                            if (CompoundRoots.Contains(tail3)) yield return tail3;
+                            yield break;
+                        }
+                    }
+
+                    // root2 fills all of tail (tail2 is empty or stop word)
+                    if (tail2.Length == 0 || StopWords.Contains(tail2))
+                    {
+                        yield return root;
+                        yield return root2;
+                        yield break;
+                    }
+                }
+            }
+        }
     }
 
     private static string ExtractAmaLetterPrefix(string code)

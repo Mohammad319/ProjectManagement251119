@@ -3,6 +3,7 @@
 @using ProjectManagement.Shared.DTO.Calculation
 @using ProjectManagement.Shared.Enums
 @using ProjectManagement.Shared.Helper.ProjectAppStorage
+@using ProjectManagement.Shared.Helper.Text
 @using System.Globalization
 @inherits AppComponentBase
 
@@ -21,8 +22,24 @@
     }
     else
     {
+        <div class="relative">
+            <input type="search"
+                   placeholder="Filter suggestions..."
+                   @bind="_filterText" @bind:event="oninput"
+                   class="w-full rounded border border-gray-300 bg-white py-1.5 pl-8 pr-3 text-sm text-gray-700 placeholder-gray-400 focus:border-blue-400 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:placeholder-gray-500" />
+            <svg class="pointer-events-none absolute left-2 top-2 h-4 w-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+            @if (!string.IsNullOrWhiteSpace(_filterText))
+            {
+                <span class="absolute right-2 top-1.5 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500 dark:bg-gray-700 dark:text-gray-400">
+                    @DisplayedStates.Count() / @_states.Count
+                </span>
+            }
+        </div>
+
         <div class="flex flex-col gap-3">
-            @foreach (var state in _states)
+            @foreach (var state in DisplayedStates)
             {
                 var convRule    = state.GetConversionRule(TaskItem.Unit);
                 var userParams  = convRule?.Params.Where(p => p.Source == ParamSource.User).ToList() ?? [];
@@ -245,6 +262,12 @@
     private int _maxResults = PageSize;
     private bool _canShowMore;
     private List<SuggestionState> _states = [];
+    private string _filterText = string.Empty;
+
+    private IEnumerable<SuggestionState> DisplayedStates =>
+        string.IsNullOrWhiteSpace(_filterText)
+            ? _states
+            : _states.Where(s => FuzzySearchHelper.Score(_filterText, s.Suggestion.SourceTaskName) >= FuzzySearchHelper.Threshold);
 
     protected override async Task OnInitializedAsync()
     {
@@ -275,6 +298,10 @@
             .ToList();
 
         _loading = false;
+
+        // Auto-expand top suggestion when confidence is high — saves the user a click
+        if (_states.Count > 0 && _states[0].Suggestion.Score >= 0.85 && !_states[0].IsExpanded)
+            await ToggleResourcesAsync(_states[0]);
     }
 
     private async Task ShowMoreAsync()

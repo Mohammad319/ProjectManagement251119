@@ -8,7 +8,7 @@ public static class Lengths
     // أسماء للعرض
     public const int DisplayName = 256;
 
-    public const int NormalizedText = 450;
+    public const int NormalizedText = 800;
 
     // ربما لاحقًا:
     // public const int Code = 64;

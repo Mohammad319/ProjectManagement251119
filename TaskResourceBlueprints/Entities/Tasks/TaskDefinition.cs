@@ -41,6 +41,7 @@ namespace TaskResourceBlueprints.Entities.Tasks
 
         public string? Code { get; set; }
         public string NormalizedTextSv { get; set; } = string.Empty;
+        public int UsageCount { get; set; }
 
         public List<decimal> WorkloadThresholds { get; set; } = new() { 0m, 0m, 0m };
 

@@ -60,6 +60,8 @@ namespace TaskResourceBlueprints.Services.ProjectTask
         Task DeleteAsync(int id, CancellationToken ct);
         Task<IReadOnlyList<ResourceCategory>> GetLookupsAsync(CancellationToken ct);
         Task UpdateVisibleFoldersAsync(int taskId, List<int> folderIds, CancellationToken ct = default);
+        Task<int> RebuildNormalizedTextAsync(CancellationToken ct = default);
+        Task IncrementUsageAsync(int taskId, CancellationToken ct = default);
     }
 
     public sealed class ProjectTaskService(IDbContextFactory<TaskResourceBlueprintsContext> factory) : ITaskDefinitionService
@@ -82,14 +84,58 @@ namespace TaskResourceBlueprints.Services.ProjectTask
         {
             await using var db = await factory.CreateDbContextAsync(ct);
             var query = db.Tasks.Where(x => x.Status == TaskStatusEnum.Ready).AsNoTracking().AsQueryable();
-            if (!string.IsNullOrEmpty(filter.NameOrCode))
+
+            var tokens = filter.SearchTokens
+                .Where(t => !string.IsNullOrWhiteSpace(t))
+                .Select(t => t.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Take(2)
+                .ToList();
+
+            if (tokens.Count > 0)
             {
-                var search = filter.NameOrCode;
-                query = query.Where(x => (x.Code ?? string.Empty).Contains(search) ||
-                x.Name.Contains(search));
+                // OR-search across NormalizedTextSv (Swedish-normalized), Name, and Code.
+                // Token[2] when present is a bigram (e.g. "schakt_planteringsyta") — searched
+                // only in NormalizedTextSv where bigrams are stored with _ separator.
+                var t0 = tokens[0];
+                if (tokens.Count == 1)
+                {
+                    query = query.Where(x =>
+                        x.NormalizedTextSv.Contains(t0) ||
+                        x.Name.Contains(t0) ||
+                        (x.Code ?? string.Empty).Contains(t0));
+                }
+                else if (tokens.Count == 2)
+                {
+                    var t1 = tokens[1];
+                    query = query.Where(x =>
+                        x.NormalizedTextSv.Contains(t0) || x.Name.Contains(t0) || (x.Code ?? string.Empty).Contains(t0) ||
+                        x.NormalizedTextSv.Contains(t1) || x.Name.Contains(t1) || (x.Code ?? string.Empty).Contains(t1));
+                }
+                else
+                {
+                    var t1 = tokens[1];
+                    var t2 = tokens[2]; // bigram phrase — only in NormalizedTextSv
+                    query = query.Where(x =>
+                        x.NormalizedTextSv.Contains(t0) || x.Name.Contains(t0) || (x.Code ?? string.Empty).Contains(t0) ||
+                        x.NormalizedTextSv.Contains(t1) || x.Name.Contains(t1) || (x.Code ?? string.Empty).Contains(t1) ||
+                        x.NormalizedTextSv.Contains(t2));
+                }
             }
+            else if (!string.IsNullOrWhiteSpace(filter.NameOrCode))
+            {
+                // Fallback for callers that still use the old single-string field.
+                var search = filter.NameOrCode.Trim();
+                query = query.Where(x =>
+                    x.NormalizedTextSv.Contains(search) ||
+                    x.Name.Contains(search) ||
+                    (x.Code ?? string.Empty).Contains(search));
+            }
+
             return await query
-                .OrderBy(x => x.Code).ThenBy(x => x.Name)
+                .OrderByDescending(x => x.UsageCount)
+                .ThenBy(x => x.Code)
+                .ThenBy(x => x.Name)
                 .Skip(filter.Skip)
                 .Take(filter.Take)
                 .TasksBaseToDto(tenantid)
@@ -311,6 +357,24 @@ namespace TaskResourceBlueprints.Services.ProjectTask
             var e = await db.Tasks.FirstOrDefaultAsync(x => x.Id == taskId, ct);
             if (e is null) return;
             e.VisibleFolderIds = folderIds;
+            await db.SaveChangesAsync(ct);
+        }
+
+        public async Task<int> RebuildNormalizedTextAsync(CancellationToken ct = default)
+        {
+            await using var db = await factory.CreateDbContextAsync(ct);
+            var tasks = await db.Tasks.ToListAsync(ct);
+            foreach (var t in tasks)
+                t.RefreshNormalizedTextSv();
+            return await db.SaveChangesAsync(ct);
+        }
+
+        public async Task IncrementUsageAsync(int taskId, CancellationToken ct = default)
+        {
+            await using var db = await factory.CreateDbContextAsync(ct);
+            var task = await db.Tasks.FirstOrDefaultAsync(x => x.Id == taskId, ct);
+            if (task is null) return;
+            task.UsageCount++;
             await db.SaveChangesAsync(ct);
         }
 

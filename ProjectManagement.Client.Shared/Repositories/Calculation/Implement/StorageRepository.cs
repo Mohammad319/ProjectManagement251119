@@ -65,5 +65,11 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
         {
             return await _httpRepository.PostAsync<bool, ResourceTenantLinkBase>(taskResourceDto, StorageURLBase + "updaterestenant/" + ResourceId);
         }
+
+        public async Task<Dictionary<string, double>> GetTfIdfAsync()
+        {
+            return await _httpRepository.GetAsync<Dictionary<string, double>>(StorageURLBase + "tfidf")
+                   ?? new Dictionary<string, double>();
+        }
     }
 }

@@ -14,6 +14,7 @@ using ProjectManagement.Client.Shared.Repositories.Organisation.Implement;
 using ProjectManagement.Client.Shared.Repositories.Project;
 using ProjectManagement.Client.Shared.Repositories.Project.Implement;
 using ProjectManagement.Client.Shared.Repositories.ResourceType;
+using ProjectManagement.Client.Shared.Services.TfIdf;
 using ProjectManagement.Shared.DTO.ProjectAppStorage.Service;
 namespace ProjectManagement.Client.DependencyInjection
 {
@@ -21,6 +22,7 @@ namespace ProjectManagement.Client.DependencyInjection
     {
         public static IServiceCollection AddProjectRepositories(this IServiceCollection services)
         {
+            services.AddScoped<TfIdfClientService>();
             services.AddScoped<HTTPRepository>();
             services.AddScoped<IProjectRepository, ProjectRepository>();
             services.AddScoped<IFolderRepository, FolderRepository>();

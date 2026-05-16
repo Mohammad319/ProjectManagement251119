@@ -3,6 +3,7 @@
 @using ProjectManagement.Shared.DTO.Calculation
 @using ProjectManagement.Shared.Base.Calculation
 @using ProjectManagement.Shared.Helper.ProjectAppStorage
+@using ProjectManagement.Shared.Helper.Text
 @using System.Globalization
 @inherits AppComponentBase
 
@@ -27,7 +28,26 @@
             <span>@CalcResource.resourceType</span>
         </label>
 
-        <div class="flex-1"></div>
+        <div class="relative flex-1">
+            <input type="search"
+                   placeholder="Filter tasks..."
+                   @bind="_taskFilter" @bind:event="oninput"
+                   class="w-full rounded border border-gray-300 bg-white py-1 pl-7 pr-3 text-sm text-gray-700 placeholder-gray-400 focus:border-blue-400 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:placeholder-gray-500" />
+            <svg class="pointer-events-none absolute left-1.5 top-1.5 h-4 w-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+        </div>
+
+        <div class="flex shrink-0 items-center gap-1.5">
+            <label class="text-xs font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">Min score</label>
+            <input type="range" min="0" max="100" step="5"
+                   value="@((int)(_minScore * 100))"
+                   @oninput="e => _minScore = int.TryParse(e.Value?.ToString(), out var v) ? v / 100d : 0d"
+                   class="w-24 accent-blue-600" />
+            <span class="w-8 text-right text-xs font-semibold text-gray-600 dark:text-gray-300">
+                @(_minScore > 0 ? $"{(int)(_minScore * 100)}%" : "All")
+            </span>
+        </div>
 
         <button class="inline-flex h-8 items-center rounded border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 hover:border-blue-500 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                 disabled="@(_loading || _saving)" @onclick="LoadAsync">
@@ -41,6 +61,16 @@
         </button>
 
     </div>
+
+    @if (_hasLoaded && MissingTasksCount > 0)
+    {
+        <div class="flex items-center gap-2 rounded border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs text-amber-700 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-400">
+            <svg class="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            </svg>
+            <span>@MissingTasksCount @(MissingTasksCount == 1 ? "task has" : "tasks have") no suggestions</span>
+        </div>
+    }
 
     <!-- ── States ── -->
     @if (_loading)
@@ -418,12 +448,34 @@
     private bool _saving;
     private bool _hasLoaded;
     private List<TaskEntry> _entries = [];
+    private string _taskFilter = string.Empty;
+    private double _minScore = 0;
 
     private const string InputCls         = "w-full min-w-[8rem] rounded border border-gray-200 bg-transparent px-1.5 py-0.5 text-gray-900 focus:border-blue-400 focus:outline-none disabled:cursor-default dark:border-gray-700 dark:text-gray-100";
     private const string NumInputCls      = "w-full rounded border border-gray-200 bg-transparent px-1.5 py-0.5 text-right text-gray-900 focus:border-blue-400 focus:outline-none disabled:cursor-default dark:border-gray-700 dark:text-gray-100";
     private const string SmallNumInputCls = "w-20 rounded border border-slate-200 bg-white px-1 py-0.5 text-right text-[11px] text-slate-800 focus:border-blue-400 focus:outline-none disabled:cursor-default dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200";
 
-    private List<TaskEntry> VisibleEntries => _entries.Where(e => e.Suggestions.Count > 0).ToList();
+    private int MissingTasksCount => _entries.Count(e => e.Suggestions.Count == 0);
+
+    private List<TaskEntry> VisibleEntries
+    {
+        get
+        {
+            var entries = _entries.Where(e => e.Suggestions.Count > 0);
+
+            if (_minScore > 0)
+                entries = entries.Where(e => e.Suggestions[0].Score >= _minScore);
+
+            if (!string.IsNullOrWhiteSpace(_taskFilter))
+            {
+                var q = _taskFilter.Trim();
+                entries = entries.Where(e =>
+                    FuzzySearchHelper.Score(q, e.Task.Name) >= FuzzySearchHelper.Threshold ||
+                    (!string.IsNullOrWhiteSpace(e.Task.Code) && e.Task.Code.Contains(q, StringComparison.OrdinalIgnoreCase)));
+            }
+            return entries.ToList();
+        }
+    }
     private bool HasAnySelected => _entries.Any(e => e.SelectedIndex.HasValue);
 
     private static string GetResourceRowStyle() => "box-shadow: inset 3px 0 0 rgba(34,197,94,0.35);";

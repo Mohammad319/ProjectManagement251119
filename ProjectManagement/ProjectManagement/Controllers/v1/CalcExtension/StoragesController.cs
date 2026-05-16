@@ -2,6 +2,7 @@ using Application.Feature.Calculation.Resource.Commands;
 using Application.Feature.Calculation.Storage.Commands;
 using Application.Feature.Calculation.Storage.Queries;
 using Application.Feature.Calculation.Task.Commands;
+using Application.Feature.TfIdf;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Persistence.Factory;
@@ -16,8 +17,27 @@ using System.Collections.Generic;
 namespace ProjectManagement.Server.Controllers.v1.CalcExtension
 {
     [ApiVersion("1.0")]
-    public class StoragesController(ITaskDefinitionService TaskService) : BaseApiController
+    public class StoragesController(ITaskDefinitionService TaskService, ITfIdfIndexProvider TfIdf) : BaseApiController
     {
+        [Authorize(Roles = PMRolesConst.Tenant.Users)]
+        [HttpGet("tfidf")]
+        public async Task<IActionResult> GetTfIdf(CancellationToken ct)
+        {
+            int? tenantId = GetTenantId();
+            if (!tenantId.HasValue) return Unauthorized();
+            var scores = await TfIdf.GetIdfScoresAsync(tenantId.Value, ct);
+            return Ok(scores);
+        }
+
+        [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
+        [HttpPost("rebuild-normalized-text")]
+        public async Task<IActionResult> RebuildNormalizedText(CancellationToken ct)
+        {
+            var count = await TaskService.RebuildNormalizedTextAsync(ct);
+            TfIdf.InvalidateAll();
+            return Ok(new { Updated = count });
+        }
+
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpPost("updaterestenant/{resId}")]
         public async Task<IActionResult> UpdateResourceAppStorageTenantAsync(int resId,[FromBody] ResourceTenantLinkBase f)
@@ -46,7 +66,8 @@ namespace ProjectManagement.Server.Controllers.v1.CalcExtension
             ProjectTaskDto? _tasks = new();
             if (tenantId.HasValue)
             {
-                    _tasks = await TaskService.GetTaskForUserDtoAsync(id, tenantId.Value, 0, CancellationToken.None);
+                _tasks = await TaskService.GetTaskForUserDtoAsync(id, tenantId.Value, 0, CancellationToken.None);
+                _ = TaskService.IncrementUsageAsync(id); // fire-and-forget
             }
             return Ok(_tasks);
         }

@@ -24,5 +24,6 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation
         Task<bool> CreateItem(PostStorygeDTO post);
         Task<bool> SaveAsync(int id, CalculationItemType type, AuthorityStorage level, StorageSort sort);
         Task<bool> RemoveAsync(int id);
+        Task<Dictionary<string, double>> GetTfIdfAsync();
     }
 }

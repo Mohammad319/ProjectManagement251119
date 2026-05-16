@@ -36,7 +36,7 @@
         // Storage
         public const int StorageValue = 4000;
 
-        // Search
-        public const int NormalizedText = 450;
+        // Search (increased to 800 to accommodate bigrams — requires DB migration)
+        public const int NormalizedText = 800;
     }
 }
