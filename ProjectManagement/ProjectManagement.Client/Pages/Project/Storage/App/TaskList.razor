@@ -225,7 +225,7 @@ else if (_tasks != null)
                     g.Code.Equals(q, StringComparison.OrdinalIgnoreCase))
                     return (Group: g, Score: 1.0);
 
-                var combined = $"{g.Code} {g.DisplayName}";
+                var combined = $"{g.Code} {g.DisplayName} {g.SearchText}";
                 var baseScore = FuzzySearchHelper.Score(q, combined);
 
                 // Bonus when BOTH search tokens are present in the task text
@@ -291,13 +291,14 @@ else if (_tasks != null)
 
         var top2 = ranked.Take(2).ToList();
 
-        // Add bigram as 3rd token for phrase-level matching on the server.
-        // Stored in NormalizedTextSv as "t0_t1" and "t1_t0" — we send both orderings.
+        // Add both bigram orders for phrase-level matching on the server.
+        // Stored in NormalizedTextSv as "t0_t1" and "t1_t0".
         if (top2.Count == 2)
         {
             var t0 = top2[0];
             var t1 = top2[1];
             top2.Add($"{t0}_{t1}");
+            top2.Add($"{t1}_{t0}");
         }
 
         filterDto.SearchTokens = top2;
@@ -308,6 +309,7 @@ else if (_tasks != null)
         public string Key { get; init; } = string.Empty;
         public string DisplayName { get; init; } = string.Empty;
         public string Code { get; init; } = string.Empty;
+        public string SearchText { get; init; } = string.Empty;
         public List<ProjectTaskDto> Tasks { get; init; } = [];
         // groupId → groupName
         public Dictionary<int, string> StateGroupNames { get; init; } = [];
@@ -410,6 +412,7 @@ else if (_tasks != null)
                     Key = g.Key,
                     DisplayName = first.DisplayName,
                     Code = first.Code ?? string.Empty,
+                    SearchText = string.Join(' ', g.Select(t => t.SearchText).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct()),
                     Tasks = g.ToList(),
                     StateGroupNames = stateGroupNames,
                 };

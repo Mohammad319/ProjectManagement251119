@@ -19,6 +19,9 @@ public class ResourceDefinitionConfiguration : IEntityTypeConfiguration<Resource
         b.Property(x => x.Unit)
             .HasMaxLength(30);
 
+        b.Property(x => x.Quantity)
+            .HasPrecision(Precision.FactorPrecision, Precision.FactorScale);
+
         b.Property(e => e.CostRoles)
             .HasJsonListComparer<RoleDTO>();
 

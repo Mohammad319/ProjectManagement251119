@@ -35,6 +35,7 @@ public class TaskResourceBlueprintsContext : DbContext
 
     // === Resource Links ===
     public DbSet<TaskDefinitionResourceLink> TaskDefinitionResourceLinks { get; set; }
+    public DbSet<TaskResourceSuggestionFeedback> TaskResourceSuggestionFeedbacks { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

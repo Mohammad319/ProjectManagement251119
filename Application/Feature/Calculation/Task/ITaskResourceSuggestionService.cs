@@ -14,4 +14,8 @@ public interface ITaskResourceSuggestionService
         int sourceTaskId,
         TaskResourceSuggestionSource source,
         CancellationToken cancellationToken = default);
+
+    Task<bool> RecordFeedbackAsync(
+        TaskResourceSuggestionFeedbackDTO feedback,
+        CancellationToken cancellationToken = default);
 }

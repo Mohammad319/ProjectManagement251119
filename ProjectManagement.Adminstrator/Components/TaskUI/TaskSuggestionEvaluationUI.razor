@@ -1,0 +1,181 @@
+@using System.Globalization
+@using TaskResourceBlueprints.Services.Evaluation
+@inject ITaskResourceSuggestionEvaluationService EvaluationService
+
+<div class="space-y-3 text-slate-900 dark:text-slate-100">
+    <section class="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
+        <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+                <h2 class="mt-1 text-lg font-semibold tracking-tight">Suggestion evaluation set</h2>
+                <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                    Measures whether known task resources can be recovered from similar blueprint tasks. Run this after imports, feedback, or ML training changes.
+                </p>
+            </div>
+
+            <div class="flex flex-wrap items-end gap-2">
+                <label class="grid gap-1 text-xs font-medium text-slate-600 dark:text-slate-300">
+                    <span>Sample</span>
+                    <input type="number"
+                           min="1"
+                           max="500"
+                           value="@sampleSize"
+                           @onchange="e => sampleSize = ReadInt(e.Value, sampleSize, 1, 500)"
+                           class="w-24 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-sky-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                </label>
+
+                <label class="grid gap-1 text-xs font-medium text-slate-600 dark:text-slate-300">
+                    <span>Top K</span>
+                    <input type="number"
+                           min="1"
+                           max="20"
+                           value="@topK"
+                           @onchange="e => topK = ReadInt(e.Value, topK, 1, 20)"
+                           class="w-20 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-sky-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                </label>
+
+                <button type="button"
+                        class="inline-flex items-center justify-center rounded-xl border border-indigo-600 bg-indigo-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-indigo-500 dark:bg-indigo-500"
+                        disabled="@isEvaluating"
+                        @onclick="RunEvaluationAsync">
+                    @(isEvaluating ? "Evaluating..." : "Run Evaluation")
+                </button>
+            </div>
+        </div>
+    </section>
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-900/70 dark:bg-rose-950/50 dark:text-rose-300">
+            @errorMessage
+        </div>
+    }
+
+    @if (result is not null)
+    {
+        <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
+            <h3 class="text-sm font-semibold">Evaluation summary</h3>
+            <div class="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                @SummaryCard("Eligible tasks", result.EligibleTasks.ToString(), result.EligibleTasks > 0)
+                @SummaryCard("Evaluated", result.EvaluatedTasks.ToString(), result.EvaluatedTasks > 0)
+                @SummaryCard("Top 1 hit", FormatPercent(result.Top1HitRate), result.Top1HitRate >= 0.50d, highlight: result.Top1HitRate < 0.50d)
+                @SummaryCard($"Top {result.TopK} hit", FormatPercent(result.TopKHitRate), result.TopKHitRate >= 0.70d, highlight: result.TopKHitRate < 0.70d)
+                @SummaryCard("Avg top 1 overlap", FormatPercent(result.AverageTop1ResourceOverlap), result.AverageTop1ResourceOverlap >= 0.25d)
+                @SummaryCard($"Avg best top {result.TopK}", FormatPercent(result.AverageBestTopKResourceOverlap), result.AverageBestTopKResourceOverlap >= 0.35d)
+                @SummaryCard("Unit match", FormatPercent(result.UnitMatchRate), result.UnitMatchRate >= 0.75d, highlight: result.UnitMatchRate < 0.75d)
+                @SummaryCard("Type match", FormatPercent(result.TypeMatchRate), result.TypeMatchRate >= 0.85d, highlight: result.TypeMatchRate < 0.85d)
+            </div>
+        </section>
+
+        <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
+            <div class="flex items-center justify-between gap-3">
+                <h3 class="text-sm font-semibold">Weak examples</h3>
+                <span class="text-xs text-slate-500">Showing first 50 sorted by best top @result.TopK overlap</span>
+            </div>
+
+            <div class="mt-3 max-h-[36rem] overflow-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                <table class="min-w-full divide-y divide-slate-100 text-sm dark:divide-slate-800">
+                    <thead class="sticky top-0 bg-white dark:bg-slate-950">
+                        <tr>
+                            <th class="px-3 py-1.5 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Task</th>
+                            <th class="px-3 py-1.5 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Top 1</th>
+                            <th class="px-3 py-1.5 text-right text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Score</th>
+                            <th class="px-3 py-1.5 text-right text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Top 1 overlap</th>
+                            <th class="px-3 py-1.5 text-right text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Best top @result.TopK</th>
+                            <th class="px-3 py-1.5 text-center text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Unit</th>
+                            <th class="px-3 py-1.5 text-center text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Type</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                        @foreach (var item in result.Items.OrderBy(x => x.BestTopKResourceOverlap).ThenBy(x => x.Top1ResourceOverlap).Take(50))
+                        {
+                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-900">
+                                <td class="px-3 py-2 align-top">
+                                    <div class="font-medium text-slate-900 dark:text-slate-100">@item.TaskName</div>
+                                    <div class="mt-0.5 text-xs text-slate-500">@item.TaskCode @item.TaskUnit · @item.ExpectedResourceCount resources</div>
+                                </td>
+                                <td class="px-3 py-2 align-top">
+                                    <div class="font-medium text-slate-800 dark:text-slate-200">@item.Top1TaskName</div>
+                                    <div class="mt-0.5 text-xs text-slate-500">@item.Top1TaskCode</div>
+                                </td>
+                                <td class="px-3 py-2 text-right font-mono text-xs">@FormatPercent(item.Top1Score)</td>
+                                <td class="px-3 py-2 text-right font-mono text-xs">@FormatPercent(item.Top1ResourceOverlap)</td>
+                                <td class="px-3 py-2 text-right font-mono text-xs">@FormatPercent(item.BestTopKResourceOverlap)</td>
+                                <td class="px-3 py-2 text-center">@StatusPill(item.UnitMatch)</td>
+                                <td class="px-3 py-2 text-center">@StatusPill(item.TypeMatch)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    }
+</div>
+
+@code {
+    private int sampleSize = 100;
+    private int topK = 5;
+    private bool isEvaluating;
+    private string? errorMessage;
+    private TaskResourceSuggestionEvaluationResult? result;
+
+    private async Task RunEvaluationAsync()
+    {
+        try
+        {
+            isEvaluating = true;
+            errorMessage = null;
+            result = null;
+            StateHasChanged();
+
+            result = await EvaluationService.EvaluateAsync(sampleSize, topK, CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isEvaluating = false;
+        }
+    }
+
+    private static int ReadInt(object? value, int fallback, int min, int max)
+        => int.TryParse(value?.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed)
+            ? Math.Clamp(parsed, min, max)
+            : fallback;
+
+    private static string FormatPercent(double value)
+        => value.ToString("0%", CultureInfo.InvariantCulture);
+
+    private static RenderFragment StatusPill(bool ok) => builder =>
+    {
+        var cls = ok
+            ? "rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:ring-emerald-800"
+            : "rounded-full bg-rose-50 px-2 py-0.5 text-xs font-semibold text-rose-700 ring-1 ring-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:ring-rose-800";
+        builder.OpenElement(0, "span");
+        builder.AddAttribute(1, "class", cls);
+        builder.AddContent(2, ok ? "OK" : "No");
+        builder.CloseElement();
+    };
+
+    private static RenderFragment SummaryCard(string title, string value, bool ok, bool highlight = false) => builder =>
+    {
+        var border = highlight
+            ? "border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30"
+            : ok
+                ? "border-emerald-200 bg-emerald-50 dark:border-emerald-900/60 dark:bg-emerald-950/30"
+                : "border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900";
+
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", $"rounded-xl border px-3 py-2 {border}");
+        builder.OpenElement(2, "div");
+        builder.AddAttribute(3, "class", "text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400");
+        builder.AddContent(4, title);
+        builder.CloseElement();
+        builder.OpenElement(5, "div");
+        builder.AddAttribute(6, "class", "mt-1 text-base font-semibold text-slate-950 dark:text-slate-50");
+        builder.AddContent(7, value);
+        builder.CloseElement();
+        builder.CloseElement();
+    };
+}

@@ -1353,6 +1353,8 @@ public sealed class PriceImportService(
             var headers = headerMatch?.Headers ?? [];
             var map = headerMatch?.Map ?? new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             var firstDataRow = headerMatch is null ? 0 : headerMatch.RowIndex + 1;
+            foreach (var inferred in InferColumnMap(sheet.Rows, firstDataRow))
+                map.TryAdd(inferred.Key, inferred.Value);
 
             for (var rowIndex = firstDataRow; rowIndex < sheet.Rows.Count; rowIndex++)
             {
@@ -1453,25 +1455,134 @@ public sealed class PriceImportService(
         for (var i = 0; i < headers.Count; i++)
         {
             var normalized = NormalizeHeader(headers[i]);
-            if (MatchesAny(normalized, "artnr", "artikelnr", "artikelnummer", "artikelnr", "artikelno", "artikelid", "articlenumber", "sku", "varunummer"))
+            if (MatchesAny(normalized, "artnr", "artikelnr", "artikelnummer", "artikelno", "artikelid", "articlenumber", "itemno", "itemnumber", "sku", "varunummer", "produktkod", "productcode"))
                 result.TryAdd("article", i);
-            else if (MatchesAny(normalized, "name", "namn", "benamning", "produktnamn", "productname", "artikel", "beskrivning", "description"))
+            else if (MatchesAny(normalized, "name", "namn", "benamning", "produktnamn", "productname", "artikel", "vara", "varubenamning", "material", "beskrivning", "description", "text"))
                 result.TryAdd("name", i);
-            else if (MatchesAny(normalized, "pris", "price", "listpris", "bruttopris", "unitprice", "prissek", "rekpris", "rekommenderatpris", "baseprice"))
+            else if (MatchesAny(normalized, "pris", "price", "listpris", "bruttopris", "unitprice", "unitcost", "enhetspris", "apris", "aprissek", "prissek", "rekpris", "rekommenderatpris", "baseprice"))
                 result.TryAdd("basePrice", i);
-            else if (MatchesAny(normalized, "nettopris", "netto", "netprice", "prisefterrabatt"))
+            else if (MatchesAny(normalized, "nettopris", "netto", "netprice", "netpriceeach", "nettoprissek", "prisefterrabatt"))
                 result.TryAdd("netPrice", i);
-            else if (MatchesAny(normalized, "unit", "enhet", "enh", "me", "mattenhet"))
+            else if (MatchesAny(normalized, "unit", "enhet", "enh", "me", "mattenhet", "unitcode", "uom", "unitofmeasure"))
                 result.TryAdd("unit", i);
-            else if (MatchesAny(normalized, "rabatt", "rabattprocent", "rabatt%", "discount", "discountprocent", "discount%"))
+            else if (MatchesAny(normalized, "rabatt", "rabattprocent", "rabattpct", "rabatt%", "discount", "discountpercent", "discountprocent", "discountpct", "discount%"))
                 result.TryAdd("discount", i);
-            else if (MatchesAny(normalized, "leverantor", "supplier"))
+            else if (MatchesAny(normalized, "leverantor", "supplier", "vendor", "manufacturer", "tillverkare"))
                 result.TryAdd("supplier", i);
-            else if (MatchesAny(normalized, "kategori", "category"))
+            else if (MatchesAny(normalized, "kategori", "category", "produktgrupp", "productgroup", "group"))
                 result.TryAdd("category", i);
         }
 
         return result;
+    }
+
+    private static Dictionary<string, int> InferColumnMap(List<List<string>> rows, int firstDataRow)
+    {
+        var result = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        var sampleRows = rows
+            .Skip(firstDataRow)
+            .Where(row => !IsMostlyEmpty(row))
+            .Take(50)
+            .ToList();
+
+        if (sampleRows.Count == 0)
+            return result;
+
+        var maxColumns = sampleRows.Max(row => row.Count);
+        var profiles = Enumerable.Range(0, maxColumns)
+            .Select(column => BuildColumnProfile(sampleRows, column))
+            .Where(profile => profile.NonEmpty > 0)
+            .ToList();
+
+        var unitColumn = profiles
+            .OrderByDescending(profile => profile.UnitLike)
+            .ThenByDescending(profile => profile.NonEmpty)
+            .FirstOrDefault(profile => profile.UnitLike >= Math.Max(2, profile.NonEmpty / 2));
+        if (unitColumn is not null)
+            result["unit"] = unitColumn.Index;
+
+        var priceColumns = profiles
+            .Where(profile => profile.Index != unitColumn?.Index && profile.Numeric > 0)
+            .OrderByDescending(profile => profile.CurrencyLike)
+            .ThenByDescending(profile => profile.AverageNumericValue)
+            .ThenByDescending(profile => profile.Index)
+            .Take(2)
+            .ToList();
+
+        if (priceColumns.Count > 0)
+            result["basePrice"] = priceColumns[0].Index;
+        if (priceColumns.Count > 1)
+            result["netPrice"] = priceColumns[1].Index;
+
+        var nameColumn = profiles
+            .Where(profile => profile.Index != unitColumn?.Index && !priceColumns.Any(price => price.Index == profile.Index))
+            .OrderByDescending(profile => profile.TextScore)
+            .ThenBy(profile => profile.Index)
+            .FirstOrDefault(profile => profile.TextScore > 0);
+        if (nameColumn is not null)
+            result["name"] = nameColumn.Index;
+
+        var articleColumn = profiles
+            .Where(profile => profile.Index != nameColumn?.Index && profile.Index != unitColumn?.Index && !priceColumns.Any(price => price.Index == profile.Index))
+            .Where(profile => profile.CodeLike > 0)
+            .OrderByDescending(profile => profile.CodeLike)
+            .ThenBy(profile => profile.Index)
+            .FirstOrDefault();
+        if (articleColumn is not null)
+            result["article"] = articleColumn.Index;
+
+        var discountColumn = profiles
+            .Where(profile => !result.ContainsValue(profile.Index))
+            .OrderByDescending(profile => profile.PercentLike)
+            .ThenByDescending(profile => profile.Numeric)
+            .FirstOrDefault(profile => profile.PercentLike > 0);
+        if (discountColumn is not null)
+            result["discount"] = discountColumn.Index;
+
+        return result;
+    }
+
+    private static ExcelColumnProfile BuildColumnProfile(List<List<string>> rows, int column)
+    {
+        var profile = new ExcelColumnProfile(column);
+
+        foreach (var row in rows)
+        {
+            var value = column < row.Count ? NormalizeOptional(row[column]) : null;
+            if (string.IsNullOrWhiteSpace(value))
+                continue;
+
+            profile.NonEmpty++;
+
+            if (LooksLikeUnit(value))
+                profile.UnitLike++;
+
+            if (LooksLikeArticleCode(value))
+                profile.CodeLike++;
+
+            if (value.Contains('%', StringComparison.Ordinal))
+                profile.PercentLike++;
+
+            if (value.Contains("sek", StringComparison.OrdinalIgnoreCase) ||
+                value.Contains("kr", StringComparison.OrdinalIgnoreCase))
+                profile.CurrencyLike++;
+
+            var number = TryParseDecimal(value);
+            if (number.HasValue)
+            {
+                profile.Numeric++;
+                profile.NumericTotal += Math.Abs(number.Value);
+                continue;
+            }
+
+            if (value.Length >= 3 && value.Any(char.IsLetter))
+            {
+                profile.Text++;
+                profile.TextLengthTotal += value.Length;
+            }
+        }
+
+        return profile;
     }
 
     private static List<PriceImportCandidate> BuildTextCandidates(
@@ -1569,6 +1680,28 @@ public sealed class PriceImportService(
         return nonEmpty >= 2 || sourceText.Length >= 30;
     }
 
+    private static bool LooksLikeUnit(string value)
+    {
+        var normalized = NormalizeHeader(value);
+        return normalized is "st" or "stk" or "pcs" or "pc" or "ea" or "m" or "m1" or "m2" or "m3"
+            or "kg" or "g" or "ton" or "t" or "l" or "liter" or "h" or "hr" or "tim" or "timme"
+            or "dag" or "styck" or "each" or "lm" or "kvm" or "kbm";
+    }
+
+    private static bool LooksLikeArticleCode(string value)
+    {
+        var text = NormalizeOptional(value);
+        if (string.IsNullOrWhiteSpace(text) || text.Length > 40)
+            return false;
+
+        var hasDigit = text.Any(char.IsDigit);
+        var hasLetter = text.Any(char.IsLetter);
+        var hasSeparator = text.Any(ch => ch is '-' or '_' or '.' or '/' or '\\');
+        var compact = text.All(ch => char.IsLetterOrDigit(ch) || ch is '-' or '_' or '.' or '/' or '\\');
+
+        return compact && (hasDigit && (hasLetter || hasSeparator) || hasLetter && hasSeparator);
+    }
+
     private static decimal? TryParseDecimal(string? value)
     {
         if (string.IsNullOrWhiteSpace(value))
@@ -1595,15 +1728,19 @@ public sealed class PriceImportService(
         if (string.IsNullOrWhiteSpace(value))
             return "";
 
-        return value.Trim()
-            .ToLowerInvariant()
-            .Replace("ä", "a", StringComparison.Ordinal)
-            .Replace("å", "a", StringComparison.Ordinal)
-            .Replace("ö", "o", StringComparison.Ordinal)
-            .Replace(".", "", StringComparison.Ordinal)
-            .Replace("_", "", StringComparison.Ordinal)
-            .Replace("-", "", StringComparison.Ordinal)
-            .Replace(" ", "", StringComparison.Ordinal);
+        var decomposed = value.Trim().ToLowerInvariant().Normalize(NormalizationForm.FormD);
+        var builder = new StringBuilder(decomposed.Length);
+
+        foreach (var ch in decomposed)
+        {
+            if (CharUnicodeInfo.GetUnicodeCategory(ch) == UnicodeCategory.NonSpacingMark)
+                continue;
+
+            if (char.IsLetterOrDigit(ch) || ch == '%')
+                builder.Append(ch);
+        }
+
+        return builder.ToString();
     }
 
     private static bool MatchesAny(string value, params string[] candidates)
@@ -1629,6 +1766,22 @@ public sealed class PriceImportService(
 
     private static string? NormalizeOptional(string? value)
         => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private sealed class ExcelColumnProfile(int index)
+    {
+        public int Index { get; } = index;
+        public int NonEmpty { get; set; }
+        public int Numeric { get; set; }
+        public int Text { get; set; }
+        public int UnitLike { get; set; }
+        public int CodeLike { get; set; }
+        public int PercentLike { get; set; }
+        public int CurrencyLike { get; set; }
+        public int TextLengthTotal { get; set; }
+        public decimal NumericTotal { get; set; }
+        public decimal AverageNumericValue => Numeric == 0 ? 0 : NumericTotal / Numeric;
+        public double TextScore => (Text * 3d) + (TextLengthTotal / 20d) - (Numeric * 2d) - (UnitLike * 3d);
+    }
 
     private static string ShortError(string? message)
     {

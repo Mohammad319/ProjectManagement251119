@@ -61,6 +61,14 @@ namespace ProjectManagement.Server.Controllers.v1.SubCalculation
             return Ok(result);
         }
 
+        [Authorize(Roles = PMRolesConst.Tenant.Users)]
+        [HttpPost("suggestions/feedback")]
+        public async Task<IActionResult> RecordSuggestionFeedback([FromBody] TaskResourceSuggestionFeedbackDTO feedback)
+        {
+            var result = await MicroBus.Send(new RecordTaskResourceSuggestionFeedbackCommand(feedback));
+            return Ok(result);
+        }
+
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpPost(URLConst.Filter)]
         public async Task<IActionResult> Post([FromBody] GetResourcesByFilterQuery command)

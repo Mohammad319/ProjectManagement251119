@@ -23,6 +23,8 @@ namespace TaskResourceBlueprints.Entities.Tasks
     }
     public class TaskDefinition : TaskLookupBase
     {
+        private const int MaxNormalizedTextLength = 800;
+
         public TaskStatusEnum Status { get; set; }
 
         public string? Responsible { get; set; }
@@ -40,7 +42,12 @@ namespace TaskResourceBlueprints.Entities.Tasks
         public bool Uncontrollable { get; set; }
 
         public string? Code { get; set; }
+        public string? ParentCode { get; set; }
+        public string? ParentName { get; set; }
+        public string? HierarchyPath { get; set; }
         public string NormalizedTextSv { get; set; } = string.Empty;
+        public List<string> NameSynonyms { get; set; } = [];
+        public List<string> UnitSynonyms { get; set; } = [];
         public int UsageCount { get; set; }
 
         public List<decimal> WorkloadThresholds { get; set; } = new() { 0m, 0m, 0m };
@@ -60,7 +67,20 @@ namespace TaskResourceBlueprints.Entities.Tasks
 
         public void RefreshNormalizedTextSv()
         {
-            NormalizedTextSv = SwedishTaskTextNormalizer.NormalizeTask(Name, Code, UnitCode, Quantity);
+            var parts = new List<string?>
+            {
+                SwedishTaskTextNormalizer.NormalizeTask(Name, Code, UnitCode, Quantity),
+                ParentCode,
+                ParentName,
+                HierarchyPath,
+            };
+            parts.AddRange(NameSynonyms);
+            parts.AddRange(UnitSynonyms);
+
+            var normalized = SwedishTaskTextNormalizer.Normalize(string.Join(' ', parts.Where(x => !string.IsNullOrWhiteSpace(x))));
+            NormalizedTextSv = normalized.Length <= MaxNormalizedTextLength
+                ? normalized
+                : normalized[..MaxNormalizedTextLength].Trim();
         }
     }
 }

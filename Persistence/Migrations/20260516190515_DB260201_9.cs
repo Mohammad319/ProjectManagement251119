@@ -2,10 +2,10 @@
 
 #nullable disable
 
-namespace TaskResourceBlueprints.Migrations
+namespace Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class DB260201_3 : Migration
+    public partial class DB260201_9 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

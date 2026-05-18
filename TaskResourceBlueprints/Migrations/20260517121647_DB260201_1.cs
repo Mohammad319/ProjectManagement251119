@@ -5,7 +5,7 @@
 namespace TaskResourceBlueprints.Migrations
 {
     /// <inheritdoc />
-    public partial class DB260201 : Migration
+    public partial class DB260201_1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -33,6 +33,45 @@ namespace TaskResourceBlueprints.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Tasks",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    Responsible = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    AdminNote = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    FieldNotes = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Quantity = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: true),
+                    PriceProduction = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: true),
+                    UnitCode = table.Column<string>(type: "nvarchar(64)", maxLength: 64, nullable: true),
+                    ChangeFactor1 = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: false),
+                    ChangeFactor2 = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    Uncontrollable = table.Column<bool>(type: "bit", nullable: false),
+                    Code = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    ParentCode = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    ParentName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    HierarchyPath = table.Column<string>(type: "nvarchar(1024)", maxLength: 1024, nullable: true),
+                    NormalizedTextSv = table.Column<string>(type: "nvarchar(800)", maxLength: 800, nullable: false),
+                    NameSynonyms = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    UnitSynonyms = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    UsageCount = table.Column<int>(type: "int", nullable: false),
+                    WorkloadThresholds = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    RowNotes = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    VisibleFolderIds = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CapacityResourceId = table.Column<int>(type: "int", nullable: true),
+                    ConversionParameters = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                    SortOrder = table.Column<int>(type: "int", nullable: false),
+                    IsVisible = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Tasks", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "TaskStateGroups",
                 columns: table => new
                 {
@@ -45,20 +84,6 @@ namespace TaskResourceBlueprints.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_TaskStateGroups", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "TaskUnitGroups",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    DisplayName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Keys = table.Column<string>(type: "nvarchar(max)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_TaskUnitGroups", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -75,6 +100,8 @@ namespace TaskResourceBlueprints.Migrations
                     ResType = table.Column<int>(type: "int", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
                     SortOrder = table.Column<int>(type: "int", nullable: false),
+                    Unit = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: true),
+                    Quantity = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: true),
                     Data = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
@@ -107,45 +134,6 @@ namespace TaskResourceBlueprints.Migrations
                         principalTable: "TaskStateGroups",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Tasks",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Status = table.Column<int>(type: "int", nullable: false),
-                    Responsible = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    AdminNote = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    FieldNotes = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Quantity = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: true),
-                    PriceProduction = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: true),
-                    UnitCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ChangeFactor1 = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: false),
-                    ChangeFactor2 = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    Uncontrollable = table.Column<bool>(type: "bit", nullable: false),
-                    Code = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    NormalizedTextSv = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
-                    WorkloadThresholds = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    TaskUnitGroupId = table.Column<int>(type: "int", nullable: true),
-                    RowNotes = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    VisibleFolderIds = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CapacityResourceId = table.Column<int>(type: "int", nullable: true),
-                    ConversionParameters = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
-                    SortOrder = table.Column<int>(type: "int", nullable: false),
-                    IsVisible = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Tasks", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Tasks_TaskUnitGroups_TaskUnitGroupId",
-                        column: x => x.TaskUnitGroupId,
-                        principalTable: "TaskUnitGroups",
-                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -287,19 +275,24 @@ namespace TaskResourceBlueprints.Migrations
                 column: "TaskStateId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Tasks_Code",
+                table: "Tasks",
+                column: "Code");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Tasks_NormalizedTextSv",
                 table: "Tasks",
                 column: "NormalizedTextSv");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Tasks_ParentCode",
+                table: "Tasks",
+                column: "ParentCode");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Tasks_Status_SortOrder",
                 table: "Tasks",
                 columns: new[] { "Status", "SortOrder" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Tasks_TaskUnitGroupId",
-                table: "Tasks",
-                column: "TaskUnitGroupId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TaskStates_TaskStateGroupId",
@@ -333,9 +326,6 @@ namespace TaskResourceBlueprints.Migrations
 
             migrationBuilder.DropTable(
                 name: "TaskStateGroups");
-
-            migrationBuilder.DropTable(
-                name: "TaskUnitGroups");
         }
     }
 }

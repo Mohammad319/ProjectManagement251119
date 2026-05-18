@@ -50,7 +50,7 @@
                 <div class="overflow-hidden rounded border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
 
                     <!-- ── Suggestion header ── -->
-                    <div class="flex min-w-0 items-center justify-between gap-2 border-b border-gray-100 px-2 py-1.5 dark:border-gray-800">
+                    <div class="flex min-w-0 items-start justify-between gap-2 border-b border-gray-100 px-2 py-1.5 dark:border-gray-800">
 
                         <button class="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-gray-300 text-base leading-none text-gray-700 hover:bg-gray-50 disabled:opacity-40 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
                                 disabled="@state.IsLoadingResources"
@@ -59,12 +59,16 @@
                             @(state.IsLoadingResources ? "..." : state.IsExpanded ? "-" : "+")
                         </button>
 
-                        <div class="min-w-0 flex-1 overflow-hidden">
-                            <div class="flex min-w-0 items-center gap-2 overflow-hidden whitespace-nowrap">
+                        <div class="min-w-0 flex-1">
+                            <div class="flex min-w-0 flex-col gap-1">
 
-                                <div class="min-w-0 flex-[1_1_18rem] truncate font-medium text-gray-900 dark:text-gray-100">
+                                <div class="min-w-0 overflow-hidden whitespace-normal text-sm font-semibold leading-snug text-gray-900 dark:text-gray-100"
+                                     style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;"
+                                     title="@state.Suggestion.SourceTaskName">
                                     @state.Suggestion.SourceTaskName
                                 </div>
+
+                                <div class="flex min-w-0 flex-wrap items-center gap-2">
 
                                 @if (HasTaskQuantityInfo(state.Suggestion))
                                 {
@@ -85,7 +89,16 @@
                                     @state.Suggestion.Source
                                 </span>
 
-                                <span class="min-w-0 flex-[1_1_10rem] truncate text-xs text-gray-400 dark:text-gray-500">
+                                @if (UsesParentContext(state.Suggestion))
+                                {
+                                    <span class="shrink-0 rounded bg-indigo-50 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-700 ring-1 ring-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:ring-indigo-800"
+                                          title="@state.Suggestion.Reason">
+                                        Parent context
+                                    </span>
+                                }
+
+                                <span class="min-w-0 flex-[1_1_10rem] truncate text-xs text-gray-400 dark:text-gray-500"
+                                      title="@state.Suggestion.Reason">
                                     @state.Suggestion.Reason
                                 </span>
 
@@ -96,11 +109,34 @@
                                         </div>
                                     </div>
                                     <span class="text-xs font-medium @GetScoreTextClass(state.Suggestion.Score)">
-                                        @state.Suggestion.Score.ToString("0%", CultureInfo.InvariantCulture)
-                                    </span>
+                                    @state.Suggestion.Score.ToString("0%", CultureInfo.InvariantCulture)
+                                </span>
+                            </div>
+
                                 </div>
 
                             </div>
+                        </div>
+
+                        <div class="flex shrink-0 items-center gap-1">
+                            <select value="@FeedbackSelectValue(state)"
+                                    disabled="@state.IsRecordingFeedback"
+                                    title="Suggestion feedback"
+                                    @onchange="e => OnFeedbackSelected(state, e.Value?.ToString())"
+                                    class="@FeedbackSelectClass(state)">
+                                <option value="">Feedback</option>
+                                <option value="@TaskResourceSuggestionFeedbackKind.Accepted">Good</option>
+                                <option value="@TaskResourceSuggestionFeedbackKind.Rejected">Bad</option>
+                                <option value="@TaskResourceSuggestionFeedbackKind.WrongUnit">Unit</option>
+                                <option value="@TaskResourceSuggestionFeedbackKind.MissingResources">Missing</option>
+                                <option value="@TaskResourceSuggestionFeedbackKind.WrongResourceType">Type</option>
+                            </select>
+                            <button class="rounded border border-blue-600 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-50 disabled:opacity-40 dark:border-blue-400 dark:text-blue-300 dark:hover:bg-blue-950"
+                                    disabled="@(state.IsRecordingFeedback || !state.PendingFeedbackChange.HasValue)"
+                                    title="Save feedback"
+                                    @onclick="() => SavePendingFeedbackAsync(state)">
+                                Save
+                            </button>
                         </div>
 
                         <button class="shrink-0 rounded border border-blue-600 px-3 py-1 text-sm text-blue-700 hover:bg-blue-50 disabled:opacity-40 dark:border-blue-400 dark:text-blue-300 dark:hover:bg-blue-950"
@@ -368,13 +404,108 @@
                 TaskItem.Id);
 
             MHD.Notifications(ToastType.Add, result);
-            if (result) Modal.Close();
+            if (result)
+            {
+                await RecordFeedbackAsync(state, TaskResourceSuggestionFeedbackKind.Accepted, notify: false);
+                Modal.Close();
+            }
         }
         finally
         {
             state.IsApplying = false;
         }
     }
+
+    private async Task RecordFeedbackAsync(
+        SuggestionState state,
+        TaskResourceSuggestionFeedbackKind feedback,
+        bool notify = true)
+    {
+        if (state.IsRecordingFeedback)
+            return;
+
+        if (state.Suggestion.Feedback == feedback)
+            return;
+
+        if (state.Suggestion.Feedback.HasValue &&
+            state.Suggestion.Feedback.Value != feedback &&
+            state.PendingFeedbackChange != feedback)
+        {
+            state.PendingFeedbackChange = feedback;
+            StateHasChanged();
+            return;
+        }
+
+        state.IsRecordingFeedback = true;
+        StateHasChanged();
+
+        try
+        {
+            var result = await Repo.Resource.RecordSuggestionFeedbackAsync(BuildFeedbackDto(state.Suggestion, feedback));
+            if (result)
+            {
+                state.Suggestion.Feedback = feedback;
+                state.PendingFeedbackChange = null;
+            }
+            if (notify)
+                MHD.Notifications(ToastType.Update, result);
+        }
+        finally
+        {
+            state.IsRecordingFeedback = false;
+        }
+    }
+
+    private static string FeedbackSelectValue(SuggestionState state)
+        => (state.PendingFeedbackChange ?? state.Suggestion.Feedback)?.ToString() ?? string.Empty;
+
+    private static string FeedbackSelectClass(SuggestionState state)
+    {
+        const string baseClass = "rounded border px-2 py-1 text-xs focus:border-blue-400 focus:outline-none disabled:opacity-50 dark:bg-gray-900";
+        if (state.PendingFeedbackChange.HasValue)
+            return $"{baseClass} border-amber-500 bg-amber-50 text-amber-700 dark:border-amber-600 dark:bg-amber-950/40 dark:text-amber-300";
+
+        return state.Suggestion.Feedback.HasValue
+            ? $"{baseClass} border-emerald-500 bg-emerald-50 text-emerald-700 dark:border-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-300"
+            : $"{baseClass} border-gray-300 bg-white text-gray-600 dark:border-gray-700 dark:text-gray-300";
+    }
+
+    private void OnFeedbackSelected(SuggestionState state, string? rawValue)
+    {
+        if (!Enum.TryParse<TaskResourceSuggestionFeedbackKind>(rawValue, out var feedback))
+        {
+            state.PendingFeedbackChange = null;
+            return;
+        }
+
+        state.PendingFeedbackChange = state.Suggestion.Feedback == feedback ? null : feedback;
+    }
+
+    private async Task SavePendingFeedbackAsync(SuggestionState state)
+    {
+        if (state.PendingFeedbackChange is { } feedback)
+            await RecordFeedbackAsync(state, feedback);
+    }
+
+    private TaskResourceSuggestionFeedbackDTO BuildFeedbackDto(
+        TaskResourceSuggestionDTO suggestion,
+        TaskResourceSuggestionFeedbackKind feedback)
+        => new()
+        {
+            TargetTaskId = TaskItem.Id,
+            TargetTaskName = TaskItem.Name,
+            TargetTaskCode = TaskItem.Code,
+            TargetTaskUnit = TaskItem.Unit,
+            TargetTaskQuantity = TaskItem.Quantity,
+            SourceTaskId = suggestion.SourceTaskId,
+            SourceTaskName = suggestion.SourceTaskName,
+            SourceTaskUnit = suggestion.SourceTaskUnit,
+            SourceTaskQuantity = suggestion.SourceTaskQuantity,
+            Source = suggestion.Source,
+            Score = suggestion.Score,
+            Feedback = feedback,
+            Reason = suggestion.Reason
+        };
 
     private static string GetParamLabel(ParamName p) => p switch
     {
@@ -403,6 +534,10 @@
 
         return string.Join(" x ", parts);
     }
+
+    private static bool UsesParentContext(TaskResourceSuggestionDTO suggestion)
+        => suggestion.Reason.Contains("parent code", StringComparison.OrdinalIgnoreCase) ||
+           suggestion.Reason.Contains("ancestor code", StringComparison.OrdinalIgnoreCase);
 
     private static string GetScoreColorClass(double score) => score switch
     {
@@ -439,7 +574,9 @@
         public bool   IsApplying          { get; set; }
         public bool   IsExpanded          { get; set; }
         public bool   IsLoadingResources  { get; set; }
+        public bool   IsRecordingFeedback { get; set; }
         public bool   HasLoadedResources  { get; private set; }
+        public TaskResourceSuggestionFeedbackKind? PendingFeedbackChange { get; set; }
         public string Key                 => BuildKey(Suggestion);
 
         public Dictionary<ParamName, decimal> ConversionParams { get; } = new();
@@ -454,7 +591,12 @@
         public static string BuildKey(TaskResourceSuggestionDTO suggestion)
             => $"{suggestion.Source}:{suggestion.SourceTaskId}";
 
-        public void UpdateSuggestion(TaskResourceSuggestionDTO suggestion) => Suggestion = suggestion;
+        public void UpdateSuggestion(TaskResourceSuggestionDTO suggestion)
+        {
+            Suggestion = suggestion;
+            if (PendingFeedbackChange == suggestion.Feedback)
+                PendingFeedbackChange = null;
+        }
 
         public void SetResources(IEnumerable<ResourcePostDTO> resources, TaskListMVVM task)
         {

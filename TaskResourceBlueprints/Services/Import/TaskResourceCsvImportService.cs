@@ -101,6 +101,7 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
 
         var rowNumber = 1;
         TaskDefinition? currentTask = null;
+        TaskDefinition? currentCodeContextTask = null;
         while (await reader.ReadLineAsync(ct) is { } line)
         {
             ct.ThrowIfCancellationRequested();
@@ -122,7 +123,10 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
                         db, row, map, fileName, rowNumber, result,
                         taskByExternalId, taskByCode, taskByImportKey,
                         stateGroupsByName, statesByKey,
-                        ++nextTaskSortOrder, ct);
+                        ++nextTaskSortOrder, currentCodeContextTask, ct);
+
+                    if (!string.IsNullOrWhiteSpace(currentTask.Code))
+                        currentCodeContextTask = currentTask;
                 }
                 else if (rowType.Equals("R", StringComparison.OrdinalIgnoreCase))
                 {
@@ -280,11 +284,20 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
         Dictionary<string, TaskStateGroup> stateGroupsByName,
         Dictionary<string, TaskState> statesByKey,
         int sortOrder,
+        TaskDefinition? currentCodeContextTask,
         CancellationToken ct)
     {
         var externalId = Get(row, map, "TaskId").Trim();
         var code = Get(row, map, "Code", fallbackIndex: FallbackCodeIndex).Trim();
         var name = Get(row, map, "Name", fallbackIndex: FallbackNameIndex).Trim();
+        var parentTaskId = Get(row, map, "ParentTaskId").Trim();
+        var parentCode = EmptyToNull(Get(row, map, "ParentCode"));
+        if (string.IsNullOrWhiteSpace(code) &&
+            string.IsNullOrWhiteSpace(parentCode) &&
+            !string.IsNullOrWhiteSpace(currentCodeContextTask?.Code))
+        {
+            parentCode = currentCodeContextTask.Code;
+        }
 
         if (string.IsNullOrWhiteSpace(name))
             throw new InvalidOperationException("Task name is required.");
@@ -321,8 +334,16 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
 
         task.Code = string.IsNullOrWhiteSpace(code) ? task.Code : code;
         task.Name = name;
+        ApplyTaskHierarchy(task, parentTaskId, parentCode, taskByExternalId, taskByCode);
         task.Quantity = ParseNullableDecimal(Get(row, map, "Quantity", fallbackIndex: FallbackQuantityIndex));
         task.UnitCode = EmptyToNull(Get(row, map, "Unit", fallbackIndex: FallbackUnitIndex));
+        var nameSynonyms = ReadSynonyms(row, map, "TaskNameSynonym1", "TaskNameSynonym2");
+        if (nameSynonyms.Count > 0)
+            task.NameSynonyms = nameSynonyms;
+
+        var unitSynonyms = ReadSynonyms(row, map, "TaskUnitSynonym1", "TaskUnitSynonym2");
+        if (unitSynonyms.Count > 0)
+            task.UnitSynonyms = unitSynonyms;
         task.FieldNotes = EmptyToNull(Get(row, map, "CalculationMethod"));
         task.AdminNote = BuildAdminNote(fileName, account: null, category: Get(row, map, "Category"), rowNumber);
         task.ChangeFactor1 = 1m;
@@ -377,6 +398,86 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
         await db.SaveChangesAsync(ct);
         return task;
     }
+
+    private static void ApplyTaskHierarchy(
+        TaskDefinition task,
+        string parentTaskId,
+        string? parentCode,
+        IReadOnlyDictionary<string, TaskDefinition> taskByExternalId,
+        IReadOnlyDictionary<string, TaskDefinition> taskByCode)
+    {
+        var parent = ResolveParentTask(parentTaskId, parentCode, task.Code, taskByExternalId, taskByCode);
+        if (parent is null)
+        {
+            task.ParentCode = parentCode;
+            task.ParentName = null;
+            task.HierarchyPath = BuildHierarchyPath(null, task);
+            return;
+        }
+
+        task.ParentCode = string.IsNullOrWhiteSpace(parent.Code) ? parentCode : parent.Code.Trim();
+        task.ParentName = parent.Name;
+        task.HierarchyPath = BuildHierarchyPath(parent, task);
+    }
+
+    private static TaskDefinition? ResolveParentTask(
+        string parentTaskId,
+        string? parentCode,
+        string? taskCode,
+        IReadOnlyDictionary<string, TaskDefinition> taskByExternalId,
+        IReadOnlyDictionary<string, TaskDefinition> taskByCode)
+    {
+        if (!string.IsNullOrWhiteSpace(parentTaskId) &&
+            taskByExternalId.TryGetValue(parentTaskId.Trim(), out var byId))
+            return byId;
+
+        if (!string.IsNullOrWhiteSpace(parentCode) &&
+            taskByCode.TryGetValue(parentCode.Trim(), out var byCode))
+            return byCode;
+
+        var inferredParentCode = InferParentCode(taskCode, taskByCode.Keys);
+        return !string.IsNullOrWhiteSpace(inferredParentCode) &&
+               taskByCode.TryGetValue(inferredParentCode, out var inferredParent)
+            ? inferredParent
+            : null;
+    }
+
+    private static string? InferParentCode(string? code, IEnumerable<string> knownCodes)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+            return null;
+
+        var trimmedCode = code.Trim();
+        return knownCodes
+            .Where(candidate => IsLikelyParentCode(trimmedCode, candidate))
+            .OrderByDescending(candidate => candidate.Length)
+            .FirstOrDefault();
+    }
+
+    private static bool IsLikelyParentCode(string code, string candidate)
+    {
+        if (string.IsNullOrWhiteSpace(candidate))
+            return false;
+
+        var parent = candidate.Trim();
+        if (parent.Length >= code.Length ||
+            !code.StartsWith(parent, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        var next = code[parent.Length];
+        return next == '.' || char.IsLetterOrDigit(next);
+    }
+
+    private static string BuildHierarchyPath(TaskDefinition? parent, TaskDefinition task)
+    {
+        var current = FormatHierarchyPart(task.Code, task.Name);
+        return string.IsNullOrWhiteSpace(parent?.HierarchyPath)
+            ? current
+            : $"{parent.HierarchyPath} > {current}";
+    }
+
+    private static string FormatHierarchyPart(string? code, string name)
+        => string.IsNullOrWhiteSpace(code) ? name.Trim() : $"{code.Trim()} {name.Trim()}";
 
     // ──────────────────────────────────────────────────────────────────────
     // Upsert resource assignment
@@ -758,6 +859,8 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
     private static ResourceTypesEnum ParseResourceType(string value, int rowNumber, TaskResourceCsvImportResult result)
     {
         var token = NormalizeToken(value);
+        if (TryParseResourceTypeName(value, out var enumType))
+            return enumType;
 
         if (token.Contains("material")) return ResourceTypesEnum.Materials;
         if (token.Contains("maskin") || token.Contains("machine") || token.Contains("equipment")) return ResourceTypesEnum.MachinesAndEquipments;
@@ -772,6 +875,25 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
         return ResourceTypesEnum.Adjustment;
     }
 
+    private static bool TryParseResourceTypeName(string value, out ResourceTypesEnum type)
+    {
+        if (Enum.TryParse(value.Trim(), ignoreCase: true, out type))
+            return true;
+
+        var token = NormalizeHeader(value ?? string.Empty);
+        foreach (var candidate in Enum.GetValues<ResourceTypesEnum>())
+        {
+            if (NormalizeHeader(candidate.ToString()).Equals(token, StringComparison.OrdinalIgnoreCase))
+            {
+                type = candidate;
+                return true;
+            }
+        }
+
+        type = default;
+        return false;
+    }
+
     private static IReadOnlyDictionary<string, int> BuildColumnMap(IReadOnlyList<string> header)
     {
         var aliases = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
@@ -782,8 +904,12 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
             ["ParentCode"]      = ["ParentCode"],
             ["Code"]            = ["Code", "Kod"],
             ["Name"]            = ["Name", "Namn"],
+            ["TaskNameSynonym1"] = ["TaskNameSynonym1", "NameSynonym1", "NamnSynonym1", "Task synonym 1"],
+            ["TaskNameSynonym2"] = ["TaskNameSynonym2", "NameSynonym2", "NamnSynonym2", "Task synonym 2"],
             ["Quantity"]        = ["Mängd", "Mangd", "Quantity"],
             ["Unit"]            = ["Enhet", "Unit"],
+            ["TaskUnitSynonym1"] = ["TaskUnitSynonym1", "UnitSynonym1", "EnhetSynonym1", "Unit synonym 1"],
+            ["TaskUnitSynonym2"] = ["TaskUnitSynonym2", "UnitSynonym2", "EnhetSynonym2", "Unit synonym 2"],
             ["Property1"]       = ["Egenskap 1", "Egenskap1", "Property1"],
             ["Value1"]          = ["Värde 1", "Varde 1", "Value1"],
             ["Property2"]       = ["Egenskap 2", "Egenskap2", "Property2"],
@@ -868,6 +994,13 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
             return row[fallback].Trim();
         return string.Empty;
     }
+
+    private static List<string> ReadSynonyms(IReadOnlyList<string> row, IReadOnlyDictionary<string, int> map, params string[] keys)
+        => keys
+            .Select(key => Get(row, map, key).Trim())
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
 
     private static decimal? ParseNullableDecimal(string value)
     {

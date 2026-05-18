@@ -4,6 +4,7 @@ using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.App.Dataloader;
 using ProjectManagement.Shared.DTO.ProjectAppStorage;
 using ProjectManagement.Shared.Enums;
+using ProjectManagement.Shared.Helper.Text;
 using ProjectManagement.Shared.Mappers;
 using System.Linq.Expressions;
 using TaskResourceBlueprints.Dto.ProjectTask;
@@ -13,6 +14,7 @@ using TaskResourceBlueprints.Entities.Tasks;
 using TaskResourceBlueprints.Entities;
 using TaskResourceBlueprints.Infrastructure;
 using TaskResourceBlueprints.Mappers.Shared.Mappers;
+using TaskResourceBlueprints.Services.Import;
 namespace TaskResourceBlueprints.Services.ProjectTask
 {
     public static class TaskSelectors
@@ -66,6 +68,8 @@ namespace TaskResourceBlueprints.Services.ProjectTask
 
     public sealed class ProjectTaskService(IDbContextFactory<TaskResourceBlueprintsContext> factory) : ITaskDefinitionService
     {
+        private const int SearchCandidateLimit = 2000;
+
         public async Task<IReadOnlyList<ResourceCategory>> GetLookupsAsync(CancellationToken ct)
         {
             await using var db = await factory.CreateDbContextAsync(ct);
@@ -89,7 +93,7 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                 .Where(t => !string.IsNullOrWhiteSpace(t))
                 .Select(t => t.Trim())
                 .Distinct(StringComparer.OrdinalIgnoreCase)
-                .Take(2)
+                .Take(4)
                 .ToList();
 
             if (tokens.Count > 0)
@@ -112,7 +116,7 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                         x.NormalizedTextSv.Contains(t0) || x.Name.Contains(t0) || (x.Code ?? string.Empty).Contains(t0) ||
                         x.NormalizedTextSv.Contains(t1) || x.Name.Contains(t1) || (x.Code ?? string.Empty).Contains(t1));
                 }
-                else
+                else if (tokens.Count == 3)
                 {
                     var t1 = tokens[1];
                     var t2 = tokens[2]; // bigram phrase — only in NormalizedTextSv
@@ -121,16 +125,31 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                         x.NormalizedTextSv.Contains(t1) || x.Name.Contains(t1) || (x.Code ?? string.Empty).Contains(t1) ||
                         x.NormalizedTextSv.Contains(t2));
                 }
+                else
+                {
+                    var t1 = tokens[1];
+                    var t2 = tokens[2];
+                    var t3 = tokens[3];
+                    query = query.Where(x =>
+                        x.NormalizedTextSv.Contains(t0) || x.Name.Contains(t0) || (x.Code ?? string.Empty).Contains(t0) ||
+                        x.NormalizedTextSv.Contains(t1) || x.Name.Contains(t1) || (x.Code ?? string.Empty).Contains(t1) ||
+                        x.NormalizedTextSv.Contains(t2) ||
+                        x.NormalizedTextSv.Contains(t3));
+                }
             }
             else if (!string.IsNullOrWhiteSpace(filter.NameOrCode))
             {
                 // Fallback for callers that still use the old single-string field.
-                var search = filter.NameOrCode.Trim();
+                var fallbackSearch = filter.NameOrCode.Trim();
                 query = query.Where(x =>
-                    x.NormalizedTextSv.Contains(search) ||
-                    x.Name.Contains(search) ||
-                    (x.Code ?? string.Empty).Contains(search));
+                    x.NormalizedTextSv.Contains(fallbackSearch) ||
+                    x.Name.Contains(fallbackSearch) ||
+                    (x.Code ?? string.Empty).Contains(fallbackSearch));
             }
+
+            var searchContext = BuildTaskSearchContext(filter, tokens);
+            if (searchContext.HasSearch)
+                return await GetRankedTasksForUserDtoAsync(query, searchContext, filter, tenantid, ct);
 
             return await query
                 .OrderByDescending(x => x.UsageCount)
@@ -141,6 +160,177 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                 .TasksBaseToDto(tenantid)
                 .ToListAsync(ct);
         }
+
+        private static async Task<List<ProjectTaskDto>> GetRankedTasksForUserDtoAsync(
+            IQueryable<TaskDefinition> query,
+            TaskSearchContext search,
+            ProjectTaskFilterDto filter,
+            int tenantid,
+            CancellationToken ct)
+        {
+            var candidates = await query
+                .OrderByDescending(x => x.UsageCount)
+                .ThenBy(x => x.Code)
+                .ThenBy(x => x.Name)
+                .Take(SearchCandidateLimit)
+                .Select(x => new TaskSearchCandidate(
+                    x.Id,
+                    x.Name,
+                    x.Code ?? string.Empty,
+                    x.NormalizedTextSv,
+                    x.UsageCount))
+                .ToListAsync(ct);
+
+            var candidateById = candidates.ToDictionary(x => x.Id);
+            var rankedIds = candidates
+                .Select(candidate => (candidate.Id, Score: CalculateTaskSearchScore(search, candidate)))
+                .OrderByDescending(x => x.Score)
+                .ThenBy(x => candidateById[x.Id].Code)
+                .ThenBy(x => candidateById[x.Id].Name)
+                .Skip(filter.Skip)
+                .Take(filter.Take)
+                .Select((x, index) => new { x.Id, index })
+                .ToList();
+
+            if (rankedIds.Count == 0)
+                return [];
+
+            var idOrder = rankedIds.ToDictionary(x => x.Id, x => x.index);
+            var ids = rankedIds.Select(x => x.Id).ToList();
+            var tasks = await query
+                .Where(x => ids.Contains(x.Id))
+                .TasksBaseToDto(tenantid)
+                .ToListAsync(ct);
+
+            return tasks
+                .OrderBy(x => idOrder.GetValueOrDefault(x.Id, int.MaxValue))
+                .ToList();
+        }
+
+        private static TaskSearchContext BuildTaskSearchContext(ProjectTaskFilterDto filter, IReadOnlyList<string> tokens)
+        {
+            var normalizedTokens = tokens
+                .Where(token => !string.IsNullOrWhiteSpace(token))
+                .Select(token => token.Trim().ToLowerInvariant())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            var wordTokens = normalizedTokens.Where(token => !token.Contains('_')).ToList();
+            var bigrams = normalizedTokens.Where(token => token.Contains('_')).ToList();
+            var rawQuery = !string.IsNullOrWhiteSpace(filter.NameOrCode)
+                ? filter.NameOrCode.Trim()
+                : string.Join(' ', wordTokens);
+            var normalizedQuery = wordTokens.Count > 0
+                ? string.Join(' ', wordTokens)
+                : SwedishTaskTextNormalizer.Normalize(rawQuery);
+
+            return new TaskSearchContext(
+                RawQuery: rawQuery,
+                NormalizedQuery: normalizedQuery,
+                WordTokens: wordTokens,
+                Bigrams: bigrams);
+        }
+
+        private static double CalculateTaskSearchScore(TaskSearchContext search, TaskSearchCandidate candidate)
+        {
+            if (!search.HasSearch)
+                return UsageScore(candidate.UsageCount);
+
+            var candidateCode = candidate.Code ?? string.Empty;
+            var normalizedCandidateCode = SwedishTaskTextNormalizer.Normalize(candidateCode);
+            var normalizedCandidate = candidate.NormalizedTextSv ?? string.Empty;
+            var normalizedName = SwedishTaskTextNormalizer.Normalize(candidate.Name);
+            var normalizedTarget = string.Join(' ', new[] { normalizedCandidateCode, normalizedName, normalizedCandidate }
+                .Where(x => !string.IsNullOrWhiteSpace(x)));
+
+            var textScore = SwedishTaskTextNormalizer.CalculateSimilarity(search.NormalizedQuery, normalizedTarget);
+            var nameScore = SwedishTaskTextNormalizer.CalculateSimilarity(search.NormalizedQuery, normalizedName);
+            var tokenCoverage = CalculateTokenCoverage(search.WordTokens, normalizedTarget);
+            var bigramScore = search.Bigrams.Count == 0
+                ? 0d
+                : search.Bigrams.Count(bigram => normalizedCandidate.Contains(bigram, StringComparison.OrdinalIgnoreCase)) / (double)search.Bigrams.Count;
+            var codeScore = CalculateCodeScore(search, candidateCode, normalizedCandidateCode);
+            var usageScore = UsageScore(candidate.UsageCount);
+
+            var score =
+                (textScore * 0.34d) +
+                (nameScore * 0.24d) +
+                (tokenCoverage * 0.22d) +
+                (bigramScore * 0.10d) +
+                (codeScore * 0.08d) +
+                (usageScore * 0.02d);
+
+            if (codeScore >= 1d)
+                score = Math.Max(score, 0.98d);
+            else if (codeScore >= 0.75d)
+                score = Math.Max(score, 0.86d);
+
+            if (tokenCoverage >= 1d && textScore >= 0.65d)
+                score = Math.Max(score, 0.88d + (bigramScore * 0.05d));
+
+            if (textScore < 0.20d && nameScore < 0.20d && tokenCoverage < 0.5d)
+                score = Math.Min(score, 0.35d);
+
+            return Math.Round(Math.Clamp(score, 0d, 1d), 4);
+        }
+
+        private static double CalculateCodeScore(TaskSearchContext search, string candidateCode, string normalizedCandidateCode)
+        {
+            if (string.IsNullOrWhiteSpace(candidateCode))
+                return 0d;
+
+            var rawQuery = search.RawQuery.Trim();
+            var normalizedQuery = SwedishTaskTextNormalizer.Normalize(rawQuery);
+
+            if (!string.IsNullOrWhiteSpace(rawQuery) &&
+                string.Equals(candidateCode, rawQuery, StringComparison.OrdinalIgnoreCase))
+                return 1d;
+
+            if (!string.IsNullOrWhiteSpace(normalizedQuery) &&
+                string.Equals(normalizedCandidateCode, normalizedQuery, StringComparison.OrdinalIgnoreCase))
+                return 1d;
+
+            if (!string.IsNullOrWhiteSpace(rawQuery) &&
+                candidateCode.StartsWith(rawQuery, StringComparison.OrdinalIgnoreCase))
+                return 0.78d;
+
+            if (search.WordTokens.Count > 0 && search.WordTokens.All(token =>
+                    normalizedCandidateCode.Contains(token, StringComparison.OrdinalIgnoreCase)))
+                return 0.70d;
+
+            return search.WordTokens.Any(token => normalizedCandidateCode.Contains(token, StringComparison.OrdinalIgnoreCase))
+                ? 0.35d
+                : 0d;
+        }
+
+        private static double CalculateTokenCoverage(IReadOnlyList<string> tokens, string normalizedTarget)
+        {
+            if (tokens.Count == 0)
+                return 0d;
+
+            return tokens.Count(token => normalizedTarget.Contains(token, StringComparison.OrdinalIgnoreCase)) / (double)tokens.Count;
+        }
+
+        private static double UsageScore(int usageCount)
+            => usageCount <= 0 ? 0d : Math.Min(Math.Log10(usageCount + 1) / 3d, 1d);
+
+        private sealed record TaskSearchContext(
+            string RawQuery,
+            string NormalizedQuery,
+            IReadOnlyList<string> WordTokens,
+            IReadOnlyList<string> Bigrams)
+        {
+            public bool HasSearch => !string.IsNullOrWhiteSpace(RawQuery)
+                || !string.IsNullOrWhiteSpace(NormalizedQuery)
+                || WordTokens.Count > 0
+                || Bigrams.Count > 0;
+        }
+
+        private sealed record TaskSearchCandidate(
+            int Id,
+            string Name,
+            string Code,
+            string NormalizedTextSv,
+            int UsageCount);
         public async Task<ProjectTaskDto?> GetTaskForUserDtoAsync(int id, int tenantid, int depId, CancellationToken ct)
         {
             await using var db = await factory.CreateDbContextAsync(ct);
@@ -364,8 +554,16 @@ namespace TaskResourceBlueprints.Services.ProjectTask
         {
             await using var db = await factory.CreateDbContextAsync(ct);
             var tasks = await db.Tasks.ToListAsync(ct);
+            var taskByCode = tasks
+                .Where(t => !string.IsNullOrWhiteSpace(t.Code))
+                .GroupBy(t => t.Code!.Trim(), StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
+
             foreach (var t in tasks)
+            {
+                TaskHierarchyContextBuilder.Apply(t, t.ParentCode, taskByCode);
                 t.RefreshNormalizedTextSv();
+            }
             return await db.SaveChangesAsync(ct);
         }
 

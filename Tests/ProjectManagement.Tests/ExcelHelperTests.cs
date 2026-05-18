@@ -12,7 +12,7 @@ public class ExcelHelperTests
     {
         using var workbook = new XLWorkbook();
         var sheet = workbook.AddWorksheet("Import");
-        var longName = new string('A', FieldLengths.Name + 10);
+        var longName = new string('A', FieldLengths.TaskName + 10);
 
         sheet.Cell(1, 1).Value = "1.01";
         sheet.Cell(1, 2).Value = longName;
@@ -23,7 +23,7 @@ public class ExcelHelperTests
         var tasks = ExcelHelper.Import(1, workbook, 1, 1, 2, 4, 5, 6, isOH: false);
 
         var task = Assert.Single(tasks);
-        Assert.Equal(FieldLengths.Name, task.Name.Length);
+        Assert.Equal(FieldLengths.TaskName, task.Name.Length);
         Assert.Equal(longName, task.Metadata.Note);
     }
 

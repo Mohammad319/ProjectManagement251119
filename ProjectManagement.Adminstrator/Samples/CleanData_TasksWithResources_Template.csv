@@ -1,0 +1,7 @@
+RowType;Code;ParentCode;Name;Unit;TaskNameSynonym1;TaskNameSynonym2;TaskUnitSynonym1;TaskUnitSynonym2;ResourceType;UnitCost
+T;CBB.311;;Schakt for ledning;m3;Gravning ledning;Ledningsschakt;kubikmeter;kbm;;
+R;;CBB.311;Gravmaskin 14 ton;h;;;;;Machine;650
+R;;CBB.311;Lastbil transport;h;;;;;Machine;850
+T;HUS.100;;Malning av vagg;m2;Vaggmalning;Mala vagg;kvadratmeter;kvm;;
+R;;HUS.100;Malarfarg vit;l;;;;;Material;120
+R;;HUS.100;Malare;h;;;;;Worker;520

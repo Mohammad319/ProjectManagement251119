@@ -48,6 +48,13 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
                 ResourceURLBase + $"suggestions/resources/{sourceTaskId}?source={source}");
         }
 
+        public async Task<bool> RecordSuggestionFeedbackAsync(TaskResourceSuggestionFeedbackDTO feedback)
+        {
+            return await _httpRepository.PostAsync<bool, TaskResourceSuggestionFeedbackDTO>(
+                feedback,
+                ResourceURLBase + "suggestions/feedback");
+        }
+
         public async Task<bool> UpdateAsync(ResourcePostDTO model, int id)
         {
             return await _httpRepository.PutAsync(model, ResourceURLBase + id);

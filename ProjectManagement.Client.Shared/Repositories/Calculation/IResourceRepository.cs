@@ -15,6 +15,7 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation
         Task<bool> CreateAsync(List<ResourcePostDTO> models, int taskId);
         Task<List<TaskResourceSuggestionDTO>> GetSuggestionsAsync(int taskId, int maxResults = 5, bool includeResources = true);
         Task<List<ResourcePostDTO>> GetSuggestionResourcesAsync(int sourceTaskId, TaskResourceSuggestionSource source);
+        Task<bool> RecordSuggestionFeedbackAsync(TaskResourceSuggestionFeedbackDTO feedback);
         Task<List<ResourceListMVVM>> GetByFilterAsync(FilterCalculationItemsDto offer);
         Task<bool> UpdateAsync(ResourcePostDTO model, int id);
         Task<bool> DeleteAsync(int calcID, IEnumerable<int> items);

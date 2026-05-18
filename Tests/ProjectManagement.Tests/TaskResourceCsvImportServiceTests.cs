@@ -1,4 +1,5 @@
 using System.Reflection;
+using ProjectManagement.Shared.Enums;
 using TaskResourceBlueprints.Services.Import;
 using Xunit;
 
@@ -71,6 +72,21 @@ public class TaskResourceCsvImportServiceTests
         Assert.Equal(first, second);
     }
 
+    [Theory]
+    [InlineData("Materials", ResourceTypesEnum.Materials)]
+    [InlineData("MachinesAndEquipments", ResourceTypesEnum.MachinesAndEquipments)]
+    [InlineData("Managers", ResourceTypesEnum.Managers)]
+    [InlineData("ProjectOverheadCosts", ResourceTypesEnum.ProjectOverheadCosts)]
+    [InlineData("Information", ResourceTypesEnum.Information)]
+    [InlineData("Adjustment", ResourceTypesEnum.Adjustment)]
+    public void ParseResourceType_AcceptsEnumNames(string value, ResourceTypesEnum expected)
+    {
+        var result = new TaskResourceCsvImportResult();
+
+        Assert.Equal(expected, ParseResourceType(value, result));
+        Assert.Empty(result.Issues);
+    }
+
     private static decimal? ParseNullableDecimal(string value)
     {
         var method = typeof(TaskResourceCsvImportService).GetMethod(
@@ -109,5 +125,16 @@ public class TaskResourceCsvImportServiceTests
         Assert.NotNull(method);
 
         return (string)method.Invoke(null, [code, name, statePairs])!;
+    }
+
+    private static ResourceTypesEnum ParseResourceType(string value, TaskResourceCsvImportResult result)
+    {
+        var method = typeof(TaskResourceCsvImportService).GetMethod(
+            "ParseResourceType",
+            BindingFlags.NonPublic | BindingFlags.Static);
+
+        Assert.NotNull(method);
+
+        return (ResourceTypesEnum)method.Invoke(null, [value, 1, result])!;
     }
 }

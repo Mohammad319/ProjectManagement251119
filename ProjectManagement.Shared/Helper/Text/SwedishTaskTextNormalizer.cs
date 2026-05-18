@@ -643,23 +643,26 @@ public static partial class SwedishTaskTextNormalizer
         // Only for tokens ≥ 4 chars to avoid false matches on short words.
         // Threshold 0.70 = max 1 edit per ~3 chars (e.g. distance ≤ 2 for 7-char word).
         var unmatchedLeft  = leftSet.Except(rightSet, StringComparer.OrdinalIgnoreCase)
-                                    .Where(t => t.Length >= 4).ToList();
+                                    .Where(t => t.Length >= 2).ToList();
         var unmatchedRight = rightSet.Except(leftSet, StringComparer.OrdinalIgnoreCase)
-                                     .Where(t => t.Length >= 4).ToList();
+                                     .Where(t => t.Length >= 2).ToList();
 
         var fuzzyIntersection = 0d;
         if (unmatchedLeft.Count > 0 && unmatchedRight.Count > 0)
         {
+            var matchedRight = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
             foreach (var lt in unmatchedLeft)
             {
                 var best = unmatchedRight
-                    .Where(rt => Math.Abs(lt.Length - rt.Length) <= 2)
-                    .Select(rt => (rt, sim: CharacterSimilarity(lt, rt)))
-                    .Where(x => x.sim >= 0.70d)
+                    .Where(rt => !matchedRight.Contains(rt))
+                    .Select(rt => (rt, sim: TokenSimilarity(lt, rt)))
+                    .Where(x => x.sim >= 0.68d)
                     .OrderByDescending(x => x.sim)
                     .FirstOrDefault();
 
                 if (best.rt is null) continue;
+                matchedRight.Add(best.rt);
 
                 // Partial credit: scaled by character similarity × token importance weight
                 var weight = Math.Max(
@@ -688,6 +691,29 @@ public static partial class SwedishTaskTextNormalizer
         // for search: a short query fully contained in a longer task name should score high.
         // Jaccard is kept as a secondary signal to rank more specific matches above broad ones.
         return Math.Round(Math.Min((0.30d * jaccard) + (0.60d * coverage) + (0.10d * containsBonus), 1d), 4);
+    }
+
+    private static double TokenSimilarity(string a, string b)
+    {
+        var minLength = Math.Min(a.Length, b.Length);
+
+        if (minLength >= 2 && (a.StartsWith(b, StringComparison.OrdinalIgnoreCase) ||
+                               b.StartsWith(a, StringComparison.OrdinalIgnoreCase)))
+        {
+            var prefixScore = minLength switch
+            {
+                >= 4 => 0.96d,
+                3 => 0.90d,
+                _ => 0.78d
+            };
+
+            return Math.Min(prefixScore, 0.70d + (0.30d * minLength / Math.Max(a.Length, b.Length)));
+        }
+
+        if (a.Length < 4 || b.Length < 4 || Math.Abs(a.Length - b.Length) > 2)
+            return 0d;
+
+        return CharacterSimilarity(a, b);
     }
 
     /// <summary>

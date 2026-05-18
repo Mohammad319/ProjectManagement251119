@@ -11,6 +11,9 @@ public sealed record GetTaskResourceSuggestionResourcesQuery(
     TaskResourceSuggestionSource Source)
     : IRequest<IReadOnlyList<ResourcePostDTO>>;
 
+public sealed record RecordTaskResourceSuggestionFeedbackCommand(TaskResourceSuggestionFeedbackDTO Feedback)
+    : IRequest<bool>;
+
 public sealed class GetTaskResourceSuggestionsQueryHandler(ITaskResourceSuggestionService service)
     : IRequestHandler<GetTaskResourceSuggestionsQuery, IReadOnlyList<TaskResourceSuggestionDTO>>
 {
@@ -37,5 +40,16 @@ public sealed class GetTaskResourceSuggestionResourcesQueryHandler(ITaskResource
             request.SourceTaskId,
             request.Source,
             cancellationToken);
+    }
+}
+
+public sealed class RecordTaskResourceSuggestionFeedbackCommandHandler(ITaskResourceSuggestionService service)
+    : IRequestHandler<RecordTaskResourceSuggestionFeedbackCommand, bool>
+{
+    public Task<bool> Handle(
+        RecordTaskResourceSuggestionFeedbackCommand request,
+        CancellationToken cancellationToken)
+    {
+        return service.RecordFeedbackAsync(request.Feedback, cancellationToken);
     }
 }

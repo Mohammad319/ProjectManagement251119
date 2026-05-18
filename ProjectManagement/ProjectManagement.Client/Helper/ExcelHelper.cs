@@ -38,13 +38,14 @@ namespace ProjectManagement.Client.Helper
         {
             "-", "%", "st", "stk", "pcs", "pc", "ea", "kpl", "m", "m1", "m2", "m3",
             "cm", "mm", "km", "kg", "g", "ton", "t", "l", "liter", "h", "hr", "tim", "timme",
-            "timmar", "dag", "dygn", "sek", "kr", "man", "month"
+            "timmar", "dag", "dygn", "sek", "kr", "man", "month", "styck", "each", "lm", "m²", "m³"
         };
 
         static readonly HashSet<string> HeaderWords = new(StringComparer.OrdinalIgnoreCase)
         {
-            "code", "kod", "nr", "nummer", "name", "namn", "text", "benamning", "beskrivning",
-            "unit", "enhet", "quantity", "qty", "antal", "mangd", "price", "pris", "apris", "belopp"
+            "code", "kod", "nr", "nummer", "pos", "littera", "ama", "name", "namn", "text",
+            "benamning", "beskrivning", "rubrik", "post", "aktivitet", "unit", "enhet", "enh",
+            "quantity", "qty", "antal", "mangd", "volym", "price", "pris", "apris", "belopp", "kostnad"
         };
 
         public static List<ExcelWorksheetOption> GetWorksheetOptions(XLWorkbook workbook)
@@ -557,12 +558,12 @@ namespace ProjectManagement.Client.Helper
         }
 
         static bool IsHeaderWord(string text) => HeaderWords.Contains(TextKey(text));
-        static bool IsCodeHeader(string key) => key is "kod" or "code" or "nr" or "nummer";
-        static bool IsNameHeader(string key) => key is "text" or "namn" or "name" or "benamning" or "beskrivning";
-        static bool IsUnitHeader(string key) => key is "enhet" or "unit";
-        static bool IsQuantityHeader(string key) => key is "mangd" or "quantity" or "qty" or "antal";
-        static bool IsPriceHeader(string key) => key is "apris" or "pris" or "price" or "unitprice";
-        static bool IsAmountHeader(string key) => key is "belopp" or "amount" or "summa" or "total";
+        static bool IsCodeHeader(string key) => key is "kod" or "code" or "nr" or "nummer" or "pos" or "littera" or "ama";
+        static bool IsNameHeader(string key) => key is "text" or "namn" or "name" or "benamning" or "beskrivning" or "rubrik" or "post" or "aktivitet";
+        static bool IsUnitHeader(string key) => key is "enhet" or "unit" or "enh" or "me" or "mattenhet";
+        static bool IsQuantityHeader(string key) => key is "mangd" or "quantity" or "qty" or "antal" or "volym" or "mangdberaknad";
+        static bool IsPriceHeader(string key) => key is "apris" or "pris" or "price" or "unitprice" or "enhetspris" or "kostnad" or "kostnadenhet";
+        static bool IsAmountHeader(string key) => key is "belopp" or "amount" or "summa" or "total" or "totalt" or "radsumma";
 
         static string NormalizeText(string? text) => (text ?? string.Empty).Replace('\u00a0', ' ').Trim();
 

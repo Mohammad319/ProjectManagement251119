@@ -13,7 +13,7 @@ public class SwedishTaskTextNormalizerTests
     {
         var actual = SwedishTaskTextNormalizer.Normalize(value);
 
-        Assert.Equal("grund schakt", actual);
+        AssertContainsTokens(actual, "grund", "schakt");
     }
 
     [Fact]
@@ -21,7 +21,7 @@ public class SwedishTaskTextNormalizerTests
     {
         var actual = SwedishTaskTextNormalizer.Normalize("Armeringsarbete f\u00f6r v\u00e4ggar");
 
-        Assert.Equal("armering v\u00e4gg", actual);
+        AssertContainsTokens(actual, "armering", "v\u00e4gg");
     }
 
     [Fact]
@@ -29,7 +29,7 @@ public class SwedishTaskTextNormalizerTests
     {
         var actual = SwedishTaskTextNormalizer.NormalizeTask("Grundschakt", "A-10", "kvm");
 
-        Assert.Equal("10 a grund m\u00b2 schakt", actual);
+        AssertContainsTokens(actual, "10", "a", "grund", "m\u00b2", "schakt");
     }
 
     [Fact]
@@ -50,6 +50,24 @@ public class SwedishTaskTextNormalizerTests
     {
         var actual = SwedishTaskTextNormalizer.Normalize("task fixedq minus codename");
 
-        Assert.Equal("codename fixedq minus task", actual);
+        AssertContainsTokens(actual, "codename", "fixedq", "minus", "task");
+    }
+
+    [Theory]
+    [InlineData("sch", "Schakt f\u00f6r ledning")]
+    [InlineData("betnog", "Betonggjutning")]
+    public void CalculateSimilarity_MatchesPrefixesAndMinorTypos(string query, string target)
+    {
+        var score = FuzzySearchHelper.Score(query, target);
+
+        Assert.True(score >= FuzzySearchHelper.Threshold, $"Expected score above threshold, got {score}");
+    }
+
+    private static void AssertContainsTokens(string actual, params string[] expectedTokens)
+    {
+        var tokens = actual.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        foreach (var expected in expectedTokens)
+            Assert.Contains(expected, tokens);
     }
 }

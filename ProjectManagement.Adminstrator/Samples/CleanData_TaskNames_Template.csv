@@ -1,0 +1,5 @@
+RowType;Code;ParentCode;Name;Unit;TaskNameSynonym1;TaskNameSynonym2;TaskUnitSynonym1;TaskUnitSynonym2;ResourceType;UnitCost
+T;CBB.311;;Schakt for ledning;m3;Gravning ledning;Ledningsschakt;kubikmeter;kbm;;
+T;CBB.312;;Aterfyllning kring ledning;m3;Fyllning runt ledning;Ledningsaterfyllning;kubikmeter;kbm;;
+T;HUS.100;;Malning av vagg;m2;Vaggmalning;Mala vagg;kvadratmeter;kvm;;
+T;EL.010;;Montering av kabelstege;m;Installera kabelstege;Kabelstege montage;meter;lm;;

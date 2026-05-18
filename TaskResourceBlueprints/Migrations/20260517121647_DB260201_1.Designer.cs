@@ -11,8 +11,8 @@ using TaskResourceBlueprints.Infrastructure;
 namespace TaskResourceBlueprints.Migrations
 {
     [DbContext(typeof(TaskResourceBlueprintsContext))]
-    [Migration("20260515181718_DB260201_3")]
-    partial class DB260201_3
+    [Migration("20260517121647_DB260201_1")]
+    partial class DB260201_1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -135,7 +135,8 @@ namespace TaskResourceBlueprints.Migrations
                         .HasColumnType("nvarchar(256)");
 
                     b.Property<decimal?>("Quantity")
-                        .HasColumnType("decimal(18,2)");
+                        .HasPrecision(18, 6)
+                        .HasColumnType("decimal(18,6)");
 
                     b.Property<int>("ResType")
                         .HasColumnType("int");
@@ -267,7 +268,8 @@ namespace TaskResourceBlueprints.Migrations
                         .HasColumnType("decimal(18,6)");
 
                     b.Property<string>("Code")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("ConversionParameters")
                         .IsRequired()
@@ -275,6 +277,10 @@ namespace TaskResourceBlueprints.Migrations
 
                     b.Property<string>("FieldNotes")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("HierarchyPath")
+                        .HasMaxLength(1024)
+                        .HasColumnType("nvarchar(1024)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -287,10 +293,22 @@ namespace TaskResourceBlueprints.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
+                    b.Property<string>("NameSynonyms")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("NormalizedTextSv")
                         .IsRequired()
                         .HasMaxLength(800)
                         .HasColumnType("nvarchar(800)");
+
+                    b.Property<string>("ParentCode")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("ParentName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<decimal?>("PriceProduction")
                         .HasPrecision(18, 6)
@@ -317,6 +335,11 @@ namespace TaskResourceBlueprints.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("UnitCode")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("UnitSynonyms")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("UsageCount")
@@ -332,7 +355,11 @@ namespace TaskResourceBlueprints.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Code");
+
                     b.HasIndex("NormalizedTextSv");
+
+                    b.HasIndex("ParentCode");
 
                     b.HasIndex("Status", "SortOrder");
 
