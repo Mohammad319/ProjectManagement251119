@@ -3,7 +3,7 @@ namespace Application.Feature.Calculation.Task;
 public interface ITaskResourceSuggestionMlRanker
 {
     bool IsEnabled { get; }
-    double? PredictScore(TaskResourceSuggestionMlFeatures features);
+    double? PredictScore(TaskResourceSuggestionMlFeatures features, int? tenantId = null);
 }
 
 public sealed record TaskResourceSuggestionMlFeatures(

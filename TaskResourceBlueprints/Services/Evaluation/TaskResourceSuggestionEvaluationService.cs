@@ -24,7 +24,29 @@ public sealed class TaskResourceSuggestionEvaluationResult
     public int TypeMatches { get; set; }
     public double AverageTop1ResourceOverlap { get; set; }
     public double AverageBestTopKResourceOverlap { get; set; }
+    public List<TaskResourceSuggestionEvaluationBreakdown> Breakdowns { get; set; } = [];
     public List<TaskResourceSuggestionEvaluationItem> Items { get; set; } = [];
+
+    public double Top1HitRate => Rate(Top1Hits, EvaluatedTasks);
+    public double TopKHitRate => Rate(TopKHits, EvaluatedTasks);
+    public double UnitMatchRate => Rate(UnitMatches, EvaluatedTasks);
+    public double TypeMatchRate => Rate(TypeMatches, EvaluatedTasks);
+
+    private static double Rate(int value, int total)
+        => total <= 0 ? 0d : Math.Round(value / (double)total, 4);
+}
+
+public sealed class TaskResourceSuggestionEvaluationBreakdown
+{
+    public string Group { get; set; } = string.Empty;
+    public string Value { get; set; } = string.Empty;
+    public int EvaluatedTasks { get; set; }
+    public int Top1Hits { get; set; }
+    public int TopKHits { get; set; }
+    public int UnitMatches { get; set; }
+    public int TypeMatches { get; set; }
+    public double AverageTop1ResourceOverlap { get; set; }
+    public double AverageBestTopKResourceOverlap { get; set; }
 
     public double Top1HitRate => Rate(Top1Hits, EvaluatedTasks);
     public double TopKHitRate => Rate(TopKHits, EvaluatedTasks);
@@ -51,6 +73,8 @@ public sealed class TaskResourceSuggestionEvaluationItem
     public bool TopKHit { get; set; }
     public bool UnitMatch { get; set; }
     public bool TypeMatch { get; set; }
+    public string DominantResourceType { get; set; } = string.Empty;
+    public bool UsesHierarchyContext { get; set; }
 }
 
 public sealed class TaskResourceSuggestionEvaluationService(IDbContextFactory<TaskResourceBlueprintsContext> dbContextFactory)
@@ -117,6 +141,8 @@ public sealed class TaskResourceSuggestionEvaluationService(IDbContextFactory<Ta
             var topKHit = bestTopKOverlap > 0d;
             var unitMatch = QuantityUnitNormalizer.AreCompatibleUnits(target.UnitCode, top1.Task.UnitCode);
             var typeMatch = HasResourceTypeOverlap(targetLinks, top1.Links);
+            var dominantResourceType = GetDominantResourceType(targetLinks);
+            var usesHierarchyContext = HasHierarchyContext(target);
 
             result.Items.Add(new TaskResourceSuggestionEvaluationItem
             {
@@ -133,7 +159,9 @@ public sealed class TaskResourceSuggestionEvaluationService(IDbContextFactory<Ta
                 Top1Hit = top1Hit,
                 TopKHit = topKHit,
                 UnitMatch = unitMatch,
-                TypeMatch = typeMatch
+                TypeMatch = typeMatch,
+                DominantResourceType = dominantResourceType,
+                UsesHierarchyContext = usesHierarchyContext
             });
 
             if (top1Hit) result.Top1Hits++;
@@ -145,6 +173,7 @@ public sealed class TaskResourceSuggestionEvaluationService(IDbContextFactory<Ta
         result.EvaluatedTasks = result.Items.Count;
         result.AverageTop1ResourceOverlap = Math.Round(result.Items.Select(x => x.Top1ResourceOverlap).DefaultIfEmpty(0d).Average(), 4);
         result.AverageBestTopKResourceOverlap = Math.Round(result.Items.Select(x => x.BestTopKResourceOverlap).DefaultIfEmpty(0d).Average(), 4);
+        result.Breakdowns = BuildBreakdowns(result.Items);
         return result;
     }
 
@@ -159,8 +188,8 @@ public sealed class TaskResourceSuggestionEvaluationService(IDbContextFactory<Ta
         var candidateNormalized = GetNormalizedTaskText(candidate);
         var textScore = SwedishTaskTextNormalizer.CalculateSimilarity(targetNormalized, candidateNormalized);
         var nameScore = SwedishTaskTextNormalizer.CalculateSimilarity(
-            SwedishTaskTextNormalizer.Normalize(target.Name),
-            SwedishTaskTextNormalizer.Normalize(candidate.Name));
+            SwedishTaskTextNormalizer.Normalize(GetContextualName(target)),
+            SwedishTaskTextNormalizer.Normalize(GetContextualName(candidate)));
         var score = Math.Max(textScore, (textScore * 0.55d) + (nameScore * 0.45d));
 
         if (!string.IsNullOrWhiteSpace(target.UnitCode) && !string.IsNullOrWhiteSpace(candidate.UnitCode))
@@ -181,6 +210,33 @@ public sealed class TaskResourceSuggestionEvaluationService(IDbContextFactory<Ta
         => string.IsNullOrWhiteSpace(task.NormalizedTextSv)
             ? SwedishTaskTextNormalizer.NormalizeTask(task.Name, task.Code, null)
             : task.NormalizedTextSv;
+
+    private static string GetContextualName(TaskDefinition task)
+    {
+        if (string.IsNullOrWhiteSpace(task.HierarchyPath))
+            return task.Name;
+
+        var names = task.HierarchyPath
+            .Split('>', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(ExtractNameFromHierarchyPart)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (names.Count == 0 || !names.Any(x => string.Equals(x, task.Name, StringComparison.OrdinalIgnoreCase)))
+            names.Add(task.Name);
+
+        return string.Join(' ', names);
+    }
+
+    private static string ExtractNameFromHierarchyPart(string part)
+    {
+        var trimmed = part.Trim();
+        var firstSpace = trimmed.IndexOf(' ');
+        return firstSpace > 0 && trimmed[..firstSpace].Any(char.IsLetterOrDigit)
+            ? trimmed[(firstSpace + 1)..].Trim()
+            : trimmed;
+    }
 
     private static double CalculateResourceOverlap(
         IReadOnlyList<TaskDefinitionResourceLink> expected,
@@ -207,4 +263,51 @@ public sealed class TaskResourceSuggestionEvaluationService(IDbContextFactory<Ta
 
     private static string NormalizeResourceName(string name)
         => SwedishTaskTextNormalizer.Normalize(name);
+
+    private static string GetDominantResourceType(IReadOnlyList<TaskDefinitionResourceLink> links)
+        => links
+            .Where(x => x.Resource is not null)
+            .GroupBy(x => x.Resource!.ResType.ToString())
+            .OrderByDescending(x => x.Count())
+            .ThenBy(x => x.Key)
+            .Select(x => x.Key)
+            .FirstOrDefault() ?? "Unknown";
+
+    private static bool HasHierarchyContext(TaskDefinition task)
+        => !string.IsNullOrWhiteSpace(task.ParentCode) ||
+           !string.IsNullOrWhiteSpace(task.ParentName) ||
+           (!string.IsNullOrWhiteSpace(task.HierarchyPath) && task.HierarchyPath.Contains('>'));
+
+    private static List<TaskResourceSuggestionEvaluationBreakdown> BuildBreakdowns(
+        IReadOnlyList<TaskResourceSuggestionEvaluationItem> items)
+    {
+        var result = new List<TaskResourceSuggestionEvaluationBreakdown>();
+        result.AddRange(BuildBreakdownGroup("Resource type", items.GroupBy(x => string.IsNullOrWhiteSpace(x.DominantResourceType) ? "Unknown" : x.DominantResourceType)));
+        result.AddRange(BuildBreakdownGroup("Hierarchy context", items.GroupBy(x => x.UsesHierarchyContext ? "With parent/ancestor" : "No parent")));
+        result.AddRange(BuildBreakdownGroup("Unit result", items.GroupBy(x => x.UnitMatch ? "Compatible unit" : "Unit mismatch")));
+        result.AddRange(BuildBreakdownGroup("Type result", items.GroupBy(x => x.TypeMatch ? "Type overlap" : "Type mismatch")));
+        return result;
+    }
+
+    private static IEnumerable<TaskResourceSuggestionEvaluationBreakdown> BuildBreakdownGroup(
+        string group,
+        IEnumerable<IGrouping<string, TaskResourceSuggestionEvaluationItem>> groups)
+        => groups
+            .OrderBy(x => x.Key)
+            .Select(x =>
+            {
+                var list = x.ToList();
+                return new TaskResourceSuggestionEvaluationBreakdown
+                {
+                    Group = group,
+                    Value = x.Key,
+                    EvaluatedTasks = list.Count,
+                    Top1Hits = list.Count(item => item.Top1Hit),
+                    TopKHits = list.Count(item => item.TopKHit),
+                    UnitMatches = list.Count(item => item.UnitMatch),
+                    TypeMatches = list.Count(item => item.TypeMatch),
+                    AverageTop1ResourceOverlap = Math.Round(list.Select(item => item.Top1ResourceOverlap).DefaultIfEmpty(0d).Average(), 4),
+                    AverageBestTopKResourceOverlap = Math.Round(list.Select(item => item.BestTopKResourceOverlap).DefaultIfEmpty(0d).Average(), 4),
+                };
+            });
 }

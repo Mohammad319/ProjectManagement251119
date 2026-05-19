@@ -8,14 +8,22 @@ namespace ProjectManagement.Shared.Helper.Text;
 /// </summary>
 public static class QuantityUnitNormalizer
 {
-    private enum UnitGroup { Count, Mass, Length, Area, Volume }
+    private enum UnitGroup { Count, Mass, Length, Area, Volume, Time }
 
     private static readonly Dictionary<string, (UnitGroup Group, decimal Factor)> Conversions =
         new(StringComparer.OrdinalIgnoreCase)
         {
             // Count -> item
             ["st"] = (UnitGroup.Count, 1m),
+            ["stk"] = (UnitGroup.Count, 1m),
+            ["stck"] = (UnitGroup.Count, 1m),
             ["styck"] = (UnitGroup.Count, 1m),
+            ["stycken"] = (UnitGroup.Count, 1m),
+            ["antal"] = (UnitGroup.Count, 1m),
+            ["nr"] = (UnitGroup.Count, 1m),
+            ["no"] = (UnitGroup.Count, 1m),
+            ["ea"] = (UnitGroup.Count, 1m),
+            ["each"] = (UnitGroup.Count, 1m),
             ["pcs"] = (UnitGroup.Count, 1m),
             ["pc"] = (UnitGroup.Count, 1m),
             ["piece"] = (UnitGroup.Count, 1m),
@@ -62,6 +70,10 @@ public static class QuantityUnitNormalizer
             ["centimetre"] = (UnitGroup.Length, 0.01m),
             ["centimetres"] = (UnitGroup.Length, 0.01m),
             ["m"] = (UnitGroup.Length, 1m),
+            ["lm"] = (UnitGroup.Length, 1m),
+            ["lpm"] = (UnitGroup.Length, 1m),
+            ["lopmeter"] = (UnitGroup.Length, 1m),
+            ["lopande"] = (UnitGroup.Length, 1m),
             ["meter"] = (UnitGroup.Length, 1m),
             ["meters"] = (UnitGroup.Length, 1m),
             ["metre"] = (UnitGroup.Length, 1m),
@@ -77,11 +89,13 @@ public static class QuantityUnitNormalizer
             ["m2"] = (UnitGroup.Area, 1m),
             ["sqm"] = (UnitGroup.Area, 1m),
             ["kvm"] = (UnitGroup.Area, 1m),
+            ["kvadrat"] = (UnitGroup.Area, 1m),
             ["squaremeter"] = (UnitGroup.Area, 1m),
             ["squaremeters"] = (UnitGroup.Area, 1m),
             ["squaremetre"] = (UnitGroup.Area, 1m),
             ["squaremetres"] = (UnitGroup.Area, 1m),
             ["kvadratmeter"] = (UnitGroup.Area, 1m),
+            ["kvadratmet"] = (UnitGroup.Area, 1m),
             ["ha"] = (UnitGroup.Area, 10000m),
             ["hectare"] = (UnitGroup.Area, 10000m),
             ["hectares"] = (UnitGroup.Area, 10000m),
@@ -101,11 +115,26 @@ public static class QuantityUnitNormalizer
             ["m3"] = (UnitGroup.Volume, 1m),
             ["kbm"] = (UnitGroup.Volume, 1m),
             ["cbm"] = (UnitGroup.Volume, 1m),
+            ["kubik"] = (UnitGroup.Volume, 1m),
             ["cubicmeter"] = (UnitGroup.Volume, 1m),
             ["cubicmeters"] = (UnitGroup.Volume, 1m),
             ["cubicmetre"] = (UnitGroup.Volume, 1m),
             ["cubicmetres"] = (UnitGroup.Volume, 1m),
             ["kubikmeter"] = (UnitGroup.Volume, 1m),
+            ["kubikmet"] = (UnitGroup.Volume, 1m),
+
+            // Time -> hour
+            ["h"] = (UnitGroup.Time, 1m),
+            ["hr"] = (UnitGroup.Time, 1m),
+            ["hrs"] = (UnitGroup.Time, 1m),
+            ["tim"] = (UnitGroup.Time, 1m),
+            ["timme"] = (UnitGroup.Time, 1m),
+            ["timmar"] = (UnitGroup.Time, 1m),
+            ["hour"] = (UnitGroup.Time, 1m),
+            ["hours"] = (UnitGroup.Time, 1m),
+            ["dag"] = (UnitGroup.Time, 8m),
+            ["dagar"] = (UnitGroup.Time, 8m),
+            ["dygn"] = (UnitGroup.Time, 24m),
         };
 
     public static (decimal Target, decimal Candidate) ToCommonUnit(

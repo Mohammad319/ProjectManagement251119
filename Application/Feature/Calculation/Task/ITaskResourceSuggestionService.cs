@@ -18,4 +18,9 @@ public interface ITaskResourceSuggestionService
     Task<bool> RecordFeedbackAsync(
         TaskResourceSuggestionFeedbackDTO feedback,
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyDictionary<int, IReadOnlyList<TaskResourceSuggestionDTO>>> GetBulkSuggestionsAsync(
+        IReadOnlyList<int> taskIds,
+        int maxResultsPerTask,
+        CancellationToken cancellationToken = default);
 }

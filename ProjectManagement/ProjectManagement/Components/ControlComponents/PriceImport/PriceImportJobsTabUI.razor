@@ -3,60 +3,57 @@
 @inject Microsoft.Extensions.Options.IOptions<PriceImportStorageOptions> StorageOptions
 @inject NavigationManager NavigationManager
 @inject ContextMenuService ContextService
+@using ClosedXML.Excel
+@using System.Globalization
 
 <div class="flex h-full flex-col overflow-hidden bg-slate-50 p-2 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+
+    <!-- ── Header ── -->
     <div class="mb-2 shrink-0 flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div class="min-w-0">
             <h1 class="text-base font-semibold">Smart Price Import</h1>
             <p class="text-xs text-slate-500 dark:text-slate-400">Review imported price candidates before they become calculation prices.</p>
         </div>
-
-        <div class="flex items-center gap-1">
-            <button type="button"
-                    class="inline-flex h-8 items-center rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-                    @onclick="CreateTestJobAsync"
-                    disabled="@IsBusy">
-                Create test job
-            </button>
-        </div>
+        <button type="button"
+                class="inline-flex h-8 items-center rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                @onclick="CreateTestJobAsync" disabled="@IsBusy">
+            Create test job
+        </button>
     </div>
 
+    <!-- ── Upload form ── -->
     <div class="mb-2 shrink-0 border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div class="grid gap-2 lg:grid-cols-[minmax(180px,260px)_minmax(260px,1fr)_auto] lg:items-end">
             <label class="block">
                 <span class="mb-1 block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">SupplierName</span>
                 <input class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs text-slate-900 outline-none transition focus:border-sky-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
-                       @bind="SupplierName"
-                       disabled="@IsBusy"
-                       placeholder="Optional supplier" />
+                       @bind="SupplierName" disabled="@IsBusy" placeholder="Optional supplier" />
             </label>
 
             <label class="block">
                 <span class="mb-1 block text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">File upload</span>
-                <InputFile OnChange="OnFileSelected"
-                           disabled="@IsBusy"
-                           accept=".xlsx,.xls,.docx,.pdf"
+                <InputFile OnChange="OnFileSelected" disabled="@IsBusy" accept=".xlsx,.xls"
                            class="block h-8 w-full cursor-pointer rounded-md border border-slate-300 bg-white text-xs text-slate-700 file:mr-2 file:h-8 file:border-0 file:bg-slate-100 file:px-3 file:text-xs file:font-semibold file:text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:file:bg-slate-800 dark:file:text-slate-200" />
             </label>
 
             <button type="button"
                     class="inline-flex h-8 items-center justify-center rounded-md bg-blue-600 px-3 text-xs font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-                    @onclick="StartImportAsync"
-                    disabled="@(IsBusy || SelectedFile is null)">
-                @(IsImporting ? "Import is running..." : "Start import")
+                    @onclick="StartImportAsync" disabled="@(IsBusy || SelectedFile is null)">
+                @(IsImporting ? "Importing..." : "Start import")
             </button>
         </div>
 
         <div class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-            Tillåtna filtyper: @AllowedExtensionsText. Maxstorlek: @MaxUploadSizeMb MB.
+            Allowed: @AllowedExtensionsText. Max: @MaxUploadSizeMb MB.
         </div>
 
         <div class="mt-2 flex flex-wrap items-center gap-2 text-xs">
             @if (SelectedFile is not null)
             {
-                <span class="rounded bg-slate-100 px-2 py-1 text-slate-700 dark:bg-slate-800 dark:text-slate-200">@SelectedFile.Name (@FormatSize(SelectedFile.Size))</span>
+                <span class="rounded bg-slate-100 px-2 py-1 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                    @SelectedFile.Name (@FormatSize(SelectedFile.Size))
+                </span>
             }
-
             @if (!string.IsNullOrWhiteSpace(UploadMessage))
             {
                 <span class="@UploadMessageClass">@UploadMessage</span>
@@ -64,6 +61,131 @@
         </div>
     </div>
 
+    <!-- ── Preview & Column Mapping ── -->
+    @if (_previewRows.Count > 0)
+    {
+        <div class="mb-2 shrink-0 border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+
+            <!-- Toolbar -->
+            <div class="mb-2 flex flex-wrap items-center gap-2">
+                <span class="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Preview & Column Mapping</span>
+
+                @if (_sheetOptions.Count > 1)
+                {
+                    <select @onchange="OnPreviewSheetChanged"
+                            class="h-7 rounded border border-slate-300 bg-white px-1.5 text-xs outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                        @foreach (var s in _sheetOptions)
+                        {
+                            <option value="@s.Index" selected="@(_previewSheetIndex == s.Index)">@s.Name</option>
+                        }
+                    </select>
+                }
+
+                <button type="button" @onclick="AutoDetectMapping"
+                        class="h-7 rounded border border-violet-300 bg-violet-50 px-2 text-xs font-semibold text-violet-700 hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-950/50 dark:text-violet-300">
+                    Auto detect
+                </button>
+
+                <label class="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300">
+                    <input type="checkbox" @bind="_useManualMapping" class="h-3.5 w-3.5 cursor-pointer accent-blue-600" />
+                    Manual column mapping
+                </label>
+
+                @if (_useManualMapping)
+                {
+                    <span class="rounded bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                        Manual active — AI auto-detect disabled
+                    </span>
+                }
+                else
+                {
+                    <span class="rounded bg-violet-100 px-2 py-0.5 text-[10px] font-semibold text-violet-700 dark:bg-violet-950 dark:text-violet-300">
+                        Auto (AI detect)
+                    </span>
+                }
+            </div>
+
+            <!-- Column index inputs (manual mode) -->
+            @if (_useManualMapping)
+            {
+                <div class="mb-3 grid grid-cols-2 gap-2 rounded border border-blue-100 bg-blue-50/60 p-2 dark:border-blue-900/40 dark:bg-blue-950/20 sm:grid-cols-4 lg:grid-cols-8">
+                    <label class="flex flex-col gap-0.5">
+                        <span class="text-[10px] font-semibold uppercase text-slate-500">Start row</span>
+                        <input type="number" min="1" @bind="_rowStart" class="@ColInputCls" />
+                    </label>
+                    <label class="flex flex-col gap-0.5">
+                        <span class="text-[10px] font-semibold uppercase text-slate-500">Article col</span>
+                        <input type="number" min="0" @bind="_articleCol" placeholder="—" class="@ColInputCls" />
+                    </label>
+                    <label class="flex flex-col gap-0.5">
+                        <span class="text-[10px] font-semibold uppercase text-slate-500">Name col</span>
+                        <input type="number" min="0" @bind="_nameCol" placeholder="—" class="@ColInputCls" />
+                    </label>
+                    <label class="flex flex-col gap-0.5">
+                        <span class="text-[10px] font-semibold uppercase text-slate-500">BasePrice col</span>
+                        <input type="number" min="0" @bind="_basePriceCol" placeholder="—" class="@ColInputCls" />
+                    </label>
+                    <label class="flex flex-col gap-0.5">
+                        <span class="text-[10px] font-semibold uppercase text-slate-500">NetPrice col</span>
+                        <input type="number" min="0" @bind="_netPriceCol" placeholder="—" class="@ColInputCls" />
+                    </label>
+                    <label class="flex flex-col gap-0.5">
+                        <span class="text-[10px] font-semibold uppercase text-slate-500">Unit col</span>
+                        <input type="number" min="0" @bind="_unitCol" placeholder="—" class="@ColInputCls" />
+                    </label>
+                    <label class="flex flex-col gap-0.5">
+                        <span class="text-[10px] font-semibold uppercase text-slate-500">Discount col</span>
+                        <input type="number" min="0" @bind="_discountCol" placeholder="—" class="@ColInputCls" />
+                    </label>
+                    <label class="flex flex-col gap-0.5">
+                        <span class="text-[10px] font-semibold uppercase text-slate-500">Category col</span>
+                        <input type="number" min="0" @bind="_categoryCol" placeholder="—" class="@ColInputCls" />
+                    </label>
+                </div>
+            }
+
+            <!-- Preview table -->
+            <div class="max-h-52 overflow-auto rounded border border-slate-200 dark:border-slate-700">
+                <table class="border-collapse text-xs">
+                    <thead class="sticky top-0 bg-slate-100 dark:bg-slate-800">
+                        <tr>
+                            <th class="border border-slate-300 px-1.5 py-1 text-center text-[10px] text-slate-400 dark:border-slate-700">#</th>
+                            @for (var ci = 0; ci < _previewColCount; ci++)
+                            {
+                                var colNum = ci + 1;
+                                var highlighted = _useManualMapping && IsColHighlighted(colNum);
+                                <th class="border border-slate-300 px-2 py-1 font-mono font-bold dark:border-slate-700 @(highlighted ? "bg-blue-200 text-blue-800 dark:bg-blue-900 dark:text-blue-200" : "text-slate-500 dark:text-slate-400")">
+                                    @colNum
+                                </th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (var ri = 0; ri < _previewRows.Count; ri++)
+                        {
+                            var row = _previewRows[ri];
+                            var rowNum = ri + 1;
+                            var isHeader   = _useManualMapping && rowNum == _rowStart - 1;
+                            var isDataStart = _useManualMapping && rowNum == _rowStart;
+                            <tr class="@(isHeader ? "bg-amber-50 font-semibold dark:bg-amber-950/30" : isDataStart ? "bg-emerald-50 dark:bg-emerald-950/20" : "hover:bg-slate-50 dark:hover:bg-slate-800/40")">
+                                <td class="border border-slate-200 px-1.5 py-0.5 text-center text-[10px] text-slate-400 dark:border-slate-700">@rowNum</td>
+                                @for (var ci = 0; ci < _previewColCount; ci++)
+                                {
+                                    var cellVal = ci < row.Count ? row[ci] : "";
+                                    var colNum = ci + 1;
+                                    var highlighted = _useManualMapping && IsColHighlighted(colNum);
+                                    <td class="max-w-[160px] truncate border border-slate-200 px-2 py-0.5 dark:border-slate-700 @(highlighted ? "bg-blue-50 dark:bg-blue-950/30" : "")"
+                                        title="@cellVal">@cellVal</td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+    <!-- ── Jobs list ── -->
     @if (IsBusy && Jobs.Count == 0)
     {
         <div class="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">Loading...</div>
@@ -140,44 +262,290 @@
 </div>
 
 @code {
+    // ── State ────────────────────────────────────────────────────────────────
     private List<PriceImportJobListItemDto> Jobs { get; set; } = [];
     private bool IsBusy;
     private bool IsImporting;
-    private long MaxUploadSize => Math.Max(1, StorageOptions.Value.MaxUploadSizeMb) * 1024L * 1024L;
-    private int MaxUploadSizeMb => Math.Max(1, StorageOptions.Value.MaxUploadSizeMb);
+    private long MaxUploadSize   => Math.Max(1, StorageOptions.Value.MaxUploadSizeMb) * 1024L * 1024L;
+    private int  MaxUploadSizeMb => Math.Max(1, StorageOptions.Value.MaxUploadSizeMb);
+
     private HashSet<string> AllowedExtensions => StorageOptions.Value.AllowedExtensions
         .Where(x => !string.IsNullOrWhiteSpace(x))
         .Select(x => x.Trim().StartsWith('.') ? x.Trim() : "." + x.Trim())
         .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
     private string AllowedExtensionsText => string.Join(", ", AllowedExtensions.OrderBy(x => x));
 
-    private IBrowserFile? SelectedFile;
+    private IBrowserFile?             SelectedFile;
     private PriceImportJobListItemDto? DeleteTarget;
-    private string? SupplierName;
-    private string? UploadMessage;
-    private bool UploadMessageIsError;
+    private string?                   SupplierName;
+    private string?                   UploadMessage;
+    private bool                      UploadMessageIsError;
+
     private string UploadMessageClass => UploadMessageIsError
         ? "rounded bg-rose-100 px-2 py-1 font-medium text-rose-700 dark:bg-rose-950 dark:text-rose-300"
         : "rounded bg-sky-100 px-2 py-1 font-medium text-sky-700 dark:bg-sky-950 dark:text-sky-300";
 
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadAsync();
-    }
+    // ── Preview state ─────────────────────────────────────────────────────────
+    private byte[]?           _fileBytes    = null;
+    private List<List<string>> _previewRows = [];
+    private int               _previewColCount;
+    private int               _previewSheetIndex = 1;
+    private List<SheetOption> _sheetOptions = [];
+
+    // ── Column mapping ────────────────────────────────────────────────────────
+    private bool _useManualMapping;
+    private int  _rowStart    = 1;
+    private int? _articleCol;
+    private int? _nameCol;
+    private int? _basePriceCol;
+    private int? _netPriceCol;
+    private int? _unitCol;
+    private int? _discountCol;
+    private int? _categoryCol;
+
+    private const string ColInputCls =
+        "h-8 w-full rounded border border-slate-300 bg-white px-2 text-xs text-slate-900 outline-none " +
+        "focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100";
+
+    private bool IsColHighlighted(int col) =>
+        col == _nameCol    || col == _articleCol  || col == _basePriceCol ||
+        col == _netPriceCol || col == _unitCol     || col == _discountCol   || col == _categoryCol;
+
+    private sealed record SheetOption(int Index, string Name);
+
+    // ── Lifecycle ─────────────────────────────────────────────────────────────
+    protected override async Task OnInitializedAsync() => await LoadAsync();
 
     private async Task LoadAsync()
     {
         IsBusy = true;
+        try   { Jobs = (await PriceImportService.GetImportJobsAsync()).ToList(); }
+        finally { IsBusy = false; }
+    }
+
+    // ── File selection & preview ──────────────────────────────────────────────
+    private async Task OnFileSelected(InputFileChangeEventArgs e)
+    {
+        UploadMessage        = null;
+        UploadMessageIsError = false;
+        SelectedFile         = e.File;
+        _previewRows         = [];
+        _fileBytes           = null;
+
+        var validation = ValidateFile(SelectedFile);
+        if (validation is not null)
+        {
+            UploadMessage        = validation;
+            UploadMessageIsError = true;
+            SelectedFile         = null;
+            return;
+        }
+
         try
         {
-            Jobs = (await PriceImportService.GetImportJobsAsync()).ToList();
+            using var ms = new MemoryStream();
+            await using var stream = SelectedFile!.OpenReadStream(MaxUploadSize);
+            await stream.CopyToAsync(ms);
+            _fileBytes = ms.ToArray();
+
+            LoadPreview(_previewSheetIndex);
+            AutoDetectMapping();
         }
-        finally
+        catch (Exception ex)
         {
-            IsBusy = false;
+            UploadMessage        = $"Could not read file: {ex.Message}";
+            UploadMessageIsError = true;
         }
     }
 
+    private void LoadPreview(int sheetIndex)
+    {
+        _previewRows    = [];
+        _previewColCount = 0;
+
+        if (_fileBytes is not { Length: > 0 }) return;
+
+        try
+        {
+            using var ms = new MemoryStream(_fileBytes);
+            using var wb = new XLWorkbook(ms);
+
+            _sheetOptions = wb.Worksheets
+                .Select((ws, i) => new SheetOption(i + 1, ws.Name))
+                .ToList();
+
+            var ws    = wb.Worksheets.ElementAtOrDefault(sheetIndex - 1) ?? wb.Worksheets.First();
+            var range = ws.RangeUsed();
+            if (range is null) return;
+
+            var lastCol      = range.LastColumnUsed()?.ColumnNumber() ?? 0;
+            _previewColCount = lastCol;
+            _previewRows = range.RowsUsed()
+                .Take(25)
+                .Select(row => Enumerable.Range(1, lastCol)
+                    .Select(col => row.Cell(col).Value.ToString() ?? string.Empty)
+                    .ToList())
+                .ToList();
+        }
+        catch { _previewRows = []; _previewColCount = 0; }
+    }
+
+    private void OnPreviewSheetChanged(ChangeEventArgs e)
+    {
+        if (!int.TryParse(e.Value?.ToString(), out var idx)) return;
+        _previewSheetIndex = idx;
+        LoadPreview(idx);
+        AutoDetectMapping();
+    }
+
+    // ── Auto-detect column mapping ────────────────────────────────────────────
+    private void AutoDetectMapping()
+    {
+        ResetMapping();
+
+        for (var ri = 0; ri < Math.Min(_previewRows.Count, 12); ri++)
+        {
+            var detected = DetectHeaderRow(_previewRows[ri]);
+            if (detected.Count < 2) continue;
+
+            _rowStart = ri + 2;
+            ApplyDetected(detected);
+            _useManualMapping = true;
+            return;
+        }
+    }
+
+    private void ResetMapping()
+    {
+        _rowStart     = 1;
+        _articleCol   = null;
+        _nameCol      = null;
+        _basePriceCol = null;
+        _netPriceCol  = null;
+        _unitCol      = null;
+        _discountCol  = null;
+        _categoryCol  = null;
+    }
+
+    private static Dictionary<string, int> DetectHeaderRow(List<string> headers)
+    {
+        var result = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+        for (var i = 0; i < headers.Count; i++)
+        {
+            var h = headers[i].ToLowerInvariant().Trim()
+                .Replace(" ", "").Replace(".", "").Replace("-", "").Replace("_", "");
+
+            if (h.Length == 0) continue;
+
+            if (ContainsAny(h, "artnr", "artikelnr", "artikelnummer", "sku", "produktkod", "itemnr", "varunr"))
+                result.TryAdd("article", i + 1);
+            else if (ContainsAny(h, "nettopris", "nettoprice", "netprice", "netpriceeach", "prisefterrabatt"))
+                result.TryAdd("netPrice", i + 1);
+            else if (ContainsAny(h, "pris", "price", "listpris", "bruttopris", "enhetspris", "baseprice", "apris"))
+                result.TryAdd("basePrice", i + 1);
+            else if (ContainsAny(h, "namn", "name", "benamning", "beskrivning", "vara", "material", "produktnamn", "text"))
+                result.TryAdd("name", i + 1);
+            else if (ContainsAny(h, "enhet", "unit", "enh", "uom", "mattenhet"))
+                result.TryAdd("unit", i + 1);
+            else if (ContainsAny(h, "rabatt", "discount", "rabattprocent", "rabatt%"))
+                result.TryAdd("discount", i + 1);
+            else if (ContainsAny(h, "kategori", "category", "produktgrupp", "grupp"))
+                result.TryAdd("category", i + 1);
+        }
+
+        return result;
+    }
+
+    private static bool ContainsAny(string s, params string[] terms)
+        => terms.Any(t => s.Contains(t, StringComparison.Ordinal));
+
+    private void ApplyDetected(Dictionary<string, int> d)
+    {
+        if (d.TryGetValue("article",   out var v)) _articleCol   = v;
+        if (d.TryGetValue("name",      out v))     _nameCol      = v;
+        if (d.TryGetValue("basePrice", out v))     _basePriceCol = v;
+        if (d.TryGetValue("netPrice",  out v))     _netPriceCol  = v;
+        if (d.TryGetValue("unit",      out v))     _unitCol      = v;
+        if (d.TryGetValue("discount",  out v))     _discountCol  = v;
+        if (d.TryGetValue("category",  out v))     _categoryCol  = v;
+    }
+
+    // ── Import ────────────────────────────────────────────────────────────────
+    private PriceImportColumnMapping? BuildMappingOrNull() =>
+        _useManualMapping ? new PriceImportColumnMapping
+        {
+            RowStart     = _rowStart,
+            ArticleCol   = _articleCol   is > 0 ? _articleCol   : null,
+            NameCol      = _nameCol      is > 0 ? _nameCol      : null,
+            BasePriceCol = _basePriceCol is > 0 ? _basePriceCol : null,
+            NetPriceCol  = _netPriceCol  is > 0 ? _netPriceCol  : null,
+            UnitCol      = _unitCol      is > 0 ? _unitCol      : null,
+            DiscountCol  = _discountCol  is > 0 ? _discountCol  : null,
+            CategoryCol  = _categoryCol  is > 0 ? _categoryCol  : null,
+        } : null;
+
+    private async Task StartImportAsync()
+    {
+        UploadMessage        = null;
+        UploadMessageIsError = false;
+
+        var validation = ValidateFile(SelectedFile);
+        if (validation is not null)
+        {
+            UploadMessage        = validation;
+            UploadMessageIsError = true;
+            return;
+        }
+
+        IsBusy      = true;
+        IsImporting = true;
+        try
+        {
+            UploadMessage = "Uploading...";
+
+            Stream uploadStream = _fileBytes is { Length: > 0 }
+                ? new MemoryStream(_fileBytes)
+                : SelectedFile!.OpenReadStream(MaxUploadSize);
+
+            await using (uploadStream)
+            {
+                UploadMessage = "Analyzing...";
+                var result = await PriceImportService.StartImportFromUploadedFileAsync(
+                    uploadStream,
+                    SelectedFile!.Name,
+                    SelectedFile.Size,
+                    SelectedFile.ContentType,
+                    SupplierName,
+                    BuildMappingOrNull());
+
+                if (result.Ok)
+                {
+                    UploadMessage = result.Message;
+                    await LoadAsync();
+                    OpenJobModal(result.JobId);
+                    return;
+                }
+
+                UploadMessage        = result.Message;
+                UploadMessageIsError = true;
+                await LoadAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            UploadMessage        = ex.Message;
+            UploadMessageIsError = true;
+        }
+        finally
+        {
+            IsImporting = false;
+            IsBusy      = false;
+        }
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
     private async Task CreateTestJobAsync()
     {
         IsBusy = true;
@@ -187,94 +555,15 @@
             await LoadAsync();
             OpenJobModal(id);
         }
-        finally
-        {
-            IsBusy = false;
-        }
-    }
-
-    private void OnFileSelected(InputFileChangeEventArgs e)
-    {
-        UploadMessage = null;
-        UploadMessageIsError = false;
-        SelectedFile = e.File;
-
-        var validation = ValidateFile(SelectedFile);
-        if (validation is null)
-            return;
-
-        UploadMessage = validation;
-        UploadMessageIsError = true;
-        SelectedFile = null;
-    }
-
-    private async Task StartImportAsync()
-    {
-        UploadMessage = null;
-        UploadMessageIsError = false;
-
-        var validation = ValidateFile(SelectedFile);
-        if (validation is not null)
-        {
-            UploadMessage = validation;
-            UploadMessageIsError = true;
-            return;
-        }
-
-        IsBusy = true;
-        IsImporting = true;
-        try
-        {
-            UploadMessage = "Uploading...";
-            await using var stream = SelectedFile!.OpenReadStream(MaxUploadSize);
-
-            UploadMessage = "Analyzing...";
-            var result = await PriceImportService.StartImportFromUploadedFileAsync(
-                stream,
-                SelectedFile.Name,
-                SelectedFile.Size,
-                SelectedFile.ContentType,
-                SupplierName);
-
-            if (result.Ok)
-            {
-                UploadMessage = result.Message;
-                await LoadAsync();
-                OpenJobModal(result.JobId);
-                return;
-            }
-
-            UploadMessage = result.Message;
-            UploadMessageIsError = true;
-            await LoadAsync();
-        }
-        catch (Exception ex)
-        {
-            UploadMessage = ex.Message;
-            UploadMessageIsError = true;
-        }
-        finally
-        {
-            IsImporting = false;
-            IsBusy = false;
-        }
+        finally { IsBusy = false; }
     }
 
     private string? ValidateFile(IBrowserFile? file)
     {
-        if (file is null)
-            return "File is required.";
-
-        var extension = Path.GetExtension(file.Name);
-        if (!AllowedExtensions.Contains(extension))
-            return $"Filtypen stöds inte. Tillåtna filtyper är: {AllowedExtensionsText}";
-
-        if (file.Size <= 0)
-            return "File is empty.";
-
-        if (file.Size > MaxUploadSize)
-            return $"Max file size is {MaxUploadSizeMb} MB.";
-
+        if (file is null)                                   return "File is required.";
+        if (!AllowedExtensions.Contains(Path.GetExtension(file.Name))) return $"Only allowed: {AllowedExtensionsText}";
+        if (file.Size <= 0)                                 return "File is empty.";
+        if (file.Size > MaxUploadSize)                      return $"Max file size is {MaxUploadSizeMb} MB.";
         return null;
     }
 
@@ -284,48 +573,38 @@
     {
         await ContextService.ShowMenuAsync(new List<MenuItem>
         {
-            new() { Label = "Open", OnClickAsync = () => { OpenJobModal(job.Id); return Task.CompletedTask; } },
+            new() { Label = "Open",   OnClickAsync = () => { OpenJobModal(job.Id); return Task.CompletedTask; } },
             new() { Label = "Delete", OnClickAsync = () => DeleteClickedAsync(job) }
         });
     }
 
     private async Task DeleteClickedAsync(PriceImportJobListItemDto job)
     {
-        if (DeleteTarget?.Id == job.Id)
-        {
-            await DeleteConfirmedAsync();
-            return;
-        }
-
-        DeleteTarget = job;
+        if (DeleteTarget?.Id == job.Id) { await DeleteConfirmedAsync(); return; }
+        DeleteTarget  = job;
         UploadMessage = $"Delete import '{job.SourceFileName}'? Click Delete again to confirm.";
         UploadMessageIsError = true;
     }
 
     private async Task DeleteConfirmedAsync()
     {
-        if (DeleteTarget is null)
-            return;
-
-        IsBusy = true;
+        if (DeleteTarget is null) return;
+        IsBusy        = true;
         UploadMessage = null;
         UploadMessageIsError = false;
         try
         {
-            var result = await PriceImportService.DeleteImportJobAsync(DeleteTarget.Id);
+            var result    = await PriceImportService.DeleteImportJobAsync(DeleteTarget.Id);
             UploadMessage = result.Message;
             UploadMessageIsError = !result.Ok;
-            DeleteTarget = null;
+            DeleteTarget  = null;
             await LoadAsync();
         }
-        finally
-        {
-            IsBusy = false;
-        }
+        finally { IsBusy = false; }
     }
 
-    private static string FormatDate(DateTime? value)
-        => value.HasValue ? value.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm") : "-";
+    private static string FormatDate(DateTime? v)
+        => v.HasValue ? v.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm") : "-";
 
     private static string FormatSize(long bytes)
         => bytes < 1024 * 1024
@@ -334,9 +613,9 @@
 
     private static string StatusClass(PriceImportJobStatus status) => status switch
     {
-        PriceImportJobStatus.Completed => "inline-flex rounded bg-emerald-100 px-1.5 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
-        PriceImportJobStatus.Failed => "inline-flex rounded bg-rose-100 px-1.5 py-0.5 text-[11px] font-semibold text-rose-700 dark:bg-rose-950 dark:text-rose-300",
+        PriceImportJobStatus.Completed      => "inline-flex rounded bg-emerald-100 px-1.5 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
+        PriceImportJobStatus.Failed         => "inline-flex rounded bg-rose-100 px-1.5 py-0.5 text-[11px] font-semibold text-rose-700 dark:bg-rose-950 dark:text-rose-300",
         PriceImportJobStatus.ReadyForReview => "inline-flex rounded bg-sky-100 px-1.5 py-0.5 text-[11px] font-semibold text-sky-700 dark:bg-sky-950 dark:text-sky-300",
-        _ => "inline-flex rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+        _                                   => "inline-flex rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300"
     };
 }

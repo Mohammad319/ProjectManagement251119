@@ -69,6 +69,16 @@ namespace ProjectManagement.Server.Controllers.v1.SubCalculation
             return Ok(result);
         }
 
+        [Authorize(Roles = PMRolesConst.Tenant.Users)]
+        [HttpPost("suggestions/bulk")]
+        public async Task<IActionResult> GetBulkSuggestions(
+            [FromBody] List<int> taskIds,
+            [FromQuery] int maxResultsPerTask = 10)
+        {
+            var result = await MicroBus.Send(new GetBulkTaskResourceSuggestionsQuery(taskIds, maxResultsPerTask));
+            return Ok(result);
+        }
+
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpPost(URLConst.Filter)]
         public async Task<IActionResult> Post([FromBody] GetResourcesByFilterQuery command)

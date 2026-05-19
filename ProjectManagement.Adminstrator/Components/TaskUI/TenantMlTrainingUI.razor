@@ -1,0 +1,792 @@
+@using System.Globalization
+@using ProjectManagement.Adminstrator.Services.TenantMl
+@using ProjectManagement.Shared.DTO.Calculation
+@using ProjectManagement.Shared.Helper.ML
+@inject ITenantMlTrainingService TenantMlTrainingService
+
+<div class="space-y-3 text-slate-900 dark:text-slate-100">
+    <section class="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
+        <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+                <h2 class="mt-1 text-lg font-semibold tracking-tight">Tenant ML training</h2>
+                <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                    Train isolated company models, control runtime usage, and review data quality after training.
+                </p>
+            </div>
+
+            <div class="flex flex-wrap items-end gap-2">
+                <button type="button"
+                        class="inline-flex items-center justify-center rounded-xl border border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                        disabled="@isLoading"
+                        @onclick="ExportReportAsync">
+                    Export Excel
+                </button>
+
+                <label class="grid gap-1 text-xs font-medium text-slate-600 dark:text-slate-300">
+                    <span>Negative examples</span>
+                    <input type="number"
+                           min="0"
+                           max="10"
+                           value="@negativeExamples"
+                           @onchange="e => negativeExamples = ReadInt(e.Value, negativeExamples, 0, 10)"
+                           class="w-28 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-sky-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                </label>
+
+                <button type="button"
+                        class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:border-sky-500 hover:text-sky-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                        disabled="@isLoading"
+                        @onclick="LoadAsync">
+                    @(isLoading ? "Loading..." : "Refresh")
+                </button>
+            </div>
+        </div>
+    </section>
+
+    @if (!string.IsNullOrWhiteSpace(message))
+    {
+        <div class="@MessageClass">
+            @message
+        </div>
+    }
+
+    @if (dashboardItems.Count > 0)
+    {
+        <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
+            <div class="flex items-center justify-between">
+                <h3 class="text-sm font-semibold">ML dashboard</h3>
+                <span class="text-xs text-slate-500">@dashboardItems.Sum(x => x.PendingFeedback) pending feedback</span>
+            </div>
+            <div class="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+                @Metric("Companies", dashboardItems.Count.ToString(CultureInfo.InvariantCulture))
+                @Metric("Models", dashboardItems.Count(x => x.HasModel).ToString(CultureInfo.InvariantCulture))
+                @Metric("Backups", dashboardItems.Count(x => x.HasBackup).ToString(CultureInfo.InvariantCulture))
+                @Metric("Auto train", dashboardItems.Count(x => x.AutoTrainingEnabled).ToString(CultureInfo.InvariantCulture))
+                @Metric("Pending feedback", dashboardItems.Sum(x => x.PendingFeedback).ToString(CultureInfo.InvariantCulture))
+            </div>
+        </section>
+    }
+
+    <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
+        <div class="flex flex-col gap-3 lg:flex-row lg:items-end">
+            <label class="grid gap-1 text-xs font-medium text-slate-600 dark:text-slate-300">
+                <span>Company</span>
+                <select @bind="previewRequest.TenantId"
+                        class="min-w-56 rounded-xl border border-slate-300 bg-white px-2 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+                    <option value="0">Select company</option>
+                    @foreach (var tenant in tenants)
+                    {
+                        <option value="@tenant.TenantId">@tenant.TenantName</option>
+                    }
+                </select>
+            </label>
+            <label class="grid flex-1 gap-1 text-xs font-medium text-slate-600 dark:text-slate-300">
+                <span>Task name</span>
+                <input @bind="previewRequest.TaskName"
+                       class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+            </label>
+            <label class="grid gap-1 text-xs font-medium text-slate-600 dark:text-slate-300">
+                <span>Code</span>
+                <input @bind="previewRequest.TaskCode"
+                       class="w-32 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+            </label>
+            <label class="grid gap-1 text-xs font-medium text-slate-600 dark:text-slate-300">
+                <span>Unit</span>
+                <input @bind="previewRequest.TaskUnit"
+                       class="w-24 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+            </label>
+            <button type="button"
+                    class="inline-flex items-center justify-center rounded-xl border border-indigo-600 bg-indigo-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-indigo-700"
+                    @onclick="PreviewSuggestionsAsync">
+                Test suggestions
+            </button>
+        </div>
+
+        @if (previewItems.Count > 0)
+        {
+            <div class="mt-3 grid gap-2">
+                @foreach (var item in previewItems)
+                {
+                    <div class="rounded-xl border border-slate-200 px-3 py-2 text-sm dark:border-slate-800">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="font-medium">@item.TaskName</div>
+                            <div class="text-xs font-semibold">@FormatNullablePercent(item.Score)</div>
+                        </div>
+                        <div class="mt-1 text-xs text-slate-500">@item.Source · @item.Unit · @item.Reason</div>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+
+    <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
+        <div class="flex items-center justify-between gap-3">
+            <h3 class="text-sm font-semibold">Companies</h3>
+            <span class="text-xs text-slate-500">@tenants.Count company</span>
+        </div>
+
+        @if (isLoading)
+        {
+            <div class="py-8">
+                <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
+            </div>
+        }
+        else if (tenants.Count == 0)
+        {
+            <div class="mt-3 rounded-xl border border-dashed border-slate-300 px-3 py-8 text-center text-sm text-slate-500 dark:border-slate-700">
+                No companies found.
+            </div>
+        }
+        else
+        {
+            <div class="mt-3 max-h-[38rem] overflow-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                <table class="min-w-full divide-y divide-slate-100 text-sm dark:divide-slate-800">
+                    <thead class="sticky top-0 bg-white dark:bg-slate-950">
+                        <tr>
+                            <th class="px-3 py-1.5 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Company</th>
+                            <th class="px-3 py-1.5 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Database</th>
+                            <th class="px-3 py-1.5 text-center text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Model</th>
+                            <th class="px-3 py-1.5 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Usage</th>
+                            <th class="px-3 py-1.5 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Last quality</th>
+                            <th class="px-3 py-1.5 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Compare</th>
+                            <th class="px-3 py-1.5 text-right text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                        @foreach (var tenant in tenants)
+                        {
+                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-900">
+                                <td class="px-3 py-2 align-top">
+                                    <div class="font-medium text-slate-900 dark:text-slate-100">@tenant.TenantName</div>
+                                    <div class="mt-0.5 text-xs text-slate-500">TenantId @tenant.TenantId</div>
+                                    <div class="mt-0.5 max-w-[22rem] truncate font-mono text-[11px] text-slate-400" title="@tenant.ModelPath">@tenant.ModelPath</div>
+                                </td>
+                                <td class="px-3 py-2 align-top text-slate-600 dark:text-slate-300">@tenant.DatabaseName</td>
+                                <td class="px-3 py-2 text-center">@ModelPill(tenant)</td>
+                                <td class="px-3 py-2 align-top">
+                                    <div class="flex flex-col gap-2">
+                                        <select value="@tenant.Settings.UsageMode"
+                                                @onchange="e => SaveUsageModeAsync(tenant, e.Value)"
+                                                class="min-w-48 rounded-xl border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-900 focus:border-sky-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+                                            <option value="@TenantMlUsageMode.TenantWithGlobalFallback">Tenant + global fallback</option>
+                                            <option value="@TenantMlUsageMode.TenantOnly">Tenant only</option>
+                                            <option value="@TenantMlUsageMode.GlobalOnly">Global only</option>
+                                        </select>
+
+                                        <label class="inline-flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                                            <input type="checkbox"
+                                                   checked="@tenant.Settings.IncludeFeedbackInTraining"
+                                                   @onchange="e => SaveFeedbackSettingAsync(tenant, e.Value)"
+                                                   class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
+                                            <span>Use feedback in training</span>
+                                        </label>
+
+                                        <label class="inline-flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                                            <input type="checkbox"
+                                                   checked="@tenant.Settings.AutoTrainingEnabled"
+                                                   @onchange="e => SaveAutoTrainingAsync(tenant, e.Value)"
+                                                   class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
+                                            <span>Auto train</span>
+                                        </label>
+
+                                        @if (tenant.Settings.AutoTrainingEnabled)
+                                        {
+                                            <label class="inline-flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                                                <span>Every</span>
+                                                <input type="number"
+                                                       min="1"
+                                                       max="365"
+                                                       value="@tenant.Settings.AutoTrainingIntervalDays"
+                                                       @onchange="e => SaveAutoTrainingIntervalAsync(tenant, e.Value)"
+                                                       class="w-20 rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                                                <span>days</span>
+                                            </label>
+                                            <div class="text-[11px] text-slate-500">Next: @FormatDate(tenant.Settings.NextTrainingAtUtc)</div>
+                                        }
+                                    </div>
+                                </td>
+                                <td class="px-3 py-2 align-top">
+                                    @if (tenant.LastRun is null)
+                                    {
+                                        <span class="text-xs text-slate-500">No training yet</span>
+                                    }
+                                    else
+                                    {
+                                        <div class="text-xs leading-5 text-slate-600 dark:text-slate-300">
+                                            <div class="font-semibold">@tenant.LastRun.Quality.QualityLabel</div>
+                                            <div>@tenant.LastRun.Quality.TasksWithResources / @tenant.LastRun.Quality.TotalTasks tasks with resources</div>
+                                            <div>@tenant.LastRun.Quality.TotalResources resources, @tenant.LastRun.FeedbackExamples feedback examples</div>
+                                            <div>@tenant.LastRun.Quality.MissingUnitResources missing units</div>
+                                        </div>
+                                    }
+                                </td>
+                                <td class="px-3 py-2 align-top">
+                                    @if (tenant.LastRun?.Comparison is { } comparison)
+                                    {
+                                        <div class="text-xs leading-5 text-slate-600 dark:text-slate-300">
+                                            <div class="font-semibold">Better: @comparison.BetterModel</div>
+                                            <div>Tenant margin: @FormatNullablePercent(comparison.TenantMargin)</div>
+                                            <div>Global margin: @FormatNullablePercent(comparison.GlobalMargin)</div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-xs text-slate-500">No comparison</span>
+                                    }
+                                </td>
+                                <td class="px-3 py-2 text-right">
+                                    <div class="flex flex-wrap justify-end gap-1.5">
+                                        <button type="button"
+                                                class="inline-flex items-center justify-center rounded-xl border border-indigo-600 bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-indigo-500 dark:bg-indigo-500"
+                                                disabled="@(busyTenantId == tenant.TenantId)"
+                                                @onclick="() => TrainAsync(tenant)">
+                                            @(busyTenantId == tenant.TenantId ? "Working..." : "Train")
+                                        </button>
+                                        <button type="button"
+                                                class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-2 py-1.5 text-xs font-medium text-slate-700 transition hover:border-sky-500 hover:text-sky-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                                                disabled="@(busyTenantId == tenant.TenantId)"
+                                                @onclick="() => AnalyzeAsync(tenant)">
+                                            Issues
+                                        </button>
+                                        <button type="button"
+                                                class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-2 py-1.5 text-xs font-medium text-slate-700 transition hover:border-sky-500 hover:text-sky-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                                                disabled="@(busyTenantId == tenant.TenantId)"
+                                                @onclick="() => EvaluateAsync(tenant)">
+                                            Evaluate
+                                        </button>
+                                        <button type="button"
+                                                class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-2 py-1.5 text-xs font-medium text-slate-700 transition hover:border-sky-500 hover:text-sky-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                                                disabled="@(busyTenantId == tenant.TenantId)"
+                                                @onclick="() => LoadFeedbackAsync(tenant)">
+                                            Feedback
+                                        </button>
+                                        <button type="button"
+                                                class="inline-flex items-center justify-center rounded-xl border border-amber-300 bg-amber-50 px-2 py-1.5 text-xs font-medium text-amber-800 transition hover:border-amber-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200"
+                                                disabled="@(busyTenantId == tenant.TenantId || string.IsNullOrWhiteSpace(tenant.LatestBackupPath))"
+                                                title="@tenant.LatestBackupPath"
+                                                @onclick="() => RollbackAsync(tenant)">
+                                            Rollback
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+
+    @if (selectedTenant is not null && detailPanel is not null)
+    {
+        <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
+            <div class="flex items-center justify-between gap-3">
+                <div>
+                    <h3 class="text-sm font-semibold">@detailPanel for @selectedTenant.TenantName</h3>
+                    <p class="text-xs text-slate-500">@detailMessage</p>
+                </div>
+                <button type="button"
+                        class="rounded-xl border border-slate-300 px-3 py-1.5 text-xs text-slate-600 dark:border-slate-700 dark:text-slate-300"
+                        @onclick="CloseDetails">
+                    Close
+                </button>
+            </div>
+
+            @if (analysisResult is not null)
+            {
+                <div class="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                    @Metric("Quality", analysisResult.Quality.QualityLabel)
+                    @Metric("Tasks with resources", $"{analysisResult.Quality.TasksWithResources} / {analysisResult.Quality.TotalTasks}")
+                    @Metric("Resources", analysisResult.Quality.TotalResources.ToString(CultureInfo.InvariantCulture))
+                    @Metric("Missing units", analysisResult.Quality.MissingUnitResources.ToString(CultureInfo.InvariantCulture))
+                </div>
+                <div class="mt-3 text-xs text-slate-600 dark:text-slate-300">
+                    Examples available: @analysisResult.TotalExamples (@analysisResult.PositiveExamples positive / @analysisResult.NegativeExamples negative), feedback @analysisResult.FeedbackExamples.
+                </div>
+                @if (analysisResult.Quality.TaskClusters.Count > 0 || analysisResult.Quality.MissingTokens.Count > 0)
+                {
+                    <div class="mt-3 grid gap-3 lg:grid-cols-2">
+                        @TaskClusters("Task clusters", analysisResult.Quality.TaskClusters)
+                        @MissingTokens("Missing resource words", analysisResult.Quality.MissingTokens)
+                    </div>
+                }
+            }
+
+            @if (evaluationResult is not null)
+            {
+                <div class="mt-3 grid gap-3 md:grid-cols-3">
+                    @Metric("Better model", evaluationResult.BetterModel)
+                    @Metric("Tenant margin", FormatNullablePercent(evaluationResult.TenantMargin))
+                    @Metric("Global margin", FormatNullablePercent(evaluationResult.GlobalMargin))
+                </div>
+                @if (evaluationResult.BestExamples.Count > 0 || evaluationResult.WorstExamples.Count > 0)
+                {
+                    <div class="mt-3 grid gap-3 lg:grid-cols-2">
+                        @EvaluationExamples("Best examples", evaluationResult.BestExamples)
+                        @EvaluationExamples("Needs review", evaluationResult.WorstExamples)
+                    </div>
+                }
+            }
+
+            @if (feedbackItems.Count > 0)
+            {
+                <div class="mt-3 max-h-96 overflow-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                    <table class="min-w-full divide-y divide-slate-100 text-xs dark:divide-slate-800">
+                        <thead>
+                            <tr>
+                                <th class="px-3 py-2 text-left">Feedback</th>
+                                <th class="px-3 py-2 text-left">Review</th>
+                                <th class="px-3 py-2 text-left">Target</th>
+                                <th class="px-3 py-2 text-left">Suggestion</th>
+                                <th class="px-3 py-2 text-left">Source</th>
+                                <th class="px-3 py-2 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                            @foreach (var item in feedbackItems)
+                            {
+                                <tr>
+                                    <td class="px-3 py-2">@item.Feedback</td>
+                                    <td class="px-3 py-2">@item.ReviewStatus</td>
+                                    <td class="px-3 py-2">@item.TargetTaskName</td>
+                                    <td class="px-3 py-2">@item.SourceTaskName</td>
+                                    <td class="px-3 py-2">@item.Source</td>
+                                    <td class="px-3 py-2 text-right">
+                                        <button type="button"
+                                                class="mr-1 rounded-lg border border-emerald-300 px-2 py-1 text-emerald-700 dark:border-emerald-900 dark:text-emerald-300"
+                                                @onclick="() => SetFeedbackStatusAsync(item, TaskResourceSuggestionFeedbackReviewStatus.Approved)">
+                                            Approve
+                                        </button>
+                                        <button type="button"
+                                                class="mr-1 rounded-lg border border-slate-300 px-2 py-1 text-slate-700 dark:border-slate-700 dark:text-slate-300"
+                                                @onclick="() => SetFeedbackStatusAsync(item, TaskResourceSuggestionFeedbackReviewStatus.Ignored)">
+                                            Ignore
+                                        </button>
+                                        <button type="button"
+                                                class="rounded-lg border border-rose-300 px-2 py-1 text-rose-700 dark:border-rose-900 dark:text-rose-300"
+                                                @onclick="() => DeleteFeedbackAsync(item)">
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    }
+</div>
+
+@code {
+    private List<TenantMlTrainingTenantItem> tenants = [];
+    private List<TenantMlDashboardItem> dashboardItems = [];
+    private List<TenantMlFeedbackItem> feedbackItems = [];
+    private List<TenantMlSuggestionPreviewItem> previewItems = [];
+    private TenantMlSuggestionPreviewRequest previewRequest = new();
+    private int negativeExamples = 2;
+    private bool isLoading;
+    private int? busyTenantId;
+    private TenantMlTrainingTenantItem? selectedTenant;
+    private string? detailPanel;
+    private string? detailMessage;
+    private TenantMlTrainingResult? analysisResult;
+    private TenantMlComparisonReport? evaluationResult;
+    private string? message;
+    private bool messageIsError;
+
+    private string MessageClass =>
+        messageIsError
+            ? "rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-900/70 dark:bg-rose-950/50 dark:text-rose-300"
+            : "rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/50 dark:text-emerald-300";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            isLoading = true;
+            message = null;
+            tenants = (await TenantMlTrainingService.GetTenantsAsync()).ToList();
+            dashboardItems = (await TenantMlTrainingService.GetDashboardAsync()).ToList();
+        }
+        catch (Exception ex)
+        {
+            messageIsError = true;
+            message = ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task TrainAsync(TenantMlTrainingTenantItem tenant)
+    {
+        try
+        {
+            busyTenantId = tenant.TenantId;
+            message = null;
+            StateHasChanged();
+
+            var result = await TenantMlTrainingService.TrainTenantAsync(tenant.TenantId, negativeExamples);
+            messageIsError = !result.Trained;
+            message = result.Trained
+                ? $"{result.TenantName}: trained {result.TotalExamples} examples ({result.PositiveExamples} positive / {result.NegativeExamples} negative, {result.FeedbackExamples} feedback). Quality {result.Quality.QualityLabel}, better model {result.Comparison.BetterModel}."
+                : $"{tenant.TenantName}: {result.Message}";
+
+            tenants = (await TenantMlTrainingService.GetTenantsAsync()).ToList();
+        }
+        catch (Exception ex)
+        {
+            messageIsError = true;
+            message = ex.Message;
+        }
+        finally
+        {
+            busyTenantId = null;
+        }
+    }
+
+    private async Task AnalyzeAsync(TenantMlTrainingTenantItem tenant)
+    {
+        try
+        {
+            busyTenantId = tenant.TenantId;
+            selectedTenant = tenant;
+            detailPanel = "Data issues";
+            analysisResult = await TenantMlTrainingService.AnalyzeTenantAsync(tenant.TenantId, negativeExamples);
+            evaluationResult = null;
+            feedbackItems = [];
+            detailMessage = analysisResult.Message;
+        }
+        catch (Exception ex)
+        {
+            messageIsError = true;
+            message = ex.Message;
+        }
+        finally
+        {
+            busyTenantId = null;
+        }
+    }
+
+    private async Task EvaluateAsync(TenantMlTrainingTenantItem tenant)
+    {
+        try
+        {
+            busyTenantId = tenant.TenantId;
+            selectedTenant = tenant;
+            detailPanel = "Model evaluation";
+            evaluationResult = await TenantMlTrainingService.EvaluateTenantAsync(tenant.TenantId, negativeExamples);
+            analysisResult = null;
+            feedbackItems = [];
+            detailMessage = $"Better model: {evaluationResult.BetterModel}.";
+        }
+        catch (Exception ex)
+        {
+            messageIsError = true;
+            message = ex.Message;
+        }
+        finally
+        {
+            busyTenantId = null;
+        }
+    }
+
+    private async Task LoadFeedbackAsync(TenantMlTrainingTenantItem tenant)
+    {
+        try
+        {
+            busyTenantId = tenant.TenantId;
+            selectedTenant = tenant;
+            detailPanel = "Feedback review";
+            feedbackItems = (await TenantMlTrainingService.GetFeedbackAsync(tenant.TenantId)).ToList();
+            analysisResult = null;
+            evaluationResult = null;
+            detailMessage = $"{feedbackItems.Count} latest feedback rows.";
+        }
+        catch (Exception ex)
+        {
+            messageIsError = true;
+            message = ex.Message;
+        }
+        finally
+        {
+            busyTenantId = null;
+        }
+    }
+
+    private async Task DeleteFeedbackAsync(TenantMlFeedbackItem item)
+    {
+        if (await TenantMlTrainingService.DeleteFeedbackAsync(item.Id))
+        {
+            feedbackItems.Remove(item);
+            detailMessage = $"{feedbackItems.Count} latest feedback rows.";
+            dashboardItems = (await TenantMlTrainingService.GetDashboardAsync()).ToList();
+        }
+    }
+
+    private async Task SetFeedbackStatusAsync(TenantMlFeedbackItem item, TaskResourceSuggestionFeedbackReviewStatus status)
+    {
+        if (await TenantMlTrainingService.SetFeedbackReviewStatusAsync(item.Id, status))
+        {
+            item.ReviewStatus = status;
+            detailMessage = $"{feedbackItems.Count} latest feedback rows.";
+            dashboardItems = (await TenantMlTrainingService.GetDashboardAsync()).ToList();
+        }
+    }
+
+    private async Task PreviewSuggestionsAsync()
+    {
+        try
+        {
+            previewItems = (await TenantMlTrainingService.PreviewSuggestionsAsync(previewRequest)).ToList();
+            messageIsError = previewItems.Count == 0;
+            message = previewItems.Count == 0
+                ? "No preview suggestions found."
+                : $"{previewItems.Count} preview suggestions found.";
+        }
+        catch (Exception ex)
+        {
+            messageIsError = true;
+            message = ex.Message;
+        }
+    }
+
+    private async Task ExportReportAsync()
+    {
+        try
+        {
+            var path = await TenantMlTrainingService.ExportQualityReportAsync();
+            messageIsError = false;
+            message = $"Excel report created: {path}";
+        }
+        catch (Exception ex)
+        {
+            messageIsError = true;
+            message = ex.Message;
+        }
+    }
+
+    private async Task RollbackAsync(TenantMlTrainingTenantItem tenant)
+    {
+        try
+        {
+            busyTenantId = tenant.TenantId;
+            var rolledBack = await TenantMlTrainingService.RollbackTenantModelAsync(tenant.TenantId);
+            messageIsError = !rolledBack;
+            message = rolledBack
+                ? $"{tenant.TenantName}: model rolled back to latest backup."
+                : $"{tenant.TenantName}: no backup was found.";
+            tenants = (await TenantMlTrainingService.GetTenantsAsync()).ToList();
+        }
+        catch (Exception ex)
+        {
+            messageIsError = true;
+            message = ex.Message;
+        }
+        finally
+        {
+            busyTenantId = null;
+        }
+    }
+
+    private static int ReadInt(object? value, int fallback, int min, int max)
+        => int.TryParse(value?.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed)
+            ? Math.Clamp(parsed, min, max)
+            : fallback;
+
+    private async Task SaveUsageModeAsync(TenantMlTrainingTenantItem tenant, object? rawValue)
+    {
+        if (!Enum.TryParse<TenantMlUsageMode>(rawValue?.ToString(), out var usageMode))
+            return;
+
+        await SaveSettingsAsync(tenant, usageMode, tenant.Settings.IncludeFeedbackInTraining);
+    }
+
+    private async Task SaveFeedbackSettingAsync(TenantMlTrainingTenantItem tenant, object? rawValue)
+    {
+        var includeFeedback = rawValue is bool value && value;
+        await SaveSettingsAsync(tenant, tenant.Settings.UsageMode, includeFeedback);
+    }
+
+    private async Task SaveSettingsAsync(TenantMlTrainingTenantItem tenant, TenantMlUsageMode usageMode, bool includeFeedback)
+    {
+        tenant.Settings.UsageMode = usageMode;
+        tenant.Settings.IncludeFeedbackInTraining = includeFeedback;
+        await SaveSettingsAsync(tenant);
+    }
+
+    private async Task SaveAutoTrainingAsync(TenantMlTrainingTenantItem tenant, object? rawValue)
+    {
+        tenant.Settings.AutoTrainingEnabled = rawValue is bool value && value;
+        if (tenant.Settings.AutoTrainingEnabled && tenant.Settings.NextTrainingAtUtc is null)
+            tenant.Settings.NextTrainingAtUtc = DateTime.UtcNow.AddDays(Math.Clamp(tenant.Settings.AutoTrainingIntervalDays, 1, 365));
+
+        await SaveSettingsAsync(tenant);
+    }
+
+    private async Task SaveAutoTrainingIntervalAsync(TenantMlTrainingTenantItem tenant, object? rawValue)
+    {
+        tenant.Settings.AutoTrainingIntervalDays = ReadInt(rawValue, tenant.Settings.AutoTrainingIntervalDays, 1, 365);
+        if (tenant.Settings.AutoTrainingEnabled)
+            tenant.Settings.NextTrainingAtUtc = DateTime.UtcNow.AddDays(tenant.Settings.AutoTrainingIntervalDays);
+
+        await SaveSettingsAsync(tenant);
+    }
+
+    private async Task SaveSettingsAsync(TenantMlTrainingTenantItem tenant)
+    {
+        try
+        {
+            tenant.Settings = await TenantMlTrainingService.UpdateSettingsAsync(tenant.TenantId, tenant.Settings);
+            messageIsError = false;
+            message = $"{tenant.TenantName}: settings saved.";
+        }
+        catch (Exception ex)
+        {
+            messageIsError = true;
+            message = ex.Message;
+        }
+    }
+
+    private void CloseDetails()
+    {
+        selectedTenant = null;
+        detailPanel = null;
+        detailMessage = null;
+        analysisResult = null;
+        evaluationResult = null;
+        feedbackItems = [];
+    }
+
+    private static string FormatNullablePercent(double? value)
+        => value.HasValue
+            ? value.Value.ToString("0.0%", CultureInfo.InvariantCulture)
+            : "n/a";
+
+    private static string FormatDate(DateTime? value)
+        => value.HasValue
+            ? value.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)
+            : "not set";
+
+    private static RenderFragment Metric(string label, string value) => builder =>
+    {
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900/60");
+        builder.OpenElement(2, "div");
+        builder.AddAttribute(3, "class", "text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500");
+        builder.AddContent(4, label);
+        builder.CloseElement();
+        builder.OpenElement(5, "div");
+        builder.AddAttribute(6, "class", "mt-1 text-base font-semibold");
+        builder.AddContent(7, value);
+        builder.CloseElement();
+        builder.CloseElement();
+    };
+
+    private static RenderFragment EvaluationExamples(string title, IReadOnlyList<TenantMlEvaluationExample> examples) => builder =>
+    {
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "rounded-xl border border-slate-200 p-3 dark:border-slate-800");
+        builder.OpenElement(2, "div");
+        builder.AddAttribute(3, "class", "text-xs font-semibold text-slate-700 dark:text-slate-200");
+        builder.AddContent(4, title);
+        builder.CloseElement();
+
+        var seq = 5;
+        foreach (var example in examples)
+        {
+            builder.OpenElement(seq++, "div");
+            builder.AddAttribute(seq++, "class", "mt-2 border-t border-slate-100 pt-2 text-xs dark:border-slate-800");
+            builder.OpenElement(seq++, "div");
+            builder.AddAttribute(seq++, "class", "font-medium");
+            builder.AddContent(seq++, example.TaskName);
+            builder.CloseElement();
+            builder.OpenElement(seq++, "div");
+            builder.AddAttribute(seq++, "class", "text-slate-500");
+            builder.AddContent(seq++, $"{example.ResourceName} · {(example.ExpectedGood ? "positive" : "negative")} · {example.Score:0%}");
+            builder.CloseElement();
+            builder.CloseElement();
+        }
+
+        builder.CloseElement();
+    };
+
+    private static RenderFragment TaskClusters(string title, IReadOnlyList<TenantMlTaskClusterItem> clusters) => builder =>
+    {
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "rounded-xl border border-slate-200 p-3 dark:border-slate-800");
+        builder.OpenElement(2, "div");
+        builder.AddAttribute(3, "class", "text-xs font-semibold text-slate-700 dark:text-slate-200");
+        builder.AddContent(4, title);
+        builder.CloseElement();
+
+        var seq = 5;
+        foreach (var cluster in clusters.Take(8))
+        {
+            builder.OpenElement(seq++, "div");
+            builder.AddAttribute(seq++, "class", "mt-2 rounded-lg bg-slate-50 p-2 text-xs dark:bg-slate-900");
+            builder.OpenElement(seq++, "div");
+            builder.AddAttribute(seq++, "class", "font-medium");
+            builder.AddContent(seq++, $"{cluster.Cluster}: {cluster.TasksWithResources}/{cluster.TotalTasks} with resources");
+            builder.CloseElement();
+            if (cluster.Examples.Count > 0)
+            {
+                builder.OpenElement(seq++, "div");
+                builder.AddAttribute(seq++, "class", "mt-1 text-slate-500");
+                builder.AddContent(seq++, string.Join(" | ", cluster.Examples));
+                builder.CloseElement();
+            }
+            builder.CloseElement();
+        }
+
+        builder.CloseElement();
+    };
+
+    private static RenderFragment MissingTokens(string title, IReadOnlyList<TenantMlMissingTokenItem> tokens) => builder =>
+    {
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "rounded-xl border border-slate-200 p-3 dark:border-slate-800");
+        builder.OpenElement(2, "div");
+        builder.AddAttribute(3, "class", "text-xs font-semibold text-slate-700 dark:text-slate-200");
+        builder.AddContent(4, title);
+        builder.CloseElement();
+
+        var seq = 5;
+        foreach (var token in tokens.Take(12))
+        {
+            builder.OpenElement(seq++, "div");
+            builder.AddAttribute(seq++, "class", "mt-2 rounded-lg bg-amber-50 p-2 text-xs text-amber-950 dark:bg-amber-950/30 dark:text-amber-100");
+            builder.OpenElement(seq++, "div");
+            builder.AddAttribute(seq++, "class", "font-medium");
+            builder.AddContent(seq++, $"{token.Token}: {token.Count}");
+            builder.CloseElement();
+            if (token.Examples.Count > 0)
+            {
+                builder.OpenElement(seq++, "div");
+                builder.AddAttribute(seq++, "class", "mt-1 opacity-80");
+                builder.AddContent(seq++, string.Join(" | ", token.Examples));
+                builder.CloseElement();
+            }
+            builder.CloseElement();
+        }
+
+        builder.CloseElement();
+    };
+
+    private static RenderFragment ModelPill(TenantMlTrainingTenantItem tenant) => builder =>
+    {
+        var cls = tenant.HasModel
+            ? "rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:ring-emerald-800"
+            : "rounded-full bg-slate-50 px-2 py-0.5 text-xs font-semibold text-slate-600 ring-1 ring-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-700";
+        builder.OpenElement(0, "span");
+        builder.AddAttribute(1, "class", cls);
+        builder.AddContent(2, tenant.HasModel ? $"Ready {tenant.ModelUpdatedAt?.ToLocalTime():yyyy-MM-dd HH:mm}" : "No model");
+        builder.CloseElement();
+    };
+}

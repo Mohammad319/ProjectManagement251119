@@ -209,7 +209,20 @@ else if (_tasks != null)
         catch (TaskCanceledException) { }
     }
 
+    private List<(TaskGroup Group, double Score)>? _scoredCache;
+    private string _lastScoredQuery = "\0";
+
     private IEnumerable<(TaskGroup Group, double Score)> GetScoredGroups()
+    {
+        if (_scoredCache is not null && _lastScoredQuery == _rawSearchQuery)
+            return _scoredCache;
+
+        _lastScoredQuery = _rawSearchQuery;
+        _scoredCache = ComputeScoredGroups().ToList();
+        return _scoredCache;
+    }
+
+    private IEnumerable<(TaskGroup Group, double Score)> ComputeScoredGroups()
     {
         var q = _rawSearchQuery.Trim();
         if (string.IsNullOrWhiteSpace(q))
@@ -420,6 +433,7 @@ else if (_tasks != null)
             .ToList();
 
         _taskGroups = grouped;
+        _scoredCache = null;
         foreach (var tg in grouped)
         {
             if (!_selectedStates.ContainsKey(tg.Key))

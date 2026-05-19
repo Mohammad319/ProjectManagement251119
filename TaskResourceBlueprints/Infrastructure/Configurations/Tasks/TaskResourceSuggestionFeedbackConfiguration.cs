@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using ProjectManagement.Shared.DTO.Calculation;
 using TaskResourceBlueprints.Entities.Tasks;
 using TaskResourceBlueprints.Infrastructure.ConfigurationConstants;
 
@@ -33,9 +34,14 @@ public sealed class TaskResourceSuggestionFeedbackConfiguration : IEntityTypeCon
         b.Property(x => x.Reason)
             .HasMaxLength(512);
 
+        b.Property(x => x.ReviewStatus)
+            .HasDefaultValue(TaskResourceSuggestionFeedbackReviewStatus.Pending);
+
         b.HasIndex(x => new { x.TenantId, x.TargetTaskId, x.Source, x.SourceTaskId })
             .IsUnique();
 
         b.HasIndex(x => new { x.Source, x.SourceTaskId, x.Feedback });
+
+        b.HasIndex(x => new { x.TenantId, x.ReviewStatus, x.UpdatedAtUtc });
     }
 }

@@ -16,7 +16,8 @@
       "Bash(npm install *)",
       "Bash(npm run *)",
       "Read(//c/Library/BlazorMHD/BlazorMHD.UI/**)",
-      "Read(//c/Library/ContextMenuMHD/ContextMenuMHD/**)"
+      "Read(//c/Library/ContextMenuMHD/ContextMenuMHD/**)",
+      "Bash(dotnet restore *)"
     ]
   }
 }

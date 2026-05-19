@@ -22,21 +22,44 @@
     }
     else
     {
-        <div class="relative">
-            <input type="search"
-                   placeholder="Filter suggestions..."
-                   @bind="_filterText" @bind:event="oninput"
-                   class="w-full rounded border border-gray-300 bg-white py-1.5 pl-8 pr-3 text-sm text-gray-700 placeholder-gray-400 focus:border-blue-400 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:placeholder-gray-500" />
-            <svg class="pointer-events-none absolute left-2 top-2 h-4 w-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-            </svg>
-            @if (!string.IsNullOrWhiteSpace(_filterText))
-            {
-                <span class="absolute right-2 top-1.5 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500 dark:bg-gray-700 dark:text-gray-400">
-                    @DisplayedStates.Count() / @_states.Count
-                </span>
-            }
+        <div class="flex flex-wrap items-center gap-2">
+            <label class="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-300">
+                <input type="checkbox" checked="@_showSystem"
+                       @onchange="e => OnSourceFilterChanged(ref _showSystem, (bool)(e.Value ?? false))"
+                       class="h-4 w-4 cursor-pointer accent-blue-600" />
+                <span class="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700 dark:bg-blue-950 dark:text-blue-300">BlueprintTask</span>
+            </label>
+
+            <label class="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-300">
+                <input type="checkbox" checked="@_showTenant"
+                       @onchange="e => OnSourceFilterChanged(ref _showTenant, (bool)(e.Value ?? false))"
+                       class="h-4 w-4 cursor-pointer accent-emerald-600" />
+                <span class="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">TenantTask</span>
+            </label>
+
+            <div class="relative min-w-[16rem] flex-1">
+                <input type="search"
+                       placeholder="Filter suggestions..."
+                       @bind="_filterText" @bind:event="oninput"
+                       class="w-full rounded border border-gray-300 bg-white py-1.5 pl-8 pr-3 text-sm text-gray-700 placeholder-gray-400 focus:border-blue-400 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:placeholder-gray-500" />
+                <svg class="pointer-events-none absolute left-2 top-2 h-4 w-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+                @if (!string.IsNullOrWhiteSpace(_filterText))
+                {
+                    <span class="absolute right-2 top-1.5 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500 dark:bg-gray-700 dark:text-gray-400">
+                        @FilteredStates.Count() / @_states.Count
+                    </span>
+                }
+            </div>
         </div>
+
+        @if (!FilteredStates.Any())
+        {
+            <div class="rounded border border-dashed border-gray-300 px-3 py-4 text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
+                @CalcResource.suggestionNoResults
+            </div>
+        }
 
         <div class="flex flex-col gap-3">
             @foreach (var state in DisplayedStates)
@@ -294,16 +317,44 @@
     [Parameter, EditorRequired] public TaskListMVVM TaskItem { get; set; } = default!;
 
     private const int PageSize = 30;
+    private const int SuggestionFetchLimit = 100;
     private bool _loading = true;
     private int _maxResults = PageSize;
-    private bool _canShowMore;
+    private bool _showSystem = true;
+    private bool _showTenant = true;
     private List<SuggestionState> _states = [];
     private string _filterText = string.Empty;
 
-    private IEnumerable<SuggestionState> DisplayedStates =>
-        string.IsNullOrWhiteSpace(_filterText)
-            ? _states
-            : _states.Where(s => FuzzySearchHelper.Score(_filterText, s.Suggestion.SourceTaskName) >= FuzzySearchHelper.Threshold);
+    private List<SuggestionState>? _filteredCache;
+    private string _lastFilterText = "\0";
+    private bool _lastShowSystem = true;
+    private bool _lastShowTenant = true;
+
+    private List<SuggestionState> FilteredStates
+    {
+        get
+        {
+            if (_filteredCache is null
+                || _lastFilterText != _filterText
+                || _lastShowSystem != _showSystem
+                || _lastShowTenant != _showTenant)
+            {
+                _filteredCache = _states
+                    .Where(SourceMatches)
+                    .Where(s =>
+                        string.IsNullOrWhiteSpace(_filterText) ||
+                        FuzzySearchHelper.Score(_filterText, s.Suggestion.SourceTaskName) >= FuzzySearchHelper.Threshold)
+                    .ToList();
+                _lastFilterText = _filterText;
+                _lastShowSystem = _showSystem;
+                _lastShowTenant = _showTenant;
+            }
+            return _filteredCache;
+        }
+    }
+
+    private IEnumerable<SuggestionState> DisplayedStates => FilteredStates.Take(_maxResults);
+    private bool _canShowMore => FilteredStates.Count > _maxResults;
 
     protected override async Task OnInitializedAsync()
     {
@@ -316,12 +367,9 @@
         StateHasChanged();
 
         var previousStates = _states.ToDictionary(x => x.Key);
-        var results = await Repo.Resource.GetSuggestionsAsync(TaskItem.Id, _maxResults + 1, includeResources: false);
-
-        _canShowMore = results.Count > _maxResults;
+        var results = await Repo.Resource.GetSuggestionsAsync(TaskItem.Id, SuggestionFetchLimit, includeResources: false);
 
         _states = results
-            .Take(_maxResults)
             .Select(s =>
             {
                 if (previousStates.TryGetValue(SuggestionState.BuildKey(s), out var existing))
@@ -333,18 +381,33 @@
             })
             .ToList();
 
+        _filteredCache = null;
         _loading = false;
 
         // Auto-expand top suggestion when confidence is high — saves the user a click
-        if (_states.Count > 0 && _states[0].Suggestion.Score >= 0.85 && !_states[0].IsExpanded)
-            await ToggleResourcesAsync(_states[0]);
+        var firstVisible = DisplayedStates.FirstOrDefault();
+        if (firstVisible is not null && firstVisible.Suggestion.Score >= 0.85 && !firstVisible.IsExpanded)
+            await ToggleResourcesAsync(firstVisible);
     }
 
     private async Task ShowMoreAsync()
     {
         _maxResults += PageSize;
-        await LoadAsync();
+        await System.Threading.Tasks.Task.CompletedTask;
     }
+
+    private void OnSourceFilterChanged(ref bool target, bool value)
+    {
+        target = value;
+        if (!_showSystem && !_showTenant)
+            target = true;
+
+        _maxResults = PageSize;
+    }
+
+    private bool SourceMatches(SuggestionState state)
+        => (_showSystem && state.Suggestion.Source == TaskResourceSuggestionSource.BlueprintTask) ||
+           (_showTenant && state.Suggestion.Source == TaskResourceSuggestionSource.TenantTask);
 
     private async Task ToggleResourcesAsync(SuggestionState state)
     {

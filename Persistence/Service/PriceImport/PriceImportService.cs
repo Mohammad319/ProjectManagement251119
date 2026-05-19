@@ -444,6 +444,7 @@ public sealed class PriceImportService(
         long fileSize,
         string? contentType,
         string? supplierName,
+        PriceImportColumnMapping? columnMapping = null,
         CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(fileStream);
@@ -477,7 +478,7 @@ public sealed class PriceImportService(
             return new PriceImportStartResultDto(
                 Guid.Empty,
                 false,
-                "Extraktionstjänsten är inte tillgänglig. Kontrollera att Python-tjänsten körs.");
+                "Extraction service is unavailable.");
         }
 
         await using var db = await dbFactory.CreateDbContextAsync(ct);
@@ -562,7 +563,7 @@ public sealed class PriceImportService(
             if (!extraction.Ok)
                 throw new InvalidOperationException(ShortError(string.Join("; ", extraction.Errors)));
 
-            var candidates = BuildCandidatesFromExtraction(extraction, job, db.TenantId);
+            var candidates = BuildCandidatesFromExtraction(extraction, job, db.TenantId, columnMapping);
             if (candidates.Count == 0)
             {
                 candidates.Add(new PriceImportCandidate
@@ -1329,12 +1330,84 @@ public sealed class PriceImportService(
     private static List<PriceImportCandidate> BuildCandidatesFromExtraction(
         PriceTextExtractionResult extraction,
         PriceImportJob job,
-        int tenantId)
+        int tenantId,
+        PriceImportColumnMapping? mapping = null)
     {
         if (extraction.Sheets.Count > 0)
-            return BuildExcelCandidates(extraction.Sheets, job, tenantId);
-
+        {
+            return mapping is not null
+                ? BuildExcelCandidatesWithMapping(extraction.Sheets, job, tenantId, mapping)
+                : BuildExcelCandidates(extraction.Sheets, job, tenantId);
+        }
         return BuildTextCandidates(extraction.Pages, job, tenantId);
+    }
+
+    private static List<PriceImportCandidate> BuildExcelCandidatesWithMapping(
+        List<ExtractedSheet> sheets,
+        PriceImportJob job,
+        int tenantId,
+        PriceImportColumnMapping mapping)
+    {
+        var candidates = new List<PriceImportCandidate>();
+        var startRow = Math.Max(0, mapping.RowStart - 1);
+
+        foreach (var sheet in sheets)
+        {
+            if (sheet.Rows.Count == 0) continue;
+
+            for (var rowIndex = startRow; rowIndex < sheet.Rows.Count; rowIndex++)
+            {
+                var row = sheet.Rows[rowIndex];
+                if (IsMostlyEmpty(row)) continue;
+
+                string? GetCol(int? colIdx) =>
+                    colIdx is > 0 && colIdx.Value - 1 < row.Count
+                        ? NormalizeOptional(row[colIdx.Value - 1])
+                        : null;
+
+                var article    = GetCol(mapping.ArticleCol);
+                var name       = GetCol(mapping.NameCol);
+                var basePrice  = TryParseDecimal(GetCol(mapping.BasePriceCol));
+                var netPrice   = TryParseDecimal(GetCol(mapping.NetPriceCol));
+                var unit       = GetCol(mapping.UnitCol);
+                var discount   = TryParseDecimal(GetCol(mapping.DiscountCol));
+                var category   = GetCol(mapping.CategoryCol);
+
+                if (string.IsNullOrWhiteSpace(name) && string.IsNullOrWhiteSpace(article)
+                    && !basePrice.HasValue && !netPrice.HasValue)
+                    continue;
+
+                if (string.IsNullOrWhiteSpace(name))
+                    name = article ?? $"Row {rowIndex + 1}";
+
+                var ready      = !string.IsNullOrWhiteSpace(name) && (basePrice.HasValue || netPrice.HasValue) && !string.IsNullOrWhiteSpace(unit);
+                var confidence = ready ? 0.9000m : 0.6500m;
+
+                candidates.Add(new PriceImportCandidate
+                {
+                    Id             = Guid.NewGuid(),
+                    TenantId       = tenantId,
+                    ImportJobId    = job.Id,
+                    ArticleNumber  = article,
+                    Name           = TruncateName(name) ?? $"Row {rowIndex + 1}",
+                    CategoryName   = category,
+                    BasePrice      = basePrice,
+                    DiscountPercent = discount,
+                    NetPrice       = netPrice,
+                    Unit           = unit,
+                    Currency       = "SEK",
+                    SupplierName   = job.SupplierName,
+                    SheetName      = sheet.SheetName,
+                    CellRange      = $"Row {rowIndex + 1}",
+                    SourceText     = string.Join(" | ", row.Where(c => !string.IsNullOrWhiteSpace(c)).Take(8)),
+                    Confidence     = confidence,
+                    Status         = ready ? PriceImportCandidateStatus.Ready : PriceImportCandidateStatus.NeedsReview,
+                    CreatedAt      = DateTime.UtcNow
+                });
+            }
+        }
+
+        return candidates;
     }
 
     private static List<PriceImportCandidate> BuildExcelCandidates(

@@ -76,12 +76,7 @@ public static class ServiceCollectionExtensions
                 options.AllowedExtensions = [".xlsx", ".xls", ".docx", ".pdf"];
         });
         services.Configure<PriceImportAiOptions>(builder.Configuration.GetSection("PriceImportAi"));
-        services.AddHttpClient<IPriceImportExtractionClient, PriceImportExtractionClient>(client =>
-        {
-            var baseUrl = builder.Configuration["PriceImportPythonApi:BaseUrl"] ?? "http://127.0.0.1:8005";
-            client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
-            client.Timeout = TimeSpan.FromMinutes(2);
-        });
+        services.AddSingleton<IPriceImportExtractionClient, ExcelPriceImportExtractionClient>();
         services.AddHttpClient<IPriceImportAiExtractionService, PriceImportAiExtractionService>(client =>
         {
             client.Timeout = TimeSpan.FromMinutes(2);

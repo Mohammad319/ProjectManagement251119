@@ -21,6 +21,7 @@ public interface IPriceImportService
         long fileSize,
         string? contentType,
         string? supplierName,
+        PriceImportColumnMapping? columnMapping = null,
         CancellationToken ct = default);
     Task<bool> UpdateCandidateStatusAsync(Guid candidateId, PriceImportCandidateStatus status, CancellationToken ct = default);
     Task<bool> UpdateCandidateAsync(PriceImportCandidateUpdateDto candidate, CancellationToken ct = default);
@@ -49,6 +50,18 @@ public sealed class PriceImportStorageOptions
     public long MaxFileSizeBytes { get; set; } = 20 * 1024 * 1024;
     public int MaxUploadSizeMb { get; set; } = 20;
     public string[] AllowedExtensions { get; set; } = [".xlsx", ".xls", ".docx", ".pdf"];
+}
+
+public sealed class PriceImportColumnMapping
+{
+    public int RowStart { get; set; } = 1;
+    public int? ArticleCol { get; set; }
+    public int? NameCol { get; set; }
+    public int? BasePriceCol { get; set; }
+    public int? NetPriceCol { get; set; }
+    public int? UnitCol { get; set; }
+    public int? DiscountCol { get; set; }
+    public int? CategoryCol { get; set; }
 }
 
 public sealed record PriceImportJobListItemDto(

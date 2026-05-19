@@ -599,10 +599,13 @@
         StateHasChanged();
 
         var leafTasks = GetLeafTasksInOrder();
+        var taskIds = leafTasks.Select(t => t.Id).ToList();
 
-        var entries = await System.Threading.Tasks.Task.WhenAll(leafTasks.Select(async task =>
+        var bulkResults = await Repo.Resource.GetBulkSuggestionsAsync(taskIds, maxResultsPerTask: 10);
+
+        _entries = leafTasks.Select(task =>
         {
-            var all = await Repo.Resource.GetSuggestionsAsync(task.Id, 10, includeResources: false);
+            var all = bulkResults.TryGetValue(task.Id, out var suggestions) ? suggestions : [];
             var filtered = all
                 .Where(s =>
                     (_showSystem && s.Source == TaskResourceSuggestionSource.BlueprintTask) ||
@@ -614,9 +617,8 @@
             if (entry.Suggestions.Count > 0)
                 entry.SelectedIndex = 0;
             return entry;
-        }));
+        }).ToList();
 
-        _entries = entries.ToList();
         _hasLoaded = true;
         _loading = false;
     }

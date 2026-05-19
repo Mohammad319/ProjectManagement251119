@@ -21,6 +21,7 @@ public sealed class TaskResourceSuggestionService(
     private const double EquivalentUnitBonus = 0.15d;
     private const double CompatibleUnitBonus = 0.10d;
     private const double IncompatibleUnitPenalty = 0.04d;
+    private const double ParentContextBonus = 0.04d;
 
     public async Task<IReadOnlyList<TaskResourceSuggestionDTO>> GetSuggestionsAsync(
         int taskId,
@@ -34,7 +35,7 @@ public sealed class TaskResourceSuggestionService(
 
         var target = await tenantDb.Tasks
             .AsNoTracking()
-            .Where(x => x.Id == taskId)
+            .Where(x => x.Id == taskId && x.TenantId == tenantDb.TenantId)
             .FirstOrDefaultAsync(cancellationToken);
 
         if (target is null)
@@ -49,11 +50,12 @@ public sealed class TaskResourceSuggestionService(
 
         var tenantId = tenantDb.TenantId;
         var feedbackBySuggestion = await GetFeedbackMapAsync(tenantId, target.Id, cancellationToken);
+        var feedbackStatsBySuggestion = await GetFeedbackStatsMapAsync(tenantId, cancellationToken);
 
         var tenantTask = GetTenantTaskSuggestionsAsync(
             tenantDb,
             target.Id,
-            targetSuggestionContext.Name,
+            targetSuggestionContext.ContextualName,
             targetNormalized,
             targetSuggestionContext.Unit,
             targetSuggestionContext.Code,
@@ -62,11 +64,12 @@ public sealed class TaskResourceSuggestionService(
             maxResults,
             includeResources,
             mlRanker,
+            tenantId,
             cancellationToken);
 
         var blueprintTask = GetBlueprintSuggestionsAsync(
             tenantId,
-            targetSuggestionContext.Name,
+            targetSuggestionContext.ContextualName,
             targetNormalized,
             targetSuggestionContext.Unit,
             targetSuggestionContext.Code,
@@ -81,7 +84,7 @@ public sealed class TaskResourceSuggestionService(
 
         return (await tenantTask)
             .Concat(await blueprintTask)
-            .Select(x => ApplyFeedbackAdjustment(x, feedbackBySuggestion))
+            .Select(x => ApplyFeedbackAdjustment(x, feedbackBySuggestion, feedbackStatsBySuggestion))
             .Where(x => !includeResources || x.Resources.Count > 0)
             .Where(x => x.Score >= MinimumScore)
             .OrderByDescending(x => x.Score)
@@ -158,6 +161,8 @@ public sealed class TaskResourceSuggestionService(
         existing.SourceTaskQuantity = feedback.SourceTaskQuantity;
         existing.Score = feedback.Score;
         existing.Feedback = feedback.Feedback;
+        existing.ReviewStatus = TaskResourceSuggestionFeedbackReviewStatus.Pending;
+        existing.ReviewedAtUtc = null;
         existing.Reason = string.IsNullOrWhiteSpace(feedback.Reason) ? null : Limit(feedback.Reason, 512);
         existing.UpdatedAtUtc = DateTime.UtcNow;
 
@@ -177,11 +182,12 @@ public sealed class TaskResourceSuggestionService(
         int maxResults,
         bool includeResources,
         ITaskResourceSuggestionMlRanker mlRanker,
+        int tenantId,
         CancellationToken ct)
     {
         var baseQuery = db.Tasks
             .AsNoTracking()
-            .Where(x => x.Id != targetTaskId && x.Resources.Any());
+            .Where(x => x.TenantId == db.TenantId && x.Id != targetTaskId && x.Resources.Any());
 
         var priorityQuery = ApplyTenantPriorityFilter(baseQuery, targetName, targetCode, targetUnit, targetNormalized)
             .OrderByDescending(x => x.Id)
@@ -221,7 +227,7 @@ public sealed class TaskResourceSuggestionService(
                     targetQuantity,
                     candidateContext.Quantity,
                     targetName,
-                    candidateContext.Name,
+                    candidateContext.ContextualName,
                     targetCodeDepth,
                     candidateCodeDepth: candidateContext.CodeDepth)
                     with
@@ -229,7 +235,8 @@ public sealed class TaskResourceSuggestionService(
                         ContextReason = BuildContextReason(targetCode, targetCodeDepth, candidateContext.Code, candidateContext.CodeDepth)
                     },
                     TaskResourceSuggestionSource.TenantTask,
-                    mlRanker);
+                    mlRanker,
+                    tenantId);
 
                 return new TaskResourceSuggestionDTO
                 {
@@ -307,7 +314,7 @@ public sealed class TaskResourceSuggestionService(
                     targetQuantity,
                     candidateContext.Quantity,
                     targetName,
-                    candidateContext.Name,
+                    candidateContext.ContextualName,
                     targetCodeDepth,
                     candidateCodeDepth: candidateContext.CodeDepth)
                     with
@@ -315,7 +322,8 @@ public sealed class TaskResourceSuggestionService(
                         ContextReason = BuildContextReason(targetCode, targetCodeDepth, candidateContext.Code, candidateContext.CodeDepth)
                     },
                     TaskResourceSuggestionSource.BlueprintTask,
-                    mlRanker);
+                    mlRanker,
+                    tenantId);
 
                 return new TaskResourceSuggestionDTO
                 {
@@ -481,10 +489,12 @@ public sealed class TaskResourceSuggestionService(
         // Unit is excluded from semantic text so compatible units don't penalize Jaccard.
         // Unit scoring is handled separately in ExplainCandidateScore.
         var normalizedText = SwedishTaskTextNormalizer.Normalize(string.Join(' ', rawTextParts));
+        var contextualName = BuildContextualName(ancestors.Select(x => x.Name), task.Name);
 
         return new TenantTaskSuggestionContext(
             task.Id,
             task.Name,
+            contextualName,
             normalizedText,
             task.Unit,
             effectiveCode,
@@ -501,9 +511,13 @@ public sealed class TaskResourceSuggestionService(
         var normalizedText = string.IsNullOrWhiteSpace(task.NormalizedTextSv)
             ? SwedishTaskTextNormalizer.NormalizeTask(task.Name, effectiveCode, null)
             : task.NormalizedTextSv;
+        var contextualName = BuildContextualName(
+            SplitHierarchyNames(task.HierarchyPath, task.Name),
+            task.Name);
 
         return new BlueprintTaskSuggestionContext(
             task.Name,
+            contextualName,
             normalizedText,
             task.UnitCode,
             effectiveCode,
@@ -589,7 +603,7 @@ public sealed class TaskResourceSuggestionService(
 
         var task = await db.Tasks
             .AsNoTracking()
-            .Where(x => x.Id == sourceTaskId)
+            .Where(x => x.Id == sourceTaskId && x.TenantId == db.TenantId)
             .Include(x => x.Resources)
             .FirstOrDefaultAsync(ct);
 
@@ -671,10 +685,14 @@ public sealed class TaskResourceSuggestionService(
 
     private static TaskResourceSuggestionDTO ApplyFeedbackAdjustment(
         TaskResourceSuggestionDTO suggestion,
-        IReadOnlyDictionary<string, TaskResourceSuggestionFeedback> feedbackBySuggestion)
+        IReadOnlyDictionary<string, TaskResourceSuggestionFeedback> feedbackBySuggestion,
+        IReadOnlyDictionary<string, FeedbackStats> feedbackStatsBySuggestion)
     {
         if (!feedbackBySuggestion.TryGetValue(FeedbackKey(suggestion.Source, suggestion.SourceTaskId), out var feedback))
+        {
+            ApplyGlobalFeedbackAdjustment(suggestion, feedbackStatsBySuggestion);
             return suggestion;
+        }
 
         suggestion.Feedback = feedback.Feedback;
         suggestion.Score = feedback.Feedback switch
@@ -690,8 +708,64 @@ public sealed class TaskResourceSuggestionService(
         return suggestion;
     }
 
+    private static void ApplyGlobalFeedbackAdjustment(
+        TaskResourceSuggestionDTO suggestion,
+        IReadOnlyDictionary<string, FeedbackStats> feedbackStatsBySuggestion)
+    {
+        if (!feedbackStatsBySuggestion.TryGetValue(FeedbackKey(suggestion.Source, suggestion.SourceTaskId), out var stats) ||
+            stats.Total == 0)
+            return;
+
+        var positiveLift = Math.Min(0.06d, stats.Accepted * 0.015d);
+        var negativePressure =
+            Math.Min(0.18d,
+                (stats.Rejected * 0.05d) +
+                (stats.WrongUnit * 0.035d) +
+                (stats.WrongResourceType * 0.035d) +
+                (stats.MissingResources * 0.015d));
+
+        var adjustment = positiveLift - negativePressure;
+        if (Math.Abs(adjustment) < 0.005d)
+            return;
+
+        suggestion.Score = Math.Round(Math.Clamp(suggestion.Score + adjustment, 0d, 1d), 4);
+        suggestion.Reason = $"{suggestion.Reason} Global feedback {FormatSignedPercent(adjustment)}.";
+    }
+
     private static string FeedbackKey(TaskResourceSuggestionSource source, int sourceTaskId)
         => $"{source}:{sourceTaskId}";
+
+    private async Task<Dictionary<string, FeedbackStats>> GetFeedbackStatsMapAsync(
+        int tenantId,
+        CancellationToken ct)
+    {
+        await using var db = await blueprintFactory.CreateDbContextAsync(ct);
+        var rows = await db.TaskResourceSuggestionFeedbacks
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId &&
+                        x.ReviewStatus == TaskResourceSuggestionFeedbackReviewStatus.Approved)
+            .GroupBy(x => new { x.Source, x.SourceTaskId })
+            .Select(x => new
+            {
+                x.Key.Source,
+                x.Key.SourceTaskId,
+                Accepted = x.Count(f => f.Feedback == TaskResourceSuggestionFeedbackKind.Accepted),
+                Rejected = x.Count(f => f.Feedback == TaskResourceSuggestionFeedbackKind.Rejected),
+                WrongUnit = x.Count(f => f.Feedback == TaskResourceSuggestionFeedbackKind.WrongUnit),
+                WrongResourceType = x.Count(f => f.Feedback == TaskResourceSuggestionFeedbackKind.WrongResourceType),
+                MissingResources = x.Count(f => f.Feedback == TaskResourceSuggestionFeedbackKind.MissingResources)
+            })
+            .ToListAsync(ct);
+
+        return rows.ToDictionary(
+            x => FeedbackKey(x.Source, x.SourceTaskId),
+            x => new FeedbackStats(
+                x.Accepted,
+                x.Rejected,
+                x.WrongUnit,
+                x.WrongResourceType,
+                x.MissingResources));
+    }
 
     private static double ScoreCandidate(
         string targetNormalized,
@@ -738,7 +812,8 @@ public sealed class TaskResourceSuggestionService(
             candidateQuantity,
             targetName,
             candidateName,
-            codeInheritanceFactor: 1d);
+            codeInheritanceFactor: 1d,
+            hasInheritedContext: false);
 
     private static CandidateScoreBreakdown ExplainCandidateScoreWithCodeContext(
         string targetNormalized,
@@ -764,7 +839,8 @@ public sealed class TaskResourceSuggestionService(
             candidateQuantity,
             targetName,
             candidateName,
-            GetCodeInheritanceFactor(targetCodeDepth, candidateCodeDepth));
+            GetCodeInheritanceFactor(targetCodeDepth, candidateCodeDepth),
+            targetCodeDepth > 0 || candidateCodeDepth > 0);
 
     private static CandidateScoreBreakdown ExplainCandidateScoreCore(
         string targetNormalized,
@@ -777,11 +853,17 @@ public sealed class TaskResourceSuggestionService(
         decimal? candidateQuantity,
         string? targetName,
         string? candidateName,
-        double codeInheritanceFactor)
+        double codeInheritanceFactor,
+        bool hasInheritedContext)
     {
         var textScore = SwedishTaskTextNormalizer.CalculateSimilarity(targetNormalized, candidateNormalized);
         var nameScore = GetNameSimilarity(targetName, candidateName);
-        var semanticScore = Math.Max(textScore, (textScore * 0.55d) + (nameScore * 0.45d));
+        var tokenCoverage = SwedishTaskTextNormalizer.CalculateTokenCoverage(targetNormalized, candidateNormalized);
+        var reverseTokenCoverage = SwedishTaskTextNormalizer.CalculateTokenCoverage(candidateNormalized, targetNormalized);
+        var hybridTokenScore = (tokenCoverage * 0.75d) + (reverseTokenCoverage * 0.25d);
+        var semanticScore = Math.Max(
+            textScore,
+            (textScore * 0.45d) + (nameScore * 0.25d) + (hybridTokenScore * 0.30d));
         var score = semanticScore;
         var quantitySimilarity = GetQuantitySimilarity(
             targetQuantity,
@@ -809,6 +891,15 @@ public sealed class TaskResourceSuggestionService(
         var codeBonus = SwedishTaskTextNormalizer.GetCodeHierarchyScore(targetCode, candidateCode) * codeInheritanceFactor;
         score = Math.Min(1d, score + codeBonus);
 
+        var parentContextBonus = 0d;
+        if (hasInheritedContext &&
+            codeBonus > 0d &&
+            hybridTokenScore >= 0.25d)
+        {
+            parentContextBonus = ParentContextBonus * codeInheritanceFactor;
+            score = Math.Min(1d, score + parentContextBonus);
+        }
+
         if (quantitySimilarity is >= 0.995d && (hasEquivalentUnits || hasCompatibleUnits))
         {
             if (nameScore >= 0.995d)
@@ -829,9 +920,12 @@ public sealed class TaskResourceSuggestionService(
             Score: Math.Round(score, 4),
             TextScore: Math.Round(textScore, 4),
             NameScore: Math.Round(nameScore, 4),
+            TokenCoverage: Math.Round(tokenCoverage, 4),
+            HybridTokenScore: Math.Round(hybridTokenScore, 4),
             QuantitySimilarity: quantitySimilarity.HasValue ? Math.Round(quantitySimilarity.Value, 4) : null,
             UnitBonus: unitBonus,
             CodeBonus: codeBonus,
+            ParentContextBonus: Math.Round(parentContextBonus, 4),
             HasEquivalentUnits: hasEquivalentUnits,
             HasCompatibleUnits: hasCompatibleUnits);
     }
@@ -864,13 +958,52 @@ public sealed class TaskResourceSuggestionService(
         return parts.Count == 0 ? null : string.Join("; ", parts);
     }
 
+    private static string BuildContextualName(IEnumerable<string?> parentNames, string taskName)
+    {
+        var names = parentNames
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => x!.Trim())
+            .Where(x => !string.Equals(x, taskName, StringComparison.OrdinalIgnoreCase))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        names.Add(taskName.Trim());
+        return string.Join(' ', names);
+    }
+
+    private static IEnumerable<string?> SplitHierarchyNames(string? hierarchyPath, string taskName)
+    {
+        if (string.IsNullOrWhiteSpace(hierarchyPath))
+        {
+            if (!string.IsNullOrWhiteSpace(taskName))
+                yield return taskName;
+            yield break;
+        }
+
+        foreach (var part in hierarchyPath.Split('>', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            var trimmed = part.Trim();
+            if (string.IsNullOrWhiteSpace(trimmed))
+                continue;
+
+            var nameOnly = trimmed;
+            var firstSpace = trimmed.IndexOf(' ');
+            if (firstSpace > 0 && trimmed[..firstSpace].Any(char.IsLetterOrDigit))
+                nameOnly = trimmed[(firstSpace + 1)..].Trim();
+
+            if (!string.IsNullOrWhiteSpace(nameOnly))
+                yield return nameOnly;
+        }
+    }
+
     private static string FormatInheritedCodeDepth(int depth)
         => depth <= 1 ? "parent" : "ancestor";
 
     private static CandidateScoreBreakdown ApplyMlScore(
         CandidateScoreBreakdown score,
         TaskResourceSuggestionSource source,
-        ITaskResourceSuggestionMlRanker mlRanker)
+        ITaskResourceSuggestionMlRanker mlRanker,
+        int tenantId)
     {
         var mlScore = mlRanker.PredictScore(new TaskResourceSuggestionMlFeatures(
             HeuristicScore: score.Score,
@@ -882,7 +1015,8 @@ public sealed class TaskResourceSuggestionService(
             CodeBonus: score.CodeBonus,
             HasEquivalentUnits: score.HasEquivalentUnits,
             HasCompatibleUnits: score.HasCompatibleUnits,
-            IsBlueprintSource: source == TaskResourceSuggestionSource.BlueprintTask));
+            IsBlueprintSource: source == TaskResourceSuggestionSource.BlueprintTask),
+            tenantId);
 
         if (!mlScore.HasValue)
             return score;
@@ -959,6 +1093,12 @@ public sealed class TaskResourceSuggestionService(
         if (score.CodeBonus > 0)
             parts.Add($"code +{FormatPercent(score.CodeBonus)}");
 
+        if (score.HybridTokenScore >= 0.40d)
+            parts.Add($"keyword coverage {FormatPercent(score.TokenCoverage)}");
+
+        if (score.ParentContextBonus > 0)
+            parts.Add($"parent context +{FormatPercent(score.ParentContextBonus)}");
+
         if (score.HasEquivalentUnits)
             parts.Add("same unit");
         else if (score.HasCompatibleUnits)
@@ -968,16 +1108,26 @@ public sealed class TaskResourceSuggestionService(
             parts.Add($"quantity {FormatPercent(score.QuantitySimilarity.Value)}");
 
         if (score.MlScore.HasValue)
-            parts.Add($"ML {FormatPercent(score.MlScore.Value)}");
+        {
+            var mlSource = source == TaskResourceSuggestionSource.TenantTask
+                ? "tenant ML"
+                : "blueprint/global ML";
+            parts.Add($"{mlSource} {FormatPercent(score.MlScore.Value)}");
+        }
 
         if (!string.IsNullOrWhiteSpace(score.ContextReason))
-            parts.Add(score.ContextReason);
+            parts.Add($"parent/code context: {score.ContextReason}");
 
         return $"{strength} from {sourceText}: {string.Join(", ", parts)}.";
     }
 
     private static string FormatPercent(double value)
         => value.ToString("0%", System.Globalization.CultureInfo.InvariantCulture);
+
+    private static string FormatSignedPercent(double value)
+        => value >= 0
+            ? $"+{FormatPercent(value)}"
+            : FormatPercent(value);
 
     private static string Limit(string value, int maxLength)
         => value.Length <= maxLength ? value : value[..maxLength].Trim();
@@ -986,15 +1136,28 @@ public sealed class TaskResourceSuggestionService(
         double Score,
         double TextScore,
         double NameScore,
+        double TokenCoverage,
+        double HybridTokenScore,
         double? QuantitySimilarity,
         double UnitBonus,
         double CodeBonus,
+        double ParentContextBonus,
         bool HasEquivalentUnits,
         bool HasCompatibleUnits)
     {
         public double? MlScore { get; init; }
         public double MlBlendWeight { get; init; }
         public string? ContextReason { get; init; }
+    }
+
+    private sealed record FeedbackStats(
+        int Accepted,
+        int Rejected,
+        int WrongUnit,
+        int WrongResourceType,
+        int MissingResources)
+    {
+        public int Total => Accepted + Rejected + WrongUnit + WrongResourceType + MissingResources;
     }
 
     private sealed record TenantTaskAncestorContext(
@@ -1006,6 +1169,7 @@ public sealed class TaskResourceSuggestionService(
     private sealed record TenantTaskSuggestionContext(
         int Id,
         string Name,
+        string ContextualName,
         string NormalizedText,
         string? Unit,
         string? Code,
@@ -1014,6 +1178,7 @@ public sealed class TaskResourceSuggestionService(
 
     private sealed record BlueprintTaskSuggestionContext(
         string Name,
+        string ContextualName,
         string NormalizedText,
         string? Unit,
         string? Code,
@@ -1037,6 +1202,28 @@ public sealed class TaskResourceSuggestionService(
             SortOrder = resource.SortOrder,
             Data = resource.GetMetadataSnapshot()
         };
+    }
+
+    public async Task<IReadOnlyDictionary<int, IReadOnlyList<TaskResourceSuggestionDTO>>> GetBulkSuggestionsAsync(
+        IReadOnlyList<int> taskIds,
+        int maxResultsPerTask,
+        CancellationToken cancellationToken = default)
+    {
+        maxResultsPerTask = Math.Clamp(maxResultsPerTask, 1, 20);
+
+        var sem = new SemaphoreSlim(4);
+        var pairs = await System.Threading.Tasks.Task.WhenAll(taskIds.Select(async taskId =>
+        {
+            await sem.WaitAsync(cancellationToken);
+            try
+            {
+                var suggestions = await GetSuggestionsAsync(taskId, maxResultsPerTask, includeResources: false, cancellationToken);
+                return (taskId, suggestions);
+            }
+            finally { sem.Release(); }
+        }));
+
+        return pairs.ToDictionary(p => p.taskId, p => p.suggestions);
     }
 
 }

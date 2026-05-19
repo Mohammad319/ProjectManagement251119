@@ -53,3 +53,17 @@ public sealed class RecordTaskResourceSuggestionFeedbackCommandHandler(ITaskReso
         return service.RecordFeedbackAsync(request.Feedback, cancellationToken);
     }
 }
+
+public sealed record GetBulkTaskResourceSuggestionsQuery(
+    IReadOnlyList<int> TaskIds,
+    int MaxResultsPerTask = 10)
+    : IRequest<IReadOnlyDictionary<int, IReadOnlyList<TaskResourceSuggestionDTO>>>;
+
+public sealed class GetBulkTaskResourceSuggestionsQueryHandler(ITaskResourceSuggestionService service)
+    : IRequestHandler<GetBulkTaskResourceSuggestionsQuery, IReadOnlyDictionary<int, IReadOnlyList<TaskResourceSuggestionDTO>>>
+{
+    public Task<IReadOnlyDictionary<int, IReadOnlyList<TaskResourceSuggestionDTO>>> Handle(
+        GetBulkTaskResourceSuggestionsQuery request,
+        CancellationToken cancellationToken)
+        => service.GetBulkSuggestionsAsync(request.TaskIds, request.MaxResultsPerTask, cancellationToken);
+}

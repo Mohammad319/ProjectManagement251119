@@ -15,6 +15,13 @@ public enum TaskResourceSuggestionFeedbackKind
     WrongResourceType = 5
 }
 
+public enum TaskResourceSuggestionFeedbackReviewStatus
+{
+    Pending = 1,
+    Approved = 2,
+    Ignored = 3
+}
+
 public sealed class TaskResourceSuggestionDTO
 {
     public int SourceTaskId { get; set; }

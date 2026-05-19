@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TaskResourceBlueprints.Infrastructure;
 
@@ -11,9 +12,11 @@ using TaskResourceBlueprints.Infrastructure;
 namespace TaskResourceBlueprints.Migrations
 {
     [DbContext(typeof(TaskResourceBlueprintsContext))]
-    partial class TaskResourceBlueprintsContextModelSnapshot : ModelSnapshot
+    [Migration("20260518162511_DB260201_2")]
+    partial class DB260201_2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -426,13 +429,6 @@ namespace TaskResourceBlueprints.Migrations
                         .HasMaxLength(512)
                         .HasColumnType("nvarchar(512)");
 
-                    b.Property<int>("ReviewStatus")
-                        .HasDefaultValue(1)
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("ReviewedAtUtc")
-                        .HasColumnType("datetime2");
-
                     b.Property<double>("Score")
                         .HasColumnType("float");
 
@@ -484,8 +480,6 @@ namespace TaskResourceBlueprints.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Source", "SourceTaskId", "Feedback");
-
-                    b.HasIndex("TenantId", "ReviewStatus", "UpdatedAtUtc");
 
                     b.HasIndex("TenantId", "TargetTaskId", "Source", "SourceTaskId")
                         .IsUnique();

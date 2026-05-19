@@ -208,6 +208,9 @@ public static partial class SwedishTaskTextNormalizer
         ["parkeringsplats"]   = "parkering",
     };
 
+    private static readonly Lazy<IReadOnlyDictionary<string, string>> ExternalSynonymMap =
+        new(LoadExternalSynonymMap, isThreadSafe: true);
+
     private static readonly HashSet<string> StopWords = new(StringComparer.OrdinalIgnoreCase)
     {
         // Swedish function words
@@ -543,7 +546,7 @@ public static partial class SwedishTaskTextNormalizer
 
             // Semantic synonym expansion: adds canonical Swedish equivalent.
             // Applied on BOTH query and target so "regnvatten" ↔ "dagvatten" meet.
-            if (SynonymMap.TryGetValue(token, out var synonym))
+            if (TryGetSynonym(token, out var synonym))
             {
                 foreach (var st in synonym.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
                 {
@@ -607,6 +610,100 @@ public static partial class SwedishTaskTextNormalizer
         };
 
         return Normalize(string.Join(' ', parts.Where(x => !string.IsNullOrWhiteSpace(x))));
+    }
+
+    public static IReadOnlyCollection<string> ExtractNormalizedTokens(string? normalizedText)
+    {
+        if (string.IsNullOrWhiteSpace(normalizedText))
+            return [];
+
+        return normalizedText
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(x => x.Length > 1 && !x.Contains('_'))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    public static double CalculateTokenCoverage(string? leftNormalizedText, string? rightNormalizedText)
+    {
+        if (string.IsNullOrWhiteSpace(leftNormalizedText) || string.IsNullOrWhiteSpace(rightNormalizedText))
+            return 0d;
+
+        var leftWeights = TokenizeWeighted(leftNormalizedText)
+            .Where(x => x.Key.Length > 1 && !x.Key.Contains('_'))
+            .ToDictionary(x => x.Key, x => x.Value, StringComparer.OrdinalIgnoreCase);
+        var rightWeights = TokenizeWeighted(rightNormalizedText)
+            .Where(x => x.Key.Length > 1 && !x.Key.Contains('_'))
+            .ToDictionary(x => x.Key, x => x.Value, StringComparer.OrdinalIgnoreCase);
+
+        if (leftWeights.Count == 0 || rightWeights.Count == 0)
+            return 0d;
+
+        var denominator = leftWeights.Values.Sum();
+        if (denominator <= 0d)
+            return 0d;
+
+        var covered = leftWeights
+            .Where(x => rightWeights.ContainsKey(x.Key))
+            .Sum(x => x.Value);
+
+        return Math.Round(Math.Clamp(covered / denominator, 0d, 1d), 4);
+    }
+
+    private static bool TryGetSynonym(string token, out string synonym)
+    {
+        if (SynonymMap.TryGetValue(token, out synonym!))
+            return true;
+
+        return ExternalSynonymMap.Value.TryGetValue(token, out synonym!);
+    }
+
+    private static IReadOnlyDictionary<string, string> LoadExternalSynonymMap()
+    {
+        var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        try
+        {
+            var path = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+                "ProjectManagement",
+                "ML",
+                "task-synonyms.csv");
+
+            if (!File.Exists(path))
+                return map;
+
+            foreach (var line in File.ReadLines(path))
+            {
+                var trimmed = line.Trim();
+                if (string.IsNullOrWhiteSpace(trimmed) || trimmed.StartsWith('#'))
+                    continue;
+
+                var separator = trimmed.Contains(';') ? ';' : ',';
+                var parts = trimmed.Split(separator, 2, StringSplitOptions.TrimEntries);
+                if (parts.Length != 2)
+                    continue;
+
+                var source = NormalizeExternalSynonymPart(parts[0]);
+                var target = NormalizeExternalSynonymPart(parts[1]);
+                if (!string.IsNullOrWhiteSpace(source) && !string.IsNullOrWhiteSpace(target))
+                    map[source] = target;
+            }
+        }
+        catch
+        {
+            return map;
+        }
+
+        return map;
+    }
+
+    private static string NormalizeExternalSynonymPart(string value)
+    {
+        var text = value.Trim().ToLowerInvariant();
+        text = NonSearchCharactersRegex().Replace(text.Replace("/", " ").Replace("-", " "), " ");
+        text = WhitespaceRegex().Replace(text, " ").Trim();
+        return text;
     }
 
     public static double CalculateSimilarity(string? leftNormalizedText, string? rightNormalizedText)

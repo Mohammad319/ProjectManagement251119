@@ -14,6 +14,7 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation
         Task<bool> ReOrderAsync(int Id, int newOrder);
         Task<bool> CreateAsync(List<ResourcePostDTO> models, int taskId);
         Task<List<TaskResourceSuggestionDTO>> GetSuggestionsAsync(int taskId, int maxResults = 5, bool includeResources = true);
+        Task<Dictionary<int, List<TaskResourceSuggestionDTO>>> GetBulkSuggestionsAsync(IEnumerable<int> taskIds, int maxResultsPerTask = 10);
         Task<List<ResourcePostDTO>> GetSuggestionResourcesAsync(int sourceTaskId, TaskResourceSuggestionSource source);
         Task<bool> RecordSuggestionFeedbackAsync(TaskResourceSuggestionFeedbackDTO feedback);
         Task<List<ResourceListMVVM>> GetByFilterAsync(FilterCalculationItemsDto offer);

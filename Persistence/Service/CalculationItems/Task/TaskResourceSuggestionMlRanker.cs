@@ -2,45 +2,92 @@ using Application.Feature.Calculation.Task;
 using Microsoft.ML;
 using Microsoft.ML.Data;
 using ProjectManagement.Shared.Helper.ML;
+using System.Collections.Concurrent;
 
 namespace Persistence.Service.CalculationItems.Task;
 
 public sealed class TaskResourceSuggestionMlRanker : ITaskResourceSuggestionMlRanker
 {
     private readonly Lazy<PredictionEngine<ModelInput, ModelOutput>?> predictionEngine;
+    private readonly ConcurrentDictionary<int, TenantPredictionEngineCacheEntry> tenantPredictionEngines = new();
+    private readonly object predictionLock = new();
 
     public TaskResourceSuggestionMlRanker()
     {
-        predictionEngine = new Lazy<PredictionEngine<ModelInput, ModelOutput>?>(CreatePredictionEngine);
+        predictionEngine = new Lazy<PredictionEngine<ModelInput, ModelOutput>?>(() => CreatePredictionEngine(TaskResourceSuggestionMlModelPath.GetDefaultModelPath(), allowBootstrap: true));
     }
 
     public bool IsEnabled => predictionEngine.Value is not null;
 
-    public double? PredictScore(TaskResourceSuggestionMlFeatures features)
+    public double? PredictScore(TaskResourceSuggestionMlFeatures features, int? tenantId = null)
     {
-        var engine = predictionEngine.Value;
+        var engine = GetPredictionEngine(tenantId);
         if (engine is null)
             return null;
 
-        var prediction = engine.Predict(ModelInput.FromFeatures(features)).Score;
+        float prediction;
+        lock (predictionLock)
+        {
+            prediction = engine.Predict(ModelInput.FromFeatures(features)).Score;
+        }
+
         if (float.IsNaN(prediction) || float.IsInfinity(prediction))
             return null;
 
         return Math.Clamp(prediction, 0f, 1f);
     }
 
-    private static PredictionEngine<ModelInput, ModelOutput>? CreatePredictionEngine()
+    private PredictionEngine<ModelInput, ModelOutput>? GetPredictionEngine(int? tenantId)
+    {
+        if (tenantId is > 0)
+        {
+            var usageMode = TenantMlModelConfigStore.ReadUsageMode(tenantId.Value);
+            if (usageMode == TenantMlUsageMode.GlobalOnly)
+                return predictionEngine.Value;
+
+            var tenantModelPath = TaskResourceSuggestionMlModelPath.GetTenantModelPath(tenantId.Value);
+            if (!File.Exists(tenantModelPath))
+            {
+                tenantPredictionEngines.TryRemove(tenantId.Value, out _);
+                return usageMode == TenantMlUsageMode.TenantOnly
+                    ? null
+                    : predictionEngine.Value;
+            }
+
+            var lastWriteUtc = File.GetLastWriteTimeUtc(tenantModelPath);
+            var tenantEntry = tenantPredictionEngines.AddOrUpdate(
+                tenantId.Value,
+                _ => CreateTenantCacheEntry(tenantModelPath, lastWriteUtc),
+                (_, existing) => existing.LastWriteUtc == lastWriteUtc
+                    ? existing
+                    : CreateTenantCacheEntry(tenantModelPath, lastWriteUtc));
+
+            var tenantEngine = tenantEntry.Engine.Value;
+
+            if (tenantEngine is not null)
+                return tenantEngine;
+
+            if (usageMode == TenantMlUsageMode.TenantOnly)
+                return null;
+        }
+
+        return predictionEngine.Value;
+    }
+
+    private static PredictionEngine<ModelInput, ModelOutput>? CreatePredictionEngine(string modelPath, bool allowBootstrap)
     {
         try
         {
             var ml = new MLContext(seed: 251119);
-            var modelPath = TaskResourceSuggestionMlModelPath.GetDefaultModelPath();
             if (File.Exists(modelPath))
             {
                 using var stream = File.OpenRead(modelPath);
                 var savedModel = ml.Model.Load(stream, out _);
                 return ml.Model.CreatePredictionEngine<ModelInput, ModelOutput>(savedModel);
             }
+
+            if (!allowBootstrap)
+                return null;
 
             var data = ml.Data.LoadFromEnumerable(BuildBootstrapTrainingData());
             var pipeline = ml.Transforms.Concatenate(
@@ -67,6 +114,11 @@ public sealed class TaskResourceSuggestionMlRanker : ITaskResourceSuggestionMlRa
             return null;
         }
     }
+
+    private static TenantPredictionEngineCacheEntry CreateTenantCacheEntry(string modelPath, DateTime lastWriteUtc)
+        => new(
+            lastWriteUtc,
+            new Lazy<PredictionEngine<ModelInput, ModelOutput>?>(() => CreatePredictionEngine(modelPath, allowBootstrap: false)));
 
     private static IEnumerable<ModelInput> BuildBootstrapTrainingData()
     {
@@ -144,4 +196,8 @@ public sealed class TaskResourceSuggestionMlRanker : ITaskResourceSuggestionMlRa
         [ColumnName("Score")]
         public float Score { get; set; }
     }
+
+    private sealed record TenantPredictionEngineCacheEntry(
+        DateTime LastWriteUtc,
+        Lazy<PredictionEngine<ModelInput, ModelOutput>?> Engine);
 }

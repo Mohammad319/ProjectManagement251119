@@ -18,7 +18,9 @@ public class TaskResourceSuggestionFeedback
     public TaskResourceSuggestionSource Source { get; set; }
     public double Score { get; set; }
     public TaskResourceSuggestionFeedbackKind Feedback { get; set; }
+    public TaskResourceSuggestionFeedbackReviewStatus ReviewStatus { get; set; } = TaskResourceSuggestionFeedbackReviewStatus.Pending;
     public string? Reason { get; set; }
+    public DateTime? ReviewedAtUtc { get; set; }
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
 }

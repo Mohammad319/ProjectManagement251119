@@ -40,6 +40,21 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
                 ResourceURLBase + $"suggestions/{taskId}?maxResults={maxResults}&includeResources={includeResources}");
         }
 
+        public async Task<Dictionary<int, List<TaskResourceSuggestionDTO>>> GetBulkSuggestionsAsync(
+            IEnumerable<int> taskIds,
+            int maxResultsPerTask = 10)
+        {
+            var ids = taskIds.ToList();
+            if (ids.Count == 0)
+                return [];
+
+            var result = await _httpRepository.PostAsync<
+                Dictionary<int, List<TaskResourceSuggestionDTO>>,
+                List<int>>(ids, ResourceURLBase + $"suggestions/bulk?maxResultsPerTask={maxResultsPerTask}");
+
+            return result ?? [];
+        }
+
         public async Task<List<ResourcePostDTO>> GetSuggestionResourcesAsync(
             int sourceTaskId,
             TaskResourceSuggestionSource source)

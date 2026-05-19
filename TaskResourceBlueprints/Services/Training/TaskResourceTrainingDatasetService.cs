@@ -118,7 +118,7 @@ public sealed class TaskResourceTrainingDatasetService(IDbContextFactory<TaskRes
             resource.Quantity);
         var normalizedResourceName = SwedishTaskTextNormalizer.Normalize(resource.Name);
         var nameSimilarity = SwedishTaskTextNormalizer.CalculateSimilarity(
-            SwedishTaskTextNormalizer.Normalize(task.Name),
+            SwedishTaskTextNormalizer.Normalize(GetContextualTaskName(task)),
             normalizedResourceName);
         var textSimilarity = SwedishTaskTextNormalizer.CalculateSimilarity(normalizedTask, normalizedResource);
         var quantitySimilarity = CalculateQuantitySimilarity(task.Quantity, resource.Quantity);
@@ -179,6 +179,7 @@ public sealed class TaskResourceTrainingDatasetService(IDbContextFactory<TaskRes
             .AsNoTracking()
             .Where(x =>
                 x.Source == TaskResourceSuggestionSource.BlueprintTask &&
+                x.ReviewStatus == TaskResourceSuggestionFeedbackReviewStatus.Approved &&
                 (x.Feedback == TaskResourceSuggestionFeedbackKind.Accepted ||
                  x.Feedback == TaskResourceSuggestionFeedbackKind.Rejected ||
                  x.Feedback == TaskResourceSuggestionFeedbackKind.WrongUnit ||
@@ -235,6 +236,33 @@ public sealed class TaskResourceTrainingDatasetService(IDbContextFactory<TaskRes
         };
         task.RefreshNormalizedTextSv();
         return task;
+    }
+
+    private static string GetContextualTaskName(TaskDefinition task)
+    {
+        if (string.IsNullOrWhiteSpace(task.HierarchyPath))
+            return task.Name;
+
+        var names = task.HierarchyPath
+            .Split('>', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(ExtractNameFromHierarchyPart)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (names.Count == 0 || !names.Any(x => string.Equals(x, task.Name, StringComparison.OrdinalIgnoreCase)))
+            names.Add(task.Name);
+
+        return string.Join(' ', names);
+    }
+
+    private static string ExtractNameFromHierarchyPart(string part)
+    {
+        var trimmed = part.Trim();
+        var firstSpace = trimmed.IndexOf(' ');
+        return firstSpace > 0 && trimmed[..firstSpace].Any(char.IsLetterOrDigit)
+            ? trimmed[(firstSpace + 1)..].Trim()
+            : trimmed;
     }
 
     private static double CalculateQuantitySimilarity(decimal? taskQuantity, decimal? resourceQuantity)

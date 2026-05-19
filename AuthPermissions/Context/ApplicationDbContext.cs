@@ -13,6 +13,8 @@ namespace AuthPermissions.Context
         public DbSet<TenantEntity> Tenants => Set<TenantEntity>();
         public DbSet<LogEntity> Logs => Set<LogEntity>();
         public DbSet<TenantDatabaseEntity> TenantDatabase => Set<TenantDatabaseEntity>();
+        public DbSet<TenantMlSettingEntity> TenantMlSettings => Set<TenantMlSettingEntity>();
+        public DbSet<TenantMlTrainingRunEntity> TenantMlTrainingRuns => Set<TenantMlTrainingRunEntity>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -71,6 +73,45 @@ namespace AuthPermissions.Context
                     .WithMany(x => x.Tenants)
                     .HasForeignKey(x => x.TenantDBId)
                     .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<TenantMlSettingEntity>(entity =>
+            {
+                entity.ToTable("TenantMlSettings");
+
+                entity.HasIndex(x => x.TenantId)
+                    .IsUnique()
+                    .HasDatabaseName("UX_TenantMlSettings_TenantId");
+
+                entity.Property(x => x.AutoTrainingIntervalDays)
+                    .HasDefaultValue(14);
+
+                entity.HasOne(x => x.Tenant)
+                    .WithMany()
+                    .HasForeignKey(x => x.TenantId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<TenantMlTrainingRunEntity>(entity =>
+            {
+                entity.ToTable("TenantMlTrainingRuns");
+
+                entity.Property(x => x.ModelPath)
+                    .HasMaxLength(4000);
+
+                entity.Property(x => x.Message)
+                    .HasMaxLength(1000);
+
+                entity.Property(x => x.BetterModel)
+                    .HasMaxLength(50);
+
+                entity.HasIndex(x => new { x.TenantId, x.StartedAtUtc })
+                    .HasDatabaseName("IX_TenantMlTrainingRuns_Tenant_Started");
+
+                entity.HasOne(x => x.Tenant)
+                    .WithMany()
+                    .HasForeignKey(x => x.TenantId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
         }
     }
