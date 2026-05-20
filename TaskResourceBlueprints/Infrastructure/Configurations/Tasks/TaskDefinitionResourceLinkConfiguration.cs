@@ -13,6 +13,8 @@ public class TaskDefinitionResourceLinkConfiguration : IEntityTypeConfiguration<
         b.Property(x => x.ResourceDefinitionId)
             .HasColumnName("ResourceId");
 
+        b.Property(e => e.RowVersion).IsRowVersion();
+
         b.Property(x => x.Quantity).HasPrecision(18, 6);
 
         b.Property(x => x.Parameters).HasJsonListComparer<ResourceParameter>();
@@ -30,5 +32,12 @@ public class TaskDefinitionResourceLinkConfiguration : IEntityTypeConfiguration<
             .WithMany()
             .HasForeignKey(x => x.ResourceDefinitionId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        b.ToTable(t =>
+        {
+            t.HasCheckConstraint("CK_TaskDefinitionResourceLinks_Task_Positive", "[TaskDefinitionId] > 0");
+            t.HasCheckConstraint("CK_TaskDefinitionResourceLinks_Resource_Positive", "[ResourceId] > 0");
+            t.HasCheckConstraint("CK_TaskDefinitionResourceLinks_Quantity_Positive", "[Quantity] > 0");
+        });
     }
 }

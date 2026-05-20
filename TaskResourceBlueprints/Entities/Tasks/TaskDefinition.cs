@@ -17,9 +17,10 @@ namespace TaskResourceBlueprints.Entities.Tasks
     public enum TaskStatusEnum
     {
         ToPlan = 1,
-        ToDo = 2,
         UnderWorking = 3,
         Ready = 10,
+        SuggestionOnly = 20,
+        TrainingOnly = 30,
     }
     public class TaskDefinition : TaskLookupBase
     {
@@ -61,6 +62,10 @@ namespace TaskResourceBlueprints.Entities.Tasks
         public string? NewUnitCode { get; set; }
 
         public List<TaskConversionParameter> ConversionParameters { get; set; } = [];
+
+        public byte[] RowVersion { get; set; } = [];
+        public DateTime CreatedAtUtc { get; init; } = DateTime.UtcNow;
+        public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
 
         public List<TaskDefinitionStateLink> StateLinks { get; set; } = [];
         public List<TaskDefinitionResourceLink> ResourceLinks { get; set; } = [];

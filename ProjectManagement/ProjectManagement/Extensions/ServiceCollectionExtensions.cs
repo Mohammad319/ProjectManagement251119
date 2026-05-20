@@ -48,11 +48,13 @@ public static class ServiceCollectionExtensions
         services.AddDatabaseDeveloperPageExceptionFilter();
 
         // DbContextFactory (Blueprints)
-        services.AddDbContextFactory<TaskResourceBlueprintsContext>(options =>
+        services.AddDbContext<TaskResourceBlueprintsContext>(options =>
             options.UseSqlServer(conn.TaskResourceBlueprintsDb, sqlOptions =>
             {
                 sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                sqlOptions.EnableRetryOnFailure();
             }));
+        services.AddScoped<IDbContextFactory<TaskResourceBlueprintsContext>, TenantAwareTaskResourceBlueprintsContextFactory>();
 
         // UI/tenant/services
         services.AddProjectServices();

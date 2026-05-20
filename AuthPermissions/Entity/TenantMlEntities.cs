@@ -13,6 +13,7 @@ public sealed class TenantMlSettingEntity
     public int AutoTrainingIntervalDays { get; set; } = 14;
     public DateTime? NextTrainingAtUtc { get; set; }
     public DateTime? LastScheduledTrainingAtUtc { get; set; }
+    public DateTime CreatedAtUtc { get; init; } = DateTime.UtcNow;
     public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
 
     public TenantEntity? Tenant { get; set; }

@@ -128,14 +128,28 @@ namespace TaskResourceBlueprints.Services.Resource
         {
             await using var context = await ContextFactory.CreateDbContextAsync();
             var entity = await context.ResourceCategories.FindAsync(obj.Id);
-            if (entity == null)
-            {
+            if (entity == null) return false;
+
+            if (obj.ParentCategoryId.HasValue && await WouldCreateCycleAsync(context, obj.Id, obj.ParentCategoryId.Value))
                 return false;
-            }
 
             context.Entry(entity).CurrentValues.SetValues(obj);
             await context.SaveChangesAsync();
             return true;
+        }
+
+        private static async Task<bool> WouldCreateCycleAsync(TaskResourceBlueprintsContext db, int id, int newParentId)
+        {
+            var current = (int?)newParentId;
+            while (current.HasValue)
+            {
+                if (current == id) return true;
+                current = await db.ResourceCategories
+                    .Where(x => x.Id == current.Value)
+                    .Select(x => (int?)x.ParentCategoryId)
+                    .FirstOrDefaultAsync();
+            }
+            return false;
         }
     }
 }

@@ -1,12 +1,9 @@
-﻿using Microsoft.AspNetCore.Components.Authorization;
+﻿using Microsoft.AspNetCore.Http;
 using ProjectManagement.Shared.Constant;
 using System.Security.Claims;
 
 namespace ProjectManagement.Services;
 
-/// <summary>
-/// Resolver يعبّي TenantContext من AuthenticationStateProvider داخل Blazor Server circuit.
-/// </summary>
 public interface ITenantContextResolver
 {
     Task EnsureResolvedAsync(CancellationToken ct = default);
@@ -14,22 +11,23 @@ public interface ITenantContextResolver
 
 public sealed class TenantContextResolver(
     TenantContext tenantContext,
-    AuthenticationStateProvider authStateProvider)
+    IHttpContextAccessor httpContextAccessor)
     : ITenantContextResolver
 {
-    public async Task EnsureResolvedAsync(CancellationToken ct = default)
+    public Task EnsureResolvedAsync(CancellationToken ct = default)
     {
         if (tenantContext.TenantId > 0)
-            return;
+            return Task.CompletedTask;
 
-        var state = await authStateProvider.GetAuthenticationStateAsync();
-        var user = state.User;
+        var user = httpContextAccessor.HttpContext?.User;
         if (user?.Identity?.IsAuthenticated != true)
-            return;
+            return Task.CompletedTask;
 
         tenantContext.TenantId = GetIntClaim(user, PMClaimsConst.Tenant);
         tenantContext.UserId = GetNullableIntClaim(user, PMClaimsConst.UserId);
         tenantContext.DepartmentId = GetNullableIntClaim(user, PMClaimsConst.DepartmentId);
+
+        return Task.CompletedTask;
     }
 
     private static int GetIntClaim(ClaimsPrincipal user, string claimType)

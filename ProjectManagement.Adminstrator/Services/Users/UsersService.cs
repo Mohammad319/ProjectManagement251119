@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Context;
+using Persistence.Seeding;
 using ProjectManagement.Adminstrator.Components.Account;
 using Persistence.Interceptors;
 using ProjectManagement.Shared.Base.Users;
@@ -125,14 +126,8 @@ namespace ProjectManagement.Adminstrator.Services.Users
             await using var dataAccess = await CreateTenantDbContextAsync(tenantId, userId);
             var changed = 0;
 
-            var defaultResourceStatuses = new (string Name, string Color, int SortOrder, bool IsVisible)[]
-            {
-                ("Active", "#16a34a", 100, true),
-                ("Inactive", "#dc2626", 200, true),
-            };
-
             var existingResourceStatuses = await dataAccess.ResourceStatus.ToListAsync();
-            foreach (var defaultResourceStatus in defaultResourceStatuses)
+            foreach (var defaultResourceStatus in TenantSeedCatalog.ResourceStatuses)
             {
                 var status = existingResourceStatuses.FirstOrDefault(x =>
                     string.Equals(x.Name, defaultResourceStatus.Name, StringComparison.OrdinalIgnoreCase));
@@ -154,15 +149,8 @@ namespace ProjectManagement.Adminstrator.Services.Users
                     defaultResourceStatus.IsVisible);
             }
 
-            var defaultTaskStatuses = new (string Name, string Color, int SortOrder, bool IsVisible)[]
-            {
-                ("Planned", "#2563eb", 100, true),
-                ("In Progress", "#f59e0b", 200, true),
-                ("Done", "#16a34a", 300, true),
-            };
-
             var existingTaskStatuses = await dataAccess.TaskStatus.ToListAsync();
-            foreach (var defaultTaskStatus in defaultTaskStatuses)
+            foreach (var defaultTaskStatus in TenantSeedCatalog.TaskStatuses)
             {
                 var status = existingTaskStatuses.FirstOrDefault(x =>
                     string.Equals(x.Name, defaultTaskStatus.Name, StringComparison.OrdinalIgnoreCase));
@@ -184,9 +172,8 @@ namespace ProjectManagement.Adminstrator.Services.Users
                     defaultTaskStatus.IsVisible);
             }
 
-            var defaultAccountGroups = new[] { "AG1", "AG2" };
             var existingAccountGroups = await dataAccess.AccountGroup.ToListAsync();
-            foreach (var groupName in defaultAccountGroups)
+            foreach (var groupName in TenantSeedCatalog.AccountGroups)
             {
                 var accountGroup = existingAccountGroups.FirstOrDefault(x =>
                     string.Equals(x.Name, groupName, StringComparison.OrdinalIgnoreCase));
@@ -208,16 +195,8 @@ namespace ProjectManagement.Adminstrator.Services.Users
             var accountGroupsByName = await dataAccess.AccountGroup
                 .ToDictionaryAsync(x => x.Name, StringComparer.OrdinalIgnoreCase);
 
-            var defaultAccounts = new (string Code, string Name, string GroupName, bool IsVisible)[]
-            {
-                ("Code1", "Acc1", "AG1", true),
-                ("Code2", "Acc2", "AG1", true),
-                ("Code3", "Acc3", "AG2", true),
-                ("Code4", "Acc4", "AG2", true),
-            };
-
             var existingAccounts = await dataAccess.Accounts.ToListAsync();
-            foreach (var defaultAccount in defaultAccounts)
+            foreach (var defaultAccount in TenantSeedCatalog.Accounts)
             {
                 if (!accountGroupsByName.TryGetValue(defaultAccount.GroupName, out var accountGroup))
                 {
@@ -254,8 +233,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
             }
 
             var existingResourceTypes = await dataAccess.ResourceTypes.ToListAsync();
-            var order = 10;
-            foreach (var type in Enum.GetValues<ResourceTypesEnum>())
+            foreach (var (type, order) in TenantSeedCatalog.ResourceTypes())
             {
                 var resourceTypeDto = new PostResourceTypeDTO
                 {
@@ -268,35 +246,27 @@ namespace ProjectManagement.Adminstrator.Services.Users
                 if (resourceType is null)
                 {
                     dataAccess.ResourceTypes.Add(ResourceTypeEntity.Create(resourceTypeDto, order));
-                    order += 10;
                     continue;
                 }
 
                 resourceType.Update(resourceTypeDto);
                 resourceType.UpdateOrder(order);
-                order += 10;
             }
 
             if (!await dataAccess.Compensations.AnyAsync())
             {
-                dataAccess.Compensations.Add(new CompensationEntity("unit price contract", "#8b5cf6", 100, true));
-                dataAccess.Compensations.Add(new CompensationEntity("time and Materials contract", "#8b5cf6", 200, true));
-                dataAccess.Compensations.Add(new CompensationEntity("lump-sum contract", "#8b5cf6", 300, true));
-                dataAccess.Compensations.Add(new CompensationEntity("integrated project delivery contract", "#8b5c60", 400, true));
-                dataAccess.Compensations.Add(new CompensationEntity("incentive construction contract", "#805cf6", 500, true));
-                dataAccess.Compensations.Add(new CompensationEntity("guaranteed maximum price contract", "#8b5cf6", 600, true));
-                dataAccess.Compensations.Add(new CompensationEntity("design and build contract", "#8b5cf6", 700, true));
-                dataAccess.Compensations.Add(new CompensationEntity("cost-plus construction contract", "#00ff00", 800, true));
+                foreach (var compensation in TenantSeedCatalog.Compensations)
+                {
+                    dataAccess.Compensations.Add(new CompensationEntity(
+                        compensation.Name,
+                        compensation.Color,
+                        compensation.SortOrder,
+                        compensation.IsVisible));
+                }
             }
 
-            var defaultContracts = new (string Name, string Color, int SortOrder, bool IsVisible)[]
-            {
-                ("Traditional procurement", "#0ea5e9", 100, true),
-                ("Design & Build Contract", "#00a590", 200, true),
-            };
-
             var existingContracts = await dataAccess.Contracts.ToListAsync();
-            foreach (var defaultContract in defaultContracts)
+            foreach (var defaultContract in TenantSeedCatalog.Contracts)
             {
                 var contract = existingContracts.FirstOrDefault(x =>
                     string.Equals(x.Name, defaultContract.Name, StringComparison.OrdinalIgnoreCase));
@@ -318,15 +288,8 @@ namespace ProjectManagement.Adminstrator.Services.Users
                     defaultContract.IsVisible);
             }
 
-            var defaultProcurementMethods = new (string Name, string Color, int SortOrder, bool IsVisible)[]
-            {
-                ("Limited Procedure", "#00ff00", 100, true),
-                ("Selective Tending", "#00ff00", 200, true),
-                ("Open Tendering", "#00ff00", 300, true),
-            };
-
             var existingProcurementMethods = await dataAccess.ProcurementMethod.ToListAsync();
-            foreach (var defaultProcurementMethod in defaultProcurementMethods)
+            foreach (var defaultProcurementMethod in TenantSeedCatalog.ProcurementMethods)
             {
                 var procurementMethod = existingProcurementMethods.FirstOrDefault(x =>
                     string.Equals(x.Name, defaultProcurementMethod.Name, StringComparison.OrdinalIgnoreCase));
@@ -352,31 +315,30 @@ namespace ProjectManagement.Adminstrator.Services.Users
 
             if (!await dataAccess.CalculationStatus.AnyAsync())
             {
-                var status = new StatusEntity();
-                status.Update("Not Started", "#22c55e", 100, true);
-                var status2 = new StatusEntity();
-                status2.Update("Planned", "#00aaff", 200, true);
-                var status3 = new StatusEntity();
-                status3.Update("In Progress", "#a2a239", 300, true);
-                var status4 = new StatusEntity();
-                status4.Update("Completed", "#2bc52b", 400, true);
-                var status5 = new StatusEntity();
-                status5.Update("Failed", "#ff0033", 500, true);
-                var status6 = new StatusEntity();
-                status6.Update("Cancelled", "#b98741", 600, true);
-                dataAccess.CalculationStatus.Add(status);
-                dataAccess.CalculationStatus.Add(status2);
-                dataAccess.CalculationStatus.Add(status3);
-                dataAccess.CalculationStatus.Add(status4);
-                dataAccess.CalculationStatus.Add(status5);
-                dataAccess.CalculationStatus.Add(status6);
+                foreach (var defaultStatus in TenantSeedCatalog.CalculationStatuses)
+                {
+                    var status = new StatusEntity();
+                    status.Update(
+                        defaultStatus.Name,
+                        defaultStatus.Color,
+                        defaultStatus.SortOrder,
+                        defaultStatus.IsVisible);
+                    dataAccess.CalculationStatus.Add(status);
+                }
             }
 
             if (!await dataAccess.CalcProjectType.AnyAsync())
             {
-                var type = new TypeEntity();
-                type.Update("General", "#3b82f6", 10, true);
-                dataAccess.CalcProjectType.Add(type);
+                foreach (var defaultType in TenantSeedCatalog.ProjectTypes)
+                {
+                    var type = new TypeEntity();
+                    type.Update(
+                        defaultType.Name,
+                        defaultType.Color,
+                        defaultType.SortOrder,
+                        defaultType.IsVisible);
+                    dataAccess.CalcProjectType.Add(type);
+                }
             }
 
             if (dataAccess.ChangeTracker.HasChanges())

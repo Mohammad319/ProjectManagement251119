@@ -2,6 +2,7 @@
 using Domain.Entities.Base;
 using Domain.Entities.Organisation;
 using Domain.Entities.Project;
+using Domain.Entities.Users;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Base.Organisation;
 using ProjectManagement.Shared.Base.Project;
@@ -38,8 +39,12 @@ namespace Domain.Entities.Calculation
             Factors = [];
         }
 
-        // Denormalized for query performance
+        // Denormalized for query performance — الـ Department لا يتغير بعد الإنشاء
         public int DepartmentId { get; private set; }
+
+        [JsonIgnore]
+        public DepartmentEntity? Department { get; private set; }
+
         public void AssignDepartment(int departmentId)
         {
             if (departmentId <= 0)
@@ -337,6 +342,7 @@ namespace Domain.Entities.Calculation
 
             return new CalculationData
             {
+                SchemaVersion = metadata.SchemaVersion,
                 QuanityList = metadata.QuanityList?.Select(CloneQuantity).ToList() ?? [],
                 TimeMonth = metadata.TimeMonth,
                 Priority = metadata.Priority,

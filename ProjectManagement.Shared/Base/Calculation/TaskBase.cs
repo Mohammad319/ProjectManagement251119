@@ -30,6 +30,8 @@ namespace ProjectManagement.Shared.Base.Calculation
 
     public class TaskMetadata
     {
+        public int SchemaVersion { get; set; } = 1;
+
         [AllowNull, MaxLength(FieldLengths.Note)]
         public string Note { get; set; } = string.Empty;
         public List<string> UpperNote { get; set; } = [];
@@ -142,6 +144,7 @@ namespace ProjectManagement.Shared.Base.Calculation
         {
             return new TaskMetadata
             {
+                SchemaVersion = SchemaVersion,
                 Note = Note ?? string.Empty,
                 UpperNote = UpperNote is null ? new() : new List<string>(UpperNote),
                 QuantityParam = QuantityParam ?? string.Empty,

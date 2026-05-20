@@ -17,16 +17,35 @@ public sealed class TfIdfIndexService(
 
     private readonly ConcurrentDictionary<string, bool> _activeKeys = new();
 
+    // SemaphoreSlim per cache key — يمنع Cache Stampede عند طلبات متزامنة لنفس TenantId
+    private readonly ConcurrentDictionary<string, SemaphoreSlim> _locks = new();
+
     public async Task<Dictionary<string, double>> GetIdfScoresAsync(int tenantId, CancellationToken ct = default)
     {
         var key = $"tfidf_{tenantId}";
+
+        // Fast path: الكاش جاهز
         if (cache.TryGetValue(key, out Dictionary<string, double>? cached) && cached is not null)
             return cached;
 
-        var scores = await BuildAsync(ct);
-        cache.Set(key, scores, CacheOptions);
-        _activeKeys.TryAdd(key, true);
-        return scores;
+        // Slow path: نبني index واحد فقط حتى لو جاءت N طلبات في نفس اللحظة
+        var sem = _locks.GetOrAdd(key, _ => new SemaphoreSlim(1, 1));
+        await sem.WaitAsync(ct);
+        try
+        {
+            // Double-check بعد الانتظار — قد يكون أُضيف بالفعل
+            if (cache.TryGetValue(key, out cached) && cached is not null)
+                return cached;
+
+            var scores = await BuildAsync(tenantId, ct);
+            cache.Set(key, scores, CacheOptions);
+            _activeKeys.TryAdd(key, true);
+            return scores;
+        }
+        finally
+        {
+            sem.Release();
+        }
     }
 
     public void InvalidateAll()
@@ -36,7 +55,8 @@ public sealed class TfIdfIndexService(
         _activeKeys.Clear();
     }
 
-    private async Task<Dictionary<string, double>> BuildAsync(CancellationToken ct)
+    // tenantId مُمرَّر صراحةً لضمان استخدام السياق الصحيح
+    private async Task<Dictionary<string, double>> BuildAsync(int tenantId, CancellationToken ct)
     {
         var docs = new List<string>();
 
@@ -51,12 +71,22 @@ public sealed class TfIdfIndexService(
         try
         {
             await using var db = await tenantFactory.CreateDbContextAsync(ct);
+
+            // تحقق صريح: السياق يطابق الـ tenantId المطلوب
+            if (db.TenantId != tenantId)
+                throw new InvalidOperationException(
+                    $"TfIdf build: expected tenant {tenantId} but got {db.TenantId}.");
+
             var tenantTexts = await db.Tasks
                 .AsNoTracking()
                 .Where(t => t.NormalizedTextSv != null && t.NormalizedTextSv != string.Empty)
                 .Select(t => t.NormalizedTextSv)
                 .ToListAsync(ct);
             docs.AddRange(tenantTexts);
+        }
+        catch (InvalidOperationException)
+        {
+            throw;
         }
         catch
         {

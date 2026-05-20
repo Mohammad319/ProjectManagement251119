@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using ProjectManagement.Shared.Enums;
 using ProjectManagement.Shared.Helper.Text;
 using TaskResourceBlueprints.Entities.Tasks;
 using TaskResourceBlueprints.Infrastructure;
@@ -75,6 +76,10 @@ public sealed class TaskResourceSuggestionEvaluationItem
     public bool TypeMatch { get; set; }
     public string DominantResourceType { get; set; } = string.Empty;
     public bool UsesHierarchyContext { get; set; }
+    public string UnitMatchReason { get; set; } = string.Empty;
+    public string ExpectedResourceUnits { get; set; } = string.Empty;
+    public string Top1ResourceUnits { get; set; } = string.Empty;
+    public string WeakReason { get; set; } = string.Empty;
 }
 
 public sealed class TaskResourceSuggestionEvaluationService(IDbContextFactory<TaskResourceBlueprintsContext> dbContextFactory)
@@ -93,9 +98,10 @@ public sealed class TaskResourceSuggestionEvaluationService(IDbContextFactory<Ta
         topK = Math.Clamp(topK, 1, 20);
 
         await using var db = await dbContextFactory.CreateDbContextAsync(ct);
+        var suggestionStatuses = new[] { TaskStatusEnum.Ready, TaskStatusEnum.SuggestionOnly };
         var tasks = await db.Tasks
             .AsNoTracking()
-            .Where(x => x.Status == TaskStatusEnum.Ready && x.IsActive && x.IsVisible)
+            .Where(x => suggestionStatuses.Contains(x.Status) && x.IsActive && x.IsVisible)
             .Include(x => x.ResourceLinks)
                 .ThenInclude(x => x.Resource)
             .OrderBy(x => x.SortOrder)
@@ -139,10 +145,12 @@ public sealed class TaskResourceSuggestionEvaluationService(IDbContextFactory<Ta
             var bestTopKOverlap = ranked.Max(x => CalculateResourceOverlap(targetLinks, x.Links));
             var top1Hit = top1Overlap > 0d;
             var topKHit = bestTopKOverlap > 0d;
-            var unitMatch = QuantityUnitNormalizer.AreCompatibleUnits(target.UnitCode, top1.Task.UnitCode);
+            var unitEvaluation = EvaluateResourceUnitMatch(targetLinks, top1.Links);
+            var unitMatch = unitEvaluation.IsMatch;
             var typeMatch = HasResourceTypeOverlap(targetLinks, top1.Links);
             var dominantResourceType = GetDominantResourceType(targetLinks);
             var usesHierarchyContext = HasHierarchyContext(target);
+            var weakReason = BuildWeakReason(top1Hit, topKHit, unitMatch, typeMatch, top1Overlap, bestTopKOverlap);
 
             result.Items.Add(new TaskResourceSuggestionEvaluationItem
             {
@@ -161,7 +169,11 @@ public sealed class TaskResourceSuggestionEvaluationService(IDbContextFactory<Ta
                 UnitMatch = unitMatch,
                 TypeMatch = typeMatch,
                 DominantResourceType = dominantResourceType,
-                UsesHierarchyContext = usesHierarchyContext
+                UsesHierarchyContext = usesHierarchyContext,
+                UnitMatchReason = unitEvaluation.Reason,
+                ExpectedResourceUnits = unitEvaluation.ExpectedUnits,
+                Top1ResourceUnits = unitEvaluation.ActualUnits,
+                WeakReason = weakReason
             });
 
             if (top1Hit) result.Top1Hits++;
@@ -261,6 +273,109 @@ public sealed class TaskResourceSuggestionEvaluationService(IDbContextFactory<Ta
         return expected.Any(x => actualTypes.Contains(x.Resource!.ResType));
     }
 
+    private static UnitEvaluation EvaluateResourceUnitMatch(
+        IReadOnlyList<TaskDefinitionResourceLink> expected,
+        IReadOnlyList<TaskDefinitionResourceLink> actual)
+    {
+        var expectedUnits = SummarizeResourceUnits(expected);
+        var actualUnits = SummarizeResourceUnits(actual);
+
+        var expectedWithUnits = expected
+            .Where(x => x.Resource is not null && !string.IsNullOrWhiteSpace(x.Resource.Unit))
+            .ToList();
+        var actualWithUnits = actual
+            .Where(x => x.Resource is not null && !string.IsNullOrWhiteSpace(x.Resource.Unit))
+            .ToList();
+
+        if (expectedWithUnits.Count == 0 || actualWithUnits.Count == 0)
+            return new UnitEvaluation(true, "No resource units to compare", expectedUnits, actualUnits);
+
+        var actualByName = actualWithUnits
+            .GroupBy(x => NormalizeResourceName(x.Resource!.Name), StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(x => x.Key, x => x.ToList(), StringComparer.OrdinalIgnoreCase);
+
+        var exactNameMatches = expectedWithUnits
+            .Where(expectedLink =>
+                actualByName.TryGetValue(NormalizeResourceName(expectedLink.Resource!.Name), out var candidates) &&
+                candidates.Any(actualLink => AreResourceUnitsCompatible(expectedLink, actualLink)))
+            .Count();
+
+        if (exactNameMatches > 0)
+            return new UnitEvaluation(true, "Matching resource unit", expectedUnits, actualUnits);
+
+        var expectedTypes = expectedWithUnits
+            .Select(x => x.Resource!.ResType)
+            .Distinct()
+            .ToList();
+
+        var actualByType = actualWithUnits
+            .GroupBy(x => x.Resource!.ResType)
+            .ToDictionary(x => x.Key, x => x.ToList());
+
+        foreach (var resourceType in expectedTypes)
+        {
+            if (!actualByType.TryGetValue(resourceType, out var actualTypeLinks))
+                continue;
+
+            var expectedTypeLinks = expectedWithUnits
+                .Where(x => x.Resource!.ResType == resourceType)
+                .ToList();
+
+            if (resourceType is ResourceTypesEnum.Worker or ResourceTypesEnum.MachinesAndEquipments or ResourceTypesEnum.Managers)
+            {
+                if (expectedTypeLinks.Any(expectedLink =>
+                    actualTypeLinks.Any(actualLink => AreResourceUnitsCompatible(expectedLink, actualLink))))
+                {
+                    return new UnitEvaluation(true, "Labor/equipment time unit compatible", expectedUnits, actualUnits);
+                }
+            }
+
+            if (resourceType == ResourceTypesEnum.Materials)
+            {
+                var compatibleMaterials = expectedTypeLinks.Count(expectedLink =>
+                    actualTypeLinks.Any(actualLink => AreResourceUnitsCompatible(expectedLink, actualLink)));
+                if (compatibleMaterials > 0 && compatibleMaterials >= Math.Ceiling(expectedTypeLinks.Count * 0.50d))
+                    return new UnitEvaluation(true, "Material units mostly compatible", expectedUnits, actualUnits);
+            }
+        }
+
+        return new UnitEvaluation(false, "Resource units differ", expectedUnits, actualUnits);
+    }
+
+    private static bool AreResourceUnitsCompatible(TaskDefinitionResourceLink expected, TaskDefinitionResourceLink actual)
+    {
+        var expectedUnit = expected.Resource?.Unit;
+        var actualUnit = actual.Resource?.Unit;
+        if (string.IsNullOrWhiteSpace(expectedUnit) || string.IsNullOrWhiteSpace(actualUnit))
+            return false;
+
+        return QuantityUnitNormalizer.AreEquivalentUnits(expectedUnit, actualUnit) ||
+               QuantityUnitNormalizer.AreCompatibleUnits(expectedUnit, actualUnit);
+    }
+
+    private static string SummarizeResourceUnits(IReadOnlyList<TaskDefinitionResourceLink> links)
+    {
+        var parts = links
+            .Where(x => x.Resource is not null)
+            .GroupBy(x => x.Resource!.ResType)
+            .Select(group =>
+            {
+                var units = group
+                    .Select(x => x.Resource!.Unit)
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .Take(4)
+                    .ToList();
+                return units.Count == 0
+                    ? $"{group.Key}: no unit"
+                    : $"{group.Key}: {string.Join(", ", units)}";
+            })
+            .Take(4)
+            .ToList();
+
+        return parts.Count == 0 ? "No resources" : string.Join(" | ", parts);
+    }
+
     private static string NormalizeResourceName(string name)
         => SwedishTaskTextNormalizer.Normalize(name);
 
@@ -286,6 +401,7 @@ public sealed class TaskResourceSuggestionEvaluationService(IDbContextFactory<Ta
         result.AddRange(BuildBreakdownGroup("Hierarchy context", items.GroupBy(x => x.UsesHierarchyContext ? "With parent/ancestor" : "No parent")));
         result.AddRange(BuildBreakdownGroup("Unit result", items.GroupBy(x => x.UnitMatch ? "Compatible unit" : "Unit mismatch")));
         result.AddRange(BuildBreakdownGroup("Type result", items.GroupBy(x => x.TypeMatch ? "Type overlap" : "Type mismatch")));
+        result.AddRange(BuildBreakdownGroup("Weak reason", items.GroupBy(x => string.IsNullOrWhiteSpace(x.WeakReason) ? "Healthy" : x.WeakReason)));
         return result;
     }
 
@@ -310,4 +426,34 @@ public sealed class TaskResourceSuggestionEvaluationService(IDbContextFactory<Ta
                     AverageBestTopKResourceOverlap = Math.Round(list.Select(item => item.BestTopKResourceOverlap).DefaultIfEmpty(0d).Average(), 4),
                 };
             });
+
+    private static string BuildWeakReason(
+        bool top1Hit,
+        bool topKHit,
+        bool unitMatch,
+        bool typeMatch,
+        double top1Overlap,
+        double bestTopKOverlap)
+    {
+        if (!topKHit)
+            return "No useful top-k resource";
+        if (!top1Hit && topKHit)
+            return "Correct match below top 1";
+        if (!typeMatch)
+            return "Resource type mismatch";
+        if (!unitMatch)
+            return "Resource unit mismatch";
+        if (bestTopKOverlap < 0.50d)
+            return "Low resource overlap";
+        if (top1Overlap < bestTopKOverlap)
+            return "Better candidate below top 1";
+
+        return "Healthy";
+    }
+
+    private sealed record UnitEvaluation(
+        bool IsMatch,
+        string Reason,
+        string ExpectedUnits,
+        string ActualUnits);
 }

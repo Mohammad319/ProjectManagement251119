@@ -93,13 +93,7 @@ else if (_tasks != null)
                         {
                             var groupId = sg.Key;
                             var groupName = sg.Value;
-                            var stateOptions = group.Tasks
-                                .SelectMany(t => t.StateLinks)
-                                .Where(sl => sl.GroupId == groupId)
-                                .Select(sl => new { sl.StateId, sl.StateName })
-                                .DistinctBy(x => x.StateId)
-                                .OrderBy(x => x.StateName)
-                                .ToList();
+                            var stateOptions = group.StateOptions.GetValueOrDefault(groupId, []);
                             <div class="flex items-center gap-1 shrink-0">
                                 <span class="text-xs text-slate-500 whitespace-nowrap">@groupName:</span>
                                 <select class="h-[25px] border border-gray-300 rounded px-2 text-[13px] leading-tight bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600"
@@ -132,13 +126,7 @@ else if (_tasks != null)
                     {
                         var groupId = sg.Key;
                         var groupName = sg.Value;
-                        var stateOptions = group.Tasks
-                            .SelectMany(t => t.StateLinks)
-                            .Where(sl => sl.GroupId == groupId)
-                            .Select(sl => new { sl.StateId, sl.StateName })
-                            .DistinctBy(x => x.StateId)
-                            .OrderBy(x => x.StateName)
-                            .ToList();
+                        var stateOptions = group.StateOptions.GetValueOrDefault(groupId, []);
                         <div class="flex items-center gap-1 shrink-0">
                             <span class="text-xs text-slate-500 whitespace-nowrap">@groupName:</span>
                             <select class="h-[25px] border border-gray-300 rounded px-2 text-[13px] leading-tight bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600"
@@ -184,7 +172,7 @@ else if (_tasks != null)
 
 @code {
     private const int PageSize = 25;
-    private string InputClass => "border border-gray-300 rounded px-2 py-1 text-[13px] leading-tight h-[25px] bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white";
+    private const string InputClass = "border border-gray-300 rounded px-2 py-1 text-[13px] leading-tight h-[25px] bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white";
 
     // ── Fuzzy search (via FuzzySearchHelper → SwedishTaskTextNormalizer) ──────
 
@@ -226,11 +214,14 @@ else if (_tasks != null)
     {
         var q = _rawSearchQuery.Trim();
         if (string.IsNullOrWhiteSpace(q))
-            return _taskGroups.Select(g => (g, 1.0));
+            return _taskGroups
+                .Where(g => g.Tasks.Any(HasResources))
+                .Select(g => (g, 1.0));
 
         var tokens = filterDto.SearchTokens;
 
         return _taskGroups
+            .Where(g => g.Tasks.Any(HasResources))
             .Select(g =>
             {
                 // Exact code match → always ranked first at 100%
@@ -238,7 +229,7 @@ else if (_tasks != null)
                     g.Code.Equals(q, StringComparison.OrdinalIgnoreCase))
                     return (Group: g, Score: 1.0);
 
-                var combined = $"{g.Code} {g.DisplayName} {g.SearchText}";
+                var combined = g.CombinedText;
                 var baseScore = FuzzySearchHelper.Score(q, combined);
 
                 // Bonus when BOTH search tokens are present in the task text
@@ -322,10 +313,39 @@ else if (_tasks != null)
         public string Key { get; init; } = string.Empty;
         public string DisplayName { get; init; } = string.Empty;
         public string Code { get; init; } = string.Empty;
-        public string SearchText { get; init; } = string.Empty;
-        public List<ProjectTaskDto> Tasks { get; init; } = [];
-        // groupId → groupName
-        public Dictionary<int, string> StateGroupNames { get; init; } = [];
+        public string SearchText { get; private set; } = string.Empty;
+        // Pre-built search string reused across every search — avoids per-search interpolation
+        public string CombinedText { get; private set; } = string.Empty;
+        public List<ProjectTaskDto> Tasks { get; } = [];
+        public Dictionary<int, string> StateGroupNames { get; } = [];
+        // groupId → sorted (StateId, StateName) — pre-computed, updated via RebuildStateOptions()
+        public Dictionary<int, List<(int StateId, string StateName)>> StateOptions { get; } = [];
+
+        private readonly HashSet<string> _searchParts = [];
+
+        public void AddTask(ProjectTaskDto task)
+        {
+            Tasks.Add(task);
+            foreach (var sl in task.StateLinks)
+                StateGroupNames.TryAdd(sl.GroupId, sl.GroupName);
+            if (!string.IsNullOrWhiteSpace(task.SearchText) && _searchParts.Add(task.SearchText))
+                SearchText = SearchText.Length == 0 ? task.SearchText : SearchText + " " + task.SearchText;
+            CombinedText = $"{Code} {DisplayName} {SearchText}";
+        }
+
+        public void RebuildStateOptions()
+        {
+            StateOptions.Clear();
+            // Single pass over all StateLinks — O(tasks × links) vs O(tasks × links × groups)
+            foreach (var g in Tasks.SelectMany(t => t.StateLinks).GroupBy(sl => sl.GroupId))
+            {
+                StateOptions[g.Key] = g
+                    .Select(sl => (sl.StateId, sl.StateName))
+                    .DistinctBy(x => x.StateId)
+                    .OrderBy(x => x.StateName)
+                    .ToList();
+            }
+        }
     }
 
     void StorageStateModal()
@@ -360,11 +380,12 @@ else if (_tasks != null)
     private bool _loadingMore = false;
     private bool _hasMore = false;
     private string? _error;
-    public List<ProjectTaskDto> _tasks = new();
+    private List<ProjectTaskDto> _tasks = new();
     private List<TaskGroup> _taskGroups = [];
+    private Dictionary<string, TaskGroup> _taskGroupDict = [];
     // groupKey → (stateGroupId → selectedStateId)
     private Dictionary<string, Dictionary<int, int>> _selectedStates = [];
-    ProjectTaskFilterDto filterDto = new();
+    ProjectTaskFilterDto filterDto = new() { ResourcesOnly = true };
     [Parameter] public EventCallback RefreshBack { get; set; }
     [Parameter] public RenderFragment? Content { get; set; }
     ResourceFormDTO Config = new();
@@ -393,6 +414,9 @@ else if (_tasks != null)
 
         foreach (var task in group.Tasks)
         {
+            if (!HasResources(task))
+                continue;
+
             bool allMatch = true;
             foreach (var (groupId, stateId) in selected)
             {
@@ -407,39 +431,32 @@ else if (_tasks != null)
         return null;
     }
 
-    void BuildTaskGroups(List<ProjectTaskDto> tasks)
+    void AppendToTaskGroups(List<ProjectTaskDto> newTasks)
     {
-        var grouped = tasks
-            .GroupBy(t => $"{t.Code ?? string.Empty}||{t.DisplayName}")
-            .Select(g =>
-            {
-                var first = g.First();
-                var stateGroupNames = g
-                    .SelectMany(t => t.StateLinks)
-                    .Select(sl => new { sl.GroupId, sl.GroupName })
-                    .DistinctBy(x => x.GroupId)
-                    .OrderBy(x => x.GroupName)
-                    .ToDictionary(x => x.GroupId, x => x.GroupName);
-                return new TaskGroup
-                {
-                    Key = g.Key,
-                    DisplayName = first.DisplayName,
-                    Code = first.Code ?? string.Empty,
-                    SearchText = string.Join(' ', g.Select(t => t.SearchText).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct()),
-                    Tasks = g.ToList(),
-                    StateGroupNames = stateGroupNames,
-                };
-            })
-            .ToList();
-
-        _taskGroups = grouped;
-        _scoredCache = null;
-        foreach (var tg in grouped)
+        var updatedKeys = new HashSet<string>();
+        foreach (var task in newTasks)
         {
-            if (!_selectedStates.ContainsKey(tg.Key))
-                _selectedStates[tg.Key] = [];
+            if (!HasResources(task))
+                continue;
+
+            var key = $"{task.Code ?? string.Empty}||{task.DisplayName}";
+            if (!_taskGroupDict.TryGetValue(key, out var group))
+            {
+                group = new TaskGroup { Key = key, DisplayName = task.DisplayName, Code = task.Code ?? string.Empty };
+                _taskGroupDict[key] = group;
+                _taskGroups.Add(group);
+                _selectedStates.TryAdd(key, []);
+            }
+            group.AddTask(task);
+            updatedKeys.Add(key);
         }
+        foreach (var key in updatedKeys)
+            _taskGroupDict[key].RebuildStateOptions();
+        _scoredCache = null;
     }
+
+    private static bool HasResources(ProjectTaskDto task)
+        => task.HasResources || task.BaseResources.Count > 0 || task.ResultResources.Count > 0;
 
     async Task Refresh()
     {
@@ -449,6 +466,8 @@ else if (_tasks != null)
         {
             _tasks = [];
             _selectedStates = [];
+            _taskGroups = [];
+            _taskGroupDict = [];
             List<ProjectTaskDto> batch;
             do
             {
@@ -457,7 +476,7 @@ else if (_tasks != null)
                 batch = await TaskService.GetTasksForUserDtoAsync(filterDto);
                 ApplyCostAdjustments(batch);
                 _tasks.AddRange(batch);
-                BuildTaskGroups(_tasks);
+                AppendToTaskGroups(batch);
             }
             while (_taskGroups.Count < PageSize && batch.Count == PageSize);
 
@@ -468,6 +487,7 @@ else if (_tasks != null)
             _error = ex.Message;
             _tasks = [];
             _taskGroups = [];
+            _taskGroupDict = [];
             _hasMore = false;
         }
         finally
@@ -491,7 +511,7 @@ else if (_tasks != null)
                 batch = await TaskService.GetTasksForUserDtoAsync(filterDto);
                 ApplyCostAdjustments(batch);
                 _tasks.AddRange(batch);
-                BuildTaskGroups(_tasks);
+                AppendToTaskGroups(batch);
             }
             while (_taskGroups.Count < groupsBefore + PageSize && batch.Count == PageSize);
 
@@ -518,8 +538,7 @@ else if (_tasks != null)
 
     public async Task<bool> SaveAsync()
     {
-        List<TaskPostDTO> Tasks = new();
-        Tasks = _tasks.Where(x => x.Added).Select(Task =>
+        var Tasks = _tasks.Where(x => x.Added).Select(Task =>
         {
             var hasConversionParameters = Task.ParameterValues.Count > 0;
             var baseQuantity = Task.Quantity;

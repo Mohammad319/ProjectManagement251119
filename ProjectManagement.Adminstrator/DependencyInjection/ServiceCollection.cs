@@ -1,6 +1,7 @@
 ﻿using ContextMenuMHD;
 using ProjectManagement.Adminstrator.Handless;
 using ProjectManagement.Adminstrator.Services.MHDBlazor;
+using ProjectManagement.Adminstrator.Services.Synonyms;
 using ProjectManagement.Adminstrator.Services.Users;
 using ProjectManagement.Adminstrator.Services.TenantMl;
 using ProjectManagement.Adminstrator.Components.Account;
@@ -17,6 +18,7 @@ namespace ProjectManagement.Adminstrator.DependencyInjection
             services.AddScoped<IExceptionHandlers, ExceptionHandlers>();
             services.AddScoped<IUsersService, UsersService>();
             services.AddScoped<ITenantMlTrainingService, TenantMlTrainingService>();
+            services.AddScoped<ISynonymDictionaryService, SynonymDictionaryService>();
             services.AddHostedService<TenantMlAutoTrainingHostedService>();
             services.AddScoped<ILoggerPM, Logger>();
             services.AddScoped<ITasksUserComputationServiceWasm, TasksUserComputationServiceWasm>();

@@ -40,7 +40,12 @@ internal sealed class ResourceTypeConfiguration : IEntityTypeConfiguration<Resou
             .HasDatabaseName("IX_ResourceTypes_Tenant_Kind_Visible_Order");
 
         builder.HasIndex(x => new { x.TenantId, x.Name })
+            .IsUnique()
             .HasDatabaseName("IX_ResourceTypes_Tenant_Name");
+
+        builder.HasIndex(x => new { x.TenantId, x.Kind })
+            .IsUnique()
+            .HasDatabaseName("UX_ResourceTypes_Tenant_Kind");
 
         builder.ToTable(t =>
         {
@@ -75,6 +80,7 @@ internal sealed class ResourceSortConfiguration : IEntityTypeConfiguration<Resou
             .HasDatabaseName("IX_ResourceSorts_Tenant_Type_Visible_Order");
 
         builder.HasIndex(x => new { x.TenantId, x.ResourceTypeId, x.Name })
+            .IsUnique()
             .HasDatabaseName("IX_ResourceSorts_Tenant_Type_Name");
 
         builder.ToTable(t =>
@@ -95,6 +101,7 @@ internal sealed class ResourceConfiguration : IEntityTypeConfiguration<ResourceE
             t.HasCheckConstraint("CK_Resources_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
             t.HasCheckConstraint("CK_Resources_SortOrder_NonNegative", "[SortOrder] >= 0");
             t.HasCheckConstraint("CK_Resources_Task_Positive", "[TaskId] > 0");
+            t.HasCheckConstraint("CK_Resources_Quantity_NonNegative", "[Quantity] IS NULL OR [Quantity] >= 0");
         });
 
         builder.Property(e => e.RowVersion).IsRowVersion();
@@ -130,6 +137,12 @@ internal sealed class ResourceConfiguration : IEntityTypeConfiguration<ResourceE
 
         builder.HasIndex(x => new { x.TenantId, x.OpportunityId })
             .HasDatabaseName("IX_Resources_Tenant_Opportunity");
+
+        // PrimaryOfferId: index فقط بدون FK — السبب: عند حذف Resource، SQL Server يحذف Offers أولاً (CASCADE)
+        // لكن قبل حذف أي Offer يتحقق من وجود FK من Resource.PrimaryOfferId إليه، فيرفض الحذف.
+        // حتى NoAction لا يحل المشكلة لأن Resource لم يُحذف بعد حين يُفحص القيد.
+        builder.HasIndex(x => new { x.TenantId, x.PrimaryOfferId })
+            .HasDatabaseName("IX_Resources_Tenant_PrimaryOffer");
 
         builder.HasOne(x => x.ResourceSort)
             .WithMany(x => x.Resources)
@@ -167,6 +180,7 @@ internal sealed class TaskConfiguration : IEntityTypeConfiguration<TaskEntity>
             t.HasCheckConstraint("CK_Tasks_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
             t.HasCheckConstraint("CK_Tasks_SortOrder_NonNegative", "[SortOrder] >= 0");
             t.HasCheckConstraint("CK_Tasks_Calculation_Positive", "[CalculationId] > 0");
+            t.HasCheckConstraint("CK_Tasks_Quantity_NonNegative", "[Quantity] IS NULL OR [Quantity] >= 0");
         });
 
         builder.Property(e => e.RowVersion).IsRowVersion();
@@ -221,7 +235,7 @@ internal sealed class TaskConfiguration : IEntityTypeConfiguration<TaskEntity>
         builder.HasOne(x => x.ParentTask)
             .WithMany(x => x.Tasks)
             .HasForeignKey(x => x.ParentTaskId)
-            .OnDelete(DeleteBehavior.ClientCascade);
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(x => x.Calculation)
             .WithMany(c => c.Tasks)
@@ -239,6 +253,9 @@ internal sealed class TaskConfiguration : IEntityTypeConfiguration<TaskEntity>
 
         builder.HasIndex(x => new { x.TenantId, x.NormalizedTextSv })
             .HasDatabaseName("IX_Tasks_Tenant_NormalizedTextSv");
+
+        builder.HasIndex("TenantId", "CreatedBy")
+            .HasDatabaseName("IX_Tasks_Tenant_CreatedBy");
     }
 }
 

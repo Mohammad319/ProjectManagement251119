@@ -72,7 +72,16 @@ namespace TaskResourceBlueprints.Migrations
 
                     b.HasIndex("TaskStateGroupId");
 
-                    b.ToTable("TaskStates");
+                    b.HasIndex("TaskStateGroupId", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("UX_TaskStates_Group_Name");
+
+                    b.ToTable("TaskStates", t =>
+                        {
+                            t.HasCheckConstraint("CK_TaskStates_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+
+                            t.HasCheckConstraint("CK_TaskStates_SortOrder_NonNegative", "[SortOrder] >= 0");
+                        });
                 });
 
             modelBuilder.Entity("TaskResourceBlueprints.Entities.Lookups.TaskStateGroup", b =>
@@ -96,7 +105,16 @@ namespace TaskResourceBlueprints.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TaskStateGroups");
+                    b.HasIndex("Name")
+                        .IsUnique()
+                        .HasDatabaseName("UX_TaskStateGroups_Name");
+
+                    b.ToTable("TaskStateGroups", t =>
+                        {
+                            t.HasCheckConstraint("CK_TaskStateGroups_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+
+                            t.HasCheckConstraint("CK_TaskStateGroups_SortOrder_NonNegative", "[SortOrder] >= 0");
+                        });
                 });
 
             modelBuilder.Entity("TaskResourceBlueprints.Entities.ResourceDefinition", b =>
@@ -113,6 +131,9 @@ namespace TaskResourceBlueprints.Migrations
                     b.Property<string>("CostRoles")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Data")
                         .IsRequired()
@@ -146,13 +167,23 @@ namespace TaskResourceBlueprints.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
 
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
                     b.HasIndex("FolderId", "SortOrder", "Name");
 
                     b.HasIndex("IsActive", "IsVisible", "Name");
 
-                    b.ToTable("Resources");
+                    b.ToTable("Resources", t =>
+                        {
+                            t.HasCheckConstraint("CK_Resources_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+
+                            t.HasCheckConstraint("CK_Resources_Quantity_NonNegative", "[Quantity] IS NULL OR [Quantity] >= 0");
+
+                            t.HasCheckConstraint("CK_Resources_SortOrder_NonNegative", "[SortOrder] >= 0");
+                        });
                 });
 
             modelBuilder.Entity("TaskResourceBlueprints.Entities.Resources.ResourceCategory", b =>
@@ -162,6 +193,9 @@ namespace TaskResourceBlueprints.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("DisplayName")
                         .IsRequired()
@@ -181,11 +215,26 @@ namespace TaskResourceBlueprints.Migrations
                     b.Property<int>("SortOrder")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("ParentCategoryId", "DisplayName")
+                        .IsUnique()
+                        .HasDatabaseName("UX_ResourceCategories_Parent_Name")
+                        .HasFilter("[ParentCategoryId] IS NOT NULL");
 
                     b.HasIndex("ParentCategoryId", "SortOrder", "DisplayName");
 
-                    b.ToTable("ResourceCategories");
+                    b.ToTable("ResourceCategories", t =>
+                        {
+                            t.HasCheckConstraint("CK_ResourceCategories_Name_NotEmpty", "LEN(LTRIM(RTRIM([DisplayName]))) > 0");
+
+                            t.HasCheckConstraint("CK_ResourceCategories_NoSelfParent", "[ParentCategoryId] IS NULL OR [ParentCategoryId] <> [Id]");
+
+                            t.HasCheckConstraint("CK_ResourceCategories_SortOrder_NonNegative", "[SortOrder] >= 0");
+                        });
                 });
 
             modelBuilder.Entity("TaskResourceBlueprints.Entities.Resources.ResourceTenantLinkEntity", b =>
@@ -213,9 +262,6 @@ namespace TaskResourceBlueprints.Migrations
                         .HasPrecision(18, 6)
                         .HasColumnType("decimal(18,6)");
 
-                    b.Property<int?>("ResourceDefinitionId")
-                        .HasColumnType("int");
-
                     b.Property<int>("ResourceId")
                         .HasColumnType("int");
 
@@ -233,14 +279,22 @@ namespace TaskResourceBlueprints.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ResourceDefinitionId");
+                    b.HasIndex("ResourceId");
 
-                    b.HasIndex(new[] { "TenantId", "ResourceId" }, "IX_ResourceTenantLink_Tenant_Resource");
+                    b.HasIndex("TenantId", "ResourceId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_ResourceTenantLink_Tenant_Resource");
 
-                    b.HasIndex(new[] { "ResourceId", "TenantId" }, "UX_ResourceTenantLink_Resource_Tenant")
-                        .IsUnique();
+                    b.ToTable("ResourceTenantLinks", t =>
+                        {
+                            t.HasCheckConstraint("CK_ResourceTenantLinks_Cost_NonNegative", "[Cost] IS NULL OR [Cost] >= 0");
 
-                    b.ToTable("ResourceTenantLinks");
+                            t.HasCheckConstraint("CK_ResourceTenantLinks_Quantity_NonNegative", "[Quantity] IS NULL OR [Quantity] >= 0");
+
+                            t.HasCheckConstraint("CK_ResourceTenantLinks_Resource_Positive", "[ResourceId] > 0");
+
+                            t.HasCheckConstraint("CK_ResourceTenantLinks_Tenant_Positive", "[TenantId] > 0");
+                        });
                 });
 
             modelBuilder.Entity("TaskResourceBlueprints.Entities.Tasks.TaskDefinition", b =>
@@ -272,6 +326,9 @@ namespace TaskResourceBlueprints.Migrations
                     b.Property<string>("ConversionParameters")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("FieldNotes")
                         .HasColumnType("nvarchar(max)");
@@ -323,6 +380,12 @@ namespace TaskResourceBlueprints.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
                     b.Property<int>("SortOrder")
                         .HasColumnType("int");
 
@@ -340,6 +403,9 @@ namespace TaskResourceBlueprints.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
                     b.Property<int>("UsageCount")
                         .HasColumnType("int");
 
@@ -355,13 +421,27 @@ namespace TaskResourceBlueprints.Migrations
 
                     b.HasIndex("Code");
 
+                    b.HasIndex("HierarchyPath")
+                        .HasDatabaseName("IX_Tasks_HierarchyPath");
+
                     b.HasIndex("NormalizedTextSv");
 
                     b.HasIndex("ParentCode");
 
                     b.HasIndex("Status", "SortOrder");
 
-                    b.ToTable("Tasks");
+                    b.ToTable("Tasks", t =>
+                        {
+                            t.HasCheckConstraint("CK_Tasks_ChangeFactors_Positive", "[ChangeFactor1] > 0 AND [ChangeFactor2] > 0");
+
+                            t.HasCheckConstraint("CK_Tasks_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+
+                            t.HasCheckConstraint("CK_Tasks_PriceProduction_NonNegative", "[PriceProduction] IS NULL OR [PriceProduction] >= 0");
+
+                            t.HasCheckConstraint("CK_Tasks_Quantity_NonNegative", "[Quantity] IS NULL OR [Quantity] >= 0");
+
+                            t.HasCheckConstraint("CK_Tasks_SortOrder_NonNegative", "[SortOrder] >= 0");
+                        });
                 });
 
             modelBuilder.Entity("TaskResourceBlueprints.Entities.Tasks.TaskDefinitionResourceLink", b =>
@@ -391,6 +471,12 @@ namespace TaskResourceBlueprints.Migrations
                         .HasColumnType("int")
                         .HasColumnName("ResourceId");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
                     b.Property<int>("TaskDefinitionId")
                         .HasColumnType("int");
 
@@ -405,7 +491,14 @@ namespace TaskResourceBlueprints.Migrations
                     b.HasIndex("TaskDefinitionId", "ResourceDefinitionId")
                         .IsUnique();
 
-                    b.ToTable("TaskDefinitionResourceLinks");
+                    b.ToTable("TaskDefinitionResourceLinks", t =>
+                        {
+                            t.HasCheckConstraint("CK_TaskDefinitionResourceLinks_Quantity_Positive", "[Quantity] > 0");
+
+                            t.HasCheckConstraint("CK_TaskDefinitionResourceLinks_Resource_Positive", "[ResourceId] > 0");
+
+                            t.HasCheckConstraint("CK_TaskDefinitionResourceLinks_Task_Positive", "[TaskDefinitionId] > 0");
+                        });
                 });
 
             modelBuilder.Entity("TaskResourceBlueprints.Entities.Tasks.TaskResourceSuggestionFeedback", b =>
@@ -427,7 +520,6 @@ namespace TaskResourceBlueprints.Migrations
                         .HasColumnType("nvarchar(512)");
 
                     b.Property<int>("ReviewStatus")
-                        .HasDefaultValue(1)
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("ReviewedAtUtc")
@@ -487,10 +579,26 @@ namespace TaskResourceBlueprints.Migrations
 
                     b.HasIndex("TenantId", "ReviewStatus", "UpdatedAtUtc");
 
+                    b.HasIndex("TenantId", "TargetTaskId", "CreatedAtUtc")
+                        .HasDatabaseName("IX_Feedback_Tenant_Task_Date");
+
                     b.HasIndex("TenantId", "TargetTaskId", "Source", "SourceTaskId")
                         .IsUnique();
 
-                    b.ToTable("TaskResourceSuggestionFeedbacks");
+                    b.ToTable("TaskResourceSuggestionFeedbacks", t =>
+                        {
+                            t.HasCheckConstraint("CK_TaskResourceSuggestionFeedbacks_Score_NonNegative", "[Score] >= 0");
+
+                            t.HasCheckConstraint("CK_TaskResourceSuggestionFeedbacks_SourceQuantity_NonNegative", "[SourceTaskQuantity] IS NULL OR [SourceTaskQuantity] >= 0");
+
+                            t.HasCheckConstraint("CK_TaskResourceSuggestionFeedbacks_SourceTask_Positive", "[SourceTaskId] > 0");
+
+                            t.HasCheckConstraint("CK_TaskResourceSuggestionFeedbacks_TargetQuantity_NonNegative", "[TargetTaskQuantity] IS NULL OR [TargetTaskQuantity] >= 0");
+
+                            t.HasCheckConstraint("CK_TaskResourceSuggestionFeedbacks_TargetTask_Positive", "[TargetTaskId] > 0");
+
+                            t.HasCheckConstraint("CK_TaskResourceSuggestionFeedbacks_Tenant_Positive", "[TenantId] > 0");
+                        });
                 });
 
             modelBuilder.Entity("TaskResourceBlueprints.Entities.Lookups.TaskDefinitionStateLink", b =>
@@ -545,7 +653,9 @@ namespace TaskResourceBlueprints.Migrations
                 {
                     b.HasOne("TaskResourceBlueprints.Entities.ResourceDefinition", null)
                         .WithMany("TenantLinks")
-                        .HasForeignKey("ResourceDefinitionId");
+                        .HasForeignKey("ResourceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("TaskResourceBlueprints.Entities.Tasks.TaskDefinitionResourceLink", b =>

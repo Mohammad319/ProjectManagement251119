@@ -67,6 +67,12 @@ internal static class PriceListConfigurationExtensions
 
         entity.Property(x => x.Currency)
             .HasMaxLength(10);
+
+        entity.ToTable(t =>
+        {
+            t.HasCheckConstraint("CK_PriceLists_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+            t.HasCheckConstraint("CK_PriceLists_DateRange", "[ValidTo] IS NULL OR [ValidFrom] IS NULL OR [ValidTo] >= [ValidFrom]");
+        });
     }
 
     internal static void EntityPriceListItem(this EntityTypeBuilder<PriceListItem> entity)
@@ -112,6 +118,17 @@ internal static class PriceListConfigurationExtensions
 
         entity.Property(x => x.Confidence)
             .HasPrecision(5, 4);
+
+        entity.ToTable(t =>
+        {
+            t.HasCheckConstraint("CK_PriceListItems_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+            t.HasCheckConstraint("CK_PriceListItems_BasePrice_NonNegative", "[BasePrice] IS NULL OR [BasePrice] >= 0");
+            t.HasCheckConstraint("CK_PriceListItems_NetPrice_NonNegative", "[NetPrice] IS NULL OR [NetPrice] >= 0");
+            t.HasCheckConstraint("CK_PriceListItems_DiscountPercent_Range", "[DiscountPercent] IS NULL OR ([DiscountPercent] >= 0 AND [DiscountPercent] <= 100)");
+            t.HasCheckConstraint("CK_PriceListItems_ConsumptionFactor_NonNegative", "[ConsumptionFactor] IS NULL OR [ConsumptionFactor] >= 0");
+            t.HasCheckConstraint("CK_PriceListItems_WastePercent_Range", "[WastePercent] IS NULL OR ([WastePercent] >= 0 AND [WastePercent] <= 100)");
+            t.HasCheckConstraint("CK_PriceListItems_Confidence_Range", "[Confidence] IS NULL OR ([Confidence] >= 0 AND [Confidence] <= 1)");
+        });
     }
 
     internal static void EntityPriceImportJob(this EntityTypeBuilder<PriceImportJob> entity)
@@ -135,6 +152,14 @@ internal static class PriceListConfigurationExtensions
 
         entity.Property(x => x.SupplierName)
             .HasMaxLength(300);
+
+        entity.ToTable(t =>
+        {
+            t.HasCheckConstraint("CK_PriceImportJobs_SourceFileName_NotEmpty", "LEN(LTRIM(RTRIM([SourceFileName]))) > 0");
+            t.HasCheckConstraint("CK_PriceImportJobs_SourceFilePath_NotEmpty", "LEN(LTRIM(RTRIM([SourceFilePath]))) > 0");
+            t.HasCheckConstraint("CK_PriceImportJobs_Counts_NonNegative", "[TotalCandidates] >= 0 AND [ReadyCount] >= 0 AND [ReviewCount] >= 0 AND [ErrorCount] >= 0 AND [ApprovedCount] >= 0");
+            t.HasCheckConstraint("CK_PriceImportJobs_DateRange", "[CompletedAt] IS NULL OR [CompletedAt] >= [StartedAt]");
+        });
     }
 
     internal static void EntityPriceImportCandidate(this EntityTypeBuilder<PriceImportCandidate> entity)
@@ -173,6 +198,15 @@ internal static class PriceListConfigurationExtensions
 
         entity.Property(x => x.Confidence)
             .HasPrecision(5, 4);
+
+        entity.ToTable(t =>
+        {
+            t.HasCheckConstraint("CK_PriceImportCandidates_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+            t.HasCheckConstraint("CK_PriceImportCandidates_BasePrice_NonNegative", "[BasePrice] IS NULL OR [BasePrice] >= 0");
+            t.HasCheckConstraint("CK_PriceImportCandidates_NetPrice_NonNegative", "[NetPrice] IS NULL OR [NetPrice] >= 0");
+            t.HasCheckConstraint("CK_PriceImportCandidates_DiscountPercent_Range", "[DiscountPercent] IS NULL OR ([DiscountPercent] >= 0 AND [DiscountPercent] <= 100)");
+            t.HasCheckConstraint("CK_PriceImportCandidates_Confidence_Range", "[Confidence] >= 0 AND [Confidence] <= 1");
+        });
     }
 
     internal static void EntityPriceImportMapping(this EntityTypeBuilder<PriceImportMapping> entity)
@@ -194,5 +228,12 @@ internal static class PriceListConfigurationExtensions
 
         entity.Property(x => x.InternalFieldName)
             .HasMaxLength(150);
+
+        entity.ToTable(t =>
+        {
+            t.HasCheckConstraint("CK_PriceImportMappings_SupplierName_NotEmpty", "LEN(LTRIM(RTRIM([SupplierName]))) > 0");
+            t.HasCheckConstraint("CK_PriceImportMappings_ExternalColumnName_NotEmpty", "LEN(LTRIM(RTRIM([ExternalColumnName]))) > 0");
+            t.HasCheckConstraint("CK_PriceImportMappings_InternalFieldName_NotEmpty", "LEN(LTRIM(RTRIM([InternalFieldName]))) > 0");
+        });
     }
 }

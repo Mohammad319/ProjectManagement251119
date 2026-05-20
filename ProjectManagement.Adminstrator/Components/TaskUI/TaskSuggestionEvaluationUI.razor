@@ -121,18 +121,25 @@
                             <th class="px-3 py-1.5 text-right text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Best top @result.TopK</th>
                             <th class="px-3 py-1.5 text-center text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Unit</th>
                             <th class="px-3 py-1.5 text-center text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Type</th>
+                            <th class="px-3 py-1.5 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Reason</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                        @foreach (var item in result.Items.OrderBy(x => x.BestTopKResourceOverlap).ThenBy(x => x.Top1ResourceOverlap).Take(50))
+                        @foreach (var item in result.Items
+                                            .OrderBy(x => x.WeakReason == "Healthy" ? 1 : 0)
+                                            .ThenBy(x => x.BestTopKResourceOverlap)
+                                            .ThenBy(x => x.Top1ResourceOverlap)
+                                            .Take(50))
                         {
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-900">
                                 <td class="px-3 py-2 align-top">
                                     <div class="font-medium text-slate-900 dark:text-slate-100">@item.TaskName</div>
+                                    <div class="mt-1 max-w-xl text-[11px] leading-5 text-slate-500">@item.ExpectedResourceUnits</div>
                                     <div class="mt-0.5 text-xs text-slate-500">@item.TaskCode @item.TaskUnit · @item.ExpectedResourceCount resources</div>
                                 </td>
                                 <td class="px-3 py-2 align-top">
                                     <div class="font-medium text-slate-800 dark:text-slate-200">@item.Top1TaskName</div>
+                                    <div class="mt-1 max-w-xl text-[11px] leading-5 text-slate-500">@item.Top1ResourceUnits</div>
                                     <div class="mt-0.5 text-xs text-slate-500">@item.Top1TaskCode</div>
                                 </td>
                                 <td class="px-3 py-2 text-right font-mono text-xs">@FormatPercent(item.Top1Score)</td>
@@ -140,6 +147,10 @@
                                 <td class="px-3 py-2 text-right font-mono text-xs">@FormatPercent(item.BestTopKResourceOverlap)</td>
                                 <td class="px-3 py-2 text-center">@StatusPill(item.UnitMatch)</td>
                                 <td class="px-3 py-2 text-center">@StatusPill(item.TypeMatch)</td>
+                                <td class="px-3 py-2 align-top">
+                                    <div class="text-xs font-semibold @(item.WeakReason == "Healthy" ? "text-emerald-700 dark:text-emerald-300" : "text-amber-700 dark:text-amber-300")">@item.WeakReason</div>
+                                    <div class="mt-1 text-[11px] leading-5 text-slate-500">@item.UnitMatchReason</div>
+                                </td>
                             </tr>
                         }
                     </tbody>

@@ -49,9 +49,10 @@
                     <label class="@LabelClass">Status</label>
                     <InputSelect @bind-Value="UpdateForm.Status" class="@SelectClass">
                         <option value="@TaskStatusEnum.ToPlan" selected="@(UpdateForm.Status == TaskStatusEnum.ToPlan)">@TaskStatusEnum.ToPlan</option>
-                        <option value="@TaskStatusEnum.ToDo" selected="@(UpdateForm.Status == TaskStatusEnum.ToDo)">@TaskStatusEnum.ToDo</option>
                         <option value="@TaskStatusEnum.UnderWorking" selected="@(UpdateForm.Status == TaskStatusEnum.UnderWorking)">@TaskStatusEnum.UnderWorking</option>
                         <option value="@TaskStatusEnum.Ready" selected="@(UpdateForm.Status == TaskStatusEnum.Ready)">@TaskStatusEnum.Ready</option>
+                        <option value="@TaskStatusEnum.SuggestionOnly" selected="@(UpdateForm.Status == TaskStatusEnum.SuggestionOnly)">@TaskStatusEnum.SuggestionOnly</option>
+                        <option value="@TaskStatusEnum.TrainingOnly" selected="@(UpdateForm.Status == TaskStatusEnum.TrainingOnly)">@TaskStatusEnum.TrainingOnly</option>
                     </InputSelect>
                 </div>
                 <div class="space-y-1">

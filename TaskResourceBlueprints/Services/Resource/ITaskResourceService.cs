@@ -114,7 +114,7 @@ namespace TaskResourceBlueprints.Services.Resource
                 return new TaskResourceDto
                 {
                     ResType = resource.ResType,
-                    Unit = resource.Unit,
+                    Unit = resource.Unit ?? string.Empty,
                 };
 
             return new TaskResourceDto
@@ -126,7 +126,7 @@ namespace TaskResourceBlueprints.Services.Resource
                 Parameters = link.Parameters,
                 AddOns = link.AddOns,
                 Times = link.Times,
-                Unit = resource.Unit,
+                Unit = resource.Unit ?? string.Empty,
             };
         }
 

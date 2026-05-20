@@ -1,5 +1,6 @@
 using System.Reflection;
 using ProjectManagement.Shared.Enums;
+using TaskResourceBlueprints.Entities.Tasks;
 using TaskResourceBlueprints.Services.Import;
 using Xunit;
 
@@ -87,6 +88,20 @@ public class TaskResourceCsvImportServiceTests
         Assert.Empty(result.Issues);
     }
 
+    [Theory]
+    [InlineData("", TaskStatusEnum.ToPlan)]
+    [InlineData("Unknown", TaskStatusEnum.ToPlan)]
+    [InlineData("2", TaskStatusEnum.ToPlan)]
+    [InlineData("ToPlan", TaskStatusEnum.ToPlan)]
+    [InlineData("UnderWorking", TaskStatusEnum.UnderWorking)]
+    [InlineData("Ready", TaskStatusEnum.Ready)]
+    [InlineData("SuggestionOnly", TaskStatusEnum.SuggestionOnly)]
+    [InlineData("TrainingOnly", TaskStatusEnum.TrainingOnly)]
+    public void ParseTaskStatus_DefaultsInvalidValuesToToPlan(string value, TaskStatusEnum expected)
+    {
+        Assert.Equal(expected, ParseTaskStatus(value));
+    }
+
     private static decimal? ParseNullableDecimal(string value)
     {
         var method = typeof(TaskResourceCsvImportService).GetMethod(
@@ -136,5 +151,16 @@ public class TaskResourceCsvImportServiceTests
         Assert.NotNull(method);
 
         return (ResourceTypesEnum)method.Invoke(null, [value, 1, result])!;
+    }
+
+    private static TaskStatusEnum ParseTaskStatus(string value)
+    {
+        var method = typeof(TaskResourceCsvImportService).GetMethod(
+            "ParseTaskStatus",
+            BindingFlags.NonPublic | BindingFlags.Static);
+
+        Assert.NotNull(method);
+
+        return (TaskStatusEnum)method.Invoke(null, [value])!;
     }
 }

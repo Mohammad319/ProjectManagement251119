@@ -208,8 +208,8 @@ public static partial class SwedishTaskTextNormalizer
         ["parkeringsplats"]   = "parkering",
     };
 
-    private static readonly Lazy<IReadOnlyDictionary<string, string>> ExternalSynonymMap =
-        new(LoadExternalSynonymMap, isThreadSafe: true);
+    private static readonly object ExternalSynonymLock = new();
+    private static IReadOnlyDictionary<string, string>? externalSynonymMap;
 
     private static readonly HashSet<string> StopWords = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -650,12 +650,33 @@ public static partial class SwedishTaskTextNormalizer
         return Math.Round(Math.Clamp(covered / denominator, 0d, 1d), 4);
     }
 
+    public static int ReloadExternalSynonyms()
+    {
+        lock (ExternalSynonymLock)
+        {
+            externalSynonymMap = LoadExternalSynonymMap();
+            return externalSynonymMap.Count;
+        }
+    }
+
     private static bool TryGetSynonym(string token, out string synonym)
     {
         if (SynonymMap.TryGetValue(token, out synonym!))
             return true;
 
-        return ExternalSynonymMap.Value.TryGetValue(token, out synonym!);
+        return GetExternalSynonymMap().TryGetValue(token, out synonym!);
+    }
+
+    private static IReadOnlyDictionary<string, string> GetExternalSynonymMap()
+    {
+        if (externalSynonymMap is not null)
+            return externalSynonymMap;
+
+        lock (ExternalSynonymLock)
+        {
+            externalSynonymMap ??= LoadExternalSynonymMap();
+            return externalSynonymMap;
+        }
     }
 
     private static IReadOnlyDictionary<string, string> LoadExternalSynonymMap()

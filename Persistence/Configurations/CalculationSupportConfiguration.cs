@@ -83,6 +83,7 @@ internal sealed class StatusResourcesConfiguration : IEntityTypeConfiguration<St
             .HasDatabaseName("IX_StatusResources_Tenant_Visible_Order");
 
         builder.HasIndex(x => new { x.TenantId, x.Name })
+            .IsUnique()
             .HasDatabaseName("IX_StatusResources_Tenant_Name");
 
         builder.ToTable(t =>
@@ -104,6 +105,7 @@ internal sealed class TaskStatusConfiguration : IEntityTypeConfiguration<TaskSta
             .HasDatabaseName("IX_TaskStatuses_Tenant_Visible_Order");
 
         builder.HasIndex(x => new { x.TenantId, x.Name })
+            .IsUnique()
             .HasDatabaseName("IX_TaskStatuses_Tenant_Name");
 
         builder.ToTable(t =>

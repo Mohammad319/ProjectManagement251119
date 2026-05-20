@@ -50,7 +50,7 @@ internal sealed class TenderAttributeBindConfiguration : IEntityTypeConfiguratio
         builder.HasOne(x => x.TenderAttribute)
             .WithMany(x => x.TendersAttributes)
             .HasForeignKey(x => x.TenderAttributeId)
-            .OnDelete(DeleteBehavior.NoAction);
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(x => new { x.TenantId, x.TenderId, x.TenderAttributeId })
             .IsUnique()

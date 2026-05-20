@@ -35,8 +35,10 @@ public sealed class TenantDbContextFactoryCache(IMemoryCache cache) : ITenantDbC
 
         return cache.GetOrCreate(key, entry =>
         {
-            //entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6);
-            //entry.SlidingExpiration = TimeSpan.FromMinutes(30);
+            // تنتهي الصلاحية بعد 24 ساعة على الأقل أو 4 ساعات من عدم الاستخدام
+            // هذا يحمي من memory leak في سيناريوهات multi-tenant وتغيير connection strings
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24);
+            entry.SlidingExpiration = TimeSpan.FromHours(4);
 
             var builder = new DbContextOptionsBuilder<ShardingSingleDbContext>();
 

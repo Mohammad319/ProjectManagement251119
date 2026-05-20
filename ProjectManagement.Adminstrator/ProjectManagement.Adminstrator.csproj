@@ -13,13 +13,21 @@
 
   <ItemGroup>
     <Compile Remove="**\node_modules\**" />
+    <Compile Remove=".codex-build\**" />
+    <Compile Remove="artifacts\**" />
     <Content Remove="**\node_modules\**" />
+    <Content Remove=".codex-build\**" />
+    <Content Remove="artifacts\**" />
     <EmbeddedResource Remove="**\node_modules\**" />
+    <EmbeddedResource Remove=".codex-build\**" />
+    <EmbeddedResource Remove="artifacts\**" />
     <None Remove="**\node_modules\**" />
+    <None Remove=".codex-build\**" />
+    <None Remove="artifacts\**" />
   </ItemGroup>
 
   <PropertyGroup>
-    <DefaultItemExcludes>$(DefaultItemExcludes);**\node_modules\**</DefaultItemExcludes>
+    <DefaultItemExcludes>$(DefaultItemExcludes);**\node_modules\**;.codex-build\**;artifacts\**</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>

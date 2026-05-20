@@ -3,6 +3,7 @@
 @using ProjectManagement.Adminstrator.Components.Folder
 @using ProjectManagement.Adminstrator.Components.TaskStatus
 @using ProjectManagement.Adminstrator.Components.TaskUI
+@using ProjectManagement.Adminstrator.Components.TenantDatabase
 @rendermode InteractiveServer
 @attribute [Authorize(Roles = PMRolesConst.APP.AdminManger)]
 
@@ -15,12 +16,13 @@
             <button type="button" class="@NavButtonClass(typeof(ControlTaskStatusUI))" @onclick="() => Component = typeof(ControlTaskStatusUI)">Actions &amp; States</button>
             <button type="button" class="@NavButtonClass(typeof(TaskDLIndexUI))" @onclick="() => Component = typeof(TaskDLIndexUI)">Task &amp; Question</button>
             <button type="button" class="@NavButtonClass(typeof(TaskResourceCsvImportUI))" @onclick="() => Component = typeof(TaskResourceCsvImportUI)">CSV Import</button>
-            <button type="button" class="@NavButtonClass(typeof(TaskCleanDataImportUI))" @onclick="() => Component = typeof(TaskCleanDataImportUI)">Clean Data</button>
+            <button type="button" class="@NavButtonClass(typeof(TaskSynonymDictionaryUI))" @onclick="() => Component = typeof(TaskSynonymDictionaryUI)">Synonyms</button>
             <button type="button" class="@NavButtonClass(typeof(TaskSuggestionEvaluationUI))" @onclick="() => Component = typeof(TaskSuggestionEvaluationUI)">Evaluation</button>
             <button type="button" class="@NavButtonClass(typeof(TaskSuggestionFeedbackReviewUI))" @onclick="() => Component = typeof(TaskSuggestionFeedbackReviewUI)">Feedback &amp; ML</button>
             <button type="button" class="@NavButtonClass(typeof(TenantMlTrainingUI))" @onclick="() => Component = typeof(TenantMlTrainingUI)">Tenant ML</button>
             <button type="button" class="@NavButtonClass(typeof(UserAppUI))" @onclick="() => Component = typeof(AppUser.UserAppUI)">Site Administrators</button>
             <button type="button" class="@NavButtonClass(typeof(Tenant.IndexUI))" @onclick="() => Component = typeof(Tenant.IndexUI)">@AppControll.tenant</button>
+            <button type="button" class="@NavButtonClass(typeof(IndexTDBUI))" @onclick="() => Component = typeof(IndexTDBUI)">@AppControll.Db</button>
             <button type="button" class="@NavButtonClass(typeof(LogUI))" @onclick="() => Component = typeof(LogUI)">Logs</button>
 
         </nav>

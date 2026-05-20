@@ -37,6 +37,7 @@ public class ProjectTaskDto
     public string DisplayName { get; set; } = string.Empty;
     public int SortOrder { get; set; }
     public bool IsVisible { get; set; } = true;
+    public bool HasResources { get; set; }
     public string Note { get; set; } = string.Empty;
     public List<string> UpperNote { get; set; } = [];
 

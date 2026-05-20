@@ -16,5 +16,15 @@ public class ResourceCategoryConfiguration : IEntityTypeConfiguration<ResourceCa
             .HasMaxLength(1024);
 
         builder.HasIndex(x => new { x.ParentCategoryId, x.SortOrder, x.DisplayName });
+        builder.HasIndex(x => new { x.ParentCategoryId, x.DisplayName })
+            .IsUnique()
+            .HasDatabaseName("UX_ResourceCategories_Parent_Name");
+
+        builder.ToTable(t =>
+        {
+            t.HasCheckConstraint("CK_ResourceCategories_Name_NotEmpty", "LEN(LTRIM(RTRIM([DisplayName]))) > 0");
+            t.HasCheckConstraint("CK_ResourceCategories_SortOrder_NonNegative", "[SortOrder] >= 0");
+            t.HasCheckConstraint("CK_ResourceCategories_NoSelfParent", "[ParentCategoryId] IS NULL OR [ParentCategoryId] <> [Id]");
+        });
     }
 }

@@ -13,6 +13,8 @@ public class TaskDefinitionResourceLink
     public List<ResourceParameter> Parameters { get; set; } = [];
     public List<ResourceAddon> AddOns { get; set; } = [];
     public List<ResourceTime> Times { get; set; } = [];
+    public byte[] RowVersion { get; set; } = [];
+
     public TaskDefinition? Task { get; set; }
     public ResourceDefinition? Resource { get; set; }
 }

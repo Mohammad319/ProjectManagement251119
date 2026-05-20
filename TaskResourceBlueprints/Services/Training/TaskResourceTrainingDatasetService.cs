@@ -53,11 +53,18 @@ public sealed class TaskResourceTrainingDatasetService(IDbContextFactory<TaskRes
         negativeExamplesPerPositive = Math.Clamp(negativeExamplesPerPositive, 0, 10);
 
         await using var db = await dbContextFactory.CreateDbContextAsync(ct);
+        var trainingStatuses = new[] { TaskStatusEnum.Ready, TaskStatusEnum.SuggestionOnly, TaskStatusEnum.TrainingOnly };
         var links = await db.TaskDefinitionResourceLinks
             .AsNoTracking()
             .Include(x => x.Task)
             .Include(x => x.Resource)
-            .Where(x => x.Task != null && x.Resource != null && x.Task.IsActive && x.Resource.IsActive && x.Resource.IsVisible)
+            .Where(x =>
+                x.Task != null &&
+                trainingStatuses.Contains(x.Task.Status) &&
+                x.Resource != null &&
+                x.Task.IsActive &&
+                x.Resource.IsActive &&
+                x.Resource.IsVisible)
             .ToListAsync(ct);
         var resources = await db.Resources
             .AsNoTracking()

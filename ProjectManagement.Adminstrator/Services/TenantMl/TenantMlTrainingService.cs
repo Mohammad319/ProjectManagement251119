@@ -891,10 +891,15 @@ public sealed class TenantMlTrainingService(
         CancellationToken ct)
     {
         await using var db = await blueprintDbFactory.CreateDbContextAsync(ct);
+        var suggestionStatuses = new[]
+        {
+            TaskResourceBlueprints.Entities.Tasks.TaskStatusEnum.Ready,
+            TaskResourceBlueprints.Entities.Tasks.TaskStatusEnum.SuggestionOnly
+        };
         var tasks = await db.Tasks
             .AsNoTracking()
             .Where(x =>
-                x.Status == TaskResourceBlueprints.Entities.Tasks.TaskStatusEnum.Ready &&
+                suggestionStatuses.Contains(x.Status) &&
                 x.ResourceLinks.Any(link => link.Resource != null && link.Resource.IsActive && link.Resource.IsVisible))
             .OrderByDescending(x => x.UsageCount)
             .ThenBy(x => x.SortOrder)

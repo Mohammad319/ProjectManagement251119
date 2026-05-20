@@ -366,6 +366,14 @@
         _loading = true;
         StateHasChanged();
 
+        if (!HasResources(TaskItem))
+        {
+            _states = [];
+            _filteredCache = null;
+            _loading = false;
+            return;
+        }
+
         var previousStates = _states.ToDictionary(x => x.Key);
         var results = await Repo.Resource.GetSuggestionsAsync(TaskItem.Id, SuggestionFetchLimit, includeResources: false);
 
@@ -390,11 +398,7 @@
             await ToggleResourcesAsync(firstVisible);
     }
 
-    private async Task ShowMoreAsync()
-    {
-        _maxResults += PageSize;
-        await System.Threading.Tasks.Task.CompletedTask;
-    }
+    private void ShowMoreAsync() => _maxResults += PageSize;
 
     private void OnSourceFilterChanged(ref bool target, bool value)
     {
@@ -618,6 +622,9 @@
 
     private static bool HasTaskQuantityInfo(TaskResourceSuggestionDTO suggestion)
         => suggestion.SourceTaskQuantity.HasValue || !string.IsNullOrWhiteSpace(suggestion.SourceTaskUnit);
+
+    private static bool HasResources(TaskListMVVM task)
+        => task.Resources?.Count > 0;
 
     private static string FormatTaskQuantity(TaskResourceSuggestionDTO suggestion)
     {

@@ -28,6 +28,9 @@ namespace TaskResourceBlueprints.Entities
             set => _data = value;
         }
 
+        public DateTime CreatedAtUtc { get; init; } = DateTime.UtcNow;
+        public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
+
         public List<ResourceTenantLinkEntity> TenantLinks { get; set; } = [];
     }
 }

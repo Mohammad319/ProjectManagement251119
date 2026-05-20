@@ -9,7 +9,7 @@ namespace Domain.Entities.Application
 {
     public class ApplicationValuesEntity : ApplicationValuesBase, IDataKeyFilterReadOnly
     {
-        [Key]
+        // Id بدون [Key] — EF يكتشفه تلقائياً بالاسم
         public int Id { get; set; }
 
         public int CalculationId { get; set; }
@@ -38,7 +38,7 @@ namespace Domain.Entities.Application
                 ApplicationId = applicationId,
                 UserId = userId,
                 Name = NormalizeRequired(name, "Application value name"),
-                Responsible = NormalizeOptional(responsible),
+                Responsible = NormalizeOptional(responsible) ?? string.Empty,
                 Data = data ?? new ApplicationValuesData(),
                 LastUpdate = DateTime.UtcNow
             };

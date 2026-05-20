@@ -23,11 +23,19 @@ public sealed class TaskResourceSuggestionService(
     private const double IncompatibleUnitPenalty = 0.04d;
     private const double ParentContextBonus = 0.04d;
 
-    public async Task<IReadOnlyList<TaskResourceSuggestionDTO>> GetSuggestionsAsync(
+    public Task<IReadOnlyList<TaskResourceSuggestionDTO>> GetSuggestionsAsync(
         int taskId,
         int maxResults,
         bool includeResources = true,
         CancellationToken cancellationToken = default)
+        => GetSuggestionsInternalAsync(taskId, maxResults, includeResources, sharedFeedbackStats: null, cancellationToken);
+
+    private async Task<IReadOnlyList<TaskResourceSuggestionDTO>> GetSuggestionsInternalAsync(
+        int taskId,
+        int maxResults,
+        bool includeResources,
+        IReadOnlyDictionary<string, FeedbackStats>? sharedFeedbackStats,
+        CancellationToken cancellationToken)
     {
         maxResults = Math.Clamp(maxResults, 1, 100);
 
@@ -50,7 +58,9 @@ public sealed class TaskResourceSuggestionService(
 
         var tenantId = tenantDb.TenantId;
         var feedbackBySuggestion = await GetFeedbackMapAsync(tenantId, target.Id, cancellationToken);
-        var feedbackStatsBySuggestion = await GetFeedbackStatsMapAsync(tenantId, cancellationToken);
+        // Use pre-fetched stats when available (bulk path) — avoids N redundant GROUP BY queries
+        var feedbackStatsBySuggestion = sharedFeedbackStats
+            ?? await GetFeedbackStatsMapAsync(tenantId, cancellationToken);
 
         var tenantTask = GetTenantTaskSuggestionsAsync(
             tenantDb,
@@ -209,6 +219,8 @@ public sealed class TaskResourceSuggestionService(
         var candidates = MergeCandidates(priorityCandidates, fallbackCandidates, x => x.Id);
 
         var candidateContexts = await BuildTenantTaskContextsAsync(db, candidates, ct);
+        // Pre-normalize once — reused across all candidates instead of per-candidate normalization
+        var targetNameNormalized = SwedishTaskTextNormalizer.Normalize(targetName);
 
         return candidates
             .Select(task =>
@@ -224,9 +236,9 @@ public sealed class TaskResourceSuggestionService(
                     candidateContext.Unit,
                     targetCode,
                     candidateContext.Code,
-                    targetQuantity,
-                    candidateContext.Quantity,
-                    targetName,
+                    targetQuantity: null,
+                    candidateQuantity: null,
+                    targetNameNormalized,
                     candidateContext.ContextualName,
                     targetCodeDepth,
                     candidateCodeDepth: candidateContext.CodeDepth)
@@ -242,7 +254,7 @@ public sealed class TaskResourceSuggestionService(
                 {
                     SourceTaskId = task.Id,
                     SourceTaskName = task.Name,
-                    SourceTaskQuantity = candidateContext.Quantity,
+                    SourceTaskQuantity = null,
                     SourceTaskUnit = candidateContext.Unit ?? string.Empty,
                     Source = TaskResourceSuggestionSource.TenantTask,
                     Score = score.Score,
@@ -276,10 +288,11 @@ public sealed class TaskResourceSuggestionService(
     {
         await using var db = await blueprintFactory.CreateDbContextAsync(ct);
 
+        var suggestionStatuses = new[] { TaskStatusEnum.Ready, TaskStatusEnum.SuggestionOnly };
         var baseQuery = db.Tasks
             .AsNoTracking()
             .Where(x =>
-                x.Status == TaskStatusEnum.Ready &&
+                suggestionStatuses.Contains(x.Status) &&
                 x.ResourceLinks.Any(link =>
                     link.Resource != null &&
                     link.Resource.IsActive &&
@@ -297,6 +310,8 @@ public sealed class TaskResourceSuggestionService(
         var fallbackCandidates = await fallbackQuery.ToListAsync(ct);
 
         var candidates = MergeCandidates(priorityCandidates, fallbackCandidates, x => x.Id);
+        // Pre-normalize once — reused across all candidates instead of per-candidate normalization
+        var targetNameNormalized = SwedishTaskTextNormalizer.Normalize(targetName);
 
         return candidates
             .Select(task =>
@@ -313,7 +328,7 @@ public sealed class TaskResourceSuggestionService(
                     candidateContext.Code,
                     targetQuantity,
                     candidateContext.Quantity,
-                    targetName,
+                    targetNameNormalized,
                     candidateContext.ContextualName,
                     targetCodeDepth,
                     candidateCodeDepth: candidateContext.CodeDepth)
@@ -810,7 +825,7 @@ public sealed class TaskResourceSuggestionService(
             candidateCode,
             targetQuantity,
             candidateQuantity,
-            targetName,
+            SwedishTaskTextNormalizer.Normalize(targetName),
             candidateName,
             codeInheritanceFactor: 1d,
             hasInheritedContext: false);
@@ -824,7 +839,7 @@ public sealed class TaskResourceSuggestionService(
         string? candidateCode = null,
         decimal? targetQuantity = null,
         decimal? candidateQuantity = null,
-        string? targetName = null,
+        string targetNameNormalized = "",
         string? candidateName = null,
         int targetCodeDepth = 0,
         int candidateCodeDepth = 0)
@@ -837,7 +852,7 @@ public sealed class TaskResourceSuggestionService(
             candidateCode,
             targetQuantity,
             candidateQuantity,
-            targetName,
+            targetNameNormalized,
             candidateName,
             GetCodeInheritanceFactor(targetCodeDepth, candidateCodeDepth),
             targetCodeDepth > 0 || candidateCodeDepth > 0);
@@ -851,13 +866,13 @@ public sealed class TaskResourceSuggestionService(
         string? candidateCode,
         decimal? targetQuantity,
         decimal? candidateQuantity,
-        string? targetName,
+        string targetNameNormalized,
         string? candidateName,
         double codeInheritanceFactor,
         bool hasInheritedContext)
     {
         var textScore = SwedishTaskTextNormalizer.CalculateSimilarity(targetNormalized, candidateNormalized);
-        var nameScore = GetNameSimilarity(targetName, candidateName);
+        var nameScore = GetNameSimilarity(targetNameNormalized, candidateName);
         var tokenCoverage = SwedishTaskTextNormalizer.CalculateTokenCoverage(targetNormalized, candidateNormalized);
         var reverseTokenCoverage = SwedishTaskTextNormalizer.CalculateTokenCoverage(candidateNormalized, targetNormalized);
         var hybridTokenScore = (tokenCoverage * 0.75d) + (reverseTokenCoverage * 0.25d);
@@ -1036,11 +1051,9 @@ public sealed class TaskResourceSuggestionService(
         };
     }
 
-    private static double GetNameSimilarity(string? targetName, string? candidateName)
+    private static double GetNameSimilarity(string targetNameNormalized, string? candidateName)
     {
-        var targetNameNormalized = SwedishTaskTextNormalizer.Normalize(targetName);
         var candidateNameNormalized = SwedishTaskTextNormalizer.Normalize(candidateName);
-
         return SwedishTaskTextNormalizer.CalculateSimilarity(targetNameNormalized, candidateNameNormalized);
     }
 
@@ -1084,7 +1097,7 @@ public sealed class TaskResourceSuggestionService(
             _ => "Weak match"
         };
 
-        var parts = new List<string>
+        var parts = new List<string>(8)
         {
             $"text {FormatPercent(score.TextScore)}",
             $"name {FormatPercent(score.NameScore)}"
@@ -1211,13 +1224,20 @@ public sealed class TaskResourceSuggestionService(
     {
         maxResultsPerTask = Math.Clamp(maxResultsPerTask, 1, 20);
 
+        if (taskIds.Count == 0)
+            return new Dictionary<int, IReadOnlyList<TaskResourceSuggestionDTO>>();
+
+        // Pre-fetch global feedback stats once — shared across all N tasks to avoid N GROUP BY queries
+        await using var sharedTenantDb = await dbFactory.CreateDbContextAsync(cancellationToken);
+        var sharedFeedbackStats = await GetFeedbackStatsMapAsync(sharedTenantDb.TenantId, cancellationToken);
+
         var sem = new SemaphoreSlim(4);
         var pairs = await System.Threading.Tasks.Task.WhenAll(taskIds.Select(async taskId =>
         {
             await sem.WaitAsync(cancellationToken);
             try
             {
-                var suggestions = await GetSuggestionsAsync(taskId, maxResultsPerTask, includeResources: false, cancellationToken);
+                var suggestions = await GetSuggestionsInternalAsync(taskId, maxResultsPerTask, includeResources: false, sharedFeedbackStats, cancellationToken);
                 return (taskId, suggestions);
             }
             finally { sem.Release(); }

@@ -31,5 +31,12 @@ public class ResourceDefinitionConfiguration : IEntityTypeConfiguration<Resource
 
         b.HasIndex(x => new { x.FolderId, x.SortOrder, x.Name });
         b.HasIndex(x => new { x.IsActive, x.IsVisible, x.Name });
+
+        b.ToTable(t =>
+        {
+            t.HasCheckConstraint("CK_Resources_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+            t.HasCheckConstraint("CK_Resources_SortOrder_NonNegative", "[SortOrder] >= 0");
+            t.HasCheckConstraint("CK_Resources_Quantity_NonNegative", "[Quantity] IS NULL OR [Quantity] >= 0");
+        });
     }
 }

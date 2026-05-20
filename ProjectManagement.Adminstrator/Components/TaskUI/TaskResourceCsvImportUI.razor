@@ -105,7 +105,7 @@
 
     <!-- ── CSV format reference ────────────────────────────────────────────── -->
     <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
-        <div class="grid gap-3 md:grid-cols-5">
+        <div class="grid gap-3 md:grid-cols-6">
             <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900/70">
                 <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">File</div>
                 <div class="mt-1 truncate text-sm font-semibold">@(selectedFile?.Name ?? "No file selected")</div>
@@ -121,6 +121,10 @@
             <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900/70">
                 <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Expected Name</div>
                 <div class="mt-1 text-sm font-semibold">Name/Namn or column F</div>
+            </div>
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900/70">
+                <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Task Status</div>
+                <div class="mt-1 text-sm font-semibold">Status: ToPlan, UnderWorking, Ready, SuggestionOnly, TrainingOnly</div>
             </div>
             <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900/70">
                 <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Expected Quantity</div>

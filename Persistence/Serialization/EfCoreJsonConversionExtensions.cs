@@ -23,7 +23,8 @@ internal static class EfCoreJsonConversionExtensions
         // Important: lets EF detect changes for mutable JSON objects (reference types)
         var comparer = new ValueComparer<T>(
             (l, r) =>
-                (l == null && r == null)
+                ReferenceEquals(l, r)                        // fast path: نفس المرجع لا يحتاج تسلسل
+                || (l == null && r == null)
                 || (l != null && r != null
                     && JsonSerializer.Serialize(l, opts) == JsonSerializer.Serialize(r, opts)),
 

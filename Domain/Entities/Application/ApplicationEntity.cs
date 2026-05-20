@@ -23,7 +23,7 @@ namespace Domain.Entities.Application
     /// </summary>
     public sealed class ApplicationEntity : ApplicationBase, IDataKeyFilterReadOnly
     {
-        [Key]
+        // Id بدون [Key] — EF يكتشفه تلقائياً بالاسم
         public int Id { get; set; }
 
         private ApplicationDataEntity _data = new();

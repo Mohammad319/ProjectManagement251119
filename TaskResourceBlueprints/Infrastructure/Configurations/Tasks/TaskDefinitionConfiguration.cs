@@ -62,9 +62,22 @@ public class TaskDefinitionConfiguration : IEntityTypeConfiguration<TaskDefiniti
         builder.Property(x => x.WorkloadThresholds)
             .HasJsonScalarListComparer();
 
+        builder.Property(e => e.RowVersion).IsRowVersion();
+
         builder.HasIndex(x => new { x.Status, x.SortOrder });
         builder.HasIndex(x => x.NormalizedTextSv);
         builder.HasIndex(x => x.Code);
         builder.HasIndex(x => x.ParentCode);
+        builder.HasIndex(x => x.HierarchyPath)
+            .HasDatabaseName("IX_Tasks_HierarchyPath");
+
+        builder.ToTable(t =>
+        {
+            t.HasCheckConstraint("CK_Tasks_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+            t.HasCheckConstraint("CK_Tasks_SortOrder_NonNegative", "[SortOrder] >= 0");
+            t.HasCheckConstraint("CK_Tasks_Quantity_NonNegative", "[Quantity] IS NULL OR [Quantity] >= 0");
+            t.HasCheckConstraint("CK_Tasks_PriceProduction_NonNegative", "[PriceProduction] IS NULL OR [PriceProduction] >= 0");
+            t.HasCheckConstraint("CK_Tasks_ChangeFactors_Positive", "[ChangeFactor1] > 0 AND [ChangeFactor2] > 0");
+        });
     }
 }

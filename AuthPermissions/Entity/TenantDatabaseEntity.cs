@@ -26,5 +26,9 @@ namespace AuthPermissions.Entity
         [Required]
         [MaxLength(4000)]
         public string ConnectionString { get; set; } = string.Empty;
+
+        public byte[] RowVersion { get; set; } = [];
+        public DateTime CreatedAtUtc { get; init; } = DateTime.UtcNow;
+        public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
     }
 }

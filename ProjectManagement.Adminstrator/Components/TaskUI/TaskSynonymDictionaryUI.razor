@@ -1,0 +1,609 @@
+@using Microsoft.AspNetCore.Components.Forms
+@using ProjectManagement.Adminstrator.Services.Synonyms
+@inject ISynonymDictionaryService SynonymDictionaryService
+
+<div class="space-y-3 text-slate-900 dark:text-slate-100">
+
+    <!-- ── Header ── -->
+    <section class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
+        <div class="flex flex-col gap-3 px-4 py-3 xl:flex-row xl:items-start xl:justify-between">
+            <div class="min-w-0">
+                <div class="flex items-center gap-2.5">
+                    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                        </svg>
+                    </span>
+                    <h2 class="text-base font-semibold tracking-tight">Synonyms Dictionary</h2>
+                </div>
+                <p class="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
+                    Central task-name dictionary used by search, data cleanup, and resource suggestions.
+                </p>
+                <div class="mt-2 flex items-center gap-1.5 overflow-hidden">
+                    <svg class="h-3.5 w-3.5 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                    </svg>
+                    <span class="truncate text-xs text-slate-400 dark:text-slate-500">@dictionaryPath</span>
+                </div>
+            </div>
+
+            <div class="flex shrink-0 flex-wrap items-center gap-2">
+                <label class="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus-within:ring-2 focus-within:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">
+                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                    </svg>
+                    Import CSV
+                    <InputFile class="sr-only" OnChange="ImportCsvAsync" accept=".csv,.txt,text/csv,text/plain" disabled="@isBusy" />
+                </label>
+
+                <label class="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                    <input type="checkbox" @bind="replaceOnImport" class="h-3.5 w-3.5 rounded border-slate-300 accent-indigo-600" />
+                    Replace on import
+                </label>
+
+                <button type="button" class="@SecondaryButton" disabled="@isBusy" @onclick="ExportAsync">
+                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                    Export CSV
+                </button>
+
+                <button type="button" class="@SecondaryButton" disabled="@isBusy" @onclick="ReloadAsync">
+                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    Reload
+                </button>
+
+                <button type="button" class="@PrimaryButton" disabled="@isBusy" @onclick="RebuildSearchIndexAsync">
+                    @if (isRebuilding)
+                    {
+                        <svg class="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                        </svg>
+                        <span>Rebuilding...</span>
+                    }
+                    else
+                    {
+                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H7m0 0l4-4m-4 4l4 4"/>
+                        </svg>
+                        <span>Rebuild Search Index</span>
+                    }
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── Messages ── -->
+    @if (!string.IsNullOrWhiteSpace(message))
+    {
+        <div class="flex items-start gap-2.5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900/70 dark:bg-emerald-950/50 dark:text-emerald-200">
+            <svg class="mt-0.5 h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span>@message</span>
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="flex items-start gap-2.5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/70 dark:bg-rose-950/50 dark:text-rose-300">
+            <svg class="mt-0.5 h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            </svg>
+            <span>@errorMessage</span>
+        </div>
+    }
+
+    <!-- ── Stats ── -->
+    <section class="hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
+        <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
+            @SummaryCard("Entries", entries.Count.ToString(), entries.Count > 0)
+            @SummaryCard("Visible", FilteredEntries.Count.ToString(), FilteredEntries.Count > 0)
+            @SummaryCard("Imported", importedSynonyms.Count.ToString(), importedSynonyms.Count > 0)
+            @SummaryCard("Missing words", missingTokens.Count.ToString(), missingTokens.Count > 0, highlight: missingTokens.Count > 0)
+        </div>
+    </section>
+
+    <!-- ── Add / Edit Entry ── -->
+    <section class="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
+        <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <div>
+                <p class="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                    @(string.IsNullOrWhiteSpace(editSource) ? "Add Entry" : "Edit Entry")
+                </p>
+                <p class="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                    Add the missing word as source, then write the canonical word the system should understand.
+                </p>
+            </div>
+            <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+                Missing: @missingTokens.Count
+            </span>
+        </div>
+        <div class="grid gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+            <label class="block">
+                <span class="mb-0.5 block text-[10px] font-semibold uppercase tracking-widest text-slate-400">Source</span>
+            <input placeholder="Source word, e.g. korbanor"
+                   @bind="editSource"
+                   class="h-8 w-full rounded-lg border border-slate-300 bg-white px-2.5 text-xs placeholder-slate-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-900 dark:placeholder-slate-600" />
+            </label>
+            <label class="block">
+                <span class="mb-0.5 block text-[10px] font-semibold uppercase tracking-widest text-slate-400">Canonical target</span>
+            <input placeholder="Canonical target, e.g. vag"
+                   @bind="editTarget"
+                   class="h-8 w-full rounded-lg border border-slate-300 bg-white px-2.5 text-xs placeholder-slate-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-900 dark:placeholder-slate-600" />
+            </label>
+            <button type="button" class="@PrimaryButton mt-4 h-8 shrink-0 px-3" disabled="@isBusy" @onclick="SaveEntryAsync">
+                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                </svg>
+                Save
+            </button>
+        </div>
+    </section>
+
+    <!-- ── Dictionary Table ── -->
+    <section class="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
+        <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <div>
+                <p class="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">Search dictionary</p>
+                <p class="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">Check whether a source or target word already exists before adding it.</p>
+            </div>
+        </div>
+        <div>
+            <div class="relative">
+                <svg class="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input placeholder="Search source or target..."
+                       @bind="searchText"
+                       @bind:event="oninput"
+                       class="h-8 w-full rounded-lg border border-slate-300 bg-white py-1.5 pl-8 pr-2.5 text-xs placeholder-slate-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-900 dark:placeholder-slate-600" />
+            </div>
+        </div>
+
+        <div class="hidden max-h-[28rem] overflow-auto">
+            <table class="min-w-full text-sm">
+                <thead class="sticky top-0 z-10 border-b border-slate-100 bg-slate-50 dark:border-slate-800 dark:bg-slate-900">
+                    <tr>
+                        <th class="px-4 py-2.5 text-left text-[10px] font-semibold uppercase tracking-widest text-slate-500">Source</th>
+                        <th class="px-4 py-2.5 text-left text-[10px] font-semibold uppercase tracking-widest text-slate-500">Target</th>
+                        <th class="px-4 py-2.5 text-right text-[10px] font-semibold uppercase tracking-widest text-slate-500">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
+                    @foreach (var entry in FilteredEntries.Take(500))
+                    {
+                        <tr class="group transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/60">
+                            <td class="px-4 py-2.5 font-medium text-slate-800 dark:text-slate-200">@entry.Source</td>
+                            <td class="px-4 py-2.5 text-slate-500 dark:text-slate-400">
+                                <span class="inline-flex items-center gap-1.5">
+                                    <svg class="h-3 w-3 shrink-0 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                                    </svg>
+                                    @entry.Target
+                                </span>
+                            </td>
+                            <td class="px-4 py-2.5 text-right">
+                                <div class="inline-flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                                    <button type="button" class="@SmallButton" @onclick="() => EditEntry(entry)">Edit</button>
+                                    <button type="button" class="@DangerSmallButton" @onclick="() => DeleteEntryAsync(entry.Source)">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- ── Imported Task Synonyms ── -->
+    <section class="hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
+        <div class="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3 dark:border-slate-800">
+            <div>
+                <h3 class="text-sm font-semibold">Imported Task Synonyms</h3>
+                <p class="mt-1 text-xs text-slate-500">Synonyms imported into individual blueprint tasks. Promote useful rows to the central dictionary.</p>
+            </div>
+            <button type="button" class="@SmallButton" disabled="@isBusy" @onclick="LoadImportedSynonymsAsync">
+                @if (importedLoaded)
+                {
+                    <svg class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    <span>Refresh</span>
+                }
+                else
+                {
+                    <span>Load</span>
+                }
+            </button>
+        </div>
+
+        @if (!importedLoaded)
+        {
+            <div class="flex min-h-[100px] items-center justify-center text-sm text-slate-400 dark:text-slate-500">
+                Click <strong class="mx-1">Load</strong> to fetch imported task synonyms.
+            </div>
+        }
+        else
+        {
+            <div class="max-h-[28rem] overflow-auto">
+                <table class="min-w-full text-sm">
+                    <thead class="sticky top-0 z-10 border-b border-slate-100 bg-slate-50 dark:border-slate-800 dark:bg-slate-900">
+                        <tr>
+                            <th class="px-4 py-2.5 text-left text-[10px] font-semibold uppercase tracking-widest text-slate-500">Type</th>
+                            <th class="px-4 py-2.5 text-left text-[10px] font-semibold uppercase tracking-widest text-slate-500">Synonym</th>
+                            <th class="px-4 py-2.5 text-left text-[10px] font-semibold uppercase tracking-widest text-slate-500">Target</th>
+                            <th class="px-4 py-2.5 text-left text-[10px] font-semibold uppercase tracking-widest text-slate-500">Task</th>
+                            <th class="px-4 py-2.5 text-right text-[10px] font-semibold uppercase tracking-widest text-slate-500">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
+                        @foreach (var row in importedSynonyms.Take(500))
+                        {
+                            <tr class="group transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/60">
+                                <td class="px-4 py-2.5 text-xs text-slate-500">@row.Kind</td>
+                                <td class="px-4 py-2.5 font-medium text-slate-800 dark:text-slate-200">@row.Synonym</td>
+                                <td class="px-4 py-2.5 text-slate-500 dark:text-slate-400">@row.Target</td>
+                                <td class="px-4 py-2.5">
+                                    <div class="text-xs font-mono text-slate-400">@row.TaskCode</div>
+                                    <div class="text-xs text-slate-600 dark:text-slate-300">@row.TaskName</div>
+                                </td>
+                                <td class="px-4 py-2.5 text-right">
+                                    <button type="button" class="@SmallButton" disabled="@isBusy" @onclick="() => PromoteImportedSynonymAsync(row)">Promote</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+
+    <!-- ── Missing Words ── -->
+    <section class="rounded-2xl border border-amber-200 bg-amber-50/40 shadow-sm dark:border-amber-900/40 dark:bg-amber-950/10">
+        <div class="flex items-center justify-between gap-3 border-b border-amber-200/70 px-4 py-3 dark:border-amber-900/30">
+            <div class="flex items-center gap-2">
+                <svg class="h-4 w-4 text-amber-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                </svg>
+                <h3 class="text-sm font-semibold text-amber-900 dark:text-amber-100">Missing Words</h3>
+                @if (missingTokens.Count > 0)
+                {
+                    <span class="rounded-full bg-amber-200 px-2 py-0.5 text-[10px] font-bold text-amber-800 dark:bg-amber-900/70 dark:text-amber-300">@missingTokens.Count</span>
+                }
+            </div>
+            <div class="flex items-center gap-3">
+                <p class="hidden text-xs text-amber-700/70 dark:text-amber-300/60 sm:block">
+                    Words in leaf blueprint tasks without resources — parent/header tasks are ignored.
+                </p>
+                <button type="button" class="@SmallButton shrink-0" disabled="@isBusy" @onclick="LoadMissingTokensAsync">
+                    @if (missingLoaded)
+                    {
+                        <svg class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                        <span>Refresh</span>
+                    }
+                    else
+                    {
+                        <span>Load</span>
+                    }
+                </button>
+            </div>
+        </div>
+
+        <div class="grid gap-2 border-b border-amber-200/70 bg-white/60 px-4 py-3 text-xs text-amber-900 dark:border-amber-900/30 dark:bg-slate-950/30 dark:text-amber-100 md:grid-cols-3">
+            <div class="rounded-lg border border-amber-200 bg-white px-3 py-2 dark:border-amber-900/40 dark:bg-slate-950/70">
+                1. Open <span class="font-semibold">View</span> to inspect where the word appears.
+            </div>
+            <div class="rounded-lg border border-amber-200 bg-white px-3 py-2 dark:border-amber-900/40 dark:bg-slate-950/70">
+                2. Write the correct canonical target and press <span class="font-semibold">Add</span>.
+            </div>
+            <div class="rounded-lg border border-amber-200 bg-white px-3 py-2 dark:border-amber-900/40 dark:bg-slate-950/70">
+                3. Press <span class="font-semibold">Refresh</span>. When all useful words are mapped, this becomes 0.
+            </div>
+        </div>
+
+        @if (!missingLoaded)
+        {
+            <div class="flex min-h-[100px] items-center justify-center text-sm text-amber-700/70 dark:text-amber-400/70">
+                Click <strong class="mx-1">Load</strong> to scan blueprint tasks for missing words.
+            </div>
+        }
+        else if (missingTokens.Count == 0)
+        {
+            <div class="flex min-h-[120px] items-center justify-center px-4 text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                No missing words found. The synonym dictionary covers the current scan.
+            </div>
+        }
+        else
+        {
+            <div class="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3">
+                @foreach (var token in missingTokens)
+                {
+                    var target = missingTokenTargets.GetValueOrDefault(token.Token, string.Empty);
+                    <div class="flex flex-col gap-2 rounded-xl border border-amber-200 bg-white p-3 shadow-sm dark:border-amber-900/40 dark:bg-slate-950/70">
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="flex min-w-0 items-center gap-1.5">
+                                <span class="truncate text-sm font-semibold text-slate-800 dark:text-slate-200">@token.Token</span>
+                                <span class="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 dark:bg-amber-950/60 dark:text-amber-300">×@token.Count</span>
+                            </div>
+                            <button type="button"
+                                    class="@(string.IsNullOrWhiteSpace(target) ? SmallButton + " opacity-40 cursor-not-allowed" : SmallButton + " border-emerald-400 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-400") shrink-0"
+                                    disabled="@string.IsNullOrWhiteSpace(target)"
+                                    @onclick="() => AddMissingTokenAsync(token.Token)">
+                                <svg class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                                </svg>
+                                Add
+                            </button>
+                            <button type="button"
+                                    class="@SmallButton shrink-0"
+                                    disabled="@isBusy"
+                                    @onclick="() => ViewMissingTokenTasksAsync(token.Token)">
+                                View
+                            </button>
+                        </div>
+                        <input placeholder="Canonical target..."
+                               value="@target"
+                               @oninput="e => missingTokenTargets[token.Token] = e.Value?.ToString() ?? string.Empty"
+                               class="w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs placeholder-slate-400 focus:border-sky-400 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:placeholder-slate-600" />
+                        @if (token.Examples.Count > 0)
+                        {
+                            <div class="flex flex-wrap gap-1">
+                                @foreach (var ex in token.Examples)
+                                {
+                                    <span class="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] leading-tight text-slate-500 dark:bg-slate-800 dark:text-slate-400">@ex</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </section>
+
+    @if (!string.IsNullOrWhiteSpace(selectedMissingToken))
+    {
+        <section class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
+            <div class="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3 dark:border-slate-800">
+                <div>
+                    <h3 class="text-sm font-semibold">Tasks containing @selectedMissingToken</h3>
+                    <p class="mt-1 text-xs text-slate-500">
+                        Showing @missingTokenTasks.Count leaf tasks without resources.
+                    </p>
+                </div>
+                <button type="button" class="@SmallButton" @onclick="CloseMissingTokenTasks">Close</button>
+            </div>
+
+            <div class="max-h-[32rem] overflow-auto">
+                <table class="min-w-full text-sm">
+                    <thead class="sticky top-0 z-10 border-b border-slate-100 bg-slate-50 dark:border-slate-800 dark:bg-slate-900">
+                        <tr>
+                            <th class="px-4 py-2.5 text-left text-[10px] font-semibold uppercase tracking-widest text-slate-500">Code</th>
+                            <th class="px-4 py-2.5 text-left text-[10px] font-semibold uppercase tracking-widest text-slate-500">Name</th>
+                            <th class="px-4 py-2.5 text-left text-[10px] font-semibold uppercase tracking-widest text-slate-500">Unit</th>
+                            <th class="px-4 py-2.5 text-left text-[10px] font-semibold uppercase tracking-widest text-slate-500">Hierarchy</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
+                        @foreach (var task in missingTokenTasks)
+                        {
+                            <tr class="transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/60">
+                                <td class="px-4 py-2.5 font-mono text-xs text-slate-500">@task.Code</td>
+                                <td class="px-4 py-2.5 font-medium text-slate-800 dark:text-slate-200">@task.Name</td>
+                                <td class="px-4 py-2.5 text-xs text-slate-500">@task.Unit</td>
+                                <td class="max-w-2xl px-4 py-2.5 text-xs leading-5 text-slate-500">@task.HierarchyPath</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    }
+
+</div>
+
+@code {
+    private const string PrimaryButton = "inline-flex items-center justify-center gap-1.5 rounded-lg border border-indigo-600 bg-indigo-600 px-2.5 py-1.5 text-xs font-medium text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-indigo-500 dark:bg-indigo-500";
+    private const string SecondaryButton = "inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800";
+    private const string SmallButton = "inline-flex items-center justify-center gap-1 rounded-md border border-slate-300 bg-white px-1.5 py-0.5 text-[11px] font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200";
+    private const string DangerSmallButton = "ml-1 inline-flex items-center justify-center gap-1 rounded-md border border-rose-300 bg-white px-1.5 py-0.5 text-[11px] font-medium text-rose-700 transition hover:bg-rose-50 dark:border-rose-900 dark:bg-slate-900 dark:text-rose-300";
+
+    private readonly Dictionary<string, string> missingTokenTargets = new(StringComparer.OrdinalIgnoreCase);
+    private List<SynonymDictionaryEntry> entries = [];
+    private List<SynonymMissingTokenItem> missingTokens = [];
+    private List<SynonymMissingTokenTaskItem> missingTokenTasks = [];
+    private List<ImportedTaskSynonymItem> importedSynonyms = [];
+    private string dictionaryPath = string.Empty;
+    private string searchText = string.Empty;
+    private string editSource = string.Empty;
+    private string editTarget = string.Empty;
+    private string? selectedMissingToken;
+    private string? message;
+    private string? errorMessage;
+    private bool replaceOnImport;
+    private bool isBusy;
+    private bool isRebuilding;
+    private bool importedLoaded;
+    private bool missingLoaded;
+
+    private List<SynonymDictionaryEntry> FilteredEntries
+        => string.IsNullOrWhiteSpace(searchText)
+            ? entries
+            : entries
+                .Where(x => x.Source.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+                            x.Target.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        dictionaryPath = SynonymDictionaryService.DictionaryPath;
+        await LoadMissingTokensAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        entries = (await SynonymDictionaryService.GetEntriesAsync()).ToList();
+    }
+
+    private async Task LoadMissingTokensAsync()
+    {
+        await RunAsync(async () =>
+        {
+            missingTokens = (await SynonymDictionaryService.GetMissingTokensAsync(30)).ToList();
+            foreach (var token in missingTokens)
+                missingTokenTargets.TryAdd(token.Token, string.Empty);
+            missingLoaded = true;
+        });
+    }
+
+    private async Task LoadImportedSynonymsAsync()
+    {
+        await RunAsync(async () =>
+        {
+            importedSynonyms = (await SynonymDictionaryService.GetImportedTaskSynonymsAsync()).ToList();
+            importedLoaded = true;
+        });
+    }
+
+    private async Task SaveEntryAsync()
+    {
+        await RunAsync(async () =>
+        {
+            var result = await SynonymDictionaryService.SaveEntryAsync(editSource, editTarget);
+            message = $"{result.Message} Dictionary entries loaded: {result.TotalEntries}.";
+            if (result.Saved)
+            {
+                editSource = string.Empty;
+                editTarget = string.Empty;
+            }
+            await LoadAsync();
+        });
+    }
+
+    private async Task AddMissingTokenAsync(string token)
+    {
+        if (!missingTokenTargets.TryGetValue(token, out var target) || string.IsNullOrWhiteSpace(target))
+            return;
+
+        editSource = token;
+        editTarget = target;
+        await SaveEntryAsync();
+        missingTokenTargets[token] = string.Empty;
+    }
+
+    private async Task PromoteImportedSynonymAsync(ImportedTaskSynonymItem item)
+    {
+        await RunAsync(async () =>
+        {
+            var result = await SynonymDictionaryService.SaveEntryAsync(item.Synonym, item.Target);
+            message = $"{item.Synonym} promoted to central dictionary. {result.Message}";
+            await LoadAsync();
+            await LoadImportedSynonymsAsync();
+        });
+    }
+
+    private async Task ViewMissingTokenTasksAsync(string token)
+    {
+        await RunAsync(async () =>
+        {
+            selectedMissingToken = token;
+            missingTokenTasks = (await SynonymDictionaryService.GetMissingTokenTasksAsync(token)).ToList();
+            message = $"Loaded {missingTokenTasks.Count} tasks for {token}.";
+        });
+    }
+
+    private void CloseMissingTokenTasks()
+    {
+        selectedMissingToken = null;
+        missingTokenTasks = [];
+    }
+
+    private void EditEntry(SynonymDictionaryEntry entry)
+    {
+        editSource = entry.Source;
+        editTarget = entry.Target;
+    }
+
+    private async Task DeleteEntryAsync(string source)
+    {
+        await RunAsync(async () =>
+        {
+            await SynonymDictionaryService.DeleteEntryAsync(source);
+            message = "Entry deleted and dictionary reloaded.";
+            await LoadAsync();
+        });
+    }
+
+    private async Task ImportCsvAsync(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        await RunAsync(async () =>
+        {
+            await using var stream = file.OpenReadStream(maxAllowedSize: 20 * 1024 * 1024);
+            var result = await SynonymDictionaryService.ImportAsync(stream, replaceOnImport);
+            message = $"Imported {result.Imported}, skipped {result.Skipped}. Dictionary entries loaded: {result.TotalEntries}.";
+            await LoadAsync();
+        });
+    }
+
+    private async Task ExportAsync()
+    {
+        await RunAsync(async () =>
+        {
+            var path = await SynonymDictionaryService.ExportAsync();
+            message = $"Exported to {path}";
+        });
+    }
+
+    private async Task ReloadAsync()
+    {
+        await RunAsync(async () =>
+        {
+            var count = await SynonymDictionaryService.ReloadAsync();
+            message = $"Dictionary reloaded. Entries loaded: {count}.";
+            await LoadAsync();
+        });
+    }
+
+    private async Task RebuildSearchIndexAsync()
+    {
+        await RunAsync(async () =>
+        {
+            isRebuilding = true;
+            var updated = await SynonymDictionaryService.RebuildSearchIndexAsync();
+            message = $"Search index rebuilt. {updated} blueprint tasks updated.";
+        }, resetRebuild: true);
+    }
+
+    private async Task RunAsync(Func<Task> action, bool resetRebuild = false)
+    {
+        try
+        {
+            isBusy = true;
+            message = null;
+            errorMessage = null;
+            await action();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isBusy = false;
+            if (resetRebuild)
+                isRebuilding = false;
+        }
+    }
+
+    private static RenderFragment SummaryCard(string label, string value, bool active = false, bool highlight = false) =>
+        @<div class="@($"rounded-xl border p-3 {(highlight && active ? "border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30" : active ? "border-emerald-200 bg-emerald-50 dark:border-emerald-900/60 dark:bg-emerald-950/20" : "border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/70")}")">
+            <div class="text-[10px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">@label</div>
+            <div class="mt-1 text-sm font-bold @(highlight && active ? "text-amber-800 dark:text-amber-200" : "text-slate-900 dark:text-slate-100")">@value</div>
+        </div>;
+}

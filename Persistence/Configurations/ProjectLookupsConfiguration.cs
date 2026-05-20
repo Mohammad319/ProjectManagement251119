@@ -20,6 +20,7 @@ internal sealed class StatusLookupConfiguration : IEntityTypeConfiguration<Statu
             .HasDatabaseName("IX_Statuses_Tenant_Visible_Order");
 
         builder.HasIndex(x => new { x.TenantId, x.Name })
+            .IsUnique()
             .HasDatabaseName("IX_Statuses_Tenant_Name");
 
         builder.ToTable(t =>
@@ -41,6 +42,7 @@ internal sealed class TypeLookupConfiguration : IEntityTypeConfiguration<TypeEnt
             .HasDatabaseName("IX_ProjectTypes_Tenant_Visible_Order");
 
         builder.HasIndex(x => new { x.TenantId, x.Name })
+            .IsUnique()
             .HasDatabaseName("IX_ProjectTypes_Tenant_Name");
 
         builder.ToTable(t =>
@@ -62,6 +64,7 @@ internal sealed class ContractLookupConfiguration : IEntityTypeConfiguration<Con
             .HasDatabaseName("IX_Contracts_Tenant_Visible_Order");
 
         builder.HasIndex(x => new { x.TenantId, x.Name })
+            .IsUnique()
             .HasDatabaseName("IX_Contracts_Tenant_Name");
 
         builder.ToTable(t =>
@@ -83,6 +86,7 @@ internal sealed class CompensationLookupConfiguration : IEntityTypeConfiguration
             .HasDatabaseName("IX_Compensations_Tenant_Visible_Order");
 
         builder.HasIndex(x => new { x.TenantId, x.Name })
+            .IsUnique()
             .HasDatabaseName("IX_Compensations_Tenant_Name");
 
         builder.ToTable(t =>
@@ -104,6 +108,7 @@ internal sealed class ProcurementMethodLookupConfiguration : IEntityTypeConfigur
             .HasDatabaseName("IX_ProcurementMethods_Tenant_Visible_Order");
 
         builder.HasIndex(x => new { x.TenantId, x.Name })
+            .IsUnique()
             .HasDatabaseName("IX_ProcurementMethods_Tenant_Name");
 
         builder.ToTable(t =>

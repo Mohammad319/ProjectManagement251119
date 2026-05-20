@@ -5,7 +5,7 @@ namespace AuthPermissions.Context
 {
     public class ApplicationUser : IdentityUser
     {
-        [MaxLength(50)]
+        [MaxLength(256)]
         public string RefreshToken { get; set; } = string.Empty;
 
         public DateTime RefreshTokenExpiryTime { get; set; }

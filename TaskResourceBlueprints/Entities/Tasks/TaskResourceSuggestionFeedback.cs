@@ -1,8 +1,9 @@
 using ProjectManagement.Shared.DTO.Calculation;
+using TaskResourceBlueprints.Entities;
 
 namespace TaskResourceBlueprints.Entities.Tasks;
 
-public class TaskResourceSuggestionFeedback
+public class TaskResourceSuggestionFeedback : ITenantScopedEntity
 {
     public int Id { get; set; }
     public int TenantId { get; set; }

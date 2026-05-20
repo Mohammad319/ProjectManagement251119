@@ -17,6 +17,8 @@ namespace ProjectManagement.Shared.DTO.ProjectAppStorage
         /// </summary>
         public List<string> SearchTokens { get; set; } = [];
 
+        public bool ResourcesOnly { get; set; }
+
         public int Skip { get; set; } = 0;
         public int Take { get; set; } = 50;
     }

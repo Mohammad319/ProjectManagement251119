@@ -40,6 +40,9 @@
         /// </summary>
         public ResourceCategory? ParentCategory { get; set; }
 
+        public DateTime CreatedAtUtc { get; init; } = DateTime.UtcNow;
+        public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
+
         /// <summary>
         /// List of resources assigned to this category.
         /// </summary>

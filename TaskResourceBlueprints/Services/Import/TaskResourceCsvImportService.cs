@@ -320,7 +320,7 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
             task = new TaskDefinition
             {
                 SortOrder = sortOrder,
-                Status = TaskStatusEnum.Ready,
+                Status = TaskStatusEnum.ToPlan,
                 IsActive = true,
                 IsVisible = true,
             };
@@ -334,6 +334,7 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
 
         task.Code = string.IsNullOrWhiteSpace(code) ? task.Code : code;
         task.Name = name;
+        task.Status = ParseTaskStatus(Get(row, map, "Status"));
         ApplyTaskHierarchy(task, parentTaskId, parentCode, taskByExternalId, taskByCode);
         task.Quantity = ParseNullableDecimal(Get(row, map, "Quantity", fallbackIndex: FallbackQuantityIndex));
         task.UnitCode = EmptyToNull(Get(row, map, "Unit", fallbackIndex: FallbackUnitIndex));
@@ -904,6 +905,7 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
             ["ParentCode"]      = ["ParentCode"],
             ["Code"]            = ["Code", "Kod"],
             ["Name"]            = ["Name", "Namn"],
+            ["Status"]          = ["Status", "TaskStatus", "Task status", "حالة", "حالة المهمة"],
             ["TaskNameSynonym1"] = ["TaskNameSynonym1", "NameSynonym1", "NamnSynonym1", "Task synonym 1"],
             ["TaskNameSynonym2"] = ["TaskNameSynonym2", "NameSynonym2", "NamnSynonym2", "Task synonym 2"],
             ["Quantity"]        = ["Mängd", "Mangd", "Quantity"],
@@ -947,6 +949,26 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
         }
 
         return map;
+    }
+
+    private static TaskStatusEnum ParseTaskStatus(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return TaskStatusEnum.ToPlan;
+
+        var token = NormalizeHeader(value);
+        return token switch
+        {
+            "toplan" or "planning" or "plan" => TaskStatusEnum.ToPlan,
+            "underworking" or "working" or "inprogress" => TaskStatusEnum.UnderWorking,
+            "ready" => TaskStatusEnum.Ready,
+            "suggestiononly" or "resourcesuggestiononly" or "suggestionsonly" => TaskStatusEnum.SuggestionOnly,
+            "trainingonly" or "trainonly" => TaskStatusEnum.TrainingOnly,
+            _ => Enum.TryParse<TaskStatusEnum>(value.Trim(), ignoreCase: true, out var status)
+                && Enum.IsDefined(status)
+                ? status
+                : TaskStatusEnum.ToPlan
+        };
     }
 
     private static List<string> ParseCsvLine(string line)

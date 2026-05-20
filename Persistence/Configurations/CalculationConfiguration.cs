@@ -1,4 +1,5 @@
-﻿using Persistence.Serialization;
+﻿using Domain.Entities.Users;
+using Persistence.Serialization;
 
 namespace Persistence.Configurations;
 
@@ -59,6 +60,12 @@ internal sealed class CalculationConfiguration : IEntityTypeConfiguration<Calcul
             .HasForeignKey(x => x.OrganisationId)
             .OnDelete(DeleteBehavior.ClientSetNull);
 
+        // DepartmentId مُخزَّن كـ denormalized field لأغراض الأداء
+        builder.HasOne(x => x.Department)
+            .WithMany()
+            .HasForeignKey(x => x.DepartmentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.ToTable(t =>
         {
             t.HasCheckConstraint("CK_Calculations_Tax_0_100", "[Tax] >= 0 AND [Tax] <= 100");
@@ -89,5 +96,8 @@ internal sealed class CalculationConfiguration : IEntityTypeConfiguration<Calcul
 
         builder.HasIndex(x => new { x.TenantId, x.StatusId })
             .HasDatabaseName("IX_Calculations_Tenant_Status");
+
+        builder.HasIndex("TenantId", "CreatedBy")
+            .HasDatabaseName("IX_Calculations_Tenant_CreatedBy");
     }
 }

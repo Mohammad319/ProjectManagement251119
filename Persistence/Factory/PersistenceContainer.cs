@@ -40,6 +40,7 @@ using Persistence.Service.Offer;
 using Persistence.Service.Organisation;
 using Persistence.Service.PriceImport;
 using Persistence.Service.TfIdf;
+using Persistence.Service.Lookup;
 using Persistence.Service.Project;
 using Persistence.Service.ResourceAccount;
 using Persistence.Service.ResourceType;
@@ -85,6 +86,7 @@ namespace Persistence.Factory
             services.AddScoped<IApplicationService, ApplicationService>();
             services.AddScoped<IPriceImportService, PriceImportService>();
             services.AddScoped<ITfIdfIndexProvider, TfIdfIndexService>();
+            services.AddSingleton<LookupCacheService>();
 
             // وبما أنك تستخدمه مع:
             services.AddScoped<ILookupStatusCommandService<TaskStatusEntity>, LookupStatusCommandService<TaskStatusEntity>>();

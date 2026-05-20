@@ -11,5 +11,14 @@ public class TaskStateConfiguration : IEntityTypeConfiguration<TaskState>
     {
         b.Property(x => x.Name).HasMaxLength(Lengths.DisplayName);
         b.HasIndex(x => x.TaskStateGroupId);
+        b.HasIndex(x => new { x.TaskStateGroupId, x.Name })
+            .IsUnique()
+            .HasDatabaseName("UX_TaskStates_Group_Name");
+
+        b.ToTable(t =>
+        {
+            t.HasCheckConstraint("CK_TaskStates_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+            t.HasCheckConstraint("CK_TaskStates_SortOrder_NonNegative", "[SortOrder] >= 0");
+        });
     }
 }

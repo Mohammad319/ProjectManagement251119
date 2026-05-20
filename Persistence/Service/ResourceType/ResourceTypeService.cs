@@ -1,13 +1,17 @@
 using Application.Feature.ResourceType;
 using Application.Mapping.ResourceType;
+using Domain.Entities.ResourceType;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Factory;
+using Persistence.Service.Lookup;
 using ProjectManagement.Shared.DTO.General;
 using ProjectManagement.Shared.DTO.ResourceType;
 
 namespace Persistence.Service.ResourceType
 {
-    public sealed class ResourceTypeService(IDbContextFactoryTenant dbFactory) : IResourceTypeService
+    public sealed class ResourceTypeService(
+        IDbContextFactoryTenant dbFactory,
+        LookupCacheService lookupCache) : IResourceTypeService
     {
         public async Task<int> CreateTypeAsync(PostResourceTypeDTO dto, CancellationToken ct = default)
         {
@@ -17,10 +21,11 @@ namespace Persistence.Service.ResourceType
                 return 0;
 
             var max = await context.ResourceTypes.MaxAsync(x => (int?)x.SortOrder, ct) ?? 0;
-            var entity = Domain.Entities.ResourceType.ResourceTypeEntity.Create(dto, max + 100);
+            var entity = ResourceTypeEntity.Create(dto, max + 100);
 
             context.ResourceTypes.Add(entity);
             await context.SaveChangesAsync(ct);
+            await lookupCache.InvalidateAsync<ResourceTypeEntity>(ct);
             return entity.Id;
         }
 
@@ -37,6 +42,7 @@ namespace Persistence.Service.ResourceType
 
             entity.Update(dto);
             await context.SaveChangesAsync(ct);
+            await lookupCache.InvalidateAsync<ResourceTypeEntity>(ct);
             return true;
         }
 
@@ -57,6 +63,7 @@ namespace Persistence.Service.ResourceType
             try
             {
                 await context.SaveChangesAsync(ct);
+                await lookupCache.InvalidateAsync<ResourceTypeEntity>(ct);
                 return true;
             }
             catch (DbUpdateException)
@@ -128,26 +135,29 @@ namespace Persistence.Service.ResourceType
 
         public async Task<List<ResourceTypeModel>> GetTypesAsync(bool isVisible, CancellationToken ct = default)
         {
-            await using var context = await dbFactory.CreateDbContextAsync(ct);
-
-            var entities = await context.ResourceTypes
-                .AsNoTracking()
-                .Where(x => x.IsVisible == isVisible)
-                .OrderBy(x => x.SortOrder)
-                .ToListAsync(ct);
+            var cacheKey = isVisible ? "visible" : "all";
+            var entities = await lookupCache.GetAsync<ResourceTypeEntity>(
+                cacheKey,
+                db => db.ResourceTypes
+                    .AsNoTracking()
+                    .Where(x => x.IsVisible == isVisible)
+                    .OrderBy(x => x.SortOrder)
+                    .ToListAsync(ct),
+                ct);
 
             return entities.Select(x => x.ToModel()).ToList();
         }
 
         public async Task<List<ResourceSortModel>> GetSortsAsync(int resourceTypeId, CancellationToken ct = default)
         {
-            await using var context = await dbFactory.CreateDbContextAsync(ct);
-
-            var entities = await context.ResourceSorts
-                .AsNoTracking()
-                .Where(x => x.ResourceTypeId == resourceTypeId)
-                .OrderBy(x => x.SortOrder)
-                .ToListAsync(ct);
+            var entities = await lookupCache.GetAsync<ResourceSortEntity>(
+                $"type_{resourceTypeId}",
+                db => db.ResourceSorts
+                    .AsNoTracking()
+                    .Where(x => x.ResourceTypeId == resourceTypeId)
+                    .OrderBy(x => x.SortOrder)
+                    .ToListAsync(ct),
+                ct);
 
             return entities.Select(x => x.ToModel()).ToList();
         }

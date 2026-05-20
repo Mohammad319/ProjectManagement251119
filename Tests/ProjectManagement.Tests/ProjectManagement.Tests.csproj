@@ -22,6 +22,8 @@
     <ProjectReference Include="..\..\ProjectManagement.Shared\ProjectManagement.Shared.csproj" />
     <ProjectReference Include="..\..\Domain\Domain.csproj" />
     <ProjectReference Include="..\..\Persistence\Persistence.csproj" />
+    <ProjectReference Include="..\..\AuthPermissions\AuthPermissions.csproj" />
+    <ProjectReference Include="..\..\TaskResourceBlueprints\TaskResourceBlueprints.csproj" />
     <ProjectReference Include="..\..\ProjectManagement.Client.Shared\ProjectManagement.Client.Shared.csproj" />
     <ProjectReference Include="..\..\ProjectManagement\ProjectManagement.Client\ProjectManagement.Client.csproj" />
   </ItemGroup>

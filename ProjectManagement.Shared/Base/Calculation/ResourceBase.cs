@@ -52,6 +52,8 @@ namespace ProjectManagement.Shared.Base.Calculation
     }
     public class ResourceMetadata
     {
+        public int SchemaVersion { get; set; } = 1;
+
         public List<ResourceParameter> Parameters { get; set; } = [];
         public List<ResourceAddon> AddOns { get; set; } = [];
         public List<ResourceTime> Times { get; set; } = [];
@@ -209,6 +211,7 @@ namespace ProjectManagement.Shared.Base.Calculation
         {
             return new ResourceMetadata
             {
+                SchemaVersion = SchemaVersion,
                 // Deep copy لتفادي مشاركة نفس الـ reference بين النسخ
                 Parameters = Parameters is null
                     ? new()

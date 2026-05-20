@@ -62,13 +62,13 @@
 
     </div>
 
-    @if (_hasLoaded && MissingTasksCount > 0)
+    @if (_hasLoaded && _missingTasksCount > 0)
     {
         <div class="flex items-center gap-2 rounded border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs text-amber-700 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-400">
             <svg class="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
             </svg>
-            <span>@MissingTasksCount @(MissingTasksCount == 1 ? "task has" : "tasks have") no suggestions</span>
+            <span>@_missingTasksCount @(_missingTasksCount == 1 ? "task has" : "tasks have") no suggestions</span>
         </div>
     }
 
@@ -281,7 +281,7 @@
                                     <tbody>
                                         @foreach (var row in selRows)
                                         {
-                                            <tr style="@GetResourceRowStyle()" class="border-b border-slate-100 transition-opacity dark:border-slate-800 @(row.Included ? "" : "opacity-40")">
+                                            <tr style="@ResourceRowStyle" class="border-b border-slate-100 transition-opacity dark:border-slate-800 @(row.Included ? "" : "opacity-40")">
                                                 <td class="px-2 py-1.5 text-center align-middle">
                                                     <button class="flex h-6 w-6 items-center justify-center rounded border text-sm font-bold leading-none transition
                                                                    @(row.Included
@@ -488,34 +488,51 @@
     private string _taskFilter = string.Empty;
     private double _minScore = 0;
 
+    private List<TaskEntry>? _visibleCache;
+    private string _lastTaskFilter = "\0";
+    private double _lastMinScore   = -1;
+
     private const string InputCls         = "w-full min-w-[8rem] rounded border border-gray-200 bg-transparent px-1.5 py-0.5 text-gray-900 focus:border-blue-400 focus:outline-none disabled:cursor-default dark:border-gray-700 dark:text-gray-100";
     private const string NumInputCls      = "w-full rounded border border-gray-200 bg-transparent px-1.5 py-0.5 text-right text-gray-900 focus:border-blue-400 focus:outline-none disabled:cursor-default dark:border-gray-700 dark:text-gray-100";
     private const string SmallNumInputCls = "w-20 rounded border border-slate-200 bg-white px-1 py-0.5 text-right text-[11px] text-slate-800 focus:border-blue-400 focus:outline-none disabled:cursor-default dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200";
 
-    private int MissingTasksCount => _entries.Count(e => e.Suggestions.Count == 0);
+    private int _missingTasksCount;
 
     private List<TaskEntry> VisibleEntries
     {
         get
         {
-            var entries = _entries.Where(e => e.Suggestions.Count > 0);
-
-            if (_minScore > 0)
-                entries = entries.Where(e => e.Suggestions[0].Score >= _minScore);
-
-            if (!string.IsNullOrWhiteSpace(_taskFilter))
+            if (_visibleCache is null
+                || _lastTaskFilter != _taskFilter
+                || _lastMinScore   != _minScore)
             {
-                var q = _taskFilter.Trim();
-                entries = entries.Where(e =>
-                    FuzzySearchHelper.Score(q, e.Task.Name) >= FuzzySearchHelper.Threshold ||
-                    (!string.IsNullOrWhiteSpace(e.Task.Code) && e.Task.Code.Contains(q, StringComparison.OrdinalIgnoreCase)));
+                _visibleCache   = ComputeVisibleEntries();
+                _lastTaskFilter = _taskFilter;
+                _lastMinScore   = _minScore;
             }
-            return entries.ToList();
+            return _visibleCache;
         }
+    }
+
+    private List<TaskEntry> ComputeVisibleEntries()
+    {
+        var entries = _entries.Where(e => e.Suggestions.Count > 0);
+
+        if (_minScore > 0)
+            entries = entries.Where(e => e.Suggestions[0].Score >= _minScore);
+
+        if (!string.IsNullOrWhiteSpace(_taskFilter))
+        {
+            var q = _taskFilter.Trim();
+            entries = entries.Where(e =>
+                FuzzySearchHelper.Score(q, e.Task.Name) >= FuzzySearchHelper.Threshold ||
+                (!string.IsNullOrWhiteSpace(e.Task.Code) && e.Task.Code.Contains(q, StringComparison.OrdinalIgnoreCase)));
+        }
+        return entries.ToList();
     }
     private bool HasAnySelected => _entries.Any(e => e.SelectedIndex.HasValue);
 
-    private static string GetResourceRowStyle() => "box-shadow: inset 3px 0 0 rgba(34,197,94,0.35);";
+    private const string ResourceRowStyle = "box-shadow: inset 3px 0 0 rgba(34,197,94,0.35);";
 
     private static UnitRule? GetConversionRule(string taskUnit, string sourceUnit)
     {
@@ -619,6 +636,8 @@
             return entry;
         }).ToList();
 
+        _visibleCache = null;
+        _missingTasksCount = _entries.Count(e => e.Suggestions.Count == 0);
         _hasLoaded = true;
         _loading = false;
     }
@@ -662,14 +681,14 @@
         _saving = true;
         StateHasChanged();
 
-        foreach (var entry in _entries)
+        var entriesToSave = _entries.Where(e => e.SelectedIndex.HasValue).ToList();
+
+        // Load all resources in parallel before sequential save
+        await Task.WhenAll(entriesToSave.Select(e => EnsureResourcesLoadedAsync(e, e.SelectedIndex!.Value)));
+
+        foreach (var entry in entriesToSave)
         {
-            if (!entry.SelectedIndex.HasValue)
-                continue;
-
-            await EnsureResourcesLoadedAsync(entry, entry.SelectedIndex.Value);
-
-            var toSave = (entry.GetRows(entry.SelectedIndex.Value) ?? [])
+            var toSave = (entry.GetRows(entry.SelectedIndex!.Value) ?? [])
                 .Where(r => r.Included)
                 .Select(r =>
                 {
@@ -688,7 +707,7 @@
             if (toSave.Count > 0)
             {
                 await Repo.Resource.CreateAsync(toSave, entry.Task.Id);
-                await RecordFeedbackAsync(entry, entry.Suggestions[entry.SelectedIndex.Value], TaskResourceSuggestionFeedbackKind.Accepted, notify: false);
+                await RecordFeedbackAsync(entry, entry.Suggestions[entry.SelectedIndex!.Value], TaskResourceSuggestionFeedbackKind.Accepted, notify: false);
             }
         }
 
@@ -797,7 +816,7 @@
     {
         if (Tasks is { Count: > 0 })
             return Tasks
-                .Where(task => task.Type != TaskType.CodeName && task.Tasks.Count == 0)
+                .Where(task => task.Type != TaskType.CodeName && task.Tasks.Count == 0 && HasResources(task))
                 .DistinctBy(task => task.Id)
                 .OrderBy(task => task.SortOrder)
                 .ToList();
@@ -812,13 +831,16 @@
     {
         if (task.Tasks.Count == 0)
         {
-            if (task.Type != TaskType.CodeName)
+            if (task.Type != TaskType.CodeName && HasResources(task))
                 result.Add(task);
             return;
         }
         foreach (var child in task.Tasks.OrderBy(t => t.SortOrder))
             CollectLeaves(child, result);
     }
+
+    private static bool HasResources(TaskListMVVM task)
+        => task.Resources?.Count > 0;
 
     private static string BuildOptionText(int idx, TaskResourceSuggestionDTO sug)
     {

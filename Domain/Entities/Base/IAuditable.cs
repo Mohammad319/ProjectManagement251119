@@ -24,7 +24,7 @@ namespace Domain.Entities.Base
         byte[] RowVersion { get; set; }
     }
 
-    public abstract class AuditableEntity<TKey> : BaseEntity<TKey>, IAuditable
+    public abstract class AuditableEntity<TKey> : BaseEntity<TKey>, IAuditable, IHasRowVersion
     {
         public DateTime CreatedAt { get; set; }
         public int? CreatedBy { get; set; }

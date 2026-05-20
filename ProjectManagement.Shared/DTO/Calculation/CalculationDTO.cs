@@ -29,6 +29,8 @@ namespace ProjectManagement.Shared.DTO.Calculation
 
     public class CalculationData
     {
+        public int SchemaVersion { get; set; } = 1;
+
         public List<QuanityListDTO> QuanityList { get; set; } = [];
 
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
@@ -71,6 +73,7 @@ namespace ProjectManagement.Shared.DTO.Calculation
         {
             return new CalculationData
             {
+                SchemaVersion = SchemaVersion,
                 QuanityList = CalculationCloneHelper.CloneQuantities(QuanityList),
                 TimeMonth = TimeMonth,
                 Priority = Priority,

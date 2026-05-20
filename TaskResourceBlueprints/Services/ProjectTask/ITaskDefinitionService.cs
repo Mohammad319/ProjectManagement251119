@@ -89,6 +89,14 @@ namespace TaskResourceBlueprints.Services.ProjectTask
             await using var db = await factory.CreateDbContextAsync(ct);
             var query = db.Tasks.Where(x => x.Status == TaskStatusEnum.Ready).AsNoTracking().AsQueryable();
 
+            if (filter.ResourcesOnly)
+            {
+                query = query.Where(x => x.ResourceLinks.Any(l =>
+                    l.Resource != null &&
+                    l.Resource.IsActive &&
+                    l.Resource.IsVisible));
+            }
+
             var tokens = filter.SearchTokens
                 .Where(t => !string.IsNullOrWhiteSpace(t))
                 .Select(t => t.Trim())

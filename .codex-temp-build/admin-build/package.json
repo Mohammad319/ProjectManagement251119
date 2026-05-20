@@ -1,0 +1,11 @@
+{
+  "name": "projectmanagement-adminstrator",
+  "private": true,
+  "scripts": {
+    "tw:build": "tailwindcss -i ./wwwroot/app.tailwind.css -o ./wwwroot/css/tailwind.css --minify",
+    "tw:watch": "tailwindcss -i ./wwwroot/app.tailwind.css -o ./wwwroot/css/tailwind.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.0"
+  }
+}

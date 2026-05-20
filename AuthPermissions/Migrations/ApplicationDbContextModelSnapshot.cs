@@ -88,8 +88,8 @@ namespace AuthPermissions.Migrations
 
                     b.Property<string>("RefreshToken")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<DateTime>("RefreshTokenExpiryTime")
                         .HasColumnType("datetime2");
@@ -183,10 +183,22 @@ namespace AuthPermissions.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("nvarchar(4000)");
 
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
@@ -194,7 +206,12 @@ namespace AuthPermissions.Migrations
                         .IsUnique()
                         .HasDatabaseName("UX_TenantDatabase_Name");
 
-                    b.ToTable("TenantDatabase", (string)null);
+                    b.ToTable("TenantDatabase", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_TenantDatabase_ConnectionString_NotEmpty", "LEN(LTRIM(RTRIM([ConnectionString]))) > 0");
+
+                            t.HasCheckConstraint("CK_TenantDatabase_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+                        });
                 });
 
             modelBuilder.Entity("AuthPermissions.Entity.TenantEntity", b =>
@@ -206,22 +223,27 @@ namespace AuthPermissions.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("BuildNumber")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("City")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Country")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTimeOffset?>("DateExpire")
                         .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Email")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("Fax")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.Property<int>("MaxCalculations")
                         .HasColumnType("int");
@@ -230,7 +252,8 @@ namespace AuthPermissions.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Mobile")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -238,29 +261,41 @@ namespace AuthPermissions.Migrations
                         .HasColumnType("nvarchar(80)");
 
                     b.Property<string>("Note")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<string>("Phone")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.Property<string>("PostCode")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("Street")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<int>("TenantDBId")
                         .HasColumnType("int");
 
                     b.Property<string>("Website")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("TenantDBId", "Name")
                         .HasDatabaseName("IX_Tenants_TenantDB_Name");
 
-                    b.ToTable("Tenants");
+                    b.ToTable("Tenants", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Tenants_MaxCalculations_Positive", "[MaxCalculations] >= 1");
+
+                            t.HasCheckConstraint("CK_Tenants_MaxUsers_Positive", "[MaxUsers] >= 1");
+
+                            t.HasCheckConstraint("CK_Tenants_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+                        });
                 });
 
             modelBuilder.Entity("AuthPermissions.Entity.TenantMlSettingEntity", b =>
@@ -278,6 +313,9 @@ namespace AuthPermissions.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasDefaultValue(14);
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
 
                     b.Property<bool>("IncludeFeedbackInTraining")
                         .HasColumnType("bit");
@@ -303,7 +341,10 @@ namespace AuthPermissions.Migrations
                         .IsUnique()
                         .HasDatabaseName("UX_TenantMlSettings_TenantId");
 
-                    b.ToTable("TenantMlSettings", (string)null);
+                    b.ToTable("TenantMlSettings", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_TenantMlSettings_AutoTrainingIntervalDays_Min", "[AutoTrainingIntervalDays] >= 1");
+                        });
                 });
 
             modelBuilder.Entity("AuthPermissions.Entity.TenantMlTrainingRunEntity", b =>

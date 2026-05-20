@@ -402,6 +402,8 @@ namespace Persistence.Migrations
 
                     b.HasIndex("DeletedBy");
 
+                    b.HasIndex("DepartmentId");
+
                     b.HasIndex("OrganisationId");
 
                     b.HasIndex("ProcurementMethodsId");
@@ -417,6 +419,9 @@ namespace Persistence.Migrations
                     b.HasIndex("TypeId");
 
                     b.HasIndex("UpdatedBy");
+
+                    b.HasIndex("TenantId", "CreatedBy")
+                        .HasDatabaseName("IX_Calculations_Tenant_CreatedBy");
 
                     b.HasIndex("TenantId", "DepartmentId")
                         .HasDatabaseName("IX_Calculations_Tenant_Department");
@@ -700,6 +705,9 @@ namespace Persistence.Migrations
                     b.HasIndex("TenantId", "OpportunityId")
                         .HasDatabaseName("IX_Resources_Tenant_Opportunity");
 
+                    b.HasIndex("TenantId", "PrimaryOfferId")
+                        .HasDatabaseName("IX_Resources_Tenant_PrimaryOffer");
+
                     b.HasIndex("TenantId", "ResourceSortId")
                         .HasDatabaseName("IX_Resources_Tenant_ResourceSort");
 
@@ -717,6 +725,8 @@ namespace Persistence.Migrations
                     b.ToTable("Resources", null, t =>
                         {
                             t.HasCheckConstraint("CK_Resources_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+
+                            t.HasCheckConstraint("CK_Resources_Quantity_NonNegative", "[Quantity] IS NULL OR [Quantity] >= 0");
 
                             t.HasCheckConstraint("CK_Resources_SortOrder_NonNegative", "[SortOrder] >= 0");
 
@@ -845,6 +855,7 @@ namespace Persistence.Migrations
                     b.HasIndex("UpdatedBy");
 
                     b.HasIndex("TenantId", "Name")
+                        .IsUnique()
                         .HasDatabaseName("IX_StatusResources_Tenant_Name");
 
                     b.HasIndex("TenantId", "IsVisible", "SortOrder")
@@ -1031,6 +1042,9 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "CalculationId");
 
+                    b.HasIndex("TenantId", "CreatedBy")
+                        .HasDatabaseName("IX_Tasks_Tenant_CreatedBy");
+
                     b.HasIndex("TenantId", "NormalizedTextSv")
                         .HasDatabaseName("IX_Tasks_Tenant_NormalizedTextSv");
 
@@ -1048,6 +1062,8 @@ namespace Persistence.Migrations
                             t.HasCheckConstraint("CK_Tasks_Calculation_Positive", "[CalculationId] > 0");
 
                             t.HasCheckConstraint("CK_Tasks_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+
+                            t.HasCheckConstraint("CK_Tasks_Quantity_NonNegative", "[Quantity] IS NULL OR [Quantity] >= 0");
 
                             t.HasCheckConstraint("CK_Tasks_SortOrder_NonNegative", "[SortOrder] >= 0");
                         });
@@ -1107,6 +1123,7 @@ namespace Persistence.Migrations
                     b.HasIndex("UpdatedBy");
 
                     b.HasIndex("TenantId", "Name")
+                        .IsUnique()
                         .HasDatabaseName("IX_TaskStatuses_Tenant_Name");
 
                     b.HasIndex("TenantId", "IsVisible", "SortOrder")
@@ -1747,7 +1764,18 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "ImportJobId", "Status");
 
-                    b.ToTable("PriceImportCandidates");
+                    b.ToTable("PriceImportCandidates", t =>
+                        {
+                            t.HasCheckConstraint("CK_PriceImportCandidates_BasePrice_NonNegative", "[BasePrice] IS NULL OR [BasePrice] >= 0");
+
+                            t.HasCheckConstraint("CK_PriceImportCandidates_Confidence_Range", "[Confidence] >= 0 AND [Confidence] <= 1");
+
+                            t.HasCheckConstraint("CK_PriceImportCandidates_DiscountPercent_Range", "[DiscountPercent] IS NULL OR ([DiscountPercent] >= 0 AND [DiscountPercent] <= 100)");
+
+                            t.HasCheckConstraint("CK_PriceImportCandidates_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+
+                            t.HasCheckConstraint("CK_PriceImportCandidates_NetPrice_NonNegative", "[NetPrice] IS NULL OR [NetPrice] >= 0");
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.PriceLists.PriceImportJob", b =>
@@ -1814,7 +1842,16 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "SupplierName");
 
-                    b.ToTable("PriceImportJobs");
+                    b.ToTable("PriceImportJobs", t =>
+                        {
+                            t.HasCheckConstraint("CK_PriceImportJobs_Counts_NonNegative", "[TotalCandidates] >= 0 AND [ReadyCount] >= 0 AND [ReviewCount] >= 0 AND [ErrorCount] >= 0 AND [ApprovedCount] >= 0");
+
+                            t.HasCheckConstraint("CK_PriceImportJobs_DateRange", "[CompletedAt] IS NULL OR [CompletedAt] >= [StartedAt]");
+
+                            t.HasCheckConstraint("CK_PriceImportJobs_SourceFileName_NotEmpty", "LEN(LTRIM(RTRIM([SourceFileName]))) > 0");
+
+                            t.HasCheckConstraint("CK_PriceImportJobs_SourceFilePath_NotEmpty", "LEN(LTRIM(RTRIM([SourceFilePath]))) > 0");
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.PriceLists.PriceImportMapping", b =>
@@ -1851,7 +1888,14 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "SupplierName", "ExternalColumnName");
 
-                    b.ToTable("PriceImportMappings");
+                    b.ToTable("PriceImportMappings", t =>
+                        {
+                            t.HasCheckConstraint("CK_PriceImportMappings_ExternalColumnName_NotEmpty", "LEN(LTRIM(RTRIM([ExternalColumnName]))) > 0");
+
+                            t.HasCheckConstraint("CK_PriceImportMappings_InternalFieldName_NotEmpty", "LEN(LTRIM(RTRIM([InternalFieldName]))) > 0");
+
+                            t.HasCheckConstraint("CK_PriceImportMappings_SupplierName_NotEmpty", "LEN(LTRIM(RTRIM([SupplierName]))) > 0");
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.PriceLists.PriceList", b =>
@@ -1912,7 +1956,12 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "SupplierName");
 
-                    b.ToTable("PriceLists");
+                    b.ToTable("PriceLists", t =>
+                        {
+                            t.HasCheckConstraint("CK_PriceLists_DateRange", "[ValidTo] IS NULL OR [ValidFrom] IS NULL OR [ValidTo] >= [ValidFrom]");
+
+                            t.HasCheckConstraint("CK_PriceLists_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.PriceLists.PriceListItem", b =>
@@ -2028,7 +2077,22 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "PriceListId", "ArticleNumber");
 
-                    b.ToTable("PriceListItems");
+                    b.ToTable("PriceListItems", t =>
+                        {
+                            t.HasCheckConstraint("CK_PriceListItems_BasePrice_NonNegative", "[BasePrice] IS NULL OR [BasePrice] >= 0");
+
+                            t.HasCheckConstraint("CK_PriceListItems_Confidence_Range", "[Confidence] IS NULL OR ([Confidence] >= 0 AND [Confidence] <= 1)");
+
+                            t.HasCheckConstraint("CK_PriceListItems_ConsumptionFactor_NonNegative", "[ConsumptionFactor] IS NULL OR [ConsumptionFactor] >= 0");
+
+                            t.HasCheckConstraint("CK_PriceListItems_DiscountPercent_Range", "[DiscountPercent] IS NULL OR ([DiscountPercent] >= 0 AND [DiscountPercent] <= 100)");
+
+                            t.HasCheckConstraint("CK_PriceListItems_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+
+                            t.HasCheckConstraint("CK_PriceListItems_NetPrice_NonNegative", "[NetPrice] IS NULL OR [NetPrice] >= 0");
+
+                            t.HasCheckConstraint("CK_PriceListItems_WastePercent_Range", "[WastePercent] IS NULL OR ([WastePercent] >= 0 AND [WastePercent] <= 100)");
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.Project.CompensationEntity", b =>
@@ -2085,6 +2149,7 @@ namespace Persistence.Migrations
                     b.HasIndex("UpdatedBy");
 
                     b.HasIndex("TenantId", "Name")
+                        .IsUnique()
                         .HasDatabaseName("IX_Compensations_Tenant_Name");
 
                     b.HasIndex("TenantId", "IsVisible", "SortOrder")
@@ -2154,6 +2219,7 @@ namespace Persistence.Migrations
                     b.HasIndex("UpdatedBy");
 
                     b.HasIndex("TenantId", "Name")
+                        .IsUnique()
                         .HasDatabaseName("IX_Contracts_Tenant_Name");
 
                     b.HasIndex("TenantId", "IsVisible", "SortOrder")
@@ -2223,6 +2289,7 @@ namespace Persistence.Migrations
                     b.HasIndex("UpdatedBy");
 
                     b.HasIndex("TenantId", "Name")
+                        .IsUnique()
                         .HasDatabaseName("IX_ProcurementMethods_Tenant_Name");
 
                     b.HasIndex("TenantId", "IsVisible", "SortOrder")
@@ -2426,6 +2493,7 @@ namespace Persistence.Migrations
                     b.HasIndex("UpdatedBy");
 
                     b.HasIndex("TenantId", "Name")
+                        .IsUnique()
                         .HasDatabaseName("IX_Statuses_Tenant_Name");
 
                     b.HasIndex("TenantId", "IsVisible", "SortOrder")
@@ -2495,6 +2563,7 @@ namespace Persistence.Migrations
                     b.HasIndex("UpdatedBy");
 
                     b.HasIndex("TenantId", "Name")
+                        .IsUnique()
                         .HasDatabaseName("IX_ProjectTypes_Tenant_Name");
 
                     b.HasIndex("TenantId", "IsVisible", "SortOrder")
@@ -2573,6 +2642,7 @@ namespace Persistence.Migrations
                     b.HasIndex("TenantId", "ResourceTypeId");
 
                     b.HasIndex("TenantId", "ResourceTypeId", "Name")
+                        .IsUnique()
                         .HasDatabaseName("IX_ResourceSorts_Tenant_Type_Name");
 
                     b.HasIndex("TenantId", "ResourceTypeId", "IsVisible", "SortOrder")
@@ -2650,7 +2720,12 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "AccountId");
 
+                    b.HasIndex("TenantId", "Kind")
+                        .IsUnique()
+                        .HasDatabaseName("UX_ResourceTypes_Tenant_Kind");
+
                     b.HasIndex("TenantId", "Name")
+                        .IsUnique()
                         .HasDatabaseName("IX_ResourceTypes_Tenant_Name");
 
                     b.HasIndex("TenantId", "Kind", "IsVisible", "SortOrder")
@@ -2895,6 +2970,12 @@ namespace Persistence.Migrations
                         .HasForeignKey("DeletedBy")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("Domain.Entities.Users.DepartmentEntity", "Department")
+                        .WithMany()
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("Domain.Entities.Organisation.OrganisationEntity", "Organisation")
                         .WithMany("Calculations")
                         .HasForeignKey("OrganisationId");
@@ -2937,6 +3018,8 @@ namespace Persistence.Migrations
                     b.Navigation("CreatedByUser");
 
                     b.Navigation("DeletedByUser");
+
+                    b.Navigation("Department");
 
                     b.Navigation("Organisation");
 
@@ -3167,7 +3250,7 @@ namespace Persistence.Migrations
                     b.HasOne("Domain.Entities.Calculation.TaskEntity", "ParentTask")
                         .WithMany("Tasks")
                         .HasForeignKey("ParentTaskId")
-                        .OnDelete(DeleteBehavior.ClientCascade);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Domain.Entities.Calculation.TaskStatusEntity", "Status")
                         .WithMany("Tasks")
@@ -3266,7 +3349,7 @@ namespace Persistence.Migrations
                     b.HasOne("Domain.Entities.Calculation.TenderAttributeDefinitionEntity", "TenderAttribute")
                         .WithMany("TendersAttributes")
                         .HasForeignKey("TenderAttributeId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Domain.Entities.Calculation.TenderEntity", "Tender")

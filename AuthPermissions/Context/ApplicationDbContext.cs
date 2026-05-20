@@ -36,7 +36,7 @@ namespace AuthPermissions.Context
             modelBuilder.Entity<ApplicationUser>(entity =>
             {
                 entity.Property(x => x.DB).HasMaxLength(128);
-                entity.Property(x => x.RefreshToken).HasMaxLength(50);
+                entity.Property(x => x.RefreshToken).HasMaxLength(256);
                 entity.Property(x => x.Firstname).HasMaxLength(100);
                 entity.Property(x => x.Lastname).HasMaxLength(100);
 
@@ -49,8 +49,6 @@ namespace AuthPermissions.Context
 
             modelBuilder.Entity<TenantDatabaseEntity>(entity =>
             {
-                entity.ToTable("TenantDatabase");
-
                 entity.Property(x => x.Name)
                     .IsRequired()
                     .HasMaxLength(200);
@@ -59,13 +57,33 @@ namespace AuthPermissions.Context
                     .IsRequired()
                     .HasMaxLength(4000);
 
+                entity.Property(x => x.RowVersion).IsRowVersion();
+
                 entity.HasIndex(x => x.Name)
                     .IsUnique()
                     .HasDatabaseName("UX_TenantDatabase_Name");
+
+                entity.ToTable("TenantDatabase", t =>
+                {
+                    t.HasCheckConstraint("CK_TenantDatabase_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+                    t.HasCheckConstraint("CK_TenantDatabase_ConnectionString_NotEmpty", "LEN(LTRIM(RTRIM([ConnectionString]))) > 0");
+                });
             });
 
             modelBuilder.Entity<TenantEntity>(entity =>
             {
+                entity.Property(x => x.Phone).HasMaxLength(30);
+                entity.Property(x => x.Mobile).HasMaxLength(30);
+                entity.Property(x => x.Fax).HasMaxLength(30);
+                entity.Property(x => x.Email).HasMaxLength(256);
+                entity.Property(x => x.Website).HasMaxLength(512);
+                entity.Property(x => x.Note).HasMaxLength(1000);
+                entity.Property(x => x.Country).HasMaxLength(100);
+                entity.Property(x => x.City).HasMaxLength(100);
+                entity.Property(x => x.PostCode).HasMaxLength(20);
+                entity.Property(x => x.Street).HasMaxLength(200);
+                entity.Property(x => x.BuildNumber).HasMaxLength(20);
+
                 entity.HasIndex(x => new { x.TenantDBId, x.Name })
                     .HasDatabaseName("IX_Tenants_TenantDB_Name");
 
@@ -73,11 +91,21 @@ namespace AuthPermissions.Context
                     .WithMany(x => x.Tenants)
                     .HasForeignKey(x => x.TenantDBId)
                     .OnDelete(DeleteBehavior.Restrict);
+
+                entity.ToTable("Tenants", t =>
+                {
+                    t.HasCheckConstraint("CK_Tenants_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+                    t.HasCheckConstraint("CK_Tenants_MaxUsers_Positive", "[MaxUsers] >= 1");
+                    t.HasCheckConstraint("CK_Tenants_MaxCalculations_Positive", "[MaxCalculations] >= 1");
+                });
             });
 
             modelBuilder.Entity<TenantMlSettingEntity>(entity =>
             {
-                entity.ToTable("TenantMlSettings");
+                entity.ToTable("TenantMlSettings", t =>
+                {
+                    t.HasCheckConstraint("CK_TenantMlSettings_AutoTrainingIntervalDays_Min", "[AutoTrainingIntervalDays] >= 1");
+                });
 
                 entity.HasIndex(x => x.TenantId)
                     .IsUnique()
