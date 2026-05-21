@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.7" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.8" />
     <ProjectReference Include="..\ProjectManagement.Shared\ProjectManagement.Shared.csproj" />
   </ItemGroup>
 

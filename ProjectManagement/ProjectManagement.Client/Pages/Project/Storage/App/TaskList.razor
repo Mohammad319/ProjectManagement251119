@@ -18,6 +18,7 @@
 @using System.Text.Json
 @using System.Net
 @inject IJSRuntime JS
+@implements IAsyncDisposable
 <div class="sticky top-0 z-10 flex items-center gap-1.5 bg-white dark:bg-slate-900">
     @Content
     @if (_tasks != null && _tasks.Any(x => x.Added))
@@ -33,21 +34,6 @@
                value="@_rawSearchQuery"
                @oninput="OnSearchInput"
                placeholder="@ResourceLoc.EnterPartOfCodeOrName" />
-    </div>
-
-    <div class="flex shrink-0 items-center gap-1">
-        <label class="@GetToggleClass(_readyOnly)" title="Show only rows that can be added immediately">
-            <input type="checkbox" class="sr-only" checked="@_readyOnly" @onchange="e => OnReadyOnlyChanged((bool)(e.Value ?? false))" />
-            Ready
-        </label>
-        <label class="@GetToggleClass(_missingSelectionOnly)" title="Show rows that still need state selection">
-            <input type="checkbox" class="sr-only" checked="@_missingSelectionOnly" @onchange="e => OnMissingSelectionOnlyChanged((bool)(e.Value ?? false))" />
-            Missing
-        </label>
-        <label class="@GetToggleClass(_resourcesOnly)" title="Search tasks that have resources">
-            <input type="checkbox" class="sr-only" checked="@_resourcesOnly" @onchange="async e => await OnResourcesOnlyChangedAsync((bool)(e.Value ?? false))" />
-            Resources
-        </label>
     </div>
 
     <div>
@@ -180,21 +166,15 @@ else if (_tasks != null)
         </div>
     }
 
-    @if (_hasMore)
+    @if (_loadingMore)
     {
         <div class="flex justify-center pt-3 pb-2">
-            @if (_loadingMore)
-            {
-                <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
-            }
-            else
-            {
-                <button class="px-4 py-1.5 text-sm border border-blue-400 text-blue-600 rounded hover:bg-blue-50 dark:border-blue-500 dark:text-blue-400 dark:hover:bg-blue-900/30 transition"
-                        @onclick="LoadMoreAsync">
-                    + @PageSize
-                </button>
-            }
+            <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
         </div>
+    }
+    else if (_hasMore && results.Count > 0)
+    {
+        <div id="@SentinelId" class="h-4 w-full"></div>
     }
 }
 
@@ -202,15 +182,17 @@ else if (_tasks != null)
     private const int PageSize = 25;
     private const string InputClass = "border border-gray-300 rounded px-2 py-1 text-[13px] leading-tight h-[25px] bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white";
 
+    private string SentinelId => $"scroll-sentinel-{Calc.Id}";
+    private DotNetObjectReference<TaskList>? _selfRef;
+    private bool _observerAttached = false;
+
     // Fuzzy search via FuzzySearchHelper and SwedishTaskTextNormalizer.
 
     private string _rawSearchQuery = string.Empty;
     private CancellationTokenSource? _searchCts;
     private string _lastInputQuery = "\0";
     private string _lastServerSearchKey = "\0";
-    private bool _readyOnly;
-    private bool _missingSelectionOnly;
-    private bool _resourcesOnly = true;
+    private const bool ResourcesOnly = true;
     private int _requestVersion;
     private string UiStateStorageKey => $"storage-task-list-ui:{Calc.Id}";
 
@@ -241,20 +223,14 @@ else if (_tasks != null)
 
     private List<SearchResult>? _scoredCache;
     private string _lastScoredQuery = "\0";
-    private bool _lastReadyOnly;
-    private bool _lastMissingSelectionOnly;
 
     private IEnumerable<SearchResult> GetScoredGroups()
     {
         if (_scoredCache is not null
-            && _lastScoredQuery == _rawSearchQuery
-            && _lastReadyOnly == _readyOnly
-            && _lastMissingSelectionOnly == _missingSelectionOnly)
+            && _lastScoredQuery == _rawSearchQuery)
             return _scoredCache;
 
         _lastScoredQuery = _rawSearchQuery;
-        _lastReadyOnly = _readyOnly;
-        _lastMissingSelectionOnly = _missingSelectionOnly;
         _scoredCache = ComputeScoredGroups().ToList();
         return _scoredCache;
     }
@@ -263,7 +239,7 @@ else if (_tasks != null)
     {
         var q = _rawSearchQuery.Trim();
         var groups = _taskGroups
-            .Where(g => !_resourcesOnly || g.Tasks.Any(HasResources))
+            .Where(g => g.Tasks.Any(HasResources))
             .Select(g => BuildSearchResult(g, q))
             .Where(r => PassesUiFilters(r.Group));
         if (string.IsNullOrWhiteSpace(q))
@@ -275,7 +251,7 @@ else if (_tasks != null)
         var tokens = filterDto.SearchTokens;
 
         return groups
-            .Select(r => r with { Score = Math.Min(1.0, r.Score + TaskListSearchHelper.GetTokenBonus(r.Group.CombinedText, tokens) + GetStateSelectionBoost(r.Group)) })
+            .Select(r => r with { Score = Math.Min(1.0, r.Score + TaskListSearchHelper.GetTokenBonus(r.Group.NormalizedCombinedText, tokens) + GetStateSelectionBoost(r.Group)) })
             .Where(x => x.Score >= FuzzySearchHelper.Threshold)
             .OrderByDescending(x => x.Score);
     }
@@ -296,19 +272,6 @@ else if (_tasks != null)
 
     private bool PassesUiFilters(TaskGroup group)
     {
-        if (!_selectedStates.TryGetValue(group.Key, out var selected))
-            selected = [];
-
-        var matched = MatchTask(group, selected);
-        var ready = group.StateGroupNames.Count == 0 || matched is not null;
-        var missing = group.StateGroupNames.Count > 0 && matched is null;
-
-        if (_readyOnly && !ready)
-            return false;
-
-        if (_missingSelectionOnly && !missing)
-            return false;
-
         return true;
     }
 
@@ -375,7 +338,7 @@ else if (_tasks != null)
         if (trimmed.Length == 1)
             return false;
 
-        var key = $"{trimmed}|{string.Join(',', filterDto.SearchTokens)}|{filterDto.NameOrCode}|{_resourcesOnly}";
+        var key = $"{trimmed}|{string.Join(',', filterDto.SearchTokens)}|{filterDto.NameOrCode}|{ResourcesOnly}";
         if (string.Equals(key, _lastServerSearchKey, StringComparison.Ordinal))
             return false;
 
@@ -392,38 +355,6 @@ else if (_tasks != null)
         await SaveUiStateAsync();
         await Refresh();
     }
-
-    private void OnReadyOnlyChanged(bool value)
-    {
-        _readyOnly = value;
-        if (value)
-            _missingSelectionOnly = false;
-        _scoredCache = null;
-        _ = SaveUiStateAsync();
-    }
-
-    private void OnMissingSelectionOnlyChanged(bool value)
-    {
-        _missingSelectionOnly = value;
-        if (value)
-            _readyOnly = false;
-        _scoredCache = null;
-        _ = SaveUiStateAsync();
-    }
-
-    private async Task OnResourcesOnlyChangedAsync(bool value)
-    {
-        _resourcesOnly = value;
-        filterDto.ResourcesOnly = _resourcesOnly;
-        _scoredCache = null;
-        await SaveUiStateAsync();
-        await Refresh();
-    }
-
-    private static string GetToggleClass(bool active)
-        => active
-            ? "cursor-pointer rounded border border-blue-500 bg-blue-50 px-2 py-1 text-[11px] font-semibold text-blue-700 dark:border-blue-500 dark:bg-blue-950/40 dark:text-blue-300"
-            : "cursor-pointer rounded border border-gray-300 bg-white px-2 py-1 text-[11px] font-medium text-gray-600 hover:border-blue-400 hover:text-blue-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300";
 
     private RenderFragment RenderTaskHeader(SearchResult result) => @<text>
         @if (!string.IsNullOrEmpty(result.Group.Code))
@@ -482,9 +413,6 @@ else if (_tasks != null)
     private sealed class StorageTaskListUiState
     {
         public string SearchQuery { get; set; } = string.Empty;
-        public bool ReadyOnly { get; set; }
-        public bool MissingSelectionOnly { get; set; }
-        public bool ResourcesOnly { get; set; } = true;
         public Dictionary<string, Dictionary<int, int>> SelectedStates { get; set; } = [];
     }
 
@@ -502,11 +430,8 @@ else if (_tasks != null)
 
             _rawSearchQuery = state.SearchQuery ?? string.Empty;
             _lastInputQuery = _rawSearchQuery;
-            _readyOnly = state.ReadyOnly;
-            _missingSelectionOnly = state.MissingSelectionOnly;
-            _resourcesOnly = state.ResourcesOnly;
             _restoredSelectedStates = state.SelectedStates ?? [];
-            filterDto.ResourcesOnly = _resourcesOnly;
+            filterDto.ResourcesOnly = ResourcesOnly;
             BuildServerFilter(_rawSearchQuery);
         }
         catch { }
@@ -519,9 +444,6 @@ else if (_tasks != null)
             var state = new StorageTaskListUiState
             {
                 SearchQuery = _rawSearchQuery,
-                ReadyOnly = _readyOnly,
-                MissingSelectionOnly = _missingSelectionOnly,
-                ResourcesOnly = _resourcesOnly,
                 SelectedStates = _selectedStates
             };
             await JS.InvokeVoidAsync("localStorage.setItem", UiStateStorageKey, JsonSerializer.Serialize(state));
@@ -537,6 +459,7 @@ else if (_tasks != null)
         public string SearchText { get; private set; } = string.Empty;
         // Pre-built search string reused across every search to avoid per-search interpolation.
         public string CombinedText { get; private set; } = string.Empty;
+        public string NormalizedCombinedText { get; private set; } = string.Empty;
         public string ResourceSearchText { get; private set; } = string.Empty;
         public string NormalizedResourceText { get; private set; } = string.Empty;
         public List<ProjectTaskDto> Tasks { get; } = [];
@@ -558,6 +481,7 @@ else if (_tasks != null)
             if (!string.IsNullOrWhiteSpace(resourceText) && _searchParts.Add(resourceText))
                 SearchText = SearchText.Length == 0 ? resourceText : SearchText + " " + resourceText;
             CombinedText = $"{Code} {DisplayName} {SearchText}";
+            NormalizedCombinedText = SwedishTaskTextNormalizer.Normalize(CombinedText);
             if (!string.IsNullOrWhiteSpace(resourceText) && _resourceSearchParts.Add(resourceText))
             {
                 ResourceSearchText = string.Join(" | ", _resourceSearchParts);
@@ -570,6 +494,7 @@ else if (_tasks != null)
                 DisplayName,
                 Code,
                 CombinedText,
+                NormalizedCombinedText,
                 ResourceSearchText,
                 NormalizedResourceText,
                 StateGroupNames.Count > 0,
@@ -628,7 +553,7 @@ else if (_tasks != null)
     // groupKey to selected state ids by stateGroupId.
     private Dictionary<string, Dictionary<int, int>> _selectedStates = [];
     private Dictionary<string, Dictionary<int, int>> _restoredSelectedStates = [];
-    ProjectTaskFilterDto filterDto = new() { ResourcesOnly = true };
+    ProjectTaskFilterDto filterDto = new() { ResourcesOnly = ResourcesOnly };
     [Parameter] public EventCallback RefreshBack { get; set; }
     [Parameter] public RenderFragment? Content { get; set; }
     ResourceFormDTO Config = new();
@@ -681,7 +606,7 @@ else if (_tasks != null)
         var updatedKeys = new HashSet<string>();
         foreach (var task in newTasks)
         {
-            if (_resourcesOnly && !HasResources(task))
+            if (!HasResources(task))
                 continue;
 
             var key = $"{task.Code ?? string.Empty}||{task.DisplayName}";
@@ -710,7 +635,7 @@ else if (_tasks != null)
         var requestVersion = ++_requestVersion;
         _error = null;
         _loading = true;
-        filterDto.ResourcesOnly = _resourcesOnly;
+        filterDto.ResourcesOnly = ResourcesOnly;
         try
         {
             _tasks = [];
@@ -888,6 +813,45 @@ else if (_tasks != null)
                 res.IsAdded = false;
         }
         return true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        var shouldObserve = _hasMore && !_loading && !_loadingMore;
+        if (shouldObserve && !_observerAttached)
+        {
+            _selfRef ??= DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("observeIntersection", _selfRef, SentinelId);
+            _observerAttached = true;
+        }
+        else if (!shouldObserve && _observerAttached)
+        {
+            await JS.InvokeVoidAsync("unobserveIntersection", SentinelId);
+            _observerAttached = false;
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnScrolledToBottom()
+    {
+        if (_loadingMore || !_hasMore || _loading) return;
+        _observerAttached = false;
+        try { await JS.InvokeVoidAsync("unobserveIntersection", SentinelId); } catch { }
+        await InvokeAsync(async () =>
+        {
+            await LoadMoreAsync();
+            StateHasChanged();
+        });
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_observerAttached)
+        {
+            try { await JS.InvokeVoidAsync("unobserveIntersection", SentinelId); } catch { }
+            _observerAttached = false;
+        }
+        _selfRef?.Dispose();
     }
 
     protected override async Task OnInitializedAsync()

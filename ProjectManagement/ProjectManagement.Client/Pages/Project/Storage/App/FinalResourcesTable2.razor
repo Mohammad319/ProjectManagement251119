@@ -26,25 +26,24 @@ else
                 -webkit-overflow-scrolling: touch;
              ">
         <table class="w-full table-fixed border-collapse text-[11px] leading-tight"
-               style="min-width: 1750px; white-space: nowrap;">
+               style="min-width: 1660px; white-space: nowrap;">
             <thead class="sticky top-0 z-10 bg-slate-100/95 text-slate-700 shadow-[0_1px_0_rgba(148,163,184,0.35)] dark:bg-slate-900/95 dark:text-slate-200">
                 <tr>
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[60px]">@CalcResource.active</th>
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.account</th>
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[450px]">@ResourceLoc.resource</th>
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[65px]">@CalcResource.changeFactor1</th>
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.cap / @CalcResource.waste</th>
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.quantity</th>
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.unit</th>
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.baseCost</th>
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.cost</th>
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.totalNetCost</th>
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[70px]">Vars</th>
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.type</th>
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.resourceSort</th>
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.status</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[92px]">@CalcResource.active</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[150px]">@CalcResource.account</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[380px]">@ResourceLoc.resource</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[80px]">@CalcResource.changeFactor1</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[85px]">@CalcResource.cap / @CalcResource.waste</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[90px]">@CalcResource.quantity</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[80px]">@CalcResource.unit</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[90px]">@CalcResource.baseCost</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[90px]">@CalcResource.cost</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[100px]">@CalcResource.totalNetCost</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[120px]">@CalcResource.type</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[120px]">@CalcResource.resourceSort</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[120px]">@CalcResource.status</th>
 
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.co2</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[90px]">@CalcResource.co2</th>
      
                 </tr>
             </thead>
@@ -112,28 +111,30 @@ else
                     <tr @key="rowKey" class="hover:bg-amber-50/60 dark:hover:bg-amber-900/20">
                         <!-- Active / Add -->
                         <td class="px-1 py-0.5 text-[11px] text-gray-800 dark:text-gray-300">
-                            @if (AddBtnIsVisible)
-                            {
-                                <button @onclick="() => current.IsAdded = !current.IsAdded"
-                                        class="@ToggleClass">
-                                    @(current.IsAdded ? "−" : "+")
-                                </button>
-                            }
-                            <input type="checkbox"
-                                   class="h-4 w-4 text-blue-600 rounded focus:ring-blue-500 dark:text-blue-400"
-                                   checked="@current.Active" disabled />
-
-                            <button type="button"
-                                    class="@VariablesButtonClass(hasResourceVariables, variablesExpanded)"
-                                    disabled="@(!hasResourceVariables)"
-                                    title="Parameters / AddOns / Times"
-                                    @onclick="() => ToggleVariables(variablesKey)">
-                                @(variablesExpanded ? "Hide" : "Show")
-                                @if (hasResourceVariables)
+                            <div class="flex items-center gap-1">
+                                @if (AddBtnIsVisible)
                                 {
-                                    <span class="ml-1 tabular-nums">@GetResourceVariablesCount(current)</span>
+                                    <button @onclick="() => current.IsAdded = !current.IsAdded"
+                                            class="@ToggleClass">
+                                        @(current.IsAdded ? "−" : "+")
+                                    </button>
                                 }
-                            </button>
+                                <input type="checkbox"
+                                       class="h-4 w-4 rounded text-blue-600 focus:ring-blue-500 dark:text-blue-400"
+                                       checked="@current.Active" disabled />
+
+                                <button type="button"
+                                        class="@VariablesButtonClass(hasResourceVariables, variablesExpanded)"
+                                        disabled="@(!hasResourceVariables)"
+                                        title="Parameters / AddOns / Times"
+                                        @onclick="() => ToggleVariables(variablesKey)">
+                                    @(variablesExpanded ? "Hide" : "Vars")
+                                    @if (hasResourceVariables)
+                                    {
+                                        <span class="ml-1 tabular-nums">@GetResourceVariablesCount(current)</span>
+                                    }
+                                </button>
+                            </div>
                         </td>
 
                         <!-- Account -->
@@ -172,7 +173,7 @@ else
                                             @onchange="e => OnMenuChanged(menuGroup, e)">
                                         @foreach (var opt in menuGroup.Resources)
                                         {
-                                            <option value="@opt.Id">@opt.Name</option>
+                                            <option value="@opt.Id">@GetResourceOptionText(opt)</option>
                                         }
                                     </select>
                                 }
@@ -181,11 +182,13 @@ else
                                 @if (!NameConfig || string.IsNullOrWhiteSpace(current.NameUserValue))
                                 {
                                     <input type="text" @bind="current.Name"
+                                           title="@current.Name"
                                            class="@($"{St} min-w-0 flex-1")" />
                                 }
                                 else
                                 {
                                     <input type="text" @bind="current.NameUserValue"
+                                           title="@current.NameUserValue"
                                            class="@($"{St} min-w-0 flex-1")" />
                                 }
                             </div>
@@ -218,7 +221,7 @@ else
                         </td>
                         <!-- Unit / BaseCost / Cost / TotalCost -->
                         <td class="px-1 py-0.5">
-                            <input type="text" @bind="current.Unit" class="@St" />
+                            <input type="text" @bind="current.Unit" title="@current.Unit" class="@St" />
                         </td>
                         <td class="px-1 py-0.5">
                             <input type="text"
@@ -461,8 +464,6 @@ else
     string SelectSt = "block h-7 w-full min-w-0 rounded border border-slate-300 bg-white px-1.5 py-0 text-[11px] " +
                       "text-slate-900 shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100";
 
-    string VariableRowGridClass = "grid grid-cols-[60px_75px_450px_75px_65px_75px_75px_70px_75px_75px_75px_75px_75px_75px_75px] gap-1";
-
     private const string ResourceFieldBaseCost = "basecost";
     private const string ResourceFieldCost = "cost";
     private const string ResourceFieldChangeFactor1 = "chf1";
@@ -472,7 +473,7 @@ else
     private readonly Dictionary<string, string> _propertyInputDrafts = new(StringComparer.Ordinal);
     private readonly Dictionary<string, string> _resourceInputDrafts = new(StringComparer.Ordinal);
     private readonly HashSet<string> _expandedVariableRows = new(StringComparer.Ordinal);
-    private int VisibleColumnCount => 15 + _propColumns.Count;
+    private int VisibleColumnCount => 14 + _propColumns.Count;
 
     private sealed class PropColumn
     {
@@ -588,7 +589,7 @@ else
 
     private static string VariablesButtonClass(bool hasVariables, bool expanded)
     {
-        var baseClass = "inline-flex h-7 w-full items-center justify-center rounded border px-1 text-[11px] transition";
+        var baseClass = "inline-flex h-6 min-w-[42px] items-center justify-center rounded border px-1 text-[10px] transition";
         if (!hasVariables)
             return $"{baseClass} cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-600";
 
@@ -596,6 +597,11 @@ else
             ? $"{baseClass} border-sky-500 bg-sky-50 text-sky-700 dark:border-sky-500 dark:bg-sky-950/50 dark:text-sky-200"
             : $"{baseClass} border-slate-300 bg-white text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800";
     }
+
+    private static string GetResourceOptionText(ResourceDto resource)
+        => string.IsNullOrWhiteSpace(resource.Unit)
+            ? resource.Name
+            : $"{resource.Name} / {resource.Unit}";
 
     private async Task OnMenuChanged(ResourceMenuGroup group, ChangeEventArgs e)
     {

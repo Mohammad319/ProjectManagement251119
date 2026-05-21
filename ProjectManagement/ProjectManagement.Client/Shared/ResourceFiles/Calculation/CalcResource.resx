@@ -139,7 +139,7 @@
     <value>Ceiling Price</value>
   </data>
   <data name="changeFactor1" xml:space="preserve">
-    <value>Quantity-driving factor</value>
+    <value>Qty factor</value>
   </data>
   <data name="changeFactor2" xml:space="preserve">
     <value>Quantity conversion factor</value>

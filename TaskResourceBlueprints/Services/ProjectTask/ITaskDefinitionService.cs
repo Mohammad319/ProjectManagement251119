@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Shared.Base.AppTenant;
 using ProjectManagement.Shared.Base.Calculation;
@@ -5,13 +6,9 @@ using ProjectManagement.Shared.DTO.App.Dataloader;
 using ProjectManagement.Shared.DTO.ProjectAppStorage;
 using ProjectManagement.Shared.Enums;
 using ProjectManagement.Shared.Helper.Text;
-using ProjectManagement.Shared.Mappers;
-using System.Linq.Expressions;
 using TaskResourceBlueprints.Dto.ProjectTask;
-using TaskResourceBlueprints.Entities.Lookups;
 using TaskResourceBlueprints.Entities.Resources;
 using TaskResourceBlueprints.Entities.Tasks;
-using TaskResourceBlueprints.Entities;
 using TaskResourceBlueprints.Infrastructure;
 using TaskResourceBlueprints.Mappers.Shared.Mappers;
 using TaskResourceBlueprints.Services.Import;
@@ -516,6 +513,7 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                         Name = resource.Name,
                         NameUserValue = tenantLink?.Name ?? string.Empty,
                         SortOrder = resource.SortOrder,
+                        Unit = resource.Unit ?? string.Empty,
                         ResType = resource.ResType,
                         ResourceSource = ResourceSource.Base,
                         Quantity = l.Quantity > 0 ? l.Quantity : null,

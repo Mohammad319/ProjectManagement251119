@@ -286,6 +286,16 @@ public static partial class SwedishTaskTextNormalizer
         ["rivning och schakt"]           = "riv schakt",
     };
 
+    // Pre-compiled once at startup — avoids creating 50+ Regex objects on every Normalize() call.
+    private static readonly (Regex Pattern, string Replacement)[] CompiledPhrasePatterns =
+        PhraseMap
+            .OrderByDescending(kv => kv.Key.Length)
+            .Select(kv => (
+                new Regex(@"\b" + Regex.Escape(kv.Key.ToLowerInvariant()) + @"\b",
+                          RegexOptions.IgnoreCase | RegexOptions.Compiled),
+                kv.Value.ToLowerInvariant()))
+            .ToArray();
+
     private static readonly Dictionary<string, string> TokenMap = new(StringComparer.OrdinalIgnoreCase)
     {
         // ── Schakt / Excavation ──────────────────────────────────────────
@@ -505,14 +515,8 @@ public static partial class SwedishTaskTextNormalizer
         text = NonSearchCharactersRegex().Replace(text, " ");
         text = WhitespaceRegex().Replace(text, " ").Trim();
 
-        foreach (var kv in PhraseMap.OrderByDescending(x => x.Key.Length))
-        {
-            text = Regex.Replace(
-                text,
-                $@"\b{Regex.Escape(kv.Key.ToLowerInvariant())}\b",
-                kv.Value.ToLowerInvariant(),
-                RegexOptions.IgnoreCase);
-        }
+        foreach (var (pattern, replacement) in CompiledPhrasePatterns)
+            text = pattern.Replace(text, replacement);
 
         var primaryTokens = new List<string>(); // original-order tokens for bigram generation
         var tokens = new List<string>();

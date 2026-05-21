@@ -139,7 +139,7 @@
     <value>Takpris</value>
   </data>
   <data name="changeFactor1" xml:space="preserve">
-    <value>Mängdpåverkande faktor</value>
+    <value>Mängdfaktor</value>
   </data>
   <data name="changeFactor2" xml:space="preserve">
     <value>Mängdomräkningsfaktor</value>

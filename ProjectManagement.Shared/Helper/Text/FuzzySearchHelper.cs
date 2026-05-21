@@ -33,6 +33,16 @@ public static class FuzzySearchHelper
         return SwedishTaskTextNormalizer.CalculateSimilarity(q, t);
     }
 
+    /// <summary>
+    /// Like Score() but skips normalization — use when both sides are already normalized.
+    /// </summary>
+    public static double ScoreNormalized(string normalizedQuery, string normalizedTarget)
+    {
+        if (string.IsNullOrWhiteSpace(normalizedQuery)) return 1.0;
+        if (string.IsNullOrWhiteSpace(normalizedTarget)) return 0.0;
+        return SwedishTaskTextNormalizer.CalculateSimilarity(normalizedQuery, normalizedTarget);
+    }
+
     public static string BarColorClass(double score) => score switch
     {
         >= 0.70 => "bg-green-500",

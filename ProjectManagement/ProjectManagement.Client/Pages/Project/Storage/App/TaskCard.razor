@@ -75,9 +75,12 @@
     <!-- State, cost, and status -->
     <div class="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 pl-[52px]">
         @Row2Content
-        <span class="text-sm font-semibold text-slate-800 dark:text-slate-100 whitespace-nowrap">
-            @FormatNumber(Task.TotalCost)<span class="opacity-70">/ @SelectedInputUnitCode</span>
-        </span>
+        @if (Task.TotalCost != 0)
+        {
+            <span class="text-sm font-semibold text-slate-800 dark:text-slate-100 whitespace-nowrap">
+                @FormatNumber(Task.TotalCost)<span class="opacity-70">/ @SelectedInputUnitCode</span>
+            </span>
+        }
         <div class="w-[175px] shrink-0">
             <select @bind="Task.StatusId" class="w-full h-[25px] border border-gray-300 rounded px-2 text-[13px] leading-tight bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600">
                 <option></option>
@@ -131,6 +134,7 @@
     private string? _computeError;
     private string? _resultText;
     private string? _resultFullText;
+    private bool _triedLoadingMissingQuantity;
     private string ResultUnit => Task.UnitCode;
     private string SelectedInputUnitCode => string.IsNullOrWhiteSpace(Task.NewUnitCode)
         ? Task.UnitCode
@@ -207,6 +211,16 @@
             var task = await TaskService.GetTaskForUserDtoAsync(Task.Id);
             if (task != null)
             {
+                Task.Quantity = task.Quantity;
+                Task.UnitCode = task.UnitCode;
+                Task.NewUnitCode = task.NewUnitCode;
+                Task.ChangeFactor1 = task.ChangeFactor1;
+                Task.ChangeFactor2 = task.ChangeFactor2;
+                Task.PriceProduction = task.PriceProduction;
+                Task.WorkloadThresholds = task.WorkloadThresholds ?? [];
+                Task.Uncontrollable = task.Uncontrollable;
+                Task.CapacityResourceId = task.CapacityResourceId;
+                Task.Note = task.Note ?? string.Empty;
                 Task.BaseResources = task.BaseResources ?? new List<ResourceDto>();
                 Task.ResultResources = task.ResultResources ?? new List<ResourceDto>();
                 Task.UpperNote = task.UpperNote ?? [];
@@ -225,6 +239,16 @@
     {
         RefreshBaseResources();
     }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!_triedLoadingMissingQuantity && Task is { Id: > 0, Quantity: null })
+        {
+            _triedLoadingMissingQuantity = true;
+            await LoadingTask();
+        }
+    }
+
     private void OnAnswersChanged()
     {
         RefreshBaseResources();

@@ -8,13 +8,11 @@ internal static class TaskListSearchHelper
     {
         var badges = new List<TaskListSearchBadge>();
         if (string.IsNullOrWhiteSpace(query))
-        {
-            badges.Add(new("Loaded", "neutral"));
             return new TaskListSearchResult(1.0, badges, null);
-        }
 
-        var score = FuzzySearchHelper.Score(query, group.CombinedText);
+        // Normalize query once — reused for all scoring below.
         var normalizedQuery = SwedishTaskTextNormalizer.Normalize(query);
+        var score = FuzzySearchHelper.ScoreNormalized(normalizedQuery, group.NormalizedCombinedText);
         string? matchHint = null;
 
         if (!string.IsNullOrWhiteSpace(group.Code))
@@ -39,15 +37,16 @@ internal static class TaskListSearchHelper
             }
         }
 
-        var nameScore = FuzzySearchHelper.Score(query, group.DisplayName);
+        var normalizedDisplayName = SwedishTaskTextNormalizer.Normalize(group.DisplayName);
+        var nameScore = FuzzySearchHelper.ScoreNormalized(normalizedQuery, normalizedDisplayName);
         if (nameScore >= FuzzySearchHelper.Threshold)
         {
             badges.Add(new($"Name {nameScore.ToString("0%", System.Globalization.CultureInfo.InvariantCulture)}", "name"));
             matchHint ??= $"Name: {group.DisplayName}";
         }
 
-        var resourceScore = FuzzySearchHelper.Score(query, group.ResourceSearchText);
-        var matchedResource = FindMatchedResourceText(group.ResourceSearchText, query);
+        var resourceScore = FuzzySearchHelper.ScoreNormalized(normalizedQuery, group.NormalizedResourceText);
+        var matchedResource = FindMatchedResourceText(group.ResourceSearchText, normalizedQuery);
         if (!string.IsNullOrWhiteSpace(matchedResource) ||
             (!string.IsNullOrWhiteSpace(normalizedQuery) &&
              group.NormalizedResourceText.Contains(normalizedQuery, StringComparison.OrdinalIgnoreCase)))
@@ -66,34 +65,34 @@ internal static class TaskListSearchHelper
         return new TaskListSearchResult(Math.Min(1.0, score), badges, matchHint);
     }
 
-    public static double GetTokenBonus(string combinedText, IReadOnlyList<string> tokens)
+    public static double GetTokenBonus(string normalizedCombinedText, IReadOnlyList<string> tokens)
     {
         if (tokens.Count < 2)
             return 0;
 
-        var lower = combinedText.ToLowerInvariant();
-        var normalizedCombined = SwedishTaskTextNormalizer.Normalize(combinedText);
-        var t0 = tokens[0].ToLowerInvariant();
-        var t1 = tokens[1].ToLowerInvariant();
-        var has0 = normalizedCombined.Contains(t0) || lower.Contains(t0);
-        var has1 = normalizedCombined.Contains(t1) || lower.Contains(t1);
+        var t0 = tokens[0];
+        var t1 = tokens[1];
+        var has0 = normalizedCombinedText.Contains(t0, StringComparison.OrdinalIgnoreCase);
+        var has1 = normalizedCombinedText.Contains(t1, StringComparison.OrdinalIgnoreCase);
         return has0 && has1 ? 0.15 : 0;
     }
 
-    private static string? FindMatchedResourceText(string resourceSearchText, string query)
+    private static string? FindMatchedResourceText(string resourceSearchText, string normalizedQuery)
     {
-        if (string.IsNullOrWhiteSpace(query) || string.IsNullOrWhiteSpace(resourceSearchText))
+        if (string.IsNullOrWhiteSpace(normalizedQuery) || string.IsNullOrWhiteSpace(resourceSearchText))
             return null;
 
-        var normalizedQuery = SwedishTaskTextNormalizer.Normalize(query);
         return resourceSearchText
             .Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Select(text => new
+            .Select(text =>
             {
-                Text = text,
-                Score = FuzzySearchHelper.Score(query, text),
-                Contains = !string.IsNullOrWhiteSpace(normalizedQuery) &&
-                           SwedishTaskTextNormalizer.Normalize(text).Contains(normalizedQuery, StringComparison.OrdinalIgnoreCase)
+                var normalizedText = SwedishTaskTextNormalizer.Normalize(text);
+                return new
+                {
+                    Text = text,
+                    Score = FuzzySearchHelper.ScoreNormalized(normalizedQuery, normalizedText),
+                    Contains = normalizedText.Contains(normalizedQuery, StringComparison.OrdinalIgnoreCase)
+                };
             })
             .Where(x => x.Contains || x.Score >= FuzzySearchHelper.Threshold)
             .OrderByDescending(x => x.Contains)
@@ -107,6 +106,7 @@ internal sealed record TaskListSearchInput(
     string DisplayName,
     string Code,
     string CombinedText,
+    string NormalizedCombinedText,
     string ResourceSearchText,
     string NormalizedResourceText,
     bool HasStates,
