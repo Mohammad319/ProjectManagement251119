@@ -1,0 +1,35 @@
+@using ProjectManagement.Shared.DTO.Calculation
+@using System.Globalization
+
+@foreach (var detail in Details.Take(MaxItems))
+{
+    <span class="@GetScoreDetailClass(detail)" title="@FormatScoreDetailTitle(detail)">
+        @detail.Label@FormatScoreDetailValue(detail)
+    </span>
+}
+
+@code {
+    [Parameter] public IReadOnlyList<TaskResourceSuggestionScoreDetailDTO> Details { get; set; } = [];
+    [Parameter] public int MaxItems { get; set; } = 5;
+
+    private static string GetScoreDetailClass(TaskResourceSuggestionScoreDetailDTO detail)
+    {
+        const string baseClass = "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold ring-1";
+        return detail.Kind switch
+        {
+            "quantity" => $"{baseClass} bg-cyan-50 text-cyan-700 ring-cyan-200 dark:bg-cyan-950/40 dark:text-cyan-300 dark:ring-cyan-800",
+            "unit" => $"{baseClass} bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:ring-emerald-800",
+            "code" or "context" => $"{baseClass} bg-indigo-50 text-indigo-700 ring-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:ring-indigo-800",
+            "warning" => $"{baseClass} bg-rose-50 text-rose-700 ring-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:ring-rose-800",
+            "feedback" => $"{baseClass} bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-800",
+            "ml" => $"{baseClass} bg-violet-50 text-violet-700 ring-violet-200 dark:bg-violet-950/40 dark:text-violet-300 dark:ring-violet-800",
+            _ => $"{baseClass} bg-gray-50 text-gray-600 ring-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-700"
+        };
+    }
+
+    private static string FormatScoreDetailValue(TaskResourceSuggestionScoreDetailDTO detail)
+        => detail.Value.HasValue ? $" {detail.Value.Value.ToString("0%", CultureInfo.InvariantCulture)}" : string.Empty;
+
+    private static string FormatScoreDetailTitle(TaskResourceSuggestionScoreDetailDTO detail)
+        => $"{detail.Label}{FormatScoreDetailValue(detail)}";
+}

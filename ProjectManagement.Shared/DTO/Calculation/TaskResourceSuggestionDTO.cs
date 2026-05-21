@@ -31,8 +31,16 @@ public sealed class TaskResourceSuggestionDTO
     public TaskResourceSuggestionSource Source { get; set; }
     public double Score { get; set; }
     public string Reason { get; set; } = string.Empty;
+    public List<TaskResourceSuggestionScoreDetailDTO> ScoreDetails { get; set; } = [];
     public TaskResourceSuggestionFeedbackKind? Feedback { get; set; }
     public List<ResourcePostDTO> Resources { get; set; } = [];
+}
+
+public sealed class TaskResourceSuggestionScoreDetailDTO
+{
+    public string Label { get; set; } = string.Empty;
+    public double? Value { get; set; }
+    public string Kind { get; set; } = string.Empty;
 }
 
 public sealed class TaskResourceSuggestionFeedbackDTO

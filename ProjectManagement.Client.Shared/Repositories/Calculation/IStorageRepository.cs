@@ -14,6 +14,7 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation
 
         Task<List<ProjectTaskDto>> GetTasksForUserDtoAsync(ProjectTaskFilterDto f);
         Task<ProjectTaskDto> GetTaskForUserDtoAsync(int id);
+        Task IncrementTaskUsageAsync(int id);
         Task<List<ConditionDto>> GetConditionsAsync();
         Task<List<TaskWithResourcesMDto>> GetTasksAppAsync();
         Task<List<ResourceEXDto>> GetResourcesAppAsync();

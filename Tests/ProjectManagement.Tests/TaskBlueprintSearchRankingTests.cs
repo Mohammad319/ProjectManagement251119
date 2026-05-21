@@ -1,6 +1,10 @@
 using System.Reflection;
+using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Shared.DTO.ProjectAppStorage;
 using ProjectManagement.Shared.Helper.Text;
+using TaskResourceBlueprints.Entities;
+using TaskResourceBlueprints.Entities.Tasks;
+using TaskResourceBlueprints.Infrastructure;
 using TaskResourceBlueprints.Services.ProjectTask;
 using Xunit;
 
@@ -72,6 +76,84 @@ public class TaskBlueprintSearchRankingTests
         Assert.True(Score(search, childWithParentContext) > Score(search, unrelated));
     }
 
+    [Fact]
+    public void SearchRanking_RewardsResourceTextMatch()
+    {
+        var search = BuildSearch("betong");
+        var resourceMatch = Candidate(1, "Gjutning av fundament", "EBC.1", 0, resourceText: "Betong C25/30 m3");
+        var unrelated = Candidate(2, "Schakt for ledning", "CBB.1", 250);
+
+        Assert.True(Score(search, resourceMatch) > Score(search, unrelated));
+    }
+
+    [Fact]
+    public async Task SearchService_ReturnsTaskWhenOnlyResourceNameMatchesTypo()
+    {
+        var options = new DbContextOptionsBuilder<TaskResourceBlueprintsContext>()
+            .UseInMemoryDatabase($"blueprint-search-{Guid.NewGuid():N}")
+            .Options;
+        await using (var db = new TaskResourceBlueprintsContext(options))
+        {
+            var concreteTask = new TaskDefinition
+            {
+                Id = 1,
+                Name = "Gjutning av fundament",
+                Code = "EBC.1",
+                Status = TaskStatusEnum.Ready,
+                UsageCount = 0,
+                RowVersion = [1]
+            };
+            concreteTask.RefreshNormalizedTextSv();
+
+            var unrelatedTask = new TaskDefinition
+            {
+                Id = 2,
+                Name = "Schakt for ledning",
+                Code = "CBB.1",
+                Status = TaskStatusEnum.Ready,
+                UsageCount = 500,
+                RowVersion = [1]
+            };
+            unrelatedTask.RefreshNormalizedTextSv();
+
+            var concreteResource = new ResourceDefinition
+            {
+                Id = 10,
+                Name = "Betong C25/30",
+                Unit = "m3",
+                IsActive = true,
+                IsVisible = true
+            };
+            var concreteLink = new TaskDefinitionResourceLink
+            {
+                TaskDefinitionId = concreteTask.Id,
+                Task = concreteTask,
+                ResourceDefinitionId = 10,
+                Resource = concreteResource,
+                Quantity = 1,
+                RowVersion = [1]
+            };
+            concreteTask.ResourceLinks.Add(concreteLink);
+
+            db.Tasks.AddRange(concreteTask, unrelatedTask);
+            db.Resources.Add(concreteResource);
+            db.TaskDefinitionResourceLinks.Add(concreteLink);
+            await db.SaveChangesAsync();
+        }
+
+        var service = new ProjectTaskService(new TestBlueprintContextFactory(options));
+        var result = await service.GetTasksForUserDtoAsync(new ProjectTaskFilterDto
+        {
+            NameOrCode = "betogn",
+            ResourcesOnly = true,
+            Take = 10
+        }, tenantid: 1, CancellationToken.None);
+
+        Assert.NotEmpty(result);
+        Assert.Equal(1, result[0].Id);
+        Assert.Contains("Betong", result[0].ResourceSearchText);
+    }
+
     private static object BuildSearch(string rawQuery)
     {
         var filter = new ProjectTaskFilterDto { NameOrCode = rawQuery };
@@ -93,7 +175,7 @@ public class TaskBlueprintSearchRankingTests
         return method.Invoke(null, [filter, tokens])!;
     }
 
-    private static object Candidate(int id, string name, string code, int usageCount, string? normalizedText = null)
+    private static object Candidate(int id, string name, string code, int usageCount, string? normalizedText = null, string resourceText = "")
     {
         var type = typeof(ProjectTaskService).GetNestedType(
             "TaskSearchCandidate",
@@ -105,7 +187,8 @@ public class TaskBlueprintSearchRankingTests
             name,
             code,
             normalizedText ?? SwedishTaskTextNormalizer.NormalizeTask(name, code, null),
-            usageCount
+            usageCount,
+            resourceText
         ])!;
     }
 
@@ -117,5 +200,12 @@ public class TaskBlueprintSearchRankingTests
         Assert.NotNull(method);
 
         return (double)method.Invoke(null, [search, candidate])!;
+    }
+
+    private sealed class TestBlueprintContextFactory(DbContextOptions<TaskResourceBlueprintsContext> options)
+        : IDbContextFactory<TaskResourceBlueprintsContext>
+    {
+        public TaskResourceBlueprintsContext CreateDbContext()
+            => new(options);
     }
 }

@@ -47,6 +47,7 @@ public class ProjectTaskDto
     public string UnitCode { get; set; } = string.Empty;
     public string Code { get; set; } = string.Empty;
     public string SearchText { get; set; } = string.Empty;
+    public string ResourceSearchText { get; set; } = string.Empty;
 
     public decimal ChangeFactor1 { get; set; } = 1m;
     public decimal ChangeFactor2 { get; set; } = 1m;

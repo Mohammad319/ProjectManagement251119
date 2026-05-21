@@ -67,9 +67,18 @@ namespace ProjectManagement.Server.Controllers.v1.CalcExtension
             if (tenantId.HasValue)
             {
                 _tasks = await TaskService.GetTaskForUserDtoAsync(id, tenantId.Value, 0, CancellationToken.None);
-                _ = TaskService.IncrementUsageAsync(id); // fire-and-forget
             }
             return Ok(_tasks);
+        }
+
+        [Authorize(Roles = PMRolesConst.Tenant.Users)]
+        [HttpPost("tasksapp2/{id}/usage")]
+        public async Task<IActionResult> IncrementTaskUsage(int id, CancellationToken ct)
+        {
+            int? tenantId = GetTenantId();
+            if (!tenantId.HasValue) return Unauthorized();
+            await TaskService.IncrementUsageAsync(id, ct);
+            return Ok(true);
         }
         [Authorize(Roles = PMRolesConst.Tenant.Users)]
         [HttpGet("tasksapp")]

@@ -1,13 +1,71 @@
 @using ProjectManagement.Client.Shared.MVVM.Calculation
 @using ProjectManagement.Client.Shared.ResourceFiles.Calculation
+@using ProjectManagement.Shared.Base.Calculation
 @using ProjectManagement.Shared.DTO.Calculation
 @using ProjectManagement.Shared.Enums
 @using ProjectManagement.Shared.Helper.ProjectAppStorage
 @using ProjectManagement.Shared.Helper.Text
+@using Microsoft.JSInterop
+@using System.Text.Json
 @using System.Globalization
 @inherits AppComponentBase
+@inject IJSRuntime JS
 
 <div class="flex flex-col gap-3">
+    @if (!_loading)
+    {
+        <div class="flex flex-wrap items-center gap-2 rounded border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-900">
+            <label class="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-300">
+                <input type="checkbox" checked="@_showSystem"
+                       @onchange="e => OnSourceFilterChanged(ref _showSystem, (bool)(e.Value ?? false))"
+                       class="h-4 w-4 cursor-pointer accent-blue-600" />
+                <span class="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700 dark:bg-blue-950 dark:text-blue-300">BlueprintTask</span>
+                <span>@CalcResource.resourceTypeSystem</span>
+            </label>
+
+            <label class="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-300">
+                <input type="checkbox" checked="@_showTenant"
+                       @onchange="e => OnSourceFilterChanged(ref _showTenant, (bool)(e.Value ?? false))"
+                       class="h-4 w-4 cursor-pointer accent-emerald-600" />
+                <span class="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">TenantTask</span>
+                <span>@CalcResource.resourceType</span>
+            </label>
+
+            <div class="relative min-w-[16rem] flex-1">
+                <input type="search"
+                       placeholder="Filter suggestions..."
+                       value="@_filterText"
+                       @oninput="OnFilterTextChangedAsync"
+                       class="w-full rounded border border-gray-300 bg-white py-1.5 pl-8 pr-3 text-sm text-gray-700 placeholder-gray-400 focus:border-blue-400 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:placeholder-gray-500" />
+                <svg class="pointer-events-none absolute left-2 top-2 h-4 w-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+                @if (!string.IsNullOrWhiteSpace(_filterText))
+                {
+                    <span class="absolute right-2 top-1.5 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500 dark:bg-gray-700 dark:text-gray-400">
+                        @FilteredStates.Count / @_states.Count
+                    </span>
+                }
+            </div>
+
+            <div class="flex shrink-0 items-center gap-1.5">
+                <label class="whitespace-nowrap text-xs font-medium text-gray-500 dark:text-gray-400">Min score</label>
+                <input type="range" min="0" max="100" step="5"
+                       value="@((int)(_minScore * 100))"
+                       @oninput="e => OnMinScoreChanged(e.Value?.ToString())"
+                       class="w-24 accent-blue-600" />
+                <span class="w-8 text-right text-xs font-semibold text-gray-600 dark:text-gray-300">
+                    @(_minScore > 0 ? $"{(int)(_minScore * 100)}%" : "All")
+                </span>
+            </div>
+
+            <button class="inline-flex h-8 items-center rounded border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 hover:border-blue-500 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+                    disabled="@_loading" @onclick="LoadAsync">
+                @AppLoc["update"]
+            </button>
+        </div>
+    }
+
     @if (_loading)
     {
         <div class="py-4">
@@ -17,47 +75,15 @@
     else if (_states.Count == 0)
     {
         <div class="rounded border border-dashed border-gray-300 px-3 py-4 text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
-            @CalcResource.suggestionNoResults
+            @NoSuggestionsMessage
         </div>
     }
     else
     {
-        <div class="flex flex-wrap items-center gap-2">
-            <label class="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-300">
-                <input type="checkbox" checked="@_showSystem"
-                       @onchange="e => OnSourceFilterChanged(ref _showSystem, (bool)(e.Value ?? false))"
-                       class="h-4 w-4 cursor-pointer accent-blue-600" />
-                <span class="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700 dark:bg-blue-950 dark:text-blue-300">BlueprintTask</span>
-            </label>
-
-            <label class="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-300">
-                <input type="checkbox" checked="@_showTenant"
-                       @onchange="e => OnSourceFilterChanged(ref _showTenant, (bool)(e.Value ?? false))"
-                       class="h-4 w-4 cursor-pointer accent-emerald-600" />
-                <span class="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">TenantTask</span>
-            </label>
-
-            <div class="relative min-w-[16rem] flex-1">
-                <input type="search"
-                       placeholder="Filter suggestions..."
-                       @bind="_filterText" @bind:event="oninput"
-                       class="w-full rounded border border-gray-300 bg-white py-1.5 pl-8 pr-3 text-sm text-gray-700 placeholder-gray-400 focus:border-blue-400 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:placeholder-gray-500" />
-                <svg class="pointer-events-none absolute left-2 top-2 h-4 w-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-                </svg>
-                @if (!string.IsNullOrWhiteSpace(_filterText))
-                {
-                    <span class="absolute right-2 top-1.5 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500 dark:bg-gray-700 dark:text-gray-400">
-                        @FilteredStates.Count() / @_states.Count
-                    </span>
-                }
-            </div>
-        </div>
-
         @if (!FilteredStates.Any())
         {
             <div class="rounded border border-dashed border-gray-300 px-3 py-4 text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
-                @CalcResource.suggestionNoResults
+                @FilteredOutMessage
             </div>
         }
 
@@ -124,6 +150,8 @@
                                       title="@state.Suggestion.Reason">
                                     @state.Suggestion.Reason
                                 </span>
+
+                                <SuggestionScoreDetails Details="state.Suggestion.ScoreDetails" MaxItems="5" />
 
                                 <div class="flex shrink-0 items-center gap-2">
                                     <div class="h-1.5 w-24 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
@@ -324,11 +352,14 @@
     private bool _showTenant = true;
     private List<SuggestionState> _states = [];
     private string _filterText = string.Empty;
+    private double _minScore;
+    private string UiStateStorageKey => $"task-resource-suggestions-ui:{TaskItem.Id}";
 
     private List<SuggestionState>? _filteredCache;
     private string _lastFilterText = "\0";
     private bool _lastShowSystem = true;
     private bool _lastShowTenant = true;
+    private double _lastMinScore = -1d;
 
     private List<SuggestionState> FilteredStates
     {
@@ -337,10 +368,12 @@
             if (_filteredCache is null
                 || _lastFilterText != _filterText
                 || _lastShowSystem != _showSystem
-                || _lastShowTenant != _showTenant)
+                || _lastShowTenant != _showTenant
+                || Math.Abs(_lastMinScore - _minScore) > double.Epsilon)
             {
                 _filteredCache = _states
                     .Where(SourceMatches)
+                    .Where(s => s.Suggestion.Score >= _minScore)
                     .Where(s =>
                         string.IsNullOrWhiteSpace(_filterText) ||
                         FuzzySearchHelper.Score(_filterText, s.Suggestion.SourceTaskName) >= FuzzySearchHelper.Threshold)
@@ -348,6 +381,7 @@
                 _lastFilterText = _filterText;
                 _lastShowSystem = _showSystem;
                 _lastShowTenant = _showTenant;
+                _lastMinScore = _minScore;
             }
             return _filteredCache;
         }
@@ -355,10 +389,28 @@
 
     private IEnumerable<SuggestionState> DisplayedStates => FilteredStates.Take(_maxResults);
     private bool _canShowMore => FilteredStates.Count > _maxResults;
+    private bool IsEligibleTarget => TaskItem.Type != TaskType.CodeName && TaskItem.Tasks.Count == 0;
+    private string NoSuggestionsMessage => !IsEligibleTarget
+        ? "Resource suggestions are available for leaf tasks only, not summary/code rows."
+        : !_showSystem && !_showTenant
+            ? "Both suggestion sources are disabled."
+            : _minScore > 0
+                ? "No matching source tasks with resources were found at the current Min score."
+                : "No matching source tasks with resources were found above the suggestion threshold.";
+    private string FilteredOutMessage => BuildFilteredOutMessage();
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadUiStateAsync();
         await LoadAsync();
+    }
+
+    private async Task OnFilterTextChangedAsync(ChangeEventArgs e)
+    {
+        _filterText = e.Value?.ToString() ?? string.Empty;
+        _filteredCache = null;
+        _maxResults = PageSize;
+        await SaveUiStateAsync();
     }
 
     private async Task LoadAsync()
@@ -366,7 +418,7 @@
         _loading = true;
         StateHasChanged();
 
-        if (!HasResources(TaskItem))
+        if (!IsEligibleTarget)
         {
             _states = [];
             _filteredCache = null;
@@ -374,6 +426,7 @@
             return;
         }
 
+        _maxResults = PageSize;
         var previousStates = _states.ToDictionary(x => x.Key);
         var results = await Repo.Resource.GetSuggestionsAsync(TaskItem.Id, SuggestionFetchLimit, includeResources: false);
 
@@ -400,6 +453,14 @@
 
     private void ShowMoreAsync() => _maxResults += PageSize;
 
+    private void OnMinScoreChanged(string? rawValue)
+    {
+        _minScore = int.TryParse(rawValue, out var value) ? value / 100d : 0d;
+        _maxResults = PageSize;
+        _filteredCache = null;
+        _ = SaveUiStateAsync();
+    }
+
     private void OnSourceFilterChanged(ref bool target, bool value)
     {
         target = value;
@@ -407,6 +468,55 @@
             target = true;
 
         _maxResults = PageSize;
+        _filteredCache = null;
+        _ = SaveUiStateAsync();
+    }
+
+    private string BuildFilteredOutMessage()
+    {
+        if (!_showSystem && !_showTenant)
+            return "Both suggestion sources are disabled.";
+        if (!string.IsNullOrWhiteSpace(_filterText))
+            return $"Suggestions were loaded, but none match \"{_filterText}\".";
+        if (_minScore > 0)
+            return $"Suggestions were loaded, but all are below {(_minScore * 100).ToString("0", CultureInfo.InvariantCulture)}%.";
+        return "Suggestions were loaded, but the current filters hide them. Try lowering Min score, clearing search, or enabling both sources.";
+    }
+
+    private async Task LoadUiStateAsync()
+    {
+        try
+        {
+            var json = await JS.InvokeAsync<string?>("localStorage.getItem", UiStateStorageKey);
+            if (string.IsNullOrWhiteSpace(json))
+                return;
+            var state = JsonSerializer.Deserialize<SuggestionFilterState>(json);
+            if (state is null)
+                return;
+            _showSystem = state.ShowSystem;
+            _showTenant = state.ShowTenant;
+            if (!_showSystem && !_showTenant)
+                _showSystem = true;
+            _filterText = state.FilterText ?? string.Empty;
+            _minScore = Math.Clamp(state.MinScore, 0d, 1d);
+        }
+        catch { }
+    }
+
+    private async Task SaveUiStateAsync()
+    {
+        try
+        {
+            var state = new SuggestionFilterState
+            {
+                ShowSystem = _showSystem,
+                ShowTenant = _showTenant,
+                FilterText = _filterText,
+                MinScore = _minScore
+            };
+            await JS.InvokeVoidAsync("localStorage.setItem", UiStateStorageKey, JsonSerializer.Serialize(state));
+        }
+        catch { }
     }
 
     private bool SourceMatches(SuggestionState state)
@@ -621,10 +731,29 @@
     };
 
     private static bool HasTaskQuantityInfo(TaskResourceSuggestionDTO suggestion)
-        => suggestion.SourceTaskQuantity.HasValue || !string.IsNullOrWhiteSpace(suggestion.SourceTaskUnit);
+        => suggestion.Source != TaskResourceSuggestionSource.BlueprintTask &&
+           (suggestion.SourceTaskQuantity.HasValue || !string.IsNullOrWhiteSpace(suggestion.SourceTaskUnit));
 
-    private static bool HasResources(TaskListMVVM task)
-        => task.Resources?.Count > 0;
+    private static string GetScoreDetailClass(TaskResourceSuggestionScoreDetailDTO detail)
+    {
+        const string baseClass = "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold ring-1";
+        return detail.Kind switch
+        {
+            "quantity" => $"{baseClass} bg-cyan-50 text-cyan-700 ring-cyan-200 dark:bg-cyan-950/40 dark:text-cyan-300 dark:ring-cyan-800",
+            "unit" => $"{baseClass} bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:ring-emerald-800",
+            "code" or "context" => $"{baseClass} bg-indigo-50 text-indigo-700 ring-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:ring-indigo-800",
+            "warning" => $"{baseClass} bg-rose-50 text-rose-700 ring-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:ring-rose-800",
+            "feedback" => $"{baseClass} bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-800",
+            "ml" => $"{baseClass} bg-violet-50 text-violet-700 ring-violet-200 dark:bg-violet-950/40 dark:text-violet-300 dark:ring-violet-800",
+            _ => $"{baseClass} bg-gray-50 text-gray-600 ring-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-700"
+        };
+    }
+
+    private static string FormatScoreDetailValue(TaskResourceSuggestionScoreDetailDTO detail)
+        => detail.Value.HasValue ? $" {detail.Value.Value.ToString("0%", CultureInfo.InvariantCulture)}" : string.Empty;
+
+    private static string FormatScoreDetailTitle(TaskResourceSuggestionScoreDetailDTO detail)
+        => $"{detail.Label}{FormatScoreDetailValue(detail)}";
 
     private static string FormatTaskQuantity(TaskResourceSuggestionDTO suggestion)
     {
@@ -707,6 +836,14 @@
             try   { return rule.Compute(raw, d); }
             catch { return raw; }
         }
+    }
+
+    private sealed class SuggestionFilterState
+    {
+        public bool ShowSystem { get; set; } = true;
+        public bool ShowTenant { get; set; } = true;
+        public string FilterText { get; set; } = string.Empty;
+        public double MinScore { get; set; }
     }
 
     private sealed class ResourceEditRow

@@ -31,6 +31,7 @@ public class ResourceDefinitionConfiguration : IEntityTypeConfiguration<Resource
 
         b.HasIndex(x => new { x.FolderId, x.SortOrder, x.Name });
         b.HasIndex(x => new { x.IsActive, x.IsVisible, x.Name });
+        b.HasIndex(x => new { x.IsActive, x.IsVisible, x.Unit });
 
         b.ToTable(t =>
         {

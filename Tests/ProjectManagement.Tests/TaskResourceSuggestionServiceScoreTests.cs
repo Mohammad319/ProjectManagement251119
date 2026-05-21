@@ -1,6 +1,7 @@
 using System.Reflection;
 using Application.Feature.Calculation.Task;
 using Persistence.Service.CalculationItems.Task;
+using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.Helper.Text;
 using Xunit;
 
@@ -136,6 +137,90 @@ public class TaskResourceSuggestionServiceScoreTests
             TaskName);
 
         Assert.True(score < 0.96d);
+    }
+
+    [Fact]
+    public void ExplainCandidateScoreForSource_IgnoresQuantityForBlueprintTasks()
+    {
+        var targetNormalized = SwedishTaskTextNormalizer.NormalizeTask(TaskName, Code, null);
+        var candidateNormalized = SwedishTaskTextNormalizer.NormalizeTask(TaskName, null, null);
+
+        var matchingQuantity = ExplainCandidateScoreForSource(
+            TaskResourceSuggestionSource.BlueprintTask,
+            targetNormalized,
+            candidateNormalized,
+            Unit,
+            Unit,
+            Code,
+            null,
+            Quantity,
+            Quantity,
+            TaskName,
+            TaskName,
+            0,
+            0);
+
+        var differentQuantity = ExplainCandidateScoreForSource(
+            TaskResourceSuggestionSource.BlueprintTask,
+            targetNormalized,
+            candidateNormalized,
+            Unit,
+            Unit,
+            Code,
+            null,
+            Quantity,
+            1m,
+            TaskName,
+            TaskName,
+            0,
+            0);
+
+        Assert.Null(GetNullableDouble(matchingQuantity, "QuantitySimilarity"));
+        Assert.Null(GetNullableDouble(differentQuantity, "QuantitySimilarity"));
+        Assert.Equal(GetDouble(matchingQuantity, "Score"), GetDouble(differentQuantity, "Score"), 4);
+        Assert.DoesNotContain("quantity", BuildReason(differentQuantity, TaskResourceSuggestionSource.BlueprintTask));
+    }
+
+    [Fact]
+    public void ExplainCandidateScoreForSource_UsesQuantityForTenantTasks()
+    {
+        var targetNormalized = SwedishTaskTextNormalizer.NormalizeTask(TaskName, Code, null);
+        var candidateNormalized = SwedishTaskTextNormalizer.NormalizeTask(TaskName, null, null);
+
+        var matchingQuantity = ExplainCandidateScoreForSource(
+            TaskResourceSuggestionSource.TenantTask,
+            targetNormalized,
+            candidateNormalized,
+            Unit,
+            Unit,
+            Code,
+            null,
+            Quantity,
+            Quantity,
+            TaskName,
+            TaskName,
+            0,
+            0);
+
+        var differentQuantity = ExplainCandidateScoreForSource(
+            TaskResourceSuggestionSource.TenantTask,
+            targetNormalized,
+            candidateNormalized,
+            Unit,
+            Unit,
+            Code,
+            null,
+            Quantity,
+            1m,
+            TaskName,
+            TaskName,
+            0,
+            0);
+
+        Assert.True(GetNullableDouble(matchingQuantity, "QuantitySimilarity") > 0.99d);
+        Assert.True(GetNullableDouble(differentQuantity, "QuantitySimilarity") < 0.10d);
+        Assert.True(GetDouble(matchingQuantity, "Score") > GetDouble(differentQuantity, "Score"));
+        Assert.Contains("quantity", BuildReason(matchingQuantity, TaskResourceSuggestionSource.TenantTask));
     }
 
     [Fact]
@@ -408,6 +493,9 @@ public class TaskResourceSuggestionServiceScoreTests
     }
 
     private static string BuildReason(object breakdown)
+        => BuildReason(breakdown, TaskResourceSuggestionSource.TenantTask);
+
+    private static string BuildReason(object breakdown, TaskResourceSuggestionSource source)
     {
         var method = typeof(TaskResourceSuggestionService).GetMethod(
             "BuildReason",
@@ -415,7 +503,45 @@ public class TaskResourceSuggestionServiceScoreTests
 
         Assert.NotNull(method);
 
-        return (string)method.Invoke(null, [breakdown, ProjectManagement.Shared.DTO.Calculation.TaskResourceSuggestionSource.BlueprintTask])!;
+        return (string)method.Invoke(null, [breakdown, source])!;
+    }
+
+    private static object ExplainCandidateScoreForSource(
+        TaskResourceSuggestionSource source,
+        string targetNormalized,
+        string candidateNormalized,
+        string? targetUnit,
+        string? candidateUnit,
+        string? targetCode,
+        string? candidateCode,
+        decimal? targetQuantity,
+        decimal? candidateQuantity,
+        string? targetName,
+        string? candidateName,
+        int targetCodeDepth,
+        int candidateCodeDepth)
+    {
+        var method = typeof(TaskResourceSuggestionService).GetMethod(
+            "ExplainCandidateScoreForSource",
+            BindingFlags.NonPublic | BindingFlags.Static);
+
+        Assert.NotNull(method);
+
+        return method.Invoke(null, [
+            source,
+            targetNormalized,
+            candidateNormalized,
+            targetUnit,
+            candidateUnit,
+            targetCode,
+            candidateCode,
+            targetQuantity,
+            candidateQuantity,
+            SwedishTaskTextNormalizer.Normalize(targetName),
+            candidateName,
+            targetCodeDepth,
+            candidateCodeDepth
+        ])!;
     }
 
     private static object ExplainCandidateScoreWithCodeContext(

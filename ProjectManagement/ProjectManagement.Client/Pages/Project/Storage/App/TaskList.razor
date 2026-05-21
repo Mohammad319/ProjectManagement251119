@@ -1,4 +1,4 @@
-@using ProjectManagement.Client.Pages.Project.Storage.App.Config
+﻿@using ProjectManagement.Client.Pages.Project.Storage.App.Config
 @using ProjectManagement.Client.Shared.Repositories.Calculation
 @using ProjectManagement.Client.Shared.Services.TfIdf
 @using ProjectManagement.Shared.Base.Calculation
@@ -14,6 +14,10 @@
 
 @using ProjectManagement.Shared.Helper.ProjectAppStorage
 @using ProjectManagement.Shared.Helper.Text
+@using Microsoft.JSInterop
+@using System.Text.Json
+@using System.Net
+@inject IJSRuntime JS
 <div class="sticky top-0 z-10 flex items-center gap-1.5 bg-white dark:bg-slate-900">
     @Content
     @if (_tasks != null && _tasks.Any(x => x.Added))
@@ -31,6 +35,21 @@
                placeholder="@ResourceLoc.EnterPartOfCodeOrName" />
     </div>
 
+    <div class="flex shrink-0 items-center gap-1">
+        <label class="@GetToggleClass(_readyOnly)" title="Show only rows that can be added immediately">
+            <input type="checkbox" class="sr-only" checked="@_readyOnly" @onchange="e => OnReadyOnlyChanged((bool)(e.Value ?? false))" />
+            Ready
+        </label>
+        <label class="@GetToggleClass(_missingSelectionOnly)" title="Show rows that still need state selection">
+            <input type="checkbox" class="sr-only" checked="@_missingSelectionOnly" @onchange="e => OnMissingSelectionOnlyChanged((bool)(e.Value ?? false))" />
+            Missing
+        </label>
+        <label class="@GetToggleClass(_resourcesOnly)" title="Search tasks that have resources">
+            <input type="checkbox" class="sr-only" checked="@_resourcesOnly" @onchange="async e => await OnResourcesOnlyChangedAsync((bool)(e.Value ?? false))" />
+            Resources
+        </label>
+    </div>
+
     <div>
         <button class="inline-flex items-center justify-center w-7 h-7 rounded-full border text-[11px] transition-all duration-150 hover:scale-105 active:scale-95 border-blue-300 text-blue-600 hover:bg-blue-100 hover:ring-1 hover:ring-blue-300 dark:border-blue-400 dark:text-blue-300 dark:hover:bg-blue-900/40 dark:hover:ring-blue-500  px-0.5 py-0 text-sm"
                 @onclick="Refresh">
@@ -46,7 +65,7 @@
 @if (_error is not null)
 {
     <div class="mt-3 flex items-center gap-2 rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-700 dark:bg-red-900/20 dark:text-red-400">
-        <span>⚠ @_error</span>
+        <span>! @_error</span>
         <button class="ml-auto underline hover:no-underline" @onclick="Refresh">Retry</button>
     </div>
 }
@@ -59,8 +78,21 @@
 }
 else if (_tasks != null)
 {
-    foreach (var (group, score) in GetScoredGroups())
+    var results = GetScoredGroups().ToList();
+    if (results.Count == 0)
     {
+        <div class="mt-3 rounded border border-dashed border-gray-300 px-3 py-6 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
+            No storage tasks matched "@_rawSearchQuery".
+            @if (!string.IsNullOrWhiteSpace(_rawSearchQuery))
+            {
+                <button class="ml-2 text-blue-600 underline hover:no-underline dark:text-blue-400" @onclick="ClearSearchAsync">Clear search</button>
+            }
+        </div>
+    }
+    foreach (var result in results)
+    {
+        var group = result.Group;
+        var score = result.Score;
         var stateGroups = group.StateGroupNames;
         var selectedStates = _selectedStates[group.Key];
         var matched = MatchTask(group, selectedStates);
@@ -82,11 +114,7 @@ else if (_tasks != null)
                           CostConfig="AppState.StorageApp.Cost" NameConfig="AppState.StorageApp.Name"
                           ShowTaskName="false">
                     <HeaderContent>
-                        @if (!string.IsNullOrEmpty(group.Code))
-                        {
-                            <span class="text-xs text-slate-500 whitespace-nowrap">[@group.Code]</span>
-                        }
-                        <span class="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[300px]">@group.DisplayName</span>
+                        @RenderTaskHeader(result)
                     </HeaderContent>
                     <Row2Content>
                         @foreach (var sg in stateGroups)
@@ -112,15 +140,11 @@ else if (_tasks != null)
             }
             else if (stateGroups.Count > 0)
             {
-                <!-- السطر الأول: الكود + الاسم -->
+                <!-- Code and name -->
                 <div class="flex flex-wrap items-center gap-x-1.5 gap-y-1 mb-1">
-                    @if (!string.IsNullOrEmpty(group.Code))
-                    {
-                        <span class="text-xs text-slate-500 whitespace-nowrap">[@group.Code]</span>
-                    }
-                    <span class="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[300px]">@group.DisplayName</span>
+                    @RenderTaskHeader(result)
                 </div>
-                <!-- السطر الثاني: StateGroups + تنبيه -->
+                <!-- State selection -->
                 <div class="flex flex-wrap items-center gap-2 pl-0">
                     @foreach (var sg in stateGroups)
                     {
@@ -147,7 +171,11 @@ else if (_tasks != null)
             {
                 <TaskCard @key="group.Tasks[0].Id" Task="group.Tasks[0]" ToAdded="TaskToAdd" Config="Config"
                           Statuses="Statuses" CO2Config="AppState.StorageApp.CO2"
-                          CostConfig="AppState.StorageApp.Cost" NameConfig="AppState.StorageApp.Name" />
+                          CostConfig="AppState.StorageApp.Cost" NameConfig="AppState.StorageApp.Name">
+                    <HeaderContent>
+                        @RenderTaskHeader(result)
+                    </HeaderContent>
+                </TaskCard>
             }
         </div>
     }
@@ -174,16 +202,30 @@ else if (_tasks != null)
     private const int PageSize = 25;
     private const string InputClass = "border border-gray-300 rounded px-2 py-1 text-[13px] leading-tight h-[25px] bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white";
 
-    // ── Fuzzy search (via FuzzySearchHelper → SwedishTaskTextNormalizer) ──────
+    // Fuzzy search via FuzzySearchHelper and SwedishTaskTextNormalizer.
 
     private string _rawSearchQuery = string.Empty;
     private CancellationTokenSource? _searchCts;
+    private string _lastInputQuery = "\0";
+    private string _lastServerSearchKey = "\0";
+    private bool _readyOnly;
+    private bool _missingSelectionOnly;
+    private bool _resourcesOnly = true;
+    private int _requestVersion;
+    private string UiStateStorageKey => $"storage-task-list-ui:{Calc.Id}";
 
     private async Task OnSearchInput(ChangeEventArgs e)
     {
-        _rawSearchQuery = e.Value?.ToString() ?? string.Empty;
+        var next = e.Value?.ToString() ?? string.Empty;
+        if (string.Equals(_lastInputQuery, next, StringComparison.Ordinal))
+            return;
+
+        _lastInputQuery = next;
+        _rawSearchQuery = next;
         BuildServerFilter(_rawSearchQuery);
+        _scoredCache = null;
         StateHasChanged();
+        await SaveUiStateAsync();
 
         _searchCts?.Cancel();
         _searchCts = new CancellationTokenSource();
@@ -191,69 +233,88 @@ else if (_tasks != null)
         try
         {
             await Task.Delay(450, token);
-            if (!token.IsCancellationRequested)
+            if (!token.IsCancellationRequested && ShouldRefreshServerForSearch(_rawSearchQuery))
                 await Refresh();
         }
         catch (TaskCanceledException) { }
     }
 
-    private List<(TaskGroup Group, double Score)>? _scoredCache;
+    private List<SearchResult>? _scoredCache;
     private string _lastScoredQuery = "\0";
+    private bool _lastReadyOnly;
+    private bool _lastMissingSelectionOnly;
 
-    private IEnumerable<(TaskGroup Group, double Score)> GetScoredGroups()
+    private IEnumerable<SearchResult> GetScoredGroups()
     {
-        if (_scoredCache is not null && _lastScoredQuery == _rawSearchQuery)
+        if (_scoredCache is not null
+            && _lastScoredQuery == _rawSearchQuery
+            && _lastReadyOnly == _readyOnly
+            && _lastMissingSelectionOnly == _missingSelectionOnly)
             return _scoredCache;
 
         _lastScoredQuery = _rawSearchQuery;
+        _lastReadyOnly = _readyOnly;
+        _lastMissingSelectionOnly = _missingSelectionOnly;
         _scoredCache = ComputeScoredGroups().ToList();
         return _scoredCache;
     }
 
-    private IEnumerable<(TaskGroup Group, double Score)> ComputeScoredGroups()
+    private IEnumerable<SearchResult> ComputeScoredGroups()
     {
         var q = _rawSearchQuery.Trim();
+        var groups = _taskGroups
+            .Where(g => !_resourcesOnly || g.Tasks.Any(HasResources))
+            .Select(g => BuildSearchResult(g, q))
+            .Where(r => PassesUiFilters(r.Group));
         if (string.IsNullOrWhiteSpace(q))
-            return _taskGroups
-                .Where(g => g.Tasks.Any(HasResources))
-                .Select(g => (g, 1.0));
+            return groups
+                .Select(r => r with { Score = Math.Min(1.0, r.Score + GetStateSelectionBoost(r.Group)) })
+                .OrderByDescending(r => r.Score)
+                .ThenBy(r => r.Group.DisplayName);
 
         var tokens = filterDto.SearchTokens;
 
-        return _taskGroups
-            .Where(g => g.Tasks.Any(HasResources))
-            .Select(g =>
-            {
-                // Exact code match → always ranked first at 100%
-                if (!string.IsNullOrEmpty(g.Code) &&
-                    g.Code.Equals(q, StringComparison.OrdinalIgnoreCase))
-                    return (Group: g, Score: 1.0);
-
-                var combined = g.CombinedText;
-                var baseScore = FuzzySearchHelper.Score(q, combined);
-
-                // Bonus when BOTH search tokens are present in the task text
-                double bonus = 0;
-                if (tokens.Count >= 2)
-                {
-                    var lower = combined.ToLowerInvariant();
-                    var normalizedCombined = SwedishTaskTextNormalizer.Normalize(combined);
-                    var t0 = tokens[0].ToLowerInvariant();
-                    var t1 = tokens[1].ToLowerInvariant();
-                    bool has0 = normalizedCombined.Contains(t0) || lower.Contains(t0);
-                    bool has1 = normalizedCombined.Contains(t1) || lower.Contains(t1);
-                    if (has0 && has1) bonus = 0.15;
-                }
-
-                return (Group: g, Score: Math.Min(1.0, baseScore + bonus));
-            })
+        return groups
+            .Select(r => r with { Score = Math.Min(1.0, r.Score + TaskListSearchHelper.GetTokenBonus(r.Group.CombinedText, tokens) + GetStateSelectionBoost(r.Group)) })
             .Where(x => x.Score >= FuzzySearchHelper.Threshold)
             .OrderByDescending(x => x.Score);
     }
 
+    private SearchResult BuildSearchResult(TaskGroup group, string query)
+    {
+        var result = TaskListSearchHelper.BuildResult(group.ToSearchInput(group.Tasks.Any(HasResources)), query);
+        return new SearchResult(group, result.Score, result.Badges, result.MatchHint);
+    }
+
+    private double GetStateSelectionBoost(TaskGroup group)
+    {
+        if (!_selectedStates.TryGetValue(group.Key, out var selected) || selected.Count == 0)
+            return 0;
+
+        return MatchTask(group, selected) is not null ? 0.04 : 0;
+    }
+
+    private bool PassesUiFilters(TaskGroup group)
+    {
+        if (!_selectedStates.TryGetValue(group.Key, out var selected))
+            selected = [];
+
+        var matched = MatchTask(group, selected);
+        var ready = group.StateGroupNames.Count == 0 || matched is not null;
+        var missing = group.StateGroupNames.Count > 0 && matched is null;
+
+        if (_readyOnly && !ready)
+            return false;
+
+        if (_missingSelectionOnly && !missing)
+            return false;
+
+        return true;
+    }
+
     // Fills filterDto.SearchTokens with the top-2 most distinctive Swedish tokens.
     // Uses TF-IDF weights when available; falls back to digit/length heuristic.
-    // For very short inputs (≤3 chars) or when normalization removes everything,
+    // For very short inputs (<= 3 chars) or when normalization removes everything,
     // falls back to raw NameOrCode so the server still does a prefix-style search.
     private void BuildServerFilter(string rawQuery)
     {
@@ -264,7 +325,7 @@ else if (_tasks != null)
 
         var trimmed = rawQuery.Trim();
 
-        // Short prefix queries (e.g. "VA", "sch") — bypass normalization
+        // Short prefix queries (e.g. "VA", "sch") bypass normalization.
         if (trimmed.Length <= 3)
         {
             filterDto.NameOrCode = trimmed;
@@ -274,7 +335,7 @@ else if (_tasks != null)
         var normalized = SwedishTaskTextNormalizer.Normalize(trimmed);
         var source = string.IsNullOrWhiteSpace(normalized) ? trimmed : normalized;
 
-        // Exclude bigrams (contain '_') — they are generated by Normalize() for NormalizedTextSv
+        // Exclude bigrams (contain '_'); they are generated by Normalize() for NormalizedTextSv
         // phrase-level matching and must NOT be used as server search tokens (they never appear
         // in task Name or Code, so the server would return 0 results if they were ranked first).
         var tokens = source.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
@@ -308,20 +369,183 @@ else if (_tasks != null)
         filterDto.SearchTokens = top2;
     }
 
+    private bool ShouldRefreshServerForSearch(string rawQuery)
+    {
+        var trimmed = rawQuery.Trim();
+        if (trimmed.Length == 1)
+            return false;
+
+        var key = $"{trimmed}|{string.Join(',', filterDto.SearchTokens)}|{filterDto.NameOrCode}|{_resourcesOnly}";
+        if (string.Equals(key, _lastServerSearchKey, StringComparison.Ordinal))
+            return false;
+
+        _lastServerSearchKey = key;
+        return true;
+    }
+
+    private async Task ClearSearchAsync()
+    {
+        _rawSearchQuery = string.Empty;
+        _lastInputQuery = string.Empty;
+        BuildServerFilter(_rawSearchQuery);
+        _scoredCache = null;
+        await SaveUiStateAsync();
+        await Refresh();
+    }
+
+    private void OnReadyOnlyChanged(bool value)
+    {
+        _readyOnly = value;
+        if (value)
+            _missingSelectionOnly = false;
+        _scoredCache = null;
+        _ = SaveUiStateAsync();
+    }
+
+    private void OnMissingSelectionOnlyChanged(bool value)
+    {
+        _missingSelectionOnly = value;
+        if (value)
+            _readyOnly = false;
+        _scoredCache = null;
+        _ = SaveUiStateAsync();
+    }
+
+    private async Task OnResourcesOnlyChangedAsync(bool value)
+    {
+        _resourcesOnly = value;
+        filterDto.ResourcesOnly = _resourcesOnly;
+        _scoredCache = null;
+        await SaveUiStateAsync();
+        await Refresh();
+    }
+
+    private static string GetToggleClass(bool active)
+        => active
+            ? "cursor-pointer rounded border border-blue-500 bg-blue-50 px-2 py-1 text-[11px] font-semibold text-blue-700 dark:border-blue-500 dark:bg-blue-950/40 dark:text-blue-300"
+            : "cursor-pointer rounded border border-gray-300 bg-white px-2 py-1 text-[11px] font-medium text-gray-600 hover:border-blue-400 hover:text-blue-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300";
+
+    private RenderFragment RenderTaskHeader(SearchResult result) => @<text>
+        @if (!string.IsNullOrEmpty(result.Group.Code))
+        {
+            <span class="text-xs text-slate-500 whitespace-nowrap">[@HighlightText(result.Group.Code)]</span>
+        }
+        <span class="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[300px]">@HighlightText(result.Group.DisplayName)</span>
+        @foreach (var badge in result.Badges.Take(4))
+        {
+            <span class="@GetSearchBadgeClass(badge)">@badge.Label</span>
+        }
+        @if (!string.IsNullOrWhiteSpace(result.MatchHint))
+        {
+            <span class="max-w-[260px] truncate rounded bg-yellow-50 px-1.5 py-0.5 text-[10px] font-semibold text-yellow-800 ring-1 ring-yellow-200 dark:bg-yellow-950/40 dark:text-yellow-200 dark:ring-yellow-800"
+                  title="@result.MatchHint">@HighlightText(result.MatchHint)</span>
+        }
+    </text>;
+
+    private static string GetSearchBadgeClass(TaskListSearchBadge badge)
+    {
+        const string baseClass = "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold ring-1";
+        return badge.Kind switch
+        {
+            "code" => $"{baseClass} bg-indigo-50 text-indigo-700 ring-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:ring-indigo-800",
+            "name" => $"{baseClass} bg-blue-50 text-blue-700 ring-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:ring-blue-800",
+            "resource" => $"{baseClass} bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:ring-emerald-800",
+            "state" => $"{baseClass} bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-800",
+            _ => $"{baseClass} bg-gray-50 text-gray-600 ring-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-700"
+        };
+    }
+
+    private MarkupString HighlightText(string text)
+    {
+        if (string.IsNullOrWhiteSpace(_rawSearchQuery) || string.IsNullOrWhiteSpace(text))
+            return new MarkupString(WebUtility.HtmlEncode(text));
+
+        var query = _rawSearchQuery.Trim();
+        var index = text.IndexOf(query, StringComparison.OrdinalIgnoreCase);
+        if (index < 0)
+            return new MarkupString(WebUtility.HtmlEncode(text));
+
+        var before = WebUtility.HtmlEncode(text[..index]);
+        var match = WebUtility.HtmlEncode(text.Substring(index, query.Length));
+        var after = WebUtility.HtmlEncode(text[(index + query.Length)..]);
+        return new MarkupString($"{before}<mark class=\"rounded bg-yellow-200 px-0.5 text-yellow-950 dark:bg-yellow-500/30 dark:text-yellow-100\">{match}</mark>{after}");
+    }
+
+    private static string BuildResourceSearchText(ProjectTaskDto task)
+        => string.Join(' ', new[]
+        {
+            task.ResourceSearchText,
+            string.Join(" | ", task.Resources.Select(r => $"{r.Name} {r.NameUserValue} {r.Unit}"))
+        }.Where(x => !string.IsNullOrWhiteSpace(x)));
+
+    private sealed record SearchResult(TaskGroup Group, double Score, List<TaskListSearchBadge> Badges, string? MatchHint);
+    private sealed class StorageTaskListUiState
+    {
+        public string SearchQuery { get; set; } = string.Empty;
+        public bool ReadyOnly { get; set; }
+        public bool MissingSelectionOnly { get; set; }
+        public bool ResourcesOnly { get; set; } = true;
+        public Dictionary<string, Dictionary<int, int>> SelectedStates { get; set; } = [];
+    }
+
+    private async Task LoadUiStateAsync()
+    {
+        try
+        {
+            var json = await JS.InvokeAsync<string?>("localStorage.getItem", UiStateStorageKey);
+            if (string.IsNullOrWhiteSpace(json))
+                return;
+
+            var state = JsonSerializer.Deserialize<StorageTaskListUiState>(json);
+            if (state is null)
+                return;
+
+            _rawSearchQuery = state.SearchQuery ?? string.Empty;
+            _lastInputQuery = _rawSearchQuery;
+            _readyOnly = state.ReadyOnly;
+            _missingSelectionOnly = state.MissingSelectionOnly;
+            _resourcesOnly = state.ResourcesOnly;
+            _restoredSelectedStates = state.SelectedStates ?? [];
+            filterDto.ResourcesOnly = _resourcesOnly;
+            BuildServerFilter(_rawSearchQuery);
+        }
+        catch { }
+    }
+
+    private async Task SaveUiStateAsync()
+    {
+        try
+        {
+            var state = new StorageTaskListUiState
+            {
+                SearchQuery = _rawSearchQuery,
+                ReadyOnly = _readyOnly,
+                MissingSelectionOnly = _missingSelectionOnly,
+                ResourcesOnly = _resourcesOnly,
+                SelectedStates = _selectedStates
+            };
+            await JS.InvokeVoidAsync("localStorage.setItem", UiStateStorageKey, JsonSerializer.Serialize(state));
+        }
+        catch { }
+    }
+
     private sealed class TaskGroup
     {
         public string Key { get; init; } = string.Empty;
         public string DisplayName { get; init; } = string.Empty;
         public string Code { get; init; } = string.Empty;
         public string SearchText { get; private set; } = string.Empty;
-        // Pre-built search string reused across every search — avoids per-search interpolation
+        // Pre-built search string reused across every search to avoid per-search interpolation.
         public string CombinedText { get; private set; } = string.Empty;
+        public string ResourceSearchText { get; private set; } = string.Empty;
+        public string NormalizedResourceText { get; private set; } = string.Empty;
         public List<ProjectTaskDto> Tasks { get; } = [];
         public Dictionary<int, string> StateGroupNames { get; } = [];
-        // groupId → sorted (StateId, StateName) — pre-computed, updated via RebuildStateOptions()
+        // groupId to sorted (StateId, StateName), updated via RebuildStateOptions().
         public Dictionary<int, List<(int StateId, string StateName)>> StateOptions { get; } = [];
 
         private readonly HashSet<string> _searchParts = [];
+        private readonly HashSet<string> _resourceSearchParts = [];
 
         public void AddTask(ProjectTaskDto task)
         {
@@ -330,13 +554,31 @@ else if (_tasks != null)
                 StateGroupNames.TryAdd(sl.GroupId, sl.GroupName);
             if (!string.IsNullOrWhiteSpace(task.SearchText) && _searchParts.Add(task.SearchText))
                 SearchText = SearchText.Length == 0 ? task.SearchText : SearchText + " " + task.SearchText;
+            var resourceText = BuildResourceSearchText(task);
+            if (!string.IsNullOrWhiteSpace(resourceText) && _searchParts.Add(resourceText))
+                SearchText = SearchText.Length == 0 ? resourceText : SearchText + " " + resourceText;
             CombinedText = $"{Code} {DisplayName} {SearchText}";
+            if (!string.IsNullOrWhiteSpace(resourceText) && _resourceSearchParts.Add(resourceText))
+            {
+                ResourceSearchText = string.Join(" | ", _resourceSearchParts);
+                NormalizedResourceText = SwedishTaskTextNormalizer.Normalize(ResourceSearchText);
+            }
         }
+
+        public TaskListSearchInput ToSearchInput(bool hasResources)
+            => new(
+                DisplayName,
+                Code,
+                CombinedText,
+                ResourceSearchText,
+                NormalizedResourceText,
+                StateGroupNames.Count > 0,
+                hasResources);
 
         public void RebuildStateOptions()
         {
             StateOptions.Clear();
-            // Single pass over all StateLinks — O(tasks × links) vs O(tasks × links × groups)
+            // Single pass over all StateLinks.
             foreach (var g in Tasks.SelectMany(t => t.StateLinks).GroupBy(sl => sl.GroupId))
             {
                 StateOptions[g.Key] = g
@@ -383,8 +625,9 @@ else if (_tasks != null)
     private List<ProjectTaskDto> _tasks = new();
     private List<TaskGroup> _taskGroups = [];
     private Dictionary<string, TaskGroup> _taskGroupDict = [];
-    // groupKey → (stateGroupId → selectedStateId)
+    // groupKey to selected state ids by stateGroupId.
     private Dictionary<string, Dictionary<int, int>> _selectedStates = [];
+    private Dictionary<string, Dictionary<int, int>> _restoredSelectedStates = [];
     ProjectTaskFilterDto filterDto = new() { ResourcesOnly = true };
     [Parameter] public EventCallback RefreshBack { get; set; }
     [Parameter] public RenderFragment? Content { get; set; }
@@ -404,6 +647,8 @@ else if (_tasks != null)
             dict[stateGroupId] = stateId;
         else
             dict.Remove(stateGroupId);
+        _scoredCache = null;
+        _ = SaveUiStateAsync();
         StateHasChanged();
     }
 
@@ -436,7 +681,7 @@ else if (_tasks != null)
         var updatedKeys = new HashSet<string>();
         foreach (var task in newTasks)
         {
-            if (!HasResources(task))
+            if (_resourcesOnly && !HasResources(task))
                 continue;
 
             var key = $"{task.Code ?? string.Empty}||{task.DisplayName}";
@@ -445,7 +690,9 @@ else if (_tasks != null)
                 group = new TaskGroup { Key = key, DisplayName = task.DisplayName, Code = task.Code ?? string.Empty };
                 _taskGroupDict[key] = group;
                 _taskGroups.Add(group);
-                _selectedStates.TryAdd(key, []);
+                _selectedStates.TryAdd(key, _restoredSelectedStates.TryGetValue(key, out var restored)
+                    ? new Dictionary<int, int>(restored)
+                    : []);
             }
             group.AddTask(task);
             updatedKeys.Add(key);
@@ -460,8 +707,10 @@ else if (_tasks != null)
 
     async Task Refresh()
     {
+        var requestVersion = ++_requestVersion;
         _error = null;
         _loading = true;
+        filterDto.ResourcesOnly = _resourcesOnly;
         try
         {
             _tasks = [];
@@ -474,6 +723,9 @@ else if (_tasks != null)
                 filterDto.Skip = _tasks.Count;
                 filterDto.Take = PageSize;
                 batch = await TaskService.GetTasksForUserDtoAsync(filterDto);
+                if (requestVersion != _requestVersion)
+                    return;
+
                 ApplyCostAdjustments(batch);
                 _tasks.AddRange(batch);
                 AppendToTaskGroups(batch);
@@ -492,12 +744,14 @@ else if (_tasks != null)
         }
         finally
         {
-            _loading = false;
+            if (requestVersion == _requestVersion)
+                _loading = false;
         }
     }
 
     async Task LoadMoreAsync()
     {
+        var requestVersion = ++_requestVersion;
         _error = null;
         _loadingMore = true;
         try
@@ -509,6 +763,9 @@ else if (_tasks != null)
                 filterDto.Skip = _tasks.Count;
                 filterDto.Take = PageSize;
                 batch = await TaskService.GetTasksForUserDtoAsync(filterDto);
+                if (requestVersion != _requestVersion)
+                    return;
+
                 ApplyCostAdjustments(batch);
                 _tasks.AddRange(batch);
                 AppendToTaskGroups(batch);
@@ -523,7 +780,8 @@ else if (_tasks != null)
         }
         finally
         {
-            _loadingMore = false;
+            if (requestVersion == _requestVersion)
+                _loadingMore = false;
         }
     }
 
@@ -636,6 +894,7 @@ else if (_tasks != null)
     {
         try
         {
+            await LoadUiStateAsync();
             var tfidfTask = LoadTfIdfAsync();
             await Refresh();
             Config = await Repo.Resource.GetConfigForm();
@@ -662,7 +921,7 @@ else if (_tasks != null)
         }
         catch
         {
-            // Non-critical — search falls back to length-based token selection.
+            // Non-critical; search falls back to length-based token selection.
         }
     }
 

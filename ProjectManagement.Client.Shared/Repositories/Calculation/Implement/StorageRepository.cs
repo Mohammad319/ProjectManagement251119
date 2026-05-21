@@ -61,6 +61,11 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
             return await _httpRepository.GetAsync<ProjectTaskDto>(StorageURLBase + "tasksapp2/" + id);
         }
 
+        public async Task IncrementTaskUsageAsync(int id)
+        {
+            await _httpRepository.PostAsync<bool, object?>(null, StorageURLBase + $"tasksapp2/{id}/usage");
+        }
+
         public async Task<bool> UpdateResourceAppStorageTenantAsync(int ResourceId, ResourceTenantLinkBase taskResourceDto)
         {
             return await _httpRepository.PostAsync<bool, ResourceTenantLinkBase>(taskResourceDto, StorageURLBase + "updaterestenant/" + ResourceId);

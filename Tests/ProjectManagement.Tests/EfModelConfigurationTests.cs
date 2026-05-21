@@ -59,11 +59,14 @@ public sealed class EfModelConfigurationTests
         var tenantLink = model.FindEntityType(typeof(ResourceTenantLinkEntity))!;
         var task = model.FindEntityType(typeof(TaskDefinition))!;
         var resourceLink = model.FindEntityType(typeof(TaskDefinitionResourceLink))!;
+        var resource = model.FindEntityType(typeof(TaskResourceBlueprints.Entities.ResourceDefinition))!;
         var feedback = model.FindEntityType(typeof(TaskResourceSuggestionFeedback))!;
 
         Assert.NotEmpty(tenantLink.GetDeclaredQueryFilters());
         Assert.NotEmpty(feedback.GetDeclaredQueryFilters());
         Assert.Contains(tenantLink.GetIndexes(), i => i.IsUnique && HasProperties(i, "TenantId", "ResourceId"));
+        Assert.Contains(task.GetIndexes(), i => HasProperties(i, "Status", "UsageCount", "Code"));
+        Assert.Contains(resource.GetIndexes(), i => HasProperties(i, "IsActive", "IsVisible", "Unit"));
         Assert.Contains(task.GetCheckConstraints(), c => c.Name == "CK_Tasks_ChangeFactors_Positive");
         Assert.Contains(resourceLink.GetCheckConstraints(), c => c.Name == "CK_TaskDefinitionResourceLinks_Quantity_Positive");
         Assert.Contains(feedback.GetCheckConstraints(), c => c.Name == "CK_TaskResourceSuggestionFeedbacks_Score_NonNegative");

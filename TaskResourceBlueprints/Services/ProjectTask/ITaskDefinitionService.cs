@@ -87,15 +87,19 @@ namespace TaskResourceBlueprints.Services.ProjectTask
         public async Task<List<ProjectTaskDto>> GetTasksForUserDtoAsync(ProjectTaskFilterDto filter, int tenantid, CancellationToken ct)
         {
             await using var db = await factory.CreateDbContextAsync(ct);
-            var query = db.Tasks.Where(x => x.Status == TaskStatusEnum.Ready).AsNoTracking().AsQueryable();
+            var baseQuery = db.Tasks.Where(x => x.Status == TaskStatusEnum.Ready).AsNoTracking().AsQueryable();
 
             if (filter.ResourcesOnly)
             {
-                query = query.Where(x => x.ResourceLinks.Any(l =>
-                    l.Resource != null &&
-                    l.Resource.IsActive &&
-                    l.Resource.IsVisible));
+                baseQuery = baseQuery.Where(x => db.TaskDefinitionResourceLinks.Any(l =>
+                    l.TaskDefinitionId == x.Id &&
+                    db.Resources.Any(r =>
+                        r.Id == l.ResourceDefinitionId &&
+                        r.IsActive &&
+                        r.IsVisible)));
             }
+
+            var query = baseQuery;
 
             var tokens = filter.SearchTokens
                 .Where(t => !string.IsNullOrWhiteSpace(t))
@@ -106,7 +110,7 @@ namespace TaskResourceBlueprints.Services.ProjectTask
 
             if (tokens.Count > 0)
             {
-                // OR-search across NormalizedTextSv (Swedish-normalized), Name, and Code.
+                // OR-search across NormalizedTextSv (Swedish-normalized), Name, Code, and attached resources.
                 // Token[2] when present is a bigram (e.g. "schakt_planteringsyta") — searched
                 // only in NormalizedTextSv where bigrams are stored with _ separator.
                 var t0 = tokens[0];
@@ -115,14 +119,25 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                     query = query.Where(x =>
                         x.NormalizedTextSv.Contains(t0) ||
                         x.Name.Contains(t0) ||
-                        (x.Code ?? string.Empty).Contains(t0));
+                        (x.Code ?? string.Empty).Contains(t0) ||
+                        x.ResourceLinks.Any(l =>
+                            l.Resource != null &&
+                            l.Resource.IsActive &&
+                            l.Resource.IsVisible &&
+                            (l.Resource.Name.Contains(t0) || (l.Resource.Unit ?? string.Empty).Contains(t0))));
                 }
                 else if (tokens.Count == 2)
                 {
                     var t1 = tokens[1];
                     query = query.Where(x =>
                         x.NormalizedTextSv.Contains(t0) || x.Name.Contains(t0) || (x.Code ?? string.Empty).Contains(t0) ||
-                        x.NormalizedTextSv.Contains(t1) || x.Name.Contains(t1) || (x.Code ?? string.Empty).Contains(t1));
+                        x.NormalizedTextSv.Contains(t1) || x.Name.Contains(t1) || (x.Code ?? string.Empty).Contains(t1) ||
+                        x.ResourceLinks.Any(l =>
+                            l.Resource != null &&
+                            l.Resource.IsActive &&
+                            l.Resource.IsVisible &&
+                            (l.Resource.Name.Contains(t0) || (l.Resource.Unit ?? string.Empty).Contains(t0) ||
+                             l.Resource.Name.Contains(t1) || (l.Resource.Unit ?? string.Empty).Contains(t1))));
                 }
                 else if (tokens.Count == 3)
                 {
@@ -131,7 +146,13 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                     query = query.Where(x =>
                         x.NormalizedTextSv.Contains(t0) || x.Name.Contains(t0) || (x.Code ?? string.Empty).Contains(t0) ||
                         x.NormalizedTextSv.Contains(t1) || x.Name.Contains(t1) || (x.Code ?? string.Empty).Contains(t1) ||
-                        x.NormalizedTextSv.Contains(t2));
+                        x.NormalizedTextSv.Contains(t2) ||
+                        x.ResourceLinks.Any(l =>
+                            l.Resource != null &&
+                            l.Resource.IsActive &&
+                            l.Resource.IsVisible &&
+                            (l.Resource.Name.Contains(t0) || (l.Resource.Unit ?? string.Empty).Contains(t0) ||
+                             l.Resource.Name.Contains(t1) || (l.Resource.Unit ?? string.Empty).Contains(t1))));
                 }
                 else
                 {
@@ -142,7 +163,13 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                         x.NormalizedTextSv.Contains(t0) || x.Name.Contains(t0) || (x.Code ?? string.Empty).Contains(t0) ||
                         x.NormalizedTextSv.Contains(t1) || x.Name.Contains(t1) || (x.Code ?? string.Empty).Contains(t1) ||
                         x.NormalizedTextSv.Contains(t2) ||
-                        x.NormalizedTextSv.Contains(t3));
+                        x.NormalizedTextSv.Contains(t3) ||
+                        x.ResourceLinks.Any(l =>
+                            l.Resource != null &&
+                            l.Resource.IsActive &&
+                            l.Resource.IsVisible &&
+                            (l.Resource.Name.Contains(t0) || (l.Resource.Unit ?? string.Empty).Contains(t0) ||
+                             l.Resource.Name.Contains(t1) || (l.Resource.Unit ?? string.Empty).Contains(t1))));
                 }
             }
             else if (!string.IsNullOrWhiteSpace(filter.NameOrCode))
@@ -152,14 +179,19 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                 query = query.Where(x =>
                     x.NormalizedTextSv.Contains(fallbackSearch) ||
                     x.Name.Contains(fallbackSearch) ||
-                    (x.Code ?? string.Empty).Contains(fallbackSearch));
+                    (x.Code ?? string.Empty).Contains(fallbackSearch) ||
+                    x.ResourceLinks.Any(l =>
+                        l.Resource != null &&
+                        l.Resource.IsActive &&
+                        l.Resource.IsVisible &&
+                        (l.Resource.Name.Contains(fallbackSearch) || (l.Resource.Unit ?? string.Empty).Contains(fallbackSearch))));
             }
 
             var searchContext = BuildTaskSearchContext(filter, tokens);
             if (searchContext.HasSearch)
-                return await GetRankedTasksForUserDtoAsync(query, searchContext, filter, tenantid, ct);
+                return await GetRankedTasksForUserDtoAsync(db, query, baseQuery, searchContext, filter, tenantid, ct);
 
-            return await query
+            var tasks = await query
                 .OrderByDescending(x => x.UsageCount)
                 .ThenBy(x => x.Code)
                 .ThenBy(x => x.Name)
@@ -167,10 +199,14 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                 .Take(filter.Take)
                 .TasksBaseToDto(tenantid)
                 .ToListAsync(ct);
+            await PopulateResourceSearchTextAsync(db, tasks, ct);
+            return tasks;
         }
 
         private static async Task<List<ProjectTaskDto>> GetRankedTasksForUserDtoAsync(
+            TaskResourceBlueprintsContext db,
             IQueryable<TaskDefinition> query,
+            IQueryable<TaskDefinition> fallbackQuery,
             TaskSearchContext search,
             ProjectTaskFilterDto filter,
             int tenantid,
@@ -186,8 +222,40 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                     x.Name,
                     x.Code ?? string.Empty,
                     x.NormalizedTextSv,
-                    x.UsageCount))
+                    x.UsageCount,
+                    string.Empty))
                 .ToListAsync(ct);
+
+            if (ShouldUseFuzzyFallback(search, candidates.Count, filter.Take))
+            {
+                var existingIds = candidates.Select(x => x.Id).ToHashSet();
+                var fallbackCandidates = await fallbackQuery
+                    .Where(x => !existingIds.Contains(x.Id))
+                    .OrderByDescending(x => x.UsageCount)
+                    .ThenBy(x => x.Code)
+                    .ThenBy(x => x.Name)
+                    .Take(SearchCandidateLimit - candidates.Count)
+                    .Select(x => new TaskSearchCandidate(
+                        x.Id,
+                        x.Name,
+                        x.Code ?? string.Empty,
+                        x.NormalizedTextSv,
+                        x.UsageCount,
+                        string.Empty))
+                    .ToListAsync(ct);
+                candidates.AddRange(fallbackCandidates);
+            }
+
+            if (candidates.Count == 0)
+                return [];
+
+            var resourceTextByTaskId = await GetResourceSearchTextByTaskIdAsync(db, candidates.Select(x => x.Id).ToList(), ct);
+            candidates = candidates
+                .Select(candidate => candidate with
+                {
+                    ResourceSearchText = resourceTextByTaskId.GetValueOrDefault(candidate.Id, string.Empty)
+                })
+                .ToList();
 
             var candidateById = candidates.ToDictionary(x => x.Id);
             var rankedIds = candidates
@@ -205,15 +273,64 @@ namespace TaskResourceBlueprints.Services.ProjectTask
 
             var idOrder = rankedIds.ToDictionary(x => x.Id, x => x.index);
             var ids = rankedIds.Select(x => x.Id).ToList();
-            var tasks = await query
+            var tasks = await fallbackQuery
                 .Where(x => ids.Contains(x.Id))
                 .TasksBaseToDto(tenantid)
                 .ToListAsync(ct);
+            foreach (var task in tasks)
+                task.ResourceSearchText = resourceTextByTaskId.GetValueOrDefault(task.Id, string.Empty);
 
             return tasks
                 .OrderBy(x => idOrder.GetValueOrDefault(x.Id, int.MaxValue))
                 .ToList();
         }
+
+        private static async Task PopulateResourceSearchTextAsync(
+            TaskResourceBlueprintsContext db,
+            List<ProjectTaskDto> tasks,
+            CancellationToken ct)
+        {
+            if (tasks.Count == 0)
+                return;
+
+            var resourceTextByTaskId = await GetResourceSearchTextByTaskIdAsync(db, tasks.Select(x => x.Id).ToList(), ct);
+
+            foreach (var task in tasks)
+                task.ResourceSearchText = resourceTextByTaskId.GetValueOrDefault(task.Id, string.Empty);
+        }
+
+        private static async Task<Dictionary<int, string>> GetResourceSearchTextByTaskIdAsync(
+            TaskResourceBlueprintsContext db,
+            IReadOnlyCollection<int> taskIds,
+            CancellationToken ct)
+        {
+            if (taskIds.Count == 0)
+                return [];
+
+            var rows = await (
+                from link in db.TaskDefinitionResourceLinks.AsNoTracking()
+                join resource in db.Resources.AsNoTracking()
+                    on link.ResourceDefinitionId equals resource.Id
+                where taskIds.Contains(link.TaskDefinitionId) &&
+                      resource.IsActive &&
+                      resource.IsVisible
+                select new
+                {
+                    TaskId = link.TaskDefinitionId,
+                    ResourceName = resource.Name,
+                    ResourceUnit = resource.Unit ?? string.Empty
+                })
+                .ToListAsync(ct);
+
+            return rows
+                .GroupBy(x => x.TaskId)
+                .ToDictionary(
+                    x => x.Key,
+                    x => string.Join(" | ", x.Select(r => $"{r.ResourceName} {r.ResourceUnit}")));
+        }
+
+        private static bool ShouldUseFuzzyFallback(TaskSearchContext search, int candidateCount, int requestedCount)
+            => search.RawQuery.Trim().Length >= 4 && candidateCount < Math.Max(1, requestedCount);
 
         private static TaskSearchContext BuildTaskSearchContext(ProjectTaskFilterDto filter, IReadOnlyList<string> tokens)
         {
@@ -247,11 +364,14 @@ namespace TaskResourceBlueprints.Services.ProjectTask
             var normalizedCandidateCode = SwedishTaskTextNormalizer.Normalize(candidateCode);
             var normalizedCandidate = candidate.NormalizedTextSv ?? string.Empty;
             var normalizedName = SwedishTaskTextNormalizer.Normalize(candidate.Name);
-            var normalizedTarget = string.Join(' ', new[] { normalizedCandidateCode, normalizedName, normalizedCandidate }
+            var normalizedResourceText = SwedishTaskTextNormalizer.Normalize(candidate.ResourceSearchText);
+            var normalizedTarget = string.Join(' ', new[] { normalizedCandidateCode, normalizedName, normalizedCandidate, normalizedResourceText }
                 .Where(x => !string.IsNullOrWhiteSpace(x)));
 
             var textScore = SwedishTaskTextNormalizer.CalculateSimilarity(search.NormalizedQuery, normalizedTarget);
             var nameScore = SwedishTaskTextNormalizer.CalculateSimilarity(search.NormalizedQuery, normalizedName);
+            var resourceScore = SwedishTaskTextNormalizer.CalculateSimilarity(search.NormalizedQuery, normalizedResourceText);
+            var resourceCoverage = CalculateTokenCoverage(search.WordTokens, normalizedResourceText);
             var tokenCoverage = CalculateTokenCoverage(search.WordTokens, normalizedTarget);
             var bigramScore = search.Bigrams.Count == 0
                 ? 0d
@@ -260,17 +380,23 @@ namespace TaskResourceBlueprints.Services.ProjectTask
             var usageScore = UsageScore(candidate.UsageCount);
 
             var score =
-                (textScore * 0.34d) +
-                (nameScore * 0.24d) +
-                (tokenCoverage * 0.22d) +
-                (bigramScore * 0.10d) +
-                (codeScore * 0.08d) +
-                (usageScore * 0.02d);
+                (textScore * 0.30d) +
+                (nameScore * 0.20d) +
+                (resourceScore * 0.18d) +
+                (tokenCoverage * 0.18d) +
+                (bigramScore * 0.08d) +
+                (codeScore * 0.05d) +
+                (usageScore * 0.01d);
 
             if (codeScore >= 1d)
                 score = Math.Max(score, 0.98d);
             else if (codeScore >= 0.75d)
                 score = Math.Max(score, 0.86d);
+
+            if (resourceCoverage >= 1d && resourceScore >= 0.55d)
+                score = Math.Max(score, 0.84d);
+            else if (resourceCoverage > 0d)
+                score = Math.Max(score, 0.70d + (resourceCoverage * 0.10d));
 
             if (tokenCoverage >= 1d && textScore >= 0.65d)
                 score = Math.Max(score, 0.88d + (bigramScore * 0.05d));
@@ -338,7 +464,8 @@ namespace TaskResourceBlueprints.Services.ProjectTask
             string Name,
             string Code,
             string NormalizedTextSv,
-            int UsageCount);
+            int UsageCount,
+            string ResourceSearchText);
         public async Task<ProjectTaskDto?> GetTaskForUserDtoAsync(int id, int tenantid, int depId, CancellationToken ct)
         {
             await using var db = await factory.CreateDbContextAsync(ct);
@@ -352,6 +479,7 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                 return null;
 
             task.BaseResources = await GetTaskBaseResourcesAsync(db, id, tenantid, ct);
+            task.ResourceSearchText = string.Join(" | ", task.BaseResources.Select(r => $"{r.Name} {r.NameUserValue} {r.Unit}"));
             return task;
         }
 

@@ -65,6 +65,7 @@ public class TaskDefinitionConfiguration : IEntityTypeConfiguration<TaskDefiniti
         builder.Property(e => e.RowVersion).IsRowVersion();
 
         builder.HasIndex(x => new { x.Status, x.SortOrder });
+        builder.HasIndex(x => new { x.Status, x.UsageCount, x.Code });
         builder.HasIndex(x => x.NormalizedTextSv);
         builder.HasIndex(x => x.Code);
         builder.HasIndex(x => x.ParentCode);

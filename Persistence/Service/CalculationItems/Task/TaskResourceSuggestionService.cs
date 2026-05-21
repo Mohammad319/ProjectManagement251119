@@ -22,6 +22,9 @@ public sealed class TaskResourceSuggestionService(
     private const double CompatibleUnitBonus = 0.10d;
     private const double IncompatibleUnitPenalty = 0.04d;
     private const double ParentContextBonus = 0.04d;
+    private static readonly SourceScoreProfile DefaultScoreProfile = new(0.18d, EquivalentUnitBonus, CompatibleUnitBonus, IncompatibleUnitPenalty, 1d, 1d);
+    private static readonly SourceScoreProfile TenantScoreProfile = new(0.22d, 0.13d, 0.09d, 0.06d, 0.90d, 0.85d);
+    private static readonly SourceScoreProfile BlueprintScoreProfile = new(0d, 0.18d, 0.12d, 0.05d, 1.20d, 1.25d);
 
     public Task<IReadOnlyList<TaskResourceSuggestionDTO>> GetSuggestionsAsync(
         int taskId,
@@ -97,8 +100,8 @@ public sealed class TaskResourceSuggestionService(
             .Select(x => ApplyFeedbackAdjustment(x, feedbackBySuggestion, feedbackStatsBySuggestion))
             .Where(x => !includeResources || x.Resources.Count > 0)
             .Where(x => x.Score >= MinimumScore)
-            .OrderByDescending(x => x.Score)
-            .ThenByDescending(x => x.Source == TaskResourceSuggestionSource.BlueprintTask)
+            .OrderByDescending(GetPresentationScore)
+            .ThenByDescending(x => x.Score)
             .ThenBy(x => x.SourceTaskName)
             .Take(maxResults)
             .ToList();
@@ -203,8 +206,7 @@ public sealed class TaskResourceSuggestionService(
             .OrderByDescending(x => x.Id)
             .Take(PriorityCandidateLimit);
 
-        var fallbackQuery = baseQuery
-            .OrderByDescending(x => x.Id)
+        var fallbackQuery = ApplyTenantFallbackOrdering(baseQuery, targetCode, targetUnit, targetNormalized)
             .Take(FallbackCandidateLimit);
 
         if (includeResources)
@@ -229,15 +231,16 @@ public sealed class TaskResourceSuggestionService(
                 var candidateNormalized = candidateContext.NormalizedText;
 
                 var score = ApplyMlScore(
-                    ExplainCandidateScoreWithCodeContext(
+                    ExplainCandidateScoreForSource(
+                    TaskResourceSuggestionSource.TenantTask,
                     targetNormalized,
                     candidateNormalized,
                     targetUnit,
                     candidateContext.Unit,
                     targetCode,
                     candidateContext.Code,
-                    targetQuantity: null,
-                    candidateQuantity: null,
+                    targetQuantity,
+                    candidateContext.Quantity,
                     targetNameNormalized,
                     candidateContext.ContextualName,
                     targetCodeDepth,
@@ -254,11 +257,12 @@ public sealed class TaskResourceSuggestionService(
                 {
                     SourceTaskId = task.Id,
                     SourceTaskName = task.Name,
-                    SourceTaskQuantity = null,
+                    SourceTaskQuantity = candidateContext.Quantity,
                     SourceTaskUnit = candidateContext.Unit ?? string.Empty,
                     Source = TaskResourceSuggestionSource.TenantTask,
                     Score = score.Score,
                     Reason = BuildReason(score, TaskResourceSuggestionSource.TenantTask),
+                    ScoreDetails = BuildScoreDetails(score, TaskResourceSuggestionSource.TenantTask),
                     Resources = includeResources
                         ? task.Resources
                             .OrderBy(x => x.SortOrder)
@@ -302,8 +306,7 @@ public sealed class TaskResourceSuggestionService(
             .OrderBy(x => x.SortOrder)
             .Take(PriorityCandidateLimit);
 
-        var fallbackQuery = baseQuery
-            .OrderBy(x => x.SortOrder)
+        var fallbackQuery = ApplyBlueprintFallbackOrdering(baseQuery, targetCode, targetUnit, targetNormalized)
             .Take(FallbackCandidateLimit);
 
         var priorityCandidates = await priorityQuery.ToListAsync(ct);
@@ -319,7 +322,8 @@ public sealed class TaskResourceSuggestionService(
                 var candidateContext = BuildBlueprintTaskContext(task);
 
                 var score = ApplyMlScore(
-                    ExplainCandidateScoreWithCodeContext(
+                    ExplainCandidateScoreForSource(
+                    TaskResourceSuggestionSource.BlueprintTask,
                     targetNormalized,
                     candidateContext.NormalizedText,
                     targetUnit,
@@ -344,11 +348,12 @@ public sealed class TaskResourceSuggestionService(
                 {
                     SourceTaskId = task.Id,
                     SourceTaskName = task.Name,
-                    SourceTaskQuantity = candidateContext.Quantity,
+                    SourceTaskQuantity = null,
                     SourceTaskUnit = candidateContext.Unit ?? string.Empty,
                     Source = TaskResourceSuggestionSource.BlueprintTask,
                     Score = score.Score,
                     Reason = BuildReason(score, TaskResourceSuggestionSource.BlueprintTask),
+                    ScoreDetails = BuildScoreDetails(score, TaskResourceSuggestionSource.BlueprintTask),
                     Resources = []
                 };
             })
@@ -409,6 +414,32 @@ public sealed class TaskResourceSuggestionService(
                                           x.ParentTask.NormalizedTextSv.Contains(tokens[1]) ||
                                           x.ParentTask.NormalizedTextSv.Contains(tokens[2]))))
         };
+    }
+
+    private static IOrderedQueryable<TaskEntity> ApplyTenantFallbackOrdering(
+        IQueryable<TaskEntity> query,
+        string? targetCode,
+        string? targetUnit,
+        string targetNormalized)
+    {
+        var hasCode = !string.IsNullOrWhiteSpace(targetCode);
+        var hasUnit = !string.IsNullOrWhiteSpace(targetUnit);
+        var tokens = ExtractPriorityTokens(targetNormalized);
+        var firstToken = tokens.Count > 0 ? tokens[0] : string.Empty;
+        var secondToken = tokens.Count > 1 ? tokens[1] : string.Empty;
+
+        return query
+            .OrderByDescending(x => hasCode && (
+                (x.Code != null && x.Code == targetCode) ||
+                (x.ParentTask != null && x.ParentTask.Code != null && x.ParentTask.Code == targetCode)))
+            .ThenByDescending(x => hasUnit && x.Unit != null && x.Unit == targetUnit)
+            .ThenByDescending(x => firstToken != string.Empty && (
+                x.NormalizedTextSv.Contains(firstToken) ||
+                (x.ParentTask != null && x.ParentTask.NormalizedTextSv.Contains(firstToken))))
+            .ThenByDescending(x => secondToken != string.Empty && (
+                x.NormalizedTextSv.Contains(secondToken) ||
+                (x.ParentTask != null && x.ParentTask.NormalizedTextSv.Contains(secondToken))))
+            .ThenByDescending(x => x.Id);
     }
 
     private static async Task<Dictionary<int, TenantTaskSuggestionContext>> BuildTenantTaskContextsAsync(
@@ -583,6 +614,28 @@ public sealed class TaskResourceSuggestionService(
         };
     }
 
+    private static IOrderedQueryable<TaskDefinition> ApplyBlueprintFallbackOrdering(
+        IQueryable<TaskDefinition> query,
+        string? targetCode,
+        string? targetUnit,
+        string targetNormalized)
+    {
+        var hasCode = !string.IsNullOrWhiteSpace(targetCode);
+        var hasUnit = !string.IsNullOrWhiteSpace(targetUnit);
+        var tokens = ExtractPriorityTokens(targetNormalized);
+        var firstToken = tokens.Count > 0 ? tokens[0] : string.Empty;
+        var secondToken = tokens.Count > 1 ? tokens[1] : string.Empty;
+
+        return query
+            .OrderByDescending(x => hasCode && (
+                (x.Code != null && x.Code == targetCode) ||
+                (x.ParentCode != null && x.ParentCode == targetCode)))
+            .ThenByDescending(x => hasUnit && x.UnitCode != null && x.UnitCode == targetUnit)
+            .ThenByDescending(x => firstToken != string.Empty && x.NormalizedTextSv.Contains(firstToken))
+            .ThenByDescending(x => secondToken != string.Empty && x.NormalizedTextSv.Contains(secondToken))
+            .ThenBy(x => x.SortOrder);
+    }
+
     private static List<string> ExtractPriorityTokens(string normalizedText)
         => normalizedText
             .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
@@ -710,16 +763,13 @@ public sealed class TaskResourceSuggestionService(
         }
 
         suggestion.Feedback = feedback.Feedback;
-        suggestion.Score = feedback.Feedback switch
-        {
-            TaskResourceSuggestionFeedbackKind.Accepted => Math.Round(Math.Min(1d, suggestion.Score + 0.08d), 4),
-            TaskResourceSuggestionFeedbackKind.Rejected => Math.Round(suggestion.Score * 0.35d, 4),
-            TaskResourceSuggestionFeedbackKind.WrongUnit => Math.Round(suggestion.Score * 0.55d, 4),
-            TaskResourceSuggestionFeedbackKind.WrongResourceType => Math.Round(suggestion.Score * 0.60d, 4),
-            TaskResourceSuggestionFeedbackKind.MissingResources => Math.Round(suggestion.Score * 0.80d, 4),
-            _ => suggestion.Score
-        };
+        suggestion.Score = ApplyDirectFeedbackScore(suggestion.Score, suggestion.Source, feedback.Feedback);
         suggestion.Reason = $"{suggestion.Reason} Feedback: {feedback.Feedback}.";
+        suggestion.ScoreDetails.Add(new TaskResourceSuggestionScoreDetailDTO
+        {
+            Label = feedback.Feedback.ToString(),
+            Kind = "feedback"
+        });
         return suggestion;
     }
 
@@ -731,13 +781,15 @@ public sealed class TaskResourceSuggestionService(
             stats.Total == 0)
             return;
 
-        var positiveLift = Math.Min(0.06d, stats.Accepted * 0.015d);
+        var acceptedWeight = suggestion.Source == TaskResourceSuggestionSource.TenantTask ? 0.020d : 0.015d;
+        var positiveCap = suggestion.Source == TaskResourceSuggestionSource.TenantTask ? 0.08d : 0.06d;
+        var positiveLift = Math.Min(positiveCap, stats.Accepted * acceptedWeight);
         var negativePressure =
             Math.Min(0.18d,
                 (stats.Rejected * 0.05d) +
-                (stats.WrongUnit * 0.035d) +
-                (stats.WrongResourceType * 0.035d) +
-                (stats.MissingResources * 0.015d));
+                (stats.WrongUnit * 0.055d) +
+                (stats.WrongResourceType * 0.050d) +
+                (stats.MissingResources * 0.010d));
 
         var adjustment = positiveLift - negativePressure;
         if (Math.Abs(adjustment) < 0.005d)
@@ -745,10 +797,52 @@ public sealed class TaskResourceSuggestionService(
 
         suggestion.Score = Math.Round(Math.Clamp(suggestion.Score + adjustment, 0d, 1d), 4);
         suggestion.Reason = $"{suggestion.Reason} Global feedback {FormatSignedPercent(adjustment)}.";
+        suggestion.ScoreDetails.Add(new TaskResourceSuggestionScoreDetailDTO
+        {
+            Label = $"Feedback {FormatSignedPercent(adjustment)}",
+            Value = adjustment,
+            Kind = adjustment >= 0 ? "feedback" : "warning"
+        });
+    }
+
+    private static double ApplyDirectFeedbackScore(
+        double score,
+        TaskResourceSuggestionSource source,
+        TaskResourceSuggestionFeedbackKind feedback)
+    {
+        var acceptedLift = source == TaskResourceSuggestionSource.TenantTask ? 0.10d : 0.08d;
+        return feedback switch
+        {
+            TaskResourceSuggestionFeedbackKind.Accepted => Math.Round(Math.Min(1d, score + acceptedLift), 4),
+            TaskResourceSuggestionFeedbackKind.Rejected => Math.Round(score * 0.35d, 4),
+            TaskResourceSuggestionFeedbackKind.WrongUnit => Math.Round(score * 0.45d, 4),
+            TaskResourceSuggestionFeedbackKind.WrongResourceType => Math.Round(score * 0.50d, 4),
+            TaskResourceSuggestionFeedbackKind.MissingResources => Math.Round(score * (source == TaskResourceSuggestionSource.BlueprintTask ? 0.70d : 0.85d), 4),
+            _ => score
+        };
     }
 
     private static string FeedbackKey(TaskResourceSuggestionSource source, int sourceTaskId)
         => $"{source}:{sourceTaskId}";
+
+    private static double GetPresentationScore(TaskResourceSuggestionDTO suggestion)
+    {
+        var lift = 0d;
+        if (suggestion.Source == TaskResourceSuggestionSource.TenantTask)
+        {
+            var quantity = suggestion.ScoreDetails.FirstOrDefault(x => x.Kind == "quantity")?.Value;
+            if (quantity is >= 0.80d)
+                lift += 0.025d;
+        }
+        else if (suggestion.Source == TaskResourceSuggestionSource.BlueprintTask)
+        {
+            var code = suggestion.ScoreDetails.FirstOrDefault(x => x.Kind == "code")?.Value;
+            if (code is >= 0.10d)
+                lift += 0.015d;
+        }
+
+        return Math.Min(1d, suggestion.Score + lift);
+    }
 
     private async Task<Dictionary<string, FeedbackStats>> GetFeedbackStatsMapAsync(
         int tenantId,
@@ -828,7 +922,8 @@ public sealed class TaskResourceSuggestionService(
             SwedishTaskTextNormalizer.Normalize(targetName),
             candidateName,
             codeInheritanceFactor: 1d,
-            hasInheritedContext: false);
+            hasInheritedContext: false,
+            DefaultScoreProfile);
 
     private static CandidateScoreBreakdown ExplainCandidateScoreWithCodeContext(
         string targetNormalized,
@@ -855,7 +950,45 @@ public sealed class TaskResourceSuggestionService(
             targetNameNormalized,
             candidateName,
             GetCodeInheritanceFactor(targetCodeDepth, candidateCodeDepth),
-            targetCodeDepth > 0 || candidateCodeDepth > 0);
+            targetCodeDepth > 0 || candidateCodeDepth > 0,
+            DefaultScoreProfile);
+
+    private static CandidateScoreBreakdown ExplainCandidateScoreForSource(
+        TaskResourceSuggestionSource source,
+        string targetNormalized,
+        string candidateNormalized,
+        string? targetUnit,
+        string? candidateUnit,
+        string? targetCode = null,
+        string? candidateCode = null,
+        decimal? targetQuantity = null,
+        decimal? candidateQuantity = null,
+        string targetNameNormalized = "",
+        string? candidateName = null,
+        int targetCodeDepth = 0,
+        int candidateCodeDepth = 0)
+    {
+        if (source == TaskResourceSuggestionSource.BlueprintTask)
+        {
+            targetQuantity = null;
+            candidateQuantity = null;
+        }
+
+        return ExplainCandidateScoreCore(
+            targetNormalized,
+            candidateNormalized,
+            targetUnit,
+            candidateUnit,
+            targetCode,
+            candidateCode,
+            targetQuantity,
+            candidateQuantity,
+            targetNameNormalized,
+            candidateName,
+            GetCodeInheritanceFactor(targetCodeDepth, candidateCodeDepth),
+            targetCodeDepth > 0 || candidateCodeDepth > 0,
+            GetScoreProfile(source));
+    }
 
     private static CandidateScoreBreakdown ExplainCandidateScoreCore(
         string targetNormalized,
@@ -869,7 +1002,8 @@ public sealed class TaskResourceSuggestionService(
         string targetNameNormalized,
         string? candidateName,
         double codeInheritanceFactor,
-        bool hasInheritedContext)
+        bool hasInheritedContext,
+        SourceScoreProfile profile)
     {
         var textScore = SwedishTaskTextNormalizer.CalculateSimilarity(targetNormalized, candidateNormalized);
         var nameScore = GetNameSimilarity(targetNameNormalized, candidateName);
@@ -886,7 +1020,7 @@ public sealed class TaskResourceSuggestionService(
             candidateQuantity,
             candidateUnit);
 
-        score = ApplyQuantityScore(score, quantitySimilarity);
+        score = ApplyQuantityScore(score, quantitySimilarity, profile.QuantityWeight);
 
         var hasEquivalentUnits = QuantityUnitNormalizer.AreEquivalentUnits(targetUnit, candidateUnit);
         var hasCompatibleUnits = QuantityUnitNormalizer.AreCompatibleUnits(targetUnit, candidateUnit);
@@ -894,16 +1028,16 @@ public sealed class TaskResourceSuggestionService(
         if (!string.IsNullOrWhiteSpace(targetUnit) && !string.IsNullOrWhiteSpace(candidateUnit))
         {
             if (hasEquivalentUnits)
-                unitBonus = EquivalentUnitBonus;
+                unitBonus = profile.EquivalentUnitBonus;
             else if (hasCompatibleUnits)
-                unitBonus = CompatibleUnitBonus;
+                unitBonus = profile.CompatibleUnitBonus;
             else
-                unitBonus = -IncompatibleUnitPenalty;
+                unitBonus = -profile.IncompatibleUnitPenalty;
         }
 
         score = Math.Clamp(score + unitBonus, 0d, 1d);
 
-        var codeBonus = SwedishTaskTextNormalizer.GetCodeHierarchyScore(targetCode, candidateCode) * codeInheritanceFactor;
+        var codeBonus = SwedishTaskTextNormalizer.GetCodeHierarchyScore(targetCode, candidateCode) * codeInheritanceFactor * profile.CodeWeightMultiplier;
         score = Math.Min(1d, score + codeBonus);
 
         var parentContextBonus = 0d;
@@ -911,7 +1045,7 @@ public sealed class TaskResourceSuggestionService(
             codeBonus > 0d &&
             hybridTokenScore >= 0.25d)
         {
-            parentContextBonus = ParentContextBonus * codeInheritanceFactor;
+            parentContextBonus = ParentContextBonus * codeInheritanceFactor * profile.ParentContextMultiplier;
             score = Math.Min(1d, score + parentContextBonus);
         }
 
@@ -1074,13 +1208,18 @@ public sealed class TaskResourceSuggestionService(
                 : null;
     }
 
-    private static double ApplyQuantityScore(double currentScore, double? quantitySimilarity)
+    private static double ApplyQuantityScore(double currentScore, double? quantitySimilarity, double quantityWeight)
     {
-        if (quantitySimilarity is null)
+        if (quantitySimilarity is null || quantityWeight <= 0d)
             return currentScore;
 
-        return Math.Clamp((currentScore * 0.82d) + (quantitySimilarity.Value * 0.18d), 0d, 1d);
+        return Math.Clamp((currentScore * (1d - quantityWeight)) + (quantitySimilarity.Value * quantityWeight), 0d, 1d);
     }
+
+    private static SourceScoreProfile GetScoreProfile(TaskResourceSuggestionSource source)
+        => source == TaskResourceSuggestionSource.BlueprintTask
+            ? BlueprintScoreProfile
+            : TenantScoreProfile;
 
     private static string BuildReason(CandidateScoreBreakdown score, TaskResourceSuggestionSource source)
     {
@@ -1117,7 +1256,7 @@ public sealed class TaskResourceSuggestionService(
         else if (score.HasCompatibleUnits)
             parts.Add("compatible unit");
 
-        if (score.QuantitySimilarity.HasValue)
+        if (source == TaskResourceSuggestionSource.TenantTask && score.QuantitySimilarity.HasValue)
             parts.Add($"quantity {FormatPercent(score.QuantitySimilarity.Value)}");
 
         if (score.MlScore.HasValue)
@@ -1133,6 +1272,49 @@ public sealed class TaskResourceSuggestionService(
 
         return $"{strength} from {sourceText}: {string.Join(", ", parts)}.";
     }
+
+    private static List<TaskResourceSuggestionScoreDetailDTO> BuildScoreDetails(
+        CandidateScoreBreakdown score,
+        TaskResourceSuggestionSource source)
+    {
+        var details = new List<TaskResourceSuggestionScoreDetailDTO>
+        {
+            BuildScoreDetail("Name", score.NameScore, "name"),
+            BuildScoreDetail("Text", score.TextScore, "text")
+        };
+
+        if (score.CodeBonus > 0)
+            details.Add(BuildScoreDetail("Code", score.CodeBonus, "code"));
+
+        if (score.HasEquivalentUnits)
+            details.Add(new TaskResourceSuggestionScoreDetailDTO { Label = "Same unit", Kind = "unit" });
+        else if (score.HasCompatibleUnits)
+            details.Add(new TaskResourceSuggestionScoreDetailDTO { Label = "Compatible unit", Kind = "unit" });
+        else if (score.UnitBonus < 0)
+            details.Add(BuildScoreDetail("Unit mismatch", score.UnitBonus, "warning"));
+
+        if (source == TaskResourceSuggestionSource.TenantTask && score.QuantitySimilarity.HasValue)
+            details.Add(BuildScoreDetail("Quantity", score.QuantitySimilarity.Value, "quantity"));
+
+        if (score.ParentContextBonus > 0)
+            details.Add(BuildScoreDetail("Parent", score.ParentContextBonus, "context"));
+
+        if (score.HybridTokenScore >= 0.40d)
+            details.Add(BuildScoreDetail("Keywords", score.TokenCoverage, "keyword"));
+
+        if (score.MlScore.HasValue)
+            details.Add(BuildScoreDetail(source == TaskResourceSuggestionSource.TenantTask ? "Tenant ML" : "Global ML", score.MlScore.Value, "ml"));
+
+        return details;
+    }
+
+    private static TaskResourceSuggestionScoreDetailDTO BuildScoreDetail(string label, double value, string kind)
+        => new()
+        {
+            Label = label,
+            Value = Math.Round(value, 4),
+            Kind = kind
+        };
 
     private static string FormatPercent(double value)
         => value.ToString("0%", System.Globalization.CultureInfo.InvariantCulture);
@@ -1162,6 +1344,14 @@ public sealed class TaskResourceSuggestionService(
         public double MlBlendWeight { get; init; }
         public string? ContextReason { get; init; }
     }
+
+    private sealed record SourceScoreProfile(
+        double QuantityWeight,
+        double EquivalentUnitBonus,
+        double CompatibleUnitBonus,
+        double IncompatibleUnitPenalty,
+        double CodeWeightMultiplier,
+        double ParentContextMultiplier);
 
     private sealed record FeedbackStats(
         int Accepted,
