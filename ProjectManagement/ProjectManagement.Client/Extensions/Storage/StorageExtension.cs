@@ -1,57 +1,59 @@
-﻿using DocumentFormat.OpenXml.Office2021.DocumentTasks;
-using ProjectManagement.Client.Shared.Model.Tenant;
+﻿using ProjectManagement.Client.Shared.Model.Tenant;
 using ProjectManagement.Shared.DTO.Calculation;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace ProjectManagement.Client.Extensions.Storage
 {
     public static class StorageAppExtension
     {
-        static TaskPostDTO ToTaskPostDTORecursive(List<TaskStoragePostModel> TasksApp,TaskStoragePostModel task)
+        static TaskPostDTO ToTaskPostDTORecursive(List<TaskStoragePostModel> tasksApp, TaskStoragePostModel task)
         {
-            TaskPostDTO taskToPost = new()
+            var taskToPost = new TaskPostDTO
             {
                 Name = task.Name,
                 Metadata = task.Data,
                 Tasks = [],
                 Resources = [],
             };
-            var list = TasksApp.Where(x => x.TaskId == task.Id).ToList();
-            if (list != null && list.Count != 0) foreach (var item in list)
-                {
-                    taskToPost.Tasks.Add(ToTaskPostDTORecursive(TasksApp,item));
-                }
-            else if (task.Groups.SelectMany(x => x.ResourcesSelected) != null)
+
+            var children = tasksApp.Where(x => x.TaskId == task.Id).ToList();
+            if (children.Count != 0)
             {
-                foreach (var item in task.Groups.SelectMany(x => x.ResourcesSelected)) item.Id = 0;
-                taskToPost.Resources.AddRange(task.Groups.SelectMany(x => x.ResourcesSelected));
+                foreach (var item in children)
+                    taskToPost.Tasks.Add(ToTaskPostDTORecursive(tasksApp, item));
             }
+            else
+            {
+                var resources = task.Groups.SelectMany(x => x.ResourcesSelected).ToList();
+                foreach (var item in resources)
+                    item.Id = 0;
+                taskToPost.Resources.AddRange(resources);
+            }
+
             return taskToPost;
         }
 
-        public static List<TaskPostDTO> Convert(List<TaskStoragePostModel> TasksApp, List<int> IDs)
+        public static List<TaskPostDTO> Convert(List<TaskStoragePostModel> tasksApp, List<int> ids)
         {
-            List<TaskPostDTO> TasksPP = [];
-            foreach (var id in IDs)
+            var taskById = tasksApp.ToDictionary(x => x.Id);
+            var result = new List<TaskPostDTO>(ids.Count);
+            foreach (var id in ids)
             {
-                var t = TasksApp.FirstOrDefault(x => x.Id == id);
-                if (t != null)
-                    TasksPP.Add(ToTaskPostDTORecursive(TasksApp,t));
+                if (taskById.TryGetValue(id, out var task))
+                    result.Add(ToTaskPostDTORecursive(tasksApp, task));
             }
-            return TasksPP;
+            return result;
         }
 
-        public static List<ResourcePostDTO> Convert(List<ResGroupPostModel> Groups, List<int> IDs)
+        public static List<ResourcePostDTO> Convert(List<ResGroupPostModel> groups, List<int> ids)
         {
-            List<ResourcePostDTO> resources = [];
-            foreach (var id in IDs)
+            var resourceById = groups.SelectMany(x => x.Resources).ToDictionary(x => x.Id);
+            var result = new List<ResourcePostDTO>(ids.Count);
+            foreach (var id in ids)
             {
-                var task = Groups.SelectMany(x => x.Resources).FirstOrDefault(x => x.Id == id);
-                if (task != null)
-                    resources.Add(task);
+                if (resourceById.TryGetValue(id, out var resource))
+                    result.Add(resource);
             }
-            return resources;
+            return result;
         }
     }
 }

@@ -222,7 +222,7 @@
     {
         IsLoading = true;
 
-        if (Id == 0)
+        if (Id == 0 && Put is not null)
         {
             await Callback.InvokeAsync(await sersService.CreateAsync(Put) > 0);
         }

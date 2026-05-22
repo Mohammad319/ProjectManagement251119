@@ -1,4 +1,4 @@
-﻿using Application.Extention;
+﻿using Application.Extension;
 using Application.Feature.Calculation.Resource;
 using Domain.Entities.Calculation;
 using Persistence.Factory;

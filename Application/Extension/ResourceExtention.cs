@@ -1,10 +1,10 @@
-using Domain.Entities.Calculation;
+﻿using Domain.Entities.Calculation;
 using Application.Mapping.Offer;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Offer;
 
-namespace Application.Extention
+namespace Application.Extension
 {
     public static class ResourceExtention
     {

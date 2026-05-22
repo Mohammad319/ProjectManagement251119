@@ -6,11 +6,23 @@ public static class NumericFormatHelper
 {
     public const int DefaultMaxFractionDigits = 4;
 
+    private static readonly string[] _formatCache =
+    [
+        "0", "0.#", "0.##", "0.###", "0.####", "0.#####",
+        "0.######", "0.#######", "0.########", "0.#########", "0.##########",
+        "0.###########", "0.############", "0.#############", "0.##############", "0.###############"
+    ];
+
+    private static readonly decimal[] _decimalFactors =
+    [
+        1m, 10m, 100m, 1_000m, 10_000m, 100_000m,
+        1_000_000m, 10_000_000m, 100_000_000m, 1_000_000_000m,
+        10_000_000_000m, 100_000_000_000m, 1_000_000_000_000m,
+        10_000_000_000_000m, 100_000_000_000_000m, 1_000_000_000_000_000m
+    ];
+
     public static string BuildOptionalFractionFormat(int maxFractionDigits)
-    {
-        var digits = Math.Clamp(maxFractionDigits, 0, 15);
-        return digits == 0 ? "0" : $"0.{new string('#', digits)}";
-    }
+        => _formatCache[Math.Clamp(maxFractionDigits, 0, 15)];
 
     public static int ExtractMaxFractionDigits(string? format)
     {
@@ -30,7 +42,7 @@ public static class NumericFormatHelper
         if (digits == 0)
             return decimal.Truncate(value);
 
-        var factor = GetDecimalFactor(digits);
+        var factor = _decimalFactors[digits];
         return decimal.Truncate(value * factor) / factor;
     }
 
@@ -64,13 +76,4 @@ public static class NumericFormatHelper
 
     public static string Format(float? value, int maxFractionDigits, CultureInfo? culture = null) =>
         value.HasValue ? Format(value.Value, maxFractionDigits, culture) : string.Empty;
-
-    private static decimal GetDecimalFactor(int digits)
-    {
-        decimal factor = 1m;
-        for (var i = 0; i < digits; i++)
-            factor *= 10m;
-
-        return factor;
-    }
 }

@@ -104,7 +104,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
             ResourceUpdate.Data.AddOns.Add(new ResourceAddon
             {
                 Name = string.Empty,
-                Unit = ResourceUpdate.Unit,
+                Unit = ResourceUpdate.Unit ?? string.Empty,
                 Factor = 1m,
                 Type = QuantityResourceAddon.Multiplication,
                 Cost = 0m,

@@ -250,7 +250,7 @@
                 <div class="min-w-0 md:col-span-4">
                     <label class="@LabelClass">@CalcResource.resourceType</label>
                     <InputSelect class="@InputClass"
-                                 @bind-Value:get="ResourceUpdate.ResourceTypeId"
+                                 @bind-Value:get="ResourceUpdate!.ResourceTypeId"
                                  @bind-Value:set="async (value) => await ChangeResType(value)">
                         <option value=""></option>
                         @foreach (var item in Config.ResourceTypes)
@@ -269,7 +269,7 @@
                 <div class="min-w-0 md:col-span-4">
                     <label class="@LabelClass">@CalcResource.resourceSort</label>
                     <InputSelect class="@InputClass"
-                                 @bind-Value:get="ResourceUpdate.ResourceSortId"
+                                 @bind-Value:get="ResourceUpdate!.ResourceSortId"
                                  @bind-Value:set="async (value) => await ChangeResSort2(value)">
                         <option></option>
                         @foreach (var item in ResTypeSelected.ResourcesSort)
@@ -808,7 +808,7 @@
         ResourceUpdate.Data.Times.Add(new ResourceTime
         {
             Name = string.Empty,
-            Unit = ResourceUpdate.Unit,
+            Unit = ResourceUpdate.Unit ?? string.Empty,
             Percentage = GetSuggestedTimePercentage(),
             Cost = 1
         }.SetResolvedQuantity(0));

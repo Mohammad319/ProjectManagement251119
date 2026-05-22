@@ -428,7 +428,7 @@
         model.Data.Times.Add(new ResourceTime
         {
             Name = string.Empty,
-            Unit = model.Unit,
+            Unit = model.Unit ?? string.Empty,
             Percentage = remaining > 0m ? remaining : 0m,
             Cost = 1
         }.SetResolvedQuantity(0));

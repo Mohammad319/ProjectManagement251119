@@ -1,9 +1,7 @@
 ﻿using Domain.Entities.Organisation;
 using ProjectManagement.Shared.Constant;
-using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Text;
 using System.Text.Json.Serialization;
 
 namespace Domain.DTO.Category

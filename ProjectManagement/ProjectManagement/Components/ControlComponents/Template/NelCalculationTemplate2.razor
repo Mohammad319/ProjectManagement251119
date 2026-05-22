@@ -6,8 +6,6 @@
 @using ProjectManagement.Shared.DTO.Calculation.Template
 @inherits AppComponentBase
 
-@inject IStringLocalizer<CalcResource> CalcLoc
-
 @if (Temp != null)
 {
  
@@ -179,7 +177,6 @@
     [Parameter] public TemplateListPostDTO Temp { get; set; } = new();
     [Parameter] public bool ShowColumnSettings { get; set; } = true;
 
-    private bool TableVisible = true;
     private string SettingsSectionClass =>
         (ShowColumnSettings ? "w-[360px] flex-none" : "min-w-0 flex-1") +
         " overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900";
@@ -203,7 +200,6 @@
 
     private async Task AddAsync(NetColumnId id)
     {
-        TableVisible = false;
         await Task.Delay(1);
 
         if (_defaults.TryGetValue(id, out var def))
@@ -225,12 +221,10 @@
             });
         }
 
-        TableVisible = true;
     }
 
     private async Task RemoveAsync(NetColumnState col)
     {
-        TableVisible = false;
         await Task.Delay(1);
 
         if (col != null)
@@ -240,7 +234,6 @@
         }
 
         await Task.Delay(1);
-        TableVisible = true;
     }
 
     private void MoveUp(NetColumnState col)

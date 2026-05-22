@@ -1,7 +1,7 @@
-using Domain.Entities.Calculation;
+﻿using Domain.Entities.Calculation;
 using ProjectManagement.Shared.DTO.Calculation;
 
-namespace Application.Extention
+namespace Application.Extension
 {
     public static class TaskExtention
     {

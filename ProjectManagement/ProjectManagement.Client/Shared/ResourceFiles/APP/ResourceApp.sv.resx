@@ -613,4 +613,49 @@
     <value>Uppgiftsåtgärder</value>
   </data>
   <data name="close" xml:space="preserve"><value>Stäng</value></data>
+  <data name="columnTemplate" xml:space="preserve">
+    <value>Kolumnmall</value>
+  </data>
+  <data name="resourceSort" xml:space="preserve">
+    <value>Resursortering</value>
+  </data>
+  <data name="resource" xml:space="preserve">
+    <value>Resurs</value>
+  </data>
+  <data name="resourceAscending" xml:space="preserve">
+    <value>Resurser stigande</value>
+  </data>
+  <data name="resourceDescending" xml:space="preserve">
+    <value>Resurser fallande</value>
+  </data>
+  <data name="filterPreset" xml:space="preserve">
+    <value>Filterförinställning</value>
+  </data>
+  <data name="noPresetSelected" xml:space="preserve">
+    <value>Ingen förinställning vald</value>
+  </data>
+  <data name="presetName" xml:space="preserve">
+    <value>Förinställningsnamn</value>
+  </data>
+  <data name="savedPresets" xml:space="preserve">
+    <value>Sparade förinställningar</value>
+  </data>
+  <data name="noSavedPresetsYet" xml:space="preserve">
+    <value>Inga sparade förinställningar än.</value>
+  </data>
+  <data name="active" xml:space="preserve">
+    <value>Aktiv</value>
+  </data>
+  <data name="selected" xml:space="preserve">
+    <value>Vald</value>
+  </data>
+  <data name="deletePreset" xml:space="preserve">
+    <value>Ta bort förinställning</value>
+  </data>
+  <data name="deleteFilterPreset" xml:space="preserve">
+    <value>Ta bort filterförinställning</value>
+  </data>
+  <data name="deleteFilterPresetConfirm" xml:space="preserve">
+    <value>Ta bort "{0}"?</value>
+  </data>
 </root>

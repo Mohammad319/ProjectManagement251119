@@ -1,4 +1,5 @@
 using Application.Feature.PriceImport;
+using System.Diagnostics;
 using Domain.Entities.PriceLists;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -1254,9 +1255,10 @@ public sealed class PriceImportService(
             if (!string.IsNullOrWhiteSpace(folder) && Directory.Exists(folder) && !Directory.EnumerateFileSystemEntries(folder).Any())
                 Directory.Delete(folder);
         }
-        catch
+        catch (Exception ex)
         {
             // Best-effort cleanup only; the import is still blocked by hash.
+            Trace.TraceWarning("TryDeleteFileAndEmptyFolder failed for '{0}': {1}", path, ex.Message);
         }
     }
 
@@ -1279,8 +1281,9 @@ public sealed class PriceImportService(
 
             return true;
         }
-        catch
+        catch (Exception ex)
         {
+            Trace.TraceWarning("TryDeleteStoredImportFile failed for '{0}': {1}", path, ex.Message);
             return false;
         }
     }

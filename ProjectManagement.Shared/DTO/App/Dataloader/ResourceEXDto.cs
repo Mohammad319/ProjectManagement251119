@@ -94,10 +94,9 @@ namespace ProjectManagement.Shared.DTO.App.Dataloader
                 case "cost": Data.Cost = value; break;
 
                 default:
-                    Console.WriteLine(string.Format(
-                        CultureInfo.CurrentCulture,
+                    System.Diagnostics.Trace.TraceWarning(
                         SharedText("UndefinedResourceVariable", "The variable {0} is not defined inside the resource."),
-                        name));
+                        name);
                     break;
             }
         }

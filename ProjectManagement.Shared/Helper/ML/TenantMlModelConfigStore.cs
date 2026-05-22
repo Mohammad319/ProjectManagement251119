@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.Json;
 
 namespace ProjectManagement.Shared.Helper.ML;
@@ -44,8 +45,9 @@ public static class TenantMlModelConfigStore
                 ? new TenantMlModelConfig { TenantId = tenantId }
                 : config;
         }
-        catch
+        catch (Exception ex) when (ex is JsonException or IOException)
         {
+            Trace.TraceWarning("Failed to read ML config for tenant {0}: {1}", tenantId, ex.Message);
             return new TenantMlModelConfig { TenantId = tenantId };
         }
     }

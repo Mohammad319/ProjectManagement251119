@@ -40,8 +40,7 @@ namespace Persistence.Service
                     emailMessage.IsBodyHtml = true;
                     if (!string.IsNullOrEmpty(request.Attachment))
                         emailMessage.Attachments.Add(new Attachment(request.Attachment));
-                    await Task.Delay(5);
-                    //await client.SendMailAsync(emailMessage);
+                    await client.SendMailAsync(emailMessage);
                 }
             }
         }
@@ -66,9 +65,7 @@ namespace Persistence.Service
                     emailMessage.From = new MailAddress(mailSettings.Mail, mailSettings.DisplayName);
                     emailMessage.Subject = request.Subject;
                     emailMessage.Body = request.Body;
-                    //emailMessage.Attachments.Add(new Attachment("C:\\file.zip"));
-                    //await client.SendMailAsync(emailMessage);
-                    await Task.Delay(5);
+                    await client.SendMailAsync(emailMessage);
                 }
             }
         }

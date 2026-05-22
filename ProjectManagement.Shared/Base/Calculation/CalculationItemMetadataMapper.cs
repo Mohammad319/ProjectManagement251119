@@ -6,7 +6,7 @@ namespace ProjectManagement.Shared.Base.Calculation
         {
             var clone = metadata?.Clone() ?? new TaskMetadata();
             clone.Note = NormalizeOptional(clone.Note);
-            clone.BaseUnit = string.IsNullOrWhiteSpace(clone.BaseUnit) ? null : clone.BaseUnit.Trim();
+            clone.BaseUnit = string.IsNullOrWhiteSpace(clone.BaseUnit) ? string.Empty : clone.BaseUnit.Trim();
             clone.Code = NormalizeOptional(clone.Code);
             clone.Responsible = NormalizeOptional(clone.Responsible);
             clone.QuantityParam = NormalizeOptional(clone.QuantityParam);

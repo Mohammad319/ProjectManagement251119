@@ -21,7 +21,10 @@
       "Bash(grep -E \"\\\\.\\(cs|razor\\)$\")",
       "Bash(grep \"\\\\.cs$\")",
       "Bash(grep -E \"\\\\.cs$\")",
-      "Bash(Get-ChildItem *)"
+      "Bash(Get-ChildItem *)",
+      "Bash(grep -r \"@attribute \\\\[Authorize\\\\]$\" --include=\"*.razor\")",
+      "Bash(grep -E \"\\\\$|^\\\\s*['\\\\\"]api/.*\\\\{|PutAsync|PostAsync|GetAsync|DeleteAsync\")",
+      "Bash(grep -r \"\\\\$\\\\\".*\\(\" \"C:\\\\Users\\\\engmo\\\\Desktop\\\\PM\\\\b07\\\\ProjectManagement251119\\\\ProjectManagement\\\\ProjectManagement\" --include=\"*.cs\")"
     ]
   }
 }

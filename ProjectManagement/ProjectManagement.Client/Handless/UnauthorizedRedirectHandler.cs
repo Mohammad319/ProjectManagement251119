@@ -1,21 +1,15 @@
 namespace ProjectManagement.Client.Handless;
 
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.Localization;
 using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Shared.Repositories;
-using ProjectManagement.Client.Shared.ResourceFiles.APP;
 using ProjectManagement.Shared.Helper;
 using System.Net;
 
 public class UnauthorizedRedirectHandler(
-    IErrorDialog ui,
     NavigationManager nav,
-    IClientLogger clientLogger,
-    IStringLocalizer<ResourceErrors> errLoc) : DelegatingHandler
+    IClientLogger clientLogger) : DelegatingHandler
 {
-    private DateTime _lastDialogUtc = DateTime.MinValue;
-
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
     {
         var response = await base.SendAsync(request, ct);
@@ -44,16 +38,6 @@ public class UnauthorizedRedirectHandler(
         }
 
         return response;
-    }
-
-    private void ShowOnce(string title, string message, string? traceId = null)
-    {
-        var now = DateTime.UtcNow;
-        if ((now - _lastDialogUtc).TotalSeconds < 3)
-            return;
-
-        _lastDialogUtc = now;
-        ui.Show(title, message, traceId);
     }
 
     private string GetCurrentLocalUrl()

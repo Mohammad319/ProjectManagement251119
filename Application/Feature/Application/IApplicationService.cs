@@ -14,7 +14,6 @@ namespace Application.Feature.Application
         Task<int> CreateCalcApp(ApplicationValuesDTO dto, CancellationToken cancellationToken);
 
         Task<bool> DeleteApplicationAsync(int id, CancellationToken cancellationToken);
-        Task<bool> DeleteApplecationAsync(int id, CancellationToken cancellationToken);
         Task<bool> DeleteCalcAppAsync(int id, CancellationToken cancellationToken);
 
         Task<bool> UpdateAsync(ApplicationDTO dto, CancellationToken cancellationToken);

@@ -1,33 +1,34 @@
 using Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Hub;
 using ProjectManagement.Shared.Enums;
 
 namespace ProjectManagement.SignalR
 {
-    public class SendHubNotification(IHubContext<NotificationHub> HubContext) : INotificationHub
+    public class SendHubNotification(IHubContext<NotificationHub> hubContext) : INotificationHub
     {
         public async Task SendNotificationAsync(string group, ObjectTypHub type, OperationType operationType, object data)
         {
-            await HubContext.Clients.Group(group).SendAsync("calc", type, operationType, data);
+            await hubContext.Clients.Group(group).SendAsync("calc", type, operationType, data);
         }
 
         public async Task SendNotificationAsync(string group, ObjectTypHub type, OperationType operationType, int parentId, object data)
         {
-            await HubContext.Clients.Group(group).SendAsync("calc", type, operationType, new HubDataDto() { Data = data, ParentId = parentId });
+            await hubContext.Clients.Group(group).SendAsync("calc", type, operationType, new HubDataDto() { Data = data, ParentId = parentId });
         }
     }
 
     [Authorize]
-    public class NotificationHub : Hub
+    public class NotificationHub(ILogger<NotificationHub> logger) : Hub
     {
         public override Task OnConnectedAsync()
         {
             var isAuth = Context.User?.Identity?.IsAuthenticated == true;
             var tenant = Context.User?.FindFirst(PMClaimsConst.Tenant)?.Value;
-            Console.WriteLine($"[Hub] Connected. IsAuth={isAuth}, TenantClaim={tenant ?? "null"}");
+            logger.LogInformation("[Hub] Connected. IsAuth={IsAuth}, TenantClaim={TenantClaim}", isAuth, tenant ?? "null");
             return base.OnConnectedAsync();
         }
 

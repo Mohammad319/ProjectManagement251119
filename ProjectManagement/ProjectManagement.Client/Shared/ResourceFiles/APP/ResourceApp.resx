@@ -613,4 +613,49 @@
     <value>Task actions</value>
   </data>
   <data name="close" xml:space="preserve"><value>Close</value></data>
+  <data name="columnTemplate" xml:space="preserve">
+    <value>Column template</value>
+  </data>
+  <data name="resourceSort" xml:space="preserve">
+    <value>Resource sort</value>
+  </data>
+  <data name="resource" xml:space="preserve">
+    <value>Resource</value>
+  </data>
+  <data name="resourceAscending" xml:space="preserve">
+    <value>Resource ascending</value>
+  </data>
+  <data name="resourceDescending" xml:space="preserve">
+    <value>Resource descending</value>
+  </data>
+  <data name="filterPreset" xml:space="preserve">
+    <value>Filter preset</value>
+  </data>
+  <data name="noPresetSelected" xml:space="preserve">
+    <value>No preset selected</value>
+  </data>
+  <data name="presetName" xml:space="preserve">
+    <value>Preset name</value>
+  </data>
+  <data name="savedPresets" xml:space="preserve">
+    <value>Saved presets</value>
+  </data>
+  <data name="noSavedPresetsYet" xml:space="preserve">
+    <value>No saved presets yet.</value>
+  </data>
+  <data name="active" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="selected" xml:space="preserve">
+    <value>Selected</value>
+  </data>
+  <data name="deletePreset" xml:space="preserve">
+    <value>Delete preset</value>
+  </data>
+  <data name="deleteFilterPreset" xml:space="preserve">
+    <value>Delete filter preset</value>
+  </data>
+  <data name="deleteFilterPresetConfirm" xml:space="preserve">
+    <value>Delete "{0}"?</value>
+  </data>
 </root>

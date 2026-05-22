@@ -149,9 +149,6 @@ namespace Persistence.Service.Application
             return entity.Id;
         }
 
-        public Task<bool> DeleteApplecationAsync(int id, CancellationToken ct)
-            => DeleteApplicationAsync(id, ct);
-
         public async Task<bool> DeleteApplicationAsync(int id, CancellationToken ct)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);

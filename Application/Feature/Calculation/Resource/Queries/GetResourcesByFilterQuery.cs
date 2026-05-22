@@ -1,4 +1,4 @@
-﻿using Application.Extention;
+﻿using Application.Extension;
 using Application.Interfaces;
 using ProjectManagement.Shared.DTO.Calculation;
 namespace Application.Feature.Calculation.Resource.Queries;

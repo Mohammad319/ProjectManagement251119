@@ -1,4 +1,4 @@
-﻿using Application.Extention;
+﻿using Application.Extension;
 using Application.Interfaces;
 using Domain.Entities.Calculation;
 using Microsoft.EntityFrameworkCore;

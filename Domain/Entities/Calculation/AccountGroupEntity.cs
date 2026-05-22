@@ -35,7 +35,7 @@ namespace Domain.Entities.Calculation
         public void SetName(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
-                throw new ValidationException(nameof(Name));
+                throw new ValidationException($"{nameof(Name)} is required.");
             var trimmed = name.Trim();
 
             if (Name == trimmed)
