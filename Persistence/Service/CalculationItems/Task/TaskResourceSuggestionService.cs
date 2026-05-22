@@ -78,7 +78,9 @@ public sealed class TaskResourceSuggestionService(
             includeResources,
             mlRanker,
             tenantId,
-            cancellationToken);
+            cancellationToken,
+            targetParentNormalized: targetSuggestionContext.ParentNormalizedText,
+            targetParentTaskId: targetSuggestionContext.ParentTaskId);
 
         var blueprintTask = GetBlueprintSuggestionsAsync(
             tenantId,
@@ -91,7 +93,8 @@ public sealed class TaskResourceSuggestionService(
             maxResults,
             includeResources,
             mlRanker,
-            cancellationToken);
+            cancellationToken,
+            targetParentNormalized: targetSuggestionContext.ParentNormalizedText);
 
         await System.Threading.Tasks.Task.WhenAll(tenantTask, blueprintTask);
 
@@ -196,7 +199,9 @@ public sealed class TaskResourceSuggestionService(
         bool includeResources,
         ITaskResourceSuggestionMlRanker mlRanker,
         int tenantId,
-        CancellationToken ct)
+        CancellationToken ct,
+        string targetParentNormalized = "",
+        int? targetParentTaskId = null)
     {
         var baseQuery = db.Tasks
             .AsNoTracking()
@@ -224,6 +229,15 @@ public sealed class TaskResourceSuggestionService(
         // Pre-normalize once — reused across all candidates instead of per-candidate normalization
         var targetNameNormalized = SwedishTaskTextNormalizer.Normalize(targetName);
 
+        // Load resource counts in one query (avoids N+1; Resources not included when includeResources=false)
+        var candidateIds = candidates.Select(c => c.Id).ToList();
+        var resourceCounts = includeResources
+            ? candidates.ToDictionary(t => t.Id, t => t.Resources.Count)
+            : await db.Tasks.AsNoTracking()
+                .Where(x => candidateIds.Contains(x.Id))
+                .Select(x => new { x.Id, Count = x.Resources.Count() })
+                .ToDictionaryAsync(x => x.Id, x => x.Count, ct);
+
         return candidates
             .Select(task =>
             {
@@ -244,7 +258,11 @@ public sealed class TaskResourceSuggestionService(
                     targetNameNormalized,
                     candidateContext.ContextualName,
                     targetCodeDepth,
-                    candidateCodeDepth: candidateContext.CodeDepth)
+                    candidateCodeDepth: candidateContext.CodeDepth,
+                    targetParentNormalized: targetParentNormalized,
+                    candidateParentNormalized: candidateContext.ParentNormalizedText,
+                    targetParentTaskId: targetParentTaskId,
+                    candidateParentTaskId: candidateContext.ParentTaskId)
                     with
                     {
                         ContextReason = BuildContextReason(targetCode, targetCodeDepth, candidateContext.Code, candidateContext.CodeDepth)
@@ -257,12 +275,15 @@ public sealed class TaskResourceSuggestionService(
                 {
                     SourceTaskId = task.Id,
                     SourceTaskName = task.Name,
+                    SourceTaskCode = task.Code,
+                    SourceTaskParentName = candidateContext.ParentName,
                     SourceTaskQuantity = candidateContext.Quantity,
                     SourceTaskUnit = candidateContext.Unit ?? string.Empty,
                     Source = TaskResourceSuggestionSource.TenantTask,
                     Score = score.Score,
                     Reason = BuildReason(score, TaskResourceSuggestionSource.TenantTask),
                     ScoreDetails = BuildScoreDetails(score, TaskResourceSuggestionSource.TenantTask),
+                    ResourceCount = resourceCounts.GetValueOrDefault(task.Id),
                     Resources = includeResources
                         ? task.Resources
                             .OrderBy(x => x.SortOrder)
@@ -288,7 +309,8 @@ public sealed class TaskResourceSuggestionService(
         int maxResults,
         bool includeResources,
         ITaskResourceSuggestionMlRanker mlRanker,
-        CancellationToken ct)
+        CancellationToken ct,
+        string targetParentNormalized = "")
     {
         await using var db = await blueprintFactory.CreateDbContextAsync(ct);
 
@@ -335,7 +357,9 @@ public sealed class TaskResourceSuggestionService(
                     targetNameNormalized,
                     candidateContext.ContextualName,
                     targetCodeDepth,
-                    candidateCodeDepth: candidateContext.CodeDepth)
+                    candidateCodeDepth: candidateContext.CodeDepth,
+                    targetParentNormalized: targetParentNormalized,
+                    candidateParentNormalized: candidateContext.ParentNormalizedText)
                     with
                     {
                         ContextReason = BuildContextReason(targetCode, targetCodeDepth, candidateContext.Code, candidateContext.CodeDepth)
@@ -348,12 +372,15 @@ public sealed class TaskResourceSuggestionService(
                 {
                     SourceTaskId = task.Id,
                     SourceTaskName = task.Name,
+                    SourceTaskCode = task.Code,
+                    SourceTaskParentName = candidateContext.ParentName,
                     SourceTaskQuantity = null,
                     SourceTaskUnit = candidateContext.Unit ?? string.Empty,
                     Source = TaskResourceSuggestionSource.BlueprintTask,
                     Score = score.Score,
                     Reason = BuildReason(score, TaskResourceSuggestionSource.BlueprintTask),
                     ScoreDetails = BuildScoreDetails(score, TaskResourceSuggestionSource.BlueprintTask),
+                    ResourceCount = task.ResourceLinks.Count(l => l.Resource is { IsActive: true, IsVisible: true }),
                     Resources = []
                 };
             })
@@ -522,11 +549,14 @@ public sealed class TaskResourceSuggestionService(
             ? ancestorCode?.Depth ?? 1
             : 0;
         var rawTextParts = new List<string>();
+        var parentTextParts = new List<string>();
 
         foreach (var ancestor in ancestors)
         {
             rawTextParts.Add(ancestor.Code ?? string.Empty);
             rawTextParts.Add(ancestor.Name);
+            if (!string.IsNullOrWhiteSpace(ancestor.Name))
+                parentTextParts.Add(ancestor.Name);
         }
 
         rawTextParts.Add(effectiveCode ?? string.Empty);
@@ -535,13 +565,22 @@ public sealed class TaskResourceSuggestionService(
         // Unit is excluded from semantic text so compatible units don't penalize Jaccard.
         // Unit scoring is handled separately in ExplainCandidateScore.
         var normalizedText = SwedishTaskTextNormalizer.Normalize(string.Join(' ', rawTextParts));
+        var parentNormalizedText = parentTextParts.Count > 0
+            ? SwedishTaskTextNormalizer.Normalize(string.Join(' ', parentTextParts))
+            : string.Empty;
         var contextualName = BuildContextualName(ancestors.Select(x => x.Name), task.Name);
+
+        var immediateParentName   = ancestors.Count > 0 ? ancestors[^1].Name : null;
+        var immediateParentTaskId = task.ParentTaskId;
 
         return new TenantTaskSuggestionContext(
             task.Id,
             task.Name,
             contextualName,
             normalizedText,
+            parentNormalizedText,
+            immediateParentName,
+            immediateParentTaskId,
             task.Unit,
             effectiveCode,
             codeDepth,
@@ -557,14 +596,28 @@ public sealed class TaskResourceSuggestionService(
         var normalizedText = string.IsNullOrWhiteSpace(task.NormalizedTextSv)
             ? SwedishTaskTextNormalizer.NormalizeTask(task.Name, effectiveCode, null)
             : task.NormalizedTextSv;
+
+        // Parent-only hierarchy names (exclude the last segment which is the task itself)
+        var hierarchyNames = SplitHierarchyNames(task.HierarchyPath, task.Name)
+            .OfType<string>()
+            .Where(n => !string.Equals(n.Trim(), task.Name.Trim(), StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        var parentNormalizedText = hierarchyNames.Count > 0
+            ? SwedishTaskTextNormalizer.Normalize(string.Join(' ', hierarchyNames))
+            : string.Empty;
+
         var contextualName = BuildContextualName(
             SplitHierarchyNames(task.HierarchyPath, task.Name),
             task.Name);
+
+        var blueprintParentName = hierarchyNames.Count > 0 ? hierarchyNames[^1] : null;
 
         return new BlueprintTaskSuggestionContext(
             task.Name,
             contextualName,
             normalizedText,
+            parentNormalizedText,
+            blueprintParentName,
             task.UnitCode,
             effectiveCode,
             codeDepth,
@@ -784,6 +837,21 @@ public sealed class TaskResourceSuggestionService(
         var acceptedWeight = suggestion.Source == TaskResourceSuggestionSource.TenantTask ? 0.020d : 0.015d;
         var positiveCap = suggestion.Source == TaskResourceSuggestionSource.TenantTask ? 0.08d : 0.06d;
         var positiveLift = Math.Min(positiveCap, stats.Accepted * acceptedWeight);
+
+        // Ratio-confidence boost: when most reviewers accepted a suggestion, it's reliably good.
+        // Requires ≥3 total votes to avoid noise from single-vote samples.
+        if (stats.Total >= 3)
+        {
+            var acceptanceRatio = (double)stats.Accepted / stats.Total;
+            if (acceptanceRatio >= 0.70d)
+            {
+                var ratioCap = suggestion.Source == TaskResourceSuggestionSource.TenantTask ? 0.12d : 0.09d;
+                // Extra lift scales with how far above 70% the ratio is (max +3% at 100%)
+                var ratioLift = (acceptanceRatio - 0.70d) * 0.10d;
+                positiveLift = Math.Min(ratioCap, positiveLift + ratioLift);
+            }
+        }
+
         var negativePressure =
             Math.Min(0.18d,
                 (stats.Rejected * 0.05d) +
@@ -966,7 +1034,11 @@ public sealed class TaskResourceSuggestionService(
         string targetNameNormalized = "",
         string? candidateName = null,
         int targetCodeDepth = 0,
-        int candidateCodeDepth = 0)
+        int candidateCodeDepth = 0,
+        string targetParentNormalized = "",
+        string candidateParentNormalized = "",
+        int? targetParentTaskId = null,
+        int? candidateParentTaskId = null)
     {
         if (source == TaskResourceSuggestionSource.BlueprintTask)
         {
@@ -987,7 +1059,11 @@ public sealed class TaskResourceSuggestionService(
             candidateName,
             GetCodeInheritanceFactor(targetCodeDepth, candidateCodeDepth),
             targetCodeDepth > 0 || candidateCodeDepth > 0,
-            GetScoreProfile(source));
+            GetScoreProfile(source),
+            targetParentNormalized,
+            candidateParentNormalized,
+            targetParentTaskId,
+            candidateParentTaskId);
     }
 
     private static CandidateScoreBreakdown ExplainCandidateScoreCore(
@@ -1003,7 +1079,11 @@ public sealed class TaskResourceSuggestionService(
         string? candidateName,
         double codeInheritanceFactor,
         bool hasInheritedContext,
-        SourceScoreProfile profile)
+        SourceScoreProfile profile,
+        string targetParentNormalized = "",
+        string candidateParentNormalized = "",
+        int? targetParentTaskId = null,
+        int? candidateParentTaskId = null)
     {
         var textScore = SwedishTaskTextNormalizer.CalculateSimilarity(targetNormalized, candidateNormalized);
         var nameScore = GetNameSimilarity(targetNameNormalized, candidateName);
@@ -1049,6 +1129,27 @@ public sealed class TaskResourceSuggestionService(
             score = Math.Min(1d, score + parentContextBonus);
         }
 
+        // Parent name bonus: boost when both tasks share similar parent context.
+        // Stronger when the task name itself is short/generic (few tokens → less discriminating).
+        var parentNameBonus = 0d;
+        if (!string.IsNullOrWhiteSpace(targetParentNormalized) &&
+            !string.IsNullOrWhiteSpace(candidateParentNormalized))
+        {
+            var parentSimilarity = SwedishTaskTextNormalizer.CalculateSimilarity(
+                targetParentNormalized, candidateParentNormalized);
+            if (parentSimilarity >= 0.30d)
+            {
+                var taskNameTokenCount = targetNameNormalized
+                    .Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;
+                var genericityFactor = taskNameTokenCount <= 1 ? 1.0d
+                    : taskNameTokenCount <= 2 ? 0.70d
+                    : taskNameTokenCount <= 3 ? 0.45d
+                    : 0.25d;
+                parentNameBonus = parentSimilarity * 0.12d * genericityFactor * profile.ParentContextMultiplier;
+                score = Math.Min(1d, score + parentNameBonus);
+            }
+        }
+
         if (quantitySimilarity is >= 0.995d && (hasEquivalentUnits || hasCompatibleUnits))
         {
             if (nameScore >= 0.995d)
@@ -1065,6 +1166,16 @@ public sealed class TaskResourceSuggestionService(
             score = Math.Min(score, 0.955d);
         }
 
+        // Sibling boost: tasks sharing the same immediate parent are structurally related.
+        var siblingBonus = 0d;
+        if (targetParentTaskId.HasValue &&
+            candidateParentTaskId.HasValue &&
+            targetParentTaskId.Value == candidateParentTaskId.Value)
+        {
+            siblingBonus = 0.05d * profile.ParentContextMultiplier;
+            score = Math.Min(1d, score + siblingBonus);
+        }
+
         return new CandidateScoreBreakdown(
             Score: Math.Round(score, 4),
             TextScore: Math.Round(textScore, 4),
@@ -1075,6 +1186,8 @@ public sealed class TaskResourceSuggestionService(
             UnitBonus: unitBonus,
             CodeBonus: codeBonus,
             ParentContextBonus: Math.Round(parentContextBonus, 4),
+            ParentNameBonus: Math.Round(parentNameBonus, 4),
+            SiblingBonus: Math.Round(siblingBonus, 4),
             HasEquivalentUnits: hasEquivalentUnits,
             HasCompatibleUnits: hasCompatibleUnits);
     }
@@ -1299,6 +1412,12 @@ public sealed class TaskResourceSuggestionService(
         if (score.ParentContextBonus > 0)
             details.Add(BuildScoreDetail("Parent", score.ParentContextBonus, "context"));
 
+        if (score.ParentNameBonus > 0)
+            details.Add(BuildScoreDetail("Parent match", score.ParentNameBonus, "context"));
+
+        if (score.SiblingBonus > 0)
+            details.Add(BuildScoreDetail("Sibling", score.SiblingBonus, "context"));
+
         if (score.HybridTokenScore >= 0.40d)
             details.Add(BuildScoreDetail("Keywords", score.TokenCoverage, "keyword"));
 
@@ -1337,6 +1456,8 @@ public sealed class TaskResourceSuggestionService(
         double UnitBonus,
         double CodeBonus,
         double ParentContextBonus,
+        double ParentNameBonus,
+        double SiblingBonus,
         bool HasEquivalentUnits,
         bool HasCompatibleUnits)
     {
@@ -1374,6 +1495,9 @@ public sealed class TaskResourceSuggestionService(
         string Name,
         string ContextualName,
         string NormalizedText,
+        string ParentNormalizedText,
+        string? ParentName,
+        int? ParentTaskId,
         string? Unit,
         string? Code,
         int CodeDepth,
@@ -1383,6 +1507,8 @@ public sealed class TaskResourceSuggestionService(
         string Name,
         string ContextualName,
         string NormalizedText,
+        string ParentNormalizedText,
+        string? ParentName,
         string? Unit,
         string? Code,
         int CodeDepth,

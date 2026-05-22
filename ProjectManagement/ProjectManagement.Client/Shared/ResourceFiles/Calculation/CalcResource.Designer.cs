@@ -653,7 +653,7 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.Calculation {
                 return ResourceManager.GetString("resourceType", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Resource type system.
         /// </summary>
@@ -662,7 +662,72 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.Calculation {
                 return ResourceManager.GetString("resourceTypeSystem", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to System.
+        /// </summary>
+        public static string badgeSystem {
+            get {
+                return ResourceManager.GetString("badgeSystem", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Company.
+        /// </summary>
+        public static string badgeCompany {
+            get {
+                return ResourceManager.GetString("badgeCompany", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Filter tasks...
+        /// </summary>
+        public static string filterTasks {
+            get {
+                return ResourceManager.GetString("filterTasks", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Filter suggestions...
+        /// </summary>
+        public static string filterSuggestions {
+            get {
+                return ResourceManager.GetString("filterSuggestions", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Min score.
+        /// </summary>
+        public static string minScore {
+            get {
+                return ResourceManager.GetString("minScore", resourceCulture);
+            }
+        }
+
+        public static string parentContext => ResourceManager.GetString("parentContext", resourceCulture)!;
+        public static string capTask       => ResourceManager.GetString("capTask", resourceCulture)!;
+        public static string feedbackLabel   => ResourceManager.GetString("feedbackLabel", resourceCulture)!;
+        public static string feedbackGood    => ResourceManager.GetString("feedbackGood", resourceCulture)!;
+        public static string feedbackBad     => ResourceManager.GetString("feedbackBad", resourceCulture)!;
+        public static string feedbackUnit    => ResourceManager.GetString("feedbackUnit", resourceCulture)!;
+        public static string feedbackMissing => ResourceManager.GetString("feedbackMissing", resourceCulture)!;
+        public static string feedbackType    => ResourceManager.GetString("feedbackType", resourceCulture)!;
+        public static string feedbackSave    => ResourceManager.GetString("feedbackSave", resourceCulture)!;
+        public static string suggestionLeafOnly              => ResourceManager.GetString("suggestionLeafOnly", resourceCulture)!;
+        public static string suggestionBothDisabled          => ResourceManager.GetString("suggestionBothDisabled", resourceCulture)!;
+        public static string suggestionNoTasksAtScore        => ResourceManager.GetString("suggestionNoTasksAtScore", resourceCulture)!;
+        public static string suggestionNoTasksAboveThreshold => ResourceManager.GetString("suggestionNoTasksAboveThreshold", resourceCulture)!;
+        public static string suggestionFilterHidden          => ResourceManager.GetString("suggestionFilterHidden", resourceCulture)!;
+        public static string suggestionNoLeafTasks           => ResourceManager.GetString("suggestionNoLeafTasks", resourceCulture)!;
+        public static string suggestionMissingCount          => ResourceManager.GetString("suggestionMissingCount", resourceCulture)!;
+        public static string suggestionFilterNoMatch         => ResourceManager.GetString("suggestionFilterNoMatch", resourceCulture)!;
+        public static string suggestionFilterBelowScore     => ResourceManager.GetString("suggestionFilterBelowScore", resourceCulture)!;
+        public static string quickAdd                        => ResourceManager.GetString("quickAdd", resourceCulture)!;
+
         /// <summary>
         ///   Looks up a localized string similar to Responsible.
         /// </summary>

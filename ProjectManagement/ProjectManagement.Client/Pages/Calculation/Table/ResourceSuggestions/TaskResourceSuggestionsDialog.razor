@@ -19,7 +19,7 @@
                 <input type="checkbox" checked="@_showSystem"
                        @onchange="e => OnSourceFilterChanged(ref _showSystem, (bool)(e.Value ?? false))"
                        class="h-4 w-4 cursor-pointer accent-blue-600" />
-                <span class="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700 dark:bg-blue-950 dark:text-blue-300">BlueprintTask</span>
+                <span class="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700 dark:bg-blue-950 dark:text-blue-300">@CalcResource.badgeSystem</span>
                 <span>@CalcResource.resourceTypeSystem</span>
             </label>
 
@@ -27,13 +27,13 @@
                 <input type="checkbox" checked="@_showTenant"
                        @onchange="e => OnSourceFilterChanged(ref _showTenant, (bool)(e.Value ?? false))"
                        class="h-4 w-4 cursor-pointer accent-emerald-600" />
-                <span class="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">TenantTask</span>
+                <span class="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">@CalcResource.badgeCompany</span>
                 <span>@CalcResource.resourceType</span>
             </label>
 
             <div class="relative min-w-[16rem] flex-1">
                 <input type="search"
-                       placeholder="Filter suggestions..."
+                       placeholder="@CalcResource.filterSuggestions"
                        value="@_filterText"
                        @oninput="OnFilterTextChangedAsync"
                        class="w-full rounded border border-gray-300 bg-white py-1.5 pl-8 pr-3 text-sm text-gray-700 placeholder-gray-400 focus:border-blue-400 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:placeholder-gray-500" />
@@ -49,7 +49,7 @@
             </div>
 
             <div class="flex shrink-0 items-center gap-1.5">
-                <label class="whitespace-nowrap text-xs font-medium text-gray-500 dark:text-gray-400">Min score</label>
+                <label class="whitespace-nowrap text-xs font-medium text-gray-500 dark:text-gray-400">@CalcResource.minScore</label>
                 <input type="range" min="0" max="100" step="5"
                        value="@((int)(_minScore * 100))"
                        @oninput="e => OnMinScoreChanged(e.Value?.ToString())"
@@ -101,12 +101,20 @@
                     <!-- ── Suggestion header ── -->
                     <div class="flex min-w-0 items-start justify-between gap-2 border-b border-gray-100 px-2 py-1.5 dark:border-gray-800">
 
-                        <button class="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-gray-300 text-base leading-none text-gray-700 hover:bg-gray-50 disabled:opacity-40 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
-                                disabled="@state.IsLoadingResources"
-                                title="@(state.IsExpanded ? "Collapse resources" : "Load resources")"
-                                @onclick="() => ToggleResourcesAsync(state)">
-                            @(state.IsLoadingResources ? "..." : state.IsExpanded ? "-" : "+")
-                        </button>
+                        <div class="flex shrink-0 flex-col items-center gap-0.5">
+                            <button class="flex h-7 w-7 items-center justify-center rounded border border-gray-300 text-base leading-none text-gray-700 hover:bg-gray-50 disabled:opacity-40 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+                                    disabled="@state.IsLoadingResources"
+                                    title="@(state.IsExpanded ? "Collapse resources" : "Load resources")"
+                                    @onclick="() => ToggleResourcesAsync(state)">
+                                @(state.IsLoadingResources ? "..." : state.IsExpanded ? "-" : "+")
+                            </button>
+                            @if (state.Suggestion.ResourceCount > 0)
+                            {
+                                <span class="text-[9px] font-semibold leading-none text-gray-400 dark:text-gray-500">
+                                    @state.Suggestion.ResourceCount
+                                </span>
+                            }
+                        </div>
 
                         <div class="min-w-0 flex-1">
                             <div class="flex min-w-0 flex-col gap-1">
@@ -114,8 +122,20 @@
                                 <div class="min-w-0 overflow-hidden whitespace-normal text-sm font-semibold leading-snug text-gray-900 dark:text-gray-100"
                                      style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;"
                                      title="@state.Suggestion.SourceTaskName">
+                                    @if (!string.IsNullOrWhiteSpace(state.Suggestion.SourceTaskCode))
+                                    {
+                                        <span class="mr-1 rounded bg-gray-200 px-1.5 py-0.5 font-mono text-xs font-semibold text-gray-700 dark:bg-gray-700 dark:text-gray-200">@state.Suggestion.SourceTaskCode</span>
+                                    }
                                     @state.Suggestion.SourceTaskName
                                 </div>
+
+                                @if (!string.IsNullOrWhiteSpace(state.Suggestion.SourceTaskParentName))
+                                {
+                                    <div class="truncate text-xs text-gray-400 dark:text-gray-500"
+                                         title="@state.Suggestion.SourceTaskParentName">
+                                        ↳ @state.Suggestion.SourceTaskParentName
+                                    </div>
+                                }
 
                                 <div class="flex min-w-0 flex-wrap items-center gap-2">
 
@@ -134,15 +154,15 @@
                                     </span>
                                 }
 
-                                <span class="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-300">
-                                    @state.Suggestion.Source
+                                <span class="shrink-0 rounded px-1.5 py-0.5 text-xs font-semibold @GetSourceBadgeClass(state.Suggestion.Source)">
+                                    @GetSourceLabel(state.Suggestion.Source)
                                 </span>
 
                                 @if (UsesParentContext(state.Suggestion))
                                 {
                                     <span class="shrink-0 rounded bg-indigo-50 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-700 ring-1 ring-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:ring-indigo-800"
                                           title="@state.Suggestion.Reason">
-                                        Parent context
+                                        @CalcResource.parentContext
                                     </span>
                                 }
 
@@ -172,23 +192,33 @@
                         <div class="flex shrink-0 items-center gap-1">
                             <select value="@FeedbackSelectValue(state)"
                                     disabled="@state.IsRecordingFeedback"
-                                    title="Suggestion feedback"
+                                    title="@CalcResource.feedbackLabel"
                                     @onchange="e => OnFeedbackSelected(state, e.Value?.ToString())"
                                     class="@FeedbackSelectClass(state)">
-                                <option value="">Feedback</option>
-                                <option value="@TaskResourceSuggestionFeedbackKind.Accepted">Good</option>
-                                <option value="@TaskResourceSuggestionFeedbackKind.Rejected">Bad</option>
-                                <option value="@TaskResourceSuggestionFeedbackKind.WrongUnit">Unit</option>
-                                <option value="@TaskResourceSuggestionFeedbackKind.MissingResources">Missing</option>
-                                <option value="@TaskResourceSuggestionFeedbackKind.WrongResourceType">Type</option>
+                                <option value="">@CalcResource.feedbackLabel</option>
+                                <option value="@TaskResourceSuggestionFeedbackKind.Accepted">@CalcResource.feedbackGood</option>
+                                <option value="@TaskResourceSuggestionFeedbackKind.Rejected">@CalcResource.feedbackBad</option>
+                                <option value="@TaskResourceSuggestionFeedbackKind.WrongUnit">@CalcResource.feedbackUnit</option>
+                                <option value="@TaskResourceSuggestionFeedbackKind.MissingResources">@CalcResource.feedbackMissing</option>
+                                <option value="@TaskResourceSuggestionFeedbackKind.WrongResourceType">@CalcResource.feedbackType</option>
                             </select>
                             <button class="rounded border border-blue-600 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-50 disabled:opacity-40 dark:border-blue-400 dark:text-blue-300 dark:hover:bg-blue-950"
                                     disabled="@(state.IsRecordingFeedback || !state.PendingFeedbackChange.HasValue)"
-                                    title="Save feedback"
+                                    title="@CalcResource.feedbackSave"
                                     @onclick="() => SavePendingFeedbackAsync(state)">
-                                Save
+                                @CalcResource.feedbackSave
                             </button>
                         </div>
+
+                        @if (state.Suggestion.Score >= 0.85 && !state.IsExpanded)
+                        {
+                            <button class="shrink-0 rounded border border-emerald-600 bg-emerald-600 px-3 py-1 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-40 dark:border-emerald-500 dark:bg-emerald-500"
+                                    disabled="@state.IsApplying"
+                                    title="@CalcResource.quickAdd"
+                                    @onclick="() => QuickApplyAsync(state)">
+                                ⚡ @CalcResource.quickAdd
+                            </button>
+                        }
 
                         <button class="shrink-0 rounded border border-blue-600 px-3 py-1 text-sm text-blue-700 hover:bg-blue-50 disabled:opacity-40 dark:border-blue-400 dark:text-blue-300 dark:hover:bg-blue-950"
                                 disabled="@(state.IsApplying || !state.IsExpanded || state.IsLoadingResources || !state.Rows.Any(r => r.Selected))"
@@ -391,12 +421,12 @@
     private bool _canShowMore => FilteredStates.Count > _maxResults;
     private bool IsEligibleTarget => TaskItem.Type != TaskType.CodeName && TaskItem.Tasks.Count == 0;
     private string NoSuggestionsMessage => !IsEligibleTarget
-        ? "Resource suggestions are available for leaf tasks only, not summary/code rows."
+        ? CalcResource.suggestionLeafOnly
         : !_showSystem && !_showTenant
-            ? "Both suggestion sources are disabled."
+            ? CalcResource.suggestionBothDisabled
             : _minScore > 0
-                ? "No matching source tasks with resources were found at the current Min score."
-                : "No matching source tasks with resources were found above the suggestion threshold.";
+                ? CalcResource.suggestionNoTasksAtScore
+                : CalcResource.suggestionNoTasksAboveThreshold;
     private string FilteredOutMessage => BuildFilteredOutMessage();
 
     protected override async Task OnInitializedAsync()
@@ -475,12 +505,12 @@
     private string BuildFilteredOutMessage()
     {
         if (!_showSystem && !_showTenant)
-            return "Both suggestion sources are disabled.";
+            return CalcResource.suggestionBothDisabled;
         if (!string.IsNullOrWhiteSpace(_filterText))
-            return $"Suggestions were loaded, but none match \"{_filterText}\".";
+            return string.Format(CalcResource.suggestionFilterNoMatch, _filterText);
         if (_minScore > 0)
-            return $"Suggestions were loaded, but all are below {(_minScore * 100).ToString("0", CultureInfo.InvariantCulture)}%.";
-        return "Suggestions were loaded, but the current filters hide them. Try lowering Min score, clearing search, or enabling both sources.";
+            return string.Format(CalcResource.suggestionFilterBelowScore, (int)(_minScore * 100));
+        return CalcResource.suggestionFilterHidden;
     }
 
     private async Task LoadUiStateAsync()
@@ -557,6 +587,36 @@
 
         state.RecalculateQuantities(TaskItem);
         StateHasChanged();
+    }
+
+    private async Task QuickApplyAsync(SuggestionState state)
+    {
+        if (state.IsApplying) return;
+
+        // Load resources if not yet expanded
+        if (!state.IsExpanded || !state.HasLoadedResources)
+        {
+            state.IsExpanded = true;
+            state.IsLoadingResources = true;
+            StateHasChanged();
+            try
+            {
+                var resources = await Repo.Resource.GetSuggestionResourcesAsync(
+                    state.Suggestion.SourceTaskId,
+                    state.Suggestion.Source);
+                state.SetResources(resources, TaskItem);
+            }
+            finally
+            {
+                state.IsLoadingResources = false;
+            }
+        }
+
+        // Select all rows then apply
+        foreach (var row in state.Rows)
+            row.Selected = true;
+
+        await ApplySuggestionAsync(state);
     }
 
     private async Task ApplySuggestionAsync(SuggestionState state)
@@ -715,6 +775,20 @@
     private static bool UsesParentContext(TaskResourceSuggestionDTO suggestion)
         => suggestion.Reason.Contains("parent code", StringComparison.OrdinalIgnoreCase) ||
            suggestion.Reason.Contains("ancestor code", StringComparison.OrdinalIgnoreCase);
+
+    private static string GetSourceLabel(TaskResourceSuggestionSource source) => source switch
+    {
+        TaskResourceSuggestionSource.BlueprintTask => CalcResource.badgeSystem,
+        TaskResourceSuggestionSource.TenantTask    => CalcResource.badgeCompany,
+        _                                          => source.ToString()
+    };
+
+    private static string GetSourceBadgeClass(TaskResourceSuggestionSource source) => source switch
+    {
+        TaskResourceSuggestionSource.BlueprintTask => "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
+        TaskResourceSuggestionSource.TenantTask    => "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
+        _                                          => "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300"
+    };
 
     private static string GetScoreColorClass(double score) => score switch
     {

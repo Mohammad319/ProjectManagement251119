@@ -297,6 +297,78 @@
   <data name="resourceTypeSystem" xml:space="preserve">
     <value>Resource type system</value>
   </data>
+  <data name="badgeSystem" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="badgeCompany" xml:space="preserve">
+    <value>Company</value>
+  </data>
+  <data name="filterTasks" xml:space="preserve">
+    <value>Filter tasks...</value>
+  </data>
+  <data name="filterSuggestions" xml:space="preserve">
+    <value>Filter suggestions...</value>
+  </data>
+  <data name="minScore" xml:space="preserve">
+    <value>Min score</value>
+  </data>
+  <data name="parentContext" xml:space="preserve">
+    <value>Parent context</value>
+  </data>
+  <data name="capTask" xml:space="preserve">
+    <value>CapTask</value>
+  </data>
+  <data name="feedbackLabel" xml:space="preserve">
+    <value>Feedback</value>
+  </data>
+  <data name="feedbackGood" xml:space="preserve">
+    <value>Good</value>
+  </data>
+  <data name="feedbackBad" xml:space="preserve">
+    <value>Bad</value>
+  </data>
+  <data name="feedbackUnit" xml:space="preserve">
+    <value>Unit</value>
+  </data>
+  <data name="feedbackMissing" xml:space="preserve">
+    <value>Missing</value>
+  </data>
+  <data name="feedbackType" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="feedbackSave" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="suggestionLeafOnly" xml:space="preserve">
+    <value>Resource suggestions are available for leaf tasks only, not summary/code rows.</value>
+  </data>
+  <data name="suggestionBothDisabled" xml:space="preserve">
+    <value>Both suggestion sources are disabled.</value>
+  </data>
+  <data name="suggestionNoTasksAtScore" xml:space="preserve">
+    <value>No matching source tasks with resources were found at the current Min score.</value>
+  </data>
+  <data name="suggestionNoTasksAboveThreshold" xml:space="preserve">
+    <value>No matching source tasks with resources were found above the suggestion threshold.</value>
+  </data>
+  <data name="suggestionFilterHidden" xml:space="preserve">
+    <value>Suggestions were loaded, but the current filters hide them. Try lowering Min score, clearing search, or enabling both sources.</value>
+  </data>
+  <data name="suggestionNoLeafTasks" xml:space="preserve">
+    <value>No eligible leaf tasks were found for resource suggestions.</value>
+  </data>
+  <data name="suggestionMissingCount" xml:space="preserve">
+    <value>{0} tasks have no suggestions</value>
+  </data>
+  <data name="suggestionFilterNoMatch" xml:space="preserve">
+    <value>Suggestions were loaded, but none match &quot;{0}&quot;.</value>
+  </data>
+  <data name="suggestionFilterBelowScore" xml:space="preserve">
+    <value>Suggestions were loaded, but all are below {0}%.</value>
+  </data>
+  <data name="quickAdd" xml:space="preserve">
+    <value>Quick add</value>
+  </data>
   <data name="responsible" xml:space="preserve">
     <value>Responsible</value>
   </data>

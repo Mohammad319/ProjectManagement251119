@@ -297,6 +297,78 @@
   <data name="resourceTypeSystem" xml:space="preserve">
     <value>Resurstyp system</value>
   </data>
+  <data name="badgeSystem" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="badgeCompany" xml:space="preserve">
+    <value>Företag</value>
+  </data>
+  <data name="filterTasks" xml:space="preserve">
+    <value>Filtrera uppgifter...</value>
+  </data>
+  <data name="filterSuggestions" xml:space="preserve">
+    <value>Filtrera förslag...</value>
+  </data>
+  <data name="minScore" xml:space="preserve">
+    <value>Minpoäng</value>
+  </data>
+  <data name="parentContext" xml:space="preserve">
+    <value>Förälderkontext</value>
+  </data>
+  <data name="capTask" xml:space="preserve">
+    <value>KapTask</value>
+  </data>
+  <data name="feedbackLabel" xml:space="preserve">
+    <value>Återkoppling</value>
+  </data>
+  <data name="feedbackGood" xml:space="preserve">
+    <value>Bra</value>
+  </data>
+  <data name="feedbackBad" xml:space="preserve">
+    <value>Dålig</value>
+  </data>
+  <data name="feedbackUnit" xml:space="preserve">
+    <value>Enhet</value>
+  </data>
+  <data name="feedbackMissing" xml:space="preserve">
+    <value>Saknas</value>
+  </data>
+  <data name="feedbackType" xml:space="preserve">
+    <value>Typ</value>
+  </data>
+  <data name="feedbackSave" xml:space="preserve">
+    <value>Spara</value>
+  </data>
+  <data name="suggestionLeafOnly" xml:space="preserve">
+    <value>Resursförslag är tillgängliga för löv-uppgifter, inte sammanfattnings-/kodrader.</value>
+  </data>
+  <data name="suggestionBothDisabled" xml:space="preserve">
+    <value>Båda förslagskällorna är inaktiverade.</value>
+  </data>
+  <data name="suggestionNoTasksAtScore" xml:space="preserve">
+    <value>Inga matchande källuppgifter med resurser hittades vid nuvarande minpoäng.</value>
+  </data>
+  <data name="suggestionNoTasksAboveThreshold" xml:space="preserve">
+    <value>Inga matchande källuppgifter med resurser hittades över förslagströskeln.</value>
+  </data>
+  <data name="suggestionFilterHidden" xml:space="preserve">
+    <value>Förslag laddades, men nuvarande filter döljer dem. Prova att sänka minpoäng, rensa sökning eller aktivera båda källorna.</value>
+  </data>
+  <data name="suggestionNoLeafTasks" xml:space="preserve">
+    <value>Inga lämpliga löv-uppgifter hittades för resursförslag.</value>
+  </data>
+  <data name="suggestionMissingCount" xml:space="preserve">
+    <value>{0} uppgifter saknar förslag</value>
+  </data>
+  <data name="suggestionFilterNoMatch" xml:space="preserve">
+    <value>Förslag laddades, men inga matchar &quot;{0}&quot;.</value>
+  </data>
+  <data name="suggestionFilterBelowScore" xml:space="preserve">
+    <value>Förslag laddades, men alla är under {0}%.</value>
+  </data>
+  <data name="quickAdd" xml:space="preserve">
+    <value>Snabb lägg till</value>
+  </data>
   <data name="responsible" xml:space="preserve">
     <value>Ansvarig</value>
   </data>

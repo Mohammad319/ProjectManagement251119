@@ -20,7 +20,8 @@
       "Bash(dotnet restore *)",
       "Bash(grep -E \"\\\\.\\(cs|razor\\)$\")",
       "Bash(grep \"\\\\.cs$\")",
-      "Bash(grep -E \"\\\\.cs$\")"
+      "Bash(grep -E \"\\\\.cs$\")",
+      "Bash(Get-ChildItem *)"
     ]
   }
 }

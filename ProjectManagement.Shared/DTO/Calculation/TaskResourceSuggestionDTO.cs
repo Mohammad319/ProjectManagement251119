@@ -26,6 +26,8 @@ public sealed class TaskResourceSuggestionDTO
 {
     public int SourceTaskId { get; set; }
     public string SourceTaskName { get; set; } = string.Empty;
+    public string? SourceTaskCode { get; set; }
+    public string? SourceTaskParentName { get; set; }
     public decimal? SourceTaskQuantity { get; set; }
     public string SourceTaskUnit { get; set; } = string.Empty;
     public TaskResourceSuggestionSource Source { get; set; }
@@ -33,6 +35,7 @@ public sealed class TaskResourceSuggestionDTO
     public string Reason { get; set; } = string.Empty;
     public List<TaskResourceSuggestionScoreDetailDTO> ScoreDetails { get; set; } = [];
     public TaskResourceSuggestionFeedbackKind? Feedback { get; set; }
+    public int ResourceCount { get; set; }
     public List<ResourcePostDTO> Resources { get; set; } = [];
 }
 
