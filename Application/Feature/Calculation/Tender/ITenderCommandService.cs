@@ -10,23 +10,27 @@
             TenderPostDTO dto,
             int calculationId,
             int companyId,
+            int? departmentId,
             CancellationToken ct = default);
 
         Task<bool> UpdateTenderAsync(
             int id,
             int calculationId,
             TenderPostDTO dto,
+            int? departmentId,
             CancellationToken ct = default);
 
         Task<bool> DeleteTenderAsync(
             int id,
             int calculationId,
+            int? departmentId,
             CancellationToken ct = default);
 
         Task<bool> UpdateTenderAttributeValueAsync(
             int tenderId,
             int attributeId,
             decimal value,
+            int? departmentId,
             CancellationToken ct = default);
     }
 }

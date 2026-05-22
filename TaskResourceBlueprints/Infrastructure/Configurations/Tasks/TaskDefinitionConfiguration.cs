@@ -71,6 +71,8 @@ public class TaskDefinitionConfiguration : IEntityTypeConfiguration<TaskDefiniti
         builder.HasIndex(x => x.ParentCode);
         builder.HasIndex(x => x.HierarchyPath)
             .HasDatabaseName("IX_Tasks_HierarchyPath");
+        builder.HasIndex(x => x.Name)
+            .HasDatabaseName("IX_Tasks_Name");
 
         builder.ToTable(t =>
         {

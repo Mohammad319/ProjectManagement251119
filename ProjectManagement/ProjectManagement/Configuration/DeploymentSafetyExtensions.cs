@@ -53,18 +53,23 @@ public static class DeploymentSafetyExtensions
         ValidateConnectionString(configuration, "ConnectionStrings:BlueprintsConnection", "BlueprintsConnection", warnings, failures);
         ValidateMailSettings(configuration, warnings);
 
-        if (failures.Count > 0)
-            throw new InvalidOperationException("Production safety validation failed: " + string.Join(" | ", failures));
-
-        if (string.IsNullOrWhiteSpace(configuration["DataProtection:KeysPath"]))
+        var dataProtectionKeysPath = configuration["DataProtection:KeysPath"]?.Trim();
+        if (string.IsNullOrWhiteSpace(dataProtectionKeysPath))
         {
-            warnings.Add("DataProtection:KeysPath is not configured. Cookies and antiforgery tokens may be lost after app restarts depending on hosting mode.");
+            failures.Add("DataProtection:KeysPath is required in non-development environments so cookies and antiforgery tokens survive app restarts.");
+        }
+        else if (!Path.IsPathRooted(dataProtectionKeysPath))
+        {
+            failures.Add("DataProtection:KeysPath must be an absolute path in non-development environments.");
         }
 
         if (string.IsNullOrWhiteSpace(configuration["Sentry:Dsn"]))
         {
             warnings.Add("Sentry:Dsn is not configured. Production exceptions will rely only on server-side logs.");
         }
+
+        if (failures.Count > 0)
+            throw new InvalidOperationException("Production safety validation failed: " + string.Join(" | ", failures));
 
         foreach (var warning in warnings)
             app.Logger.LogWarning("Deployment safety warning: {Warning}", warning);

@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
+using ProjectManagement.Client.Configuration;
 using ProjectManagement.Client.DependencyInjection;
 using ProjectManagement.Client.Handless;
 using ProjectManagement.Client.Helper;
@@ -7,11 +9,14 @@ using ProjectManagement.Client.Shared.Error;
 using ProjectManagement.Client.Shared.Repositories;
 using System.Globalization;
 using System.Net.Http.Headers;
-using System.Security.Claims;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
+var apiOptions = builder.Configuration.GetSection(ClientApiOptions.SectionName).Get<ClientApiOptions>() ?? new ClientApiOptions();
 
-// ✅ Handlers + Dialog + ClientLogger
+builder.Logging.SetMinimumLevel(builder.HostEnvironment.IsDevelopment() ? LogLevel.Debug : LogLevel.Information);
+builder.Services.Configure<ClientApiOptions>(builder.Configuration.GetSection(ClientApiOptions.SectionName));
+builder.Services.AddSingleton(apiOptions);
+
 builder.Services.AddScoped<CorrelationIdHandler>();
 builder.Services.AddScoped<UnauthorizedRedirectHandler>();
 builder.Services.AddScoped<ApiErrorHandler>();
@@ -19,37 +24,30 @@ builder.Services.AddScoped<ApiErrorHandler>();
 builder.Services.AddScoped<IErrorDialog, UiErrorDialog>();
 builder.Services.AddScoped<IClientLogger, ClientLogger>();
 
-//// ✅ HttpClientFactory + named client Api
 builder.Services.AddHttpClient("Api", client =>
 {
-    client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress);
+    client.BaseAddress = apiOptions.ResolveBaseAddress(builder.HostEnvironment);
+    client.Timeout = apiOptions.ResolveTimeout();
     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 })
-
 .AddHttpMessageHandler<CorrelationIdHandler>()
 .AddHttpMessageHandler<UnauthorizedRedirectHandler>()
-.AddHttpMessageHandler<ApiErrorHandler>()
-;
+.AddHttpMessageHandler<ApiErrorHandler>();
+
 builder.Services.AddHttpClient("Log", client =>
 {
-    client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress);
+    client.BaseAddress = apiOptions.ResolveBaseAddress(builder.HostEnvironment);
+    client.Timeout = apiOptions.ResolveTimeout();
     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 });
-
-//builder.Services.AddScoped(sp =>sp.GetRequiredService<IHttpClientFactory>().CreateClient("Api"));
 
 builder.Services.AddAuthorizationCore();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddAuthenticationStateDeserialization();
 builder.Services.AddClientServices();
-//builder.Services.AddOidcAuthentication(options =>
-//{
-//    options.UserOptions.RoleClaim = ClaimTypes.Role;
-//});
 
 var host = builder.Build();
 
-// ✅ حماية culture حتى لا يكسر التشغيل لو JS غير موجود
 try
 {
     var js = host.Services.GetRequiredService<IJSRuntime>();
@@ -62,7 +60,7 @@ try
 }
 catch
 {
-    // ignore
+    // Culture bootstrap is best effort because prerender/static hosts may not expose JS yet.
 }
 
 await host.RunAsync();

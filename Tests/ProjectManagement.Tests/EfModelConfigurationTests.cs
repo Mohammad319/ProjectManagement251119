@@ -31,12 +31,20 @@ public sealed class EfModelConfigurationTests
         var project = model.FindEntityType(typeof(ProjectEntity))!;
         var task = model.FindEntityType(typeof(TaskEntity))!;
         var resource = model.FindEntityType(typeof(ResourceEntity))!;
+        var offer = model.FindEntityType(typeof(OfferEntity))!;
+        var tender = model.FindEntityType(typeof(TenderEntity))!;
+        var opportunity = model.FindEntityType(typeof(OpportunityEntity))!;
+        var shareCalc = model.FindEntityType(typeof(ShareCalcEntity))!;
         var status = model.FindEntityType(typeof(StatusEntity))!;
         var taskStatus = model.FindEntityType(typeof(TaskStatusEntity))!;
 
         Assert.NotEmpty(project.GetDeclaredQueryFilters());
         Assert.NotEmpty(task.GetDeclaredQueryFilters());
         Assert.NotEmpty(resource.GetDeclaredQueryFilters());
+        Assert.NotEmpty(offer.GetDeclaredQueryFilters());
+        Assert.NotEmpty(tender.GetDeclaredQueryFilters());
+        Assert.NotEmpty(opportunity.GetDeclaredQueryFilters());
+        Assert.NotEmpty(shareCalc.GetDeclaredQueryFilters());
         Assert.True(project.FindProperty(nameof(AuditableEntity<int>.RowVersion))!.IsConcurrencyToken);
         Assert.Contains(status.GetIndexes(), i => i.IsUnique && HasProperties(i, "TenantId", "Name"));
         Assert.Contains(taskStatus.GetIndexes(), i => i.IsUnique && HasProperties(i, "TenantId", "Name"));

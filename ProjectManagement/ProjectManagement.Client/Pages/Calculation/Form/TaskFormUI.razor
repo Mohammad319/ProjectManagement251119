@@ -706,9 +706,18 @@
 
         SyncMetadataToWrappers();
         if (Task.Id == 0) PostList.Add(TaskUpdate);
-        Statuses = (await Repo.Task.GetAsync()).ToList();
-        if (Calc.Opportunities == null)
-            Calc.Opportunities = await Repo.Opportunity.GetAsync(Calc.Id);
+        var statusTask = Repo.Task.GetAsync();
+        if (Calc.Opportunities is null)
+        {
+            var oppTask = Repo.Opportunity.GetAsync(Calc.Id);
+            await System.Threading.Tasks.Task.WhenAll(statusTask, oppTask);
+            Statuses = statusTask.Result.ToList();
+            Calc.Opportunities = oppTask.Result;
+        }
+        else
+        {
+            Statuses = (await statusTask).ToList();
+        }
     }
 
     void UpdateStatus(TaskListMVVM task)
@@ -911,7 +920,7 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
+            _ = ClientLog.ErrorAsync("TaskForm submit failed", ex: ex);
         }
         Close();
     }

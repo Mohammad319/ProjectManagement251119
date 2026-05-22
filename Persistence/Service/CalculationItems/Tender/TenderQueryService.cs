@@ -11,12 +11,14 @@ namespace Persistence.Service.CalculationItems.Tender
     {
         public async Task<TenderAttributeValuesListDTO> GetTenderListAsync(
             int calculationId,
+            int? departmentId,
             CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var tenders = await context.Tenders
-                .Where(x => x.CalculationId == calculationId)
+                .Where(x => x.CalculationId == calculationId &&
+                    (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value))
                 .AsNoTracking()
                 .Select(x => new TenderListDTO
                 {
@@ -34,7 +36,8 @@ namespace Persistence.Service.CalculationItems.Tender
                 .ToListAsync(ct);
 
             var attributes = await context.AttributeNameTender
-                .Where(x => x.CalculationId == calculationId)
+                .Where(x => x.CalculationId == calculationId &&
+                    (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value))
                 .AsNoTracking()
                 .Select(x => new TenderAttributeListDTO
                 {
@@ -54,12 +57,15 @@ namespace Persistence.Service.CalculationItems.Tender
         public async Task<TenderDetailsDTO?> GetTenderDetailsAsync(
             int tenderId,
             int calculationId,
+            int? departmentId,
             CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             return await context.Tenders
-                .Where(x => x.Id == tenderId && x.CalculationId == calculationId)
+                .Where(x => x.Id == tenderId &&
+                    x.CalculationId == calculationId &&
+                    (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value))
                 .AsNoTracking()
                 .Select(x => new TenderDetailsDTO
                 {

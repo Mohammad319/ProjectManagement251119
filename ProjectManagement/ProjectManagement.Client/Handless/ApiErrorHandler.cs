@@ -1,9 +1,10 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
+using ProjectManagement.Client.Configuration;
 using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Shared.Repositories;
 using ProjectManagement.Client.Shared.ResourceFiles.APP;
-using static ProjectManagement.Client.Shared.ResourceFiles.APP.ResourceApp;
 using ProjectManagement.Shared.Helper;
 using System.Net;
 using System.Text.Json;
@@ -15,8 +16,12 @@ public class ApiErrorHandler(
     IErrorDialog ui,
     IClientLogger clientLogger,
     NavigationManager navigationManager,
-    IStringLocalizer<ResourceErrors> errLoc) : DelegatingHandler
+    IStringLocalizer<ResourceErrors> errLoc,
+    ILogger<ApiErrorHandler> logger,
+    ClientApiOptions options) : DelegatingHandler
 {
+    private const int MaxDialogBodyLength = 300;
+    private const int MaxLogBodyLength = 4_000;
     private DateTime _lastDialogUtc = DateTime.MinValue;
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
@@ -37,12 +42,14 @@ public class ApiErrorHandler(
         catch (HttpRequestException ex)
         {
             ShowOnce(errLoc["networkUnavailableTitle"], errLoc["networkUnavailableMessage"]);
+            logger.LogError(ex, "Network error while calling API {RequestUri}", request.RequestUri);
             _ = clientLogger.ErrorAsync("Network error while calling API", traceId: null, ex: ex);
             throw;
         }
         catch (Exception ex)
         {
             ShowOnce(ResourceApp.error, ResourceApp.AnUnexpectedErrorHasOccurred);
+            logger.LogError(ex, "Unexpected client error while calling API {RequestUri}", request.RequestUri);
             _ = clientLogger.ErrorAsync("Unexpected client error while calling API", traceId: null, ex: ex);
             throw;
         }
@@ -60,6 +67,7 @@ public class ApiErrorHandler(
             if (!AuthRecoveryPathHelper.HasRetryFlag(currentLocalUrl))
             {
                 ShowOnce(errLoc["permissionsTitle"], errLoc["permissionsRefreshMessage"]);
+                logger.LogWarning("Forbidden API response recovered via refresh for {RequestUri}", request.RequestUri);
                 _ = clientLogger.ErrorAsync($"Forbidden (403) recovered via refresh for {request.RequestUri}", traceId: null, ex: null);
                 navigationManager.NavigateTo(AuthRecoveryPathHelper.BuildRefreshUrl(currentLocalUrl), forceLoad: true);
                 return response;
@@ -67,22 +75,28 @@ public class ApiErrorHandler(
 
             ShowOnce(errLoc["permissionsTitle"], errLoc["permissionsDeniedMessage"]);
             var endpoint = request.RequestUri?.ToString() ?? "(unknown-endpoint)";
+            logger.LogWarning("Forbidden API response from {RequestUri}", request.RequestUri);
             _ = clientLogger.ErrorAsync($"Forbidden (403) from API {endpoint}", traceId: null, ex: null);
             return response;
         }
 
-        var contentType = response.Content?.Headers?.ContentType?.MediaType ?? "";
+        var contentType = response.Content?.Headers?.ContentType?.MediaType ?? string.Empty;
         var body = await SafeReadAsync(response, ct);
 
         if (contentType.Contains("application/problem+json", StringComparison.OrdinalIgnoreCase))
         {
-            var pd = TryParseProblemDetails(body);
-            var title = pd?.Title ?? errLoc["requestFailedTitle"];
-            var detail = pd?.Detail ?? errLoc["requestFailedMessage"];
-            var traceId = pd?.TraceId;
+            var problemDetails = TryParseProblemDetails(body);
+            var title = problemDetails?.Title ?? errLoc["requestFailedTitle"];
+            var detail = BuildSafeDialogMessage(problemDetails?.Detail, errLoc["requestFailedMessage"]);
+            var traceId = problemDetails?.TraceId;
 
             ShowOnce(title, detail, traceId);
-            _ = clientLogger.ErrorAsync($"API ProblemDetails: {title}", traceId, new Exception(body));
+            logger.LogWarning(
+                "API ProblemDetails from {RequestUri}. StatusCode: {StatusCode}. TraceId: {TraceId}",
+                request.RequestUri,
+                (int)response.StatusCode,
+                traceId);
+            _ = clientLogger.ErrorAsync($"API ProblemDetails: {title}", traceId, BuildBodyException(body));
 
             return response;
         }
@@ -90,15 +104,25 @@ public class ApiErrorHandler(
         if (LooksLikeHtml(body))
         {
             ShowOnce(errLoc["serverErrorTitle"], errLoc["serverErrorMessage"]);
-            _ = clientLogger.ErrorAsync("API returned HTML error page", traceId: null, new Exception(body));
+            logger.LogWarning("API returned HTML error page from {RequestUri}. StatusCode: {StatusCode}", request.RequestUri, (int)response.StatusCode);
+            _ = clientLogger.ErrorAsync("API returned HTML error page", traceId: null, ex: BuildBodyException(body));
             return response;
         }
 
-        var message = string.IsNullOrWhiteSpace(body) ? errLoc["requestFailedMessage"] : Trim(body, 300);
+        var message = BuildSafeDialogMessage(body, errLoc["requestFailedMessage"]);
         ShowOnce(errLoc["requestFailedTitle"], message);
-        _ = clientLogger.ErrorAsync("API returned non-success response", traceId: null, new Exception(body));
+        logger.LogWarning("API returned non-success response from {RequestUri}. StatusCode: {StatusCode}", request.RequestUri, (int)response.StatusCode);
+        _ = clientLogger.ErrorAsync("API returned non-success response", traceId: null, ex: BuildBodyException(body));
 
         return response;
+    }
+
+    private string BuildSafeDialogMessage(string? detail, string fallback)
+    {
+        if (!options.ShowDetailedErrors || string.IsNullOrWhiteSpace(detail))
+            return fallback;
+
+        return Trim(detail, MaxDialogBodyLength);
     }
 
     private void ShowOnce(string title, string message, string? traceId = null)
@@ -137,6 +161,9 @@ public class ApiErrorHandler(
             || trimmed.StartsWith("<html", StringComparison.OrdinalIgnoreCase)
             || trimmed.Contains("<body", StringComparison.OrdinalIgnoreCase);
     }
+
+    private static Exception? BuildBodyException(string body)
+        => string.IsNullOrWhiteSpace(body) ? null : new Exception(Trim(body, MaxLogBodyLength));
 
     private static string Trim(string value, int max)
         => value.Length <= max ? value : value[..max];

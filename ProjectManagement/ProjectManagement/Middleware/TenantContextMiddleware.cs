@@ -1,10 +1,9 @@
 using Microsoft.Extensions.Primitives;
+using ProjectManagement.Security;
 using ProjectManagement.Services;
 using ProjectManagement.Shared.Constant;
 using System.Net;
 using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace ProjectManagement.Middleware;
 
@@ -60,9 +59,7 @@ public sealed class TenantContextMiddleware(RequestDelegate next, IConfiguration
             if (!context.Request.Headers.TryGetValue("X-Tenant-Secret", out StringValues suppliedSecret))
                 return false;
 
-            var suppliedBytes = Encoding.UTF8.GetBytes(suppliedSecret.ToString());
-            var expectedBytes = Encoding.UTF8.GetBytes(_headerSecret);
-            return CryptographicOperations.FixedTimeEquals(suppliedBytes, expectedBytes);
+            return SecretComparison.FixedTimeEquals(suppliedSecret.ToString(), _headerSecret);
         }
 
         var remoteIp = context.Connection.RemoteIpAddress;

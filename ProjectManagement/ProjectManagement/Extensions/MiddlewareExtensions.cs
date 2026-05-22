@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using ProjectManagement.Configuration;
 using ProjectManagement.Middleware;
+using ProjectManagement.Security;
 using ProjectManagement.Services;
 using Serilog;
 using System.Globalization;
@@ -103,7 +104,7 @@ public static class MiddlewareExtensions
             {
                 var header = req.Headers["X-Tenant-Reload-Secret"].ToString();
 
-                if (header != tenantReloadSecret)
+                if (!SecretComparison.FixedTimeEquals(header, tenantReloadSecret))
                     return Results.Unauthorized();
 
                 await store.ReloadAsync(req.HttpContext.RequestAborted);
@@ -119,7 +120,7 @@ public static class MiddlewareExtensions
             {
                 var header = req.Headers["X-Tenant-Reload-Secret"].ToString();
 
-                if (header != tenantReloadSecret)
+                if (!SecretComparison.FixedTimeEquals(header, tenantReloadSecret))
                     return Results.Unauthorized();
 
                 await store.ReloadTenantAsync(tenantId, req.HttpContext.RequestAborted);
@@ -131,41 +132,9 @@ public static class MiddlewareExtensions
 
         // TenantContext after auth (depends on claims)
         app.UseMiddleware<TenantContextMiddleware>();
+        app.UseMiddleware<AuditLoggingMiddleware>();
 
         app.UseAntiforgery();
-
-        return app;
-    }
-
-    public static WebApplication LogProductionConfigurationWarnings(this WebApplication app, AppConnectionStrings conn)
-    {
-        if (!app.Environment.IsProduction())
-            return app;
-
-        var config = app.Configuration;
-        var warnings = new List<string>();
-
-        if (string.Equals(config["AllowedHosts"], "*", StringComparison.Ordinal))
-            warnings.Add("AllowedHosts is '*'. Restrict this to your production host names.");
-
-        if (!string.IsNullOrWhiteSpace(config["User:Email"]) || !string.IsNullOrWhiteSpace(config["User:Password"]))
-            warnings.Add("User:Email/User:Password are still present in configuration. Move them out of appsettings for production.");
-
-        if (string.Equals(config["TenantReload:Secret"], "dev-only-tenant-reload-secret", StringComparison.Ordinal))
-            warnings.Add("TenantReload:Secret still uses the development placeholder.");
-
-        if (conn.DefaultConnection.Contains(@".\SQLEXPRESS", StringComparison.OrdinalIgnoreCase) ||
-            conn.DefaultConnection.Contains("Encrypt=False", StringComparison.OrdinalIgnoreCase))
-            warnings.Add("Primary connection string still looks like a local/dev SQL configuration (.\\SQLEXPRESS or Encrypt=False).");
-
-        if (string.IsNullOrWhiteSpace(config["DataProtection:KeysPath"]))
-            warnings.Add("DataProtection:KeysPath is missing. Persist keys in production so sign-in cookies survive restarts.");
-
-        if (string.IsNullOrWhiteSpace(config["MailSettings:Host"]))
-            warnings.Add("MailSettings:Host is empty. Account recovery / email flows may fail in production.");
-
-        foreach (var warning in warnings)
-            app.Logger.LogWarning("GoLive warning: {Warning}", warning);
 
         return app;
     }

@@ -40,7 +40,7 @@ namespace Persistence.Service.CalculationItems.ShareCalc
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            if (!await CalculationAndDepartmentExistAsync(context, dto.CalculationId, dto.DepartmentId, ct))
+            if (!await CalculationAndDepartmentExistAsync(context, dto.CalculationId, dto.DepartmentId, fromDepartment, ct))
                 return 0;
 
             var data = dto.ToMetadata();
@@ -95,7 +95,8 @@ namespace Persistence.Service.CalculationItems.ShareCalc
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            if (!await CalculationAndDepartmentExistAsync(context, dto.CalculationId, dto.DepartmentId, ct))
+            if (!departmentId.HasValue ||
+                !await CalculationAndDepartmentExistAsync(context, dto.CalculationId, dto.DepartmentId, departmentId.Value, ct))
                 return 0;
 
             var data = new ShareCalcData { Tabs = dto.ResolveTabs() };
@@ -119,7 +120,8 @@ namespace Persistence.Service.CalculationItems.ShareCalc
             }
 
             var existing = await context.ShareCalc
-                .FirstOrDefaultAsync(x => x.Id == dto.Id.Value, ct);
+                .FirstOrDefaultAsync(x => x.Id == dto.Id.Value &&
+                    x.Calculation.DepartmentId == departmentId.Value, ct);
 
             if (existing is null)
                 return 0;
@@ -148,15 +150,10 @@ namespace Persistence.Service.CalculationItems.ShareCalc
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var entity = await context.ShareCalc
-                .FirstOrDefaultAsync(x => x.Id == id, ct);
+                .FirstOrDefaultAsync(x => x.Id == id &&
+                    (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value), ct);
 
             if (entity is null)
-                return false;
-
-            if (departmentId.HasValue && entity.DepartmentId != departmentId.Value)
-                return false;
-
-            if (userId.HasValue && entity.CreatedBy != userId.Value)
                 return false;
 
             context.ShareCalc.Remove(entity);
@@ -168,6 +165,7 @@ namespace Persistence.Service.CalculationItems.ShareCalc
             ShardingSingleDbContext context,
             int calculationId,
             int departmentId,
+            int sourceDepartmentId,
             CancellationToken ct)
         {
             if (calculationId <= 0 || departmentId <= 0)
@@ -175,7 +173,7 @@ namespace Persistence.Service.CalculationItems.ShareCalc
 
             var calculationExists = await context.Calculations
                 .AsNoTracking()
-                .AnyAsync(x => x.Id == calculationId, ct);
+                .AnyAsync(x => x.Id == calculationId && x.DepartmentId == sourceDepartmentId, ct);
 
             if (!calculationExists)
                 return false;

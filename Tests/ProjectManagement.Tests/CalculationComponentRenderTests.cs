@@ -902,6 +902,7 @@ public class CalculationComponentRenderTests : BunitContext
     {
         Services.AddSingleton<ICalculationTableCoordinator>(coordinator);
         Services.AddSingleton<IStringLocalizer<ResourceApp>>(new FakeStringLocalizer<ResourceApp>());
+        Services.AddSingleton<IStringLocalizer<ResourceStorage>>(new FakeStringLocalizer<ResourceStorage>());
         Services.AddSingleton(calcService);
         Services.AddSingleton(folderState);
         Services.AddSingleton(interactionState);
@@ -917,6 +918,7 @@ public class CalculationComponentRenderTests : BunitContext
         CalculationInteractionState interactionState)
     {
         Services.AddSingleton<IStringLocalizer<ResourceApp>>(new FakeStringLocalizer<ResourceApp>());
+        Services.AddSingleton<IStringLocalizer<ResourceStorage>>(new FakeStringLocalizer<ResourceStorage>());
         Services.AddSingleton(calcService);
         Services.AddSingleton(folderState);
         Services.AddSingleton(interactionState);
@@ -951,6 +953,8 @@ public class CalculationComponentRenderTests : BunitContext
         Services.AddSingleton(taskService);
         Services.AddSingleton(resourceService);
         Services.AddSingleton<ITemplateColumnRepository>(new FakeTemplateColumnRepository());
+        Services.AddSingleton<IStringLocalizer<ResourceApp>>(new FakeStringLocalizer<ResourceApp>());
+        Services.AddSingleton<IStringLocalizer<ResourceStorage>>(new FakeStringLocalizer<ResourceStorage>());
         Services.AddSingleton<IStringLocalizer<CalcResource>>(new FakeStringLocalizer<CalcResource>());
         Services.AddSingleton<ITaskRepository>(new FakeTaskRepository());
         Services.AddSingleton<IResourceTypeRepository>(new FakeResourceTypeRepository());
@@ -962,6 +966,7 @@ public class CalculationComponentRenderTests : BunitContext
         JSInterop.Setup<string?>("localStorage.getItem", _ => true).SetResult(null);
         JSInterop.SetupVoid("localStorage.removeItem", _ => true);
         JSInterop.SetupVoid("localStorage.setItem", _ => true);
+        JSInterop.SetupVoid("clampCalcGridScroll", _ => true);
     }
 
     private static FolderState CreateFolderState(CalculationMVVM calculation)
@@ -1201,6 +1206,8 @@ public class CalculationComponentRenderTests : BunitContext
     private sealed class FakeClientLogger : IClientLogger
     {
         public Task ErrorAsync(string message, string? traceId = null, Exception? ex = null) => Task.CompletedTask;
+        public Task WarnAsync(string message, string? traceId = null) => Task.CompletedTask;
+        public Task InfoAsync(string message, string? traceId = null) => Task.CompletedTask;
     }
 
     private sealed class FakeTemplateRepository : ITemplateRepository

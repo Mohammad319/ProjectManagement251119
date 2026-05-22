@@ -59,7 +59,9 @@ public sealed class GetAllCalculationsByDepartmentQueryHandler(ICalculationQuery
 // ============================================
 
 public sealed record GetCalculationDetailsQuery(
-    int Id
+    int Id,
+    int UserId,
+    int? DepartmentId
 ) : IRequest<CalculationDetailsDTO?>;
 
 public sealed class GetCalculationDetailsQueryHandler(ICalculationQueryService service)
@@ -71,6 +73,8 @@ public sealed class GetCalculationDetailsQueryHandler(ICalculationQueryService s
     {
         return service.GetDetailsAsync(
             request.Id,
+            request.UserId,
+            request.DepartmentId,
             cancellationToken);
     }
 }
@@ -80,7 +84,9 @@ public sealed class GetCalculationDetailsQueryHandler(ICalculationQueryService s
 // ============================================
 
 public sealed record GetCalculationPostQuery(
-    int Id
+    int Id,
+    int UserId,
+    int? DepartmentId
 ) : IRequest<CalculationPostDTO?>;
 
 public sealed class GetCalculationPostQueryHandler(ICalculationQueryService service)
@@ -92,6 +98,8 @@ public sealed class GetCalculationPostQueryHandler(ICalculationQueryService serv
     {
         return service.GetPostModelAsync(
             request.Id,
+            request.UserId,
+            request.DepartmentId,
             cancellationToken);
     }
 }

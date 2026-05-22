@@ -1,6 +1,7 @@
 ﻿using BlazorMHD.UI.Core.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Localization;
+using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Services;
 using ProjectManagement.Client.Shared.ResourceFiles.APP;
 using ProjectManagement.Client.Services.Calculation;
@@ -17,6 +18,7 @@ namespace ProjectManagement.Client.Pages
 
         // 🟩 Common Services
         [Inject] protected DialogService Modal { get; set; } = default!;
+        [Inject] protected IClientLogger ClientLog { get; set; } = default!;
         protected MhdServices MHD => UoWService.Mhd;
         protected CalculationMVVM Calc => Folder?.State?.Calculation ?? default!;
         protected TemplateMVVM Template => Folder?.State?.Calculation?.Template?? default!;

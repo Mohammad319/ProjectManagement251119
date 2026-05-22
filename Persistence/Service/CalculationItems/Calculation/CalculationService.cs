@@ -161,12 +161,14 @@ namespace Persistence.Service.CalculationItems.Calculation
         public async Task<bool> NewOrderAsync(
             int id,
             int newOrder,
+            int? departmentId,
             CancellationToken cancellationToken = default)
         {
             await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
 
             var calculation = await db.Calculations
-                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+                .FirstOrDefaultAsync(x => x.Id == id &&
+                    (!departmentId.HasValue || x.DepartmentId == departmentId.Value), cancellationToken);
             if (calculation is null)
                 return false;
 

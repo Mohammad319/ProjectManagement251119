@@ -7,6 +7,6 @@
 
     public interface ITenderAttributeQueryService
     {
-        Task<List<TenderAttributeListDTO>> GetAttributesAsync(int calculationId,CancellationToken ct = default);
+        Task<List<TenderAttributeListDTO>> GetAttributesAsync(int calculationId, int? departmentId, CancellationToken ct = default);
     }
 }

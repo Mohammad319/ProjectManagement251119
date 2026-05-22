@@ -14,25 +14,25 @@ namespace ProjectManagement.Server.Controllers.v1.SubCalculation
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(int id)
         {
-            return Ok(await MicroBus.Send(new GetOpportunitiesQuery(id)));
+            return Ok(await MicroBus.Send(new GetOpportunitiesQuery(id, GetDepartmentId())));
         }
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpPost("{CalculationId}")]
         public async Task<IActionResult> Post(int CalculationId, PostOpportunityDTO dto)
         {
-            return Ok(await MicroBus.Send(new CreateOpportunityCommand(dto, CalculationId)));
+            return Ok(await MicroBus.Send(new CreateOpportunityCommand(dto, CalculationId, GetDepartmentId())));
         }
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, PostOpportunityDTO dto)
         {
-            return Ok(await MicroBus.Send(new UpdateOpportunityCommand(dto, id)));
+            return Ok(await MicroBus.Send(new UpdateOpportunityCommand(dto, id, GetDepartmentId())));
         }
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            return Ok(await MicroBus.Send(new DeleteOpportunityCommand(id)));
+            return Ok(await MicroBus.Send(new DeleteOpportunityCommand(id, GetDepartmentId())));
         }
     }
 }

@@ -24,7 +24,15 @@
       "Bash(Get-ChildItem *)",
       "Bash(grep -r \"@attribute \\\\[Authorize\\\\]$\" --include=\"*.razor\")",
       "Bash(grep -E \"\\\\$|^\\\\s*['\\\\\"]api/.*\\\\{|PutAsync|PostAsync|GetAsync|DeleteAsync\")",
-      "Bash(grep -r \"\\\\$\\\\\".*\\(\" \"C:\\\\Users\\\\engmo\\\\Desktop\\\\PM\\\\b07\\\\ProjectManagement251119\\\\ProjectManagement\\\\ProjectManagement\" --include=\"*.cs\")"
+      "Bash(grep -r \"\\\\$\\\\\".*\\(\" \"C:\\\\Users\\\\engmo\\\\Desktop\\\\PM\\\\b07\\\\ProjectManagement251119\\\\ProjectManagement\\\\ProjectManagement\" --include=\"*.cs\")",
+      "Bash(grep -E \"\\\\.cs$|\\\\.razor$\")",
+      "Bash(xargs -0 wc -l)",
+      "Bash(grep -v \"//\")",
+      "Bash(grep -r \"class TenantEntity\" \"C:\\\\Users\\\\engmo\\\\Desktop\\\\PM\\\\b07\\\\ProjectManagement251119\" ! -path \"*/obj/*\" ! -path \"*/bin/*\")",
+      "Bash(xargs ls *)",
+      "Bash(git -C \"C:/Users/engmo/Desktop/PM/b07/ProjectManagement251119\" log --oneline --follow -- \"ProjectManagement/ProjectManagement/Components/ControlComponents/Template/NelCalculationTemplate2.razor\")",
+      "Bash(git -C \"C:/Users/engmo/Desktop/PM/b07/ProjectManagement251119\" show 19643b2d -- \"ProjectManagement/ProjectManagement/Components/ControlComponents/Template/NelCalculationTemplate2.razor\")",
+      "Bash(git -C \"C:/Users/engmo/Desktop/PM/b07/ProjectManagement251119\" show 19643b2d -- \"ProjectManagement/ProjectManagement/Components/ControlComponents/Template/SummarySheetTemplate.razor\")"
     ]
   }
 }

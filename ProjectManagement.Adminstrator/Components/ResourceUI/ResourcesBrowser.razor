@@ -6,6 +6,7 @@
 @using TaskResourceBlueprints.Services.Resource
 @using ProjectManagement.Adminstrator.Components.Folder
 @using ProjectManagement.Adminstrator.Helper
+@attribute [Authorize(Roles = PMRolesConst.APP.AdminManger)]
 @inherits AppComponentBase
 @using ProjectManagement.Shared.Enums
 @inject IResourceCategoryService ResourceFolderService

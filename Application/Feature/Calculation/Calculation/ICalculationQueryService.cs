@@ -20,10 +20,14 @@ namespace Application.Feature.Calculation.Calculation
 
         Task<CalculationDetailsDTO?> GetDetailsAsync(
             int id,
+            int userId,
+            int? departmentId,
             CancellationToken cancellationToken = default);
 
         Task<CalculationPostDTO?> GetPostModelAsync(
             int id,
+            int userId,
+            int? departmentId,
             CancellationToken cancellationToken = default);
 
         Task<CalculationPageDTO?> GetPageAsync(

@@ -33,8 +33,8 @@ builder.Services.AddProjectManagementApp(builder, conn);
 var app = builder.Build();
 
 
-// Surface production-safety warnings early in the logs.
-app.LogProductionConfigurationWarnings(conn);
+// Fail fast on unsafe production configuration before database/bootstrap work starts.
+app.ValidateDeploymentSafety();
 
 // Ensure AuthPermissions schema/roles are initialized before hosted services start querying tenants.
 await app.InitializeAuthPermissionsAsync();

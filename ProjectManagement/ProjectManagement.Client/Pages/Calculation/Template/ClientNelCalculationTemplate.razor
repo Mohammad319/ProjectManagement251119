@@ -1,0 +1,137 @@
+@using ProjectManagement.Client.Constant
+@using ProjectManagement.Client.Shared.ResourceFiles.APP
+@using ProjectManagement.Shared.Constants
+@using ProjectManagement.Shared.DTO.Calculation.Template
+@inherits AppComponentBase
+
+@if (Temp != null)
+{
+    <div class="overflow-x-auto">
+        <div class="flex @(ShowColumnSettings ? "min-w-[1100px]" : "min-w-full") items-start gap-2">
+            <section class="@SettingsSectionClass">
+                <div class="border-b border-slate-200 px-2 py-1 dark:border-slate-700">
+                    <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                        @AppLoc["appearance"]
+                    </h3>
+                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                        @AppLoc["tableColorsAndBorderStyle"]
+                    </p>
+                </div>
+
+                <div class="max-h-[65vh] overflow-auto p-2">
+                    <div class="@SettingsGridClass">
+                        <div class="space-y-1">
+                            <label class="block text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                                @AppFormatResource.borderType
+                            </label>
+                            <select @bind="Temp.NetCalc.Color.BorderStyle" class="@SelectInputClass">
+                                @foreach (var item in TemplateConst.BorderStyles)
+                                {
+                                    <option value="@item">@item</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="@ColorGridClass">
+                            <div class="@ColorRowClass">
+                                <label class="@ColorLabelClass">@AppFormatResource.bolder</label>
+                                <input type="color" class="@ColorInputClass" @bind="Temp.NetCalc.Color.Border" />
+                            </div>
+
+                            <div class="@ColorRowClass">
+                                <label class="@ColorLabelClass">@AppFormatResource.font</label>
+                                <input type="color" class="@ColorInputClass" @bind="Temp.NetCalc.Color.Text" />
+                            </div>
+
+                            <div class="@ColorRowClass">
+                                <label class="@ColorLabelClass">Inactive font</label>
+                                <input type="color" class="@ColorInputClass" @bind="Temp.NetCalc.Color.InactiveText" />
+                            </div>
+
+                            <div class="@ColorRowClass">
+                                <label class="@ColorLabelClass">@ResourceApp.header</label>
+                                <input type="color" class="@ColorInputClass" @bind="Temp.NetCalc.Color.Header" />
+                            </div>
+
+                            <div class="@ColorRowClass">
+                                <label class="@ColorLabelClass">@ResourceLoc.task</label>
+                                <input type="color" class="@ColorInputClass" @bind="Temp.NetCalc.Color.Task" />
+                            </div>
+
+                            <div class="@ColorRowClass">
+                                <label class="@ColorLabelClass">OnlyCodeText task</label>
+                                <input type="color" class="@ColorInputClass" @bind="Temp.NetCalc.Color.TaskCodeName" />
+                            </div>
+
+                            <div class="@ColorRowClass">
+                                <label class="@ColorLabelClass">@ResourceLoc.SubTask</label>
+                                <input type="color" class="@ColorInputClass" @bind="Temp.NetCalc.Color.SubTask" />
+                            </div>
+
+                            <div class="@ColorRowClass">
+                                <label class="@ColorLabelClass">BaseQuantity row</label>
+                                <input type="color" class="@ColorInputClass" @bind="Temp.NetCalc.Color.TaskDetailBaseQuantity" />
+                            </div>
+
+                            <div class="@ColorRowClass">
+                                <label class="@ColorLabelClass">@ResourceLoc.resource</label>
+                                <input type="color" class="@ColorInputClass" @bind="Temp.NetCalc.Color.Resource" />
+                            </div>
+
+                            <div class="@ColorRowClass">
+                                <label class="@ColorLabelClass">Quantity-driving factor</label>
+                                <input type="color" class="@ColorInputClass" @bind="Temp.NetCalc.Color.ResourceParameter" />
+                            </div>
+
+                            <div class="@ColorRowClass">
+                                <label class="@ColorLabelClass">Add-ons / Attachments</label>
+                                <input type="color" class="@ColorInputClass" @bind="Temp.NetCalc.Color.ResourceAttachment" />
+                            </div>
+
+                            <div class="@ColorRowClass">
+                                <label class="@ColorLabelClass">Breakdown of hours</label>
+                                <input type="color" class="@ColorInputClass" @bind="Temp.NetCalc.Color.ResourceTime" />
+                            </div>
+
+                            <div class="@ColorRowClass">
+                                <label class="@ColorLabelClass">@CalcResource.note</label>
+                                <input type="color" class="@ColorInputClass" @bind="Temp.NetCalc.Color.Note" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public TemplateListPostDTO Temp { get; set; } = new();
+    [Parameter] public bool ShowColumnSettings { get; set; } = true;
+
+    private const string SelectInputClass =
+        "h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-[12px] text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white";
+
+    private const string ColorRowClass =
+        "flex min-h-9 items-center justify-between gap-2 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 dark:border-slate-700 dark:bg-slate-800/70";
+
+    private const string ColorLabelClass =
+        "truncate text-[11px] font-medium text-slate-700 dark:text-slate-200";
+
+    private const string ColorInputClass =
+        "h-7 w-10 shrink-0 rounded border border-slate-300 bg-transparent p-0.5 dark:border-slate-600";
+
+    private string SettingsSectionClass =>
+        (ShowColumnSettings ? "w-[360px] flex-none" : "min-w-0 flex-1") +
+        " overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900";
+
+    private string SettingsGridClass =>
+        ShowColumnSettings
+            ? "grid grid-cols-1 gap-2"
+            : "grid grid-cols-1 gap-2 lg:grid-cols-[220px_minmax(0,1fr)]";
+
+    private string ColorGridClass =>
+        ShowColumnSettings
+            ? "grid grid-cols-2 gap-1"
+            : "grid grid-cols-2 gap-1 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-6";
+}

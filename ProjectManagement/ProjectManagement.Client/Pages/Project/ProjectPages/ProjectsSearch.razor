@@ -281,10 +281,8 @@
     {
         IsLoading = true;
         StateHasChanged();
-
-        projects = await Repo.Project.FilterAsync(projectFilter);
-
-        IsLoading = false;
+        try { projects = await Repo.Project.FilterAsync(projectFilter); }
+        finally { IsLoading = false; }
     }
 
     async Task ProjectSelected(SearchProjectsMVVM pro)
@@ -304,7 +302,7 @@
     protected override async Task OnInitializedAsync()
     {
         IsLoading = true;
-        Customers = await Repo.Org.GetVisibleOrIdAsync();
-        IsLoading = false;
+        try { Customers = await Repo.Org.GetVisibleOrIdAsync(); }
+        finally { IsLoading = false; }
     }
 }

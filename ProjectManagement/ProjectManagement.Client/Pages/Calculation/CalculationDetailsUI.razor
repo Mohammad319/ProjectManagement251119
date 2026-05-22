@@ -523,17 +523,22 @@
             return;
 
         IsLoading = true;
+        try
+        {
+            var calculationTask = Repo.Calculation.DetailsAsync(Id);
+            var projectTask = LoadProjectAsync(effectiveProjectId);
 
-        var calculationTask = Repo.Calculation.DetailsAsync(Id);
-        var projectTask = LoadProjectAsync(effectiveProjectId);
+            await Task.WhenAll(calculationTask, projectTask);
 
-        await Task.WhenAll(calculationTask, projectTask);
-
-        CalculationInfo = await calculationTask;
-        ProjectInfo = await projectTask;
-        _loadedCalculationId = Id;
-        _loadedProjectId = effectiveProjectId;
-        IsLoading = false;
+            CalculationInfo = await calculationTask;
+            ProjectInfo = await projectTask;
+            _loadedCalculationId = Id;
+            _loadedProjectId = effectiveProjectId;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 
     private void ResetState()

@@ -28,6 +28,7 @@ namespace Persistence.Service.CalculationItems.Calculation
                 .Where(x => !x.IsDeleted &&
                     x.ProjectId == projectId &&
                     x.IsVisible == isVisible &&
+                    (!departmentId.HasValue || x.Project.Folder.DepartmentId == departmentId.Value || x.CreatedBy == userId) &&
                     (!x.IsPrivate || x.CreatedBy == userId))
                 .OrderBy(x => x.SortOrder)
                 .Select(ListCalculationProjection)
@@ -72,6 +73,8 @@ namespace Persistence.Service.CalculationItems.Calculation
 
         public async Task<CalculationDetailsDTO?> GetDetailsAsync(
             int id,
+            int userId,
+            int? departmentId,
             CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
@@ -82,7 +85,9 @@ namespace Persistence.Service.CalculationItems.Calculation
                 .Include(x => x.Contract)
                 .Include(x => x.ProcurementMethods)
                 .Include(x => x.Type)
-                .Where(x => x.Id == id)
+                .Where(x => x.Id == id &&
+                    (!departmentId.HasValue || x.Project.Folder.DepartmentId == departmentId.Value || x.CreatedBy == userId) &&
+                    (!x.IsPrivate || x.CreatedBy == userId))
                 .FirstOrDefaultAsync(ct);
 
             return calculation?.ToDetailsDto();
@@ -90,13 +95,17 @@ namespace Persistence.Service.CalculationItems.Calculation
 
         public async Task<CalculationPostDTO?> GetPostModelAsync(
             int id,
+            int userId,
+            int? departmentId,
             CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var calculation = await context.Calculations
                 .AsNoTracking()
-                .Where(x => x.Id == id)
+                .Where(x => x.Id == id &&
+                    (!departmentId.HasValue || x.Project.Folder.DepartmentId == departmentId.Value || x.CreatedBy == userId) &&
+                    (!x.IsPrivate || x.CreatedBy == userId))
                 .FirstOrDefaultAsync(ct);
 
             return calculation?.ToPostDto();

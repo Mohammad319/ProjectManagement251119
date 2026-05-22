@@ -2,10 +2,6 @@
 {
     public class ConstValues
     {
-        // التوكنات
-        public const string Token = "authToken";
-        public const string RefreshToken = "rt";
-
         // الصفحات
         public const string CalculationPage = "CalculationPage";
         public const string ProjectPage = "ProjectPage";

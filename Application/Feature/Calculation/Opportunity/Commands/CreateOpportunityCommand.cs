@@ -5,7 +5,7 @@ using ProjectManagement.Shared.DTO.Calculation;
 namespace Application.Feature.Calculation.Opportunity.Commands
 {
     // CREATE
-    public sealed record CreateOpportunityCommand(PostOpportunityDTO Dto, int CalculationId) : IRequest<int>;
+    public sealed record CreateOpportunityCommand(PostOpportunityDTO Dto, int CalculationId, int? DepartmentId) : IRequest<int>;
 
     public sealed class CreateOpportunityCommandHandler
         : IRequestHandler<CreateOpportunityCommand, int>
@@ -18,11 +18,11 @@ namespace Application.Feature.Calculation.Opportunity.Commands
         }
 
         public Task<int> Handle(CreateOpportunityCommand request, CancellationToken ct)
-            => _service.CreateAsync(request.Dto, request.CalculationId, ct);
+            => _service.CreateAsync(request.Dto, request.CalculationId, request.DepartmentId, ct);
     }
 
     // UPDATE
-    public sealed record UpdateOpportunityCommand(PostOpportunityDTO Dto, int Id) : IRequest<bool>;
+    public sealed record UpdateOpportunityCommand(PostOpportunityDTO Dto, int Id, int? DepartmentId) : IRequest<bool>;
 
     public sealed class UpdateOpportunityCommandHandler
         : IRequestHandler<UpdateOpportunityCommand, bool>
@@ -35,11 +35,11 @@ namespace Application.Feature.Calculation.Opportunity.Commands
         }
 
         public Task<bool> Handle(UpdateOpportunityCommand request, CancellationToken ct)
-            => _service.UpdateAsync(request.Id, request.Dto, ct);
+            => _service.UpdateAsync(request.Id, request.Dto, request.DepartmentId, ct);
     }
 
     // DELETE
-    public sealed record DeleteOpportunityCommand(int Id) : IRequest<bool>;
+    public sealed record DeleteOpportunityCommand(int Id, int? DepartmentId) : IRequest<bool>;
 
     public sealed class DeleteOpportunityCommandHandler
         : IRequestHandler<DeleteOpportunityCommand, bool>
@@ -52,6 +52,6 @@ namespace Application.Feature.Calculation.Opportunity.Commands
         }
 
         public Task<bool> Handle(DeleteOpportunityCommand request, CancellationToken ct)
-            => _service.DeleteAsync(request.Id, ct);
+            => _service.DeleteAsync(request.Id, request.DepartmentId, ct);
     }
 }

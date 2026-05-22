@@ -12,13 +12,14 @@ namespace Persistence.Service.Offer
 {
     public sealed class OfferService(IDbContextFactoryTenant dbFactory, INotificationHub hub) : IOfferService
     {
-        public async Task<int> CreateAsync(PostOfferDTO dto, CancellationToken ct = default)
+        public async Task<int> CreateAsync(PostOfferDTO dto, int? departmentId, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var resourceExists = await context.Resources
                 .AsNoTracking()
-                .AnyAsync(x => x.Id == dto.ResourceId, ct);
+                .AnyAsync(x => x.Id == dto.ResourceId &&
+                    (!departmentId.HasValue || x.Task.Calculation.DepartmentId == departmentId.Value), ct);
 
             if (!resourceExists)
                 return 0;
@@ -51,11 +52,13 @@ namespace Persistence.Service.Offer
             return entity.Id;
         }
 
-        public async Task<bool> UpdateAsync(int id, PostOfferDTO dto, CancellationToken ct = default)
+        public async Task<bool> UpdateAsync(int id, PostOfferDTO dto, int? departmentId, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            var entity = await context.Offers.FirstOrDefaultAsync(x => x.Id == id, ct);
+            var entity = await context.Offers
+                .FirstOrDefaultAsync(x => x.Id == id &&
+                    (!departmentId.HasValue || x.Resource.Task.Calculation.DepartmentId == departmentId.Value), ct);
             if (entity is null)
                 return false;
 
@@ -94,14 +97,15 @@ namespace Persistence.Service.Offer
             return true;
         }
 
-        public async Task<bool> DeleteAsync(int id, CancellationToken ct = default)
+        public async Task<bool> DeleteAsync(int id, int? departmentId, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var offer = await context.Offers
                 .Include(x => x.Resource)
                 .ThenInclude(x => x.Task)
-                .FirstOrDefaultAsync(x => x.Id == id, ct);
+                .FirstOrDefaultAsync(x => x.Id == id &&
+                    (!departmentId.HasValue || x.Resource.Task.Calculation.DepartmentId == departmentId.Value), ct);
 
             if (offer is null)
                 return false;
@@ -118,13 +122,14 @@ namespace Persistence.Service.Offer
             return true;
         }
 
-        public async Task<bool> SetPrimaryOfferAsync(int resourceId, int? offerId, CancellationToken ct = default)
+        public async Task<bool> SetPrimaryOfferAsync(int resourceId, int? offerId, int? departmentId, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var resource = await context.Resources
                 .Include(x => x.Offers)
-                .FirstOrDefaultAsync(x => x.Id == resourceId, ct);
+                .FirstOrDefaultAsync(x => x.Id == resourceId &&
+                    (!departmentId.HasValue || x.Task.Calculation.DepartmentId == departmentId.Value), ct);
 
             if (resource is null)
                 return false;
@@ -171,7 +176,7 @@ namespace Persistence.Service.Offer
             return true;
         }
 
-        public async Task<bool> CalcAvgOfferAsync(int calcId, int organisationId, double avg, CancellationToken ct = default)
+        public async Task<bool> CalcAvgOfferAsync(int calcId, int organisationId, double avg, int? departmentId, CancellationToken ct = default)
         {
             if (double.IsNaN(avg) || double.IsInfinity(avg))
                 return false;
@@ -179,7 +184,9 @@ namespace Persistence.Service.Offer
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var offers = await context.Offers
-                .Where(x => x.OrganisationId == organisationId && x.Resource.Task.CalculationId == calcId)
+                .Where(x => x.OrganisationId == organisationId &&
+                    x.Resource.Task.CalculationId == calcId &&
+                    (!departmentId.HasValue || x.Resource.Task.Calculation.DepartmentId == departmentId.Value))
                 .ToListAsync(ct);
 
             if (offers.Count == 0)
@@ -196,7 +203,9 @@ namespace Persistence.Service.Offer
 
             var result = await context.Offers
                 .AsNoTracking()
-                .Where(x => x.OrganisationId == organisationId && x.Resource.Task.CalculationId == calcId)
+                .Where(x => x.OrganisationId == organisationId &&
+                    x.Resource.Task.CalculationId == calcId &&
+                    (!departmentId.HasValue || x.Resource.Task.Calculation.DepartmentId == departmentId.Value))
                 .Select(OfferDtoMapper.ProjectListDto())
                 .ToListAsync(ct);
 
@@ -204,11 +213,14 @@ namespace Persistence.Service.Offer
             return true;
         }
 
-        public async Task<List<ListOfferCalcInfo>> GetByFilterAsync(OfferFilterDTO f, CancellationToken ct = default)
+        public async Task<List<ListOfferCalcInfo>> GetByFilterAsync(OfferFilterDTO f, int? departmentId, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             IQueryable<OfferEntity> q = context.Offers.AsNoTracking();
+
+            if (departmentId.HasValue)
+                q = q.Where(x => x.Resource.Task.Calculation.DepartmentId == departmentId.Value);
 
             if (f.CalculationID > 0)
                 q = q.Where(x => x.Resource.Task.CalculationId == f.CalculationID);

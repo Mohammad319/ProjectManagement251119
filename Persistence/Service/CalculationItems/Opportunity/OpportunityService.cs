@@ -9,24 +9,26 @@ namespace Persistence.Service.CalculationItems.Opportunity
 {
     public sealed class OpportunityService(IDbContextFactoryTenant dbFactory, INotificationHub notification) : IOpportunityService
     {
-        public async Task<List<OpportunityListDTO>> GetByCalculationAsync(int calculationId, CancellationToken ct = default)
+        public async Task<List<OpportunityListDTO>> GetByCalculationAsync(int calculationId, int? departmentId, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
             var entities = await context.Opportunity
-                .Where(x => x.CalculationId == calculationId)
+                .Where(x => x.CalculationId == calculationId &&
+                    (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value))
                 .AsNoTracking()
                 .OrderByDescending(x => x.Id)
                 .ToListAsync(ct);
             return entities.Select(x => x.ToListDto()).ToList();
         }
 
-        public async Task<int> CreateAsync(PostOpportunityDTO dto, int calculationId, CancellationToken ct = default)
+        public async Task<int> CreateAsync(PostOpportunityDTO dto, int calculationId, int? departmentId, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var calculationExists = await context.Calculations
                 .AsNoTracking()
-                .AnyAsync(x => x.Id == calculationId, ct);
+                .AnyAsync(x => x.Id == calculationId &&
+                    (!departmentId.HasValue || x.DepartmentId == departmentId.Value), ct);
 
             if (!calculationExists)
                 return 0;
@@ -49,10 +51,12 @@ namespace Persistence.Service.CalculationItems.Opportunity
             return entity.Id;
         }
 
-        public async Task<bool> UpdateAsync(int id, PostOpportunityDTO dto, CancellationToken ct = default)
+        public async Task<bool> UpdateAsync(int id, PostOpportunityDTO dto, int? departmentId, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
-            var entity = await context.Opportunity.FirstOrDefaultAsync(x => x.Id == id, ct);
+            var entity = await context.Opportunity
+                .FirstOrDefaultAsync(x => x.Id == id &&
+                    (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value), ct);
 
             if (entity is null)
                 return false;
@@ -73,16 +77,23 @@ namespace Persistence.Service.CalculationItems.Opportunity
             return true;
         }
 
-        public async Task<bool> DeleteAsync(int id, CancellationToken ct = default)
+        public async Task<bool> DeleteAsync(int id, int? departmentId, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
             var opp = await context.Opportunity
-                .FirstOrDefaultAsync(x => x.Id == id, ct);
+                .FirstOrDefaultAsync(x => x.Id == id &&
+                    (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value), ct);
             if (opp is null)
                 return false;
 
-            var tasks = await context.Tasks.Where(x => x.OpportunityId == opp.Id).ToListAsync(ct);
-            var resources = await context.Resources.Where(x => x.OpportunityId == opp.Id).ToListAsync(ct);
+            var tasks = await context.Tasks
+                .Where(x => x.OpportunityId == opp.Id && x.CalculationId == opp.CalculationId)
+                .ToListAsync(ct);
+
+            var taskIds = tasks.Select(t => t.Id).ToHashSet();
+            var resources = await context.Resources
+                .Where(x => x.OpportunityId == opp.Id && taskIds.Contains(x.TaskId))
+                .ToListAsync(ct);
 
             foreach (var task in tasks)
                 task.SetOpportunity(null);

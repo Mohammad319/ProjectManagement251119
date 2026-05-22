@@ -540,7 +540,11 @@ public class TaskResourceSuggestionServiceScoreTests
             SwedishTaskTextNormalizer.Normalize(targetName),
             candidateName,
             targetCodeDepth,
-            candidateCodeDepth
+            candidateCodeDepth,
+            string.Empty,
+            string.Empty,
+            null,
+            null
         ])!;
     }
 

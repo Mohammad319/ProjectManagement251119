@@ -86,8 +86,9 @@ namespace ProjectManagement.Client.Pages.Offer
             Projects = null;
             if (id.HasValue)
             {
-                Projects = await Repo.Project.GetByFolderIdAsync(id.Value);
-                Projects ??= await Repo.Project.GetOtherDepartmentAsync(id.Value);
+                Projects = Folder.State.OtherDepartment
+                    ? await Repo.Project.GetOtherDepartmentAsync(id.Value)
+                    : await Repo.Project.GetByFolderIdAsync(id.Value);
             }
         }
 

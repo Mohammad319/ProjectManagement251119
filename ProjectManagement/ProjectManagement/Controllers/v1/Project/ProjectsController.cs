@@ -45,19 +45,19 @@ namespace ProjectManagement.Server.Controllers.v1
         [HttpGet(URLConst.Details + "/{id}")]
         public async Task<IActionResult> Details(Guid id)
         {
-            return Ok(await MicroBus.Send(new GetProjectDetailsQuery(id )));
+            return Ok(await MicroBus.Send(new GetProjectDetailsQuery(id, GetUserId(), GetDepartmentId())));
         }
         [Authorize(Roles = Tenant.AdminManger)]
         [HttpGet(URLConst.Project.GetProjectPost + "/{id}")]
         public async Task<IActionResult> GetToPost(Guid id)
         {
-            return Ok(await MicroBus.Send(new GetProjectPostQuery(id )));
+            return Ok(await MicroBus.Send(new GetProjectPostQuery(id, GetUserId(), GetDepartmentId())));
         }
         [Authorize(Roles = Tenant.AdminManger)]
         [HttpGet(URLConst.ReOrder + "/{Id}/{NewOrder}")]
         public async Task<IActionResult> ReOrder(Guid Id, int NewOrder)
         {
-            return Ok(await MicroBus.Send(new NewOrderProjectCommand(Id, NewOrder )));
+            return Ok(await MicroBus.Send(new NewOrderProjectCommand(Id, NewOrder, GetDepartmentId())));
         }
         [Authorize(Roles = Tenant.AdminManger)]
         [HttpPost]

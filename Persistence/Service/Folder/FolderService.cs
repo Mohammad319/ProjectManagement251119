@@ -76,11 +76,12 @@ namespace Persistence.Service.Folder
             return true;
         }
 
-        public async Task<bool> UpdateOrderAsync(Guid id, int newOrder, CancellationToken ct = default)
+        public async Task<bool> UpdateOrderAsync(Guid id, int newOrder, int? departmentId, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
             var folder = await context.Folders
-                .FirstOrDefaultAsync(x => x.Id == id, ct);
+                .FirstOrDefaultAsync(x => x.Id == id &&
+                    (!departmentId.HasValue || x.DepartmentId == departmentId.Value), ct);
             if (folder == null) return false;
 
             folder.UpdateOrder(newOrder);
@@ -145,12 +146,13 @@ namespace Persistence.Service.Folder
                 .ToListAsync(ct);
         }
 
-        public async Task<DetailsFolderDTO?> GetDetailsAsync(Guid id, CancellationToken ct = default)
+        public async Task<DetailsFolderDTO?> GetDetailsAsync(Guid id, int? departmentId, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
             return await context.Folders
                 .AsNoTracking()
-                .Where(x => x.Id == id)
+                .Where(x => x.Id == id &&
+                    (!departmentId.HasValue || x.DepartmentId == departmentId.Value))
                 .Select(x => new DetailsFolderDTO
                 {
                     Name = x.Name,

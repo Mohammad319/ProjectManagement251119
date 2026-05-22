@@ -118,9 +118,9 @@ else
     {
         if (Form is null) return;
         if (Tab == 1)
-            __builder.AddContent(0, (RenderFragment)(b => b.AddContent(0, @<NelCalculationTemplate2 Temp="Form" ShowColumnSettings="false" />)));
+            __builder.AddContent(0, (RenderFragment)(b => b.AddContent(0, @<ClientNelCalculationTemplate Temp="Form" ShowColumnSettings="false" />)));
         else if (Tab == 3)
-            __builder.AddContent(1, @<SummarySheetTemplate Temp="Form" />);
+            __builder.AddContent(1, @<ClientSummarySheetTemplate Temp="Form" />);
     };
 
     List<TemplateMVVM> List = [];
@@ -142,8 +142,6 @@ else
 
     protected async override Task OnInitializedAsync()
     {
-        Console.WriteLine("TemplateSetDefaultUI OnInitializedAsync");
-
         List = await Repo.Template.GetAsync() ?? [];
         if ((List == null || !List.Any()))
         {
@@ -152,7 +150,6 @@ else
         else if (Calc.TemplateId > 0)
         {
             int? userDepartmentId = await GetUserDepartmentIdAsync();
-            Console.WriteLine(userDepartmentId + "--" + Calc.Template?.DepartmentId);
             if (Calc.Template?.DepartmentId == userDepartmentId)
             {
                 TemplateListPostDTO zzz = new();
@@ -184,7 +181,7 @@ else
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
+            _ = ClientLog.ErrorAsync("TemplateSetDefault submit failed", ex: ex);
         }
 
         dialogService.Close();

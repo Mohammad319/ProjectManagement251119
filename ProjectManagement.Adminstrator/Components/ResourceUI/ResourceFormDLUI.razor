@@ -8,6 +8,7 @@
 @using ProjectManagement.Shared.Enums
 @using ProjectManagement.Shared.Base.Calculation
 @inject IResourceBlueprintsService ResourceService
+@attribute [Authorize(Roles = PMRolesConst.APP.AdminSuperManger)]
 @inherits AppComponentBase
 
 <div class="space-y-3">

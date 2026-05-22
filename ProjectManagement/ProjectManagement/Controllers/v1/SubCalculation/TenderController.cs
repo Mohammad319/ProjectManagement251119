@@ -14,28 +14,28 @@ namespace ProjectManagement.Server.Controllers.v1.SubCalculation
         [HttpGet(URLConst.Details + "/{id}/{calculationId}")]
         public async Task<IActionResult> Details(int id, int calculationId)
         {
-            return Ok(await MicroBus.Send(new GetTenderDetailsQuery(id, calculationId)));
+            return Ok(await MicroBus.Send(new GetTenderDetailsQuery(id, calculationId, GetDepartmentId())));
         }
 
         [Authorize(Roles = PMRolesConst.Tenant.Users)]
         [HttpGet(URLConst.GetAll + "/{calculationId}")]
         public async Task<IActionResult> GetAll(int calculationId)
         {
-            return Ok(await MicroBus.Send(new GetTenderListQuery(calculationId)));
+            return Ok(await MicroBus.Send(new GetTenderListQuery(calculationId, GetDepartmentId())));
         }
 
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpPost("{calculationId}/{companyId}")]
         public async Task<IActionResult> Create(int calculationId, int companyId, TenderPostDTO dto)
         {
-            return Ok(await MicroBus.Send(new CreateTenderCommand(dto, calculationId, companyId)));
+            return Ok(await MicroBus.Send(new CreateTenderCommand(dto, calculationId, companyId, GetDepartmentId())));
         }
 
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpPost(URLConst.Tender.Attribute + "/{calculationId}")]
         public async Task<IActionResult> Create(int calculationId, TenderAttributeListPostDTO dto)
         {
-            return Ok(await MicroBus.Send(new CreateTenderAttributeCommand(dto, calculationId)));
+            return Ok(await MicroBus.Send(new CreateTenderAttributeCommand(dto, calculationId, GetDepartmentId())));
         }
 
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
@@ -45,35 +45,35 @@ namespace ProjectManagement.Server.Controllers.v1.SubCalculation
             int AttributeId,
             [FromRoute(Name = "val")] decimal AttrValue)
         {
-            return Ok(await MicroBus.Send(new UpdateTenderAttributeBindCommand(TenderId, AttributeId, AttrValue)));
+            return Ok(await MicroBus.Send(new UpdateTenderAttributeBindCommand(TenderId, AttributeId, AttrValue, GetDepartmentId())));
         }
 
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpPut("{id}/{calculationId}")]
         public async Task<IActionResult> Update(int id, int calculationId, TenderPostDTO dto)
         {
-            return Ok(await MicroBus.Send(new UpdateTenderCommand(dto, id, calculationId)));
+            return Ok(await MicroBus.Send(new UpdateTenderCommand(dto, id, calculationId, GetDepartmentId())));
         }
 
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpPut(URLConst.Tender.Attribute + "/{id}/{calculationId}")]
         public async Task<IActionResult> Update(int id, int calculationId, TenderAttributePostDTO dto)
         {
-            return Ok(await MicroBus.Send(new UpdateTenderAttributeCommand(dto, id, calculationId)));
+            return Ok(await MicroBus.Send(new UpdateTenderAttributeCommand(dto, id, calculationId, GetDepartmentId())));
         }
 
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpDelete("{id}/{calculationId}")]
         public async Task<IActionResult> Delete(int id, int calculationId)
         {
-            return Ok(await MicroBus.Send(new DeleteTenderCommand(id, calculationId)));
+            return Ok(await MicroBus.Send(new DeleteTenderCommand(id, calculationId, GetDepartmentId())));
         }
 
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpDelete(URLConst.Tender.Attribute + "/{id}/{calculationId}")]
         public async Task<IActionResult> DeleteAttribute(int id, int calculationId)
         {
-            return Ok(await MicroBus.Send(new DeleteTenderAttributeCommand(id, calculationId)));
+            return Ok(await MicroBus.Send(new DeleteTenderAttributeCommand(id, calculationId, GetDepartmentId())));
         }
     }
 }

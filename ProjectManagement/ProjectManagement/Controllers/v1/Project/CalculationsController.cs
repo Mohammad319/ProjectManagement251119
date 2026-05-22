@@ -24,7 +24,7 @@ namespace ProjectManagement.Server.Controllers.v1.Project
         [HttpGet(URLConst.ReOrder + "/{Id}/{NewOrder}")]
         public async Task<IActionResult> ReOrder(int Id, int NewOrder)
         {
-            return Ok(await MicroBus.Send(new NewOrderCalculationCommand(Id, NewOrder)));
+            return Ok(await MicroBus.Send(new NewOrderCalculationCommand(Id, NewOrder, GetDepartmentId())));
         }
 
         [Authorize(Roles = Tenant.AdminManger)]
@@ -56,7 +56,7 @@ namespace ProjectManagement.Server.Controllers.v1.Project
         [HttpGet(URLConst.Details + "/{id}")]
         public async Task<IActionResult> Details(int id)
         {
-            return Ok(await MicroBus.Send(new GetCalculationDetailsQuery(id)));
+            return Ok(await MicroBus.Send(new GetCalculationDetailsQuery(id, GetUserId(), GetDepartmentId())));
         }
         [Authorize(Roles = Tenant.Users)]
         [HttpGet(URLConst.Calculation.Page + "/{id}")]
@@ -77,7 +77,7 @@ namespace ProjectManagement.Server.Controllers.v1.Project
         [HttpGet(URLConst.Calculation.GetToPost + "/{id}")]
         public async Task<IActionResult> GetPost(int id)
         {
-            return Ok(await MicroBus.Send(new GetCalculationPostQuery(id)));
+            return Ok(await MicroBus.Send(new GetCalculationPostQuery(id, GetUserId(), GetDepartmentId())));
         }
         [Authorize(Roles = Tenant.AdminManger)]
         [HttpPost(URLConst.Calculation.Create + "/{ProjectId}")]
@@ -111,7 +111,7 @@ namespace ProjectManagement.Server.Controllers.v1.Project
         {
             return Ok(await MicroBus.Send(new UpdateFactorsCommand(model, id, GetDepartmentId())));
         }
-        //[Authorize(Roles = Tenant.AdminManger)]
+        [Authorize(Roles = Tenant.AdminManger)]
         [HttpPut("QuantityList/{id}")]
         public async Task<IActionResult> UpdateQuantityList(int id, List<QuanityListDTO> model)
         {

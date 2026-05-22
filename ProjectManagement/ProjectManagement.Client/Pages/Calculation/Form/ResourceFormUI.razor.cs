@@ -289,7 +289,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
             catch (Exception ex)
             {
                 MHD.Notifications(resource.Id == 0 ? ToastType.Add : ToastType.Update, false);
-                Console.WriteLine(ex.Message);
+                _ = ClientLog.ErrorAsync("ResourceForm submit failed", ex: ex);
             }
             Close();
         }
@@ -302,9 +302,18 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
             editContext.OnValidationRequested += HandleValidationRequested;
             editContext.OnFieldChanged += HandleFieldChanged;
             messageStore = new(editContext);
-            if (Calc.Opportunities == null)
-                Calc.Opportunities = await Repo.Opportunity.GetAsync(Calc.Id);
-            Config = await Repo.Resource.GetConfigForm();
+            var configTask = Repo.Resource.GetConfigForm();
+            if (Calc.Opportunities is null)
+            {
+                var oppTask = Repo.Opportunity.GetAsync(Calc.Id);
+                await Task.WhenAll(configTask, oppTask);
+                Calc.Opportunities = oppTask.Result;
+            }
+            else
+            {
+                await configTask;
+            }
+            Config = configTask.Result;
             if (Resource is not null)
             {
                 PropertyCopier.CopyPropertiesTo(Resource, ResourceUpdate);

@@ -29,13 +29,13 @@ namespace ProjectManagement.Server.Controllers.v1.Project
         [Authorize(Roles = PMRolesConst.Tenant.Users), HttpGet(URLConst.Details + "/{id}")]
         public async Task<IActionResult> Details(Guid id)
         {
-            return Ok(await MicroBus.Send(new GetDetailsFoldersQuery(id)));
+            return Ok(await MicroBus.Send(new GetDetailsFoldersQuery(id, GetDepartmentId())));
         }
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpGet(URLConst.ReOrder + "/{Id}/{NewOrder}")]
         public async Task<IActionResult> ReOrder(Guid Id, int NewOrder)
         {
-            return Ok(await MicroBus.Send(new NewOrderFolderCommand(Id, NewOrder)));
+            return Ok(await MicroBus.Send(new NewOrderFolderCommand(Id, NewOrder, GetDepartmentId())));
         }
 
         [Authorize(Roles = PMRolesConst.Tenant.Super_Manger)]

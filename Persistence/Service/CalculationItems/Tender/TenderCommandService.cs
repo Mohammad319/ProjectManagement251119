@@ -16,12 +16,13 @@ namespace Persistence.Service.CalculationItems.Tender
             TenderPostDTO dto,
             int calculationId,
             int companyId,
+            int? departmentId,
             CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
             await using var tx = await context.Database.BeginTransactionAsync(ct);
 
-            if (!await context.Calculations.AsNoTracking().AnyAsync(x => x.Id == calculationId, ct))
+            if (!await IsCalculationAllowedAsync(context, calculationId, departmentId, ct))
                 return 0;
 
             if (!await context.Organisation.AsNoTracking().AnyAsync(x => x.Id == companyId, ct))
@@ -47,12 +48,16 @@ namespace Persistence.Service.CalculationItems.Tender
             int id,
             int calculationId,
             TenderPostDTO dto,
+            int? departmentId,
             CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
+            await using var tx = await context.Database.BeginTransactionAsync(ct);
 
             var tender = await context.Tenders
-                .FirstOrDefaultAsync(x => x.Id == id && x.CalculationId == calculationId, ct);
+                .FirstOrDefaultAsync(x => x.Id == id &&
+                    x.CalculationId == calculationId &&
+                    (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value), ct);
 
             if (tender is null)
                 return false;
@@ -67,18 +72,22 @@ namespace Persistence.Service.CalculationItems.Tender
             else
                 await context.SaveChangesAsync(ct);
 
+            await tx.CommitAsync(ct);
             return true;
         }
 
         public async Task<bool> DeleteTenderAsync(
             int id,
             int calculationId,
+            int? departmentId,
             CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var tender = await context.Tenders
-                .FirstOrDefaultAsync(x => x.Id == id && x.CalculationId == calculationId, ct);
+                .FirstOrDefaultAsync(x => x.Id == id &&
+                    x.CalculationId == calculationId &&
+                    (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value), ct);
 
             if (tender is null)
                 return false;
@@ -99,13 +108,15 @@ namespace Persistence.Service.CalculationItems.Tender
             int tenderId,
             int attributeId,
             decimal value,
+            int? departmentId,
             CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var tenderInfo = await context.Tenders
                 .AsNoTracking()
-                .Where(x => x.Id == tenderId)
+                .Where(x => x.Id == tenderId &&
+                    (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value))
                 .Select(x => new { x.Id, x.CalculationId })
                 .FirstOrDefaultAsync(ct);
 
@@ -188,6 +199,18 @@ namespace Persistence.Service.CalculationItems.Tender
                 .CountAsync(ct);
 
             return validCount == ids.Length;
+        }
+
+        private static Task<bool> IsCalculationAllowedAsync(
+            ShardingSingleDbContext context,
+            int calculationId,
+            int? departmentId,
+            CancellationToken ct)
+        {
+            return context.Calculations
+                .AsNoTracking()
+                .AnyAsync(x => x.Id == calculationId &&
+                    (!departmentId.HasValue || x.DepartmentId == departmentId.Value), ct);
         }
     }
 }

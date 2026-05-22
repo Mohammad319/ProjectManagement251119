@@ -29,11 +29,19 @@ namespace Persistence.Service.CalculationItems.Task
             int targetCalcId,
             bool isOH,
             bool deleteOriginal = false,
+            int? departmentId = null,
             CancellationToken ct = default)
         {
             if (taskItems is null || taskItems.Count == 0)
                 return false;
             await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            if (!await IsCalculationAllowedAsync(context, sourceCalcId, departmentId, ct) ||
+                !await IsCalculationAllowedAsync(context, targetCalcId, departmentId, ct) ||
+                !await IsParentTaskAllowedAsync(context, parentTaskId, targetCalcId, departmentId, ct))
+            {
+                return false;
+            }
 
             var resultDtos = new List<TaskListDTO>();
 
@@ -75,6 +83,7 @@ namespace Persistence.Service.CalculationItems.Task
         public async Task<List<TaskListDTO>> CreateAsync(
             IReadOnlyList<TaskPostDTO> tasks,
             int targetCalcId,
+            int? departmentId,
             CancellationToken ct = default)
         {
             if (tasks is null || tasks.Count == 0)
@@ -88,7 +97,9 @@ namespace Persistence.Service.CalculationItems.Task
             if (parentTaskId.HasValue && parentTaskId > 0)
             {
                 var parentTask = await context.Tasks
-                    .FirstOrDefaultAsync(x => x.Id == parentTaskId && x.CalculationId == targetCalcId, ct);
+                    .FirstOrDefaultAsync(x => x.Id == parentTaskId &&
+                        x.CalculationId == targetCalcId &&
+                        (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value), ct);
 
                 if (parentTask == null)
                     return [];
@@ -104,7 +115,8 @@ namespace Persistence.Service.CalculationItems.Task
             else
             {
                 bool calcExists = await context.Calculations
-                    .AnyAsync(x => x.Id == targetCalcId, ct);
+                    .AnyAsync(x => x.Id == targetCalcId &&
+                        (!departmentId.HasValue || x.DepartmentId == departmentId.Value), ct);
 
                 if (!calcExists)
                     return [];
@@ -125,6 +137,7 @@ namespace Persistence.Service.CalculationItems.Task
 
             var tasksWithNav = await context.Tasks
                 .AsNoTracking()
+                .AsSplitQuery()
                 .Where(t => createdTaskIds.Contains(t.Id))
                 .Include(t => t.Status)
                 .Include(t => t.Opportunity)
@@ -162,6 +175,7 @@ namespace Persistence.Service.CalculationItems.Task
             IReadOnlyList<ResourceTaskItemDTO> items,
             int order = 100,
             bool isOH = false,
+            int? departmentId = null,
             CancellationToken ct = default)
         {
             if (items is null || items.Count == 0)
@@ -171,6 +185,13 @@ namespace Persistence.Service.CalculationItems.Task
             if (parentTaskId == 0)
                 parentTaskId = null;
             await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            if (!await IsCalculationAllowedAsync(context, sourceCalcId, departmentId, ct) ||
+                !await IsCalculationAllowedAsync(context, targetCalcId, departmentId, ct) ||
+                !await IsParentTaskAllowedAsync(context, parentTaskId, targetCalcId, departmentId, ct))
+            {
+                return false;
+            }
 
             int? maxOrder = 0;
 
@@ -184,7 +205,9 @@ namespace Persistence.Service.CalculationItems.Task
                     .AsNoTracking()
                     .Include(x => x.Tasks)
                     .FirstOrDefaultAsync(
-                        x => x.Id == parentTaskId && x.CalculationId == targetCalcId,
+                        x => x.Id == parentTaskId &&
+                            x.CalculationId == targetCalcId &&
+                            (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value),
                         ct);
 
                 if (parent == null)
@@ -203,7 +226,8 @@ namespace Persistence.Service.CalculationItems.Task
                 var calc = await context.Calculations
                     .AsNoTracking()
                     .Include(c => c.Tasks)
-                    .FirstOrDefaultAsync(x => x.Id == targetCalcId, ct);
+                    .FirstOrDefaultAsync(x => x.Id == targetCalcId &&
+                        (!departmentId.HasValue || x.DepartmentId == departmentId.Value), ct);
 
                 if (calc == null)
                     return false;
@@ -238,7 +262,9 @@ namespace Persistence.Service.CalculationItems.Task
                     {
                         var task = await context.Tasks
                             .FirstOrDefaultAsync(
-                                x => x.Id == item.Id && x.CalculationId == sourceCalcId,
+                                x => x.Id == item.Id &&
+                                    x.CalculationId == sourceCalcId &&
+                                    (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value),
                                 ct);
 
                         if (task == null)
@@ -278,7 +304,9 @@ namespace Persistence.Service.CalculationItems.Task
 
                     var originalRoot = await context.Tasks
                         .FirstOrDefaultAsync(
-                            x => x.Id == item.Id && x.CalculationId == sourceCalcId,
+                            x => x.Id == item.Id &&
+                                x.CalculationId == sourceCalcId &&
+                                (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value),
                             ct);
 
                     if (originalRoot != null)
@@ -370,9 +398,13 @@ namespace Persistence.Service.CalculationItems.Task
         public async Task<bool> DeleteAsync(
             IEnumerable<int> taskIds,
             int calcId,
+            int? departmentId,
             CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            if (!await IsCalculationAllowedAsync(context, calcId, departmentId, ct))
+                return false;
 
             if (taskIds is null)
                 return false;
@@ -451,12 +483,14 @@ namespace Persistence.Service.CalculationItems.Task
         public async Task<bool> NewOrderAsync(
             int taskId,
             int newOrder,
+            int? departmentId,
             CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var taskWithCalcId = await context.Tasks
-                .Where(x => x.Id == taskId)
+                .Where(x => x.Id == taskId &&
+                    (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value))
                 .Select(x => new { Task = x, CalcId = x.CalculationId })
                 .FirstOrDefaultAsync(ct);
 
@@ -473,11 +507,13 @@ namespace Persistence.Service.CalculationItems.Task
         public async Task<bool> UpdateAsync(
             int taskId,
             TaskPostDTO dto,
+            int? departmentId,
             CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
             var taskWithCalcId = await context.Tasks
-                .Where(x => x.Id == taskId)
+                .Where(x => x.Id == taskId &&
+                    (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value))
                 .Select(x => new { Task = x, CalcId = x.CalculationId })
                 .FirstOrDefaultAsync(ct);
 
@@ -670,6 +706,35 @@ namespace Persistence.Service.CalculationItems.Task
                     : []);
             // ملاحظة: deleteOriginal يمكن استخدامه لاحقاً في CutAsync لحذف النسخة الأصلية
             return tasks;
+        }
+
+        private static Task<bool> IsCalculationAllowedAsync(
+            ShardingSingleDbContext context,
+            int calculationId,
+            int? departmentId,
+            CancellationToken ct)
+        {
+            return context.Calculations
+                .AsNoTracking()
+                .AnyAsync(x => x.Id == calculationId &&
+                    (!departmentId.HasValue || x.DepartmentId == departmentId.Value), ct);
+        }
+
+        private static Task<bool> IsParentTaskAllowedAsync(
+            ShardingSingleDbContext context,
+            int? parentTaskId,
+            int targetCalcId,
+            int? departmentId,
+            CancellationToken ct)
+        {
+            if (!parentTaskId.HasValue || parentTaskId <= 0)
+                return System.Threading.Tasks.Task.FromResult(true);
+
+            return context.Tasks
+                .AsNoTracking()
+                .AnyAsync(x => x.Id == parentTaskId.Value &&
+                    x.CalculationId == targetCalcId &&
+                    (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value), ct);
         }
     }
 }

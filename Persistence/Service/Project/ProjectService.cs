@@ -98,12 +98,13 @@ namespace Persistence.Service.Project
             return true;
         }
 
-        public async Task<bool> UpdateOrderAsync(Guid id, int newOrder, CancellationToken ct)
+        public async Task<bool> UpdateOrderAsync(Guid id, int newOrder, int? departmentId, CancellationToken ct)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var project = await context.Projects
-                .FirstOrDefaultAsync(x => x.Id == id, ct);
+                .FirstOrDefaultAsync(x => x.Id == id &&
+                    (departmentId == null || x.Folder.DepartmentId == departmentId), ct);
             if (project == null) return false;
 
             project.UpdateOrder(newOrder);
@@ -151,7 +152,7 @@ namespace Persistence.Service.Project
 
         // -------- Queries --------
 
-        public async Task<ProjectDetailsDTO?> GetDetailsAsync(Guid id, CancellationToken ct)
+        public async Task<ProjectDetailsDTO?> GetDetailsAsync(Guid id, int userId, int? departmentId, CancellationToken ct)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
@@ -163,19 +164,21 @@ namespace Persistence.Service.Project
                 .Include(x => x.Compensation)
                 .Include(x => x.Contract)
                 .Include(x => x.ProjectType)
-                .Where(x => x.Id == id)
+                .Where(x => x.Id == id &&
+                    (departmentId == null || x.Folder.DepartmentId == departmentId || x.CreatedBy == userId))
                 .FirstOrDefaultAsync(ct);
 
             return project?.ToDetailsDto();
         }
 
-        public async Task<PostProjectDTO?> GetPostAsync(Guid id, CancellationToken ct)
+        public async Task<PostProjectDTO?> GetPostAsync(Guid id, int userId, int? departmentId, CancellationToken ct)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var project = await context.Projects
                 .AsNoTracking()
-                .Where(x => x.Id == id)
+                .Where(x => x.Id == id &&
+                    (departmentId == null || x.Folder.DepartmentId == departmentId || x.CreatedBy == userId))
                 .FirstOrDefaultAsync(ct);
 
             return project?.ToPostDto();

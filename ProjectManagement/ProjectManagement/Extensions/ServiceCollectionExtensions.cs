@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Components.Account;
+using ProjectManagement.Auditing;
 using ProjectManagement.Configuration;
 using ProjectManagement.Middleware;
 using ProjectManagement.Services;
@@ -187,6 +188,7 @@ public static class ServiceCollectionExtensions
         });
 
         // Middleware registrations
+        services.AddSingleton<IAuditLogger, SerilogAuditLogger>();
         services.AddTransient<CorrelationIdMiddleware>();
         //services.AddTransient<SecurityHeadersMiddleware>();
 

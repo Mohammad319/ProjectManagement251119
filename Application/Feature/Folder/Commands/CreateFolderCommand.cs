@@ -19,13 +19,13 @@ namespace Application.Feature.Project.Folder.Commands
         public Task<bool> Handle(UpdateFolderCommand request, CancellationToken ct)
             => service.UpdateAsync(request.Id, request.Dto, request.UserId, request.DepartmentId, ct);
     }
-    public sealed record NewOrderFolderCommand(Guid Id, int NewOrder) : IRequest<bool>;
+    public sealed record NewOrderFolderCommand(Guid Id, int NewOrder, int? DepartmentId) : IRequest<bool>;
 
     public sealed class NewOrderFolderCommandHandler(IFolderService service)
         : IRequestHandler<NewOrderFolderCommand, bool>
     {
         public Task<bool> Handle(NewOrderFolderCommand request, CancellationToken ct)
-            => service.UpdateOrderAsync(request.Id, request.NewOrder, ct);
+            => service.UpdateOrderAsync(request.Id, request.NewOrder, request.DepartmentId, ct);
     }
 
     public sealed record DeleteFolderCommand(Guid Id, int UserId, int? DepartmentId) : IRequest<bool>;

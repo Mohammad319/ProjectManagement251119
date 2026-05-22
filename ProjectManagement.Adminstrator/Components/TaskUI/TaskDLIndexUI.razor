@@ -1,13 +1,10 @@
-@using System.Globalization
 @using TaskResourceBlueprints.Dto.ProjectTask
-@using TaskResourceBlueprints.Services.Demo
 @using TaskResourceBlueprints.Services.ProjectTask
 @using TaskResourceBlueprints.Services.Resource
-@using ProjectManagement.Adminstrator.Components.Question
-@using ProjectManagement.Adminstrator.Components.Question.QuestionConditionList
 @using ProjectManagement.Adminstrator.Constants
 @using ProjectManagement.Adminstrator.Services.MHDBlazor
 @using Microsoft.JSInterop
+@attribute [Authorize(Roles = PMRolesConst.APP.AdminManger)]
 @inject ITaskDefinitionQueryService TaskQueries
 @inject ITaskDefinitionService TaskCommands
 @inject ITaskResourceService FoldersService

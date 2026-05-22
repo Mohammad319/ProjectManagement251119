@@ -12,12 +12,14 @@ namespace Application.Feature.Calculation.CalcShare.Commands
             => service.UpsertAsync(request.Dto, request.UserId, request.DepartmentId, ct);
     }
 
-    public sealed record DeleteCalcShareCommand(int Id) : IRequest<bool>;
+    public sealed record DeleteCalcShareCommand(int Id, int? DepartmentId, int UserId) : IRequest<bool>;
 
     public sealed class DeleteCalcShareCommandHandler(IShareCalcService service)
         : IRequestHandler<DeleteCalcShareCommand, bool>
     {
         public Task<bool> Handle(DeleteCalcShareCommand request, CancellationToken ct)
-            => service.DeleteAsync(request.Id, ct);
+            => request.DepartmentId.HasValue
+                ? service.DeleteAsync(request.Id, request.DepartmentId.Value, request.UserId, ct)
+                : System.Threading.Tasks.Task.FromResult(false);
     }
 }

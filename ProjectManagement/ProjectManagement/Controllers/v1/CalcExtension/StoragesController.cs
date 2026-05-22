@@ -115,16 +115,16 @@ namespace ProjectManagement.Server.Controllers.v1.CalcExtension
             if (post.Type == CalculationItemType.resource)
             {
                 if (post.copyType == CopyType.Move)
-                    return Ok(await MicroBus.Send(new CutResourceCommand(post.Items, post.ParentID, post.OldCalcID)));
+                    return Ok(await MicroBus.Send(new CutResourceCommand(post.Items, post.ParentID, post.OldCalcID, GetDepartmentId())));
                 if (post.copyType == CopyType.Copy)
-                    return Ok(await MicroBus.Send(new CopyResourceCommand(post.Items, post.ParentID, post.OldCalcID)));
+                    return Ok(await MicroBus.Send(new CopyResourceCommand(post.Items, post.ParentID, post.OldCalcID, GetDepartmentId())));
             }
             else if (post.Type == CalculationItemType.task)
             {
                 if (post.copyType == CopyType.Move)
-                    return Ok(await MicroBus.Send(new CutTaskCommand() { Items = post.Items, OldCalcId = post.OldCalcID, NewNetCalcId = post.NewCalcID, TaskParentID = post.ParentID, IsOH = post.IsOH }));
+                    return Ok(await MicroBus.Send(new CutTaskCommand() { Items = post.Items, OldCalcId = post.OldCalcID, NewNetCalcId = post.NewCalcID, TaskParentID = post.ParentID, IsOH = post.IsOH, DepartmentId = GetDepartmentId() }));
                 if (post.copyType == CopyType.Copy)
-                    return Ok(await MicroBus.Send(new CopyTaskCommand(post.Items, post.ParentID > 0 ? post.ParentID : null, post.OldCalcID, post.NewCalcID, post.IsOH)));
+                    return Ok(await MicroBus.Send(new CopyTaskCommand(post.Items, post.ParentID > 0 ? post.ParentID : null, post.OldCalcID, post.NewCalcID, post.IsOH, DepartmentId: GetDepartmentId())));
             }
             return BadRequest();
         }

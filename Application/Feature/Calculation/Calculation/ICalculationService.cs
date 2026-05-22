@@ -37,6 +37,7 @@ namespace Application.Feature.Calculation.Calculation
         Task<bool> NewOrderAsync(
             int id,
             int newOrder,
+            int? departmentId,
             CancellationToken cancellationToken = default);
 
         Task<bool> UpdateHourlyPriceListAsync(

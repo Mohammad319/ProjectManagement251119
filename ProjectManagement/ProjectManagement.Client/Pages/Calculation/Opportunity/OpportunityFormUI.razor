@@ -87,7 +87,7 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
+            _ = ClientLog.ErrorAsync("OpportunityForm submit failed", ex: ex);
         }
         IsLoading = false;
         Modal.Close();

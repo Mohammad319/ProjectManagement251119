@@ -386,7 +386,8 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
         IsFrozenHeader(id) ? "true" : "false";
 
     private bool IsFrozenHeader(NetColumnId id) =>
-        Template?.NetCalc?.Columns?.FirstOrDefault(x => x.Id == id)?.Frozen == true;
+        id is NetColumnId.Account or NetColumnId.Name
+        || Template?.NetCalc?.Columns?.FirstOrDefault(x => x.Id == id)?.Frozen == true;
 
     private static IReadOnlyList<ColumnHeader> BuildHeaderColumns(
         IReadOnlyList<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>> columns,

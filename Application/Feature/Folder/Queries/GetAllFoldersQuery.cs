@@ -11,13 +11,13 @@ namespace Application.Feature.Project.Folder.Queries
         public Task<List<ListFolderDTO>> Handle(GetAllFoldersQuery request, CancellationToken ct)
             => service.GetAllVisibleAsync(ct);
     }
-    public sealed record GetDetailsFoldersQuery(Guid Id) : IRequest<DetailsFolderDTO?>;
+    public sealed record GetDetailsFoldersQuery(Guid Id, int? DepartmentId) : IRequest<DetailsFolderDTO?>;
 
     public sealed class GetDetailsFoldersQueryHandler(IFolderService service)
         : IRequestHandler<GetDetailsFoldersQuery, DetailsFolderDTO?>
     {
         public Task<DetailsFolderDTO?> Handle(GetDetailsFoldersQuery request, CancellationToken ct)
-            => service.GetDetailsAsync(request.Id, ct);
+            => service.GetDetailsAsync(request.Id, request.DepartmentId, ct);
     }
     public sealed record GetFoldersDepartmentQuery(bool IsVisible, int? DepartmentId) : IRequest<List<ListFolderDTO>>;
 

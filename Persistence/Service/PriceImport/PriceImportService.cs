@@ -709,26 +709,29 @@ public sealed class PriceImportService(
             .Where(x => ids.Contains(x.Id) && x.TenantId == db.TenantId)
             .ToListAsync(ct);
 
+        var jobIds = candidates.Select(c => c.ImportJobId).ToHashSet();
+
+        // Partition into two groups; at most two batch UPDATE statements instead of N.
+        var needsReviewIds = candidates
+            .Where(c => status == PriceImportCandidateStatus.Approved && !CanApproveCandidate(c, out _))
+            .Select(c => c.Id).ToList();
+
+        var toTargetIds = candidates
+            .Select(c => c.Id)
+            .Except(needsReviewIds)
+            .ToList();
+
         var changed = 0;
-        var jobIds = new HashSet<Guid>();
-        foreach (var candidate in candidates)
-        {
-            if (status == PriceImportCandidateStatus.Approved && !CanApproveCandidate(candidate, out _))
-            {
-                candidate.Status = PriceImportCandidateStatus.NeedsReview;
-            }
-            else
-            {
-                candidate.Status = status;
-            }
 
-            var updated = await db.PriceImportCandidates
-                .Where(x => x.Id == candidate.Id && x.TenantId == db.TenantId)
-                .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.Status, candidate.Status), ct);
+        if (needsReviewIds.Count > 0)
+            changed += await db.PriceImportCandidates
+                .Where(x => needsReviewIds.Contains(x.Id) && x.TenantId == db.TenantId)
+                .ExecuteUpdateAsync(s => s.SetProperty(x => x.Status, PriceImportCandidateStatus.NeedsReview), ct);
 
-            changed += updated;
-            jobIds.Add(candidate.ImportJobId);
-        }
+        if (toTargetIds.Count > 0)
+            changed += await db.PriceImportCandidates
+                .Where(x => toTargetIds.Contains(x.Id) && x.TenantId == db.TenantId)
+                .ExecuteUpdateAsync(s => s.SetProperty(x => x.Status, status), ct);
 
         foreach (var jobId in jobIds)
             await RefreshJobCountsAsync(db, jobId, ct);
@@ -745,21 +748,19 @@ public sealed class PriceImportService(
             .Where(x => x.ImportJobId == jobId && x.TenantId == db.TenantId && x.Status == PriceImportCandidateStatus.Ready)
             .ToListAsync(ct);
 
-        var approved = 0;
-        foreach (var candidate in candidates)
-        {
-            if (!CanApproveCandidate(candidate, out _))
-            {
-                await db.PriceImportCandidates
-                    .Where(x => x.Id == candidate.Id && x.TenantId == db.TenantId)
-                    .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.Status, PriceImportCandidateStatus.NeedsReview), ct);
-                continue;
-            }
+        var needsReviewIds = candidates.Where(c => !CanApproveCandidate(c, out _)).Select(c => c.Id).ToList();
+        var approveIds    = candidates.Where(c =>  CanApproveCandidate(c, out _)).Select(c => c.Id).ToList();
 
-            approved += await db.PriceImportCandidates
-                .Where(x => x.Id == candidate.Id && x.TenantId == db.TenantId)
-                .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.Status, PriceImportCandidateStatus.Approved), ct);
-        }
+        if (needsReviewIds.Count > 0)
+            await db.PriceImportCandidates
+                .Where(x => needsReviewIds.Contains(x.Id) && x.TenantId == db.TenantId)
+                .ExecuteUpdateAsync(s => s.SetProperty(x => x.Status, PriceImportCandidateStatus.NeedsReview), ct);
+
+        var approved = 0;
+        if (approveIds.Count > 0)
+            approved = await db.PriceImportCandidates
+                .Where(x => approveIds.Contains(x.Id) && x.TenantId == db.TenantId)
+                .ExecuteUpdateAsync(s => s.SetProperty(x => x.Status, PriceImportCandidateStatus.Approved), ct);
 
         await RefreshJobCountsAsync(db, jobId, ct);
         return approved;

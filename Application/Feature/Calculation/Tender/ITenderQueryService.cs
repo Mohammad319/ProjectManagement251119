@@ -6,10 +6,10 @@
 
     public interface ITenderQueryService
     {
-        Task<TenderAttributeValuesListDTO> GetTenderListAsync(int calculationId, CancellationToken ct = default);
+        Task<TenderAttributeValuesListDTO> GetTenderListAsync(int calculationId, int? departmentId, CancellationToken ct = default);
 
         Task<TenderDetailsDTO?> GetTenderDetailsAsync(
-           int tenderId, int CalculationId,
+           int tenderId, int CalculationId, int? departmentId,
             CancellationToken ct = default);
     }
 }

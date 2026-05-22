@@ -301,9 +301,15 @@
             return;
 
         IsLoading = true;
-        ProjectDetails = await Repo.Project.DetailsAsync(ProjectId);
-        _loadedProjectId = ProjectId;
-        IsLoading = false;
+        try
+        {
+            ProjectDetails = await Repo.Project.DetailsAsync(ProjectId);
+            _loadedProjectId = ProjectId;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 
     private static List<DisplayField> BuildOverviewItems(ProjectDetailsDTO details)

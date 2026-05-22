@@ -439,8 +439,8 @@
         }
         catch (Exception ex)
         {
-            MHD.Notifications(ToastType.Info);
-            Console.WriteLine(ex.Message);
+            MHD.Notifications(ToastType.Update, false);
+            _ = ClientLog.ErrorAsync("CalculationForm submit failed", ex: ex);
         }
         finally
         {

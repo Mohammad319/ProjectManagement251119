@@ -5,7 +5,6 @@
 @using ProjectManagement.Shared.DTO.Calculation
 @using ProjectManagement.Shared.DTO.ProjectAppStorage
 @using ProjectManagement.Shared.DTO.ProjectAppStorage.Service
-@using ProjectManagement.Shared.Enums
 @inject IStorageRepository TaskService
 @inject ITasksUserComputationServiceWasm Compute
 @inherits AppComponentBase
@@ -835,6 +834,7 @@ else if (_tasks != null)
         catch (Exception ex)
         {
             _error = ex.Message;
+            _ = ClientLog.ErrorAsync("TaskList initialization failed", ex: ex);
         }
         finally
         {

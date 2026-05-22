@@ -28,9 +28,15 @@ namespace ProjectManagement.Client.Pages.Project.Storage.App
 
         public static string RangeLabel(decimal? min, decimal? max, int maxFractionDigits = 2)
         {
-            if (min.HasValue && max.HasValue) return $"[{min.Value:G} .. {max.Value:G}]";
-            if (min.HasValue) return $">= {min.Value:G}";
-            if (max.HasValue) return $"<= {max.Value:G}";
+            if (min.HasValue && max.HasValue)
+                return $"[{NumericFormatHelper.Format(min.Value, maxFractionDigits)} .. {NumericFormatHelper.Format(max.Value, maxFractionDigits)}]";
+
+            if (min.HasValue)
+                return $">= {NumericFormatHelper.Format(min.Value, maxFractionDigits)}";
+
+            if (max.HasValue)
+                return $"<= {NumericFormatHelper.Format(max.Value, maxFractionDigits)}";
+
             return "(any)";
         }
     }

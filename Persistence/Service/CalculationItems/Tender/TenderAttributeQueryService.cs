@@ -10,12 +10,14 @@ namespace Persistence.Service.CalculationItems.Tender
     {
         public async Task<List<TenderAttributeListDTO>> GetAttributesAsync(
             int calculationId,
+            int? departmentId,
             CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             return await context.AttributeNameTender
-                .Where(x => x.CalculationId == calculationId)
+                .Where(x => x.CalculationId == calculationId &&
+                    (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value))
                 .AsNoTracking()
                 .Select(x => new TenderAttributeListDTO
                 {

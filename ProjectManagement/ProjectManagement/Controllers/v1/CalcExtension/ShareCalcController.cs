@@ -45,7 +45,7 @@ namespace ProjectManagement.Server.Controllers.v1.Calculation
             if (!groupId.HasValue)
                 return BadRequest("Department not found.");
 
-            return Ok(await MicroBus.Send(new DeleteCalcShareCommand(id)));
+            return Ok(await MicroBus.Send(new DeleteCalcShareCommand(id, groupId, GetUserId())));
         }
     }
 }
