@@ -8,12 +8,46 @@ namespace TaskResourceBlueprints.Services.ProjectTask
     public interface ITaskDefinitionQueryService
     {
         Task<IReadOnlyList<ProjectTaskListItemDto>> GetListAsync(CancellationToken ct);
+        Task<IReadOnlyList<ProjectTaskListItemDto>> GetListPagedAsync(int skip, int take, CancellationToken ct);
         Task<TaskDefinitionEditDto> GetForEditAsync(int id, CancellationToken ct);
         Task<IReadOnlyList<ResourceTaskIndexDto>> GetResourcesForTaskAsync(int id, CancellationToken ct);
     }
 
     public sealed class ProjectTaskQueryService(IDbContextFactory<TaskResourceBlueprintsContext> dbContextFactory) : ITaskDefinitionQueryService
     {
+        public async Task<IReadOnlyList<ProjectTaskListItemDto>> GetListPagedAsync(int skip, int take, CancellationToken ct)
+        {
+            await using var db = await dbContextFactory.CreateDbContextAsync(ct);
+
+            return await db.Tasks.AsNoTracking()
+                .OrderBy(t => t.SortOrder)
+                .ThenBy(t => t.Name)
+                .Skip(skip)
+                .Take(take)
+                .Select(t => new ProjectTaskListItemDto(
+                    t.Id,
+                    t.Code,
+                    t.Name,
+                    t.UnitCode,
+                    t.Quantity,
+                    t.IsActive,
+                    t.Responsible,
+                    t.Uncontrollable
+                )
+                {
+                    StateLinks = t.StateLinks
+                        .OrderBy(sl => sl.State!.Group!.Name)
+                        .ThenBy(sl => sl.State!.Name)
+                        .Select(sl => new TaskStateLinkDto(
+                            sl.TaskStateId,
+                            sl.State!.Name,
+                            sl.State.TaskStateGroupId,
+                            sl.State.Group!.Name))
+                        .ToList()
+                })
+                .ToListAsync(ct);
+        }
+
         public async Task<IReadOnlyList<ProjectTaskListItemDto>> GetListAsync(CancellationToken ct)
         {
             await using var db = await dbContextFactory.CreateDbContextAsync(ct);

@@ -7,11 +7,13 @@
 @using ProjectManagement.Adminstrator.Components.Question.QuestionConditionList
 @using ProjectManagement.Adminstrator.Constants
 @using ProjectManagement.Adminstrator.Services.MHDBlazor
+@using Microsoft.JSInterop
 @inject ITaskDefinitionQueryService TaskQueries
 @inject ITaskDefinitionService TaskCommands
 @inject ITaskResourceService FoldersService
-
+@inject IJSRuntime JS
 @inject MhdServices MHD
+@implements IAsyncDisposable
 
 <div class="space-y-3 text-slate-900 dark:text-slate-100">
     <section class="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
@@ -84,7 +86,7 @@
                                             @Icons.Edit
                                         </button>
                                         <button @onclick="() => ConfirmDelete(item.Id, item.DisplayName)" class="inline-flex items-center justify-center gap-2 rounded-xl px-1 py-1 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-rose-600 bg-rose-600 px-1 py-1 text-xs font-medium text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-500 dark:bg-rose-500 dark:hover:bg-rose-400 px-1 py-1 text-xs" title="Delete">
-                                            @Icons.Delete 
+                                            @Icons.Delete
                                         </button>
                                         <button @onclick="() => OpenTaskFolders(item.Id, item.DisplayName)" class="inline-flex items-center justify-center gap-2 rounded-xl px-1 py-1 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-1 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 px-1 py-1 text-xs">@ResourceLoc.resource</button>
                                     </div>
@@ -161,7 +163,7 @@
                                                 </span>
                                             </div>
                                         </td>
-                                     
+
                                     </tr>
                                 }
                             }
@@ -170,13 +172,32 @@
                 </table>
             </div>
         </div>
+
+        @if (_loadingMore)
+        {
+            <div class="flex justify-center pt-3 pb-2">
+                <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
+            </div>
+        }
+        else if (_hasMore)
+        {
+            <div id="task-dl-scroll-sentinel" class="h-4 w-full"></div>
+        }
     }
 </div>
 
 @code {
+    private const int PageSize = 100;
+    private const string SentinelId = "task-dl-scroll-sentinel";
+
+    private DotNetObjectReference<TaskDLIndexUI>? _selfRef;
+    private bool _observerAttached = false;
+    private bool _loadingMore = false;
+    private bool _hasMore = false;
+
     void TaskChoiceResourceBin(ProjectTaskListItemDto model, ResourceTaskIndexDto resourceId) =>
     MHD.Modal.ShowComponent<TaskResourceUI>
-    (model.DisplayName +" Resource",
+    (model.DisplayName + " Resource",
 new Dictionary<string, object>
 {
     [nameof(TaskResourceUI.Task)] = model,
@@ -207,11 +228,11 @@ new Dictionary<string, object>
         else
         {
             task.ResourceTasks = (await TaskQueries.GetResourcesForTaskAsync(task.Id, CancellationToken.None)).ToList();
-
             ColspanTaskIDs.Add(task.Id);
         }
         StateHasChanged();
     }
+
     protected override async Task OnInitializedAsync() => await ReloadAsync();
 
     private async Task ReloadAsync()
@@ -219,9 +240,12 @@ new Dictionary<string, object>
         try
         {
             errorMessage = null;
-            tasks = (await TaskQueries.GetListAsync(CancellationToken.None)).ToList();
+            _hasMore = false;
+            ColspanTaskIDs.Clear();
+            var batch = (await TaskQueries.GetListPagedAsync(0, PageSize, CancellationToken.None)).ToList();
+            tasks = batch;
+            _hasMore = batch.Count == PageSize;
             StateHasChanged();
-
         }
         catch (Exception ex)
         {
@@ -230,8 +254,64 @@ new Dictionary<string, object>
         }
     }
 
+    private async Task LoadMoreAsync()
+    {
+        if (tasks is null || _loadingMore || !_hasMore) return;
+        _loadingMore = true;
+        try
+        {
+            var batch = (await TaskQueries.GetListPagedAsync(tasks.Count, PageSize, CancellationToken.None)).ToList();
+            tasks.AddRange(batch);
+            _hasMore = batch.Count == PageSize;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            _loadingMore = false;
+        }
+    }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        var shouldObserve = _hasMore && !_loadingMore && tasks is not null;
+        if (shouldObserve && !_observerAttached)
+        {
+            _selfRef ??= DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("observeIntersection", _selfRef, SentinelId);
+            _observerAttached = true;
+        }
+        else if (!shouldObserve && _observerAttached)
+        {
+            await JS.InvokeVoidAsync("unobserveIntersection", SentinelId);
+            _observerAttached = false;
+        }
+    }
 
+    [JSInvokable]
+    public async Task OnScrolledToBottom()
+    {
+        if (_loadingMore || !_hasMore || tasks is null) return;
+        _observerAttached = false;
+        try { await JS.InvokeVoidAsync("unobserveIntersection", SentinelId); } catch { }
+        await InvokeAsync(async () =>
+        {
+            await LoadMoreAsync();
+            StateHasChanged();
+        });
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_observerAttached)
+        {
+            try { await JS.InvokeVoidAsync("unobserveIntersection", SentinelId); } catch { }
+            _observerAttached = false;
+        }
+        _selfRef?.Dispose();
+    }
 
     private void OpenEditor(int id)
     {
@@ -240,7 +320,7 @@ new Dictionary<string, object>
         {
             [nameof(TaskDLFormUI.TaskId)] = id,
             [nameof(TaskDLFormUI.Saved)] = EventCallback.Factory.Create<bool>(this, ReloadAsync),
-        } , DialogSize.ExtraLarge);
+        }, DialogSize.ExtraLarge);
     }
 
     private void OpenTaskFolders(int id, string name)

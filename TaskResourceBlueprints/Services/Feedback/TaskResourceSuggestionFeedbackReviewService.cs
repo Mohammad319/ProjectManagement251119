@@ -8,7 +8,10 @@ public interface ITaskResourceSuggestionFeedbackReviewService
 {
     Task<TaskResourceSuggestionFeedbackReviewResult> GetAsync(
         TaskResourceSuggestionFeedbackKind? feedback = null,
-        int take = 200,
+        TaskResourceSuggestionSource? source = null,
+        string? search = null,
+        int skip = 0,
+        int take = 100,
         CancellationToken ct = default);
 
     Task<bool> DeleteAsync(int id, CancellationToken ct = default);
@@ -17,6 +20,7 @@ public interface ITaskResourceSuggestionFeedbackReviewService
 public sealed class TaskResourceSuggestionFeedbackReviewResult
 {
     public int Total { get; set; }
+    public int FilteredTotal { get; set; }
     public Dictionary<TaskResourceSuggestionFeedbackKind, int> CountsByFeedback { get; set; } = [];
     public List<TaskResourceSuggestionFeedbackReviewItem> Items { get; set; } = [];
 }
@@ -48,26 +52,44 @@ public sealed class TaskResourceSuggestionFeedbackReviewService(
 {
     public async Task<TaskResourceSuggestionFeedbackReviewResult> GetAsync(
         TaskResourceSuggestionFeedbackKind? feedback = null,
-        int take = 200,
+        TaskResourceSuggestionSource? source = null,
+        string? search = null,
+        int skip = 0,
+        int take = 100,
         CancellationToken ct = default)
     {
-        take = Math.Clamp(take, 1, 1000);
-        await using var db = await dbContextFactory.CreateDbContextAsync(ct);
+        take = Math.Clamp(take, 1, 500);
+        skip = Math.Max(0, skip);
 
+        await using var db = await dbContextFactory.CreateDbContextAsync(ct);
         var baseQuery = db.TaskResourceSuggestionFeedbacks.AsNoTracking();
+
         var total = await baseQuery.CountAsync(ct);
         var counts = await baseQuery
             .GroupBy(x => x.Feedback)
             .Select(x => new { Feedback = x.Key, Count = x.Count() })
             .ToDictionaryAsync(x => x.Feedback, x => x.Count, ct);
 
-        var query = feedback.HasValue
-            ? baseQuery.Where(x => x.Feedback == feedback.Value)
-            : baseQuery;
+        var filteredQuery = baseQuery;
+        if (feedback.HasValue)
+            filteredQuery = filteredQuery.Where(x => x.Feedback == feedback.Value);
+        if (source.HasValue)
+            filteredQuery = filteredQuery.Where(x => x.Source == source.Value);
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var s = search.Trim();
+            filteredQuery = filteredQuery.Where(x =>
+                x.TargetTaskName.Contains(s) ||
+                (x.TargetTaskCode != null && x.TargetTaskCode.Contains(s)) ||
+                x.SourceTaskName.Contains(s));
+        }
 
-        var items = await query
+        var filteredTotal = await filteredQuery.CountAsync(ct);
+
+        var items = await filteredQuery
             .OrderByDescending(x => x.UpdatedAtUtc)
             .ThenByDescending(x => x.Id)
+            .Skip(skip)
             .Take(take)
             .Select(x => new TaskResourceSuggestionFeedbackReviewItem
             {
@@ -94,6 +116,7 @@ public sealed class TaskResourceSuggestionFeedbackReviewService(
         return new TaskResourceSuggestionFeedbackReviewResult
         {
             Total = total,
+            FilteredTotal = filteredTotal,
             CountsByFeedback = counts,
             Items = items,
         };

@@ -93,74 +93,41 @@ else if (_tasks != null)
                     <span class="text-[10px] @FuzzySearchHelper.TextColorClass(score)">@score.ToString("0%", System.Globalization.CultureInfo.InvariantCulture)</span>
                 </div>
             }
-            @if (stateGroups.Count > 0 && matched is not null)
+            @{
+                var displayTask = matched ?? group.Tasks.FirstOrDefault(HasResources);
+            }
+            @if (displayTask is not null)
             {
-                <TaskCard @key="matched.Id" Task="matched" ToAdded="TaskToAdd" Config="Config"
+                <TaskCard @key="displayTask.Id" Task="displayTask" ToAdded="TaskToAdd" Config="Config"
                           Statuses="Statuses" CO2Config="AppState.StorageApp.CO2"
                           CostConfig="AppState.StorageApp.Cost" NameConfig="AppState.StorageApp.Name"
-                          ShowTaskName="false">
+                          ShowTaskName="@(stateGroups.Count == 0)">
                     <HeaderContent>
                         @RenderTaskHeader(result)
                     </HeaderContent>
-                    <Row2Content>
-                        @foreach (var sg in stateGroups)
-                        {
-                            var groupId = sg.Key;
-                            var groupName = sg.Value;
-                            var stateOptions = group.StateOptions.GetValueOrDefault(groupId, []);
-                            <div class="flex items-center gap-1 shrink-0">
-                                <span class="text-xs text-slate-500 whitespace-nowrap">@groupName:</span>
-                                <select class="h-[25px] border border-gray-300 rounded px-2 text-[13px] leading-tight bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600"
-                                        value="@(selectedStates.TryGetValue(groupId, out var sv) ? sv.ToString() : string.Empty)"
-                                        @onchange="e => OnStateChanged(group.Key, groupId, e)">
-                                    <option value="">--</option>
-                                    @foreach (var opt in stateOptions)
-                                    {
-                                        <option value="@opt.StateId">@opt.StateName</option>
-                                    }
-                                </select>
-                            </div>
-                        }
-                    </Row2Content>
-                </TaskCard>
-            }
-            else if (stateGroups.Count > 0)
-            {
-                <!-- Code and name -->
-                <div class="flex flex-wrap items-center gap-x-1.5 gap-y-1 mb-1">
-                    @RenderTaskHeader(result)
-                </div>
-                <!-- State selection -->
-                <div class="flex flex-wrap items-center gap-2 pl-0">
-                    @foreach (var sg in stateGroups)
+                    @if (stateGroups.Count > 0)
                     {
-                        var groupId = sg.Key;
-                        var groupName = sg.Value;
-                        var stateOptions = group.StateOptions.GetValueOrDefault(groupId, []);
-                        <div class="flex items-center gap-1 shrink-0">
-                            <span class="text-xs text-slate-500 whitespace-nowrap">@groupName:</span>
-                            <select class="h-[25px] border border-gray-300 rounded px-2 text-[13px] leading-tight bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600"
-                                    value="@(selectedStates.TryGetValue(groupId, out var sv) ? sv.ToString() : string.Empty)"
-                                    @onchange="e => OnStateChanged(group.Key, groupId, e)">
-                                <option value="">--</option>
-                                @foreach (var opt in stateOptions)
-                                {
-                                    <option value="@opt.StateId">@opt.StateName</option>
-                                }
-                            </select>
-                        </div>
+                        <Row2Content>
+                            @foreach (var sg in stateGroups)
+                            {
+                                var groupId = sg.Key;
+                                var groupName = sg.Value;
+                                var stateOptions = group.StateOptions.GetValueOrDefault(groupId, []);
+                                <div class="flex items-center gap-1 shrink-0">
+                                    <span class="text-xs text-slate-500 whitespace-nowrap">@groupName:</span>
+                                    <select class="h-[25px] border border-gray-300 rounded px-2 text-[13px] leading-tight bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600"
+                                            value="@(selectedStates.TryGetValue(groupId, out var sv) ? sv.ToString() : string.Empty)"
+                                            @onchange="e => OnStateChanged(group.Key, groupId, e)">
+                                        <option value="">--</option>
+                                        @foreach (var opt in stateOptions)
+                                        {
+                                            <option value="@opt.StateId">@opt.StateName</option>
+                                        }
+                                    </select>
+                                </div>
+                            }
+                        </Row2Content>
                     }
-                    <span class="text-xs text-amber-600 dark:text-amber-400 whitespace-nowrap">Select a combination to load task</span>
-                </div>
-            }
-            else if (stateGroups.Count == 0 && group.Tasks.Count > 0)
-            {
-                <TaskCard @key="group.Tasks[0].Id" Task="group.Tasks[0]" ToAdded="TaskToAdd" Config="Config"
-                          Statuses="Statuses" CO2Config="AppState.StorageApp.CO2"
-                          CostConfig="AppState.StorageApp.Cost" NameConfig="AppState.StorageApp.Name">
-                    <HeaderContent>
-                        @RenderTaskHeader(result)
-                    </HeaderContent>
                 </TaskCard>
             }
         </div>
@@ -579,7 +546,7 @@ else if (_tasks != null)
 
     ProjectTaskDto? MatchTask(TaskGroup group, Dictionary<int, int> selected)
     {
-        if (group.StateGroupNames.Count > 0 && selected.Count < group.StateGroupNames.Count)
+        if (selected.Count == 0)
             return null;
 
         foreach (var task in group.Tasks)
@@ -609,10 +576,10 @@ else if (_tasks != null)
             if (!HasResources(task))
                 continue;
 
-            var key = $"{task.Code ?? string.Empty}||{task.DisplayName}";
+            var key = $"{(task.Code ?? string.Empty).Trim()}||{task.DisplayName.Trim()}";
             if (!_taskGroupDict.TryGetValue(key, out var group))
             {
-                group = new TaskGroup { Key = key, DisplayName = task.DisplayName, Code = task.Code ?? string.Empty };
+                group = new TaskGroup { Key = key, DisplayName = task.DisplayName.Trim(), Code = (task.Code ?? string.Empty).Trim() };
                 _taskGroupDict[key] = group;
                 _taskGroups.Add(group);
                 _selectedStates.TryAdd(key, _restoredSelectedStates.TryGetValue(key, out var restored)
