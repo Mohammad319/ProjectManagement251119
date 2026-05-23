@@ -38,8 +38,17 @@ namespace Application.Mapping.CalcItems
         public static TaskEntity MapToTaskEntity(TaskPostDTO dto, int calcId)
         {
             var task = TaskEntity.Create(calcId, dto, dto.SortOrder, dto.ParentTaskId);
-            task.SetResources(dto.Resources?.Select(x => x.Parse(dto.Id)).ToList() ?? []);
-            task.SetChildTasks(dto.Tasks?.Select(t => MapToTaskEntity(t, calcId)).ToList() ?? []);
+
+            if (TaskTypeRules.CanHaveResources(dto.Type))
+                task.SetResources(dto.Resources?.Select(x => x.Parse(dto.Id)).ToList() ?? []);
+            else
+                task.SetResources([]);
+
+            if (TaskTypeRules.CanHaveChildTasks(dto.Type))
+                task.SetChildTasks(dto.Tasks?.Select(t => MapToTaskEntity(t, calcId)).ToList() ?? []);
+            else
+                task.SetChildTasks([]);
+
             return task;
         }
     }

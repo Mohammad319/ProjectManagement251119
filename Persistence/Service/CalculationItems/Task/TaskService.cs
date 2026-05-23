@@ -734,6 +734,7 @@ namespace Persistence.Service.CalculationItems.Task
                 .AsNoTracking()
                 .AnyAsync(x => x.Id == parentTaskId.Value &&
                     x.CalculationId == targetCalcId &&
+                    x.Type != TaskType.FourBarCode &&
                     (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value), ct);
         }
     }

@@ -915,7 +915,7 @@
     {
         if (Tasks is { Count: > 0 })
             return Tasks
-                .Where(task => task.Type != TaskType.CodeName && task.Tasks.Count == 0)
+                .Where(task => TaskTypeRules.CanHaveResources(task.Type) && task.Tasks.Count == 0)
                 .DistinctBy(task => task.Id)
                 .OrderBy(task => task.SortOrder)
                 .ToList();
@@ -930,7 +930,7 @@
     {
         if (task.Tasks.Count == 0)
         {
-            if (task.Type != TaskType.CodeName)
+            if (TaskTypeRules.CanHaveResources(task.Type))
                 result.Add(task);
             return;
         }

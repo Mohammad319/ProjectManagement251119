@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Components.Rendering;
 using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Shared.Base.Calculation;
@@ -115,12 +116,12 @@ public static class CalcColumnFactory
             },
             [NetColumnId.Quantity] = new()
             {
-                TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.Quantity),
+                TaskRender = (b, t) => RenderTaskQuantityTd(b, round, t),
                 ResRender = (b, r) => TableRenderHelpers.RenderFormattedTd(b, round, r.Quantity)
             },
             [NetColumnId.Unit] = new()
             {
-                TaskRender = (b, t) => TableRenderHelpers.RenderTextTd(b, TaskConversionUnitDisplayHelper.Resolve(t.Metadata, t.Unit).ConvertedUnit),
+                TaskRender = RenderTaskUnitTd,
                 ResRender = (b, r) => TableRenderHelpers.RenderTextTd(b, r.Unit)
             },
             [NetColumnId.Cost] = new()
@@ -135,7 +136,7 @@ public static class CalcColumnFactory
             },
             [NetColumnId.ChangeFactor2] = new()
             {
-                TaskRender = (b, t) => { if (t.Type == TaskType.CodeName) TableRenderHelpers.EmptyTd(b); else TableRenderHelpers.RenderFormattedTd(b, round, t.Metadata.ChangeFactor2); },
+                TaskRender = (b, t) => { if (t.Type is TaskType.CodeName or TaskType.FourBarCode) TableRenderHelpers.EmptyTd(b); else TableRenderHelpers.RenderFormattedTd(b, round, t.Metadata.ChangeFactor2); },
                 //ResRender = (b, r) => TableRenderHelpers.RenderFormattedTd(b, round, r.ChangeFactor2)
                 ResRender = static (b, _) => TableRenderHelpers.EmptyTd(b),
             },
@@ -163,7 +164,7 @@ public static class CalcColumnFactory
             },
             [NetColumnId.BaseCost] = new()
             {
-                TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.GetComputedBaseCost()),
+                TaskRender = (b, t) => RenderFourBarPriceTd(b, round, t, t.GetComputedBaseCost()),
                 ResRender = (b, r) => TableRenderHelpers.RenderFormattedTd(b, round, r.GetComputedBaseCost())
             },
             [NetColumnId.Opportunity] = new()
@@ -173,37 +174,37 @@ public static class CalcColumnFactory
             },
             [NetColumnId.NetCostQ] = new()
             {
-                TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.GetComputedNetCostQ()),
+                TaskRender = (b, t) => RenderFourBarPriceTd(b, round, t, t.GetComputedNetCostQ()),
                 ResRender = (b, r) => TableRenderHelpers.RenderFormattedTd(b, round, r.GetComputedNetCostQ())
             },
             [NetColumnId.TotalNetCost] = new()
             {
-                TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.GetComputedNetCostTotaly()),
+                TaskRender = (b, t) => RenderFourBarPriceTd(b, round, t, t.GetComputedNetCostTotaly()),
                 ResRender = (b, r) => TableRenderHelpers.RenderFormattedTd(b, round, r.GetComputedNetCostTotaly())
             },
             [NetColumnId.PriceQTax] = new()
             {
-                TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.PriceQTax(tax)),
+                TaskRender = (b, t) => RenderFourBarPriceTd(b, round, t, t.PriceQTax(tax)),
                 ResRender = static (b, _) => TableRenderHelpers.EmptyTd(b)
             },
             [NetColumnId.PriceQ] = new()
             {
-                TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.PriceQ),
+                TaskRender = (b, t) => RenderFourBarPriceTd(b, round, t, t.PriceQ),
                 ResRender = static (b, _) => TableRenderHelpers.EmptyTd(b)
             },
             [NetColumnId.PriceProduction] = new()
             {
-                TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.PriceProduction),
+                TaskRender = (b, t) => RenderFourBarPriceTd(b, round, t, t.PriceProduction),
                 ResRender = static (b, _) => TableRenderHelpers.EmptyTd(b)
             },
             [NetColumnId.PriceTotaly] = new()
             {
-                TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.GetComputedApriceTotally()),
+                TaskRender = (b, t) => RenderFourBarPriceTd(b, round, t, t.GetComputedApriceTotally()),
                 ResRender = (b, r) => TableRenderHelpers.RenderFormattedTd(b, round, r.GetComputedApriceTotally())
             },
             [NetColumnId.PriceTotallyTax] = new()
             {
-                TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.ApriceTotallyTax(tax)),
+                TaskRender = (b, t) => RenderFourBarPriceTd(b, round, t, t.ApriceTotallyTax(tax)),
                 ResRender = static (b, _) => TableRenderHelpers.EmptyTd(b)
             },
             [NetColumnId.Factor] = new()
@@ -213,32 +214,32 @@ public static class CalcColumnFactory
             },
             [NetColumnId.MinPrice] = new()
             {
-                TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.MinPrice),
+                TaskRender = (b, t) => RenderFourBarPriceTd(b, round, t, t.MinPrice),
                 ResRender = static (b, _) => TableRenderHelpers.EmptyTd(b)
             },
             [NetColumnId.CeilingPrice] = new()
             {
-                TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.CeilingPrice),
+                TaskRender = (b, t) => RenderFourBarPriceTd(b, round, t, t.CeilingPrice),
                 ResRender = static (b, _) => TableRenderHelpers.EmptyTd(b)
             },
             [NetColumnId.PriceSub] = new()
             {
-                TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.PriceSub),
+                TaskRender = (b, t) => RenderFourBarPriceTd(b, round, t, t.PriceSub),
                 ResRender = (b, r) => TableRenderHelpers.RenderFormattedTd(b, round, r.Data.PriceSub)
             },
             [NetColumnId.PriceTotalSub] = new()
             {
-                TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.PriceSubTotal),
+                TaskRender = (b, t) => RenderFourBarPriceTd(b, round, t, t.PriceSubTotal),
                 ResRender = (b, r) => TableRenderHelpers.RenderFormattedTd(b, round, r.PriceSubTotal)
             },
             [NetColumnId.PriceTotalSubTax] = new()
             {
-                TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.PriceTotalSubTax(tax)),
+                TaskRender = (b, t) => RenderFourBarPriceTd(b, round, t, t.PriceTotalSubTax(tax)),
                 ResRender = static (b, _) => TableRenderHelpers.EmptyTd(b)
             },
             [NetColumnId.Diff] = new()
             {
-                TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.Diff),
+                TaskRender = (b, t) => RenderFourBarPriceTd(b, round, t, t.Diff),
                 ResRender = static (b, _) => TableRenderHelpers.EmptyTd(b)
             },
             [NetColumnId.Responsible] = new()
@@ -248,52 +249,52 @@ public static class CalcColumnFactory
             },
             [NetColumnId.Co2] = new()
             {
-                TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.GetComputedCO2PerQuantity()),
+                TaskRender = (b, t) => RenderFourBarEmptyTd(b, round, t, t.GetComputedCO2PerQuantity()),
                 ResRender = (b, r) => TableRenderHelpers.RenderFormattedTd(b, round, r.CO2)
             },
             [NetColumnId.TotalCo2] = new()
             {
-                TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.GetComputedTotalCO2()),
+                TaskRender = (b, t) => RenderFourBarEmptyTd(b, round, t, t.GetComputedTotalCO2()),
                 ResRender = (b, r) => TableRenderHelpers.RenderFormattedTd(b, round, r.GetComputedTotalCO2())
             },
             [NetColumnId.ActuallyQuantity] = new()
             {
-                TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.Metadata.ActuallyQuantity),
+                TaskRender = (b, t) => RenderFourBarEmptyTd(b, round, t, t.Metadata.ActuallyQuantity),
                 ResRender = static (b, _) => TableRenderHelpers.EmptyTd(b)
             },
             [NetColumnId.WorkedQ] = new()
             {
-                TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.Metadata.WorkedQ),
+                TaskRender = (b, t) => RenderFourBarEmptyTd(b, round, t, t.Metadata.WorkedQ),
                 ResRender = static (b, _) => TableRenderHelpers.EmptyTd(b)
             },
             [NetColumnId.WorkedQPercent] = new()
             {
-                TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.WorkedQPercent),
+                TaskRender = (b, t) => RenderFourBarEmptyTd(b, round, t, t.WorkedQPercent),
                 ResRender = static (b, _) => TableRenderHelpers.EmptyTd(b)
             },
             [NetColumnId.PriceActuallyQuantity] = new()
             {
-                TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.PriceActuallyQuantity),
+                TaskRender = (b, t) => RenderFourBarPriceTd(b, round, t, t.PriceActuallyQuantity),
                 ResRender = static (b, _) => TableRenderHelpers.EmptyTd(b)
             },
             [NetColumnId.PriceWorkedQ] = new()
             {
-                TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.PriceWorkedQ),
+                TaskRender = (b, t) => RenderFourBarPriceTd(b, round, t, t.PriceWorkedQ),
                 ResRender = static (b, _) => TableRenderHelpers.EmptyTd(b)
             },
             [NetColumnId.PriceSubTax] = new()
             {
-                TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.PriceSubTax(tax)),
+                TaskRender = (b, t) => RenderFourBarPriceTd(b, round, t, t.PriceSubTax(tax)),
                 ResRender = static (b, _) => TableRenderHelpers.EmptyTd(b)
             },
             [NetColumnId.PriceActuallyQuantityTax] = new()
             {
-                TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.PriceActuallyQuantityTax(tax)),
+                TaskRender = (b, t) => RenderFourBarPriceTd(b, round, t, t.PriceActuallyQuantityTax(tax)),
                 ResRender = static (b, _) => TableRenderHelpers.EmptyTd(b)
             },
             [NetColumnId.PriceWorkedQTax] = new()
             {
-                TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.PriceWorkedQTax(tax)),
+                TaskRender = (b, t) => RenderFourBarPriceTd(b, round, t, t.PriceWorkedQTax(tax)),
                 ResRender = static (b, _) => TableRenderHelpers.EmptyTd(b)
             },
             [NetColumnId.Note] = new()
@@ -307,5 +308,58 @@ public static class CalcColumnFactory
             pair.Value.Id = pair.Key;
 
         return columns;
+    }
+
+    private static void RenderTaskQuantityTd(RenderTreeBuilder builder, string round, TaskListMVVM task)
+    {
+        if (TaskTypeRules.DisplaysDashQuantity(task.Type))
+        {
+            var title = TaskTypeRules.IsThreeBarCode(task.Type)
+                ? "\"-\" här räknas mängden som 1."
+                : null;
+            TableRenderHelpers.RenderTextTd(builder, "-", title);
+        }
+        else
+            TableRenderHelpers.RenderFormattedTd(builder, round, task.Quantity);
+    }
+
+    private static void RenderTaskUnitTd(RenderTreeBuilder builder, TaskListMVVM task)
+    {
+        if (TaskTypeRules.DisplaysDashUnit(task.Type))
+            TableRenderHelpers.RenderTextTd(builder, "-");
+        else
+            TableRenderHelpers.RenderTextTd(builder, TaskConversionUnitDisplayHelper.Resolve(task.Metadata, task.Unit).ConvertedUnit);
+    }
+
+    private static void RenderFourBarPriceTd(RenderTreeBuilder builder, string round, TaskListMVVM task, decimal value)
+    {
+        if (TaskTypeRules.DisplaysDashPrice(task.Type))
+            TableRenderHelpers.RenderTextTd(builder, "-");
+        else
+            TableRenderHelpers.RenderFormattedTd(builder, round, value);
+    }
+
+    private static void RenderFourBarPriceTd(RenderTreeBuilder builder, string round, TaskListMVVM task, decimal? value)
+    {
+        if (TaskTypeRules.DisplaysDashPrice(task.Type))
+            TableRenderHelpers.RenderTextTd(builder, "-");
+        else
+            TableRenderHelpers.RenderFormattedTd(builder, round, value);
+    }
+
+    private static void RenderFourBarEmptyTd(RenderTreeBuilder builder, string round, TaskListMVVM task, decimal value)
+    {
+        if (TaskTypeRules.IsFourBarCode(task.Type))
+            TableRenderHelpers.EmptyTd(builder);
+        else
+            TableRenderHelpers.RenderFormattedTd(builder, round, value);
+    }
+
+    private static void RenderFourBarEmptyTd(RenderTreeBuilder builder, string round, TaskListMVVM task, double? value)
+    {
+        if (TaskTypeRules.IsFourBarCode(task.Type))
+            TableRenderHelpers.EmptyTd(builder);
+        else
+            TableRenderHelpers.RenderFormattedTd(builder, round, value);
     }
 }

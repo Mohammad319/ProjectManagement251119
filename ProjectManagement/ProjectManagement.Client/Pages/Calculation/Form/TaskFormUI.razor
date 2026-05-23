@@ -37,7 +37,7 @@
     <MhdCard Elevated="true" Compact="true" Class="mb-1.5">
         <div class="@HeaderGridClass">
 
-            @if (!TaskUpdate.OnlyCodeText)
+            @if (ShowActiveCheckbox)
             {
                 <div class="min-w-0">
                     <label class="@($"{CheckboxCardClass} w-fit whitespace-nowrap")">
@@ -48,11 +48,15 @@
             }
 
             <div class="min-w-0">
-                <label class="@($"{CheckboxCardClass} w-fit whitespace-nowrap")">
-                    <InputCheckbox @bind-Value="TaskUpdate.OnlyCodeText"
-                                   class="@CheckboxClass" />
-                    <span>@AppLoc["onlyCodeText"]</span>
-                </label>
+                <label class="@LabelClass">@CalcResource.type</label>
+                <select class="@InputClass"
+                        value="@TaskUpdate.Metadata.Type"
+                        @onchange="OnTaskTypeChanged">
+                    <option value="@TaskType.Task">@ResourceLoc.task</option>
+                    <option value="@TaskType.CodeName">@AppLoc["onlyCodeText"]</option>
+                    <option value="@TaskType.ThreeBarCode">3-Bar Code</option>
+                    <option value="@TaskType.FourBarCode">4-Bar Code</option>
+                </select>
             </div>
 
             <div class="min-w-0">
@@ -67,14 +71,24 @@
 
         </div>
     </MhdCard>
-    @if (!TaskUpdate.OnlyCodeText)
+    @if (ShowTaskDetails)
             {
     <MhdCard Elevated="true" Compact="true" Class="mb-1.5">
         <div class="grid gap-x-2 gap-y-1.5 md:grid-cols-12">
 
                 <div class="min-w-0 md:col-span-12 xl:col-span-5">
                     <label class="@LabelClass">@CalcResource.quantity</label>
-                    @if (HasTaskAbove)
+                    @if (IsThreeBarCodeTask)
+                    {
+                        <div class="grid items-start gap-1.5 grid-cols-[7.25rem_minmax(0,1fr)]">
+                            <input class="@DisabledInputClass" value="@CalcResource.fixedQ" disabled />
+                            <TrimmedNumberInput TValue="decimal?"
+                                                @bind-Value="TaskUpdate.Metadata.BaseQuantity"
+                                                @bind-Value:after="SyncConvertedQuantity"
+                                                class="@InputClass" />
+                        </div>
+                    }
+                    else if (HasTaskAbove)
                     {
                         <div class="grid items-start gap-1.5 @(TaskUpdate.Metadata.QuantityParam == ConstValues.FixedQ ? "grid-cols-[minmax(0,1fr)_7.25rem]" : "grid-cols-1")">
                             <InputSelect class="@InputClass"
@@ -144,24 +158,27 @@
                     </div>
                 } *@
 
-                <div class="min-w-0 md:col-span-3 xl:col-span-2">
-                    <label class="@LabelClass">@CalcResource.changeFactor2 </label>
-                    @if (TaskUpdate.Metadata.ConversionParameters.Any())
-                    {
-                        <TrimmedNumberInput TValue="decimal"
-                                            @bind-Value="TaskUpdate.Metadata.ChangeFactor2"
-                                            class="@DisabledInputClass"
-                                            disabled />
-                    }
-                    else
-                    {
-                        <TrimmedNumberInput TValue="decimal"
-                                            @bind-Value="TaskUpdate.Metadata.ChangeFactor2"
-                                            @bind-Value:after="SyncConvertedQuantity"
-                                            class="@InputClass" />
-                    }
-                </div>
-                @if (TaskUpdate.Metadata.ConversionParameters.Any())
+                @if (!IsThreeBarCodeTask)
+                {
+                    <div class="min-w-0 md:col-span-3 xl:col-span-2">
+                        <label class="@LabelClass">@CalcResource.changeFactor2 </label>
+                        @if (TaskUpdate.Metadata.ConversionParameters.Any())
+                        {
+                            <TrimmedNumberInput TValue="decimal"
+                                                @bind-Value="TaskUpdate.Metadata.ChangeFactor2"
+                                                class="@DisabledInputClass"
+                                                disabled />
+                        }
+                        else
+                        {
+                            <TrimmedNumberInput TValue="decimal"
+                                                @bind-Value="TaskUpdate.Metadata.ChangeFactor2"
+                                                @bind-Value:after="SyncConvertedQuantity"
+                                                class="@InputClass" />
+                        }
+                    </div>
+                }
+                @if (!IsThreeBarCodeTask && TaskUpdate.Metadata.ConversionParameters.Any())
                 {
                     <div class="min-w-0 md:col-span-3 xl:col-span-2">
                         <label class="@LabelClass">@ResourceLoc.convertedQuantity</label>
@@ -179,7 +196,6 @@
                         <TrimmedNumberInput TValue="decimal?" @bind-Value="TaskUpdate.Metadata.Cap" class="@InputClass" />
                     </div>
                 }
-            
         </div>
     </MhdCard>
        
@@ -309,7 +325,7 @@
                         </div>
                     </div>
 
-                    @if (!TaskUpdate.OnlyCodeText)
+                    @if (CanEditConversionParameters)
                     {
                         <div class="flex items-end gap-2">
                             <button type="button"
@@ -321,7 +337,7 @@
                     }
                 </div>
 
-                @if (!TaskUpdate.OnlyCodeText)
+                @if (CanEditConversionParameters)
                 {
                     @if (!TaskUpdate.Metadata.ConversionParameters.Any())
                     {
@@ -466,6 +482,12 @@
     private ValidationMessageStore? messageStore;
     private bool HasTaskAbove => HasParentTask(TaskUpdate);
     private bool ParentIsOnlyCodeText => IsParentOnlyCodeText(TaskUpdate);
+    private bool IsCodeTextTask => TaskUpdate.Metadata.Type == TaskType.CodeName;
+    private bool IsThreeBarCodeTask => TaskUpdate.Metadata.Type == TaskType.ThreeBarCode;
+    private bool IsFourBarCodeTask => TaskUpdate.Metadata.Type == TaskType.FourBarCode;
+    private bool ShowActiveCheckbox => !IsCodeTextTask && !IsFourBarCodeTask;
+    private bool ShowTaskDetails => !IsCodeTextTask && !IsFourBarCodeTask;
+    private bool CanEditConversionParameters => ShowTaskDetails && !IsThreeBarCodeTask;
     private bool ShowExpandedTaskQuantity => !HasTaskAbove || TaskUpdate.Metadata.QuantityParam == ConstValues.FixedQ;
     private bool ShowTaskCapInput => CanEditTaskCap(Task?.Resources);
     private FieldIdentifier BaseQuantityField => new(TaskUpdate.Metadata, nameof(TaskMetadata.BaseQuantity));
@@ -500,6 +522,24 @@
         TaskUpdate = task;
         SyncMetadataToWrappers();
         ConfigureEditContext();
+    }
+
+    private void OnTaskTypeChanged(ChangeEventArgs args)
+    {
+        if (!Enum.TryParse(args.Value?.ToString(), out TaskType type))
+            type = TaskType.Task;
+
+        ChangeTaskType(TaskUpdate, NormalizeFormTaskType(type));
+        ClearBaseQuantityValidation();
+        editContext?.NotifyValidationStateChanged();
+    }
+
+    private void ChangeTaskType(TaskPostDTO task, TaskType type)
+    {
+        task.Metadata.Type = NormalizeFormTaskType(type);
+        task.OnlyCodeText = task.Metadata.Type == TaskType.CodeName;
+        ApplyTaskFormRules(task);
+        SyncConvertedQuantity(task);
     }
 
     private void RemoveCurrentTask()
@@ -561,8 +601,11 @@
     private decimal? ResolveSourceQuantity(TaskPostDTO task)
     {
         var metadata = task.Metadata;
-        if (metadata.Type == TaskType.CodeName || task.OnlyCodeText)
+        if (metadata.Type is TaskType.CodeName or TaskType.FourBarCode)
             return null;
+
+        if (metadata.Type == TaskType.ThreeBarCode)
+            return metadata.BaseQuantity ?? task.Quantity ?? 1m;
 
         if (string.Equals(metadata.QuantityParam, ConstValues.FixedQ, StringComparison.OrdinalIgnoreCase))
             return metadata.BaseQuantity ?? task.Quantity;
@@ -669,6 +712,54 @@
         if (metadata is null)
             return;
 
+        if (metadata.Type == TaskType.CodeName)
+        {
+            task.OnlyCodeText = true;
+            metadata.QuantityParam = string.Empty;
+            metadata.BaseQuantity = null;
+            metadata.ChangeFactor1 = 1;
+            metadata.ChangeFactor2 = 1;
+            task.Quantity = null;
+            return;
+        }
+
+        if (metadata.Type == TaskType.ThreeBarCode)
+        {
+            task.OnlyCodeText = false;
+            metadata.BaseQuantity ??= task.Quantity ?? 1m;
+            task.Quantity = metadata.BaseQuantity;
+            metadata.QuantityParam = ConstValues.FixedQ;
+            metadata.ChangeFactor1 = 1;
+            metadata.ChangeFactor2 = 1;
+            metadata.ConversionParameters = [];
+            metadata.BaseUnit = string.Empty;
+            return;
+        }
+
+        if (metadata.Type == TaskType.FourBarCode)
+        {
+            task.OnlyCodeText = false;
+            task.Unit = "-";
+            task.Quantity = null;
+            task.StatusId = null;
+            task.OpportunityId = null;
+            metadata.QuantityParam = string.Empty;
+            metadata.BaseQuantity = null;
+            metadata.ChangeFactor1 = 1;
+            metadata.ChangeFactor2 = 1;
+            metadata.ConversionParameters = [];
+            metadata.BaseUnit = string.Empty;
+            metadata.PriceSubDB = null;
+            metadata.PriceProductionDB = null;
+            metadata.PriceSubTaxDB = null;
+            metadata.MinPrice = null;
+            metadata.CeilingPrice = null;
+            metadata.ActuallyQuantity = 0m;
+            metadata.WorkedQ = 0m;
+            metadata.Cap = null;
+            return;
+        }
+
         var hasParameters = metadata.ConversionParameters is { Count: > 0 };
         var sourceQuantity = ResolveSourceQuantity(task);
 
@@ -694,7 +785,7 @@
     protected async override Task OnInitializedAsync()
     {
         TaskUpdate = TaskConvert.GetToPost(Task);
-        TaskUpdate.OnlyCodeText = TaskUpdate.Metadata.Type == TaskType.CodeName;
+        ChangeTaskType(TaskUpdate, TaskUpdate.Metadata.Type);
         ApplyTaskFormRules(TaskUpdate);
         EnsureConversionParameters(TaskUpdate);
         EnsureBaseQuantity(TaskUpdate);
@@ -729,16 +820,18 @@
 
     void CheckTaskType(TaskPostDTO po)
     {
-        if (po.OnlyCodeText)
-        {
-            po.Metadata.Type = TaskType.CodeName;
-            po.Metadata.QuantityParam = string.Empty;
-            po.Quantity = null;
-        }
-        else po.Metadata.Type = TaskType.Task;
-
+        po.Metadata.Type = NormalizeFormTaskType(po.Metadata.Type);
+        po.OnlyCodeText = po.Metadata.Type == TaskType.CodeName;
         ApplyTaskFormRules(po);
     }
+
+    private static TaskType NormalizeFormTaskType(TaskType type) => type switch
+    {
+        TaskType.CodeName => TaskType.CodeName,
+        TaskType.ThreeBarCode or TaskType.Minus => TaskType.ThreeBarCode,
+        TaskType.FourBarCode => TaskType.FourBarCode,
+        _ => TaskType.Task
+    };
 
     private bool HasParentTask(TaskPostDTO task)
     {
@@ -757,10 +850,51 @@
     }
     private void ApplyTaskFormRules(TaskPostDTO task)
     {
-        if (task.OnlyCodeText)
+        task.Metadata.Type = NormalizeFormTaskType(task.Metadata.Type);
+        task.OnlyCodeText = task.Metadata.Type == TaskType.CodeName;
+
+        if (task.Metadata.Type == TaskType.CodeName)
         {
             task.Metadata.ChangeFactor1 = 1;
             task.Metadata.ChangeFactor2 = 1;
+            task.Metadata.QuantityParam = string.Empty;
+            task.Metadata.Cap = null;
+            task.Quantity = null;
+            return;
+        }
+
+        if (task.Metadata.Type == TaskType.ThreeBarCode)
+        {
+            task.Metadata.BaseQuantity ??= task.Quantity ?? 1m;
+            task.Quantity = task.Metadata.BaseQuantity;
+            task.Metadata.QuantityParam = ConstValues.FixedQ;
+            task.Metadata.ChangeFactor1 = 1;
+            task.Metadata.ChangeFactor2 = 1;
+            task.Metadata.ConversionParameters = [];
+            task.Metadata.BaseUnit = string.Empty;
+            task.Metadata.Cap = null;
+            return;
+        }
+
+        if (task.Metadata.Type == TaskType.FourBarCode)
+        {
+            task.Unit = "-";
+            task.Quantity = null;
+            task.StatusId = null;
+            task.OpportunityId = null;
+            task.Metadata.QuantityParam = string.Empty;
+            task.Metadata.BaseQuantity = null;
+            task.Metadata.ChangeFactor1 = 1;
+            task.Metadata.ChangeFactor2 = 1;
+            task.Metadata.ConversionParameters = [];
+            task.Metadata.BaseUnit = string.Empty;
+            task.Metadata.PriceSubDB = null;
+            task.Metadata.PriceProductionDB = null;
+            task.Metadata.PriceSubTaxDB = null;
+            task.Metadata.MinPrice = null;
+            task.Metadata.CeilingPrice = null;
+            task.Metadata.ActuallyQuantity = 0m;
+            task.Metadata.WorkedQ = 0m;
             task.Metadata.Cap = null;
             return;
         }
@@ -792,9 +926,9 @@
         task.Unit = units.ConvertedUnit;
     }
     private string HeaderGridClass =>
-    TaskUpdate.OnlyCodeText
-        ? "grid grid-cols-[max-content_150px_minmax(260px,1fr)] items-end justify-start gap-x-1.5 gap-y-1"
-        : "grid grid-cols-[max-content_max-content_150px_minmax(260px,1fr)] items-end justify-start gap-x-1.5 gap-y-1";
+    ShowActiveCheckbox
+        ? "grid grid-cols-[max-content_150px_150px_minmax(260px,1fr)] items-end justify-start gap-x-1.5 gap-y-1"
+        : "grid grid-cols-[150px_150px_minmax(260px,1fr)] items-end justify-start gap-x-1.5 gap-y-1";
 
     private static bool CanEditTaskCap(IEnumerable<ResourceListMVVM>? resources)
     {
@@ -832,7 +966,7 @@
     }
 
     private bool IsBaseQuantityRequired()
-        => !TaskUpdate.OnlyCodeText
+        => TaskUpdate.Metadata.Type is TaskType.Task or TaskType.ThreeBarCode
             && string.Equals(TaskUpdate.Metadata.QuantityParam, ConstValues.FixedQ, StringComparison.OrdinalIgnoreCase);
 
     private void ClearBaseQuantityValidation()
@@ -864,12 +998,9 @@
             return;
         }
 
-        if (ReferenceEquals(args.FieldIdentifier.Model, TaskUpdate)
-            && args.FieldIdentifier.FieldName == nameof(TaskPostDTO.OnlyCodeText))
-        {
+        if (ReferenceEquals(args.FieldIdentifier.Model, TaskUpdate.Metadata)
+            && args.FieldIdentifier.FieldName == nameof(TaskMetadata.Type))
             ClearBaseQuantityValidation();
-            editContext?.NotifyValidationStateChanged();
-        }
     }
 
     async Task HandleSubmitAsync()

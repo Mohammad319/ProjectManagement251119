@@ -3,6 +3,7 @@ using Application.Feature.Calculation.Resource;
 using Application.Interfaces;
 using Domain.Entities.Calculation;
 using Persistence.Factory;
+using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Project;
@@ -33,10 +34,12 @@ namespace Persistence.Service.CalculationItems.Resource
                 {
                     MaxOrder = x.Resources.Max(r => (int?)r.SortOrder),
                     NewCalcID = x.CalculationId,
+                    x.Type,
                 })
                 .FirstOrDefaultAsync(ct);
 
             if (parent is null) return false;
+            if (!TaskTypeRules.CanHaveResources(parent.Type)) return false;
 
             if (!await IsCalculationAllowedAsync(context, sourceCalcId, departmentId, ct))
                 return false;
@@ -120,10 +123,12 @@ namespace Persistence.Service.CalculationItems.Resource
                 {
                     MaxOrder = x.Resources.Max(r => (int?)r.SortOrder),
                     CalID = x.CalculationId,
+                    x.Type,
                 })
                 .FirstOrDefaultAsync(ct);
 
             if (parent is null) return false;
+            if (!TaskTypeRules.CanHaveResources(parent.Type)) return false;
 
             var entities = new List<ResourceEntity>(items.Count);
             int nextOrder = parent.MaxOrder.HasValue ? parent.MaxOrder.Value + 100 : 100;
@@ -173,10 +178,12 @@ namespace Persistence.Service.CalculationItems.Resource
                 {
                     CalID = x.CalculationId,
                     Max = x.Resources.Max(r => (int?)r.SortOrder),
+                    x.Type,
                 })
                 .FirstOrDefaultAsync(ct);
 
             if (parent is null) return false;
+            if (!TaskTypeRules.CanHaveResources(parent.Type)) return false;
 
             if (!await IsCalculationAllowedAsync(context, sourceCalcId, departmentId, ct))
                 return false;

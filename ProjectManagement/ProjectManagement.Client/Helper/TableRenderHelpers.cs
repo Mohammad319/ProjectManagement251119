@@ -5,12 +5,15 @@ namespace ProjectManagement.Client.Helper
 {
     public static class TableRenderHelpers
     {
-        private static void RenderTd(RenderTreeBuilder builder, string? content, string? cssClass = null)
+        private static void RenderTd(RenderTreeBuilder builder, string? content, string? cssClass = null, string? title = null)
         {
             int seq = 0;
             builder.OpenElement(seq++, "td");
             if (!string.IsNullOrEmpty(cssClass))
                 builder.AddAttribute(seq++, "class", cssClass);
+
+            if (!string.IsNullOrWhiteSpace(title))
+                builder.AddAttribute(seq++, "title", title);
 
             if (!string.IsNullOrEmpty(content))
                 builder.AddContent(seq++, content);
@@ -48,6 +51,9 @@ namespace ProjectManagement.Client.Helper
 
         public static void RenderTextTd(RenderTreeBuilder builder, string? value) =>
             RenderTd(builder, value);
+
+        public static void RenderTextTd(RenderTreeBuilder builder, string? value, string? title) =>
+            RenderTd(builder, value, title: title);
 
         public static void RenderTextTd(RenderTreeBuilder builder, object? value) =>
             RenderTd(builder, value?.ToString() ?? string.Empty);

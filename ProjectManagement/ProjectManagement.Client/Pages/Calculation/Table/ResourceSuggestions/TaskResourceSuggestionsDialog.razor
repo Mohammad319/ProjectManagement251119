@@ -419,7 +419,7 @@
 
     private IEnumerable<SuggestionState> DisplayedStates => FilteredStates.Take(_maxResults);
     private bool _canShowMore => FilteredStates.Count > _maxResults;
-    private bool IsEligibleTarget => TaskItem.Type != TaskType.CodeName && TaskItem.Tasks.Count == 0;
+    private bool IsEligibleTarget => TaskTypeRules.CanHaveResources(TaskItem.Type) && TaskItem.Tasks.Count == 0;
     private string NoSuggestionsMessage => !IsEligibleTarget
         ? CalcResource.suggestionLeafOnly
         : !_showSystem && !_showTenant

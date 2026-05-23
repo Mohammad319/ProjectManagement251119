@@ -115,7 +115,7 @@ namespace ProjectManagement.Client.Services.Calculation
 
             var list = new List<MenuItem>();
 
-            if (item.Metadata.Type != TaskType.CodeName && (item.Tasks == null || item.Tasks.Count == 0))
+            if (TaskTypeRules.CanHaveResources(item.Metadata.Type) && (item.Tasks == null || item.Tasks.Count == 0))
             {
                 list.Add(NewMenuItem(
                     Icons.NewResource,
@@ -133,7 +133,7 @@ namespace ProjectManagement.Client.Services.Calculation
                     () => tableCoordinator.ShowResourceSuggestions(item)));
             }
 
-            if (item.Resources == null || item.Resources.Count == 0)
+            if (TaskTypeRules.CanHaveChildTasks(item.Metadata.Type) && (item.Resources == null || item.Resources.Count == 0))
             {
                 list.Add(NewMenuItem(
                     Icons.NewSubTask,

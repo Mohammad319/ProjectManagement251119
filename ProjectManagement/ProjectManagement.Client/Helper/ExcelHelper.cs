@@ -28,6 +28,8 @@ namespace ProjectManagement.Client.Helper
         public int UnitIndex { get; set; } = 4;
         public int QuantityIndex { get; set; } = 5;
         public int PriceIndex { get; set; } = 6;
+        public int AmountIndex { get; set; } = 7;
+        public int RowEnd { get; set; } = 1;
         public int Score { get; set; }
         public bool IsDetected => Score > 0;
     }
@@ -44,8 +46,10 @@ namespace ProjectManagement.Client.Helper
         static readonly HashSet<string> HeaderWords = new(StringComparer.OrdinalIgnoreCase)
         {
             "code", "kod", "nr", "nummer", "pos", "littera", "ama", "name", "namn", "text",
-            "benamning", "beskrivning", "rubrik", "post", "aktivitet", "unit", "enhet", "enh",
-            "quantity", "qty", "antal", "mangd", "volym", "price", "pris", "apris", "belopp", "kostnad"
+            "benamning", "beteckning", "beskrivning", "rubrik", "post", "aktivitet", "arbete",
+            "arbetsmoment", "unit", "enhet", "enh", "me", "mattenhet", "quantity", "qty", "antal",
+            "mangd", "mangdberaknad", "volym", "price", "pris", "apris", "enhetspris", "belopp",
+            "kostnad", "summa", "total", "totalt", "radsumma"
         };
 
         public static List<ExcelWorksheetOption> GetWorksheetOptions(XLWorkbook workbook)
@@ -94,6 +98,10 @@ namespace ProjectManagement.Client.Helper
 
         public static List<TaskPostDTO> Import(int sheetNr, XLWorkbook workbook, int rowStart,
             int codeIndex, int nameIndex, int unitIndex, int quantityIndex, int priceIndex, bool isOH)
+            => Import(sheetNr, workbook, rowStart, 0, codeIndex, nameIndex, unitIndex, quantityIndex, priceIndex, 0, isOH);
+
+        public static List<TaskPostDTO> Import(int sheetNr, XLWorkbook workbook, int rowStart, int rowEnd,
+            int codeIndex, int nameIndex, int unitIndex, int quantityIndex, int priceIndex, int amountIndex, bool isOH)
         {
             if (!workbook.Worksheets.Any())
                 return new List<TaskPostDTO>();
@@ -104,16 +112,18 @@ namespace ProjectManagement.Client.Helper
             unitIndex = Math.Max(unitIndex, 1);
             quantityIndex = Math.Max(quantityIndex, 1);
             priceIndex = Math.Max(priceIndex, 1);
+            amountIndex = amountIndex > 0 ? amountIndex : Math.Max(priceIndex + 1, codeIndex + 7);
             rowStart = Math.Max(rowStart, 1);
 
-            int belopIndex = Math.Max(priceIndex, codeIndex + 7);
             List<TaskPostDTO> sections = new();
+            HashSet<TaskPostDTO> leafCodeRows = new();
             IXLWorksheet sheet = workbook.Worksheet(safeSheetNr);
 
             var lastRow = sheet.LastRowUsed()?.RowNumber() ?? 0;
-            for (int row = rowStart; row <= lastRow; row++)
+            int effectiveLastRow = rowEnd >= rowStart ? Math.Min(rowEnd, lastRow) : lastRow;
+            for (int row = rowStart; row <= effectiveLastRow; row++)
             {
-                if (IsImportRowEmpty(sheet, row, codeIndex, nameIndex, unitIndex, quantityIndex, priceIndex))
+                if (IsImportRowEmpty(sheet, row, codeIndex, nameIndex, unitIndex, quantityIndex, priceIndex, amountIndex))
                     continue;
 
                 string code = CellText(sheet, row, codeIndex);
@@ -127,13 +137,15 @@ namespace ProjectManagement.Client.Helper
                     string unit = CellText(sheet, row, unitIndex);
                     string quantityStr = CellText(sheet, row, quantityIndex);
                     string priceStr = CellText(sheet, row, priceIndex);
-                    string belopStr = CellText(sheet, row, belopIndex);
+                    string amountStr = CellText(sheet, row, amountIndex);
 
                     if (LooksLikeNumber(unit) && IsLikelyUnit(quantityStr))
                         (unit, quantityStr) = (quantityStr, unit);
 
-                    string importedName = LimitText(name, FieldLengths.TaskName);
-                    string importedCode = LimitText(code, FieldLengths.Code);
+                    bool isLocalOrdinalCode = IsLocalOrdinalCode(code);
+                    string sourceName = isLocalOrdinalCode ? JoinCodeAndName(code, name) : name;
+                    string importedName = LimitText(sourceName, FieldLengths.TaskName);
+                    string importedCode = isLocalOrdinalCode ? string.Empty : LimitText(code, FieldLengths.Code);
                     string importedUnit = LimitText(unit, FieldLengths.Unit);
 
                     var task = new TaskPostDTO
@@ -150,18 +162,35 @@ namespace ProjectManagement.Client.Helper
                         }
                     };
 
-                    if (name.Length > FieldLengths.TaskName)
-                        task.Metadata.Note = LimitText(name, FieldLengths.Note);
+                    if (sourceName.Length > FieldLengths.TaskName)
+                        task.Metadata.Note = LimitText(sourceName, FieldLengths.Note);
 
-                    if (string.IsNullOrWhiteSpace(unit) && string.IsNullOrWhiteSpace(priceStr) && string.IsNullOrWhiteSpace(quantityStr))
+                    bool isThreeDashRow = IsDash(unit) && IsDash(quantityStr) && IsDash(priceStr);
+                    bool isFourDashCodeRow = isThreeDashRow
+                        && IsDash(amountStr)
+                        && RowContainsOnlyCodeNameAndDashes(sheet, row, codeIndex, nameIndex, minimumDashCount: 4);
+
+                    if (isFourDashCodeRow)
+                    {
+                        task.Metadata.Type = TaskType.FourBarCode;
+                        task.Unit = "-";
+                        task.Quantity = null;
+                        task.Metadata.PriceSubDB = null;
+                        leafCodeRows.Add(task);
+                    }
+                    else if (string.IsNullOrWhiteSpace(unit) && string.IsNullOrWhiteSpace(priceStr) && string.IsNullOrWhiteSpace(quantityStr))
                     {
                         task.Metadata.Type = TaskType.CodeName;
                         task.Quantity = null;
                     }
-                    else if (unit == "-" && quantityStr == "-" && priceStr == "-")
+                    else if (isThreeDashRow)
                     {
-                        task.Metadata.Type = TaskType.Minus;
-                        task.Quantity = belopStr == "-" ? 0 : 1;
+                        task.Metadata.Type = TaskType.ThreeBarCode;
+                        task.Quantity = 1m;
+                        task.Metadata.BaseQuantity = 1m;
+                        task.Metadata.QuantityParam = ConstValues.FixedQ;
+                        task.Metadata.ChangeFactor1 = 1m;
+                        task.Metadata.ChangeFactor2 = 1m;
                     }
                     else
                     {
@@ -177,7 +206,7 @@ namespace ProjectManagement.Client.Helper
                 }
             }
 
-            ReSort(sections);
+            ReSort(sections, leafCodeRows);
             return sections;
         }
 
@@ -209,6 +238,7 @@ namespace ProjectManagement.Client.Helper
             int unitIndex = header?.UnitIndex ?? DetectUnitColumn(profiles, nameIndex);
             int quantityIndex = header?.QuantityIndex ?? DetectQuantityColumn(profiles, nameIndex, unitIndex);
             int priceIndex = header?.PriceIndex ?? DetectPriceColumn(profiles, unitIndex, quantityIndex);
+            int amountIndex = header?.AmountIndex ?? DetectAmountColumn(profiles, priceIndex);
 
             ExcelImportLayout layout = new()
             {
@@ -219,10 +249,12 @@ namespace ProjectManagement.Client.Helper
                 UnitIndex = unitIndex,
                 QuantityIndex = quantityIndex,
                 PriceIndex = priceIndex,
+                AmountIndex = amountIndex,
             };
 
             int startSearchRow = header == null ? firstRow : Math.Min(header.RowNumber + 1, lastRow);
             layout.RowStart = DetectStartRow(sheet, startSearchRow, lastRow, layout);
+            layout.RowEnd = DetectEndRow(sheet, layout.RowStart, lastRow, layout);
             layout.Score = ScoreLayout(sheet, firstRow, lastRow, layout) + (header?.Score ?? 0);
 
             return layout;
@@ -231,13 +263,11 @@ namespace ProjectManagement.Client.Helper
         static HeaderLayout? DetectHeaderLayout(IXLWorksheet sheet, int firstRow, int lastRow, int firstColumn, int lastColumn)
         {
             HeaderLayout? best = null;
-            int maxHeaderRow = Math.Min(lastRow, firstRow + 100);
+            int maxHeaderRow = Math.Min(lastRow, firstRow + 150);
 
             for (int row = firstRow; row <= maxHeaderRow; row++)
             {
                 HeaderLayout current = new() { RowNumber = row };
-                int? amountIndex = null;
-
                 for (int column = firstColumn; column <= lastColumn; column++)
                 {
                     string key = TextKey(CellText(sheet, row, column));
@@ -269,14 +299,12 @@ namespace ProjectManagement.Client.Helper
                         current.PriceIndex = column;
                         current.Matches++;
                     }
-                    else if (amountIndex == null && IsAmountHeader(key))
+                    else if (current.AmountIndex == null && IsAmountHeader(key))
                     {
-                        amountIndex = column;
+                        current.AmountIndex = column;
                         current.Matches++;
                     }
                 }
-
-                current.PriceIndex ??= amountIndex;
 
                 if (current.NameIndex == null || current.Matches < 2)
                     continue;
@@ -386,6 +414,16 @@ namespace ProjectManagement.Client.Helper
             return profile?.ColumnNumber ?? after + 1;
         }
 
+        static int DetectAmountColumn(List<ColumnProfile> profiles, int priceIndex)
+        {
+            ColumnProfile? profile = profiles
+                .Where(x => x.ColumnNumber > priceIndex && x.ColumnNumber <= priceIndex + 6 && x.NumericCount > 0)
+                .OrderBy(x => x.ColumnNumber)
+                .FirstOrDefault();
+
+            return profile?.ColumnNumber ?? priceIndex + 1;
+        }
+
         static int DetectStartRow(IXLWorksheet sheet, int firstRow, int lastRow, ExcelImportLayout layout)
         {
             for (int row = firstRow; row <= lastRow; row++)
@@ -404,6 +442,17 @@ namespace ProjectManagement.Client.Helper
             }
 
             return firstRow;
+        }
+
+        static int DetectEndRow(IXLWorksheet sheet, int firstRow, int lastRow, ExcelImportLayout layout)
+        {
+            for (int row = lastRow; row >= firstRow; row--)
+            {
+                if (!string.IsNullOrWhiteSpace(CellText(sheet, row, layout.NameIndex)))
+                    return row;
+            }
+
+            return lastRow;
         }
 
         static int ScoreLayout(IXLWorksheet sheet, int firstRow, int lastRow, ExcelImportLayout layout)
@@ -460,6 +509,29 @@ namespace ProjectManagement.Client.Helper
             }
 
             return sheet.Row(row).IsEmpty();
+        }
+
+        static bool RowContainsOnlyCodeNameAndDashes(IXLWorksheet sheet, int row, int codeIndex, int nameIndex, int minimumDashCount)
+        {
+            int lastColumn = sheet.LastColumnUsed()?.ColumnNumber() ?? 0;
+            int dashCount = 0;
+
+            for (int column = 1; column <= lastColumn; column++)
+            {
+                if (column == codeIndex || column == nameIndex)
+                    continue;
+
+                string text = CellText(sheet, row, column);
+                if (string.IsNullOrWhiteSpace(text))
+                    continue;
+
+                if (!IsDash(text))
+                    return false;
+
+                dashCount++;
+            }
+
+            return dashCount >= minimumDashCount;
         }
 
         static string CellText(IXLWorksheet sheet, int row, int column)
@@ -534,6 +606,8 @@ namespace ProjectManagement.Client.Helper
 
         static bool LooksLikeNumber(string text) => TryReadDecimal(text, out _);
 
+        static bool IsDash(string text) => NormalizeText(text) == "-";
+
         static string LimitText(string text, int maxLength)
         {
             text = NormalizeText(text);
@@ -558,8 +632,8 @@ namespace ProjectManagement.Client.Helper
         }
 
         static bool IsHeaderWord(string text) => HeaderWords.Contains(TextKey(text));
-        static bool IsCodeHeader(string key) => key is "kod" or "code" or "nr" or "nummer" or "pos" or "littera" or "ama";
-        static bool IsNameHeader(string key) => key is "text" or "namn" or "name" or "benamning" or "beskrivning" or "rubrik" or "post" or "aktivitet";
+        static bool IsCodeHeader(string key) => key is "kod" or "code" or "nr" or "nummer" or "pos" or "position" or "littera" or "ama";
+        static bool IsNameHeader(string key) => key is "text" or "namn" or "name" or "benamning" or "beteckning" or "beskrivning" or "rubrik" or "post" or "aktivitet" or "arbete" or "arbetsmoment";
         static bool IsUnitHeader(string key) => key is "enhet" or "unit" or "enh" or "me" or "mattenhet";
         static bool IsQuantityHeader(string key) => key is "mangd" or "quantity" or "qty" or "antal" or "volym" or "mangdberaknad";
         static bool IsPriceHeader(string key) => key is "apris" or "pris" or "price" or "unitprice" or "enhetspris" or "kostnad" or "kostnadenhet";
@@ -596,24 +670,92 @@ namespace ProjectManagement.Client.Helper
             return key.ToString();
         }
 
-        static void ReSort(List<TaskPostDTO> sections)
+        static void ReSort(List<TaskPostDTO> sections, ISet<TaskPostDTO>? leafTasks = null)
         {
             for (int child = sections.Count - 1; child >= 0; child--)
             {
                 for (int parent = child - 1; parent >= 0; parent--)
                 {
+                    if (leafTasks?.Contains(sections[parent]) == true)
+                        continue;
+
                     bool parentHasCode = !string.IsNullOrEmpty(sections[parent].Metadata.Code);
                     bool childHasCode = !string.IsNullOrEmpty(sections[child].Metadata.Code);
 
-                    if ((parentHasCode && childHasCode && sections[child].Metadata.Code.StartsWith(sections[parent].Metadata.Code))
+                    if ((parentHasCode && childHasCode && IsParentCode(sections[parent].Metadata.Code, sections[child].Metadata.Code))
                         || (!childHasCode && parentHasCode))
                     {
+                        sections[parent].Colspan = true;
                         sections[parent].Tasks.Insert(0, sections[child]);
                         sections.RemoveAt(child);
                         break;
                     }
                 }
             }
+        }
+
+        static bool IsParentCode(string parentCode, string childCode)
+        {
+            parentCode = NormalizeCode(parentCode);
+            childCode = NormalizeCode(childCode);
+
+            if (string.IsNullOrWhiteSpace(parentCode) ||
+                string.IsNullOrWhiteSpace(childCode) ||
+                string.Equals(parentCode, childCode, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            if (IsLocalOrdinalCode(childCode) && !IsLocalOrdinalCode(parentCode))
+                return true;
+
+            string parentPrefix = parentCode.TrimEnd('.');
+            if (string.IsNullOrWhiteSpace(parentPrefix) ||
+                !childCode.StartsWith(parentPrefix, StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            if (childCode.Length == parentPrefix.Length)
+                return false;
+
+            char next = childCode[parentPrefix.Length];
+            return next is '.' or '-' or '_' or '/' or '\\';
+        }
+
+        static string NormalizeCode(string? code)
+        {
+            string normalized = NormalizeText(code);
+            while (normalized.Length > 0 && char.IsWhiteSpace(normalized[^1]))
+                normalized = normalized[..^1];
+
+            return normalized;
+        }
+
+        static bool IsLocalOrdinalCode(string code)
+        {
+            code = NormalizeCode(code);
+            if (code.Length < 1 || code.Length > 6)
+                return false;
+
+            char suffix = code[^1];
+            string number = suffix is '.' or ')' ? code[..^1] : code;
+            return number.Length > 0 && number.All(char.IsDigit);
+        }
+
+        static string JoinCodeAndName(string code, string name)
+        {
+            code = NormalizeCode(code);
+            name = NormalizeText(name);
+
+            if (string.IsNullOrWhiteSpace(code))
+                return name;
+
+            if (string.IsNullOrWhiteSpace(name))
+                return code;
+
+            if (name.StartsWith(code, StringComparison.OrdinalIgnoreCase))
+                return name;
+
+            return $"{code} {name}";
         }
 
         public static void Export(DataTable data, string sheetName, string path)
@@ -649,6 +791,7 @@ namespace ProjectManagement.Client.Helper
             public int? UnitIndex { get; set; }
             public int? QuantityIndex { get; set; }
             public int? PriceIndex { get; set; }
+            public int? AmountIndex { get; set; }
             public int Matches { get; set; }
             public int Score { get; set; }
         }

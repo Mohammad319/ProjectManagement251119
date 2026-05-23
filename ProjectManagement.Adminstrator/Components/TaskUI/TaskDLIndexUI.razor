@@ -44,7 +44,7 @@
             <div class="mt-1 max-w-xl text-sm text-slate-600 dark:text-slate-400">The admin workspace is fetching task definitions and linked resource assignments.</div>
         </div>
     }
-    else if (tasks.Count == 0)
+    else if (taskRows.Count == 0)
     {
         <div class="flex min-h-[180px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-8 text-center dark:border-slate-700 dark:bg-slate-900/40">
             <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">No task definitions yet</div>
@@ -70,19 +70,20 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var item in tasks)
+                        @foreach (var row in taskRows)
                         {
+                            var item = row.Task;
                             <tr>
                                 <td class="px-1 py-1 align-top text-sm text-slate-700 dark:text-slate-200">
                                     <div class="flex flex-wrap items-center gap-1">
-                                        <button @onclick="async () => await Collspan(item)" class="inline-flex items-center justify-center gap-2 rounded-xl px-1 py-1 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-1 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-800 px-1 py-1 text-xs">
-                                            @(ColspanTaskIDs.Any(x => x == item.Id) ? "-" : "+")
+                                        <button @onclick="async () => await Collspan(row)" class="inline-flex items-center justify-center gap-2 rounded-xl px-1 py-1 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-1 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-800 px-1 py-1 text-xs">
+                                            @(ColspanTaskIDs.Any(x => x == row.Id) ? "-" : "+")
                                         </button>
 
                                         <button @onclick="() => OpenEditor(item.Id)" class="inline-flex items-center justify-center gap-1 rounded-xl px-1 py-1 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-1 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-800 px-1 py-1 text-xs" title="Edit">
                                             @Icons.Edit
                                         </button>
-                                        <button @onclick="() => ConfirmDelete(item.Id, item.DisplayName)" class="inline-flex items-center justify-center gap-2 rounded-xl px-1 py-1 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-rose-600 bg-rose-600 px-1 py-1 text-xs font-medium text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-500 dark:bg-rose-500 dark:hover:bg-rose-400 px-1 py-1 text-xs" title="Delete">
+                                        <button @onclick="() => ConfirmDelete(row)" class="inline-flex items-center justify-center gap-2 rounded-xl px-1 py-1 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-rose-600 bg-rose-600 px-1 py-1 text-xs font-medium text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-500 dark:bg-rose-500 dark:hover:bg-rose-400 px-1 py-1 text-xs" title="Delete">
                                             @Icons.Delete
                                         </button>
                                         <button @onclick="() => OpenTaskFolders(item.Id, item.DisplayName)" class="inline-flex items-center justify-center gap-2 rounded-xl px-1 py-1 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-1 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 px-1 py-1 text-xs">@ResourceLoc.resource</button>
@@ -111,10 +112,10 @@
                                     }
                                 </td>
                                 <td class="px-1 py-1 align-top">
-                                    @if (item.StateLinks.Count > 0)
+                                    @if (row.StateLinks.Count > 0)
                                     {
                                         <div class="flex flex-wrap gap-1">
-                                            @foreach (var sl in item.StateLinks)
+                                            @foreach (var sl in row.StateLinks)
                                             {
                                                 <span class="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[11px] font-medium text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-200"
                                                       title="@sl.GroupName">
@@ -125,17 +126,17 @@
                                     }
                                 </td>
                             </tr>
-                            @if (ColspanTaskIDs.Any(x => x == item.Id) && item.ResourceTasks != null)
+                            @if (ColspanTaskIDs.Any(x => x == row.Id) && row.ResourceTasks != null)
                             {
-                                foreach (var res in item.ResourceTasks)
+                                foreach (var res in row.ResourceTasks)
                                 {
                                     <tr class="bg-slate-50/60 dark:bg-slate-950/30">
                                         <td class="px-1 py-1 align-top text-sm text-slate-700 dark:text-slate-200">
                                             <div class="flex flex-wrap items-center gap-1">
-                                                <button class="inline-flex items-center justify-center gap-2 rounded-xl px-1 py-1 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-1 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 px-1 py-1 text-xs" @onclick="() => TaskChoiceResourceBin(item, res)">
+                                                <button class="inline-flex items-center justify-center gap-2 rounded-xl px-1 py-1 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-1 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 px-1 py-1 text-xs" @onclick="() => TaskChoiceResourceBin(row, res)">
                                                     @((MarkupString)Icons.Machines)
                                                 </button>
-                                                <button class="inline-flex items-center justify-center gap-2 rounded-xl px-1 py-1 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-rose-600 bg-rose-600 px-1 py-1 text-xs font-medium text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-500 dark:bg-rose-500 dark:hover:bg-rose-400 px-1 py-1 text-xs" @onclick="() => RemoveAsync(item, res)">
+                                                <button class="inline-flex items-center justify-center gap-2 rounded-xl px-1 py-1 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-rose-600 bg-rose-600 px-1 py-1 text-xs font-medium text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-500 dark:bg-rose-500 dark:hover:bg-rose-400 px-1 py-1 text-xs" @onclick="() => RemoveAsync(row, res)">
                                                     @((MarkupString)Icons.Delete)
                                                 </button>
                                                 <span class="text-sm font-medium text-slate-800 dark:text-slate-100">@res.DisplayName</span>
@@ -192,40 +193,45 @@
     private bool _loadingMore = false;
     private bool _hasMore = false;
 
-    void TaskChoiceResourceBin(ProjectTaskListItemDto model, ResourceTaskIndexDto resourceId) =>
+    void TaskChoiceResourceBin(TaskDisplayRow row, ResourceTaskIndexDto resourceId) =>
     MHD.Modal.ShowComponent<TaskResourceUI>
-    (model.DisplayName + " Resource",
+    (row.Task.DisplayName + " Resource",
 new Dictionary<string, object>
 {
-    [nameof(TaskResourceUI.Task)] = model,
+    [nameof(TaskResourceUI.Task)] = row.GetTaskForAssignment(resourceId.AssignmentId),
     [nameof(TaskResourceUI.Resource)] = resourceId,
 }, DialogSize.ExtraLarge);
     private List<ProjectTaskListItemDto>? tasks;
+    private List<TaskDisplayRow> taskRows = [];
     private string? errorMessage;
     private string? infoMessage;
+    private int _loadedTaskCount = 0;
     List<int> ColspanTaskIDs = [];
-    private void ConfirmDelete(ProjectTaskListItemDto task, ResourceTaskIndexDto res)
-    => MHD.DeleteMessage(res.DisplayName, EventCallback.Factory.Create(this, () => RemoveAsync(task, res)));
 
-    async Task RemoveAsync(ProjectTaskListItemDto task, ResourceTaskIndexDto res)
+    async Task RemoveAsync(TaskDisplayRow row, ResourceTaskIndexDto res)
     {
         if (await FoldersService.RemoveAssignmentAsync(res.AssignmentId))
         {
-            task.ResourceTasks?.RemoveAll(x => x.AssignmentId == res.AssignmentId);
+            row.ResourceTasks?.RemoveAll(x => x.AssignmentId == res.AssignmentId);
             StateHasChanged();
         }
     }
 
-    async Task Collspan(ProjectTaskListItemDto task)
+    async Task Collspan(TaskDisplayRow row)
     {
-        if (ColspanTaskIDs.Any(x => x == task.Id))
+        if (ColspanTaskIDs.Any(x => x == row.Id))
         {
-            ColspanTaskIDs.Remove(task.Id);
+            ColspanTaskIDs.Remove(row.Id);
         }
         else
         {
-            task.ResourceTasks = (await TaskQueries.GetResourcesForTaskAsync(task.Id, CancellationToken.None)).ToList();
-            ColspanTaskIDs.Add(task.Id);
+            row.ClearResourceTasks();
+            foreach (var taskId in row.TaskIds)
+            {
+                var resources = await TaskQueries.GetResourcesForTaskAsync(taskId, CancellationToken.None);
+                row.AddResourceTasks(taskId, resources);
+            }
+            ColspanTaskIDs.Add(row.Id);
         }
         StateHasChanged();
     }
@@ -241,6 +247,8 @@ new Dictionary<string, object>
             ColspanTaskIDs.Clear();
             var batch = (await TaskQueries.GetListPagedAsync(0, PageSize, CancellationToken.None)).ToList();
             tasks = batch;
+            taskRows = BuildDisplayRows(tasks);
+            _loadedTaskCount = batch.Count;
             _hasMore = batch.Count == PageSize;
             StateHasChanged();
         }
@@ -257,8 +265,10 @@ new Dictionary<string, object>
         _loadingMore = true;
         try
         {
-            var batch = (await TaskQueries.GetListPagedAsync(tasks.Count, PageSize, CancellationToken.None)).ToList();
+            var batch = (await TaskQueries.GetListPagedAsync(_loadedTaskCount, PageSize, CancellationToken.None)).ToList();
             tasks.AddRange(batch);
+            taskRows = BuildDisplayRows(tasks);
+            _loadedTaskCount += batch.Count;
             _hasMore = batch.Count == PageSize;
         }
         catch (Exception ex)
@@ -328,12 +338,15 @@ new Dictionary<string, object>
         }, DialogSize.ExtraLarge);
     }
 
-    private void ConfirmDelete(int id, string name)
-        => MHD.DeleteMessage(name, EventCallback.Factory.Create(this, () => DeleteAsync(id)));
+    private void ConfirmDelete(TaskDisplayRow row)
+        => MHD.DeleteMessage(row.Task.DisplayName, EventCallback.Factory.Create(this, () => DeleteAsync(row.TaskIds)));
 
-    private async Task DeleteAsync(int id)
+    private async Task DeleteAsync(IReadOnlyList<int> ids)
     {
-        await TaskCommands.DeleteAsync(id, CancellationToken.None);
+        foreach (var id in ids.Distinct())
+        {
+            await TaskCommands.DeleteAsync(id, CancellationToken.None);
+        }
         await ReloadAsync();
     }
 
@@ -342,4 +355,121 @@ new Dictionary<string, object>
 
     private static string FormatNullableDecimal(decimal? value)
         => NumericDisplayHelper.Format(value);
+
+    private static List<TaskDisplayRow> BuildDisplayRows(IEnumerable<ProjectTaskListItemDto> source)
+    {
+        var rows = new List<TaskDisplayRow>();
+        var index = new Dictionary<TaskDisplayKey, TaskDisplayRow>();
+
+        foreach (var task in source)
+        {
+            var key = TaskDisplayKey.From(task);
+            if (!index.TryGetValue(key, out var row))
+            {
+                row = new TaskDisplayRow(task);
+                rows.Add(row);
+                index.Add(key, row);
+            }
+            else
+            {
+                row.AddTaskId(task.Id);
+            }
+
+            row.AddStateLinks(task.StateLinks);
+        }
+
+        return rows;
+    }
+
+    private sealed record TaskDisplayKey(
+        string Code,
+        string DisplayName,
+        string UnitCode,
+        decimal? Quantity,
+        bool IsActive,
+        string Responsible,
+        bool Uncontrollable)
+    {
+        public static TaskDisplayKey From(ProjectTaskListItemDto task) => new(
+            Normalize(task.Code),
+            Normalize(task.DisplayName),
+            Normalize(task.UnitCode),
+            task.Quantity,
+            task.IsActive,
+            Normalize(task.Responsible),
+            task.Uncontrollable);
+
+        private static string Normalize(string? value) => (value ?? string.Empty).Trim();
+    }
+
+    private sealed class TaskDisplayRow
+    {
+        private readonly Dictionary<int, int> assignmentTaskIds = [];
+
+        public TaskDisplayRow(ProjectTaskListItemDto task)
+        {
+            Task = task;
+            TaskIds.Add(task.Id);
+        }
+
+        public int Id => Task.Id;
+        public ProjectTaskListItemDto Task { get; }
+        public List<int> TaskIds { get; } = [];
+        public List<TaskStateLinkDto> StateLinks { get; } = [];
+        public List<ResourceTaskIndexDto>? ResourceTasks { get; private set; }
+
+        public void AddTaskId(int taskId)
+        {
+            if (!TaskIds.Contains(taskId))
+            {
+                TaskIds.Add(taskId);
+            }
+        }
+
+        public void AddStateLinks(IEnumerable<TaskStateLinkDto> links)
+        {
+            foreach (var link in links)
+            {
+                if (!StateLinks.Any(x => x.StateId == link.StateId && x.GroupId == link.GroupId))
+                {
+                    StateLinks.Add(link);
+                }
+            }
+        }
+
+        public void ClearResourceTasks()
+        {
+            ResourceTasks = [];
+            assignmentTaskIds.Clear();
+        }
+
+        public void AddResourceTasks(int taskId, IEnumerable<ResourceTaskIndexDto> resources)
+        {
+            ResourceTasks ??= [];
+
+            foreach (var resource in resources)
+            {
+                if (assignmentTaskIds.ContainsKey(resource.AssignmentId))
+                {
+                    continue;
+                }
+
+                ResourceTasks.Add(resource);
+                assignmentTaskIds.Add(resource.AssignmentId, taskId);
+            }
+        }
+
+        public ProjectTaskListItemDto GetTaskForAssignment(int assignmentId)
+        {
+            if (!assignmentTaskIds.TryGetValue(assignmentId, out var taskId) || taskId == Task.Id)
+            {
+                return Task;
+            }
+
+            var task = Task with { Id = taskId };
+            task.StateLinks = StateLinks;
+            task.ResourceTasks = ResourceTasks ?? [];
+            return task;
+        }
+    }
 }

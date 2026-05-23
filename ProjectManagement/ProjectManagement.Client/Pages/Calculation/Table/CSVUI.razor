@@ -3,6 +3,7 @@
 @using ProjectManagement.Client.Shared.MVVM.Calculation
 @using ProjectManagement.Client.Shared.Model.Project
 @using ProjectManagement.Client.Shared.Repositories.Calculation
+@using ProjectManagement.Shared.Base.Calculation
 @using ProjectManagement.Shared.DTO.Calculation
 @using System.Globalization
 @using System.IO
@@ -12,10 +13,53 @@
 <div class="space-y-3 p-3 text-slate-800 dark:text-slate-100" style="--net-task: @UiStyles.Task;--net-subtask: @UiStyles.SubTask;">
     <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/60">
         <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <div class="flex min-w-0 flex-col gap-1 xl:col-span-2">
+                <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Välj Excel-fil (mängdförteckning)</label>
+                <div class="flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-white px-2 py-2 dark:border-slate-700 dark:bg-slate-900">
+                    <label for="excel-import-file"
+                           class="inline-flex h-8 cursor-pointer items-center justify-center rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition hover:border-blue-500 hover:text-blue-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-blue-400 dark:hover:text-blue-300">
+                        Välj fil
+                    </label>
+                    <InputFile id="excel-import-file"
+                               class="hidden"
+                               type="file"
+                               accept=".xlsx,.xls"
+                               OnChange="(InputFileChangeEventArgs e) => CheckedChanged(e)" />
+                    <span class="min-w-0 truncate text-sm text-slate-600 dark:text-slate-300">@SelectedFileLabel</span>
+
+                    @if (CanImport)
+                    {
+                        <button type="button"
+                                class="inline-flex h-8 items-center justify-center rounded-lg border border-blue-600 bg-blue-600 px-3 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-blue-500 dark:bg-blue-500 dark:hover:bg-blue-400 dark:hover:text-slate-900"
+                                @onclick="Import"
+                                disabled="@wait">
+                            Importera
+                        </button>
+                    }
+
+                    @if (CanTransferToCalculation)
+                    {
+                        <button type="button"
+                                class="inline-flex h-8 items-center justify-center rounded-lg border border-emerald-600 bg-emerald-600 px-3 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400 dark:hover:text-slate-900"
+                                @onclick="Save"
+                                disabled="@wait">
+                            @(wait ? "Överför data till kalkyl..." : "Överför data till kalkyl")
+                        </button>
+                    }
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(ImportMessage))
+                {
+                    <div class="@ImportMessageClass">
+                        @ImportMessage
+                    </div>
+                }
+            </div>
+
             @if (SheetIsVisible)
             {
                 <div class="flex flex-col gap-1">
-                    <label class="text-sm font-medium text-slate-700 dark:text-slate-300">@AppLoc["sheetNr"]</label>
+                    <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Välj blad att importera</label>
                     <select class="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
                             value="@SheetNr"
                             @onchange="OnSheetChanged">
@@ -27,69 +71,46 @@
                 </div>
             }
 
-            <div class="flex flex-col gap-1">
-                <label class="text-sm font-medium text-slate-700 dark:text-slate-300">@ResourceApp.StartFromRow</label>
-                <input type="number"
-                       class="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
-                       placeholder="@ResourceApp.StartFromRow"
-                       @bind="RowStart" />
-            </div>
+            @if (HasSelectedFile)
+            {
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="flex flex-col gap-1">
+                        <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Importera från rad</label>
+                        <input type="number"
+                               class="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
+                               value="@RowStart"
+                               @onchange="OnRowStartChanged" />
+                    </div>
 
-            <div class="flex min-w-0 flex-col gap-1 xl:col-span-2">
-                <label class="text-sm font-medium text-slate-700 dark:text-slate-300">@AppLoc["file"]</label>
-                <div class="flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-white px-2 py-2 dark:border-slate-700 dark:bg-slate-900">
-                    <InputFile type="file" OnChange="(InputFileChangeEventArgs e) => CheckedChanged(e)"></InputFile>
-
-                    @if (HasSelectedFile)
-                    {
-                        <button type="button"
-                                class="inline-flex h-8 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition hover:border-blue-500 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-blue-400 dark:hover:text-blue-300"
-                                @onclick="DetectCurrentSheet"
-                                disabled="@wait">
-                            Auto
-                        </button>
-
-                        <button type="button"
-                                class="inline-flex h-8 items-center justify-center rounded-lg border border-blue-600 bg-blue-600 px-3 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-blue-500 dark:bg-blue-500 dark:hover:bg-blue-400 dark:hover:text-slate-900"
-                                @onclick="Import"
-                                disabled="@wait">
-                            @ResourceApp.import
-                        </button>
-                    }
-
-                    @if (Sections != null && Sections.Any())
-                    {
-                        <button type="button"
-                                class="inline-flex h-8 items-center justify-center rounded-lg border border-emerald-600 bg-emerald-600 px-3 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400 dark:hover:text-slate-900"
-                                @onclick="Save"
-                                disabled="@wait">
-                            @ResourceApp.save
-                        </button>
-                    }
+                    <div class="flex flex-col gap-1">
+                        <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Importera till rad</label>
+                        <input type="number"
+                               class="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
+                               value="@RowEnd"
+                               @onchange="OnRowEndChanged" />
+                    </div>
                 </div>
-
-                @if (!string.IsNullOrWhiteSpace(DetectionMessage))
-                {
-                    <div class="rounded-lg border border-blue-100 bg-blue-50 px-2 py-1.5 text-xs text-blue-800 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-200">
-                        @DetectionMessage
-                    </div>
-                }
-
-                @if (!string.IsNullOrWhiteSpace(ImportMessage))
-                {
-                    <div class="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
-                        @ImportMessage
-                    </div>
-                }
-            </div>
+            }
         </div>
     </div>
 
+    @if (HasImportedPreview)
+    {
     <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
-        <table class="min-w-[780px] w-full border-collapse text-sm">
+        <table class="min-w-[1400px] w-full table-fixed border-collapse text-sm">
+            <colgroup>
+                <col class="w-[58px]" />
+                <col class="w-[10%]" />
+                <col class="w-[40%]" />
+                <col class="w-[10%]" />
+                <col class="w-[10%]" />
+                <col class="w-[12%]" />
+                <col class="w-[10%]" />
+                <col class="w-[96px]" />
+            </colgroup>
             <thead class="bg-slate-100 dark:bg-slate-800">
                 <tr>
-                    <th class="border border-slate-300 px-2 py-2 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200" width="84"></th>
+                    <th class="border border-slate-300 px-2 py-2 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200" width="58"></th>
                     <th class="border border-slate-300 px-2 py-2 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
                         <div class="flex items-center gap-2 whitespace-nowrap">
                             <input class="h-8 w-14 rounded-md border border-slate-300 bg-white px-2 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
@@ -127,9 +148,18 @@
                             <input class="h-8 w-14 rounded-md border border-slate-300 bg-white px-2 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
                                    type="number"
                                    @bind="PriceIndex" />
-                            <span>@CalcResource.price</span>
+                            <span>Á-pris/enhet</span>
                         </div>
                     </th>
+                    <th class="border border-slate-300 px-2 py-2 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                        <div class="flex items-center gap-2 whitespace-nowrap">
+                            <input class="h-8 w-14 rounded-md border border-slate-300 bg-white px-2 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
+                                   type="number"
+                                   @bind="AmountIndex" />
+                            <span>Belopp</span>
+                        </div>
+                    </th>
+                    <th class="border border-slate-300 px-2 py-2 text-end font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200" width="96"></th>
                 </tr>
             </thead>
             <tbody>
@@ -137,26 +167,21 @@
                 {
                     @foreach (var Task in Sections)
                     {
-                        @TaskRow(Task)
+                        @TaskRow(Task, Sections)
                     }
                 }
             </tbody>
         </table>
     </div>
+    }
 </div>
 
 @code {
-    RenderFragment TaskRow(TaskPostDTO Task, int left = 0) => __builder =>
+    RenderFragment TaskRow(TaskPostDTO Task, List<TaskPostDTO> siblings, int left = 0) => __builder =>
     {
-        <tr class="@(left == 0 ? "task" : "subTask") border-b border-slate-200 dark:border-slate-700">
+        <tr class="@($"{(left == 0 ? "task" : "subTask")} border-b border-slate-200 dark:border-slate-700")">
             <td class="border border-slate-300 px-2 py-1.5 dark:border-slate-700">
-                <div class="flex items-center gap-2" style="margin-left:@($"{left}px")">
-                    <span class="cursor-pointer text-slate-500 transition hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400"
-                          @onclick="() => RemoveSection(Task)"
-                          role="button">
-                        @((MarkupString)Icons.Delete)
-                    </span>
-
+                <div class="flex items-center gap-1.5" style="margin-left:@($"{left}px")">
                     @if (Task.Tasks.Any())
                     {
                         <span role="button"
@@ -164,6 +189,10 @@
                               class="cursor-pointer text-slate-500 transition hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400">
                             @((MarkupString)(Icons.RightBottom(Task.Colspan)))
                         </span>
+                    }
+                    else
+                    {
+                        <span class="inline-block w-4"></span>
                     }
                 </div>
             </td>
@@ -178,19 +207,45 @@
                        @bind="@Task.Name" />
             </td>
             <td class="border border-slate-300 px-2 py-1.5 dark:border-slate-700">
-                <input class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
+                <input class="@PreviewInputClass"
                        type="text"
-                       @bind="@Task.Unit" />
+                       value="@FormatUnitDraft(Task)"
+                       @onchange="args => OnUnitChanged(Task, args.Value?.ToString())" />
             </td>
             <td class="border border-slate-300 px-2 py-1.5 dark:border-slate-700">
-                <input class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
-                       type="number"
-                       @bind="@Task.Quantity" />
+                <input class="@PreviewInputClass"
+                       type="text"
+                       value="@FormatQuantityDraft(Task)"
+                       title="@GetDashQuantityTooltip(Task)"
+                       @onchange="args => OnQuantityChanged(Task, args.Value?.ToString())" />
             </td>
             <td class="border border-slate-300 px-2 py-1.5 dark:border-slate-700">
-                <input class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
-                       type="number"
-                       @bind="@Task.Metadata.PriceSubDB" />
+                <input class="@PreviewInputClass"
+                       type="text"
+                       value="@FormatPriceDraft(Task)"
+                       @onchange="args => OnPriceChanged(Task, args.Value?.ToString())" />
+            </td>
+            <td class="border border-slate-300 px-2 py-1.5 dark:border-slate-700">
+                <input class="@PreviewInputClass"
+                       type="text"
+                       value="@FormatAmountDraft(Task)"
+                       @onchange="args => OnAmountChanged(Task, args.Value?.ToString())" />
+            </td>
+            <td class="border border-slate-300 px-2 py-1.5 text-right dark:border-slate-700">
+                <div class="flex justify-end gap-1">
+                    <button type="button"
+                            class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-blue-200 bg-blue-50 text-blue-700 transition hover:bg-blue-100 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300"
+                            title="Lägg till rad under"
+                            @onclick="() => AddRowAfter(siblings, Task)">
+                        @((MarkupString)Icons.Plus)
+                    </button>
+                    <button type="button"
+                            class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-rose-200 bg-rose-50 text-rose-700 transition hover:bg-rose-100 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300"
+                            title="Ta bort rad"
+                            @onclick="() => RemoveSection(siblings, Task)">
+                        @((MarkupString)Icons.Delete)
+                    </button>
+                </div>
             </td>
         </tr>
 
@@ -200,33 +255,46 @@
             {
                 foreach (var item in Task.Tasks.OrderByDescending(x => x.Order))
                 {
-                    @TaskRow(item, left + 7)
+                    @TaskRow(item, Task.Tasks, left + 14)
                 }
             }
         }
     };
 
+    private const string DashQuantityTooltip = "\"-\" här räknas mängden som 1.";
+    private string PreviewInputClass => "h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20";
+    private readonly Dictionary<TaskPostDTO, string> AmountDrafts = new(ReferenceEqualityComparer.Instance);
+
     void Save() =>
-         MHD.MessageYesNo(ResourceApp.save, ResourceApp.DoYouWanTtoSaveTheListInDatabase,
+         MHD.MessageYesNo("Överför data till kalkyl", "Vill du överföra datan till kalkylen?",
              MhdState.Primary, EventCallback.Factory.Create(this, () => SaveConfirm()));
 
-    int RowStart = 39;
-    string fileUrl = string.Empty;
+    int RowStart = 1;
+    int RowEnd = 1;
     List<TaskPostDTO>? Sections;
     bool wait = false;
+    bool transferCompleted = false;
     int CodeIndex = 1;
     int NameIndex = 2;
     int UnitIndex = 4;
     int QuantityIndex = 5;
     int PriceIndex = 6;
+    int AmountIndex = 7;
     int SheetNr = 1;
-    List<ListOrderDTO>? Statuses;
     bool SheetIsVisible = false;
     List<ExcelWorksheetOption> SheetOptions = new();
-    string DetectionMessage = string.Empty;
     string ImportMessage = string.Empty;
+    bool ImportMessageIsSuccess = false;
+    string SelectedFileName = string.Empty;
     byte[]? workbookBytes;
     bool HasSelectedFile => workbookBytes is { Length: > 0 };
+    bool HasImportedPreview => Sections is { Count: > 0 };
+    bool CanImport => HasSelectedFile && !HasImportedPreview && !transferCompleted;
+    bool CanTransferToCalculation => HasImportedPreview && !transferCompleted;
+    string SelectedFileLabel => string.IsNullOrWhiteSpace(SelectedFileName) ? "Ingen fil har valts" : SelectedFileName;
+    string ImportMessageClass => ImportMessageIsSuccess
+        ? "whitespace-pre-line rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-1.5 text-xs font-bold text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300"
+        : "whitespace-pre-line rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200";
 
     async Task SaveConfirm()
     {
@@ -236,20 +304,27 @@
             return;
         }
 
-        wait = true;
-        var createdTasks = await Repo.Task.CreateAsync(Sections, Calc.Id);
-        bool result = createdTasks.Count > 0;
-        if (result)
-            await CalcService.AddCreatedTasksOrRefreshAsync(createdTasks);
+        try
+        {
+            wait = true;
+            var createdTasks = await Repo.Task.CreateAsync(Sections, Calc.Id);
+            bool result = createdTasks.Count > 0;
+            if (result)
+            {
+                await CalcService.AddCreatedTasksOrRefreshAsync(createdTasks);
+                transferCompleted = true;
+                Sections = null;
+                AmountDrafts.Clear();
+                ImportMessage = "Överföringen till kalkylen lyckades!";
+                ImportMessageIsSuccess = true;
+            }
 
-        MHD.Notifications(ToastType.Add, result);
-        workbook?.Dispose();
-        workbook = null;
-        workbookStream?.Dispose();
-        workbookStream = null;
-        workbookBytes = null;
-        wait = false;
-        Close();
+            MHD.Notifications(ToastType.Add, result);
+        }
+        finally
+        {
+            wait = false;
+        }
     }
     
     XLWorkbook? workbook;
@@ -260,13 +335,16 @@
         try
         {
             IBrowserFile File = f.File;
+            SelectedFileName = File.Name;
             using MemoryStream memStream = new();
             await File.OpenReadStream(File.Size).CopyToAsync(memStream);
             workbookBytes = memStream.ToArray();
 
             Sections = null;
+            AmountDrafts.Clear();
             ImportMessage = string.Empty;
-            DetectionMessage = string.Empty;
+            ImportMessageIsSuccess = false;
+            transferCompleted = false;
             SheetOptions = new();
             SheetIsVisible = false;
 
@@ -289,8 +367,9 @@
             workbookStream = null;
             SheetOptions = new();
             SheetIsVisible = false;
-            DetectionMessage = string.Empty;
-            ImportMessage = $"تعذر قراءة ملف Excel: {ex.Message}";
+            SelectedFileName = string.Empty;
+            ImportMessage = $"Det gick inte att läsa Excel-filen: {ex.Message}";
+            ImportMessageIsSuccess = false;
         }
     }
 
@@ -300,7 +379,29 @@
         {
             SheetNr = selectedSheet;
             DetectCurrentSheet();
+            ResetImportedPreview();
         }
+    }
+
+    void OnRowStartChanged(ChangeEventArgs args)
+    {
+        if (!int.TryParse(args.Value?.ToString(), out var row))
+            return;
+
+        RowStart = Math.Max(1, row);
+        if (RowEnd < RowStart)
+            RowEnd = RowStart;
+
+        ResetImportedPreview();
+    }
+
+    void OnRowEndChanged(ChangeEventArgs args)
+    {
+        if (!int.TryParse(args.Value?.ToString(), out var row))
+            return;
+
+        RowEnd = Math.Max(RowStart, row);
+        ResetImportedPreview();
     }
 
     void DetectCurrentSheet()
@@ -318,17 +419,17 @@
 
         if (!layout.IsDetected)
         {
-            DetectionMessage = string.Empty;
             return;
         }
 
         RowStart = layout.RowStart;
+        RowEnd = layout.RowEnd;
         CodeIndex = layout.CodeIndex;
         NameIndex = layout.NameIndex;
         UnitIndex = layout.UnitIndex;
         QuantityIndex = layout.QuantityIndex;
         PriceIndex = layout.PriceIndex;
-        DetectionMessage = $"Auto: {layout.SheetName} | row {RowStart} | code {CodeIndex} | name {NameIndex} | unit {UnitIndex} | qty {QuantityIndex} | price {PriceIndex}";
+        AmountIndex = layout.AmountIndex;
     }
 
     private void Import()
@@ -340,22 +441,27 @@
         {
             XLWorkbook currentWorkbook = workbook!;
             wait = true;
-            Sections = ExcelHelper.Import(SheetNr, currentWorkbook, RowStart, CodeIndex, NameIndex, UnitIndex, QuantityIndex, PriceIndex, Calc.OHFactors);
-            int importedCount = CountTasks(Sections);
+            Sections = ExcelHelper.Import(SheetNr, currentWorkbook, RowStart, RowEnd, CodeIndex, NameIndex, UnitIndex, QuantityIndex, PriceIndex, AmountIndex, Calc.OHFactors);
+            InitializeAmountDrafts(Sections);
+            transferCompleted = false;
+            ImportMessageIsSuccess = false;
+            ImportSummary summary = CountTasks(Sections);
 
-            if (importedCount == 0)
+            if (summary.Total == 0)
             {
-                ImportMessage = "لم يتم العثور على بيانات. تحقق من اسم sheet ورقم الصف والأعمدة ثم اضغط import مرة أخرى.";
+                ImportMessage = "Inga kalkylposter hittades. Kontrollera blad, rader och kolumner och importera igen.";
+                ImportMessageIsSuccess = false;
                 MHD.MessageOk("Import", ImportMessage, MhdState.Warning);
                 return;
             }
 
-            ImportMessage = $"تم استيراد {importedCount} صف.";
+            ImportMessage = $"Importen är klar!\n\nTotalt importerades {summary.Total} kalkylposter, inklusive {summary.ThreeBarCode} trestreckade poster och {summary.FourBarCode} fyrstreckade poster.";
         }
         catch (Exception ex)
         {
             Sections = null;
             ImportMessage = ex.Message;
+            ImportMessageIsSuccess = false;
             MHD.MessageOk("Import", ex.Message, MhdState.Danger);
         }
         finally
@@ -363,13 +469,6 @@
             wait = false;
         }
     }
-
-    protected async override Task OnInitializedAsync()
-    {
-        Statuses = await Repo.Task.GetAsync(null);
-    }
-
-    void RemoveSection(TaskPostDTO task) => Sections?.Remove(task);
 
     void Close() => Modal.Close();
 
@@ -388,7 +487,8 @@
 
         if (!HasSelectedFile)
         {
-            ImportMessage = "اختر ملف Excel أولاً.";
+            ImportMessage = "Välj en Excel-fil först.";
+            ImportMessageIsSuccess = false;
             return false;
         }
 
@@ -403,10 +503,23 @@
             workbook = null;
             workbookStream?.Dispose();
             workbookStream = null;
-            ImportMessage = $"تعذر قراءة ملف Excel: {ex.Message}";
+            ImportMessage = $"Det gick inte att läsa Excel-filen: {ex.Message}";
+            ImportMessageIsSuccess = false;
             MHD.MessageOk("Import", ImportMessage, MhdState.Danger);
             return false;
         }
+    }
+
+    void ResetImportedPreview()
+    {
+        if (!HasImportedPreview && !transferCompleted)
+            return;
+
+        Sections = null;
+        AmountDrafts.Clear();
+        transferCompleted = false;
+        ImportMessage = string.Empty;
+        ImportMessageIsSuccess = false;
     }
 
     void LoadWorkbook()
@@ -430,15 +543,221 @@
         }
     }
 
-    static int CountTasks(List<TaskPostDTO>? tasks)
+    private void InitializeAmountDrafts(IEnumerable<TaskPostDTO>? tasks)
+    {
+        AmountDrafts.Clear();
+        InitializeAmountDraftsRecursive(tasks);
+    }
+
+    private void InitializeAmountDraftsRecursive(IEnumerable<TaskPostDTO>? tasks)
+    {
+        if (tasks is null)
+            return;
+
+        foreach (var task in tasks)
+        {
+            AmountDrafts[task] = task.Metadata.Type == TaskType.FourBarCode ? "-" : string.Empty;
+            InitializeAmountDraftsRecursive(task.Tasks);
+        }
+    }
+
+    private string FormatUnitDraft(TaskPostDTO task) =>
+        TaskTypeRules.DisplaysDashUnit(task.Metadata.Type) ? "-" : task.Unit;
+
+    private string FormatQuantityDraft(TaskPostDTO task) =>
+        TaskTypeRules.DisplaysDashQuantity(task.Metadata.Type)
+            ? "-"
+            : FormatDecimal(task.Quantity);
+
+    private string FormatPriceDraft(TaskPostDTO task) =>
+        task.Metadata.Type is TaskType.ThreeBarCode or TaskType.FourBarCode
+            ? "-"
+            : FormatDecimal(task.Metadata.PriceSubDB);
+
+    private string FormatAmountDraft(TaskPostDTO task) =>
+        AmountDrafts.TryGetValue(task, out var value) ? value : string.Empty;
+
+    private string? GetDashQuantityTooltip(TaskPostDTO task) =>
+        task.Metadata.Type == TaskType.ThreeBarCode ? DashQuantityTooltip : null;
+
+    private void OnUnitChanged(TaskPostDTO task, string? value)
+    {
+        value = NormalizeDraft(value);
+        if (IsDash(value))
+        {
+            ApplyDashGroup(task, includeAmount: false);
+            return;
+        }
+
+        ConvertDashRowToEditableTask(task);
+        task.Unit = value;
+        MarkPreviewChanged();
+    }
+
+    private void OnQuantityChanged(TaskPostDTO task, string? value)
+    {
+        value = NormalizeDraft(value);
+        if (IsDash(value))
+        {
+            ApplyDashGroup(task, includeAmount: false);
+            return;
+        }
+
+        ConvertDashRowToEditableTask(task);
+        if (TryReadDecimal(value, out var quantity))
+        {
+            task.Quantity = quantity;
+            task.Metadata.BaseQuantity = quantity;
+            task.Metadata.QuantityParam = ConstValues.FixedQ;
+        }
+
+        MarkPreviewChanged();
+    }
+
+    private void OnPriceChanged(TaskPostDTO task, string? value)
+    {
+        value = NormalizeDraft(value);
+        if (IsDash(value))
+        {
+            ApplyDashGroup(task, includeAmount: false);
+            return;
+        }
+
+        ConvertDashRowToEditableTask(task);
+        task.Metadata.PriceSubDB = TryReadDecimal(value, out var price) ? price : null;
+        MarkPreviewChanged();
+    }
+
+    private void OnAmountChanged(TaskPostDTO task, string? value)
+    {
+        value = NormalizeDraft(value);
+        if (IsDash(value))
+        {
+            ApplyDashGroup(task, includeAmount: true);
+            return;
+        }
+
+        AmountDrafts[task] = value;
+        if (task.Metadata.Type == TaskType.FourBarCode)
+            ApplyDashGroup(task, includeAmount: false);
+
+        MarkPreviewChanged();
+    }
+
+    private void ApplyDashGroup(TaskPostDTO task, bool includeAmount)
+    {
+        task.Metadata.Type = includeAmount ? TaskType.FourBarCode : TaskType.ThreeBarCode;
+        task.Unit = "-";
+        task.Metadata.PriceSubDB = null;
+        task.Metadata.QuantityParam = includeAmount ? string.Empty : ConstValues.FixedQ;
+        task.Metadata.BaseQuantity = includeAmount ? null : 1m;
+        task.Quantity = includeAmount ? null : 1m;
+        AmountDrafts[task] = includeAmount ? "-" : FormatAmountDraft(task);
+        MarkPreviewChanged();
+    }
+
+    private void ConvertDashRowToEditableTask(TaskPostDTO task)
+    {
+        if (task.Metadata.Type is not (TaskType.ThreeBarCode or TaskType.FourBarCode))
+            return;
+
+        task.Metadata.Type = TaskType.Task;
+        if (task.Unit == "-")
+            task.Unit = string.Empty;
+
+        task.Metadata.QuantityParam = ConstValues.FixedQ;
+        task.Metadata.BaseQuantity ??= task.Quantity ?? 1m;
+        task.Quantity ??= task.Metadata.BaseQuantity;
+        AmountDrafts[task] = string.Empty;
+    }
+
+    private void AddRowAfter(List<TaskPostDTO> siblings, TaskPostDTO current)
+    {
+        int index = siblings.IndexOf(current);
+        if (index < 0)
+            return;
+
+        var task = new TaskPostDTO
+        {
+            Name = "Ny post",
+            Unit = string.Empty,
+            Quantity = 1m,
+            Tasks = [],
+            Metadata = new TaskMetadata
+            {
+                Type = TaskType.Task,
+                QuantityParam = ConstValues.FixedQ,
+                BaseQuantity = 1m,
+                IsOH = Calc.OHFactors
+            }
+        };
+
+        siblings.Insert(index + 1, task);
+        AmountDrafts[task] = string.Empty;
+        MarkPreviewChanged();
+    }
+
+    private void RemoveSection(List<TaskPostDTO> siblings, TaskPostDTO task)
+    {
+        siblings.Remove(task);
+        AmountDrafts.Remove(task);
+        MarkPreviewChanged();
+    }
+
+    private void MarkPreviewChanged()
+    {
+        if (transferCompleted)
+            ImportMessage = "Förhandsgranskningen har ändrats. Importera filen på nytt för att överföra en ny version.";
+
+        ImportMessageIsSuccess = false;
+    }
+
+    private static string NormalizeDraft(string? value) => (value ?? string.Empty).Trim();
+    private static bool IsDash(string? value) => NormalizeDraft(value) == "-";
+
+    private static string FormatDecimal(decimal? value) =>
+        value.HasValue ? value.Value.ToString("0.###", CultureInfo.InvariantCulture) : string.Empty;
+
+    private static bool TryReadDecimal(string? text, out decimal value)
+    {
+        text = NormalizeDraft(text).Replace(" ", string.Empty);
+        return decimal.TryParse(text, NumberStyles.Number, CultureInfo.CurrentCulture, out value)
+            || decimal.TryParse(text, NumberStyles.Number, CultureInfo.InvariantCulture, out value)
+            || decimal.TryParse(text, NumberStyles.Number, CultureInfo.GetCultureInfo("sv-SE"), out value)
+            || decimal.TryParse(text, NumberStyles.Number, CultureInfo.GetCultureInfo("en-US"), out value);
+    }
+
+    static ImportSummary CountTasks(List<TaskPostDTO>? tasks)
     {
         if (tasks == null)
-            return 0;
+            return new ImportSummary();
 
-        int count = tasks.Count;
+        ImportSummary summary = new();
         foreach (TaskPostDTO task in tasks)
-            count += CountTasks(task.Tasks);
+        {
+            summary.Total++;
+            if (task.Metadata.Type == TaskType.ThreeBarCode)
+                summary.ThreeBarCode++;
+            else if (task.Metadata.Type == TaskType.FourBarCode)
+                summary.FourBarCode++;
 
-        return count;
+            summary.Add(CountTasks(task.Tasks));
+        }
+
+        return summary;
+    }
+
+    sealed class ImportSummary
+    {
+        public int Total { get; set; }
+        public int ThreeBarCode { get; set; }
+        public int FourBarCode { get; set; }
+
+        public void Add(ImportSummary other)
+        {
+            Total += other.Total;
+            ThreeBarCode += other.ThreeBarCode;
+            FourBarCode += other.FourBarCode;
+        }
     }
 }

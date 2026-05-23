@@ -184,7 +184,34 @@ namespace ProjectManagement.Shared.Base.Calculation
 
     public enum TaskType
     {
-        Task, FixedQ, Minus, CodeName
+        Task,
+        FixedQ,
+        Minus,
+        CodeName,
+        ThreeBarCode,
+        FourBarCode
+    }
+
+    public static class TaskTypeRules
+    {
+        public static bool IsCodeText(TaskType type) => type == TaskType.CodeName;
+        public static bool IsThreeBarCode(TaskType type) => type == TaskType.ThreeBarCode;
+        public static bool IsFourBarCode(TaskType type) => type == TaskType.FourBarCode;
+
+        public static bool CanHaveResources(TaskType type) =>
+            type != TaskType.CodeName && type != TaskType.FourBarCode;
+
+        public static bool CanHaveChildTasks(TaskType type) =>
+            type != TaskType.FourBarCode;
+
+        public static bool DisplaysDashQuantity(TaskType type) =>
+            type is TaskType.ThreeBarCode or TaskType.FourBarCode;
+
+        public static bool DisplaysDashUnit(TaskType type) =>
+            type is TaskType.ThreeBarCode or TaskType.FourBarCode;
+
+        public static bool DisplaysDashPrice(TaskType type) =>
+            type == TaskType.FourBarCode;
     }
 
     public class TaskBase

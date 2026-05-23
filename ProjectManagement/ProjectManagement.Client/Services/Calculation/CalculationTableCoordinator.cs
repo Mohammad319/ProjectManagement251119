@@ -67,8 +67,10 @@ namespace ProjectManagement.Client.Services.Calculation
                 return false;
 
             return interactionState.ClipboardType == CalculationItemType.task
-                ? task.Resources == null || task.Resources.Count == 0
-                : interactionState.ClipboardType == CalculationItemType.resource && (task.Tasks == null || task.Tasks.Count == 0);
+                ? TaskTypeRules.CanHaveChildTasks(task.Type) && (task.Resources == null || task.Resources.Count == 0)
+                : interactionState.ClipboardType == CalculationItemType.resource
+                    && TaskTypeRules.CanHaveResources(task.Type)
+                    && (task.Tasks == null || task.Tasks.Count == 0);
         }
 
         public void NotifyStructureRefresh() => calculationService.RequestGridRefresh(CalculationGridRefreshKind.FlatList);
@@ -165,6 +167,9 @@ namespace ProjectManagement.Client.Services.Calculation
 
         public void ShowResourceSuggestions(TaskListMVVM task)
         {
+            if (!CanSuggestResourcesForTask(task))
+                return;
+
             var selectedTasks = GetSelectedTasksForSuggestion(task);
             if (selectedTasks.Count > 1)
             {
@@ -235,11 +240,11 @@ namespace ProjectManagement.Client.Services.Calculation
         }
 
         private static bool CanSuggestResourcesForTask(TaskListMVVM task)
-            => task.Metadata.Type != TaskType.CodeName
+            => TaskTypeRules.CanHaveResources(task.Metadata.Type)
                 && (task.Tasks == null || task.Tasks.Count == 0);
 
         public void ShowImportDialog() =>
-            dialogService.ShowComponent<CSVUI>(ResourceApp.importFromFile, Icons.ImportFromFile, null, DialogSize.ExtraLarge);
+            dialogService.ShowComponent<CSVUI>("Importera Excel-mängdförteckning", Icons.ImportFromFile, null, DialogSize.FullScreen);
 
         public void ShowTemplateDialog() =>
             dialogService.ShowComponent<Pages.Calculation.Template.TemplateSetDefaultUI>(
