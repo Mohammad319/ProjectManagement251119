@@ -194,19 +194,18 @@ namespace ProjectManagement.Client.Helper
                     bool amountDash = IsDash(amountStr);
                     bool hasUnit = !string.IsNullOrWhiteSpace(unit) && !unitDash;
                     bool hasQuantity = TryReadDecimal(quantityStr, out decimal quantity);
+                    // 4-streckad: dashes in all four key columns
+                    bool isFourDashCodeRow = unitDash && quantityDash && priceDash && amountDash;
+                    // 3-streckad: quantity or price has dash (strong bar-code indicator) but not all four dashes
+                    bool isThreeDashRow = !isFourDashCodeRow && (quantityDash || priceDash);
+                    // CodeText: no bar-code signals, no real unit, no real quantity (name/text only ± price/amount numbers)
+                    bool hasTextOnlyShape = !unitDash && !quantityDash && !priceDash && !amountDash
+                        && !hasUnit && !hasQuantity;
+                    // kalkylpost: has unit or quantity; amountDash alone does not disqualify
                     bool hasCalculationShape = !string.IsNullOrWhiteSpace(sourceName)
                         && (hasUnit || hasQuantity || unitDash)
                         && !quantityDash
-                        && !priceDash
-                        && !amountDash;
-                    bool hasTextOnlyShape = string.IsNullOrWhiteSpace(unit)
-                        && string.IsNullOrWhiteSpace(quantityStr)
-                        && string.IsNullOrWhiteSpace(priceStr)
-                        && string.IsNullOrWhiteSpace(amountStr);
-                    bool isThreeDashRow = unitDash && quantityDash && priceDash;
-                    bool isFourDashCodeRow = isThreeDashRow
-                        && amountDash
-                        && RowContainsOnlyCodeNameAndDashes(sheet, row, codeIndex, nameIndex, minimumDashCount: 4);
+                        && !priceDash;
 
                     if (isFourDashCodeRow)
                     {

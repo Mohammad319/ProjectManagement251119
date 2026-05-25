@@ -1672,69 +1672,61 @@
                 diagnostics.Add(new DiagnosticItem(kind, shortText, T(detailSv, detailEn)));
         }
 
+        // Ogiltig mängd – ENDAST för kvantitetskolumnen
         if (quantityInvalid)
             Add(
                 DiagnosticKind.Warning,
-                "Ogiltig mängd",
-                "Invalid quantity",
-                "Kvantitet innehåller ett ogiltigt numeriskt värde.",
-                "Quantity contains an invalid numeric value.");
+                "Ogiltig mängd", "Invalid quantity",
+                "Kvantitet innehåller ett ogiltigt numeriskt värde, t.ex. #VÄRDEFEL!.",
+                "Quantity contains an invalid numeric value, e.g. #VALUE!.");
 
-        if (regularTask && !hasQuantity && (hasUnit || unitDash) && !quantityDash)
-            Add(
-                DiagnosticKind.Warning,
-                "Mängd saknas",
-                "Quantity missing",
-                "Raden innehåller enhet men ingen mängd.",
-                "The row contains a unit but no quantity.");
-
-        if (regularTask && !hasUnit && !unitDash && hasQuantity && !TaskTypeRules.DisplaysDashUnit(task.Metadata.Type))
-            Add(
-                DiagnosticKind.Warning,
-                "Enhet saknas",
-                "Unit missing",
-                "Raden innehåller mängd men ingen enhet.",
-                "The row contains quantity but no unit.");
-
+        // Namn saknas – när raden har kalkylsignaler men inget namn
         if (!hasName && hasIncompleteCalculationData)
             Add(
                 DiagnosticKind.Warning,
-                "Namn saknas",
-                "Name missing",
+                "Namn saknas", "Name missing",
                 "Raden innehåller kalkyldata men saknar namn/beskrivning.",
                 "The row contains calculation data but no name/description.");
 
-        if (regularTask && priceDash && (!hasQuantity || !hasUnit))
+        // Kalkylpost: mängd saknas
+        if (regularTask && !hasQuantity && !quantityInvalid && (hasUnit || unitDash) && !quantityDash)
             Add(
                 DiagnosticKind.Warning,
-                "Komplettera raden",
-                "Complete row",
-                "Raden behöver kompletteras eller få en annan typ.",
-                "The row needs to be completed or changed to another type.");
+                "Mängd saknas", "Quantity missing",
+                "Raden har importerats som en kalkylpost. Komplettera vid behov mängden eller ändra typen till 3-streckad kod, 4-streckad kod eller kodtext.",
+                "The row was imported as a calculation item. Complete the quantity if needed, or change the type to 3-bar code, 4-bar code, or code text.");
 
-        if (regularTask && amountDash && (!hasQuantity || !hasUnit))
+        // Kalkylpost: enhet saknas
+        if (regularTask && !hasUnit && !unitDash && hasQuantity && !TaskTypeRules.DisplaysDashUnit(task.Metadata.Type))
             Add(
                 DiagnosticKind.Warning,
-                "Komplettera raden",
-                "Complete row",
-                "Raden behöver kompletteras eller få en annan typ.",
-                "The row needs to be completed or changed to another type.");
+                "Enhet saknas", "Unit missing",
+                "Raden har importerats som en kalkylpost. Komplettera vid behov enheten eller ändra typen till 3-streckad kod, 4-streckad kod eller kodtext.",
+                "The row was imported as a calculation item. Complete the unit if needed, or change the type to 3-bar code, 4-bar code, or code text.");
 
+        // 3-streckad kod: informationsvarning om typ
+        if (task.Metadata.Type == TaskType.ThreeBarCode)
+            Add(
+                DiagnosticKind.Warning,
+                "3-streckad kod", "3-bar code",
+                "Raden har importerats som en 3-streckad kod. Ändra vid behov typen till 4-streckad kod, kalkylpost eller kodtext.",
+                "The row was imported as a 3-bar code. Change the type to 4-bar code, calculation item, or code text if needed.");
+
+        // 4-streckad kod: informationsvarning om typ
+        if (task.Metadata.Type == TaskType.FourBarCode)
+            Add(
+                DiagnosticKind.Warning,
+                "4-streckad kod", "4-bar code",
+                "Raden har importerats som en 4-streckad kod. Ändra vid behov typen till 3-streckad kod, kalkylpost eller kodtext.",
+                "The row was imported as a 4-bar code. Change the type to 3-bar code, calculation item, or code text if needed.");
+
+        // 4-streckad kod ska vara slutrad
         if (task.Metadata.Type == TaskType.FourBarCode && (task.Tasks.Count > 0 || task.Resources.Count > 0))
             Add(
                 DiagnosticKind.Warning,
-                "Komplettera raden",
-                "Complete row",
-                "4-streckad kod ska vara en slutrad utan barn.",
+                "Ogiltig struktur", "Invalid structure",
+                "4-streckad kod ska vara en slutrad utan underrader.",
                 "4-bar code must be a leaf row without children.");
-
-        if (task.Metadata.Type == TaskType.ThreeBarCode && (task.Quantity != 1m || task.Metadata.BaseQuantity != 1m))
-            Add(
-                DiagnosticKind.Warning,
-                "Komplettera raden",
-                "Complete row",
-                "3-streckad kod ska ha intern mängd 1.",
-                "3-bar code must have internal quantity 1.");
 
         return diagnostics;
     }
