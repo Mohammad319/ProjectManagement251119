@@ -16,19 +16,19 @@
     <div class="flex min-w-0 flex-wrap items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-2 py-1.5 dark:border-slate-700 dark:bg-slate-800/60">
 
         <label for="excel-import-file"
-               class="inline-flex h-7 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-slate-300 bg-white px-2.5 text-xs font-medium text-slate-700 transition hover:border-blue-500 hover:text-blue-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-blue-400 dark:hover:text-blue-300">
+               class="inline-flex h-7 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-slate-300 bg-white px-5 text-xs font-medium text-slate-700 transition hover:border-blue-500 hover:text-blue-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-blue-400 dark:hover:text-blue-300">
             @T("Välj fil", "Select file")
         </label>
         <InputFile id="excel-import-file" class="hidden" type="file" accept=".xlsx,.xls"
                    OnChange="(InputFileChangeEventArgs e) => CheckedChanged(e)" />
 
-        <span class="shrink-0 truncate text-xs text-slate-500 dark:text-slate-400" style="max-width:180px">@SelectedFileLabel</span>
+        <span class="shrink-0 truncate text-xs text-slate-500 dark:text-slate-400" style="max-width:480px">@SelectedFileLabel</span>
 
         @if (SheetIsVisible)
         {
             <span class="shrink-0 text-slate-300 dark:text-slate-600">|</span>
             <span class="shrink-0 text-[10px] font-medium text-slate-500 dark:text-slate-400">@T("Blad", "Sheet")</span>
-            <select class="@GetMappingInputClass(nameof(SheetNr)) !h-6 !w-auto !shrink-0 !py-0 !text-[11px]"
+            <select class="@GetMappingInputClass(nameof(SheetNr)) !h-6 !w-auto !min-w-[8rem] !shrink-0 !py-0 !text-[11px]"
                     title="@GetLayoutSuggestion(nameof(SheetNr))"
                     value="@SheetNr"
                     @onchange="OnSheetChanged">
@@ -125,7 +125,7 @@
             }
             @if (HasImportedPreview)
             {
-                @{
+                
                     var _s = CountTasks(Sections);
                     int _w = 0, _tasks = 0, _codeText = 0;
                     foreach (var _r in FlattenTasksWithDepth(Sections))
@@ -135,7 +135,7 @@
                         if (GetTaskDiagnostics(_r.Task, _r.Depth).Any(x => x.Kind == DiagnosticKind.Warning)) _w++;
                     }
                     int _changed = ChangedTasks.Count;
-                }
+                
                 <div class="flex min-w-0 items-center gap-1.5 overflow-x-auto px-2 py-1.5">
                     <input type="search"
                            class="h-7 w-36 shrink-0 rounded-lg border border-slate-300 bg-white px-2 text-xs text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
@@ -155,16 +155,26 @@
                         <option value="@ImportPreviewTypeFilter.Changed">@T("Ändrade rader", "Changed rows") (@_changed)</option>
                     </select>
                     <select class="h-7 shrink-0 rounded-lg border border-slate-300 bg-white px-2 text-xs text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                            value="@TreeViewMode"
-                            @onchange="OnTreeViewModeChanged"
-                            title="@T("Visa nivå", "Show level")">
-                        <option value="all">@T("Expandera alla", "Expand all")</option>
-                        <option value="none">@T("Fäll ihop alla", "Collapse all")</option>
-                        @for (int level = 1; level <= 10; level++)
-                        {
-                            <option value="@level.ToString(CultureInfo.InvariantCulture)">@T($"Nivå {level}", $"Level {level}")</option>
-                        }
+                            value="@DisplayMode"
+                            @onchange="OnDisplayModeChanged"
+                            title="@T("Välj visningsläge", "Select display mode")">
+                        <option value="tree">@T("Trädvy", "Tree view")</option>
+                        <option value="overview">@T("Översikt", "Overview")</option>
                     </select>
+                    @if (IsTreeView)
+                    {
+                        <select class="h-7 shrink-0 rounded-lg border border-slate-300 bg-white px-2 text-xs text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                                value="@TreeViewMode"
+                                @onchange="OnTreeViewModeChanged"
+                                title="@T("Visa nivå", "Show level")">
+                            <option value="all">@T("Expandera alla", "Expand all")</option>
+                            <option value="none">@T("Fäll ihop alla", "Collapse all")</option>
+                            @for (int level = 1; level <= 10; level++)
+                            {
+                                <option value="@level.ToString(CultureInfo.InvariantCulture)">@T($"Nivå {level}", $"Level {level}")</option>
+                            }
+                        </select>
+                    }
                     <button type="button" class="@ToolbarButtonClass @(WarningsOnly ? "!border-amber-500 !text-amber-700 dark:!border-amber-400 dark:!text-amber-300" : "")" @onclick="ShowOnlyWarnings">@T("Endast varningar", "Only warnings")</button>
                     <button type="button" class="@ToolbarButtonClass" @onclick="ShowOnlyCalculationItems">@T("Endast kalkylposter", "Only calc. items")</button>
                 </div>
@@ -176,8 +186,11 @@
             <div class="mt-1 rounded-xl border border-slate-200 dark:border-slate-700">
             <table class="w-full table-fixed border-collapse text-sm">
                 <colgroup>
-                    <col style="width:44px" />
-                    <col style="@($"width:{TreeColumnWidthPx}px")" />
+                    <col style="width:54px" />
+                    @if (IsTreeView)
+                    {
+                        <col style="@($"width:{TreeColumnWidthPx}px")" />
+                    }
                     <col style="width:10%" />
                     <col />
                     <col style="width:5%" />
@@ -193,9 +206,12 @@
                         <th class="border border-slate-300 px-1 py-1 text-center font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
                             <span title="@T("Visar ursprungligt radnummer från Excel-filen.", "Shows the original row number from the Excel file.")">@T("Radnr", "Row no.")</span>
                         </th>
-                        <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
-                            @T("Träd", "Tree")
-                        </th>
+                        @if (IsTreeView)
+                        {
+                            <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                                @T("Träd", "Tree")
+                            </th>
+                        }
                         <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
                             @CalcResource.code
                         </th>
@@ -234,7 +250,7 @@
                     else
                     {
                         <tr>
-                            <td colspan="11" class="border border-dashed border-slate-300 px-3 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                            <td colspan="@(IsTreeView ? 11 : 10)" class="border border-dashed border-slate-300 px-3 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
                                 @T("Inga rader matchar filtret.", "No rows match the filter.")
                             </td>
                         </tr>
@@ -258,20 +274,22 @@
             <td class="border border-slate-300 px-1.5 py-0.5 text-xs font-medium text-slate-500 dark:border-slate-700 dark:text-slate-400">
                 @GetOriginalRowNumber(Task)
             </td>
-            <td class="overflow-hidden border border-slate-300 px-1 py-0.5 text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
-                <div class="relative flex min-w-0 items-center gap-1" style="padding-left:@($"{GetTreeIndentPx(row.Depth)}px")">
+            @if (IsTreeView)
+            {
+            <td class="overflow-hidden border-y border-slate-200 px-0.5 py-0 text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                <div class="relative flex min-w-0 items-center" style="padding-left:@($"{GetTreeIndentPx(row.Depth)}px")">
                     @for (int guide = 0; guide < row.Depth; guide++)
                     {
-                        <span class="pointer-events-none absolute bottom-[-6px] top-[-6px] border-l border-dotted border-slate-300/80 dark:border-slate-600/80"
+                        <span class="pointer-events-none absolute bottom-[-3px] top-[-3px] border-l border-dotted border-slate-200 dark:border-slate-700"
                               style="left:@($"{GetTreeGuideLeftPx(guide)}px")"></span>
                     }
                     @if (!HasActivePreviewFilter && Task.Tasks.Any())
                     {
                         <button type="button"
                                 @onclick="() => Task.Colspan = !Task.Colspan"
-                                class="relative z-[1] inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border border-slate-300 bg-white text-[10px] font-semibold leading-none text-slate-700 shadow-sm transition hover:border-blue-500 hover:bg-blue-50 hover:text-blue-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-blue-400 dark:hover:bg-blue-950"
+                                class="relative z-[1] inline-flex h-4 w-4 shrink-0 items-center justify-center rounded text-[11px] font-medium leading-none text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:text-slate-300"
                                 title="@(Task.Colspan ? T("Fäll ihop", "Collapse") : T("Expandera", "Expand"))">
-                            @(Task.Colspan ? "–" : "+")
+                            @(Task.Colspan ? "−" : "+")
                         </button>
                     }
                     else
@@ -280,6 +298,7 @@
                     }
                 </div>
             </td>
+            }
             <td class="border border-slate-300 px-1 py-0.5 dark:border-slate-700">
                 <input class="h-6 w-full rounded-md border border-slate-300 bg-white px-1.5 text-xs text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
                        type="text"
@@ -346,6 +365,21 @@
                                 title="@T("Återställ rad", "Restore row")"
                                 @onclick="() => RestorePreviewRow(Task)">
                             ↺
+                        </button>
+                    }
+                    @if (IsTreeView)
+                    {
+                        <button type="button"
+                                class="inline-flex h-6 w-6 items-center justify-center rounded-md border border-slate-200 bg-slate-50 text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300"
+                                title="@T("Flytta in – gör till underrad", "Indent – make child row")"
+                                @onclick="() => MoveTaskIn(siblings, Task)">
+                            →
+                        </button>
+                        <button type="button"
+                                class="inline-flex h-6 w-6 items-center justify-center rounded-md border border-slate-200 bg-slate-50 text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300"
+                                title="@T("Flytta ut – flytta en nivå upp", "Outdent – move one level up")"
+                                @onclick="() => MoveTaskOut(siblings, Task, row.ParentSiblings)">
+                            ←
                         </button>
                     }
                     <button type="button"
@@ -427,6 +461,8 @@
     private string PreviewSearchText = string.Empty;
     private ImportPreviewTypeFilter PreviewTypeFilter = ImportPreviewTypeFilter.All;
     private string TreeViewMode = "all";
+    private string DisplayMode = "tree";
+    private bool IsTreeView => DisplayMode == "tree";
     private bool WarningsOnly;
     private bool HasActivePreviewFilter =>
         !string.IsNullOrWhiteSpace(PreviewSearchText)
@@ -610,6 +646,7 @@
             PreviewSearchText = string.Empty;
             PreviewTypeFilter = ImportPreviewTypeFilter.All;
             TreeViewMode = "all";
+            DisplayMode = "tree";
             WarningsOnly = false;
             PreviewRequiresImport = false;
             ImportMessage = string.Empty;
@@ -1538,21 +1575,23 @@
         if (Sections is null)
             yield break;
 
-        foreach (var row in BuildVisiblePreviewRows(Sections, 0))
+        foreach (var row in BuildVisiblePreviewRows(Sections, 0, null))
             yield return row;
     }
 
-    private IEnumerable<PreviewRow> BuildVisiblePreviewRows(List<TaskPostDTO> siblings, int depth)
+    private IEnumerable<PreviewRow> BuildVisiblePreviewRows(List<TaskPostDTO> siblings, int depth, List<TaskPostDTO>? parentSiblings)
     {
         foreach (var task in siblings)
         {
-            bool matches = MatchesPreviewFilter(task, depth);
+            int effectiveDepth = IsTreeView ? depth : 0;
+            bool matches = MatchesPreviewFilter(task, effectiveDepth);
             if (matches)
-                yield return new PreviewRow(task, siblings, depth);
+                yield return new PreviewRow(task, siblings, effectiveDepth, parentSiblings);
 
-            if ((HasActivePreviewFilter || task.Colspan) && task.Tasks is { Count: > 0 })
+            bool shouldRecurse = !IsTreeView || HasActivePreviewFilter || task.Colspan;
+            if (shouldRecurse && task.Tasks is { Count: > 0 })
             {
-                foreach (var child in BuildVisiblePreviewRows(task.Tasks, depth + 1))
+                foreach (var child in BuildVisiblePreviewRows(task.Tasks, depth + 1, siblings))
                     yield return child;
             }
         }
@@ -1607,6 +1646,38 @@
     private void CollapseAll() => SetExpandedRecursive(Sections, expanded: false);
 
     private void ExpandToLevel(int level) => SetExpandedToLevel(Sections, currentDepth: 0, level);
+
+    private void OnDisplayModeChanged(ChangeEventArgs args)
+    {
+        DisplayMode = args.Value?.ToString() ?? "tree";
+    }
+
+    private void MoveTaskIn(List<TaskPostDTO> siblings, TaskPostDTO task)
+    {
+        int idx = siblings.IndexOf(task);
+        if (idx <= 0) return;
+        var prev = siblings[idx - 1];
+        siblings.RemoveAt(idx);
+        prev.Tasks ??= [];
+        prev.Tasks.Add(task);
+        prev.Colspan = true;
+        MarkPreviewChanged();
+    }
+
+    private void MoveTaskOut(List<TaskPostDTO> siblings, TaskPostDTO task, List<TaskPostDTO>? parentSiblings)
+    {
+        if (parentSiblings is null) return;
+        TaskPostDTO? parent = null;
+        foreach (var s in parentSiblings)
+        {
+            if (s.Tasks == siblings) { parent = s; break; }
+        }
+        if (parent is null) return;
+        int parentIdx = parentSiblings.IndexOf(parent);
+        siblings.Remove(task);
+        parentSiblings.Insert(parentIdx + 1, task);
+        MarkPreviewChanged();
+    }
 
     private void OnTreeViewModeChanged(ChangeEventArgs args)
     {
@@ -2142,7 +2213,7 @@
         Warning
     }
 
-    private sealed record PreviewRow(TaskPostDTO Task, List<TaskPostDTO> Siblings, int Depth);
+    private sealed record PreviewRow(TaskPostDTO Task, List<TaskPostDTO> Siblings, int Depth, List<TaskPostDTO>? ParentSiblings = null);
     private sealed record PreviewMetric(string Label, string Title, string CssClass);
     private sealed record DiagnosticItem(DiagnosticKind Kind, string ShortText, string Detail);
     private sealed record TaskPreviewSnapshot(
