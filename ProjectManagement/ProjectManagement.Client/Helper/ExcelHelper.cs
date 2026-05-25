@@ -38,6 +38,8 @@ namespace ProjectManagement.Client.Helper
     {
         public List<TaskPostDTO> Tasks { get; set; } = [];
         public Dictionary<TaskPostDTO, int> RowNumbers { get; set; } = new();
+        // Rows where the app had to fill in dashes that were missing in the original Excel
+        public HashSet<TaskPostDTO> AppCompletedBarCodeRows { get; set; } = new(ReferenceEqualityComparer.Instance);
     }
 
     public class ExcelHelper
@@ -132,6 +134,7 @@ namespace ProjectManagement.Client.Helper
             List<TaskPostDTO> sections = new();
             Dictionary<TaskPostDTO, int> rowNumbers = new();
             HashSet<TaskPostDTO> leafCodeRows = new();
+            HashSet<TaskPostDTO> appCompletedBarCodeRows = new(ReferenceEqualityComparer.Instance);
             IXLWorksheet sheet = workbook.Worksheet(safeSheetNr);
 
             var lastRow = sheet.LastRowUsed()?.RowNumber() ?? 0;
@@ -214,6 +217,9 @@ namespace ProjectManagement.Client.Helper
                         task.Quantity = null;
                         task.Metadata.PriceSubDB = null;
                         leafCodeRows.Add(task);
+                        // Mark as completed if the original Excel didn't have all four dashes
+                        if (!(unitDash && quantityDash && priceDash && amountDash))
+                            appCompletedBarCodeRows.Add(task);
                     }
                     else if (hasTextOnlyShape)
                     {
@@ -228,6 +234,9 @@ namespace ProjectManagement.Client.Helper
                         task.Metadata.QuantityParam = ConstValues.FixedQ;
                         task.Metadata.ChangeFactor1 = 1m;
                         task.Metadata.ChangeFactor2 = 1m;
+                        // Mark as completed if the original Excel didn't have all three dashes (unit/quantity/price)
+                        if (!(unitDash && quantityDash && priceDash))
+                            appCompletedBarCodeRows.Add(task);
                     }
                     else
                     {
@@ -257,7 +266,8 @@ namespace ProjectManagement.Client.Helper
             return new ExcelImportResult
             {
                 Tasks = sections,
-                RowNumbers = rowNumbers
+                RowNumbers = rowNumbers,
+                AppCompletedBarCodeRows = appCompletedBarCodeRows
             };
         }
 
