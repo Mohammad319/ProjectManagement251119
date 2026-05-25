@@ -1212,22 +1212,14 @@
                 InvalidQuantityDrafts[item.Key] = quantity;
 
             var taskType = item.Key.Metadata.Type;
-            bool hasRealUnit = !string.IsNullOrWhiteSpace(item.Key.Unit) && item.Key.Unit != "-";
-            bool hasRealQuantity = item.Key.Quantity.HasValue;
 
             if (taskType == TaskType.FourBarCode)
             {
                 AmountDrafts[item.Key] = "-";
             }
-            else if (taskType == TaskType.CodeName)
+            else if (taskType == TaskType.Task || taskType == TaskType.CodeName)
             {
-                // CodeText rows: no Belopp display
-            }
-            else if (taskType == TaskType.Task && hasRealUnit && hasRealQuantity)
-            {
-                // Kalkylpost with real unit+quantity: calculated amount shown live, not "-"
-                if (!IsSpreadsheetError(amount) && TryReadDecimal(amount, out decimal av) && av != 0m)
-                    AmountDrafts[item.Key] = FormatDecimal(av);
+                // kalkylpost and CodeText: no amount display during import
             }
             else if (IsDash(amount))
             {
@@ -1345,7 +1337,9 @@
     private string FormatPriceDraft(TaskPostDTO task) =>
         task.Metadata.Type is TaskType.ThreeBarCode or TaskType.FourBarCode
             ? "-"
-            : FormatDecimal(task.Metadata.PriceSubDB);
+            : task.Metadata.Type == TaskType.Task
+                ? string.Empty
+                : FormatDecimal(task.Metadata.PriceSubDB);
 
     private string FormatAmountDraft(TaskPostDTO task) =>
         AmountDrafts.TryGetValue(task, out var value) ? value : string.Empty;
@@ -1718,16 +1712,16 @@
                 "Raden har importerats som en kalkylpost. Komplettera vid behov enheten eller ändra typen till 3-streckad kod, 4-streckad kod eller kodtext.",
                 "The row was imported as a calculation item. Complete the unit if needed, or change the type to 3-bar code, 4-bar code, or code text.");
 
-        // 3-streckad kod: informationsvarning om typ
-        if (task.Metadata.Type == TaskType.ThreeBarCode)
+        // 3-streckad kod: varna bara om namn saknas (korrekt formaterad rad behöver ingen varning)
+        if (task.Metadata.Type == TaskType.ThreeBarCode && !hasName)
             Add(
                 DiagnosticKind.Warning,
                 "3-streckad kod", "3-bar code",
                 "Raden har importerats som en 3-streckad kod. Ändra vid behov typen till 4-streckad kod, kalkylpost eller kodtext.",
                 "The row was imported as a 3-bar code. Change the type to 4-bar code, calculation item, or code text if needed.");
 
-        // 4-streckad kod: informationsvarning om typ
-        if (task.Metadata.Type == TaskType.FourBarCode)
+        // 4-streckad kod: varna bara om namn saknas (korrekt formaterad rad behöver ingen varning)
+        if (task.Metadata.Type == TaskType.FourBarCode && !hasName)
             Add(
                 DiagnosticKind.Warning,
                 "4-streckad kod", "4-bar code",
