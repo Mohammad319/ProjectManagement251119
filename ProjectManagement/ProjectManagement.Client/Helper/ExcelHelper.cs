@@ -194,9 +194,9 @@ namespace ProjectManagement.Client.Helper
                     bool amountDash = IsDash(amountStr);
                     bool hasUnit = !string.IsNullOrWhiteSpace(unit) && !unitDash;
                     bool hasQuantity = TryReadDecimal(quantityStr, out decimal quantity);
-                    // 4-streckad: dashes in all four key columns
-                    bool isFourDashCodeRow = unitDash && quantityDash && priceDash && amountDash;
-                    // 3-streckad: quantity or price has dash (strong bar-code indicator) but not all four dashes
+                    // 4-streckad: price is dash AND (amount is dash OR amount is a real non-zero number)
+                    bool isFourDashCodeRow = priceDash && (amountDash || HasNonZeroNumber(amountStr));
+                    // 3-streckad: quantity or price has dash but not classified as 4-streckad
                     bool isThreeDashRow = !isFourDashCodeRow && (quantityDash || priceDash);
                     // CodeText: no bar-code signals, no real unit, no real quantity (name/text only ± price/amount numbers)
                     bool hasTextOnlyShape = !unitDash && !quantityDash && !priceDash && !amountDash

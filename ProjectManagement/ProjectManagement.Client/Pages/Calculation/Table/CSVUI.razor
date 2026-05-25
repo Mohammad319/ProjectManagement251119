@@ -1211,9 +1211,23 @@
             if (IsSpreadsheetError(quantity))
                 InvalidQuantityDrafts[item.Key] = quantity;
 
-            if (item.Key.Metadata.Type == TaskType.FourBarCode)
+            var taskType = item.Key.Metadata.Type;
+            bool hasRealUnit = !string.IsNullOrWhiteSpace(item.Key.Unit) && item.Key.Unit != "-";
+            bool hasRealQuantity = item.Key.Quantity.HasValue;
+
+            if (taskType == TaskType.FourBarCode)
             {
                 AmountDrafts[item.Key] = "-";
+            }
+            else if (taskType == TaskType.CodeName)
+            {
+                // CodeText rows: no Belopp display
+            }
+            else if (taskType == TaskType.Task && hasRealUnit && hasRealQuantity)
+            {
+                // Kalkylpost with real unit+quantity: calculated amount shown live, not "-"
+                if (!IsSpreadsheetError(amount) && TryReadDecimal(amount, out decimal av) && av != 0m)
+                    AmountDrafts[item.Key] = FormatDecimal(av);
             }
             else if (IsDash(amount))
             {
