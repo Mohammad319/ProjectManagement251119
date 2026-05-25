@@ -76,18 +76,9 @@
         {
             <button type="button"
                     class="inline-flex h-7 shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-white px-2.5 text-xs font-medium text-slate-700 transition hover:border-emerald-500 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+                    title="@T("Appen föreslår automatiskt blad, radintervall och kolumner för kod, namn, enhet, kvantitet, á-pris och belopp. Du kan ändra alla värden manuellt om något inte stämmer.", "The app automatically suggests sheet, row range and columns for code, name, unit, quantity, unit price and amount. You can change all values manually if something is incorrect.")"
                     @onclick="ApplySuggestedLayout" disabled="@wait">
                 @T("Använd förslag", "Apply suggestion")
-            </button>
-        }
-
-        @if (HasSelectedFile)
-        {
-            <button type="button"
-                    class="inline-flex h-7 shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-white px-2.5 text-xs font-medium text-slate-600 transition hover:border-rose-400 hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
-                    @onclick="ClearSavedLayoutAsync" disabled="@wait"
-                    title="@T("Rensa sparad kolumn- och radlayout för importen.", "Clear saved column and row layout for import.")">
-                @T("Rensa sparad layout", "Clear saved layout")
             </button>
         }
 
@@ -98,12 +89,22 @@
                 @ImportMessageFirstLine
             </span>
         }
+
+        @if (HasSelectedFile)
+        {
+            <div class="basis-full"></div>
+            @MappingField(T("Kod", "Code"), nameof(CodeIndex), CodeIndex, v => OnMappingColumnChanged(ref CodeIndex, v))
+            @MappingField(T("Namn", "Name"), nameof(NameIndex), NameIndex, v => OnMappingColumnChanged(ref NameIndex, v))
+            @MappingField(T("Enhet", "Unit"), nameof(UnitIndex), UnitIndex, v => OnMappingColumnChanged(ref UnitIndex, v))
+            @MappingField(T("Kvantitet", "Quantity"), nameof(QuantityIndex), QuantityIndex, v => OnMappingColumnChanged(ref QuantityIndex, v))
+            @MappingField(T("Á-pris", "Unit price"), nameof(PriceIndex), PriceIndex, v => OnMappingColumnChanged(ref PriceIndex, v))
+            @MappingField(T("Belopp", "Amount"), nameof(AmountIndex), AmountIndex, v => OnMappingColumnChanged(ref AmountIndex, v))
+        }
     </div>
 
     @if (HasSelectedFile)
     {
-    <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
-        <div class="sticky top-0 z-30 rounded-xl border border-slate-200 bg-white/95 shadow-sm backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/95">
+        <div class="rounded-xl border border-slate-200 bg-white/95 dark:border-slate-700 dark:bg-slate-900/95">
             @if (ColumnMappingWarnings.Count > 0)
             {
                 <div class="flex items-center gap-2 border-b border-amber-100 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-300">
@@ -122,32 +123,36 @@
                     <span class="truncate" title="@ImportMessage">@ImportMessageFirstLine</span>
                 </div>
             }
-            <div class="flex min-w-0 flex-wrap items-center gap-1.5 px-2 py-1.5">
-                @MappingField(T("Kod", "Code"), nameof(CodeIndex), CodeIndex, v => OnMappingColumnChanged(ref CodeIndex, v))
-                @MappingField(T("Namn", "Name"), nameof(NameIndex), NameIndex, v => OnMappingColumnChanged(ref NameIndex, v))
-                @MappingField(T("Enhet", "Unit"), nameof(UnitIndex), UnitIndex, v => OnMappingColumnChanged(ref UnitIndex, v))
-                @MappingField(T("Kvantitet", "Quantity"), nameof(QuantityIndex), QuantityIndex, v => OnMappingColumnChanged(ref QuantityIndex, v))
-                @MappingField(T("Á-pris", "Unit price"), nameof(PriceIndex), PriceIndex, v => OnMappingColumnChanged(ref PriceIndex, v))
-                @MappingField(T("Belopp", "Amount"), nameof(AmountIndex), AmountIndex, v => OnMappingColumnChanged(ref AmountIndex, v))
-                @if (HasImportedPreview)
-                {
-                    <div class="basis-full"></div>
+            @if (HasImportedPreview)
+            {
+                @{
+                    var _s = CountTasks(Sections);
+                    int _w = 0, _tasks = 0, _codeText = 0;
+                    foreach (var _r in FlattenTasksWithDepth(Sections))
+                    {
+                        if (_r.Task.Metadata.Type == TaskType.Task) _tasks++;
+                        else if (_r.Task.Metadata.Type == TaskType.CodeName) _codeText++;
+                        if (GetTaskDiagnostics(_r.Task, _r.Depth).Any(x => x.Kind == DiagnosticKind.Warning)) _w++;
+                    }
+                    int _changed = ChangedTasks.Count;
+                }
+                <div class="flex min-w-0 items-center gap-1.5 overflow-x-auto px-2 py-1.5">
                     <input type="search"
-                           class="h-7 w-36 shrink rounded-lg border border-slate-300 bg-white px-2 text-xs text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                           class="h-7 w-36 shrink-0 rounded-lg border border-slate-300 bg-white px-2 text-xs text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                            placeholder="@T("Sök...", "Search...")"
                            value="@PreviewSearchText"
                            @oninput="OnPreviewSearchChanged" />
-                    <select class="h-7 shrink-0 rounded-lg border border-slate-300 bg-white px-2 text-xs text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                    <select class="h-7 w-72 shrink-0 rounded-lg border border-slate-300 bg-white px-2 text-xs text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                             value="@PreviewTypeFilter"
                             @onchange="OnPreviewTypeFilterChanged">
-                        <option value="@ImportPreviewTypeFilter.All">@T("Alla typer", "All types")</option>
-                        <option value="@ImportPreviewTypeFilter.CalculationItems">@T("Kalkylposter", "Calc. items")</option>
-                        <option value="@ImportPreviewTypeFilter.Task">Task</option>
-                        <option value="@ImportPreviewTypeFilter.CodeText">CodeText</option>
-                        <option value="@ImportPreviewTypeFilter.ThreeBarCode">3-Bar Code</option>
-                        <option value="@ImportPreviewTypeFilter.FourBarCode">4-Bar Code</option>
-                        <option value="@ImportPreviewTypeFilter.Warnings">@T("Varningar", "Warnings")</option>
-                        <option value="@ImportPreviewTypeFilter.Changed">@T("Ändrade", "Changed")</option>
+                        <option value="@ImportPreviewTypeFilter.All">@T("Alla typer", "All types") (@_s.TotalRows)</option>
+                        <option value="@ImportPreviewTypeFilter.CalculationItems">@T("Kalkylposter inkl. 3- och 4-streckad kod", "Calc. items incl. 3- and 4-bar") (@_s.CalculationItems)</option>
+                        <option value="@ImportPreviewTypeFilter.Task">@T("Kalkylpost", "Calculation item") (@_tasks)</option>
+                        <option value="@ImportPreviewTypeFilter.CodeText">@T("Kodtext", "Code text") (@_codeText)</option>
+                        <option value="@ImportPreviewTypeFilter.ThreeBarCode">@T("3-streckade koder", "3-bar codes") (@_s.ThreeBarCode)</option>
+                        <option value="@ImportPreviewTypeFilter.FourBarCode">@T("4-streckade koder", "4-bar codes") (@_s.FourBarCode)</option>
+                        <option value="@ImportPreviewTypeFilter.Warnings">@T("Rader med varningar", "Rows with warnings") (@_w)</option>
+                        <option value="@ImportPreviewTypeFilter.Changed">@T("Ändrade rader", "Changed rows") (@_changed)</option>
                     </select>
                     <select class="h-7 shrink-0 rounded-lg border border-slate-300 bg-white px-2 text-xs text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                             value="@TreeViewMode"
@@ -160,91 +165,85 @@
                             <option value="@level.ToString(CultureInfo.InvariantCulture)">@T($"Nivå {level}", $"Level {level}")</option>
                         }
                     </select>
-                    <button type="button" class="@ToolbarButtonClass" @onclick="ShowOnlyWarnings">@T("Endast varningar", "Only warnings")</button>
+                    <button type="button" class="@ToolbarButtonClass @(WarningsOnly ? "!border-amber-500 !text-amber-700 dark:!border-amber-400 dark:!text-amber-300" : "")" @onclick="ShowOnlyWarnings">@T("Endast varningar", "Only warnings")</button>
                     <button type="button" class="@ToolbarButtonClass" @onclick="ShowOnlyCalculationItems">@T("Endast kalkylposter", "Only calc. items")</button>
-                    <div class="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-1">
-                        @foreach (var metric in PreviewMetrics)
-                        {
-                            <span class="@metric.CssClass" title="@metric.Title">@metric.Label</span>
-                        }
-                    </div>
-                }
-            </div>
+                </div>
+            }
         </div>
-
-        @if (HasImportedPreview)
-        {
-        <div class="mt-1 rounded-xl border border-slate-200 dark:border-slate-700">
-        <table class="w-full table-fixed border-collapse text-sm">
-            <colgroup>
-                <col style="width:58px" />
-                <col style="@($"width:{TreeColumnWidthPx}px")" />
-                <col style="width:10%" />
-                <col />
-                <col style="width:5%" />
-                <col style="width:8%" />
-                <col style="width:6%" />
-                <col style="width:6%" />
-                <col style="width:100px" />
-                <col style="width:96px" />
-                <col style="width:112px" />
-            </colgroup>
-            <thead class="sticky top-0 z-10 bg-slate-100 dark:bg-slate-800">
-                <tr>
-                    <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
-                        <span title="@T("Visar ursprungligt radnummer från Excel-filen.", "Shows the original row number from the Excel file.")">@T("Radnr", "Row no.")</span>
-                    </th>
-                    <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
-                        @T("Träd", "Tree")
-                    </th>
-                    <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
-                        @CalcResource.code
-                    </th>
-                    <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
-                        @CalcResource.name
-                    </th>
-                    <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
-                        @CalcResource.unit
-                    </th>
-                    <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
-                        @CalcResource.quantity
-                    </th>
-                    <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
-                        @T("Á-pris", "Unit price")
-                    </th>
-                    <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
-                        @T("Belopp", "Amount")
-                    </th>
-                    <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
-                        @T("Typ", "Type")
-                    </th>
-                    <th class="border border-slate-300 px-1 py-1 text-center font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">@T("Status", "Status")</th>
-                    <th class="border border-slate-300 px-2 py-1 text-center font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
-                        @T("Varningar", "Warnings")
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (VisiblePreviewRows.Any())
-                {
-                    @foreach (var row in VisiblePreviewRows)
-                    {
-                        @TaskRow(row)
-                    }
-                }
-                else
-                {
+        <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+            @if (HasImportedPreview)
+            {
+            <div class="mt-1 rounded-xl border border-slate-200 dark:border-slate-700">
+            <table class="w-full table-fixed border-collapse text-sm">
+                <colgroup>
+                    <col style="width:44px" />
+                    <col style="@($"width:{TreeColumnWidthPx}px")" />
+                    <col style="width:10%" />
+                    <col />
+                    <col style="width:5%" />
+                    <col style="width:8%" />
+                    <col style="width:6%" />
+                    <col style="width:6%" />
+                    <col style="width:100px" />
+                    <col style="width:96px" />
+                    <col style="width:144px" />
+                </colgroup>
+                <thead class="sticky top-0 z-10 bg-slate-100 dark:bg-slate-800">
                     <tr>
-                        <td colspan="11" class="border border-dashed border-slate-300 px-3 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
-                            @T("Inga rader matchar filtret.", "No rows match the filter.")
-                        </td>
+                        <th class="border border-slate-300 px-1 py-1 text-center font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                            <span title="@T("Visar ursprungligt radnummer från Excel-filen.", "Shows the original row number from the Excel file.")">@T("Radnr", "Row no.")</span>
+                        </th>
+                        <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                            @T("Träd", "Tree")
+                        </th>
+                        <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                            @CalcResource.code
+                        </th>
+                        <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                            @CalcResource.name
+                        </th>
+                        <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                            @CalcResource.unit
+                        </th>
+                        <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                            @CalcResource.quantity
+                        </th>
+                        <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                            @T("Á-pris", "Unit price")
+                        </th>
+                        <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                            @T("Belopp", "Amount")
+                        </th>
+                        <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                            @T("Typ", "Type")
+                        </th>
+                        <th class="border border-slate-300 px-1 py-1 text-center font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">@T("Status", "Status")</th>
+                        <th class="border border-slate-300 px-2 py-1 text-center font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                            @T("Varningar", "Warnings")
+                        </th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @if (VisiblePreviewRows.Any())
+                    {
+                        @foreach (var row in VisiblePreviewRows)
+                        {
+                            @TaskRow(row)
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="11" class="border border-dashed border-slate-300 px-3 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                                @T("Inga rader matchar filtret.", "No rows match the filter.")
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            </div>
+            }
         </div>
-        }
-    </div>
     }
 </div>
 
@@ -340,7 +339,7 @@
                     {
                         <span class="inline-flex h-6 w-6 items-center justify-center rounded-md bg-violet-100 text-[10px] font-semibold text-violet-700 dark:bg-violet-950 dark:text-violet-300" title="@T("Ändrad manuellt", "Changed manually")">Ä</span>
                     }
-                    @if (ChangedTasks.Contains(Task) || NewTasks.Contains(Task))
+                    @if (ChangedTasks.Contains(Task) && !NewTasks.Contains(Task))
                     {
                         <button type="button"
                                 class="inline-flex h-6 w-6 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-700 transition hover:border-violet-500 hover:text-violet-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
@@ -1595,6 +1594,7 @@
     {
         if (Enum.TryParse(args.Value?.ToString(), out ImportPreviewTypeFilter filter))
             PreviewTypeFilter = filter;
+        WarningsOnly = false;
     }
 
     private void OnWarningsOnlyChanged(ChangeEventArgs args) =>
@@ -2046,6 +2046,8 @@
             ImportMessage = T(
                 "Förhandsgranskningen har ändrats. Importera filen på nytt för att överföra en ny version.",
                 "The preview has changed. Re-import the file to transfer a new version.");
+        else if (ImportMessageIsSuccess)
+            ImportMessage = string.Empty;
 
         ImportMessageIsSuccess = false;
     }
