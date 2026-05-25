@@ -658,4 +658,19 @@
   <data name="deleteFilterPresetConfirm" xml:space="preserve">
     <value>Ta bort "{0}"?</value>
   </data>
+  <data name="_private" xml:space="preserve">
+    <value>Privat</value>
+  </data>
+  <data name="department" xml:space="preserve">
+    <value>Avdelning</value>
+  </data>
+  <data name="_public" xml:space="preserve">
+    <value>Offentlig</value>
+  </data>
+  <data name="program" xml:space="preserve">
+    <value>Program</value>
+  </data>
+  <data name="ImportFromOtherCalc" xml:space="preserve">
+    <value>Importera från annan kalkyl</value>
+  </data>
 </root>

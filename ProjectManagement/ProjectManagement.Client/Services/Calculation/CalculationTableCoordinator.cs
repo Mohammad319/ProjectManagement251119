@@ -244,7 +244,7 @@ namespace ProjectManagement.Client.Services.Calculation
                 && (task.Tasks == null || task.Tasks.Count == 0);
 
         public void ShowImportDialog() =>
-            dialogService.ShowComponent<CSVUI>("Importera Excel-mängdförteckning", Icons.ImportFromFile, null, DialogSize.FullScreen);
+            dialogService.ShowComponent<CSVUI>("Importera Excel-mängdförteckning", Icons.ImportFromFile, null, DialogSize.FullScreen, closeOnOverlayClick: false);
 
         public void ShowTemplateDialog() =>
             dialogService.ShowComponent<Pages.Calculation.Template.TemplateSetDefaultUI>(

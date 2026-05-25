@@ -103,3 +103,31 @@ function preventHorizontalBackNavigation(el) {
         if (atLeft || atRight) e.preventDefault();
     }, { passive: false });
 }
+
+window.printCalcGrid = function (title) {
+    const table = document.getElementById('resizeMe');
+    if (!table) return;
+
+    let cssText = '';
+    Array.from(document.styleSheets).forEach(function (sheet) {
+        try {
+            Array.from(sheet.cssRules).forEach(function (rule) {
+                cssText += rule.cssText + '\n';
+            });
+        } catch (_) { }
+    });
+
+    const win = window.open('', '_blank', 'width=1400,height=900');
+    if (!win) return;
+
+    win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + (title || 'Print') + '</title><style>' +
+        cssText +
+        'body{margin:6mm;font-family:system-ui,-apple-system,sans-serif;font-size:11px;}' +
+        'table{border-collapse:collapse;width:100%;}' +
+        'thead{display:table-header-group;}' +
+        'tr{page-break-inside:avoid;}' +
+        '</style></head><body>' + table.outerHTML + '</body></html>');
+    win.document.close();
+    win.focus();
+    setTimeout(function () { win.print(); win.close(); }, 400);
+};

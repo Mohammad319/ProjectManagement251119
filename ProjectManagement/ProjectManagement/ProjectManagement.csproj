@@ -82,8 +82,8 @@
 	</ItemGroup>
 
 	<Target Name="BuildTailwindCss" BeforeTargets="Build;Publish" Condition="Exists('$(MSBuildProjectDirectory)\package.json')">
-		<Exec Command="npm ci" WorkingDirectory="$(MSBuildProjectDirectory)" Condition="!Exists('$(MSBuildProjectDirectory)\node_modules')" />
-		<Exec Command="npm run tw:build" WorkingDirectory="$(MSBuildProjectDirectory)" />
+		<Exec Command="npm ci" WorkingDirectory="$(MSBuildProjectDirectory)" Condition="!Exists('$(MSBuildProjectDirectory)\node_modules')" ContinueOnError="WarnAndContinue" />
+		<Exec Command="npm run tw:build" WorkingDirectory="$(MSBuildProjectDirectory)" ContinueOnError="WarnAndContinue" />
 	</Target>
 
 </Project>

@@ -211,6 +211,134 @@ public class ExcelHelperTests
     }
 
     [Fact]
+    public void Import_PrefixCodes_BuildsNestedHierarchy()
+    {
+        using var workbook = new XLWorkbook();
+        var sheet = workbook.AddWorksheet("Import");
+
+        sheet.Cell(1, 1).Value = "B";
+        sheet.Cell(1, 2).Value = "Main section";
+        sheet.Cell(2, 1).Value = "BB";
+        sheet.Cell(2, 2).Value = "Sub section";
+        sheet.Cell(3, 1).Value = "BBB";
+        sheet.Cell(3, 2).Value = "Deep section";
+        sheet.Cell(4, 1).Value = "BBC.3";
+        sheet.Cell(4, 2).Value = "Dotted section";
+        sheet.Cell(5, 1).Value = "BBC.32";
+        sheet.Cell(5, 2).Value = "Dotted child";
+
+        var tasks = ExcelHelper.Import(1, workbook, 1, 1, 2, 4, 5, 6, isOH: false);
+
+        var root = Assert.Single(tasks);
+        Assert.Equal("B", root.Metadata.Code);
+        var bb = Assert.Single(root.Tasks);
+        Assert.Equal("BB", bb.Metadata.Code);
+        Assert.Equal(2, bb.Tasks.Count);
+        Assert.Equal("BBB", bb.Tasks[0].Metadata.Code);
+        Assert.Equal("BBC.3", bb.Tasks[1].Metadata.Code);
+        var dottedChild = Assert.Single(bb.Tasks[1].Tasks);
+        Assert.Equal("BBC.32", dottedChild.Metadata.Code);
+    }
+
+    [Fact]
+    public void Import_TextOnlyRows_AreCodeTextNotCalculationItems()
+    {
+        using var workbook = new XLWorkbook();
+        var sheet = workbook.AddWorksheet("Import");
+
+        sheet.Cell(1, 1).Value = "BBC";
+        sheet.Cell(1, 2).Value = "Undersokningar";
+        sheet.Cell(2, 2).Value = "Only descriptive text";
+
+        var tasks = ExcelHelper.Import(1, workbook, 1, 1, 2, 4, 5, 6, isOH: false);
+
+        var root = Assert.Single(tasks);
+        Assert.Equal(TaskType.CodeName, root.Metadata.Type);
+        var child = Assert.Single(root.Tasks);
+        Assert.Equal(TaskType.CodeName, child.Metadata.Type);
+    }
+
+    [Fact]
+    public void Import_IncompleteCalculationRows_AreCalculationItemsForReview()
+    {
+        using var workbook = new XLWorkbook();
+        var sheet = workbook.AddWorksheet("Import");
+
+        sheet.Cell(1, 1).Value = "BBC.1";
+        sheet.Cell(1, 2).Value = "Missing quantity";
+        sheet.Cell(1, 4).Value = "m";
+
+        sheet.Cell(2, 1).Value = "BBC.2";
+        sheet.Cell(2, 2).Value = "Dash in unit";
+        sheet.Cell(2, 4).Value = "-";
+
+        var tasks = ExcelHelper.Import(1, workbook, 1, 1, 2, 4, 5, 6, isOH: false);
+
+        Assert.Equal(2, tasks.Count);
+        Assert.All(tasks, task => Assert.Equal(TaskType.Task, task.Metadata.Type));
+        Assert.Null(tasks[0].Quantity);
+        Assert.Equal("m", tasks[0].Unit);
+        Assert.Null(tasks[1].Quantity);
+        Assert.Equal("-", tasks[1].Unit);
+    }
+
+    [Fact]
+    public void Import_DashPatterns_ClassifiesThreeAndFourBarCodesWithoutPrice()
+    {
+        using var workbook = new XLWorkbook();
+        var sheet = workbook.AddWorksheet("Import");
+
+        sheet.Cell(1, 1).Value = "A";
+        sheet.Cell(1, 2).Value = "Three dash";
+        sheet.Cell(1, 4).Value = "-";
+        sheet.Cell(1, 5).Value = "-";
+        sheet.Cell(1, 6).Value = "-";
+
+        sheet.Cell(2, 1).Value = "B";
+        sheet.Cell(2, 2).Value = "Four dash";
+        sheet.Cell(2, 4).Value = "-";
+        sheet.Cell(2, 5).Value = "-";
+        sheet.Cell(2, 6).Value = "-";
+        sheet.Cell(2, 7).Value = "-";
+
+        var tasks = ExcelHelper.Import(1, workbook, 1, 2, 1, 2, 4, 5, 6, 7, isOH: false);
+
+        Assert.Equal(2, tasks.Count);
+        Assert.Equal(TaskType.ThreeBarCode, tasks[0].Metadata.Type);
+        Assert.Equal(TaskType.FourBarCode, tasks[1].Metadata.Type);
+        Assert.Null(tasks[0].Metadata.PriceSubDB);
+        Assert.Null(tasks[1].Metadata.PriceSubDB);
+    }
+
+    [Fact]
+    public void Import_PriceZeroAndErrorValues_AreIgnored()
+    {
+        using var workbook = new XLWorkbook();
+        var sheet = workbook.AddWorksheet("Import");
+
+        sheet.Cell(1, 1).Value = "BBC.1";
+        sheet.Cell(1, 2).Value = "Valid task with zero price";
+        sheet.Cell(1, 4).Value = "m";
+        sheet.Cell(1, 5).Value = 2;
+        sheet.Cell(1, 6).Value = 0;
+
+        sheet.Cell(2, 1).Value = "BBC.2";
+        sheet.Cell(2, 2).Value = "Valid task with price error";
+        sheet.Cell(2, 4).Value = "m";
+        sheet.Cell(2, 5).Value = 2;
+        sheet.Cell(2, 6).Value = "#VÄRDEFEL!";
+
+        var tasks = ExcelHelper.Import(1, workbook, 1, 1, 2, 4, 5, 6, isOH: false);
+
+        Assert.Equal(2, tasks.Count);
+        Assert.All(tasks, task =>
+        {
+            Assert.Equal(TaskType.Task, task.Metadata.Type);
+            Assert.Null(task.Metadata.PriceSubDB);
+        });
+    }
+
+    [Fact]
     public void DetectLayout_UnlabeledSwedishRows_FindsColumnsAndStartRow()
     {
         using var workbook = new XLWorkbook();
@@ -270,11 +398,82 @@ public class ExcelHelperTests
 
         Assert.True(layout.IsDetected);
         Assert.Equal(5, layout.RowStart);
-        Assert.Equal(6, layout.RowEnd);
+        Assert.Equal(8, layout.RowEnd);
         Assert.Equal(1, layout.CodeIndex);
         Assert.Equal(2, layout.NameIndex);
         Assert.Equal(4, layout.UnitIndex);
         Assert.Equal(3, layout.QuantityIndex);
+        Assert.Equal(5, layout.PriceIndex);
+        Assert.Equal(6, layout.AmountIndex);
+    }
+
+    [Fact]
+    public void DetectLayout_HeaderRows_StartsAtNameTextEvenWhenCodeIsEmpty()
+    {
+        using var workbook = new XLWorkbook();
+        var sheet = workbook.AddWorksheet("Mängdförteckning");
+
+        sheet.Cell(4, 1).Value = "Kod";
+        sheet.Cell(4, 2).Value = "Namn";
+        sheet.Cell(4, 3).Value = "Mängd";
+        sheet.Cell(4, 4).Value = "Enhet";
+        sheet.Cell(5, 2).Value = "Allmän orientering";
+        sheet.Cell(6, 1).Value = "B";
+        sheet.Cell(6, 2).Value = "Huvudkod";
+
+        var layout = ExcelHelper.DetectLayout(workbook);
+
+        Assert.True(layout.IsDetected);
+        Assert.Equal(5, layout.RowStart);
+    }
+
+    [Fact]
+    public void DetectLayout_EndRow_AllowsEmptyRowsInsideImport()
+    {
+        using var workbook = new XLWorkbook();
+        var sheet = workbook.AddWorksheet("Mängdförteckning");
+
+        sheet.Cell(1, 1).Value = "Kod";
+        sheet.Cell(1, 2).Value = "Namn";
+        sheet.Cell(1, 3).Value = "Mängd";
+        sheet.Cell(1, 4).Value = "Enhet";
+        sheet.Cell(2, 1).Value = "B";
+        sheet.Cell(2, 2).Value = "Start";
+        sheet.Cell(12, 1).Value = "BB";
+        sheet.Cell(12, 2).Value = "After empty rows";
+
+        var layout = ExcelHelper.DetectLayout(workbook);
+
+        Assert.True(layout.IsDetected);
+        Assert.Equal(2, layout.RowStart);
+        Assert.Equal(12, layout.RowEnd);
+    }
+
+    [Fact]
+    public void DetectLayout_HeaderRows_UsesStrongHeadersForUnitQuantityPriceAndAmount()
+    {
+        using var workbook = new XLWorkbook();
+        var sheet = workbook.AddWorksheet("Mängdförteckning");
+
+        sheet.Cell(3, 1).Value = "Kod";
+        sheet.Cell(3, 2).Value = "Text";
+        sheet.Cell(3, 3).Value = "Enhet";
+        sheet.Cell(3, 4).Value = "Mängd";
+        sheet.Cell(3, 5).Value = "Á-pris";
+        sheet.Cell(3, 6).Value = "Belopp";
+        sheet.Cell(4, 1).Value = "NBK.1139";
+        sheet.Cell(4, 2).Value = "Trappor av rostfritt stål";
+        sheet.Cell(5, 2).Value = "A Här pratar vi om A";
+        sheet.Cell(5, 3).Value = "-";
+        sheet.Cell(5, 4).Value = "-";
+        sheet.Cell(5, 5).Value = "-";
+        sheet.Cell(5, 6).Value = "-";
+
+        var layout = ExcelHelper.DetectLayout(workbook);
+
+        Assert.True(layout.IsDetected);
+        Assert.Equal(3, layout.UnitIndex);
+        Assert.Equal(4, layout.QuantityIndex);
         Assert.Equal(5, layout.PriceIndex);
         Assert.Equal(6, layout.AmountIndex);
     }

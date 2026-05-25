@@ -34,6 +34,12 @@ namespace ProjectManagement.Client.Helper
         public bool IsDetected => Score > 0;
     }
 
+    public sealed class ExcelImportResult
+    {
+        public List<TaskPostDTO> Tasks { get; set; } = [];
+        public Dictionary<TaskPostDTO, int> RowNumbers { get; set; } = new();
+    }
+
     public class ExcelHelper
     {
         static readonly HashSet<string> KnownUnits = new(StringComparer.OrdinalIgnoreCase)
@@ -45,11 +51,15 @@ namespace ProjectManagement.Client.Helper
 
         static readonly HashSet<string> HeaderWords = new(StringComparer.OrdinalIgnoreCase)
         {
-            "code", "kod", "nr", "nummer", "pos", "littera", "ama", "name", "namn", "text",
-            "benamning", "beteckning", "beskrivning", "rubrik", "post", "aktivitet", "arbete",
-            "arbetsmoment", "unit", "enhet", "enh", "me", "mattenhet", "quantity", "qty", "antal",
-            "mangd", "mangdberaknad", "volym", "price", "pris", "apris", "enhetspris", "belopp",
-            "kostnad", "summa", "total", "totalt", "radsumma"
+            "code", "kod", "amakod", "amacode", "itemcode", "artikelkod", "id", "nr", "nummer",
+            "pos", "position", "littera", "ama", "name", "namn", "itemname", "artikeltext",
+            "text", "benamning", "beteckning", "beskrivning", "description", "item", "artikel",
+            "rubrik", "post", "aktivitet", "arbete", "arbetsmoment", "unit", "uom", "enhet",
+            "enh", "eh", "me", "mattenhet", "quantity", "qty", "q", "antal", "kvantitet",
+            "mangd", "mangdberaknad", "volym", "langd", "area", "price", "unitprice",
+            "priceunit", "pris", "apris", "aprisenhet", "enhetspris", "prisenhet",
+            "kostnadenhet", "belopp", "amount", "sum", "summa", "total", "totalt",
+            "totalpris", "totalcost", "kostnad", "radsumma"
         };
 
         public static List<ExcelWorksheetOption> GetWorksheetOptions(XLWorkbook workbook)
@@ -102,9 +112,13 @@ namespace ProjectManagement.Client.Helper
 
         public static List<TaskPostDTO> Import(int sheetNr, XLWorkbook workbook, int rowStart, int rowEnd,
             int codeIndex, int nameIndex, int unitIndex, int quantityIndex, int priceIndex, int amountIndex, bool isOH)
+            => ImportWithRowNumbers(sheetNr, workbook, rowStart, rowEnd, codeIndex, nameIndex, unitIndex, quantityIndex, priceIndex, amountIndex, isOH).Tasks;
+
+        public static ExcelImportResult ImportWithRowNumbers(int sheetNr, XLWorkbook workbook, int rowStart, int rowEnd,
+            int codeIndex, int nameIndex, int unitIndex, int quantityIndex, int priceIndex, int amountIndex, bool isOH)
         {
             if (!workbook.Worksheets.Any())
-                return new List<TaskPostDTO>();
+                return new ExcelImportResult();
 
             int safeSheetNr = Math.Clamp(sheetNr, 1, workbook.Worksheets.Count);
             codeIndex = Math.Max(codeIndex, 1);
@@ -116,6 +130,7 @@ namespace ProjectManagement.Client.Helper
             rowStart = Math.Max(rowStart, 1);
 
             List<TaskPostDTO> sections = new();
+            Dictionary<TaskPostDTO, int> rowNumbers = new();
             HashSet<TaskPostDTO> leafCodeRows = new();
             IXLWorksheet sheet = workbook.Worksheet(safeSheetNr);
 
@@ -132,18 +147,26 @@ namespace ProjectManagement.Client.Helper
                 if (IsHeaderWord(code) && IsHeaderWord(name))
                     continue;
 
-                if (!string.IsNullOrWhiteSpace(name))
-                {
-                    string unit = CellText(sheet, row, unitIndex);
-                    string quantityStr = CellText(sheet, row, quantityIndex);
-                    string priceStr = CellText(sheet, row, priceIndex);
-                    string amountStr = CellText(sheet, row, amountIndex);
+                string unit = IgnoreNonQuantityError(CellText(sheet, row, unitIndex));
+                string quantityStr = CellText(sheet, row, quantityIndex);
+                string priceStr = IgnoreNonQuantityError(CellText(sheet, row, priceIndex));
+                string amountStr = IgnoreNonQuantityError(CellText(sheet, row, amountIndex));
+                bool hasImportantCells = !string.IsNullOrWhiteSpace(unit)
+                    || !string.IsNullOrWhiteSpace(quantityStr)
+                    || IsDash(priceStr)
+                    || IsDash(amountStr)
+                    || HasNonZeroNumber(priceStr)
+                    || HasNonZeroNumber(amountStr);
 
+                if (!string.IsNullOrWhiteSpace(code) || !string.IsNullOrWhiteSpace(name) || hasImportantCells)
+                {
                     if (LooksLikeNumber(unit) && IsLikelyUnit(quantityStr))
                         (unit, quantityStr) = (quantityStr, unit);
 
                     bool isLocalOrdinalCode = IsLocalOrdinalCode(code);
                     string sourceName = isLocalOrdinalCode ? JoinCodeAndName(code, name) : name;
+                    if (string.IsNullOrWhiteSpace(sourceName))
+                        sourceName = MissingNameText();
                     string importedName = LimitText(sourceName, FieldLengths.TaskName);
                     string importedCode = isLocalOrdinalCode ? string.Empty : LimitText(code, FieldLengths.Code);
                     string importedUnit = LimitText(unit, FieldLengths.Unit);
@@ -165,9 +188,24 @@ namespace ProjectManagement.Client.Helper
                     if (sourceName.Length > FieldLengths.TaskName)
                         task.Metadata.Note = LimitText(sourceName, FieldLengths.Note);
 
-                    bool isThreeDashRow = IsDash(unit) && IsDash(quantityStr) && IsDash(priceStr);
+                    bool unitDash = IsDash(unit);
+                    bool quantityDash = IsDash(quantityStr);
+                    bool priceDash = IsDash(priceStr);
+                    bool amountDash = IsDash(amountStr);
+                    bool hasUnit = !string.IsNullOrWhiteSpace(unit) && !unitDash;
+                    bool hasQuantity = TryReadDecimal(quantityStr, out decimal quantity);
+                    bool hasCalculationShape = !string.IsNullOrWhiteSpace(sourceName)
+                        && (hasUnit || hasQuantity || unitDash)
+                        && !quantityDash
+                        && !priceDash
+                        && !amountDash;
+                    bool hasTextOnlyShape = string.IsNullOrWhiteSpace(unit)
+                        && string.IsNullOrWhiteSpace(quantityStr)
+                        && string.IsNullOrWhiteSpace(priceStr)
+                        && string.IsNullOrWhiteSpace(amountStr);
+                    bool isThreeDashRow = unitDash && quantityDash && priceDash;
                     bool isFourDashCodeRow = isThreeDashRow
-                        && IsDash(amountStr)
+                        && amountDash
                         && RowContainsOnlyCodeNameAndDashes(sheet, row, codeIndex, nameIndex, minimumDashCount: 4);
 
                     if (isFourDashCodeRow)
@@ -178,7 +216,7 @@ namespace ProjectManagement.Client.Helper
                         task.Metadata.PriceSubDB = null;
                         leafCodeRows.Add(task);
                     }
-                    else if (string.IsNullOrWhiteSpace(unit) && string.IsNullOrWhiteSpace(priceStr) && string.IsNullOrWhiteSpace(quantityStr))
+                    else if (hasTextOnlyShape)
                     {
                         task.Metadata.Type = TaskType.CodeName;
                         task.Quantity = null;
@@ -194,20 +232,34 @@ namespace ProjectManagement.Client.Helper
                     }
                     else
                     {
-                        task.Metadata.QuantityParam = ConstValues.FixedQ;
-                        _ = TryReadDecimal(quantityStr, out decimal quantity);
-                        _ = TryReadDecimal(priceStr, out decimal price);
-                        task.Quantity = quantity;
-                        task.Metadata.PriceSubDB = price;
+                        if (hasCalculationShape)
+                        {
+                            task.Metadata.QuantityParam = ConstValues.FixedQ;
+                            task.Quantity = hasQuantity ? quantity : null;
+                            task.Metadata.PriceSubDB = TryReadDecimal(priceStr, out decimal price) && price != 0m ? price : null;
+                        }
+                        else
+                        {
+                            task.Metadata.Type = TaskType.CodeName;
+                            task.Quantity = hasQuantity ? quantity : null;
+                            task.Metadata.PriceSubDB = null;
+                        }
                     }
 
                     if (!string.IsNullOrWhiteSpace(task.Name))
+                    {
                         sections.Add(task);
+                        rowNumbers[task] = row;
+                    }
                 }
             }
 
             ReSort(sections, leafCodeRows);
-            return sections;
+            return new ExcelImportResult
+            {
+                Tasks = sections,
+                RowNumbers = rowNumbers
+            };
         }
 
         static ExcelImportLayout DetectLayout(IXLWorksheet sheet, int sheetIndex)
@@ -253,7 +305,7 @@ namespace ProjectManagement.Client.Helper
             };
 
             int startSearchRow = header == null ? firstRow : Math.Min(header.RowNumber + 1, lastRow);
-            layout.RowStart = DetectStartRow(sheet, startSearchRow, lastRow, layout);
+            layout.RowStart = DetectStartRow(sheet, startSearchRow, lastRow, layout, header != null);
             layout.RowEnd = DetectEndRow(sheet, layout.RowStart, lastRow, layout);
             layout.Score = ScoreLayout(sheet, firstRow, lastRow, layout) + (header?.Score ?? 0);
 
@@ -333,6 +385,9 @@ namespace ProjectManagement.Client.Helper
 
                     profile.NonEmptyCount++;
 
+                    if (IsDash(text))
+                        profile.DashCount++;
+
                     if (LooksLikeNumber(text))
                         profile.NumericCount++;
                     else if (IsLikelyUnit(text))
@@ -389,11 +444,12 @@ namespace ProjectManagement.Client.Helper
         static int DetectQuantityColumn(List<ColumnProfile> profiles, int nameIndex, int unitIndex)
         {
             IEnumerable<ColumnProfile> candidates = profiles
-                .Where(x => x.ColumnNumber > nameIndex && x.ColumnNumber <= nameIndex + 10 && x.ColumnNumber != unitIndex && x.NumericCount > 0);
+                .Where(x => x.ColumnNumber > nameIndex && x.ColumnNumber <= nameIndex + 10 && x.ColumnNumber != unitIndex && (x.NumericCount > 0 || x.DashCount > 0));
 
             ColumnProfile? closestToUnit = candidates
                 .OrderBy(x => Math.Abs(x.ColumnNumber - unitIndex))
                 .ThenByDescending(x => x.NumericCount)
+                .ThenByDescending(x => x.DashCount)
                 .FirstOrDefault();
 
             if (closestToUnit != null)
@@ -407,8 +463,9 @@ namespace ProjectManagement.Client.Helper
             int after = Math.Max(unitIndex, quantityIndex);
 
             ColumnProfile? profile = profiles
-                .Where(x => x.ColumnNumber > after && x.ColumnNumber <= after + 8 && x.NumericCount > 0)
+                .Where(x => x.ColumnNumber > after && x.ColumnNumber <= after + 8 && (x.NumericCount > 0 || x.DashCount > 0))
                 .OrderBy(x => x.ColumnNumber)
+                .ThenByDescending(x => x.NumericCount + x.DashCount)
                 .FirstOrDefault();
 
             return profile?.ColumnNumber ?? after + 1;
@@ -417,15 +474,26 @@ namespace ProjectManagement.Client.Helper
         static int DetectAmountColumn(List<ColumnProfile> profiles, int priceIndex)
         {
             ColumnProfile? profile = profiles
-                .Where(x => x.ColumnNumber > priceIndex && x.ColumnNumber <= priceIndex + 6 && x.NumericCount > 0)
+                .Where(x => x.ColumnNumber > priceIndex && x.ColumnNumber <= priceIndex + 6 && (x.NumericCount > 0 || x.DashCount > 0))
                 .OrderBy(x => x.ColumnNumber)
+                .ThenByDescending(x => x.NumericCount + x.DashCount)
                 .FirstOrDefault();
 
             return profile?.ColumnNumber ?? priceIndex + 1;
         }
 
-        static int DetectStartRow(IXLWorksheet sheet, int firstRow, int lastRow, ExcelImportLayout layout)
+        static int DetectStartRow(IXLWorksheet sheet, int firstRow, int lastRow, ExcelImportLayout layout, bool hasHeader)
         {
+            if (hasHeader)
+            {
+                for (int row = firstRow; row <= lastRow; row++)
+                {
+                    string name = CellText(sheet, row, layout.NameIndex);
+                    if (IsMeaningfulName(name))
+                        return row;
+                }
+            }
+
             for (int row = firstRow; row <= lastRow; row++)
             {
                 string code = CellText(sheet, row, layout.CodeIndex);
@@ -446,14 +514,35 @@ namespace ProjectManagement.Client.Helper
 
         static int DetectEndRow(IXLWorksheet sheet, int firstRow, int lastRow, ExcelImportLayout layout)
         {
-            for (int row = lastRow; row >= firstRow; row--)
+            const int emptyLookaheadLimit = 50;
+            int lastDataRow = firstRow;
+            int emptyRun = 0;
+
+            for (int row = firstRow; row <= lastRow; row++)
             {
-                if (!string.IsNullOrWhiteSpace(CellText(sheet, row, layout.NameIndex)))
-                    return row;
+                if (HasImportRowData(sheet, row, layout))
+                {
+                    lastDataRow = row;
+                    emptyRun = 0;
+                    continue;
+                }
+
+                emptyRun++;
+                if (emptyRun >= emptyLookaheadLimit)
+                    break;
             }
 
-            return lastRow;
+            return lastDataRow;
         }
+
+        static bool HasImportRowData(IXLWorksheet sheet, int row, ExcelImportLayout layout) =>
+            !string.IsNullOrWhiteSpace(CellText(sheet, row, layout.CodeIndex))
+            || !string.IsNullOrWhiteSpace(CellText(sheet, row, layout.NameIndex))
+            || !string.IsNullOrWhiteSpace(CellText(sheet, row, layout.UnitIndex))
+            || !string.IsNullOrWhiteSpace(CellText(sheet, row, layout.QuantityIndex))
+            || !string.IsNullOrWhiteSpace(CellText(sheet, row, layout.PriceIndex))
+            || !string.IsNullOrWhiteSpace(CellText(sheet, row, layout.AmountIndex));
+        
 
         static int ScoreLayout(IXLWorksheet sheet, int firstRow, int lastRow, ExcelImportLayout layout)
         {
@@ -595,18 +684,37 @@ namespace ProjectManagement.Client.Helper
             if (!text.Any(char.IsLower))
                 return false;
 
-            if (text.Contains(':') || text.Contains(';') || text.Contains(',') || text.Length > 8)
+            if (text.Contains(':') || text.Contains(';') || text.Contains(',') || text.Length > 4)
                 return false;
 
             int letterCount = key.Count(char.IsLetter);
             int digitCount = key.Count(char.IsDigit);
 
-            return letterCount > 0 && digitCount <= 2 && key.Length <= 8;
+            return letterCount > 0 && digitCount <= 2 && key.Length <= 4;
         }
 
         static bool LooksLikeNumber(string text) => TryReadDecimal(text, out _);
 
         static bool IsDash(string text) => NormalizeText(text) == "-";
+
+        static bool HasNonZeroNumber(string text) =>
+            TryReadDecimal(text, out decimal value) && value != 0m;
+
+        static string IgnoreNonQuantityError(string text) =>
+            IsSpreadsheetError(text) ? string.Empty : text;
+
+        static bool IsSpreadsheetError(string text)
+        {
+            text = NormalizeText(text);
+            return text.Length > 1
+                && text[0] == '#'
+                && (text.Contains('!') || text.Contains("ERROR", StringComparison.OrdinalIgnoreCase) || text.Contains("FEL", StringComparison.OrdinalIgnoreCase));
+        }
+
+        static string MissingNameText() =>
+            CultureInfo.CurrentUICulture.Name.StartsWith("sv", StringComparison.OrdinalIgnoreCase)
+                ? "Namn saknas"
+                : "Name missing";
 
         static string LimitText(string text, int maxLength)
         {
@@ -632,12 +740,12 @@ namespace ProjectManagement.Client.Helper
         }
 
         static bool IsHeaderWord(string text) => HeaderWords.Contains(TextKey(text));
-        static bool IsCodeHeader(string key) => key is "kod" or "code" or "nr" or "nummer" or "pos" or "position" or "littera" or "ama";
-        static bool IsNameHeader(string key) => key is "text" or "namn" or "name" or "benamning" or "beteckning" or "beskrivning" or "rubrik" or "post" or "aktivitet" or "arbete" or "arbetsmoment";
-        static bool IsUnitHeader(string key) => key is "enhet" or "unit" or "enh" or "me" or "mattenhet";
-        static bool IsQuantityHeader(string key) => key is "mangd" or "quantity" or "qty" or "antal" or "volym" or "mangdberaknad";
-        static bool IsPriceHeader(string key) => key is "apris" or "pris" or "price" or "unitprice" or "enhetspris" or "kostnad" or "kostnadenhet";
-        static bool IsAmountHeader(string key) => key is "belopp" or "amount" or "summa" or "total" or "totalt" or "radsumma";
+        static bool IsCodeHeader(string key) => key is "kod" or "amakod" or "amacode" or "code" or "itemcode" or "artikelkod" or "nr" or "nummer" or "pos" or "position" or "id" or "littera" or "ama";
+        static bool IsNameHeader(string key) => key is "text" or "namn" or "name" or "item" or "artikel" or "itemname" or "artikeltext" or "description" or "benamning" or "beteckning" or "beskrivning" or "rubrik" or "post" or "aktivitet" or "arbete" or "arbetsmoment";
+        static bool IsUnitHeader(string key) => key is "enhet" or "unit" or "uom" or "enh" or "eh" or "me" or "mattenhet";
+        static bool IsQuantityHeader(string key) => key is "kvantitet" or "mangd" or "quantity" or "qty" or "q" or "antal" or "volym" or "langd" or "area" or "mangdberaknad";
+        static bool IsPriceHeader(string key) => key is "apris" or "aprisenhet" or "pris" or "price" or "unitprice" or "priceunit" or "enhetspris" or "prisenhet" or "kostnadenhet";
+        static bool IsAmountHeader(string key) => key is "belopp" or "amount" or "sum" or "summa" or "total" or "totalt" or "totalpris" or "totalcost" or "kostnad" or "radsumma";
 
         static string NormalizeText(string? text) => (text ?? string.Empty).Replace('\u00a0', ' ').Trim();
 
@@ -718,7 +826,36 @@ namespace ProjectManagement.Client.Helper
                 return false;
 
             char next = childCode[parentPrefix.Length];
-            return next is '.' or '-' or '_' or '/' or '\\';
+            if (next is '.' or '-' or '_' or '/' or '\\')
+                return true;
+
+            if (char.IsLetterOrDigit(next))
+                return IsLikelyCodeHierarchyStep(parentPrefix, childCode);
+
+            return false;
+        }
+
+        static bool IsLikelyCodeHierarchyStep(string parentCode, string childCode)
+        {
+            string parentKey = CodeHierarchyKey(parentCode);
+            string childKey = CodeHierarchyKey(childCode);
+
+            return parentKey.Length > 0
+                && childKey.Length > parentKey.Length
+                && childKey.StartsWith(parentKey, StringComparison.OrdinalIgnoreCase);
+        }
+
+        static string CodeHierarchyKey(string code)
+        {
+            string normalized = NormalizeCode(code);
+            StringBuilder key = new(normalized.Length);
+            foreach (char ch in normalized)
+            {
+                if (char.IsLetterOrDigit(ch))
+                    key.Append(ch);
+            }
+
+            return key.ToString();
         }
 
         static string NormalizeCode(string? code)
@@ -777,6 +914,7 @@ namespace ProjectManagement.Client.Helper
             public int ColumnNumber { get; }
             public int NonEmptyCount { get; set; }
             public int NumericCount { get; set; }
+            public int DashCount { get; set; }
             public int UnitLikeCount { get; set; }
             public int CodeLikeCount { get; set; }
             public int TextCount { get; set; }

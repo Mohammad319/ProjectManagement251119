@@ -8,7 +8,7 @@
 @attribute [Authorize(Roles = PMRolesConst.APP.AdminSuperManger)]
 @inherits AppComponentBase
 @inject IUsersService sersService
-@inject ApplicationDbContext context
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
 
 <div class="space-y-3 text-slate-900 dark:text-slate-100">
     <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/80 overflow-hidden">
@@ -25,7 +25,19 @@
         </div>
 
         <div class="px-4 py-3">
-            @if (Tenants is { Count: > 0 })
+            @if (_loading)
+            {
+                <div class="flex min-h-[120px] items-center justify-center text-sm text-slate-500 dark:text-slate-400">
+                    <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
+                </div>
+            }
+            else if (_loadError is not null)
+            {
+                <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300">
+                    <strong>Error:</strong> @_loadError
+                </div>
+            }
+            else if (Tenants is { Count: > 0 })
             {
                 <div class="overflow-x-auto">
                     <MhdTable TItem="TenantDatabaseEntity" Items="Tenants" ShowFilter="false">
@@ -82,6 +94,8 @@
 
 @code{
     List<TenantDatabaseEntity>? Tenants;
+    bool _loading = true;
+    string? _loadError;
 
     void UpdateForm(TenantDatabaseEntity model)
     {
@@ -101,12 +115,7 @@
     {
         Modal.Close();
         if (newLoading)
-        {
-            Tenants = await context.TenantDatabase
-                .AsNoTracking()
-                .OrderBy(x => x.Name)
-                .ToListAsync();
-        }
+            await LoadAsync();
     }
 
     void Remove(TenantDatabaseEntity obj)
@@ -116,18 +125,37 @@
 
     async Task RemoveAsync(TenantDatabaseEntity obj)
     {
-        context.TenantDatabase.Remove(obj);
-        await context.SaveChangesAsync();
+        await using var db = await DbFactory.CreateDbContextAsync();
+        db.TenantDatabase.Remove(obj);
+        await db.SaveChangesAsync();
         Tenants?.Remove(obj);
         MHD.ToastMessage(ResourceApp.delete, ToastType.Delete, true);
     }
 
-    protected async override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
     {
-        Tenants = await context.TenantDatabase
-            .AsNoTracking()
-            .OrderBy(x => x.Name)
-            .ToListAsync();
+        _loading = true;
+        _loadError = null;
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+            Tenants = await db.TenantDatabase
+                .AsNoTracking()
+                .OrderBy(x => x.Name)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            _loadError = ex.Message;
+            Tenants = null;
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
     }
 
     async Task Context(TenantDatabaseEntity item)

@@ -2,6 +2,7 @@ using BlazorMHD.UI.Core.DesignSystem;
 using BlazorMHD.UI.Core.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Localization;
+using Microsoft.JSInterop;
 using ProjectManagement.Client.Pages.Calculation.Table.Header;
 using ProjectManagement.Client.Pages.Calculation.Table.ResourceSuggestions;
 using ProjectManagement.Client.Services.Calculation;
@@ -26,6 +27,7 @@ public partial class NelCalculationPage : ComponentBase, IDisposable
     [Inject] private FolderState FolderState { get; set; } = default!;
     [Inject] private ICalculationRepository CalcRepo { get; set; } = default!;
     [Inject] private DialogService DialogService { get; set; } = default!;
+    [Inject] private IJSRuntime JS { get; set; } = default!;
 
     private Action? _onFolderChanged;
     private Action? _onInteractionChanged;
@@ -236,6 +238,12 @@ public partial class NelCalculationPage : ComponentBase, IDisposable
     {
         if (Calc is null) return;
         await CalcRepo.UpdateDisplayPresetsAsync(Calc.Id, store);
+    }
+
+    private async Task PrintAsync()
+    {
+        var title = Calc?.Name ?? "Calculation";
+        await JS.InvokeVoidAsync("printCalcGrid", title);
     }
 
     private static string GetToggleChipClass(bool isActive) =>

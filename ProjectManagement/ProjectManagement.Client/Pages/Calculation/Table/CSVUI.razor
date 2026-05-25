@@ -1,278 +1,513 @@
 ﻿@using BlazorMHD.UI.Core.DesignSystem
+@using BlazorMHD.UI.Core.Services
 @using ClosedXML.Excel
-@using ProjectManagement.Client.Shared.MVVM.Calculation
-@using ProjectManagement.Client.Shared.Model.Project
-@using ProjectManagement.Client.Shared.Repositories.Calculation
+@using Microsoft.JSInterop
 @using ProjectManagement.Shared.Base.Calculation
 @using ProjectManagement.Shared.DTO.Calculation
 @using System.Globalization
 @using System.IO
+@using System.Text
+@using System.Text.Json
 @inherits AppComponentBase
 @implements IDisposable
+@inject IJSRuntime JS
 
-<div class="space-y-3 p-3 text-slate-800 dark:text-slate-100" style="--net-task: @UiStyles.Task;--net-subtask: @UiStyles.SubTask;">
-    <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/60">
-        <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <div class="flex min-w-0 flex-col gap-1 xl:col-span-2">
-                <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Välj Excel-fil (mängdförteckning)</label>
-                <div class="flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-white px-2 py-2 dark:border-slate-700 dark:bg-slate-900">
-                    <label for="excel-import-file"
-                           class="inline-flex h-8 cursor-pointer items-center justify-center rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition hover:border-blue-500 hover:text-blue-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-blue-400 dark:hover:text-blue-300">
-                        Välj fil
-                    </label>
-                    <InputFile id="excel-import-file"
-                               class="hidden"
-                               type="file"
-                               accept=".xlsx,.xls"
-                               OnChange="(InputFileChangeEventArgs e) => CheckedChanged(e)" />
-                    <span class="min-w-0 truncate text-sm text-slate-600 dark:text-slate-300">@SelectedFileLabel</span>
+<div class="flex h-full flex-col gap-1 text-slate-800 dark:text-slate-100" style="--net-task: @UiStyles.Task;--net-subtask: @UiStyles.SubTask;">
+    <div class="flex min-w-0 flex-wrap items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-2 py-1.5 dark:border-slate-700 dark:bg-slate-800/60">
 
-                    @if (CanImport)
-                    {
-                        <button type="button"
-                                class="inline-flex h-8 items-center justify-center rounded-lg border border-blue-600 bg-blue-600 px-3 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-blue-500 dark:bg-blue-500 dark:hover:bg-blue-400 dark:hover:text-slate-900"
-                                @onclick="Import"
-                                disabled="@wait">
-                            Importera
-                        </button>
-                    }
+        <label for="excel-import-file"
+               class="inline-flex h-7 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-slate-300 bg-white px-2.5 text-xs font-medium text-slate-700 transition hover:border-blue-500 hover:text-blue-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-blue-400 dark:hover:text-blue-300">
+            @T("Välj fil", "Select file")
+        </label>
+        <InputFile id="excel-import-file" class="hidden" type="file" accept=".xlsx,.xls"
+                   OnChange="(InputFileChangeEventArgs e) => CheckedChanged(e)" />
 
-                    @if (CanTransferToCalculation)
-                    {
-                        <button type="button"
-                                class="inline-flex h-8 items-center justify-center rounded-lg border border-emerald-600 bg-emerald-600 px-3 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400 dark:hover:text-slate-900"
-                                @onclick="Save"
-                                disabled="@wait">
-                            @(wait ? "Överför data till kalkyl..." : "Överför data till kalkyl")
-                        </button>
-                    }
-                </div>
+        <span class="shrink-0 truncate text-xs text-slate-500 dark:text-slate-400" style="max-width:180px">@SelectedFileLabel</span>
 
-                @if (!string.IsNullOrWhiteSpace(ImportMessage))
+        @if (SheetIsVisible)
+        {
+            <span class="shrink-0 text-slate-300 dark:text-slate-600">|</span>
+            <span class="shrink-0 text-[10px] font-medium text-slate-500 dark:text-slate-400">@T("Blad", "Sheet")</span>
+            <select class="@GetMappingInputClass(nameof(SheetNr)) !h-6 !w-auto !shrink-0 !py-0 !text-[11px]"
+                    title="@GetLayoutSuggestion(nameof(SheetNr))"
+                    value="@SheetNr"
+                    @onchange="OnSheetChanged">
+                @foreach (var sheet in SheetOptions)
                 {
-                    <div class="@ImportMessageClass">
-                        @ImportMessage
+                    <option value="@sheet.Index">@sheet.DisplayName</option>
+                }
+            </select>
+        }
+
+        @if (HasSelectedFile)
+        {
+            <span class="shrink-0 text-slate-300 dark:text-slate-600">|</span>
+            <span class="shrink-0 text-[10px] font-medium text-slate-500 dark:text-slate-400">@T("Rad", "Row")</span>
+            <input type="number"
+                   class="@GetMappingInputClass(nameof(RowStart)) !h-6 !w-16 !shrink-0 !py-0 !text-[11px]"
+                   title="@GetLayoutSuggestion(nameof(RowStart))"
+                   value="@RowStart" @onchange="OnRowStartChanged" />
+            <span class="shrink-0 text-[10px] text-slate-400">–</span>
+            <input type="number"
+                   class="@GetMappingInputClass(nameof(RowEnd)) !h-6 !w-16 !shrink-0 !py-0 !text-[11px]"
+                   title="@GetLayoutSuggestion(nameof(RowEnd))"
+                   value="@RowEnd" @onchange="OnRowEndChanged" />
+        }
+
+        @if (CanImport)
+        {
+            <button type="button"
+                    class="inline-flex h-7 shrink-0 items-center justify-center rounded-lg border border-blue-600 bg-blue-600 px-2.5 text-xs font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-blue-500 dark:bg-blue-500 dark:hover:bg-blue-400 dark:hover:text-slate-900"
+                    @onclick="Import" disabled="@wait">
+                @(wait ? T("Arbetar...", "Working...") : T("Importera", "Import"))
+            </button>
+        }
+
+        @if (CanTransferToCalculation)
+        {
+            <button type="button"
+                    class="inline-flex h-7 shrink-0 items-center justify-center rounded-lg border border-emerald-600 bg-emerald-600 px-2.5 text-xs font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400 dark:hover:text-slate-900"
+                    @onclick="Save" disabled="@wait">
+                @(wait ? T("Överför data till kalkyl...", "Transferring data to calculation...") : T("Överför data till kalkyl", "Transfer data to calculation"))
+            </button>
+        }
+
+        @if (HasSelectedFile && SuggestedLayout is { IsDetected: true } && HasLayoutSuggestionDifference)
+        {
+            <button type="button"
+                    class="inline-flex h-7 shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-white px-2.5 text-xs font-medium text-slate-700 transition hover:border-emerald-500 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+                    @onclick="ApplySuggestedLayout" disabled="@wait">
+                @T("Använd förslag", "Apply suggestion")
+            </button>
+        }
+
+        @if (HasSelectedFile)
+        {
+            <button type="button"
+                    class="inline-flex h-7 shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-white px-2.5 text-xs font-medium text-slate-600 transition hover:border-rose-400 hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+                    @onclick="ClearSavedLayoutAsync" disabled="@wait"
+                    title="@T("Rensa sparad kolumn- och radlayout för importen.", "Clear saved column and row layout for import.")">
+                @T("Rensa sparad layout", "Clear saved layout")
+            </button>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(ImportMessage))
+        {
+            <span class="ml-auto shrink-0 cursor-default rounded-full @ImportMessageBadgeClass px-2 py-0.5 text-[11px] font-semibold"
+                  title="@ImportMessage">
+                @ImportMessageFirstLine
+            </span>
+        }
+    </div>
+
+    @if (HasSelectedFile)
+    {
+    <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+        <div class="sticky top-0 z-30 rounded-xl border border-slate-200 bg-white/95 shadow-sm backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/95">
+            @if (ColumnMappingWarnings.Count > 0)
+            {
+                <div class="flex items-center gap-2 border-b border-amber-100 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-300">
+                    <svg class="h-3 w-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                    </svg>
+                    <span>@string.Join(" ", ColumnMappingWarnings)</span>
+                </div>
+            }
+            @if (!string.IsNullOrWhiteSpace(ImportMessage) && !ImportMessageIsSuccess)
+            {
+                <div class="flex items-center gap-2 border-b border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                    <svg class="h-3 w-3 shrink-0 text-amber-500" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008v.008H12V16.5Zm-9.303-.374c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126Z" />
+                    </svg>
+                    <span class="truncate" title="@ImportMessage">@ImportMessageFirstLine</span>
+                </div>
+            }
+            <div class="flex min-w-0 flex-wrap items-center gap-1.5 px-2 py-1.5">
+                @MappingField(T("Kod", "Code"), nameof(CodeIndex), CodeIndex, v => OnMappingColumnChanged(ref CodeIndex, v))
+                @MappingField(T("Namn", "Name"), nameof(NameIndex), NameIndex, v => OnMappingColumnChanged(ref NameIndex, v))
+                @MappingField(T("Enhet", "Unit"), nameof(UnitIndex), UnitIndex, v => OnMappingColumnChanged(ref UnitIndex, v))
+                @MappingField(T("Kvantitet", "Quantity"), nameof(QuantityIndex), QuantityIndex, v => OnMappingColumnChanged(ref QuantityIndex, v))
+                @MappingField(T("Á-pris", "Unit price"), nameof(PriceIndex), PriceIndex, v => OnMappingColumnChanged(ref PriceIndex, v))
+                @MappingField(T("Belopp", "Amount"), nameof(AmountIndex), AmountIndex, v => OnMappingColumnChanged(ref AmountIndex, v))
+                @if (HasImportedPreview)
+                {
+                    <div class="basis-full"></div>
+                    <input type="search"
+                           class="h-7 w-36 shrink rounded-lg border border-slate-300 bg-white px-2 text-xs text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                           placeholder="@T("Sök...", "Search...")"
+                           value="@PreviewSearchText"
+                           @oninput="OnPreviewSearchChanged" />
+                    <select class="h-7 shrink-0 rounded-lg border border-slate-300 bg-white px-2 text-xs text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                            value="@PreviewTypeFilter"
+                            @onchange="OnPreviewTypeFilterChanged">
+                        <option value="@ImportPreviewTypeFilter.All">@T("Alla typer", "All types")</option>
+                        <option value="@ImportPreviewTypeFilter.CalculationItems">@T("Kalkylposter", "Calc. items")</option>
+                        <option value="@ImportPreviewTypeFilter.Task">Task</option>
+                        <option value="@ImportPreviewTypeFilter.CodeText">CodeText</option>
+                        <option value="@ImportPreviewTypeFilter.ThreeBarCode">3-Bar Code</option>
+                        <option value="@ImportPreviewTypeFilter.FourBarCode">4-Bar Code</option>
+                        <option value="@ImportPreviewTypeFilter.Warnings">@T("Varningar", "Warnings")</option>
+                        <option value="@ImportPreviewTypeFilter.Changed">@T("Ändrade", "Changed")</option>
+                    </select>
+                    <select class="h-7 shrink-0 rounded-lg border border-slate-300 bg-white px-2 text-xs text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                            value="@TreeViewMode"
+                            @onchange="OnTreeViewModeChanged"
+                            title="@T("Visa nivå", "Show level")">
+                        <option value="all">@T("Expandera alla", "Expand all")</option>
+                        <option value="none">@T("Fäll ihop alla", "Collapse all")</option>
+                        @for (int level = 1; level <= 10; level++)
+                        {
+                            <option value="@level.ToString(CultureInfo.InvariantCulture)">@T($"Nivå {level}", $"Level {level}")</option>
+                        }
+                    </select>
+                    <button type="button" class="@ToolbarButtonClass" @onclick="ShowOnlyWarnings">@T("Endast varningar", "Only warnings")</button>
+                    <button type="button" class="@ToolbarButtonClass" @onclick="ShowOnlyCalculationItems">@T("Endast kalkylposter", "Only calc. items")</button>
+                    <div class="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-1">
+                        @foreach (var metric in PreviewMetrics)
+                        {
+                            <span class="@metric.CssClass" title="@metric.Title">@metric.Label</span>
+                        }
                     </div>
                 }
             </div>
-
-            @if (SheetIsVisible)
-            {
-                <div class="flex flex-col gap-1">
-                    <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Välj blad att importera</label>
-                    <select class="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
-                            value="@SheetNr"
-                            @onchange="OnSheetChanged">
-                        @foreach (var sheet in SheetOptions)
-                        {
-                            <option value="@sheet.Index">@sheet.DisplayName</option>
-                        }
-                    </select>
-                </div>
-            }
-
-            @if (HasSelectedFile)
-            {
-                <div class="grid grid-cols-2 gap-2">
-                    <div class="flex flex-col gap-1">
-                        <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Importera från rad</label>
-                        <input type="number"
-                               class="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
-                               value="@RowStart"
-                               @onchange="OnRowStartChanged" />
-                    </div>
-
-                    <div class="flex flex-col gap-1">
-                        <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Importera till rad</label>
-                        <input type="number"
-                               class="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
-                               value="@RowEnd"
-                               @onchange="OnRowEndChanged" />
-                    </div>
-                </div>
-            }
         </div>
-    </div>
 
-    @if (HasImportedPreview)
-    {
-    <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
-        <table class="min-w-[1400px] w-full table-fixed border-collapse text-sm">
+        @if (HasImportedPreview)
+        {
+        <div class="mt-1 rounded-xl border border-slate-200 dark:border-slate-700">
+        <table class="w-full table-fixed border-collapse text-sm">
             <colgroup>
-                <col class="w-[58px]" />
-                <col class="w-[10%]" />
-                <col class="w-[40%]" />
-                <col class="w-[10%]" />
-                <col class="w-[10%]" />
-                <col class="w-[12%]" />
-                <col class="w-[10%]" />
-                <col class="w-[96px]" />
+                <col style="width:58px" />
+                <col style="@($"width:{TreeColumnWidthPx}px")" />
+                <col style="width:10%" />
+                <col />
+                <col style="width:5%" />
+                <col style="width:8%" />
+                <col style="width:6%" />
+                <col style="width:6%" />
+                <col style="width:100px" />
+                <col style="width:96px" />
+                <col style="width:112px" />
             </colgroup>
-            <thead class="bg-slate-100 dark:bg-slate-800">
+            <thead class="sticky top-0 z-10 bg-slate-100 dark:bg-slate-800">
                 <tr>
-                    <th class="border border-slate-300 px-2 py-2 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200" width="58"></th>
-                    <th class="border border-slate-300 px-2 py-2 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
-                        <div class="flex items-center gap-2 whitespace-nowrap">
-                            <input class="h-8 w-14 rounded-md border border-slate-300 bg-white px-2 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
-                                   type="number"
-                                   @bind="CodeIndex" />
-                            <span>@CalcResource.code</span>
-                        </div>
+                    <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                        <span title="@T("Visar ursprungligt radnummer från Excel-filen.", "Shows the original row number from the Excel file.")">@T("Radnr", "Row no.")</span>
                     </th>
-                    <th class="border border-slate-300 px-2 py-2 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
-                        <div class="flex items-center gap-2 whitespace-nowrap">
-                            <input class="h-8 w-14 rounded-md border border-slate-300 bg-white px-2 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
-                                   type="number"
-                                   @bind="NameIndex" />
-                            <span>@CalcResource.name</span>
-                        </div>
+                    <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                        @T("Träd", "Tree")
                     </th>
-                    <th class="border border-slate-300 px-2 py-2 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
-                        <div class="flex items-center gap-2 whitespace-nowrap">
-                            <input class="h-8 w-16 rounded-md border border-slate-300 bg-white px-2 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
-                                   type="number"
-                                   @bind="UnitIndex" />
-                            <span>@CalcResource.unit</span>
-                        </div>
+                    <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                        @CalcResource.code
                     </th>
-                    <th class="border border-slate-300 px-2 py-2 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
-                        <div class="flex items-center gap-2 whitespace-nowrap">
-                            <input class="h-8 w-14 rounded-md border border-slate-300 bg-white px-2 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
-                                   type="number"
-                                   @bind="QuantityIndex" />
-                            <span>@CalcResource.quantity</span>
-                        </div>
+                    <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                        @CalcResource.name
                     </th>
-                    <th class="border border-slate-300 px-2 py-2 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
-                        <div class="flex items-center gap-2 whitespace-nowrap">
-                            <input class="h-8 w-14 rounded-md border border-slate-300 bg-white px-2 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
-                                   type="number"
-                                   @bind="PriceIndex" />
-                            <span>Á-pris/enhet</span>
-                        </div>
+                    <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                        @CalcResource.unit
                     </th>
-                    <th class="border border-slate-300 px-2 py-2 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
-                        <div class="flex items-center gap-2 whitespace-nowrap">
-                            <input class="h-8 w-14 rounded-md border border-slate-300 bg-white px-2 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
-                                   type="number"
-                                   @bind="AmountIndex" />
-                            <span>Belopp</span>
-                        </div>
+                    <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                        @CalcResource.quantity
                     </th>
-                    <th class="border border-slate-300 px-2 py-2 text-end font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200" width="96"></th>
+                    <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                        @T("Á-pris", "Unit price")
+                    </th>
+                    <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                        @T("Belopp", "Amount")
+                    </th>
+                    <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                        @T("Typ", "Type")
+                    </th>
+                    <th class="border border-slate-300 px-1 py-1 text-center font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">@T("Status", "Status")</th>
+                    <th class="border border-slate-300 px-2 py-1 text-center font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                        @T("Varningar", "Warnings")
+                    </th>
                 </tr>
             </thead>
             <tbody>
-                @if (Sections != null && Sections.Any())
+                @if (VisiblePreviewRows.Any())
                 {
-                    @foreach (var Task in Sections)
+                    @foreach (var row in VisiblePreviewRows)
                     {
-                        @TaskRow(Task, Sections)
+                        @TaskRow(row)
                     }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="11" class="border border-dashed border-slate-300 px-3 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                            @T("Inga rader matchar filtret.", "No rows match the filter.")
+                        </td>
+                    </tr>
                 }
             </tbody>
         </table>
+        </div>
+        }
     </div>
     }
 </div>
 
 @code {
-    RenderFragment TaskRow(TaskPostDTO Task, List<TaskPostDTO> siblings, int left = 0) => __builder =>
+    RenderFragment TaskRow(PreviewRow row) => __builder =>
     {
-        <tr class="@($"{(left == 0 ? "task" : "subTask")} border-b border-slate-200 dark:border-slate-700")">
-            <td class="border border-slate-300 px-2 py-1.5 dark:border-slate-700">
-                <div class="flex items-center gap-1.5" style="margin-left:@($"{left}px")">
-                    @if (Task.Tasks.Any())
+        var Task = row.Task;
+        var siblings = row.Siblings;
+        var diagnostics = GetTaskDiagnostics(Task, row.Depth);
+
+        <tr class="@GetPreviewRowClass(row)">
+            <td class="border border-slate-300 px-1.5 py-0.5 text-xs font-medium text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                @GetOriginalRowNumber(Task)
+            </td>
+            <td class="overflow-hidden border border-slate-300 px-1 py-0.5 text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                <div class="relative flex min-w-0 items-center gap-1" style="padding-left:@($"{GetTreeIndentPx(row.Depth)}px")">
+                    @for (int guide = 0; guide < row.Depth; guide++)
                     {
-                        <span role="button"
-                              @onclick="() => Task.Colspan = !Task.Colspan"
-                              class="cursor-pointer text-slate-500 transition hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400">
-                            @((MarkupString)(Icons.RightBottom(Task.Colspan)))
-                        </span>
+                        <span class="pointer-events-none absolute bottom-[-6px] top-[-6px] border-l border-dotted border-slate-300/80 dark:border-slate-600/80"
+                              style="left:@($"{GetTreeGuideLeftPx(guide)}px")"></span>
+                    }
+                    @if (!HasActivePreviewFilter && Task.Tasks.Any())
+                    {
+                        <button type="button"
+                                @onclick="() => Task.Colspan = !Task.Colspan"
+                                class="relative z-[1] inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border border-slate-300 bg-white text-[10px] font-semibold leading-none text-slate-700 shadow-sm transition hover:border-blue-500 hover:bg-blue-50 hover:text-blue-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-blue-400 dark:hover:bg-blue-950"
+                                title="@(Task.Colspan ? T("Fäll ihop", "Collapse") : T("Expandera", "Expand"))">
+                            @(Task.Colspan ? "–" : "+")
+                        </button>
                     }
                     else
                     {
-                        <span class="inline-block w-4"></span>
+                        <span class="relative z-[1] inline-block h-4 w-4 shrink-0"></span>
                     }
                 </div>
             </td>
-            <td class="border border-slate-300 px-2 py-1.5 dark:border-slate-700">
-                <input class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
+            <td class="border border-slate-300 px-1 py-0.5 dark:border-slate-700">
+                <input class="h-6 w-full rounded-md border border-slate-300 bg-white px-1.5 text-xs text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
                        type="text"
-                       @bind="@Task.Metadata.Code" />
+                       value="@Task.Metadata.Code"
+                       @onchange="args => OnCodeChanged(Task, args.Value?.ToString())" />
             </td>
-            <td class="border border-slate-300 px-2 py-1.5 dark:border-slate-700">
-                <input class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
+            <td class="border border-slate-300 px-1 py-0.5 dark:border-slate-700">
+                <input class="h-6 w-full truncate rounded-md border border-slate-300 bg-white px-1.5 text-xs text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
                        type="text"
-                       @bind="@Task.Name" />
+                       value="@Task.Name"
+                       title="@Task.Name"
+                       @onchange="args => OnNameChanged(Task, args.Value?.ToString())" />
             </td>
-            <td class="border border-slate-300 px-2 py-1.5 dark:border-slate-700">
+            <td class="border border-slate-300 px-1 py-0.5 dark:border-slate-700">
                 <input class="@PreviewInputClass"
                        type="text"
                        value="@FormatUnitDraft(Task)"
                        @onchange="args => OnUnitChanged(Task, args.Value?.ToString())" />
             </td>
-            <td class="border border-slate-300 px-2 py-1.5 dark:border-slate-700">
+            <td class="border border-slate-300 px-1 py-0.5 dark:border-slate-700">
                 <input class="@PreviewInputClass"
                        type="text"
                        value="@FormatQuantityDraft(Task)"
                        title="@GetDashQuantityTooltip(Task)"
                        @onchange="args => OnQuantityChanged(Task, args.Value?.ToString())" />
             </td>
-            <td class="border border-slate-300 px-2 py-1.5 dark:border-slate-700">
+            <td class="border border-slate-300 px-1 py-0.5 dark:border-slate-700">
                 <input class="@PreviewInputClass"
                        type="text"
                        value="@FormatPriceDraft(Task)"
                        @onchange="args => OnPriceChanged(Task, args.Value?.ToString())" />
             </td>
-            <td class="border border-slate-300 px-2 py-1.5 dark:border-slate-700">
+            <td class="border border-slate-300 px-1 py-0.5 dark:border-slate-700">
                 <input class="@PreviewInputClass"
                        type="text"
                        value="@FormatAmountDraft(Task)"
                        @onchange="args => OnAmountChanged(Task, args.Value?.ToString())" />
             </td>
-            <td class="border border-slate-300 px-2 py-1.5 text-right dark:border-slate-700">
-                <div class="flex justify-end gap-1">
+            <td class="border border-slate-300 px-1 py-0.5 dark:border-slate-700">
+                <select class="@GetTaskTypeSelectClass(Task, diagnostics)"
+                        value="@Task.Metadata.Type"
+                        title="@GetTaskTypeReason(Task)"
+                        @onchange="args => OnTaskTypeChanged(Task, args.Value?.ToString())">
+                    <option value="@TaskType.Task">@T("Kalkylpost", "Calculation item")</option>
+                    <option value="@TaskType.CodeName">@T("Kodtext", "Code text")</option>
+                    <option value="@TaskType.ThreeBarCode">@T("3-streckad", "3-bar")</option>
+                    <option value="@TaskType.FourBarCode">@T("4-streckad", "4-bar")</option>
+                </select>
+            </td>
+            <td class="border border-slate-300 px-1 py-0.5 text-center dark:border-slate-700">
+                <div class="flex items-center justify-center gap-1">
+                    @if (NewTasks.Contains(Task))
+                    {
+                        <span class="inline-flex h-6 w-6 items-center justify-center rounded-md bg-emerald-100 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" title="@T("Ny rad", "New row")">N</span>
+                    }
+                    else if (ChangedTasks.Contains(Task))
+                    {
+                        <span class="inline-flex h-6 w-6 items-center justify-center rounded-md bg-violet-100 text-[10px] font-semibold text-violet-700 dark:bg-violet-950 dark:text-violet-300" title="@T("Ändrad manuellt", "Changed manually")">Ä</span>
+                    }
+                    @if (ChangedTasks.Contains(Task) || NewTasks.Contains(Task))
+                    {
+                        <button type="button"
+                                class="inline-flex h-6 w-6 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-700 transition hover:border-violet-500 hover:text-violet-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+                                title="@T("Återställ rad", "Restore row")"
+                                @onclick="() => RestorePreviewRow(Task)">
+                            ↺
+                        </button>
+                    }
                     <button type="button"
-                            class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-blue-200 bg-blue-50 text-blue-700 transition hover:bg-blue-100 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300"
-                            title="Lägg till rad under"
+                            class="inline-flex h-6 w-6 items-center justify-center rounded-md border border-blue-200 bg-blue-50 text-blue-700 transition hover:bg-blue-100 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300"
+                            title="@T("Lägg till rad under", "Add row below")"
                             @onclick="() => AddRowAfter(siblings, Task)">
                         @((MarkupString)Icons.Plus)
                     </button>
                     <button type="button"
-                            class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-rose-200 bg-rose-50 text-rose-700 transition hover:bg-rose-100 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300"
-                            title="Ta bort rad"
+                            class="inline-flex h-6 w-6 items-center justify-center rounded-md border border-rose-200 bg-rose-50 text-rose-700 transition hover:bg-rose-100 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300"
+                            title="@T("Ta bort rad", "Delete row")"
                             @onclick="() => RemoveSection(siblings, Task)">
-                        @((MarkupString)Icons.Delete)
+                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M18 6 6 18" />
+                            <path d="m6 6 12 12" />
+                        </svg>
                     </button>
                 </div>
             </td>
+            <td class="border border-slate-300 px-1 py-0.5 text-center dark:border-slate-700">
+                <div class="flex items-center justify-center">
+                    @if (diagnostics.Count > 0)
+                    {
+                        <button type="button"
+                                class="inline-flex max-w-full items-center justify-center gap-1 rounded px-1 py-0.5 text-amber-600 transition hover:bg-amber-100 hover:text-amber-700 dark:text-amber-300 dark:hover:bg-amber-950"
+                                title="@BuildDiagnosticTitle(diagnostics)"
+                                @onclick="() => ShowDiagnostics(diagnostics)">
+                            <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M10.29 3.86c.75-1.3 2.67-1.3 3.42 0l8.03 13.9c.75 1.3-.2 2.94-1.71 2.94H3.97c-1.5 0-2.46-1.64-1.71-2.94l8.03-13.9ZM12 8.25c.41 0 .75.34.75.75v4.5a.75.75 0 0 1-1.5 0V9c0-.41.34-.75.75-.75Zm0 8.25a.9.9 0 1 0 0 1.8.9.9 0 0 0 0-1.8Z" clip-rule="evenodd" />
+                            </svg>
+                            <span class="truncate text-[11px] font-semibold">@GetPrimaryDiagnosticText(diagnostics)</span>
+                        </button>
+                    }
+                </div>
+            </td>
         </tr>
+    };
+    private bool IsSwedish => CultureInfo.CurrentUICulture.Name.StartsWith("sv", StringComparison.OrdinalIgnoreCase);
+    private string T(string sv, string en) => IsSwedish ? sv : en;
 
-        if (Task.Colspan)
-        {
-            if (Task.Tasks != null)
-            {
-                foreach (var item in Task.Tasks.OrderByDescending(x => x.Order))
-                {
-                    @TaskRow(item, Task.Tasks, left + 14)
-                }
-            }
-        }
+    RenderFragment MappingField(string label, string fieldName, int value, Action<int> onChange) => __builder =>
+    {
+        string suggestion = GetLayoutSuggestion(fieldName);
+        bool differs = DiffersFromSuggestion(fieldName);
+        string tooltipTitle = string.IsNullOrEmpty(suggestion) ? label : $"{label} ({suggestion})";
+        <div class="flex shrink-0 items-center gap-1 rounded-lg border @(differs ? "border-amber-200 bg-amber-50 dark:border-amber-800/50 dark:bg-amber-950/20" : "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800/60") px-1.5 py-0.5">
+            <span class="shrink-0 text-[10px] font-semibold text-slate-500 dark:text-slate-400" title="@tooltipTitle">@label</span>
+            <input class="w-10 rounded border-0 bg-transparent p-0 text-center text-xs font-bold text-slate-700 outline-none focus:ring-0 dark:text-slate-200 @(differs ? "text-amber-600 dark:text-amber-400" : "")"
+                   type="number"
+                   min="1"
+                   value="@value"
+                   @onchange="args => { if (int.TryParse(args.Value?.ToString(), out int v) && v >= 1) onChange(v); }" />
+        </div>
     };
 
-    private const string DashQuantityTooltip = "\"-\" här räknas mängden som 1.";
-    private string PreviewInputClass => "h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20";
+    private string DashQuantityTooltip => T("\"-\" här räknas mängden som 1.", "\"-\" here the quantity is counted as 1.");
+    private string PreviewInputClass => "h-6 w-full rounded-md border border-slate-300 bg-white px-1.5 text-xs text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20";
+    private string ToolbarButtonClass => "inline-flex h-7 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-white px-2 text-[11px] font-medium text-slate-700 transition hover:border-blue-500 hover:text-blue-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-blue-400";
     private readonly Dictionary<TaskPostDTO, string> AmountDrafts = new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<TaskPostDTO, string> InvalidQuantityDrafts = new(ReferenceEqualityComparer.Instance);
+    private readonly HashSet<TaskPostDTO> ChangedTasks = new(ReferenceEqualityComparer.Instance);
+    private readonly HashSet<TaskPostDTO> NewTasks = new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<TaskPostDTO, TaskPreviewSnapshot> OriginalTaskSnapshots = new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<TaskPostDTO, string> OriginalRowNumbers = new(ReferenceEqualityComparer.Instance);
+    private ExcelImportLayout? SuggestedLayout;
+    private string PreviewSearchText = string.Empty;
+    private ImportPreviewTypeFilter PreviewTypeFilter = ImportPreviewTypeFilter.All;
+    private string TreeViewMode = "all";
+    private bool WarningsOnly;
+    private bool HasActivePreviewFilter =>
+        !string.IsNullOrWhiteSpace(PreviewSearchText)
+        || PreviewTypeFilter != ImportPreviewTypeFilter.All
+        || WarningsOnly;
+    private string LayoutStorageKey => $"csv-import-layout:v3:{Calc?.Id ?? 0}";
+    private IEnumerable<PreviewMetric> PreviewMetrics => BuildPreviewMetrics();
+    private IEnumerable<PreviewRow> VisiblePreviewRows => BuildVisiblePreviewRows();
+    private int TreeColumnWidthPx => Math.Clamp((VisiblePreviewRows.Select(x => x.Depth).DefaultIfEmpty(0).Max() * 14) + 36, 76, 180);
+    private List<string> ColumnMappingWarnings => BuildColumnMappingWarnings();
 
-    void Save() =>
-         MHD.MessageYesNo("Överför data till kalkyl", "Vill du överföra datan till kalkylen?",
-             MhdState.Primary, EventCallback.Factory.Create(this, () => SaveConfirm()));
+    void Save()
+    {
+        var model = new DialogModel
+        {
+            Size = DialogSize.Medium,
+            State = MhdState.Primary,
+            Title = T("Överför data till kalkyl", "Transfer data to calculation"),
+            Content = builder =>
+            {
+                builder.OpenElement(0, "p");
+                builder.AddAttribute(1, "class", "whitespace-pre-line text-sm text-slate-600 dark:text-slate-300");
+                builder.AddContent(2, BuildTransferConfirmationMessage());
+                builder.CloseElement();
+            },
+            CloseOnOverlayClick = false,
+            Buttons =
+            {
+                new DialogButtonModel
+                {
+                    Text = T("Ja", "Yes"),
+                    State = MhdState.Primary,
+                    IsPrimary = true,
+                    OnClick = EventCallback.Factory.Create(this, async () =>
+                    {
+                        Modal.Close();
+                        await SaveConfirm(closeImportWindow: false);
+                    })
+                },
+                new DialogButtonModel
+                {
+                    Text = T("Ja och stäng importfönstret", "Yes and close import window"),
+                    State = MhdState.Success,
+                    IsPrimary = true,
+                    OnClick = EventCallback.Factory.Create(this, async () =>
+                    {
+                        Modal.Close();
+                        await SaveConfirm(closeImportWindow: true);
+                    })
+                },
+                new DialogButtonModel
+                {
+                    Text = T("Nej", "No"),
+                    State = MhdState.Neutral,
+                    OnClick = EventCallback.Factory.Create(this, () => Modal.Close())
+                }
+            }
+        };
+
+        Modal.Show(model);
+    }
+
+    private string BuildTransferConfirmationMessage()
+    {
+        var summary = CountTasks(Sections);
+        int warnings = FlattenTasksWithDepth(Sections).Count(row => GetTaskDiagnostics(row.Task, row.Depth).Any(x => x.Kind == DiagnosticKind.Warning));
+
+        var message = new StringBuilder();
+        message.AppendLine(T("Vill du överföra datan till kalkylen?", "Do you want to transfer the data to the calculation?"));
+        message.AppendLine();
+        message.AppendLine($"{T("Totala rader", "Total rows")}: {summary.TotalRows}");
+        message.AppendLine($"{T("Kalkylposter", "Calculation items")}: {summary.CalculationItems} {T("(inkl. 3- och 4-streckade koder)", "(incl. 3- and 4-bar codes)")}");
+        message.AppendLine($"{T("3-streckade koder", "3-bar codes")}: {summary.ThreeBarCode}");
+        message.AppendLine($"{T("4-streckade koder", "4-bar codes")}: {summary.FourBarCode}");
+        message.AppendLine($"{T("Rader med varningar", "Rows with warnings")}: {warnings}");
+
+        return message.ToString();
+    }
+
+    private string BuildPreImportSummary()
+    {
+        int rows = RowEnd >= RowStart ? RowEnd - RowStart + 1 : 0;
+        string sheet = SheetOptions.FirstOrDefault(x => x.Index == SheetNr)?.DisplayName ?? SheetNr.ToString(CultureInfo.InvariantCulture);
+        return T(
+            $"Förhandskontroll: blad {sheet}, rader {RowStart}-{RowEnd}, upp till {rows} rader att läsa.",
+            $"Pre-check: sheet {sheet}, rows {RowStart}-{RowEnd}, up to {rows} rows to read.");
+    }
 
     int RowStart = 1;
     int RowEnd = 1;
     List<TaskPostDTO>? Sections;
     bool wait = false;
+    bool loadingOverlayActive = false;
     bool transferCompleted = false;
     int CodeIndex = 1;
     int NameIndex = 2;
@@ -287,16 +522,22 @@
     bool ImportMessageIsSuccess = false;
     string SelectedFileName = string.Empty;
     byte[]? workbookBytes;
+    bool PreviewRequiresImport = false;
     bool HasSelectedFile => workbookBytes is { Length: > 0 };
     bool HasImportedPreview => Sections is { Count: > 0 };
-    bool CanImport => HasSelectedFile && !HasImportedPreview && !transferCompleted;
+    bool HasLayoutSuggestionDifference => SuggestedLayout is { IsDetected: true } && !LayoutMatchesCurrent(SuggestedLayout);
+    bool CanImport => HasSelectedFile && !transferCompleted && (!HasImportedPreview || PreviewRequiresImport);
     bool CanTransferToCalculation => HasImportedPreview && !transferCompleted;
-    string SelectedFileLabel => string.IsNullOrWhiteSpace(SelectedFileName) ? "Ingen fil har valts" : SelectedFileName;
+    string SelectedFileLabel => string.IsNullOrWhiteSpace(SelectedFileName) ? T("Ingen fil har valts", "No file selected") : SelectedFileName;
     string ImportMessageClass => ImportMessageIsSuccess
         ? "whitespace-pre-line rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-1.5 text-xs font-bold text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300"
         : "whitespace-pre-line rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200";
+    string ImportMessageBadgeClass => ImportMessageIsSuccess
+        ? "border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300"
+        : "border border-slate-200 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300";
+    string ImportMessageFirstLine => ImportMessage.Split('\n', '\r')[0].Trim();
 
-    async Task SaveConfirm()
+    async Task SaveConfirm(bool closeImportWindow = false)
     {
         if (Sections is null || Sections.Count == 0)
         {
@@ -315,8 +556,15 @@
                 transferCompleted = true;
                 Sections = null;
                 AmountDrafts.Clear();
-                ImportMessage = "Överföringen till kalkylen lyckades!";
+                InvalidQuantityDrafts.Clear();
+                ChangedTasks.Clear();
+                NewTasks.Clear();
+                OriginalTaskSnapshots.Clear();
+                OriginalRowNumbers.Clear();
+                ImportMessage = T("Överföringen till kalkylen lyckades!", "Transfer to calculation successful!");
                 ImportMessageIsSuccess = true;
+                if (closeImportWindow)
+                    Close();
             }
 
             MHD.Notifications(ToastType.Add, result);
@@ -326,7 +574,7 @@
             wait = false;
         }
     }
-    
+
     XLWorkbook? workbook;
     MemoryStream? workbookStream;
 
@@ -342,11 +590,22 @@
 
             Sections = null;
             AmountDrafts.Clear();
+            InvalidQuantityDrafts.Clear();
+            ChangedTasks.Clear();
+            NewTasks.Clear();
+            OriginalTaskSnapshots.Clear();
+            OriginalRowNumbers.Clear();
+            PreviewSearchText = string.Empty;
+            PreviewTypeFilter = ImportPreviewTypeFilter.All;
+            TreeViewMode = "all";
+            WarningsOnly = false;
+            PreviewRequiresImport = false;
             ImportMessage = string.Empty;
             ImportMessageIsSuccess = false;
             transferCompleted = false;
             SheetOptions = new();
             SheetIsVisible = false;
+            SuggestedLayout = null;
 
             LoadWorkbook();
 
@@ -356,7 +615,22 @@
                 SheetIsVisible = SheetOptions.Any();
 
                 if (SheetIsVisible)
-                    ApplyDetectedLayout(ExcelHelper.DetectLayout(workbook));
+                {
+                    var detectedLayout = ExcelHelper.DetectLayout(workbook);
+                    if (detectedLayout.IsDetected)
+                    {
+                        ApplyDetectedLayout(detectedLayout);
+                        await SaveLayoutAsync();
+                    }
+                    else
+                    {
+                        bool restored = await RestoreSavedLayoutAsync();
+                        ImportMessage = restored
+                            ? T("Kunde inte identifiera layouten automatiskt. Tidigare sparad layout används.", "Could not detect the layout automatically. The previously saved layout is being used.")
+                            : T("Kunde inte identifiera layouten automatiskt. Kontrollera blad, rader och kolumner manuellt.", "Could not detect the layout automatically. Check sheet, rows and columns manually.");
+                        ImportMessageIsSuccess = false;
+                    }
+                }
             }
         }
         catch (Exception ex)
@@ -368,18 +642,19 @@
             SheetOptions = new();
             SheetIsVisible = false;
             SelectedFileName = string.Empty;
-            ImportMessage = $"Det gick inte att läsa Excel-filen: {ex.Message}";
+            ImportMessage = T($"Det gick inte att läsa Excel-filen: {ex.Message}", $"Failed to read Excel file: {ex.Message}");
             ImportMessageIsSuccess = false;
         }
     }
 
-    void OnSheetChanged(ChangeEventArgs args)
+    async Task OnSheetChanged(ChangeEventArgs args)
     {
         if (int.TryParse(args.Value?.ToString(), out int selectedSheet))
         {
             SheetNr = selectedSheet;
-            DetectCurrentSheet();
             ResetImportedPreview();
+            await DetectCurrentSheetAsync(reimportPreview: false);
+            await SaveLayoutAsync();
         }
     }
 
@@ -393,6 +668,20 @@
             RowEnd = RowStart;
 
         ResetImportedPreview();
+        _ = SaveLayoutAsync();
+    }
+
+    private void OnMappingColumnChanged(ref int target, int value)
+    {
+        target = Math.Max(1, value);
+        PreviewRequiresImport = HasImportedPreview;
+        if (transferCompleted)
+        {
+            transferCompleted = false;
+            PreviewRequiresImport = false;
+        }
+
+        _ = SaveLayoutAsync();
     }
 
     void OnRowEndChanged(ChangeEventArgs args)
@@ -402,15 +691,60 @@
 
         RowEnd = Math.Max(RowStart, row);
         ResetImportedPreview();
+        _ = SaveLayoutAsync();
     }
 
-    void DetectCurrentSheet()
+    private async Task DetectCurrentSheetAsync(bool reimportPreview)
     {
         if (!EnsureWorkbook())
             return;
 
-        XLWorkbook currentWorkbook = workbook!;
-        ApplyDetectedLayout(ExcelHelper.DetectLayout(currentWorkbook, SheetNr));
+        bool hadImportedPreview = reimportPreview && HasImportedPreview;
+        try
+        {
+            ImportMessage = T("Identifierar automatiskt...", "Auto-detecting...");
+            ImportMessageIsSuccess = false;
+            await SetBusyAsync(true);
+
+            XLWorkbook currentWorkbook = workbook!;
+            int selectedStartRow = RowStart;
+            var detectedLayout = ExcelHelper.DetectLayout(currentWorkbook, SheetNr);
+            if (!detectedLayout.IsDetected)
+            {
+                ImportMessage = T("Inga automatiska förslag hittades för det valda bladet.", "No automatic suggestions were found for the selected sheet.");
+                ImportMessageIsSuccess = false;
+                return;
+            }
+
+            if (selectedStartRow > 1)
+                detectedLayout.RowStart = selectedStartRow;
+
+            bool layoutWasAlreadyApplied = LayoutMatchesCurrent(detectedLayout);
+            ApplyDetectedLayout(detectedLayout);
+            if (hadImportedPreview)
+            {
+                string actionMessage = BuildLayoutActionMessage(
+                    layoutWasAlreadyApplied
+                        ? T("Nuvarande inställningar matchar redan automatiska förslag.", "The current settings already match the automatic suggestions.")
+                        : T("Automatiska förslag har tillämpats.", "Automatic suggestions applied."),
+                    detectedLayout);
+                await ImportAsync(manageWait: false, completionPrefix: actionMessage);
+            }
+            else
+            {
+                await SaveLayoutAsync();
+                ImportMessage = BuildLayoutActionMessage(
+                    layoutWasAlreadyApplied
+                        ? T("Nuvarande inställningar matchar redan automatiska förslag.", "The current settings already match the automatic suggestions.")
+                        : T("Automatiska förslag har tillämpats.", "Automatic suggestions applied."),
+                    detectedLayout);
+                ImportMessageIsSuccess = true;
+            }
+        }
+        finally
+        {
+            await SetBusyAsync(false);
+        }
     }
 
     void ApplyDetectedLayout(ExcelImportLayout layout)
@@ -430,32 +764,109 @@
         QuantityIndex = layout.QuantityIndex;
         PriceIndex = layout.PriceIndex;
         AmountIndex = layout.AmountIndex;
+        SuggestedLayout = layout;
     }
 
-    private void Import()
+    private async Task ApplySuggestedLayout()
+    {
+        if (SuggestedLayout is null || !SuggestedLayout.IsDetected)
+        {
+            await DetectCurrentSheetAsync(reimportPreview: true);
+            return;
+        }
+
+        try
+        {
+            ImportMessage = T("Tillämpar förslag...", "Applying suggestions...");
+            ImportMessageIsSuccess = false;
+            await SetBusyAsync(true);
+
+            bool hadImportedPreview = HasImportedPreview;
+            bool layoutWasAlreadyApplied = LayoutMatchesCurrent(SuggestedLayout);
+            ApplyDetectedLayout(SuggestedLayout);
+
+            if (hadImportedPreview)
+            {
+                string actionMessage = BuildLayoutActionMessage(
+                    layoutWasAlreadyApplied
+                        ? T("Nuvarande inställningar matchar redan förslaget.", "The current settings already match the suggestion.")
+                        : T("Förslagen har tillämpats.", "Suggestions applied."),
+                    SuggestedLayout);
+                await ImportAsync(manageWait: false, completionPrefix: actionMessage);
+                return;
+            }
+
+            ResetImportedPreview();
+            await SaveLayoutAsync();
+            ImportMessage = BuildLayoutActionMessage(
+                layoutWasAlreadyApplied
+                    ? T("Nuvarande inställningar matchar redan förslaget.", "The current settings already match the suggestion.")
+                    : T("Förslagen har tillämpats.", "Suggestions applied."),
+                SuggestedLayout);
+            ImportMessageIsSuccess = true;
+        }
+        finally
+        {
+            await SetBusyAsync(false);
+        }
+    }
+
+    private Task Import() => ImportAsync();
+
+    private async Task ImportAsync(bool manageWait = true, string? completionPrefix = null)
     {
         if (!EnsureWorkbook())
             return;
 
+        if (ColumnMappingWarnings.Count > 0)
+        {
+            string message = string.Join(Environment.NewLine, ColumnMappingWarnings);
+            ImportMessage = message;
+            ImportMessageIsSuccess = false;
+            MHD.MessageOk("Import", message, MhdState.Warning);
+            return;
+        }
+
         try
         {
             XLWorkbook currentWorkbook = workbook!;
-            wait = true;
-            Sections = ExcelHelper.Import(SheetNr, currentWorkbook, RowStart, RowEnd, CodeIndex, NameIndex, UnitIndex, QuantityIndex, PriceIndex, AmountIndex, Calc.OHFactors);
+            ImportMessage = T("Importerar...", "Importing...");
+            ImportMessageIsSuccess = false;
+            if (manageWait)
+            {
+                await SetBusyAsync(true);
+            }
+
+            var importResult = ExcelHelper.ImportWithRowNumbers(SheetNr, currentWorkbook, RowStart, RowEnd, CodeIndex, NameIndex, UnitIndex, QuantityIndex, PriceIndex, AmountIndex, Calc.OHFactors);
+            Sections = importResult.Tasks;
             InitializeAmountDrafts(Sections);
+            InitializeOriginalRows(importResult.RowNumbers);
+            InitializeAmountDraftsFromWorkbook(importResult.RowNumbers, currentWorkbook.Worksheet(Math.Clamp(SheetNr, 1, currentWorkbook.Worksheets.Count)));
+            CaptureOriginalSnapshots(Sections);
+            ChangedTasks.Clear();
+            NewTasks.Clear();
             transferCompleted = false;
             ImportMessageIsSuccess = false;
             ImportSummary summary = CountTasks(Sections);
+            PreviewRequiresImport = false;
+            await SaveLayoutAsync();
 
-            if (summary.Total == 0)
+            if (summary.TotalRows == 0)
             {
-                ImportMessage = "Inga kalkylposter hittades. Kontrollera blad, rader och kolumner och importera igen.";
+                ImportMessage = T(
+                    "Inga kalkylposter hittades. Kontrollera blad, rader och kolumner och importera igen.",
+                    "No calculation items found. Check sheet, rows and columns and import again.");
                 ImportMessageIsSuccess = false;
                 MHD.MessageOk("Import", ImportMessage, MhdState.Warning);
                 return;
             }
 
-            ImportMessage = $"Importen är klar!\n\nTotalt importerades {summary.Total} kalkylposter, inklusive {summary.ThreeBarCode} trestreckade poster och {summary.FourBarCode} fyrstreckade poster.";
+            ImportMessage = T(
+                $"Importen är klar!\n\nTotala rader: {summary.TotalRows}\nKalkylposter: {summary.CalculationItems} (inkl. 3- och 4-streckade koder)\n3-streckade koder: {summary.ThreeBarCode}\n4-streckade koder: {summary.FourBarCode}",
+                $"Import complete!\n\nTotal rows: {summary.TotalRows}\nCalculation items: {summary.CalculationItems} (incl. 3- and 4-bar codes)\n3-bar codes: {summary.ThreeBarCode}\n4-bar codes: {summary.FourBarCode}");
+            if (!string.IsNullOrWhiteSpace(completionPrefix))
+                ImportMessage = $"{completionPrefix}{Environment.NewLine}{Environment.NewLine}{ImportMessage}";
+            ImportMessageIsSuccess = true;
         }
         catch (Exception ex)
         {
@@ -466,14 +877,42 @@
         }
         finally
         {
-            wait = false;
+            if (manageWait)
+            {
+                await SetBusyAsync(false);
+            }
         }
+    }
+
+    private async Task SetBusyAsync(bool value)
+    {
+        wait = value;
+        if (value && !loadingOverlayActive)
+        {
+            MHD.Loading.Begin();
+            loadingOverlayActive = true;
+        }
+        else if (!value && loadingOverlayActive)
+        {
+            MHD.Loading.End();
+            loadingOverlayActive = false;
+        }
+
+        await InvokeAsync(StateHasChanged);
+        if (value)
+            await Task.Delay(1);
     }
 
     void Close() => Modal.Close();
 
     public void Dispose()
     {
+        if (loadingOverlayActive)
+        {
+            MHD.Loading.End();
+            loadingOverlayActive = false;
+        }
+
         workbook?.Dispose();
         workbook = null;
         workbookStream?.Dispose();
@@ -487,7 +926,7 @@
 
         if (!HasSelectedFile)
         {
-            ImportMessage = "Välj en Excel-fil först.";
+            ImportMessage = T("Välj en Excel-fil först.", "Select an Excel file first.");
             ImportMessageIsSuccess = false;
             return false;
         }
@@ -503,7 +942,7 @@
             workbook = null;
             workbookStream?.Dispose();
             workbookStream = null;
-            ImportMessage = $"Det gick inte att läsa Excel-filen: {ex.Message}";
+            ImportMessage = T($"Det gick inte att läsa Excel-filen: {ex.Message}", $"Failed to read Excel file: {ex.Message}");
             ImportMessageIsSuccess = false;
             MHD.MessageOk("Import", ImportMessage, MhdState.Danger);
             return false;
@@ -517,9 +956,90 @@
 
         Sections = null;
         AmountDrafts.Clear();
+        InvalidQuantityDrafts.Clear();
+        ChangedTasks.Clear();
+        NewTasks.Clear();
+        OriginalTaskSnapshots.Clear();
+        OriginalRowNumbers.Clear();
         transferCompleted = false;
+        PreviewRequiresImport = false;
         ImportMessage = string.Empty;
         ImportMessageIsSuccess = false;
+    }
+
+    private async Task<bool> RestoreSavedLayoutAsync()
+    {
+        try
+        {
+            var json = await JS.InvokeAsync<string?>("localStorage.getItem", LayoutStorageKey);
+            if (string.IsNullOrWhiteSpace(json))
+                return false;
+
+            var state = JsonSerializer.Deserialize<ImportLayoutState>(json);
+            if (state is null)
+                return false;
+
+            int maxSheet = SheetOptions.Count == 0 ? 1 : SheetOptions.Max(x => x.Index);
+            SheetNr = Math.Clamp(state.SheetNr, 1, maxSheet);
+            RowStart = Math.Max(1, state.RowStart);
+            RowEnd = Math.Max(RowStart, state.RowEnd);
+            CodeIndex = Math.Max(1, state.CodeIndex);
+            NameIndex = Math.Max(1, state.NameIndex);
+            UnitIndex = Math.Max(1, state.UnitIndex);
+            QuantityIndex = Math.Max(1, state.QuantityIndex);
+            PriceIndex = Math.Max(1, state.PriceIndex);
+            AmountIndex = Math.Max(1, state.AmountIndex);
+            return true;
+        }
+        catch
+        {
+            // Non-critical: auto-detection still works without saved layout state.
+            return false;
+        }
+    }
+
+    private async Task ClearSavedLayoutAsync()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("localStorage.removeItem", LayoutStorageKey);
+            if (workbook is not null)
+                ApplyDetectedLayout(ExcelHelper.DetectLayout(workbook, SheetNr));
+
+            ImportMessage = T("Sparad importlayout har rensats. Automatisk identifiering används.", "Saved import layout has been cleared. Automatic detection is used.");
+            ImportMessageIsSuccess = true;
+        }
+        catch (Exception ex)
+        {
+            ImportMessage = T($"Kunde inte rensa sparad layout: {ex.Message}", $"Could not clear saved layout: {ex.Message}");
+            ImportMessageIsSuccess = false;
+        }
+    }
+
+    private async Task SaveLayoutAsync()
+    {
+        try
+        {
+            var state = new ImportLayoutState
+            {
+                SheetNr = SheetNr,
+                RowStart = RowStart,
+                RowEnd = RowEnd,
+                CodeIndex = CodeIndex,
+                NameIndex = NameIndex,
+                UnitIndex = UnitIndex,
+                QuantityIndex = QuantityIndex,
+                PriceIndex = PriceIndex,
+                AmountIndex = AmountIndex,
+                Score = SuggestedLayout?.Score ?? 0
+            };
+
+            await JS.InvokeVoidAsync("localStorage.setItem", LayoutStorageKey, JsonSerializer.Serialize(state));
+        }
+        catch
+        {
+            // Non-critical persistence.
+        }
     }
 
     void LoadWorkbook()
@@ -543,9 +1063,246 @@
         }
     }
 
+    private bool LayoutMatchesCurrent(ExcelImportLayout layout) =>
+        layout.IsDetected
+        && SheetNr == layout.SheetIndex
+        && RowStart == layout.RowStart
+        && RowEnd == layout.RowEnd
+        && CodeIndex == layout.CodeIndex
+        && NameIndex == layout.NameIndex
+        && UnitIndex == layout.UnitIndex
+        && QuantityIndex == layout.QuantityIndex
+        && PriceIndex == layout.PriceIndex
+        && AmountIndex == layout.AmountIndex;
+
+    private string BuildLayoutActionMessage(string title, ExcelImportLayout layout)
+    {
+        string sheet = string.IsNullOrWhiteSpace(layout.SheetName)
+            ? layout.SheetIndex.ToString(CultureInfo.InvariantCulture)
+            : $"{layout.SheetIndex}. {layout.SheetName}";
+
+        return string.Join(Environment.NewLine, new[]
+        {
+            title,
+            $"{T("Blad", "Sheet")}: {sheet}",
+            $"{T("Rader", "Rows")}: {layout.RowStart}-{layout.RowEnd}",
+            $"{T("Kolumner", "Columns")}: {T("Kod", "Code")} {layout.CodeIndex}, {T("Namn", "Name")} {layout.NameIndex}, {T("Enhet", "Unit")} {layout.UnitIndex}, {T("Kvantitet", "Quantity")} {layout.QuantityIndex}, {T("Á-pris", "Unit price")} {layout.PriceIndex}, {T("Belopp", "Amount")} {layout.AmountIndex}"
+        });
+    }
+
+    private string GetLayoutSuggestion(string field)
+    {
+        if (SuggestedLayout is null || !SuggestedLayout.IsDetected)
+            return string.Empty;
+
+        int? value = GetSuggestedLayoutValue(field);
+        return value.HasValue ? $"{T("Förslag", "Suggestion")}: {value.Value}" : string.Empty;
+    }
+
+    private int? GetSuggestedLayoutValue(string field)
+    {
+        if (SuggestedLayout is null || !SuggestedLayout.IsDetected)
+            return null;
+
+        return field switch
+        {
+            nameof(SheetNr) => SuggestedLayout.SheetIndex,
+            nameof(RowStart) => SuggestedLayout.RowStart,
+            nameof(RowEnd) => SuggestedLayout.RowEnd,
+            nameof(CodeIndex) => SuggestedLayout.CodeIndex,
+            nameof(NameIndex) => SuggestedLayout.NameIndex,
+            nameof(UnitIndex) => SuggestedLayout.UnitIndex,
+            nameof(QuantityIndex) => SuggestedLayout.QuantityIndex,
+            nameof(PriceIndex) => SuggestedLayout.PriceIndex,
+            nameof(AmountIndex) => SuggestedLayout.AmountIndex,
+            _ => null
+        };
+    }
+
+    private int? GetCurrentLayoutValue(string field) => field switch
+    {
+        nameof(SheetNr) => SheetNr,
+        nameof(RowStart) => RowStart,
+        nameof(RowEnd) => RowEnd,
+        nameof(CodeIndex) => CodeIndex,
+        nameof(NameIndex) => NameIndex,
+        nameof(UnitIndex) => UnitIndex,
+        nameof(QuantityIndex) => QuantityIndex,
+        nameof(PriceIndex) => PriceIndex,
+        nameof(AmountIndex) => AmountIndex,
+        _ => null
+    };
+
+    private bool DiffersFromSuggestion(string field) =>
+        GetSuggestedLayoutValue(field) is int suggested
+        && GetCurrentLayoutValue(field) is int current
+        && suggested != current;
+
+    private string GetLayoutSuggestionClass(string field) =>
+        DiffersFromSuggestion(field)
+            ? "truncate text-[10px] font-semibold text-amber-600 dark:text-amber-300"
+            : "truncate text-[10px] font-normal text-blue-600 dark:text-blue-300";
+
+    private string GetMappingInputClass(string field)
+    {
+        const string baseClass = "h-7 w-full rounded-lg border bg-white px-2 py-0.5 text-xs text-slate-900 outline-none transition focus:ring-2 dark:bg-slate-900 dark:text-slate-100";
+        return DiffersFromSuggestion(field)
+            ? $"{baseClass} border-amber-300 focus:border-amber-500 focus:ring-amber-500/20 dark:border-amber-700 dark:focus:border-amber-400 dark:focus:ring-amber-400/20"
+            : $"{baseClass} border-slate-300 focus:border-blue-500 focus:ring-blue-500/20 dark:border-slate-600 dark:focus:border-blue-400 dark:focus:ring-blue-400/20";
+    }
+
+    private List<string> BuildColumnMappingWarnings()
+    {
+        var fields = new (string Label, int Column)[]
+        {
+            (T("Kod", "Code"), CodeIndex),
+            (T("Namn", "Name"), NameIndex),
+            (T("Enhet", "Unit"), UnitIndex),
+            (T("Kvantitet", "Quantity"), QuantityIndex),
+            (T("Á-pris", "Unit price"), PriceIndex),
+            (T("Belopp", "Amount"), AmountIndex)
+        };
+
+        return fields
+            .Where(x => x.Column > 0)
+            .GroupBy(x => x.Column)
+            .Where(group => group.Count() > 1)
+            .Select(group => T(
+                $"Kolumn {group.Key} används för {string.Join(", ", group.Select(x => x.Label))}.",
+                $"Column {group.Key} is used for {string.Join(", ", group.Select(x => x.Label))}."))
+            .ToList();
+    }
+
+    private string GetOriginalRowNumber(TaskPostDTO task) =>
+        OriginalRowNumbers.TryGetValue(task, out string? row) ? row : string.Empty;
+
+    private void InitializeOriginalRows(IReadOnlyDictionary<TaskPostDTO, int> rowNumbers)
+    {
+        OriginalRowNumbers.Clear();
+        foreach (var item in rowNumbers)
+            OriginalRowNumbers[item.Key] = item.Value.ToString(CultureInfo.InvariantCulture);
+    }
+
+    private void CaptureOriginalSnapshots(IEnumerable<TaskPostDTO>? tasks)
+    {
+        OriginalTaskSnapshots.Clear();
+        CaptureOriginalSnapshotsRecursive(tasks);
+    }
+
+    private void CaptureOriginalSnapshotsRecursive(IEnumerable<TaskPostDTO>? tasks)
+    {
+        if (tasks is null)
+            return;
+
+        foreach (var task in tasks)
+        {
+            OriginalTaskSnapshots[task] = TaskPreviewSnapshot.From(task, FormatAmountDraft(task));
+            CaptureOriginalSnapshotsRecursive(task.Tasks);
+        }
+    }
+
+    private void InitializeAmountDraftsFromWorkbook(IReadOnlyDictionary<TaskPostDTO, int> rowNumbers, IXLWorksheet sheet)
+    {
+        foreach (var item in rowNumbers)
+        {
+            string amount = CellTextDraft(sheet, item.Value, AmountIndex);
+            string quantity = CellTextDraft(sheet, item.Value, QuantityIndex);
+
+            if (IsSpreadsheetError(quantity))
+                InvalidQuantityDrafts[item.Key] = quantity;
+
+            if (item.Key.Metadata.Type == TaskType.FourBarCode)
+            {
+                AmountDrafts[item.Key] = "-";
+            }
+            else if (IsDash(amount))
+            {
+                AmountDrafts[item.Key] = "-";
+            }
+            else if (!IsSpreadsheetError(amount) && TryReadDecimal(amount, out decimal amountValue) && amountValue != 0m)
+            {
+                AmountDrafts[item.Key] = FormatDecimal(amountValue);
+            }
+        }
+    }
+
+    private static string CellTextDraft(IXLWorksheet sheet, int row, int column)
+    {
+        if (row < 1 || column < 1)
+            return string.Empty;
+
+        return (sheet.Cell(row, column).GetFormattedString() ?? string.Empty).Trim();
+    }
+
+    private static bool IsLikelyCodeDraft(string text)
+    {
+        text = NormalizeDraft(text);
+        if (string.IsNullOrWhiteSpace(text) || text.Length > 35 || IsLikelyUnitDraft(text))
+            return false;
+
+        int whitespaceCount = text.Count(char.IsWhiteSpace);
+        if (whitespaceCount > 1)
+            return false;
+
+        bool hasDigit = text.Any(char.IsDigit);
+        bool hasLetter = text.Any(char.IsLetter);
+        bool hasSeparator = text.Any(x => x is '.' or '-' or '_' or '/' or '\\');
+        bool allCodeChars = text.All(x => char.IsLetterOrDigit(x) || x is '.' or '-' or '_' or '/' or '\\');
+        bool allLettersUpper = text.Where(char.IsLetter).All(char.IsUpper);
+
+        return TryReadDecimal(text, out _)
+            || (hasLetter && allCodeChars && text.Length <= 20 && (allLettersUpper || hasDigit || hasSeparator))
+            || (hasDigit && (hasLetter || hasSeparator));
+    }
+
+    private static bool IsMeaningfulNameDraft(string text)
+    {
+        text = NormalizeDraft(text);
+        return text.Length >= 3 && !TryReadDecimal(text, out _) && !IsLikelyUnitDraft(text);
+    }
+
+    private static bool IsLikelyUnitDraft(string text)
+    {
+        text = NormalizeDraft(text);
+        if (string.IsNullOrWhiteSpace(text) || TryReadDecimal(text, out _) || IsDash(text))
+            return IsDash(text);
+
+        string key = NormalizeSearch(text).Replace(" ", string.Empty);
+        if (KnownUnitKeys.Contains(key))
+            return true;
+
+        if (!text.Any(char.IsLower) || text.Contains(':') || text.Contains(';') || text.Contains(',') || text.Length > 8)
+            return false;
+
+        int letterCount = key.Count(char.IsLetter);
+        int digitCount = key.Count(char.IsDigit);
+        return letterCount > 0 && digitCount <= 2 && key.Length <= 8;
+    }
+
+    private static bool IsQuantityCell(string text) => IsDash(text) || TryReadDecimal(text, out _);
+    private static bool IsPriceCell(string text) => IsDash(text) || TryReadDecimal(text, out _);
+    private static bool IsAmountCell(string text) => IsDash(text) || TryReadDecimal(text, out _);
+
+    private static bool IsSpreadsheetError(string? text)
+    {
+        text = NormalizeDraft(text);
+        return text.Length > 1
+            && text[0] == '#'
+            && (text.Contains('!') || text.Contains("ERROR", StringComparison.OrdinalIgnoreCase) || text.Contains("FEL", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static double Clamp01(double value) => Math.Min(1d, Math.Max(0d, value));
+
+    private static readonly HashSet<string> KnownUnitKeys = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "m", "m2", "m3", "st", "styck", "kg", "ton", "h", "tim", "dag", "vecka", "manad", "l", "liter",
+        "km", "cm", "mm", "par", "set", "pkt", "ls", "rs", "sum", "kr"
+    };
+
     private void InitializeAmountDrafts(IEnumerable<TaskPostDTO>? tasks)
     {
         AmountDrafts.Clear();
+        InvalidQuantityDrafts.Clear();
         InitializeAmountDraftsRecursive(tasks);
     }
 
@@ -567,6 +1324,8 @@
     private string FormatQuantityDraft(TaskPostDTO task) =>
         TaskTypeRules.DisplaysDashQuantity(task.Metadata.Type)
             ? "-"
+            : InvalidQuantityDrafts.TryGetValue(task, out string? invalidQuantity)
+                ? invalidQuantity
             : FormatDecimal(task.Quantity);
 
     private string FormatPriceDraft(TaskPostDTO task) =>
@@ -582,21 +1341,23 @@
 
     private void OnUnitChanged(TaskPostDTO task, string? value)
     {
+        PreviewRequiresImport = true;
         value = NormalizeDraft(value);
-        if (IsDash(value))
-        {
-            ApplyDashGroup(task, includeAmount: false);
-            return;
-        }
+        if (IsSpreadsheetError(value))
+            value = string.Empty;
 
-        ConvertDashRowToEditableTask(task);
+        if (!IsDash(value))
+            ConvertDashRowToEditableTask(task);
+
         task.Unit = value;
-        MarkPreviewChanged();
+        MarkPreviewChanged(task);
     }
 
     private void OnQuantityChanged(TaskPostDTO task, string? value)
     {
+        PreviewRequiresImport = true;
         value = NormalizeDraft(value);
+        InvalidQuantityDrafts.Remove(task);
         if (IsDash(value))
         {
             ApplyDashGroup(task, includeAmount: false);
@@ -610,12 +1371,21 @@
             task.Metadata.BaseQuantity = quantity;
             task.Metadata.QuantityParam = ConstValues.FixedQ;
         }
+        else
+        {
+            task.Quantity = null;
+            task.Metadata.BaseQuantity = null;
+            task.Metadata.QuantityParam = string.Empty;
+            if (!string.IsNullOrWhiteSpace(value))
+                InvalidQuantityDrafts[task] = value;
+        }
 
-        MarkPreviewChanged();
+        MarkPreviewChanged(task);
     }
 
     private void OnPriceChanged(TaskPostDTO task, string? value)
     {
+        PreviewRequiresImport = true;
         value = NormalizeDraft(value);
         if (IsDash(value))
         {
@@ -624,12 +1394,13 @@
         }
 
         ConvertDashRowToEditableTask(task);
-        task.Metadata.PriceSubDB = TryReadDecimal(value, out var price) ? price : null;
-        MarkPreviewChanged();
+        task.Metadata.PriceSubDB = TryReadDecimal(value, out var price) && price != 0m ? price : null;
+        MarkPreviewChanged(task);
     }
 
     private void OnAmountChanged(TaskPostDTO task, string? value)
     {
+        PreviewRequiresImport = true;
         value = NormalizeDraft(value);
         if (IsDash(value))
         {
@@ -637,11 +1408,13 @@
             return;
         }
 
-        AmountDrafts[task] = value;
+        AmountDrafts[task] = TryReadDecimal(value, out var amount) && amount != 0m
+            ? FormatDecimal(amount)
+            : string.Empty;
         if (task.Metadata.Type == TaskType.FourBarCode)
             ApplyDashGroup(task, includeAmount: false);
 
-        MarkPreviewChanged();
+        MarkPreviewChanged(task);
     }
 
     private void ApplyDashGroup(TaskPostDTO task, bool includeAmount)
@@ -653,7 +1426,7 @@
         task.Metadata.BaseQuantity = includeAmount ? null : 1m;
         task.Quantity = includeAmount ? null : 1m;
         AmountDrafts[task] = includeAmount ? "-" : FormatAmountDraft(task);
-        MarkPreviewChanged();
+        MarkPreviewChanged(task);
     }
 
     private void ConvertDashRowToEditableTask(TaskPostDTO task)
@@ -679,8 +1452,8 @@
 
         var task = new TaskPostDTO
         {
-            Name = "Ny post",
-            Unit = string.Empty,
+            Name = T("Ny post", "New item"),
+            Unit = T("Enhet", "Unit"),
             Quantity = 1m,
             Tasks = [],
             Metadata = new TaskMetadata
@@ -694,20 +1467,565 @@
 
         siblings.Insert(index + 1, task);
         AmountDrafts[task] = string.Empty;
-        MarkPreviewChanged();
+        if (OriginalRowNumbers.TryGetValue(current, out string? currentRow))
+            OriginalRowNumbers[task] = GetNextInsertedRowNumber(currentRow, siblings);
+        OriginalTaskSnapshots[task] = TaskPreviewSnapshot.From(task, AmountDrafts[task]);
+        NewTasks.Add(task);
+        MarkPreviewChanged(task);
     }
 
     private void RemoveSection(List<TaskPostDTO> siblings, TaskPostDTO task)
     {
         siblings.Remove(task);
-        AmountDrafts.Remove(task);
+        RemoveTaskStateRecursive(task);
         MarkPreviewChanged();
     }
 
-    private void MarkPreviewChanged()
+    private string GetNextInsertedRowNumber(string baseRow, IEnumerable<TaskPostDTO> siblings)
     {
+        string prefix = baseRow.Contains('.') ? baseRow[..baseRow.IndexOf('.')] : baseRow;
+        int next = siblings
+            .Select(x => OriginalRowNumbers.TryGetValue(x, out string? row) ? row : string.Empty)
+            .Where(x => x.StartsWith(prefix + ".", StringComparison.Ordinal))
+            .Select(x => int.TryParse(x[(prefix.Length + 1)..], NumberStyles.Integer, CultureInfo.InvariantCulture, out int suffix) ? suffix : 0)
+            .DefaultIfEmpty(0)
+            .Max() + 1;
+
+        return $"{prefix}.{next}";
+    }
+
+    private IEnumerable<PreviewMetric> BuildPreviewMetrics()
+    {
+        var summary = CountTasks(Sections);
+        int warnings = FlattenTasksWithDepth(Sections).Count(row => GetTaskDiagnostics(row.Task, row.Depth).Any(x => x.Kind == DiagnosticKind.Warning));
+        int changed = ChangedTasks.Count;
+
+        yield return new PreviewMetric($"{T("Totala rader", "Total rows")}: {summary.TotalRows}", T("Importerade rader", "Imported rows"), "rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200");
+        yield return new PreviewMetric($"{T("Kalkylposter", "Calc. items")}: {summary.CalculationItems}", T("Inklusive 3- och 4-streckade koder.", "Includes 3- and 4-bar codes."), "rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200");
+        yield return new PreviewMetric($"{T("3-streckade koder", "3-bar codes")}: {summary.ThreeBarCode}", T("Mängd räknas som 1 men visas som '-'.", "Quantity counted as 1 but displayed as '-'."), "rounded bg-blue-100 px-1.5 py-0.5 text-[11px] font-semibold text-blue-700 dark:bg-blue-950 dark:text-blue-300");
+        yield return new PreviewMetric($"{T("4-streckade koder", "4-bar codes")}: {summary.FourBarCode}", T("Endast kod/namn, inga barn eller resurser.", "Code/name only, no children or resources."), "rounded bg-indigo-100 px-1.5 py-0.5 text-[11px] font-semibold text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300");
+        yield return new PreviewMetric($"{T("Rader med varningar", "Rows with warnings")}: {warnings}", T("Rader som behöver granskas innan överföring.", "Rows that need review before transfer."), "rounded bg-amber-100 px-1.5 py-0.5 text-[11px] font-semibold text-amber-700 dark:bg-amber-950 dark:text-amber-300");
+
+        if (changed > 0)
+            yield return new PreviewMetric($"{T("Ändrade", "Changed")} {changed}", T("Rader som ändrats manuellt i förhandsgranskningen.", "Rows changed manually in the preview."), "rounded bg-violet-100 px-1.5 py-0.5 text-[11px] font-semibold text-violet-700 dark:bg-violet-950 dark:text-violet-300");
+    }
+
+    private IEnumerable<PreviewRow> BuildVisiblePreviewRows()
+    {
+        if (Sections is null)
+            yield break;
+
+        foreach (var row in BuildVisiblePreviewRows(Sections, 0))
+            yield return row;
+    }
+
+    private IEnumerable<PreviewRow> BuildVisiblePreviewRows(List<TaskPostDTO> siblings, int depth)
+    {
+        foreach (var task in siblings)
+        {
+            bool matches = MatchesPreviewFilter(task, depth);
+            if (matches)
+                yield return new PreviewRow(task, siblings, depth);
+
+            if ((HasActivePreviewFilter || task.Colspan) && task.Tasks is { Count: > 0 })
+            {
+                foreach (var child in BuildVisiblePreviewRows(task.Tasks, depth + 1))
+                    yield return child;
+            }
+        }
+    }
+
+    private bool MatchesPreviewFilter(TaskPostDTO task, int depth)
+    {
+        if (WarningsOnly && !GetTaskDiagnostics(task, depth).Any(x => x.Kind == DiagnosticKind.Warning))
+            return false;
+
+        if (!MatchesTypeFilter(task, depth))
+            return false;
+
+        string search = NormalizeSearch(PreviewSearchText);
+        if (string.IsNullOrWhiteSpace(search))
+            return true;
+
+        string haystack = NormalizeSearch($"{task.Metadata.Code} {task.Name} {task.Unit}");
+        return haystack.Contains(search, StringComparison.Ordinal);
+    }
+
+    private bool MatchesTypeFilter(TaskPostDTO task, int depth) => PreviewTypeFilter switch
+    {
+        ImportPreviewTypeFilter.All => true,
+        ImportPreviewTypeFilter.CalculationItems => task.Metadata.Type is TaskType.Task or TaskType.ThreeBarCode or TaskType.FourBarCode,
+        ImportPreviewTypeFilter.Task => task.Metadata.Type == TaskType.Task,
+        ImportPreviewTypeFilter.CodeText => task.Metadata.Type == TaskType.CodeName,
+        ImportPreviewTypeFilter.ThreeBarCode => task.Metadata.Type == TaskType.ThreeBarCode,
+        ImportPreviewTypeFilter.FourBarCode => task.Metadata.Type == TaskType.FourBarCode,
+        ImportPreviewTypeFilter.Warnings => GetTaskDiagnostics(task, depth).Any(x => x.Kind == DiagnosticKind.Warning),
+        ImportPreviewTypeFilter.Changed => ChangedTasks.Contains(task),
+        _ => true
+    };
+
+    private void OnPreviewSearchChanged(ChangeEventArgs args) =>
+        PreviewSearchText = args.Value?.ToString() ?? string.Empty;
+
+    private void OnPreviewTypeFilterChanged(ChangeEventArgs args)
+    {
+        if (Enum.TryParse(args.Value?.ToString(), out ImportPreviewTypeFilter filter))
+            PreviewTypeFilter = filter;
+    }
+
+    private void OnWarningsOnlyChanged(ChangeEventArgs args) =>
+        WarningsOnly = args.Value is bool value && value;
+
+    private void ToggleWarningsOnly() => WarningsOnly = !WarningsOnly;
+
+    private void ExpandAll() => SetExpandedRecursive(Sections, expanded: true);
+
+    private void CollapseAll() => SetExpandedRecursive(Sections, expanded: false);
+
+    private void ExpandToLevel(int level) => SetExpandedToLevel(Sections, currentDepth: 0, level);
+
+    private void OnTreeViewModeChanged(ChangeEventArgs args)
+    {
+        TreeViewMode = args.Value?.ToString() ?? "all";
+        if (TreeViewMode == "all")
+        {
+            ExpandAll();
+            return;
+        }
+
+        if (TreeViewMode == "none")
+        {
+            CollapseAll();
+            return;
+        }
+
+        if (int.TryParse(TreeViewMode, NumberStyles.Integer, CultureInfo.InvariantCulture, out int level))
+            ExpandToLevel(Math.Clamp(level, 1, 10));
+    }
+
+    private void ShowOnlyWarnings()
+    {
+        WarningsOnly = true;
+        PreviewTypeFilter = ImportPreviewTypeFilter.Warnings;
+    }
+
+    private void ShowOnlyCalculationItems()
+    {
+        WarningsOnly = false;
+        PreviewTypeFilter = ImportPreviewTypeFilter.CalculationItems;
+    }
+
+    private static void SetExpandedRecursive(IEnumerable<TaskPostDTO>? tasks, bool expanded)
+    {
+        if (tasks is null)
+            return;
+
+        foreach (var task in tasks)
+        {
+            task.Colspan = expanded;
+            SetExpandedRecursive(task.Tasks, expanded);
+        }
+    }
+
+    private static void SetExpandedToLevel(IEnumerable<TaskPostDTO>? tasks, int currentDepth, int level)
+    {
+        if (tasks is null)
+            return;
+
+        foreach (var task in tasks)
+        {
+            task.Colspan = currentDepth < level;
+            SetExpandedToLevel(task.Tasks, currentDepth + 1, level);
+        }
+    }
+
+    private string GetWarningsOnlyButtonClass() =>
+        WarningsOnly
+            ? "inline-flex h-7 items-center justify-center rounded-lg border border-amber-500 bg-amber-100 px-2.5 text-xs font-semibold text-amber-800 transition hover:bg-amber-200 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-300"
+            : "inline-flex h-7 items-center justify-center rounded-lg border border-slate-300 bg-white px-2.5 text-xs font-medium text-slate-700 transition hover:border-amber-500 hover:text-amber-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200";
+
+    private List<DiagnosticItem> GetTaskDiagnostics(TaskPostDTO task, int? depth = null)
+    {
+        var diagnostics = new List<DiagnosticItem>();
+        var added = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        string unitDraft = FormatUnitDraft(task);
+        string quantityDraft = FormatQuantityDraft(task);
+        string priceDraft = FormatPriceDraft(task);
+        string amountDraft = FormatAmountDraft(task);
+        bool hasName = !string.IsNullOrWhiteSpace(task.Name) && !string.Equals(NormalizeDraft(task.Name), T("Namn saknas", "Name missing"), StringComparison.OrdinalIgnoreCase);
+        bool hasUnit = !string.IsNullOrWhiteSpace(unitDraft) && !IsDash(unitDraft);
+        bool unitDash = IsDash(unitDraft);
+        bool quantityDash = IsDash(quantityDraft);
+        bool priceDash = IsDash(priceDraft);
+        bool amountDash = IsDash(amountDraft);
+        bool hasValidQuantity = TryReadDecimal(quantityDraft, out _);
+        bool quantityInvalid = InvalidQuantityDrafts.ContainsKey(task)
+            || (!string.IsNullOrWhiteSpace(quantityDraft) && !quantityDash && !hasValidQuantity);
+        bool hasQuantity = hasValidQuantity;
+        bool regularTask = task.Metadata.Type == TaskType.Task;
+        bool hasIncompleteCalculationData = hasUnit || hasQuantity || unitDash || quantityDash || priceDash || amountDash || quantityInvalid;
+
+        void Add(DiagnosticKind kind, string shortSv, string shortEn, string detailSv, string detailEn)
+        {
+            string shortText = T(shortSv, shortEn);
+            if (added.Add(shortText))
+                diagnostics.Add(new DiagnosticItem(kind, shortText, T(detailSv, detailEn)));
+        }
+
+        if (quantityInvalid)
+            Add(
+                DiagnosticKind.Warning,
+                "Ogiltig mängd",
+                "Invalid quantity",
+                "Kvantitet innehåller ett ogiltigt numeriskt värde.",
+                "Quantity contains an invalid numeric value.");
+
+        if (regularTask && !hasQuantity && (hasUnit || unitDash) && !quantityDash)
+            Add(
+                DiagnosticKind.Warning,
+                "Mängd saknas",
+                "Quantity missing",
+                "Raden innehåller enhet men ingen mängd.",
+                "The row contains a unit but no quantity.");
+
+        if (regularTask && !hasUnit && !unitDash && hasQuantity && !TaskTypeRules.DisplaysDashUnit(task.Metadata.Type))
+            Add(
+                DiagnosticKind.Warning,
+                "Enhet saknas",
+                "Unit missing",
+                "Raden innehåller mängd men ingen enhet.",
+                "The row contains quantity but no unit.");
+
+        if (!hasName && hasIncompleteCalculationData)
+            Add(
+                DiagnosticKind.Warning,
+                "Namn saknas",
+                "Name missing",
+                "Raden innehåller kalkyldata men saknar namn/beskrivning.",
+                "The row contains calculation data but no name/description.");
+
+        if (regularTask && priceDash && (!hasQuantity || !hasUnit))
+            Add(
+                DiagnosticKind.Warning,
+                "Komplettera raden",
+                "Complete row",
+                "Raden behöver kompletteras eller få en annan typ.",
+                "The row needs to be completed or changed to another type.");
+
+        if (regularTask && amountDash && (!hasQuantity || !hasUnit))
+            Add(
+                DiagnosticKind.Warning,
+                "Komplettera raden",
+                "Complete row",
+                "Raden behöver kompletteras eller få en annan typ.",
+                "The row needs to be completed or changed to another type.");
+
+        if (task.Metadata.Type == TaskType.FourBarCode && (task.Tasks.Count > 0 || task.Resources.Count > 0))
+            Add(
+                DiagnosticKind.Warning,
+                "Komplettera raden",
+                "Complete row",
+                "4-streckad kod ska vara en slutrad utan barn.",
+                "4-bar code must be a leaf row without children.");
+
+        if (task.Metadata.Type == TaskType.ThreeBarCode && (task.Quantity != 1m || task.Metadata.BaseQuantity != 1m))
+            Add(
+                DiagnosticKind.Warning,
+                "Komplettera raden",
+                "Complete row",
+                "3-streckad kod ska ha intern mängd 1.",
+                "3-bar code must have internal quantity 1.");
+
+        return diagnostics;
+    }
+
+    private double GetRowConfidence(TaskPostDTO task, IReadOnlyList<DiagnosticItem> diagnostics)
+    {
+        double score = 0.92;
+        score -= diagnostics.Count(x => x.Kind == DiagnosticKind.Warning) * 0.22;
+
+        if (ChangedTasks.Contains(task))
+            score -= 0.05;
+
+        return Clamp01(score);
+    }
+
+    private static string BuildDiagnosticTitle(IReadOnlyList<DiagnosticItem> diagnostics)
+    {
+        if (diagnostics.Count == 0)
+            return string.Empty;
+
+        return string.Join(Environment.NewLine, diagnostics.Select(x => $"{x.ShortText}: {x.Detail}"));
+    }
+
+    private void ShowDiagnostics(IReadOnlyList<DiagnosticItem> diagnostics)
+    {
+        string message = BuildDiagnosticTitle(diagnostics);
+        if (!string.IsNullOrWhiteSpace(message))
+            MHD.MessageOk(T("Varningar", "Warnings"), message, MhdState.Warning);
+    }
+
+    private static string GetPrimaryDiagnosticText(IReadOnlyList<DiagnosticItem> diagnostics) =>
+        diagnostics.FirstOrDefault(x => x.Kind == DiagnosticKind.Warning)?.ShortText
+        ?? diagnostics.FirstOrDefault()?.ShortText
+        ?? string.Empty;
+
+    private string GetPreviewRowClass(PreviewRow row)
+    {
+        bool hasWarning = GetTaskDiagnostics(row.Task, row.Depth).Any(x => x.Kind == DiagnosticKind.Warning);
+        string weight = row.Depth == 0
+            ? "font-bold"
+            : row.Depth == 1
+                ? "font-semibold"
+                : "font-normal";
+        string background = hasWarning
+            ? "bg-amber-50/55 dark:bg-amber-950/15"
+            : row.Task.Metadata.Type switch
+            {
+                TaskType.CodeName => "bg-slate-50/60 dark:bg-slate-900/35",
+                TaskType.ThreeBarCode => "bg-blue-50/30 dark:bg-blue-950/10",
+                TaskType.FourBarCode => "bg-violet-50/30 dark:bg-violet-950/10",
+                _ => "bg-white dark:bg-slate-950/20"
+            };
+
+        return $"{background} {weight} border-b border-slate-200 transition-colors hover:bg-blue-50/40 dark:border-slate-700 dark:hover:bg-blue-950/20";
+    }
+
+    private static string GetTreeCellTextClass(PreviewRow row) => row.Depth switch
+    {
+        0 => "relative z-[1] truncate font-bold text-slate-700 dark:text-slate-200",
+        1 => "relative z-[1] truncate font-semibold text-slate-600 dark:text-slate-300",
+        _ => "relative z-[1] truncate font-normal text-slate-500 dark:text-slate-400"
+    };
+
+    private int GetTreeIndentPx(int depth) =>
+        Math.Clamp(depth * 14, 0, Math.Max(0, TreeColumnWidthPx - 24));
+
+    private int GetTreeGuideLeftPx(int guideIndex) =>
+        Math.Clamp(guideIndex * 14 + 7, 7, Math.Max(7, TreeColumnWidthPx - 14));
+
+    private string GetTaskTypeSelectClass(TaskPostDTO task, IReadOnlyList<DiagnosticItem> diagnostics)
+    {
+        const string baseClass = "h-6 w-full rounded-full border px-2 text-[11px] font-semibold outline-none transition focus:ring-2";
+
+        if (diagnostics.Any(x => x.Kind == DiagnosticKind.Warning))
+        {
+            return $"{baseClass} border-amber-300 bg-amber-50 text-amber-800 focus:border-amber-500 focus:ring-amber-500/20 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300";
+        }
+
+        return task.Metadata.Type switch
+        {
+            TaskType.Task => $"{baseClass} border-emerald-300 bg-emerald-50 text-emerald-800 focus:border-emerald-500 focus:ring-emerald-500/20 dark:border-emerald-800 dark:bg-emerald-950/35 dark:text-emerald-300",
+            TaskType.CodeName => $"{baseClass} border-slate-300 bg-slate-100 text-slate-700 focus:border-slate-500 focus:ring-slate-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200",
+            TaskType.ThreeBarCode => $"{baseClass} border-blue-300 bg-blue-50 text-blue-800 focus:border-blue-500 focus:ring-blue-500/20 dark:border-blue-800 dark:bg-blue-950/35 dark:text-blue-300",
+            TaskType.FourBarCode => $"{baseClass} border-violet-300 bg-violet-50 text-violet-800 focus:border-violet-500 focus:ring-violet-500/20 dark:border-violet-800 dark:bg-violet-950/35 dark:text-violet-300",
+            _ => $"{baseClass} border-slate-300 bg-white text-slate-800 focus:border-blue-500 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+        };
+    }
+
+    private string GetTaskTypeReason(TaskPostDTO task)
+    {
+        string dashDetail = BuildDashPatternText(task);
+        return task.Metadata.Type switch
+        {
+            TaskType.CodeName => T($"Kodtext: raden innehåller text/information utan kalkylvärden.{dashDetail}", $"Code text: the row contains text/information without calculation values.{dashDetail}"),
+            TaskType.ThreeBarCode => T($"3-streckad: streck i Enhet, Kvantitet och Á-pris. Intern mängd räknas som 1.{dashDetail}", $"3-bar: dashes in Unit, Quantity and Unit price. Internal quantity is counted as 1.{dashDetail}"),
+            TaskType.FourBarCode => T($"4-streckad: streck i Enhet, Kvantitet, Á-pris och Belopp. Ska vara slutrad.{dashDetail}", $"4-bar: dashes in Unit, Quantity, Unit price and Amount. Must be a leaf row.{dashDetail}"),
+            _ => T($"Kalkylpost: raden behandlas som kalkylrad med namn och kalkyldata.{dashDetail}", $"Calculation item: the row is treated as a calculation row with name and calculation data.{dashDetail}")
+        };
+    }
+
+    private string BuildDashPatternText(TaskPostDTO task)
+    {
+        var parts = new List<string>();
+        if (IsDash(FormatUnitDraft(task)))
+            parts.Add(T("enhet", "unit"));
+        if (IsDash(FormatQuantityDraft(task)))
+            parts.Add(T("mängd", "quantity"));
+        if (IsDash(FormatPriceDraft(task)))
+            parts.Add(T("pris", "price"));
+        if (IsDash(FormatAmountDraft(task)))
+            parts.Add(T("belopp", "amount"));
+
+        return parts.Count == 0
+            ? string.Empty
+            : T($" Detekterade streck ({parts.Count}): {string.Join(", ", parts)}.",
+                $" Detected dashes ({parts.Count}): {string.Join(", ", parts)}.");
+    }
+
+    private void OnCodeChanged(TaskPostDTO task, string? value)
+    {
+        PreviewRequiresImport = true;
+        task.Metadata.Code = NormalizeDraft(value);
+        MarkPreviewChanged(task);
+    }
+
+    private void OnNameChanged(TaskPostDTO task, string? value)
+    {
+        PreviewRequiresImport = true;
+        task.Name = NormalizeDraft(value);
+        MarkPreviewChanged(task);
+    }
+
+    private void OnTaskTypeChanged(TaskPostDTO task, string? value)
+    {
+        if (!Enum.TryParse(value, out TaskType type))
+            return;
+
+        task.Metadata.Type = type;
+        NormalizeTaskForType(task);
+        MarkPreviewChanged(task);
+    }
+
+    private void RestorePreviewRow(TaskPostDTO task)
+    {
+        if (!OriginalTaskSnapshots.TryGetValue(task, out var snapshot))
+            return;
+
+        snapshot.ApplyTo(task);
+        AmountDrafts[task] = snapshot.Amount;
+        ChangedTasks.Remove(task);
+        ImportMessageIsSuccess = false;
+    }
+
+    private void NormalizeTaskForType(TaskPostDTO task)
+    {
+        switch (task.Metadata.Type)
+        {
+            case TaskType.CodeName:
+                task.Unit = string.Empty;
+                task.Quantity = null;
+                task.Metadata.BaseQuantity = null;
+                task.Metadata.QuantityParam = string.Empty;
+                task.Metadata.PriceSubDB = null;
+                AmountDrafts[task] = string.Empty;
+                break;
+            case TaskType.ThreeBarCode:
+                task.Unit = "-";
+                task.Quantity = 1m;
+                task.Metadata.BaseQuantity = 1m;
+                task.Metadata.QuantityParam = ConstValues.FixedQ;
+                task.Metadata.PriceSubDB = null;
+                if (!AmountDrafts.ContainsKey(task) || AmountDrafts[task] == "-")
+                    AmountDrafts[task] = string.Empty;
+                break;
+            case TaskType.FourBarCode:
+                task.Unit = "-";
+                task.Quantity = null;
+                task.Metadata.BaseQuantity = null;
+                task.Metadata.QuantityParam = string.Empty;
+                task.Metadata.PriceSubDB = null;
+                foreach (var child in task.Tasks)
+                    RemoveTaskStateRecursive(child);
+                task.Tasks.Clear();
+                task.Resources.Clear();
+                AmountDrafts[task] = "-";
+                break;
+            default:
+                if (task.Unit == "-")
+                    task.Unit = string.Empty;
+                task.Quantity ??= 1m;
+                task.Metadata.BaseQuantity ??= task.Quantity;
+                task.Metadata.QuantityParam = ConstValues.FixedQ;
+                AmountDrafts[task] = string.Empty;
+                break;
+        }
+    }
+
+    private static double TokenOverlapScore(string left, string right)
+    {
+        var tokens = SplitSearchTokens(left);
+        if (tokens.Count == 0)
+            return 0;
+
+        int hits = tokens.Count(token => right.Contains(token, StringComparison.Ordinal));
+        return hits / (double)tokens.Count;
+    }
+
+    private static List<string> SplitSearchTokens(string value) =>
+        NormalizeSearch(value)
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(x => x.Length > 1)
+            .Distinct()
+            .ToList();
+
+    private static IEnumerable<TaskPostDTO> FlattenTasks(IEnumerable<TaskPostDTO>? tasks)
+    {
+        if (tasks is null)
+            yield break;
+
+        foreach (var task in tasks)
+        {
+            yield return task;
+
+            foreach (var child in FlattenTasks(task.Tasks))
+                yield return child;
+        }
+    }
+
+    private static IEnumerable<PreviewRow> FlattenTasksWithDepth(IEnumerable<TaskPostDTO>? tasks, int depth = 0)
+    {
+        if (tasks is null)
+            yield break;
+
+        foreach (var task in tasks)
+        {
+            yield return new PreviewRow(task, [], depth);
+
+            foreach (var child in FlattenTasksWithDepth(task.Tasks, depth + 1))
+                yield return child;
+        }
+    }
+
+    private void RemoveTaskStateRecursive(TaskPostDTO task)
+    {
+        AmountDrafts.Remove(task);
+        InvalidQuantityDrafts.Remove(task);
+        ChangedTasks.Remove(task);
+        NewTasks.Remove(task);
+        OriginalTaskSnapshots.Remove(task);
+        OriginalRowNumbers.Remove(task);
+
+        foreach (var child in task.Tasks)
+            RemoveTaskStateRecursive(child);
+    }
+
+    private static string GetConfidenceTextClass(double confidence) => confidence switch
+    {
+        >= 0.75 => "text-[10px] font-semibold text-emerald-600 dark:text-emerald-300",
+        >= 0.5 => "text-[10px] font-semibold text-amber-600 dark:text-amber-300",
+        _ => "text-[10px] font-semibold text-rose-600 dark:text-rose-300"
+    };
+
+    private static string GetConfidenceBarClass(double confidence) => confidence switch
+    {
+        >= 0.75 => "bg-emerald-500",
+        >= 0.5 => "bg-amber-500",
+        _ => "bg-rose-500"
+    };
+
+    private void MarkPreviewChanged(TaskPostDTO? task = null)
+    {
+        if (task is not null)
+        {
+            if (!OriginalTaskSnapshots.TryGetValue(task, out var snapshot))
+                OriginalTaskSnapshots[task] = TaskPreviewSnapshot.From(task, FormatAmountDraft(task));
+
+            if (OriginalTaskSnapshots.TryGetValue(task, out snapshot)
+                && snapshot.Equals(TaskPreviewSnapshot.From(task, FormatAmountDraft(task))))
+            {
+                ChangedTasks.Remove(task);
+            }
+            else
+            {
+                ChangedTasks.Add(task);
+            }
+        }
+
         if (transferCompleted)
-            ImportMessage = "Förhandsgranskningen har ändrats. Importera filen på nytt för att överföra en ny version.";
+            ImportMessage = T(
+                "Förhandsgranskningen har ändrats. Importera filen på nytt för att överföra en ny version.",
+                "The preview has changed. Re-import the file to transfer a new version.");
 
         ImportMessageIsSuccess = false;
     }
@@ -715,8 +2033,43 @@
     private static string NormalizeDraft(string? value) => (value ?? string.Empty).Trim();
     private static bool IsDash(string? value) => NormalizeDraft(value) == "-";
 
+    private static bool LooksLikePotentialChildCode(string? code)
+    {
+        code = NormalizeDraft(code);
+        if (string.IsNullOrWhiteSpace(code))
+            return false;
+
+        if (code.Any(c => c is '.' or '-' or '_' or '/' or '\\'))
+            return true;
+
+        string compact = new(code.Where(char.IsLetterOrDigit).ToArray());
+        return compact.Length > 1;
+    }
+
+    private static string NormalizeSearch(string? value)
+    {
+        value = NormalizeDraft(value);
+        if (value.Length == 0)
+            return string.Empty;
+
+        var builder = new StringBuilder(value.Length);
+        foreach (char c in value.ToLowerInvariant().Normalize(NormalizationForm.FormD))
+        {
+            var category = CharUnicodeInfo.GetUnicodeCategory(c);
+            if (category == UnicodeCategory.NonSpacingMark)
+                continue;
+
+            builder.Append(char.IsLetterOrDigit(c) ? c : ' ');
+        }
+
+        return string.Join(' ', builder.ToString().Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+    }
+
     private static string FormatDecimal(decimal? value) =>
         value.HasValue ? value.Value.ToString("0.###", CultureInfo.InvariantCulture) : string.Empty;
+
+    private string FormatFourBarPost(int count) =>
+        count == 1 ? T("fyrstreckad post", "four-bar item") : T("fyrstreckade poster", "four-bar items");
 
     private static bool TryReadDecimal(string? text, out decimal value)
     {
@@ -735,7 +2088,9 @@
         ImportSummary summary = new();
         foreach (TaskPostDTO task in tasks)
         {
-            summary.Total++;
+            summary.TotalRows++;
+            if (task.Metadata.Type is TaskType.Task or TaskType.ThreeBarCode or TaskType.FourBarCode)
+                summary.CalculationItems++;
             if (task.Metadata.Type == TaskType.ThreeBarCode)
                 summary.ThreeBarCode++;
             else if (task.Metadata.Type == TaskType.FourBarCode)
@@ -747,15 +2102,88 @@
         return summary;
     }
 
+    private enum ImportPreviewTypeFilter
+    {
+        All,
+        CalculationItems,
+        Task,
+        CodeText,
+        ThreeBarCode,
+        FourBarCode,
+        Warnings,
+        Changed
+    }
+
+    private enum DiagnosticKind
+    {
+        Info,
+        Warning
+    }
+
+    private sealed record PreviewRow(TaskPostDTO Task, List<TaskPostDTO> Siblings, int Depth);
+    private sealed record PreviewMetric(string Label, string Title, string CssClass);
+    private sealed record DiagnosticItem(DiagnosticKind Kind, string ShortText, string Detail);
+    private sealed record TaskPreviewSnapshot(
+        TaskType Type,
+        string Code,
+        string Name,
+        string Unit,
+        decimal? Quantity,
+        decimal? BaseQuantity,
+        decimal? Price,
+        string Amount)
+    {
+        public static TaskPreviewSnapshot From(TaskPostDTO task, string amount) =>
+            new(
+                task.Metadata.Type,
+                NormalizeDraft(task.Metadata.Code),
+                NormalizeDraft(task.Name),
+                NormalizeDraft(task.Unit),
+                task.Quantity,
+                task.Metadata.BaseQuantity,
+                task.Metadata.PriceSubDB,
+                NormalizeDraft(amount));
+
+        public void ApplyTo(TaskPostDTO task)
+        {
+            task.Metadata.Type = Type;
+            task.Metadata.Code = Code;
+            task.Name = Name;
+            task.Unit = Unit;
+            task.Quantity = Quantity;
+            task.Metadata.BaseQuantity = BaseQuantity;
+            task.Metadata.PriceSubDB = Price;
+            task.Metadata.QuantityParam = Type == TaskType.ThreeBarCode || Quantity.HasValue
+                ? ConstValues.FixedQ
+                : string.Empty;
+        }
+    }
+
+    private sealed class ImportLayoutState
+    {
+        public int SheetNr { get; set; }
+        public int RowStart { get; set; }
+        public int RowEnd { get; set; }
+        public int CodeIndex { get; set; }
+        public int NameIndex { get; set; }
+        public int UnitIndex { get; set; }
+        public int QuantityIndex { get; set; }
+        public int PriceIndex { get; set; }
+        public int AmountIndex { get; set; }
+        public int Score { get; set; }
+    }
+
     sealed class ImportSummary
     {
-        public int Total { get; set; }
+        public int TotalRows { get; set; }
+        public int CalculationItems { get; set; }
         public int ThreeBarCode { get; set; }
         public int FourBarCode { get; set; }
 
         public void Add(ImportSummary other)
         {
-            Total += other.Total;
+            TotalRows += other.TotalRows;
+            CalculationItems += other.CalculationItems;
             ThreeBarCode += other.ThreeBarCode;
             FourBarCode += other.FourBarCode;
         }
