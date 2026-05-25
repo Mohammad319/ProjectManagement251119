@@ -50,8 +50,19 @@
             </button>
 
             <!-- Folder Icon -->
-            <span class="shrink-0 text-[16px]">
-                @(folder.ShowProjects ? "📂" : "📁")
+            <span class="shrink-0" style="color:@(string.IsNullOrWhiteSpace(folder.Color) ? "#08bf66" : folder.Color)">
+                @if (folder.ShowProjects)
+                {
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M20 6H12l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/>
+                    </svg>
+                }
+                else
+                {
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z"/>
+                    </svg>
+                }
             </span>
 
             <!-- Folder Name + Count -->

@@ -1,17 +1,22 @@
-<td>
-    <div class="flex items-center gap-1" style="@IndentStyle">
+<td class="overflow-hidden">
+    <div class="relative flex items-center gap-1" style="@IndentStyle">
+        @for (int guide = 0; guide < Depth; guide++)
+        {
+            <span class="pointer-events-none absolute bottom-[-3px] top-[-3px] border-l border-dotted"
+                  style="left:@(GuideLeftPx(guide))px; border-color:var(--net-border-color, #94a3b8);"></span>
+        }
         @if (CanToggle)
         {
-            <span role="button"
-                  @onclick="HandleToggle"
-                  @onclick:stopPropagation="true"
-                  class="@ToggleClass">
+            <button type="button"
+                    @onclick="HandleToggle"
+                    @onclick:stopPropagation="true"
+                    class="@ToggleClass">
                 @(IsExpanded ? "−" : "+")
-            </span>
+            </button>
         }
         else if (ShowPlaceholder)
         {
-            <span class="block w-5 h-5 shrink-0"></span>
+            <span class="relative z-[1] inline-block h-4 w-4 shrink-0"></span>
         }
     </div>
 </td>
