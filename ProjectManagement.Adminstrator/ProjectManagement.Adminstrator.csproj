@@ -61,7 +61,14 @@
   <ItemGroup>
     <Content Update="**\package.json" CopyToPublishDirectory="Never" />
     <Content Update="**\package-lock.json" CopyToPublishDirectory="Never" />
+    <Content Update="**\tailwind.config.js" CopyToPublishDirectory="Never" />
+    <Content Update="**\postcss.config.js" CopyToPublishDirectory="Never" />
   </ItemGroup>
+
+  <Target Name="BuildTailwindCss" BeforeTargets="Build;Publish" Condition="Exists('$(MSBuildProjectDirectory)\package.json')">
+    <Exec Command="npm ci" WorkingDirectory="$(MSBuildProjectDirectory)" Condition="!Exists('$(MSBuildProjectDirectory)\node_modules')" ContinueOnError="WarnAndContinue" />
+    <Exec Command="npm run tw:build" WorkingDirectory="$(MSBuildProjectDirectory)" ContinueOnError="WarnAndContinue" />
+  </Target>
 
 
 

@@ -70,6 +70,7 @@ namespace ProjectManagement.Client.Pages.Folder
             {
                 Admin = true;
                 Folder.State.SetDepartments(await Repo.Departments.GetDepartmentsAsListAsync());
+                await Folder.LoadPrivateAndGroupFoldersAsync();
             }
             else
             {

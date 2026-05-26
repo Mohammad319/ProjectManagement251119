@@ -1,0 +1,100 @@
+/* _content/BlazorMHD.UI/Components/Data/Card/MhdCard.razor.rz.scp.css */
+.mhd-ripple[b-u8angab3i5] {
+    position: relative;
+    overflow: hidden;
+}
+
+.mhd-ripple[b-u8angab3i5]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: inherit;
+    transform: scale(0);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.35s ease-out, opacity 0.55s ease-out;
+}
+
+.mhd-ripple:active[b-u8angab3i5]::after {
+    transform: scale(3);
+    opacity: 1;
+    transition: 0s;
+}
+
+.mhd-card-inner[b-u8angab3i5] {
+    transition: transform 0.15s ease-out;
+}
+
+.mhd-card-shell:hover > .mhd-card-inner[b-u8angab3i5] {
+    transform: scale(1.005);
+}
+/* _content/BlazorMHD.UI/Components/Feedback/Dialog/MhdDialog.razor.rz.scp.css */
+.mhd-dialog-header[b-mb59iava2v] {
+    cursor: move;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+}
+
+.mhd-dialog-header-static[b-mb59iava2v] {
+    cursor: default;
+    user-select: auto;
+    -webkit-user-select: auto;
+    touch-action: auto;
+}
+
+.mhd-dialog-close[b-mb59iava2v] {
+    cursor: pointer;
+    font-size: 0;
+    line-height: 1;
+}
+
+.mhd-dialog-close[b-mb59iava2v]::before {
+    content: "\2715";
+    font-size: 1rem;
+}
+
+.mhd-dialog-header *[b-mb59iava2v] {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.mhd-dialog-body[b-mb59iava2v] {
+    scrollbar-gutter: stable;
+    overscroll-behavior: contain;
+}
+/* _content/BlazorMHD.UI/Components/Feedback/Toast/MhdToastContainer.razor.rz.scp.css */
+
+
+@keyframes mhd-toast-progress-isolated-b-4pv7z0tl02 {
+    from {
+        width: 100%;
+    }
+
+    to {
+        width: 0%;
+    }
+}
+
+.mhd-animate-toast-progress[b-4pv7z0tl02] {
+    animation-name: mhd-toast-progress-isolated-b-4pv7z0tl02;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+}
+
+@keyframes mhd-slide-in-isolated-b-4pv7z0tl02 {
+    0% {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.mhd-animate-slide-in[b-4pv7z0tl02] {
+    animation: mhd-slide-in-isolated-b-4pv7z0tl02 0.25s ease-out;
+}
