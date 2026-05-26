@@ -1,4 +1,4 @@
-﻿@using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Client.Shared.MVVM.Calculation
 @using ProjectManagement.Client.Shared.ResourceFiles
 @using ProjectManagement.Shared.DTO.Project
 @using ProjectManagement.Client.Shared.Model.Project.Calculation
@@ -10,6 +10,10 @@
         <h3 class="text-base font-semibold text-slate-900 dark:text-slate-100">
             @StorageLoc["storageOptions"]
         </h3>
+        @if (!string.IsNullOrEmpty(Name))
+        {
+            <p class="mt-0.5 text-xs font-medium text-blue-600 dark:text-blue-400">@Name</p>
+        }
         <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
             @StorageLoc["storageOptionsHint"]
         </p>
@@ -36,12 +40,12 @@
 
                         <button type="button"
                                 @onclick="() => SelectStorage(storage)"
-                                class="@GetStorageButtonClass(isSelected)">
+                                disabled="@IsBusy"
+                                class="@GetButtonClass(isSelected, false)">
                             <div class="flex items-center gap-3">
                                 <div class="@GetDotOuterClass(isSelected, false)">
                                     <div class="@GetDotInnerClass(isSelected, false)"></div>
                                 </div>
-
                                 <span class="font-medium text-slate-700 dark:text-slate-200">
                                     @AppLoc[storage.ToString()]
                                 </span>
@@ -70,12 +74,12 @@
 
                     <button type="button"
                             @onclick="() => SelectStorageSort(sort)"
-                            class="@GetSortButtonClass(isSelected)">
+                            disabled="@IsBusy"
+                            class="@GetButtonClass(isSelected, true)">
                         <div class="flex items-center gap-3">
                             <div class="@GetDotOuterClass(isSelected, true)">
                                 <div class="@GetDotInnerClass(isSelected, true)"></div>
                             </div>
-
                             <span class="font-medium text-slate-700 dark:text-slate-200">
                                 @ResourceLocalize.GetStorageSort(sort)
                             </span>
@@ -84,18 +88,34 @@
                 }
             </div>
         </section>
+
+        @if (HasError)
+        {
+            <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
+                @StorageLoc["saveError"]
+            </div>
+        }
     </div>
 
     <div class="flex items-center justify-end gap-2 border-t border-slate-200 px-5 py-4 dark:border-slate-700">
         <button type="button"
-                class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                disabled="@IsBusy"
                 @onclick="Close">
             @ResourceApp.cancel
         </button>
 
         <button type="button"
-                class="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+                class="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 disabled:opacity-60 dark:focus:ring-offset-slate-900"
+                disabled="@IsBusy"
                 @onclick="SaveAPI">
+            @if (IsBusy)
+            {
+                <svg class="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 12 12 12 12h4z"></path>
+                </svg>
+            }
             @ResourceApp.save
         </button>
     </div>
@@ -104,6 +124,8 @@
 @code {
     private AuthorityStorage StorageLevelValue = AuthorityStorage._private;
     private StorageSort StorageSortValue = StorageSort.Construction;
+    private bool IsBusy;
+    private bool HasError;
 
     [Parameter] public object Parent { get; set; } = default!;
 
@@ -134,34 +156,38 @@
 
     private async Task SaveAPI()
     {
-        if (await Repo.Storage.SaveAsync(Id, StorageType, StorageLevelValue, StorageSortValue))
-            Close();
+        if (IsBusy) return;
+
+        IsBusy = true;
+        HasError = false;
+
+        try
+        {
+            if (await Repo.Storage.SaveAsync(Id, StorageType, StorageLevelValue, StorageSortValue))
+                Close();
+            else
+                HasError = true;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
-    private void SelectStorage(AuthorityStorage value)
-    {
-        StorageLevelValue = value;
-    }
+    private void SelectStorage(AuthorityStorage value) => StorageLevelValue = value;
+    private void SelectStorageSort(StorageSort value) => StorageSortValue = value;
 
-    private void SelectStorageSort(StorageSort value)
+    private string GetButtonClass(bool isSelected, bool isGreen)
     {
-        StorageSortValue = value;
-    }
+        const string baseClass = "w-full rounded-xl border px-4 py-3 text-left transition min-h-[56px] disabled:opacity-50 ";
+        if (isGreen)
+            return isSelected
+                ? baseClass + "border-emerald-600 bg-emerald-50 ring-2 ring-emerald-200 dark:border-emerald-400 dark:bg-emerald-500/10 dark:ring-emerald-500/20"
+                : baseClass + "border-slate-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/60 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-emerald-500 dark:hover:bg-slate-800";
 
-    private string GetStorageButtonClass(bool isSelected)
-    {
-        var baseClass = "w-full rounded-xl border px-4 py-3 text-left transition min-h-[56px] ";
         return isSelected
             ? baseClass + "border-blue-600 bg-blue-50 ring-2 ring-blue-200 dark:border-blue-400 dark:bg-blue-500/10 dark:ring-blue-500/20"
             : baseClass + "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/60 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-blue-500 dark:hover:bg-slate-800";
-    }
-
-    private string GetSortButtonClass(bool isSelected)
-    {
-        var baseClass = "w-full rounded-xl border px-4 py-3 text-left transition min-h-[56px] ";
-        return isSelected
-            ? baseClass + "border-emerald-600 bg-emerald-50 ring-2 ring-emerald-200 dark:border-emerald-400 dark:bg-emerald-500/10 dark:ring-emerald-500/20"
-            : baseClass + "border-slate-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/60 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-emerald-500 dark:hover:bg-slate-800";
     }
 
     private string GetDotOuterClass(bool isSelected, bool isGreen)
@@ -169,18 +195,13 @@
         var selectedClass = isGreen
             ? "border-emerald-600 dark:border-emerald-400"
             : "border-blue-600 dark:border-blue-400";
-
         var normalClass = "border-slate-400 dark:border-slate-500";
-
         return $"flex h-4 w-4 items-center justify-center rounded-full border {(isSelected ? selectedClass : normalClass)}";
     }
 
     private string GetDotInnerClass(bool isSelected, bool isGreen)
     {
-        var colorClass = isGreen
-            ? "bg-emerald-600 dark:bg-emerald-400"
-            : "bg-blue-600 dark:bg-blue-400";
-
+        var colorClass = isGreen ? "bg-emerald-600 dark:bg-emerald-400" : "bg-blue-600 dark:bg-blue-400";
         return $"h-2 w-2 rounded-full {colorClass} {(isSelected ? "opacity-100" : "opacity-0")}";
     }
 
