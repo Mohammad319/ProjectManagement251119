@@ -106,4 +106,21 @@
   <data name="ProjectManagementHome" xml:space="preserve"><value>Startsida för projekthantering</value></data>
   <data name="ToggleNavigation" xml:space="preserve"><value>Växla navigation</value></data>
   <data name="Reload" xml:space="preserve"><value>Ladda om</value></data>
+  <data name="ReportProblem" xml:space="preserve"><value>Rapportera ett problem</value></data>
+  <data name="SupportPageTitle" xml:space="preserve"><value>Kontakta support</value></data>
+  <data name="SupportPageDescription" xml:space="preserve"><value>Beskriv ditt problem så återkommer vi så snart som möjligt.</value></data>
+  <data name="SupportCategory" xml:space="preserve"><value>Kategori</value></data>
+  <data name="SupportCategoryBug" xml:space="preserve"><value>Felrapport</value></data>
+  <data name="SupportCategoryQuestion" xml:space="preserve"><value>Fråga</value></data>
+  <data name="SupportCategoryFeature" xml:space="preserve"><value>Funktionsönskemål</value></data>
+  <data name="SupportCategoryOther" xml:space="preserve"><value>Övrigt</value></data>
+  <data name="SupportMessage" xml:space="preserve"><value>Beskrivning</value></data>
+  <data name="SupportMessagePlaceholder" xml:space="preserve"><value>Beskriv problemet så detaljerat som möjligt...</value></data>
+  <data name="SupportSubmit" xml:space="preserve"><value>Skicka meddelande</value></data>
+  <data name="SupportSuccessTitle" xml:space="preserve"><value>Meddelande skickat</value></data>
+  <data name="SupportSuccessMessage" xml:space="preserve"><value>Tack. Ditt meddelande har tagits emot. Spara detta referensnummer när du kontaktar support.</value></data>
+  <data name="SupportErrorMessage" xml:space="preserve"><value>Det gick inte att skicka meddelandet. Försök igen eller kontakta support direkt.</value></data>
+  <data name="SupportReferenceNumber" xml:space="preserve"><value>Referensnummer</value></data>
+  <data name="SupportContextInfo" xml:space="preserve"><value>Denna information inkluderas automatiskt för att hjälpa oss undersöka problemet.</value></data>
+  <data name="SupportNavTitle" xml:space="preserve"><value>Support</value></data>
 </root>

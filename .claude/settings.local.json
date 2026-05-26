@@ -42,7 +42,10 @@
       "Bash(xargs -0 grep -l \"interface I.*Storage\\\\|class.*MVVM.*:\")",
       "Bash(grep -r \"class.*MVVM.*:\\\\|interface.*Parent\" /c/Users/engmo/Desktop/PM/b07/ProjectManagement251119/ProjectManagement.Client.Shared/MVVM --include=\"*.cs\" ! -path \"*/.codex-*\" ! -path \"*/.vs/*\")",
       "Bash(xargs -0 grep -l \"bool IsLoading\")",
-      "Bash(xargs -0 grep \"interface.*IStorage\\\\|interface.*Parent\")"
+      "Bash(xargs -0 grep \"interface.*IStorage\\\\|interface.*Parent\")",
+      "Bash(grep -E \"\\\\.\\(resx|cs\\)$\")",
+      "Bash(grep -E \"\\\\.\\(razor|cs\\)$\")",
+      "Bash(grep -E \"\\\\.\\(cs\\)$\")"
     ]
   }
 }

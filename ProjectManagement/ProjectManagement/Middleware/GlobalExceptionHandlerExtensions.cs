@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using ProjectManagement.Extensions;
+using ProjectManagement.Shared.Constant;
 
 namespace ProjectManagement.Middleware;
 
@@ -23,7 +24,15 @@ public static class GlobalExceptionHandlerExtensions
                     .GetRequiredService<ILogger<GlobalExceptionLog>>();
 
                 if (ex is not null)
-                    logger.LogError(ex, "Unhandled exception. TraceId={TraceId} Path={Path}", traceId, context.Request.Path);
+                {
+                    var user = context.User;
+                    var userId = user.FindFirst(PMClaimsConst.UserId)?.Value;
+                    var tenantId = user.FindFirst(PMClaimsConst.Tenant)?.Value;
+
+                    logger.LogError(ex,
+                        "Unhandled exception. TraceId={TraceId} Path={Path} UserId={UserId} TenantId={TenantId}",
+                        traceId, context.Request.Path, userId, tenantId);
+                }
 
                 var isApi =
                     context.Request.Path.StartsWithSegments("/api") ||

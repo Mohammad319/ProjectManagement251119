@@ -116,6 +116,23 @@ public class PMWebResource
     public static string ResourceAttachment => GetString(nameof(ResourceAttachment), "Add-ons / Attachments");
     public static string ResourceTime => GetString(nameof(ResourceTime), "Breakdown of hours");
     public static string Impressum => GetString(nameof(Impressum), "Impressum");
+    public static string ReportProblem => GetString(nameof(ReportProblem), "Report a problem");
+    public static string SupportNavTitle => GetString(nameof(SupportNavTitle), "Support");
+    public static string SupportPageTitle => GetString(nameof(SupportPageTitle), "Contact support");
+    public static string SupportPageDescription => GetString(nameof(SupportPageDescription), "Describe your problem and we will get back to you as soon as possible.");
+    public static string SupportCategory => GetString(nameof(SupportCategory), "Category");
+    public static string SupportCategoryBug => GetString(nameof(SupportCategoryBug), "Bug report");
+    public static string SupportCategoryQuestion => GetString(nameof(SupportCategoryQuestion), "Question");
+    public static string SupportCategoryFeature => GetString(nameof(SupportCategoryFeature), "Feature request");
+    public static string SupportCategoryOther => GetString(nameof(SupportCategoryOther), "Other");
+    public static string SupportMessage => GetString(nameof(SupportMessage), "Description");
+    public static string SupportMessagePlaceholder => GetString(nameof(SupportMessagePlaceholder), "Describe the problem in as much detail as possible...");
+    public static string SupportSubmit => GetString(nameof(SupportSubmit), "Send message");
+    public static string SupportSuccessTitle => GetString(nameof(SupportSuccessTitle), "Message sent");
+    public static string SupportSuccessMessage => GetString(nameof(SupportSuccessMessage), "Thank you. Your message has been received. Keep this reference number when contacting support.");
+    public static string SupportErrorMessage => GetString(nameof(SupportErrorMessage), "Could not send the message. Please try again or contact support directly.");
+    public static string SupportReferenceNumber => GetString(nameof(SupportReferenceNumber), "Reference number");
+    public static string SupportContextInfo => GetString(nameof(SupportContextInfo), "This information is automatically included to help us investigate the problem.");
 
     private static string GetString(string name, string fallback)
         => ResourceManager.GetString(name, Culture) ?? fallback;

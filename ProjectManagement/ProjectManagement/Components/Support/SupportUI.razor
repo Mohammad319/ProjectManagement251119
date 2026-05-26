@@ -1,0 +1,186 @@
+@page "/support"
+@rendermode InteractiveServer
+@using Application.Interfaces.Email
+@using Application.Model
+@using System.Security.Claims
+@inject IEmailService EmailService
+@inject IConfiguration Configuration
+@inject ILogger<SupportUI> Logger
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Nav
+
+<div class="mx-auto max-w-2xl px-4 py-8">
+
+    @if (_submitted)
+    {
+        <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-8 shadow-sm dark:border-emerald-900/50 dark:bg-emerald-950/40">
+            <h1 class="text-xl font-semibold text-emerald-800 dark:text-emerald-200">@PMWebResource.SupportSuccessTitle</h1>
+            <p class="mt-2 text-sm text-emerald-700 dark:text-emerald-300">@PMWebResource.SupportSuccessMessage</p>
+
+            <div class="mt-4 rounded-lg border border-emerald-200/80 bg-white px-3 py-2 text-sm dark:border-emerald-800 dark:bg-emerald-950">
+                <span class="font-medium text-emerald-800 dark:text-emerald-200">@PMWebResource.SupportReferenceNumber:</span>
+                <span class="ml-2 font-mono text-emerald-700 dark:text-emerald-300">@_referenceId</span>
+            </div>
+
+            <button class="mt-6 inline-flex items-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
+                    @onclick='() => Nav.NavigateTo("/")'>
+                @PMWebResource.BackToHomeAction
+            </button>
+        </div>
+    }
+    else
+    {
+        <div class="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <h1 class="text-xl font-semibold text-slate-900 dark:text-slate-100">@PMWebResource.SupportPageTitle</h1>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">@PMWebResource.SupportPageDescription</p>
+
+            @if (!string.IsNullOrWhiteSpace(_traceId))
+            {
+                <div class="mt-4 rounded-lg border border-rose-200/80 bg-rose-50 px-3 py-2 text-sm dark:border-rose-800 dark:bg-rose-950/40">
+                    <span class="font-medium text-rose-800 dark:text-rose-200">@PMWebResource.TraceIdLabel:</span>
+                    <span class="ml-2 font-mono text-rose-700 dark:text-rose-300">@_traceId</span>
+                </div>
+            }
+
+            <EditForm Model="_form" OnValidSubmit="SubmitAsync" class="mt-6 space-y-4">
+                <DataAnnotationsValidator />
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">@PMWebResource.SupportCategory</label>
+                    <InputSelect @bind-Value="_form.Category"
+                                 class="mt-1 block h-10 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+                        <option value="Bug">@PMWebResource.SupportCategoryBug</option>
+                        <option value="Question">@PMWebResource.SupportCategoryQuestion</option>
+                        <option value="Feature">@PMWebResource.SupportCategoryFeature</option>
+                        <option value="Other">@PMWebResource.SupportCategoryOther</option>
+                    </InputSelect>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">@PMWebResource.SupportMessage</label>
+                    <InputTextArea @bind-Value="_form.Message"
+                                   rows="5"
+                                   placeholder="@PMWebResource.SupportMessagePlaceholder"
+                                   class="mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500" />
+                    <ValidationMessage For="() => _form.Message" class="mt-1 text-xs text-rose-600 dark:text-rose-400" />
+                </div>
+
+                <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-400">
+                    <p class="mb-1 font-medium">@PMWebResource.SupportContextInfo</p>
+                    @if (!string.IsNullOrWhiteSpace(_userEmail)) { <span>Email: @_userEmail · </span> }
+                    @if (_tenantId > 0) { <span>Company: @_tenantId · </span> }
+                    @if (_userId.HasValue) { <span>User: @_userId · </span> }
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(_sendError))
+                {
+                    <p class="text-sm text-rose-600 dark:text-rose-400">@_sendError</p>
+                }
+
+                <div class="flex items-center gap-3">
+                    <button type="submit"
+                            disabled="@_isSending"
+                            class="inline-flex items-center gap-2 rounded-xl border border-sky-600 bg-sky-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-500 dark:bg-sky-500 dark:hover:bg-sky-400">
+                        @if (_isSending)
+                        {
+                            <span>...</span>
+                        }
+                        @PMWebResource.SupportSubmit
+                    </button>
+                    <button type="button"
+                            class="text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                            @onclick='() => Nav.NavigateTo("/")'>
+                        @PMWebResource.BackToHomeAction
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    }
+</div>
+
+@code {
+    private readonly SupportForm _form = new();
+    private string? _traceId;
+    private string? _userEmail;
+    private int _tenantId;
+    private int? _userId;
+    private bool _submitted;
+    private bool _isSending;
+    private string? _sendError;
+    private string _referenceId = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var uri = new Uri(Nav.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        _traceId = query["traceId"];
+
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        _userEmail = user.FindFirst(ClaimTypes.Email)?.Value ?? user.Identity?.Name;
+        if (int.TryParse(user.FindFirst(PMClaimsConst.Tenant)?.Value, out var tid)) _tenantId = tid;
+        if (int.TryParse(user.FindFirst(PMClaimsConst.UserId)?.Value, out var uid)) _userId = uid;
+
+        if (!string.IsNullOrWhiteSpace(_traceId))
+            _form.Category = "Bug";
+    }
+
+    private async Task SubmitAsync()
+    {
+        _isSending = true;
+        _sendError = null;
+
+        _referenceId = $"SUP-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid().ToString()[..6].ToUpper()}";
+
+        Logger.LogWarning(
+            "Support request submitted. RefId={RefId} Category={Category} TraceId={TraceId} UserId={UserId} TenantId={TenantId} UserEmail={UserEmail}",
+            _referenceId, _form.Category, _traceId, _userId, _tenantId, _userEmail);
+
+        var supportEmail = Configuration["Support:Email"];
+        if (!string.IsNullOrWhiteSpace(supportEmail))
+        {
+            try
+            {
+                var body = BuildEmailBody();
+                await EmailService.SendEmailAsync(new MailRequest
+                {
+                    ToEmail = supportEmail,
+                    DisplayName = "ProjectManagement Support",
+                    Subject = $"[Support] [{_form.Category}] {_referenceId}",
+                    Body = body
+                });
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to send support email. RefId={RefId}", _referenceId);
+                _sendError = PMWebResource.SupportErrorMessage;
+                _isSending = false;
+                return;
+            }
+        }
+
+        _submitted = true;
+        _isSending = false;
+    }
+
+    private string BuildEmailBody() =>
+        $"""
+        <p><strong>Reference:</strong> {_referenceId}</p>
+        <p><strong>Category:</strong> {_form.Category}</p>
+        <p><strong>Message:</strong><br/>{System.Net.WebUtility.HtmlEncode(_form.Message)}</p>
+        <hr/>
+        <p><strong>TraceId:</strong> {_traceId ?? "-"}</p>
+        <p><strong>User email:</strong> {_userEmail ?? "-"}</p>
+        <p><strong>UserId:</strong> {_userId?.ToString() ?? "-"}</p>
+        <p><strong>TenantId:</strong> {(_tenantId > 0 ? _tenantId.ToString() : "-")}</p>
+        """;
+
+    private sealed class SupportForm
+    {
+        public string Category { get; set; } = "Bug";
+
+        [System.ComponentModel.DataAnnotations.Required]
+        [System.ComponentModel.DataAnnotations.MinLength(10)]
+        public string Message { get; set; } = string.Empty;
+    }
+}
