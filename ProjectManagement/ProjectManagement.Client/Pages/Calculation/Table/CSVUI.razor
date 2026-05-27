@@ -104,10 +104,10 @@
 
     @if (HasSelectedFile)
     {
-        <div class="rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+        <div class="flex-1 min-h-0 flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
             @if (ColumnMappingWarnings.Count > 0)
             {
-                <div class="flex items-center gap-2 border-b border-amber-100 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-300">
+                <div class="shrink-0 flex items-center gap-2 border-b border-amber-100 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-300">
                     <svg class="h-3 w-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
                     </svg>
@@ -116,7 +116,7 @@
             }
             @if (!string.IsNullOrWhiteSpace(ImportMessage) && !ImportMessageIsSuccess)
             {
-                <div class="flex items-center gap-2 border-b border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                <div class="shrink-0 flex items-center gap-2 border-b border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
                     <svg class="h-3 w-3 shrink-0 text-amber-500" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008v.008H12V16.5Zm-9.303-.374c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126Z" />
                     </svg>
@@ -125,7 +125,7 @@
             }
             @if (HasImportedPreview)
             {
-                
+
                     var _s = CountTasks(Sections);
                     int _w = 0, _tasks = 0, _codeText = 0;
                     foreach (var _r in FlattenTasksWithDepth(Sections))
@@ -135,8 +135,8 @@
                         if (GetTaskDiagnostics(_r.Task, _r.Depth).Any(x => x.Kind == DiagnosticKind.Warning)) _w++;
                     }
                     int _changed = ChangedTasks.Count;
-                
-                <div class="flex min-w-0 flex-wrap items-center gap-1.5 px-2 py-1.5">
+
+                <div class="relative z-30 shrink-0 flex min-w-0 flex-wrap items-center gap-1.5 border-b border-slate-200 bg-white px-2 py-1.5 dark:border-slate-700 dark:bg-slate-900">
                     <input type="search"
                            class="h-7 w-36 shrink-0 rounded-lg border border-slate-300 bg-white px-2 text-xs text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                            placeholder="@T("Sök...", "Search...")"
@@ -190,76 +190,74 @@
                     }
                 </div>
             }
-        </div>
-        <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
-            @if (HasImportedPreview)
-            {
-            <div class="rounded-xl border border-slate-200 dark:border-slate-700">
-            <table class="w-full table-fixed border-collapse text-sm">
-                <colgroup>
-                    <col style="width:54px" />
-                    <col style="@CodeColumnStyle" />
-                    <col />
-                    <col style="width:58px" />
-                    <col style="width:76px" />
-                    <col style="width:62px" />
-                    <col style="width:62px" />
-                    <col style="width:100px" />
-                    <col style="width:96px" />
-                    <col style="width:120px" />
-                </colgroup>
-                <thead class="sticky top-0 z-10 bg-slate-100 dark:bg-slate-800">
-                    <tr>
-                        <th class="border border-slate-300 px-1 py-1 text-center font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
-                            <span title="@T("Visar ursprungligt radnummer från Excel-filen.", "Shows the original row number from the Excel file.")">@T("Radnr", "Row no.")</span>
-                        </th>
-                        <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
-                            @CalcResource.code
-                        </th>
-                        <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
-                            @CalcResource.name
-                        </th>
-                        <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
-                            @CalcResource.unit
-                        </th>
-                        <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
-                            @CalcResource.quantity
-                        </th>
-                        <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
-                            @T("Á-pris", "Unit price")
-                        </th>
-                        <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
-                            @T("Belopp", "Amount")
-                        </th>
-                        <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
-                            @T("Typ", "Type")
-                        </th>
-                        <th class="border border-slate-300 px-1 py-1 text-center font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">@T("Status", "Status")</th>
-                        <th class="border border-slate-300 pl-2 pr-4 py-1 text-center font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
-                            @T("Varningar", "Warnings")
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (VisiblePreviewRows.Any())
-                    {
-                        @foreach (var row in VisiblePreviewRows)
-                        {
-                            @TaskRow(row)
-                        }
-                    }
-                    else
-                    {
+            <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-white dark:bg-slate-900">
+                @if (HasImportedPreview)
+                {
+                <table class="w-full table-fixed border-collapse text-sm">
+                    <colgroup>
+                        <col style="width:54px" />
+                        <col style="@CodeColumnStyle" />
+                        <col />
+                        <col style="width:58px" />
+                        <col style="width:76px" />
+                        <col style="width:62px" />
+                        <col style="width:62px" />
+                        <col style="width:100px" />
+                        <col style="width:96px" />
+                        <col style="width:120px" />
+                    </colgroup>
+                    <thead class="csv-thead-sticky sticky top-0 z-20 bg-slate-100 dark:bg-slate-800">
                         <tr>
-                            <td colspan="10" class="border border-dashed border-slate-300 px-3 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
-                                @T("Inga rader matchar filtret.", "No rows match the filter.")
-                            </td>
+                            <th class="border border-slate-300 px-1 py-1 text-center font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                                <span title="@T("Visar ursprungligt radnummer från Excel-filen.", "Shows the original row number from the Excel file.")">@T("Radnr", "Row no.")</span>
+                            </th>
+                            <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                                @CalcResource.code
+                            </th>
+                            <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                                @CalcResource.name
+                            </th>
+                            <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                                @CalcResource.unit
+                            </th>
+                            <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                                @CalcResource.quantity
+                            </th>
+                            <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                                @T("Á-pris", "Unit price")
+                            </th>
+                            <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                                @T("Belopp", "Amount")
+                            </th>
+                            <th class="border border-slate-300 px-2 py-1 text-start font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                                @T("Typ", "Type")
+                            </th>
+                            <th class="border border-slate-300 px-1 py-1 text-center font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">@T("Status", "Status")</th>
+                            <th class="border border-slate-300 pl-2 pr-4 py-1 text-center font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                                @T("Varningar", "Warnings")
+                            </th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @if (VisiblePreviewRows.Any())
+                        {
+                            @foreach (var row in VisiblePreviewRows)
+                            {
+                                @TaskRow(row)
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="10" class="border border-dashed border-slate-300 px-3 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                                    @T("Inga rader matchar filtret.", "No rows match the filter.")
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                }
             </div>
-            }
         </div>
     }
 </div>
@@ -282,31 +280,34 @@
                 @if (IsTreeView)
                 {
                     <div class="relative flex h-6 min-w-0 items-center" style="padding-left:@($"{GetTreeIndentPx(row.Depth)}px")">
-                        @for (int g = 0; g < row.Depth; g++)
+                        @if (showTreeAnchor)
                         {
-                            @if (row.AncestorHasNextSibling?[g] == true)
+                            @for (int g = 0; g < row.Depth; g++)
                             {
-                                <span class="@TreeConnectorVerticalClass"
-                                      style="left:@($"{GetTreeGuideLeftPx(g)}px")"></span>
+                                @if (row.AncestorHasNextSibling?[g] == true)
+                                {
+                                    <span class="@TreeConnectorVerticalClass"
+                                          style="left:@($"{GetTreeGuideLeftPx(g)}px")"></span>
+                                }
                             }
-                        }
-                        @if (row.Depth > 0 && showTreeAnchor)
-                        {
-                            <span class="@TreeConnectorCurrentTopClass"
-                                  style="left:@($"{GetTreeGuideLeftPx(row.Depth - 1)}px");height:calc(50% - 0.25rem)"></span>
-                            @if (row.HasNextSibling)
+                            @if (row.Depth > 0)
                             {
-                                <span class="@TreeConnectorCurrentBottomClass"
+                                <span class="@TreeConnectorCurrentTopClass"
                                       style="left:@($"{GetTreeGuideLeftPx(row.Depth - 1)}px");height:calc(50% - 0.25rem)"></span>
+                                @if (row.HasNextSibling)
+                                {
+                                    <span class="@TreeConnectorCurrentBottomClass"
+                                          style="left:@($"{GetTreeGuideLeftPx(row.Depth - 1)}px");height:calc(50% - 0.25rem)"></span>
+                                }
+                                <span class="@TreeConnectorHorizontalClass"
+                                      style="left:@($"{GetTreeGuideLeftPx(row.Depth - 1)}px")"></span>
                             }
-                            <span class="@TreeConnectorHorizontalClass"
-                                  style="left:@($"{GetTreeGuideLeftPx(row.Depth - 1)}px")"></span>
                         }
                         @if (!HasActivePreviewFilter && hasChildren)
                         {
                             <button type="button"
                                     @onclick="() => Task.Colspan = !Task.Colspan"
-                                    class="relative z-[1] inline-flex h-5 w-5 shrink-0 items-center justify-center rounded border border-slate-200 bg-white/80 text-sm font-bold leading-none text-slate-500 transition hover:border-slate-400 hover:bg-slate-100 hover:text-slate-800 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400 dark:hover:border-slate-500 dark:hover:bg-slate-700 dark:hover:text-slate-200">
+                                    class="relative z-[1] inline-flex h-5 w-5 shrink-0 items-center justify-center rounded border border-slate-300 bg-white/90 text-base font-bold leading-none text-slate-600 transition hover:border-slate-400 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-300 dark:hover:border-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-100">
                                 @(Task.Colspan ? "−" : "+")
                             </button>
                         }
@@ -314,7 +315,7 @@
                         {
                             <span class="relative z-[1] inline-block h-5 w-5 shrink-0"></span>
                         }
-                        <input class="relative z-[1] h-5 min-w-0 flex-1 truncate rounded border border-transparent bg-transparent px-1 text-xs text-slate-900 outline-none transition hover:border-slate-200 hover:bg-slate-50/80 focus:border-blue-400 focus:bg-white focus:ring-1 focus:ring-blue-400/20 dark:text-slate-100 dark:hover:border-slate-700 dark:hover:bg-slate-800/40 dark:focus:border-blue-500 dark:focus:bg-slate-900 dark:focus:ring-blue-500/20"
+                        <input class="relative z-[1] h-5 min-w-[2.5rem] max-w-[8rem] flex-shrink truncate rounded border border-slate-300 bg-white px-1 text-xs text-slate-900 outline-none transition focus:border-blue-400 focus:ring-1 focus:ring-blue-400/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-500 dark:focus:ring-blue-500/20"
                                type="text"
                                value="@Task.Metadata.Code"
                                title="@Task.Metadata.Code"
@@ -467,7 +468,7 @@
     private string DashQuantityTooltip => T("\"-\" här räknas mängden som 1.", "\"-\" here the quantity is counted as 1.");
     private string PreviewInputClass => "h-6 w-full rounded-md border border-slate-300 bg-white px-1.5 text-xs text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20";
     private string ToolbarButtonClass => "inline-flex h-7 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-white px-2 text-[11px] font-medium text-slate-700 transition hover:border-blue-500 hover:text-blue-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-blue-400";
-    private string TreeConnectorColorClass => "border-slate-300/70 dark:border-slate-600/60";
+    private string TreeConnectorColorClass => "border-slate-400/75 dark:border-slate-500/65";
     private string TreeConnectorVerticalClass => $"pointer-events-none absolute bottom-1 top-1 border-l border-dashed {TreeConnectorColorClass}";
     private string TreeConnectorCurrentTopClass => $"pointer-events-none absolute top-1 border-l border-dashed {TreeConnectorColorClass}";
     private string TreeConnectorCurrentBottomClass => $"pointer-events-none absolute bottom-1 border-l border-dashed {TreeConnectorColorClass}";
@@ -1664,12 +1665,23 @@
             yield return row;
     }
 
+    // A sibling counts as a tree-visible node when it has a code or has children.
+    // Rows that have neither don't anchor to the tree and must not extend vertical guide lines.
+    private static bool IsTreeAnchor(TaskPostDTO task) =>
+        !string.IsNullOrWhiteSpace(task.Metadata.Code) || task.Tasks.Any();
+
     private IEnumerable<PreviewRow> BuildVisiblePreviewRows(List<TaskPostDTO> siblings, int depth, List<TaskPostDTO>? parentSiblings, bool[]? ancestorHasNextSibling = null)
     {
         for (int i = 0; i < siblings.Count; i++)
         {
             var task = siblings[i];
-            bool hasNextSibling = i < siblings.Count - 1;
+            // In tree view: a sibling only extends the vertical guide line if at least one
+            // later sibling will actually render a tree anchor (has code or children).
+            // This ensures └─ is used for the last real tree-node and no vertical line
+            // continues past it, while code-less rows between anchors are invisible to the guide.
+            bool hasNextSibling = IsTreeView
+                ? siblings.Skip(i + 1).Any(IsTreeAnchor)
+                : i < siblings.Count - 1;
             int effectiveDepth = IsTreeView ? depth : 0;
             bool matches = MatchesPreviewFilter(task, effectiveDepth);
             if (matches)

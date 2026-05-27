@@ -9,3 +9,11 @@
     margin-bottom: 1px;
     color: black;
 }
+
+.csv-thead-sticky {
+    box-shadow: 0 1px 0 rgb(203 213 225 / 1);
+}
+
+.dark .csv-thead-sticky {
+    box-shadow: 0 1px 0 rgb(51 65 85 / 1);
+}
