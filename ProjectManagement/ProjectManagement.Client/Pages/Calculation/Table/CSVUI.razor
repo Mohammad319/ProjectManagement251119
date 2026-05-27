@@ -104,7 +104,7 @@
 
     @if (HasSelectedFile)
     {
-        <div class="rounded-xl border border-slate-200 bg-white/95 dark:border-slate-700 dark:bg-slate-900/95">
+        <div class="rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
             @if (ColumnMappingWarnings.Count > 0)
             {
                 <div class="flex items-center gap-2 border-b border-amber-100 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-300">
@@ -194,7 +194,7 @@
         <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
             @if (HasImportedPreview)
             {
-            <div class="mt-1 rounded-xl border border-slate-200 dark:border-slate-700">
+            <div class="rounded-xl border border-slate-200 dark:border-slate-700">
             <table class="w-full table-fixed border-collapse text-sm">
                 <colgroup>
                     <col style="width:54px" />
@@ -206,7 +206,7 @@
                     <col style="width:62px" />
                     <col style="width:100px" />
                     <col style="width:96px" />
-                    <col style="width:96px" />
+                    <col style="width:120px" />
                 </colgroup>
                 <thead class="sticky top-0 z-10 bg-slate-100 dark:bg-slate-800">
                     <tr>
@@ -235,7 +235,7 @@
                             @T("Typ", "Type")
                         </th>
                         <th class="border border-slate-300 px-1 py-1 text-center font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">@T("Status", "Status")</th>
-                        <th class="border border-slate-300 px-2 py-1 text-center font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                        <th class="border border-slate-300 pl-2 pr-4 py-1 text-center font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
                             @T("Varningar", "Warnings")
                         </th>
                     </tr>
@@ -281,7 +281,7 @@
             <td class="border border-slate-300 px-1 py-0.5 dark:border-slate-700">
                 @if (IsTreeView)
                 {
-                    <div class="relative flex h-7 min-w-0 items-center pr-1" style="padding-left:@($"{GetTreeIndentPx(row.Depth)}px")">
+                    <div class="relative flex h-6 min-w-0 items-center" style="padding-left:@($"{GetTreeIndentPx(row.Depth)}px")">
                         @for (int g = 0; g < row.Depth; g++)
                         {
                             @if (row.AncestorHasNextSibling?[g] == true)
@@ -306,16 +306,15 @@
                         {
                             <button type="button"
                                     @onclick="() => Task.Colspan = !Task.Colspan"
-                                    class="relative z-[1] inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-transparent text-base font-semibold leading-none text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-50"
-                                    title="@(Task.Colspan ? T("Fäll ihop", "Collapse") : T("Expandera", "Expand"))">
+                                    class="relative z-[1] inline-flex h-5 w-5 shrink-0 items-center justify-center rounded border border-slate-200 bg-white/80 text-sm font-bold leading-none text-slate-500 transition hover:border-slate-400 hover:bg-slate-100 hover:text-slate-800 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400 dark:hover:border-slate-500 dark:hover:bg-slate-700 dark:hover:text-slate-200">
                                 @(Task.Colspan ? "−" : "+")
                             </button>
                         }
                         else
                         {
-                            <span class="relative z-[1] inline-block h-6 w-6 shrink-0"></span>
+                            <span class="relative z-[1] inline-block h-5 w-5 shrink-0"></span>
                         }
-                        <input class="relative z-[1] h-6 min-w-0 flex-1 truncate rounded-md border border-slate-300 bg-white px-1.5 text-xs text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
+                        <input class="relative z-[1] h-5 min-w-0 flex-1 truncate rounded border border-transparent bg-transparent px-1 text-xs text-slate-900 outline-none transition hover:border-slate-200 hover:bg-slate-50/80 focus:border-blue-400 focus:bg-white focus:ring-1 focus:ring-blue-400/20 dark:text-slate-100 dark:hover:border-slate-700 dark:hover:bg-slate-800/40 dark:focus:border-blue-500 dark:focus:bg-slate-900 dark:focus:ring-blue-500/20"
                                type="text"
                                value="@Task.Metadata.Code"
                                title="@Task.Metadata.Code"
@@ -418,7 +417,7 @@
                     </button>
                 </div>
             </td>
-            <td class="border border-slate-300 px-1 py-0.5 text-center dark:border-slate-700">
+            <td class="border border-slate-300 pl-2 pr-4 py-0.5 text-center dark:border-slate-700">
                 <div class="flex items-center justify-center">
                     @if (diagnostics.Count > 0)
                     {
@@ -468,7 +467,7 @@
     private string DashQuantityTooltip => T("\"-\" här räknas mängden som 1.", "\"-\" here the quantity is counted as 1.");
     private string PreviewInputClass => "h-6 w-full rounded-md border border-slate-300 bg-white px-1.5 text-xs text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20";
     private string ToolbarButtonClass => "inline-flex h-7 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-white px-2 text-[11px] font-medium text-slate-700 transition hover:border-blue-500 hover:text-blue-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-blue-400";
-    private string TreeConnectorColorClass => "border-slate-400/70 dark:border-slate-500/80";
+    private string TreeConnectorColorClass => "border-slate-300/70 dark:border-slate-600/60";
     private string TreeConnectorVerticalClass => $"pointer-events-none absolute bottom-1 top-1 border-l border-dashed {TreeConnectorColorClass}";
     private string TreeConnectorCurrentTopClass => $"pointer-events-none absolute top-1 border-l border-dashed {TreeConnectorColorClass}";
     private string TreeConnectorCurrentBottomClass => $"pointer-events-none absolute bottom-1 border-l border-dashed {TreeConnectorColorClass}";
@@ -483,6 +482,7 @@
     private readonly Dictionary<TaskPostDTO, string> OriginalRowNumbers = new(ReferenceEqualityComparer.Instance);
     private ExcelImportLayout? SuggestedLayout;
     private string PreviewSearchText = string.Empty;
+    private string _fullTextDraft = string.Empty;
     private ImportPreviewTypeFilter PreviewTypeFilter = ImportPreviewTypeFilter.All;
     private string TreeViewMode = "all";
     private string DisplayMode = "overview";
@@ -490,8 +490,8 @@
     private bool WarningsOnly;
     private int MaxTreeDepth => FlattenTasksWithDepth(Sections).Select(x => x.Depth).DefaultIfEmpty(0).Max();
     private int MaxTreeLevel => Math.Max(1, MaxTreeDepth + 1);
-    private int CodeTreeColumnWidthPx => Math.Clamp((MaxTreeDepth * 16) + 128, 132, 260);
-    private string CodeColumnStyle => IsTreeView ? $"width:{CodeTreeColumnWidthPx}px" : "width:104px";
+    private int CodeTreeColumnWidthPx => Math.Clamp((MaxTreeDepth * 16) + 108, 112, 240);
+    private string CodeColumnStyle => IsTreeView ? $"width:{CodeTreeColumnWidthPx}px" : "width:84px";
     private bool HasWarningRows => FlattenTasksWithDepth(Sections).Any(row => GetTaskDiagnostics(row.Task, row.Depth).Any(x => x.Kind == DiagnosticKind.Warning));
     private bool HasActivePreviewFilter =>
         !string.IsNullOrWhiteSpace(PreviewSearchText)
@@ -555,20 +555,30 @@
 
     private void ShowFullText(TaskPostDTO task)
     {
-        string text = string.IsNullOrWhiteSpace(task.Name)
-            ? T("(Tomt)", "(Empty)")
-            : task.Name;
+        string rowNr = GetOriginalRowNumber(task);
+        string title = string.IsNullOrWhiteSpace(rowNr)
+            ? T("Namn", "Name")
+            : T($"Namn – Radnr {rowNr}", $"Name – Row {rowNr}");
+
+        _fullTextDraft = task.Name ?? string.Empty;
+
+        void ApplyDraft()
+        {
+            OnNameChanged(task, _fullTextDraft);
+        }
 
         var model = new DialogModel
         {
             Size = DialogSize.Medium,
             State = MhdState.Primary,
-            Title = T("Fullständig text", "Full text"),
+            Title = title,
             Content = builder =>
             {
-                builder.OpenElement(0, "div");
-                builder.AddAttribute(1, "class", "max-h-[60vh] overflow-auto whitespace-pre-wrap break-words text-sm leading-6 text-slate-700 dark:text-slate-200");
-                builder.AddContent(2, text);
+                builder.OpenElement(0, "textarea");
+                builder.AddAttribute(1, "class", "h-40 w-full resize-y rounded-lg border border-slate-300 p-2 text-sm leading-relaxed text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:focus:border-blue-400 dark:focus:ring-blue-400/20");
+                builder.AddAttribute(2, "value", _fullTextDraft);
+                builder.AddAttribute(3, "oninput", EventCallback.Factory.Create<ChangeEventArgs>(this,
+                    args => { _fullTextDraft = args.Value?.ToString() ?? string.Empty; }));
                 builder.CloseElement();
             },
             CloseOnOverlayClick = false,
@@ -576,9 +586,22 @@
             {
                 new DialogButtonModel
                 {
-                    Text = T("Stäng", "Close"),
+                    Text = T("Spara", "Save"),
                     State = MhdState.Primary,
                     IsPrimary = true,
+                    OnClick = EventCallback.Factory.Create(this, ApplyDraft)
+                },
+                new DialogButtonModel
+                {
+                    Text = T("Spara och stäng", "Save and close"),
+                    State = MhdState.Success,
+                    IsPrimary = true,
+                    OnClick = EventCallback.Factory.Create(this, () => { ApplyDraft(); Modal.Close(); })
+                },
+                new DialogButtonModel
+                {
+                    Text = T("Avbryt", "Cancel"),
+                    State = MhdState.Neutral,
                     OnClick = EventCallback.Factory.Create(this, () => Modal.Close())
                 }
             }
