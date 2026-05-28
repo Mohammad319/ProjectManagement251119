@@ -18,12 +18,12 @@ namespace ProjectManagement.Client.Services.Folder
         public FolderState State => folderState;
 
         private bool _isLoaded;
-        public bool IsVisible { get; set; } = true;
+        public bool ShowArchived { get; private set; }
 
         public async Task EnsureLoadedAsync()
         {
             if (_isLoaded) return;
-            await LoadFoldersAsync(() => folderRepo.GetByVisible(IsVisible));
+            await LoadFoldersAsync(() => folderRepo.GetByVisible(ShowArchived));
         }
 
         public async Task LoadFoldersAsync(Func<Task<List<FolderMVVM>>> loadFunc)
@@ -40,6 +40,12 @@ namespace ProjectManagement.Client.Services.Folder
             var existing = folderState.FoldersList.FirstOrDefault(f => f.Id == folder.Id);
             if (existing == null)
             {
+                if (!ShowArchived && !folder.IsVisible)
+                {
+                    dialogService.Close();
+                    return;
+                }
+
                 int newOrder = folderState.FoldersList.Any()
                     ? folderState.FoldersList.Max(f => f.Order) + 100
                     : 0;
@@ -49,15 +55,24 @@ namespace ProjectManagement.Client.Services.Folder
                     Id = folder.Id,
                     Name = folder.Name,
                     Color = folder.Color,
-                    Order = newOrder
+                    Order = newOrder,
+                    IsVisible = folder.IsVisible
                 };
 
                 folderState.AddFolder(newFolder);
             }
             else
             {
+                if (!ShowArchived && !folder.IsVisible)
+                {
+                    folderState.RemoveFolder(existing);
+                    dialogService.Close();
+                    return;
+                }
+
                 existing.Name = folder.Name;
                 existing.Color = folder.Color;
+                existing.IsVisible = folder.IsVisible;
                 folderState.UpdateFolder(existing);
             }
 
@@ -83,13 +98,15 @@ namespace ProjectManagement.Client.Services.Folder
         }
 
         public Task LoadPrivateAndGroupFoldersAsync() =>
-            LoadFoldersAsync(() => folderRepo.GetByVisible(IsVisible));
+            LoadFoldersAsync(() => folderRepo.GetByVisible(ShowArchived));
 
-        public async Task LoadHiddenVisibleFoldersAsync()
+        public async Task ToggleArchivedFoldersAsync()
         {
-            IsVisible = !IsVisible;
-            await LoadFoldersAsync(() => folderRepo.GetByVisible(IsVisible));
+            ToggleArchivedFilter();
+            await LoadFoldersAsync(() => folderRepo.GetByVisible(ShowArchived));
         }
+
+        public void ToggleArchivedFilter() => ShowArchived = !ShowArchived;
 
         public Task LoadFoldersByDepartmentAsync(string departmentId)
         {
@@ -99,7 +116,7 @@ namespace ProjectManagement.Client.Services.Folder
                 return Task.CompletedTask;
             }
 
-            return LoadFoldersAsync(() => folderRepo.GetByDepartmentAsync(id));
+            return LoadFoldersAsync(() => folderRepo.GetByDepartmentAsync(id, ShowArchived));
         }
 
         public async Task SetProjectsToFolder(FolderMVVM folder)
@@ -109,8 +126,8 @@ namespace ProjectManagement.Client.Services.Folder
             if (!folder.ProjectsLoaded)
             {
                 folder.Projects = folderState.OtherDepartment
-                    ? await projectRepo.GetOtherDepartmentAsync(folder.Id)
-                    : await projectRepo.GetByFolderIdAsync(folder.Id);
+                    ? await projectRepo.GetOtherDepartmentAsync(folder.Id, ShowArchived)
+                    : await projectRepo.GetByFolderIdAsync(folder.Id, ShowArchived);
                 folder.ProjectsLoaded = true;
             }
 

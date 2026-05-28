@@ -1,4 +1,4 @@
-﻿@using BlazorMHD.UI.Components.Navigation.Tabs
+@using BlazorMHD.UI.Components.Navigation.Tabs
 @using Microsoft.AspNetCore.Components.Forms
 @using ProjectManagement.Client.Shared.SharedComponent.Contact
 @using ProjectManagement.Shared.Base.Project
@@ -20,209 +20,208 @@ else if (ProjectUpdate is not null)
         <DataAnnotationsValidator />
         <FormValidationSummary />
 
-        <!-- التابات -->
-        <MhdTabs Items="@TabItems"
-                 Mode="MhdTabMode.Horizontal"
-                 Size="MhdSize.Sm"
-                 @bind-ActiveKey="ActiveKey" />
-
-        <!-- محتوى كل تبويب -->
-        @if (Part == 1)
-        {
-            <div class="mt-2 grid grid-cols-2 gap-3">
-                <div>
-                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.code</label>
-                    <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@ProjectUpdate.Code" />
-                </div>
-                <div>
-                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.name</label>
-                    <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@ProjectUpdate.Name" />
-                </div>
-                <div>
-                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.projectType</label>
-                    <InputSelect @bind-Value="ProjectUpdate.TypeId" class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
-                        <option></option>
-                        @if (Config?.Types != null)
-                        {
-                            foreach (var t in Config.Types)
-                            {
-                                <option value="@t.Id">@t.Name</option>
-                            }
-                        }
-                    </InputSelect>
-                </div>
-            </div>
-        }
-        else if (Part == 2)
-        {
-            <div class="mt-2 grid grid-cols-2 gap-3">
-                <div>
-                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.projectContract</label>
-                    <InputSelect @bind-Value="ProjectUpdate.ContractId" class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
-                        <option></option>
-                        @if (Config?.Contracts != null)
-                        {
-                            foreach (var t in Config.Contracts)
-                            {
-                                <option value="@t.Id">@t.Name</option>
-                            }
-                        }
-                    </InputSelect>
-                </div>
-                <div>
-                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.projectCompensation</label>
-                    <InputSelect @bind-Value="ProjectUpdate.CompensationId" class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
-                        <option></option>
-                        @if (Config?.Compensations != null)
-                        {
-                            foreach (var t in Config.Compensations)
-                            {
-                                <option value="@t.Id">@t.Name</option>
-                            }
-                        }
-                    </InputSelect>
-                </div>
-                <div>
-                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.procurement</label>
-                    <InputSelect @bind-Value="ProjectUpdate.Procurement" class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
-                        <option value="@Procurement.A">@Procurement.A</option>
-                        <option value="@Procurement.B">@Procurement.B</option>
-                    </InputSelect>
-                </div>
-                <div>
-                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.procurementMethods</label>
-                    <InputSelect @bind-Value="ProjectUpdate.ProcurementMethodsId" class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
-                        <option></option>
-                        @if (Config?.Methods != null)
-                        {
-                            foreach (var t in Config.Methods)
-                            {
-                                <option value="@t.Id">@t.Name</option>
-                            }
-                        }
-                    </InputSelect>
-                </div>
-            </div>
-        }
-        else if (Part == 3)
-        {
-            <div class="mt-2 grid grid-cols-2 gap-3">
-                @for (int i = 0; i < ProjectUpdate.Responsibles.Count; i++)
-                {
-                    <div>
-                        <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.responsible</label>
-                        <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                                   @bind-Value="@ProjectUpdate.Responsibles[i]" />
-                    </div>
-                }
-
-                <div>
-                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.inspector</label>
-                    <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@ProjectUpdate.Inspector" />
-                </div>
-                <div>
-                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@ResourceApp.organisation</label>
-                    <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@ProjectUpdate.Supervisor" />
-                </div>
-            </div>
-        }
-        else if (Part == 4)
-        {
-            <div class="mt-2 grid grid-cols-2 gap-3">
-                @if (Config?.Organisation != null)
-                {
-                    <div>
-                        <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@ResourceApp.organisation</label>
-                        <InputSelect @bind-Value="ProjectUpdate.OrganisationId" class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
-                            <option></option>
-                            @foreach (var t in Config.Organisation)
-                            {
-                                <option value="@t.Id">@t.Name</option>
-                            }
-                        </InputSelect>
-                    </div>
-                }
-
-                <div>
-                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.developer</label>
-                    <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@ProjectUpdate.Developer" />
-                </div>
-                <div>
-                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@ResourceLoc.clientsProjectmanager</label>
-                    <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@ProjectUpdate.ClientsManager" />
-                </div>
-                <div>
-                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@ResourceLoc.designer</label>
-                    <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@ProjectUpdate.Designer" />
-                </div>
-                <div class="col-span-2">
-                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.overviewInfoProject</label>
-                    <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@ProjectUpdate.OverviewInfoProject" />
-                </div>
-            </div>
-        }
-        else if (Part == 5)
-        {
-            <div class="mt-2 grid grid-cols-2 gap-3">
-                <div>
-                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.startDate</label>
-                    <InputDate class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@ProjectUpdate.StartDate" />
-                </div>
-                <div>
-                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.endDate</label>
-                    <InputDate class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@ProjectUpdate.EndDate" />
-                </div>
-                <div>
-                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.tenderDeadline</label>
-                    <InputDate class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@ProjectUpdate.TenderDeadline" />
-                </div>
-                <div>
-                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.tenderQA</label>
-                    <InputDate class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@ProjectUpdate.TenderQA" />
-                </div>
-            </div>
-        }
-        else if (Part == 6)
-        {
-            <div class="mt-2 grid grid-cols-2 gap-3">
-                <div class="flex items-center gap-2 self-end">
-                    <InputCheckbox class="h-4 w-4 rounded text-blue-600 focus:ring-blue-500 dark:text-blue-400" @bind-Value="@ProjectUpdate.IsVisible" />
-                    <label class="select-none text-sm dark:text-white">@ResourceApp.visible</label>
-                </div>
-
-                <div class="flex items-end justify-start">
-                    <button type="button" class="rounded border border-green-600 px-2 py-1 text-green-600 transition hover:bg-green-600 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-400 dark:hover:text-white"
-                            @onclick="()=>ProjectUpdate.Notes.Add(string.Empty)">
-                        @AppLoc[LocalizerConst.New, ResourceLoc.description]
-                    </button>
-                </div>
-
-                @for (int i = 0; i < ProjectUpdate.Notes.Count; i++)
-                {
-                    var index = i;
-
-                    <div class="col-span-2 flex items-start gap-2">
-                        <button type="button" class="mt-2 inline-flex items-center justify-center rounded-md border border-red-500 px-2 py-1 text-sm text-red-500 transition hover:bg-red-500 hover:text-white"
-                                @onclick="() => ProjectUpdate.Notes.RemoveAt(index)">
-                            @((MarkupString)Icons.DeleteSVG)
-                        </button>
-
-                        <div class="min-w-0 flex-1">
-                            <textarea class="min-h-28 w-full resize-y rounded border border-gray-300 px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                                          @bind="ProjectUpdate.Notes[index]">
-                        </textarea>
-                            </div>
+        <div class="max-h-[72vh] overflow-y-auto pr-1">
+            <div class="grid grid-cols-1 gap-3 xl:grid-cols-2">
+                <section class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                    <h3 class="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">@CalcResource.project</h3>
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div>
+                            <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.code</label>
+                            <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@ProjectUpdate.Code" />
                         </div>
-                    }
+                        <div>
+                            <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.name</label>
+                            <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@ProjectUpdate.Name" />
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.projectType</label>
+                            <InputSelect @bind-Value="ProjectUpdate.TypeId" class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
+                                <option></option>
+                                @if (Config?.Types != null)
+                                {
+                                    foreach (var t in Config.Types)
+                                    {
+                                        <option value="@t.Id">@t.Name</option>
+                                    }
+                                }
+                            </InputSelect>
+                        </div>
+                    </div>
+                </section>
 
-                </div>
-            }
-        else if (Part == 7)
-            {
-                <div class="mt-2">
+                <section class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                    <h3 class="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">@CalcResource.procurement</h3>
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div>
+                            <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.projectContract</label>
+                            <InputSelect @bind-Value="ProjectUpdate.ContractId" class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
+                                <option></option>
+                                @if (Config?.Contracts != null)
+                                {
+                                    foreach (var t in Config.Contracts)
+                                    {
+                                        <option value="@t.Id">@t.Name</option>
+                                    }
+                                }
+                            </InputSelect>
+                        </div>
+                        <div>
+                            <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.projectCompensation</label>
+                            <InputSelect @bind-Value="ProjectUpdate.CompensationId" class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
+                                <option></option>
+                                @if (Config?.Compensations != null)
+                                {
+                                    foreach (var t in Config.Compensations)
+                                    {
+                                        <option value="@t.Id">@t.Name</option>
+                                    }
+                                }
+                            </InputSelect>
+                        </div>
+                        <div>
+                            <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.procurement</label>
+                            <InputSelect @bind-Value="ProjectUpdate.Procurement" class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
+                                <option value="@Procurement.A">@Procurement.A</option>
+                                <option value="@Procurement.B">@Procurement.B</option>
+                            </InputSelect>
+                        </div>
+                        <div>
+                            <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.procurementMethods</label>
+                            <InputSelect @bind-Value="ProjectUpdate.ProcurementMethodsId" class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
+                                <option></option>
+                                @if (Config?.Methods != null)
+                                {
+                                    foreach (var t in Config.Methods)
+                                    {
+                                        <option value="@t.Id">@t.Name</option>
+                                    }
+                                }
+                            </InputSelect>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                    <h3 class="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">@ResourceApp.organisation</h3>
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        @for (int i = 0; i < ProjectUpdate.Responsibles.Count; i++)
+                        {
+                            <div>
+                                <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.responsible</label>
+                                <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                                           @bind-Value="@ProjectUpdate.Responsibles[i]" />
+                            </div>
+                        }
+
+                        <div>
+                            <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.inspector</label>
+                            <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@ProjectUpdate.Inspector" />
+                        </div>
+                        <div>
+                            <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@ResourceApp.organisation</label>
+                            <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@ProjectUpdate.Supervisor" />
+                        </div>
+                    </div>
+                </section>
+
+                <section class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                    <h3 class="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">@ResourceIdentity.customerGroup</h3>
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        @if (Config?.Organisation != null)
+                        {
+                            <div>
+                                <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@ResourceApp.organisation</label>
+                                <InputSelect @bind-Value="ProjectUpdate.OrganisationId" class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
+                                    <option></option>
+                                    @foreach (var t in Config.Organisation)
+                                    {
+                                        <option value="@t.Id">@t.Name</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                        }
+
+                        <div>
+                            <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.developer</label>
+                            <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@ProjectUpdate.Developer" />
+                        </div>
+                        <div>
+                            <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@ResourceLoc.clientsProjectmanager</label>
+                            <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@ProjectUpdate.ClientsManager" />
+                        </div>
+                        <div>
+                            <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@ResourceLoc.designer</label>
+                            <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@ProjectUpdate.Designer" />
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.overviewInfoProject</label>
+                            <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@ProjectUpdate.OverviewInfoProject" />
+                        </div>
+                    </div>
+                </section>
+
+                <section class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                    <h3 class="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">@ResourceApp.date</h3>
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div>
+                            <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.startDate</label>
+                            <InputDate class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@ProjectUpdate.StartDate" />
+                        </div>
+                        <div>
+                            <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.endDate</label>
+                            <InputDate class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@ProjectUpdate.EndDate" />
+                        </div>
+                        <div>
+                            <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.tenderDeadline</label>
+                            <InputDate class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@ProjectUpdate.TenderDeadline" />
+                        </div>
+                        <div>
+                            <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.tenderQA</label>
+                            <InputDate class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@ProjectUpdate.TenderQA" />
+                        </div>
+                    </div>
+                </section>
+
+                <section class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                    <h3 class="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">@CalcResource.note</h3>
+                    <div class="grid grid-cols-1 gap-3">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <div class="flex items-center gap-2">
+                                <InputCheckbox class="h-4 w-4 rounded text-blue-600 focus:ring-blue-500 dark:text-blue-400" @bind-Value="@ProjectUpdate.IsVisible" />
+                                <label class="select-none text-sm dark:text-white">@(ProjectUpdate.IsVisible ? "Aktiv" : "Arkiverad")</label>
+                            </div>
+
+                            <button type="button" class="rounded border border-green-600 px-2 py-1 text-green-600 transition hover:bg-green-600 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-400 dark:hover:text-white"
+                                    @onclick="()=>ProjectUpdate.Notes.Add(string.Empty)">
+                                @AppLoc[LocalizerConst.New, ResourceLoc.description]
+                            </button>
+                        </div>
+
+                        @for (int i = 0; i < ProjectUpdate.Notes.Count; i++)
+                        {
+                            var index = i;
+
+                            <div class="flex items-start gap-2">
+                                <button type="button" class="mt-2 inline-flex items-center justify-center rounded-md border border-red-500 px-2 py-1 text-sm text-red-500 transition hover:bg-red-500 hover:text-white"
+                                        @onclick="() => ProjectUpdate.Notes.RemoveAt(index)">
+                                    @((MarkupString)Icons.DeleteSVG)
+                                </button>
+
+                                <div class="min-w-0 flex-1">
+                                    <textarea class="min-h-28 w-full resize-y rounded border border-gray-300 px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                                              @bind="ProjectUpdate.Notes[index]">
+                                    </textarea>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </section>
+
+                <section class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900 xl:col-span-2">
+                    <h3 class="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">@ResourceIdentity.contact</h3>
                     <ContactsUI Contacts="ProjectUpdate.Contacts" />
-                </div>
-            }
-        </EditForm>
-
-    }
+                </section>
+            </div>
+        </div>
+    </EditForm>
+}

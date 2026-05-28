@@ -15,13 +15,13 @@ namespace ProjectManagement.Client.Shared.Repositories.Project.Implement
     {
         static string ProjectsURLBase => "api/v1/projects/";
 
-        public async Task<List<ListProjectMVVM>> GetByFolderIdAsync(Guid folderId, bool IsVisible = true) =>
-            (await _httpRepository.GetAsync<List<ListProjectDTO>>(ProjectsURLBase + URLConst.Project.GetByFolderDepartmentId + $"/{folderId}?isVisible={IsVisible}"))
+        public async Task<List<ListProjectMVVM>> GetByFolderIdAsync(Guid folderId, bool includeArchived = false) =>
+            (await _httpRepository.GetAsync<List<ListProjectDTO>>(ProjectsURLBase + URLConst.Project.GetByFolderDepartmentId + $"/{folderId}?includeArchived={includeArchived}"))
                 .Select(x => x.ToListProjectMVVM())
                 .OrderByDescending(x => x.Order)
                 .ToList();
-        public async Task<List<ListProjectMVVM>> GetOtherDepartmentAsync(Guid folderId) =>
-            (await _httpRepository.GetAsync<List<ListProjectDTO>>(ProjectsURLBase + URLConst.Project.GetProjectsOtherDepartment + $"/{folderId}"))
+        public async Task<List<ListProjectMVVM>> GetOtherDepartmentAsync(Guid folderId, bool includeArchived = false) =>
+            (await _httpRepository.GetAsync<List<ListProjectDTO>>(ProjectsURLBase + URLConst.Project.GetProjectsOtherDepartment + $"/{folderId}?includeArchived={includeArchived}"))
                 .Select(x => x.ToListProjectMVVM())
                 .OrderByDescending(x => x.Order)
                 .ToList();
@@ -56,6 +56,14 @@ namespace ProjectManagement.Client.Shared.Repositories.Project.Implement
         public async Task<bool> UpdateAsync(Guid id, PostProjectDTO model)
         {
             return await _httpRepository.PutAsync(model, ProjectsURLBase + id);
+        }
+        public async Task<bool> MoveAsync(Guid id, Guid targetFolderId)
+        {
+            return await _httpRepository.PutAsync(new { }, ProjectsURLBase + URLConst.Project.Move + $"/{id}/{targetFolderId}");
+        }
+        public async Task<Guid> CopyAsync(Guid targetFolderId, Guid projectId, bool includeCalculations)
+        {
+            return await _httpRepository.GetAsync<Guid>(ProjectsURLBase + URLConst.Project.Copy + $"/{targetFolderId}/{projectId}?includeCalculations={includeCalculations}");
         }
         public async Task<bool> DeleteAsync(Guid id)
         {

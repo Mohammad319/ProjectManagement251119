@@ -210,5 +210,6 @@ namespace ProjectManagement.Shared.DTO.Project
         public DateTime EndDate { get; set; } = DateTime.Now.AddMonths(2);
         public DateTime TenderDeadline { get; set; } = DateTime.Now;
         public DateTime TenderQA { get; set; } = DateTime.Now;
+        public bool IsVisible { get; set; } = true;
     }
 }

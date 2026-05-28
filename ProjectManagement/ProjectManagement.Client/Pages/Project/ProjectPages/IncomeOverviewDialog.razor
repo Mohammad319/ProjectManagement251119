@@ -1,0 +1,312 @@
+@using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Client.Shared.MVVM.Folder
+@using ProjectManagement.Shared.Base.Calculation
+@using ProjectManagement.Shared.DTO.Calculation
+
+@inherits AppComponentBase
+
+<div class="space-y-3 text-slate-800 dark:text-slate-100">
+    <div class="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-200">
+        Intäktsöversikten läser befintlig inkomst från kalkylernas Inkomst-tab. Manuell projektinkomst finns inte i nuvarande listdata och räknas därför inte i detta steg.
+    </div>
+
+    @if (_isLoading)
+    {
+        <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
+    }
+    else
+    {
+        <div class="grid grid-cols-1 gap-2 rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:grid-cols-3">
+            <div>
+                <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Inkomstår</label>
+                <select class="@SelectClass" @bind="_selectedYear">
+                    <option value="">Alla år</option>
+                    @foreach (var year in AvailableYears)
+                    {
+                        <option value="@year.ToString()">@year</option>
+                    }
+                </select>
+            </div>
+            <div>
+                <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Kvartal</label>
+                <select class="@SelectClass" @bind="_selectedQuarter">
+                    <option value="0">Alla kvartal</option>
+                    <option value="1">Q1</option>
+                    <option value="2">Q2</option>
+                    <option value="3">Q3</option>
+                    <option value="4">Q4</option>
+                </select>
+            </div>
+            <div>
+                <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Status</label>
+                <select class="@SelectClass" @bind="_selectedStatus">
+                    <option value="">Alla statusar</option>
+                    @foreach (var status in AvailableStatuses)
+                    {
+                        <option value="@status">@status</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 md:grid-cols-5">
+            <div class="@TotalCardClass">
+                <span>Q1</span>
+                <strong>@FormatMoney(TotalQ1)</strong>
+            </div>
+            <div class="@TotalCardClass">
+                <span>Q2</span>
+                <strong>@FormatMoney(TotalQ2)</strong>
+            </div>
+            <div class="@TotalCardClass">
+                <span>Q3</span>
+                <strong>@FormatMoney(TotalQ3)</strong>
+            </div>
+            <div class="@TotalCardClass">
+                <span>Q4</span>
+                <strong>@FormatMoney(TotalQ4)</strong>
+            </div>
+            <div class="@TotalCardClass">
+                <span>Årssumma</span>
+                <strong>@FormatMoney(TotalYear)</strong>
+            </div>
+        </div>
+
+        @if (FilteredRows.Any())
+        {
+            <div class="max-h-[58vh] overflow-auto rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
+                <table class="min-w-full table-auto text-left text-xs">
+                    <thead class="sticky top-0 z-10 bg-slate-50 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-900 dark:text-slate-400">
+                        <tr>
+                            <th class="whitespace-nowrap px-3 py-2">Räkna med</th>
+                            <th class="min-w-44 px-3 py-2">Projekt</th>
+                            <th class="min-w-44 px-3 py-2">Kalkyl</th>
+                            <th class="whitespace-nowrap px-3 py-2">Status</th>
+                            <th class="whitespace-nowrap px-3 py-2">Inkomstkälla</th>
+                            <th class="whitespace-nowrap px-3 py-2">År</th>
+                            <th class="whitespace-nowrap px-3 py-2 text-right">Q1</th>
+                            <th class="whitespace-nowrap px-3 py-2 text-right">Q2</th>
+                            <th class="whitespace-nowrap px-3 py-2 text-right">Q3</th>
+                            <th class="whitespace-nowrap px-3 py-2 text-right">Q4</th>
+                            <th class="whitespace-nowrap px-3 py-2 text-right">Årssumma</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                        @foreach (var row in FilteredRows)
+                        {
+                            <tr class="transition hover:bg-slate-50 dark:hover:bg-slate-900/80">
+                                <td class="px-3 py-2">
+                                    <input type="checkbox"
+                                           class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800"
+                                           @bind="row.Include" />
+                                </td>
+                                <td class="max-w-64 px-3 py-2">
+                                    <span class="block truncate font-semibold text-slate-800 dark:text-slate-100" title="@row.ProjectName">@row.ProjectName</span>
+                                </td>
+                                <td class="max-w-64 px-3 py-2">
+                                    <span class="block truncate text-slate-700 dark:text-slate-200" title="@row.CalculationName">@row.CalculationName</span>
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-2">
+                                    <span class="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-semibold text-sky-700 dark:bg-sky-950/50 dark:text-sky-300">
+                                        @row.Status
+                                    </span>
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@row.Source</td>
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@row.Year</td>
+                                <td class="whitespace-nowrap px-3 py-2 text-right">@FormatMoney(row.Q1)</td>
+                                <td class="whitespace-nowrap px-3 py-2 text-right">@FormatMoney(row.Q2)</td>
+                                <td class="whitespace-nowrap px-3 py-2 text-right">@FormatMoney(row.Q3)</td>
+                                <td class="whitespace-nowrap px-3 py-2 text-right">@FormatMoney(row.Q4)</td>
+                                <td class="whitespace-nowrap px-3 py-2 text-right font-semibold">@FormatMoney(GetFilteredYearTotal(row))</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
+                Ingen inkomst matchar de valda filtren.
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public FolderMVVM? FolderScope { get; set; }
+    [Parameter] public ListProjectMVVM? ProjectScope { get; set; }
+
+    private bool _isLoading = true;
+    private string _selectedYear = string.Empty;
+    private int _selectedQuarter;
+    private string _selectedStatus = string.Empty;
+    private readonly List<IncomeOverviewRow> _rows = [];
+
+    private const string SelectClass = "w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-800 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100";
+    private const string TotalCardClass = "flex flex-col gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-500 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400 [&_strong]:text-base [&_strong]:text-slate-900 dark:[&_strong]:text-slate-100";
+
+    private IEnumerable<int> AvailableYears =>
+        _rows.Select(row => row.Year).Distinct().OrderBy(year => year);
+
+    private IEnumerable<string> AvailableStatuses =>
+        _rows.Select(row => row.Status)
+            .Where(status => !string.IsNullOrWhiteSpace(status))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(status => status);
+
+    private IEnumerable<IncomeOverviewRow> FilteredRows => _rows.Where(MatchesFilters).ToList();
+    private IEnumerable<IncomeOverviewRow> IncludedRows => FilteredRows.Where(row => row.Include);
+
+    private decimal TotalQ1 => _selectedQuarter is 0 or 1 ? IncludedRows.Sum(row => row.Q1) : 0m;
+    private decimal TotalQ2 => _selectedQuarter is 0 or 2 ? IncludedRows.Sum(row => row.Q2) : 0m;
+    private decimal TotalQ3 => _selectedQuarter is 0 or 3 ? IncludedRows.Sum(row => row.Q3) : 0m;
+    private decimal TotalQ4 => _selectedQuarter is 0 or 4 ? IncludedRows.Sum(row => row.Q4) : 0m;
+    private decimal TotalYear => TotalQ1 + TotalQ2 + TotalQ3 + TotalQ4;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRowsAsync();
+        _isLoading = false;
+    }
+
+    private async Task LoadRowsAsync()
+    {
+        foreach (var (folder, project) in await GetProjectsAsync())
+        {
+            var calculations = await GetCalculationsAsync(project);
+            foreach (var calculation in calculations)
+            {
+                CalculationPostDTO? post;
+                try
+                {
+                    post = await Repo.Calculation.GetPostAsync(calculation.Id);
+                }
+                catch (Exception ex)
+                {
+                    await ClientLog.ErrorAsync("Loading calculation income for overview failed", ex: ex);
+                    continue;
+                }
+
+                AddCalculationIncomeRows(folder, project, calculation, post);
+            }
+        }
+    }
+
+    private async Task<List<(FolderMVVM Folder, ListProjectMVVM Project)>> GetProjectsAsync()
+    {
+        if (ProjectScope is not null)
+        {
+            var folder = FolderScope ?? Folder.State.FolderSelected;
+            return folder is null ? [] : [(folder, ProjectScope)];
+        }
+
+        if (FolderScope is null)
+            return [];
+
+        await Folder.SetProjectsToFolder(FolderScope);
+        return FolderScope.Projects
+            .Select(project => (FolderScope, project))
+            .ToList();
+    }
+
+    private async Task<List<ListCalculationMVVM>> GetCalculationsAsync(ListProjectMVVM project)
+    {
+        if (!project.CalculationsLoaded)
+        {
+            project.Calculations = Folder.State.OtherDepartment
+                ? await Repo.Calculation.GetShareCalculationsAsync(project.Id)
+                : await Repo.Calculation.GetAsync(project.Id, UoWService.Folder.ShowArchived);
+
+            project.CalculationsLoaded = true;
+        }
+
+        return project.Calculations ?? [];
+    }
+
+    private void AddCalculationIncomeRows(
+        FolderMVVM folder,
+        ListProjectMVVM project,
+        ListCalculationMVVM calculation,
+        CalculationPostDTO post)
+    {
+        var minYear = GetIncomeStartYear(calculation, post);
+        var status = string.IsNullOrWhiteSpace(calculation.Status) ? "Utkast" : calculation.Status;
+
+        foreach (var income in post.Income ?? [])
+        {
+            if (income.Year <= 0 || income.Year < minYear || !HasIncome(income))
+                continue;
+
+            _rows.Add(new IncomeOverviewRow
+            {
+                ProjectName = project.Name,
+                CalculationName = calculation.Name,
+                Status = status,
+                Source = "Från kalkyler",
+                Year = income.Year,
+                Q1 = income.Q1,
+                Q2 = income.Q2,
+                Q3 = income.Q3,
+                Q4 = income.Q4
+            });
+        }
+    }
+
+    private static int GetIncomeStartYear(ListCalculationMVVM calculation, CalculationPostDTO post)
+    {
+        var start = post.StartDate == default ? calculation.StartDate : post.StartDate;
+        return start == default ? DateTime.Today.Year : start.Year;
+    }
+
+    private static bool HasIncome(IncomeBase income) =>
+        income.Q1 != 0 || income.Q2 != 0 || income.Q3 != 0 || income.Q4 != 0;
+
+    private bool MatchesFilters(IncomeOverviewRow row)
+    {
+        if (!string.IsNullOrWhiteSpace(_selectedYear) &&
+            int.TryParse(_selectedYear, out var year) &&
+            row.Year != year)
+            return false;
+
+        if (!string.IsNullOrWhiteSpace(_selectedStatus) &&
+            !string.Equals(row.Status, _selectedStatus, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        return _selectedQuarter switch
+        {
+            1 => row.Q1 != 0,
+            2 => row.Q2 != 0,
+            3 => row.Q3 != 0,
+            4 => row.Q4 != 0,
+            _ => true
+        };
+    }
+
+    private decimal GetFilteredYearTotal(IncomeOverviewRow row) =>
+        _selectedQuarter switch
+        {
+            1 => row.Q1,
+            2 => row.Q2,
+            3 => row.Q3,
+            4 => row.Q4,
+            _ => row.Q1 + row.Q2 + row.Q3 + row.Q4
+        };
+
+    private static string FormatMoney(decimal value) =>
+        value.ToString("N0");
+
+    private sealed class IncomeOverviewRow
+    {
+        public bool Include { get; set; } = true;
+        public string ProjectName { get; set; } = string.Empty;
+        public string CalculationName { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public string Source { get; set; } = string.Empty;
+        public int Year { get; set; }
+        public decimal Q1 { get; set; }
+        public decimal Q2 { get; set; }
+        public decimal Q3 { get; set; }
+        public decimal Q4 { get; set; }
+    }
+}

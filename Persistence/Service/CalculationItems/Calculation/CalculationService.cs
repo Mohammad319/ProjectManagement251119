@@ -1,5 +1,6 @@
 using Application.Feature.Calculation.Calculation;
 using Application.Interfaces;
+using Application.Mapping.Calculation;
 using Domain.Entities.Calculation;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Context;
@@ -118,6 +119,7 @@ namespace Persistence.Service.CalculationItems.Calculation
             Guid projectId,
             int? departmentId,
             int userId,
+            bool allowCrossDepartment,
             CancellationToken cancellationToken = default)
         {
             await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
@@ -140,10 +142,27 @@ namespace Persistence.Service.CalculationItems.Calculation
             if (!targetProjectDepartmentId.HasValue)
                 return 0;
 
-            if (departmentId.HasValue && targetProjectDepartmentId.Value != departmentId.Value)
+            if (departmentId.HasValue && targetProjectDepartmentId.Value != departmentId.Value && !allowCrossDepartment)
                 return 0;
 
             var copy = CalculationEntity.CreateCopy(original, projectId, userId);
+
+            var existingNames = await db.Calculations
+                .AsNoTracking()
+                .Where(x => x.ProjectId == projectId)
+                .Select(x => x.Name)
+                .ToListAsync(cancellationToken);
+
+            var existingCodes = await db.Calculations
+                .AsNoTracking()
+                .Where(x => x.ProjectId == projectId)
+                .Select(x => x.Code)
+                .ToListAsync(cancellationToken);
+
+            var copyDto = original.ToPostDto();
+            copyDto.Name = EnsureUniqueName(copyDto.Name, existingNames);
+            copyDto.Code = EnsureUniqueCode(copyDto.Code, existingCodes);
+            copy.Update(copyDto);
             copy.AssignDepartment(targetProjectDepartmentId.Value);
 
             var maxOrder = await db.Calculations
@@ -156,6 +175,51 @@ namespace Persistence.Service.CalculationItems.Calculation
             await db.SaveChangesAsync(cancellationToken);
 
             return copy.Id;
+        }
+
+        public async Task<bool> MoveAsync(
+            int id,
+            Guid projectId,
+            int? departmentId,
+            int userId,
+            bool allowCrossDepartment,
+            CancellationToken cancellationToken = default)
+        {
+            await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
+
+            var calculation = await GetEditableCalculationAsync(db, id, departmentId, cancellationToken);
+            if (calculation is null)
+                return false;
+
+            var targetProjectDepartmentId = await db.Projects
+                .AsNoTracking()
+                .Where(p => p.Id == projectId)
+                .Select(p => (int?)p.Folder.DepartmentId)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (!targetProjectDepartmentId.HasValue)
+                return false;
+
+            if (departmentId.HasValue && targetProjectDepartmentId.Value != departmentId.Value && !allowCrossDepartment)
+                return false;
+
+            var maxOrder = await db.Calculations
+                .Where(x => x.ProjectId == projectId)
+                .MaxAsync(x => (int?)x.SortOrder, cancellationToken);
+
+            calculation.MoveToProject(projectId, targetProjectDepartmentId.Value);
+            calculation.UpdateOrder((maxOrder ?? 0) + 100);
+            Touch(calculation, userId);
+
+            await db.SaveChangesAsync(cancellationToken);
+
+            await notification.SendNotificationAsync(
+                calculation.Id.ToString(),
+                ObjectTypHub.calculation,
+                OperationType.Update,
+                BuildPageDto(calculation));
+
+            return true;
         }
 
         public async Task<bool> NewOrderAsync(
@@ -385,6 +449,31 @@ namespace Persistence.Service.CalculationItems.Calculation
 
         private static string? NormalizeCode(string? code)
             => string.IsNullOrWhiteSpace(code) ? null : code.Trim();
+
+        private static string EnsureUniqueName(string name, IEnumerable<string> existingNames)
+        {
+            var existing = existingNames.ToHashSet(StringComparer.CurrentCultureIgnoreCase);
+            if (!existing.Contains(name))
+                return name;
+
+            var baseName = $"{name} - kopia";
+            if (!existing.Contains(baseName))
+                return baseName;
+
+            var index = 2;
+            while (existing.Contains($"{baseName} {index}"))
+                index++;
+
+            return $"{baseName} {index}";
+        }
+
+        private static string EnsureUniqueCode(string code, IEnumerable<string> existingCodes)
+        {
+            if (string.IsNullOrWhiteSpace(code))
+                return string.Empty;
+
+            return EnsureUniqueName(code, existingCodes);
+        }
 
         private static void Touch(CalculationEntity calculation, int userId)
         {

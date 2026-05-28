@@ -61,6 +61,14 @@ namespace Domain.Entities.Folder
             SortOrder = newOrder;
         }
 
+        public void MoveToDepartment(int departmentId)
+        {
+            if (departmentId <= 0)
+                throw new ArgumentOutOfRangeException(nameof(departmentId));
+
+            DepartmentId = departmentId;
+        }
+
         private static string NormalizeName(string? name)
         {
             var normalized = (name ?? string.Empty).Trim();

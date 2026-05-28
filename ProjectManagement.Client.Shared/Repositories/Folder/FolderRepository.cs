@@ -14,13 +14,13 @@ namespace ProjectManagement.Client.Shared.Repositories.Folder
     public class FolderRepository(HTTPRepository _httpRepository) : IFolderRepository
     {
         static string FolderURLBase => PMAPIConst.Folders;
-        public async Task<List<FolderMVVM>> GetByDepartmentAsync(int DepartmentId)
-            => (await _httpRepository.GetAsync<List<ListFolderDTO>>(FolderURLBase + URLConst.Folder.GetFoldersByDepartmentId + $"/{DepartmentId}"))
+        public async Task<List<FolderMVVM>> GetByDepartmentAsync(int DepartmentId, bool includeArchived = false)
+            => (await _httpRepository.GetAsync<List<ListFolderDTO>>(FolderURLBase + URLConst.Folder.GetFoldersByDepartmentId + $"/{DepartmentId}?includeArchived={includeArchived}"))
                 .Select(x => x.ToFolderMVVM())
                 .OrderByDescending(x => x.Order)
                 .ToList();
-        public async Task<List<FolderMVVM>> GetByVisible(bool IsVisible)
-            => (await _httpRepository.GetAsync<List<ListFolderDTO>>(FolderURLBase + URLConst.GetList + $"?isVisible={IsVisible}"))
+        public async Task<List<FolderMVVM>> GetByVisible(bool includeArchived)
+            => (await _httpRepository.GetAsync<List<ListFolderDTO>>(FolderURLBase + URLConst.GetList + $"?includeArchived={includeArchived}"))
                 .Select(x => x.ToFolderMVVM())
                 .OrderByDescending(x => x.Order)
                 .ToList();
@@ -36,9 +36,17 @@ namespace ProjectManagement.Client.Shared.Repositories.Folder
         {
             return await _httpRepository.PostAsync<Guid, PostFolderDTO>(model, FolderURLBase);
         }
+        public async Task<Guid> CreateAsync(PostFolderDTO model, int departmentId)
+        {
+            return await _httpRepository.PostAsync<Guid, PostFolderDTO>(model, FolderURLBase + URLConst.Folder.CreateForDepartment + "/" + departmentId);
+        }
         public async Task<bool> UpdateAsync(Guid Id, PostFolderDTO model)
         {
             return await _httpRepository.PutAsync(model, FolderURLBase + Id);
+        }
+        public async Task<bool> MoveAsync(Guid id, int departmentId)
+        {
+            return await _httpRepository.PutAsync(new { }, FolderURLBase + URLConst.Folder.Move + $"/{id}/{departmentId}");
         }
         public async Task<bool> DeleteAsync(Guid id)
         {

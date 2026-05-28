@@ -19,6 +19,16 @@ namespace Application.Feature.Project.Folder.Commands
         public Task<bool> Handle(UpdateFolderCommand request, CancellationToken ct)
             => service.UpdateAsync(request.Id, request.Dto, request.UserId, request.DepartmentId, ct);
     }
+
+    public sealed record MoveFolderCommand(Guid Id, int TargetDepartmentId, int UserId, int? DepartmentId) : IRequest<bool>;
+
+    public sealed class MoveFolderCommandHandler(IFolderService service)
+        : IRequestHandler<MoveFolderCommand, bool>
+    {
+        public Task<bool> Handle(MoveFolderCommand request, CancellationToken ct)
+            => service.MoveAsync(request.Id, request.TargetDepartmentId, request.UserId, request.DepartmentId, ct);
+    }
+
     public sealed record NewOrderFolderCommand(Guid Id, int NewOrder, int? DepartmentId) : IRequest<bool>;
 
     public sealed class NewOrderFolderCommandHandler(IFolderService service)

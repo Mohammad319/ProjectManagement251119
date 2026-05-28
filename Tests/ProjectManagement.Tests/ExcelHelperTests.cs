@@ -241,6 +241,81 @@ public class ExcelHelperTests
     }
 
     [Fact]
+    public void Import_AmaStyleCodes_BBCNestsUnderBBNotB()
+    {
+        // BBC starts with BB → must appear under BB, not directly under B.
+        using var workbook = new XLWorkbook();
+        var sheet = workbook.AddWorksheet("Import");
+
+        sheet.Cell(1, 1).Value = "B";
+        sheet.Cell(1, 2).Value = "Main section";
+        sheet.Cell(2, 1).Value = "BB";
+        sheet.Cell(2, 2).Value = "BB section";
+        sheet.Cell(3, 1).Value = "BBB";
+        sheet.Cell(3, 2).Value = "BBB section";
+        sheet.Cell(4, 1).Value = "BBB.3";
+        sheet.Cell(4, 2).Value = "BBB.3 section";
+        sheet.Cell(5, 1).Value = "BBB.37";
+        sheet.Cell(5, 2).Value = "BBB.37 section";
+        sheet.Cell(6, 1).Value = "BBC";
+        sheet.Cell(6, 2).Value = "BBC section";
+        sheet.Cell(7, 1).Value = "BBC.3";
+        sheet.Cell(7, 2).Value = "BBC.3 section";
+        sheet.Cell(8, 1).Value = "BBC.32";
+        sheet.Cell(8, 2).Value = "BBC.32 section";
+
+        var tasks = ExcelHelper.Import(1, workbook, 1, 1, 2, 4, 5, 6, isOH: false);
+
+        var root = Assert.Single(tasks);
+        Assert.Equal("B", root.Metadata.Code);
+        var bb = Assert.Single(root.Tasks);
+        Assert.Equal("BB", bb.Metadata.Code);
+        Assert.Equal(2, bb.Tasks.Count);
+
+        var bbb = bb.Tasks[0];
+        Assert.Equal("BBB", bbb.Metadata.Code);
+        var bbb3 = Assert.Single(bbb.Tasks);
+        Assert.Equal("BBB.3", bbb3.Metadata.Code);
+        var bbb37 = Assert.Single(bbb3.Tasks);
+        Assert.Equal("BBB.37", bbb37.Metadata.Code);
+
+        var bbc = bb.Tasks[1];
+        Assert.Equal("BBC", bbc.Metadata.Code);
+        var bbc3 = Assert.Single(bbc.Tasks);
+        Assert.Equal("BBC.3", bbc3.Metadata.Code);
+        var bbc32 = Assert.Single(bbc3.Tasks);
+        Assert.Equal("BBC.32", bbc32.Metadata.Code);
+    }
+
+    [Fact]
+    public void Import_AmaStyleCodes_BCIsSiblingOfBBUnderB()
+    {
+        // BC starts with B but not BB → BC must be a sibling of BB, not a child of BB.
+        using var workbook = new XLWorkbook();
+        var sheet = workbook.AddWorksheet("Import");
+
+        sheet.Cell(1, 1).Value = "B";
+        sheet.Cell(1, 2).Value = "Main section";
+        sheet.Cell(2, 1).Value = "BB";
+        sheet.Cell(2, 2).Value = "BB section";
+        sheet.Cell(3, 1).Value = "BC";
+        sheet.Cell(3, 2).Value = "BC section";
+        sheet.Cell(4, 1).Value = "BE";
+        sheet.Cell(4, 2).Value = "BE section";
+
+        var tasks = ExcelHelper.Import(1, workbook, 1, 1, 2, 4, 5, 6, isOH: false);
+
+        var root = Assert.Single(tasks);
+        Assert.Equal("B", root.Metadata.Code);
+        Assert.Equal(3, root.Tasks.Count);
+        Assert.Equal("BB", root.Tasks[0].Metadata.Code);
+        Assert.Equal("BC", root.Tasks[1].Metadata.Code);
+        Assert.Equal("BE", root.Tasks[2].Metadata.Code);
+        Assert.Empty(root.Tasks[1].Tasks);
+        Assert.Empty(root.Tasks[2].Tasks);
+    }
+
+    [Fact]
     public void Import_TextOnlyRows_AreCodeTextNotCalculationItems()
     {
         using var workbook = new XLWorkbook();

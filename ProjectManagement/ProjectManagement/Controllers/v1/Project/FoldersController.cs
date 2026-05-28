@@ -11,9 +11,9 @@ namespace ProjectManagement.Server.Controllers.v1.Project
     public class FoldersController : BaseApiController
     {
         [Authorize(Roles = PMRolesConst.Tenant.Users), HttpGet(URLConst.Folder.GetFoldersByDepartmentId + "/{id}")]
-        public async Task<IActionResult> GetByDepartment(int id)
+        public async Task<IActionResult> GetByDepartment(int id, bool includeArchived = false)
         {
-            return Ok(await MicroBus.Send(new GetFoldersFromOtherDepartmentQuery(id)));
+            return Ok(await MicroBus.Send(new GetFoldersFromOtherDepartmentQuery(id, includeArchived)));
         }
         [Authorize(Roles = PMRolesConst.Tenant.Users), HttpGet("getall")]
         public async Task<IActionResult> GetAll()
@@ -22,9 +22,9 @@ namespace ProjectManagement.Server.Controllers.v1.Project
         }
         [Authorize(Roles = PMRolesConst.Tenant.Users)]
         [HttpGet(URLConst.GetList)]
-        public async Task<IActionResult> GetByVisible(bool isVisible = true)
+        public async Task<IActionResult> GetByVisible(bool includeArchived = false)
         {
-            return Ok(await MicroBus.Send(new GetFoldersDepartmentQuery(isVisible, GetDepartmentId())));
+            return Ok(await MicroBus.Send(new GetFoldersDepartmentQuery(includeArchived, GetDepartmentId())));
         }
         [Authorize(Roles = PMRolesConst.Tenant.Users), HttpGet(URLConst.Details + "/{id}")]
         public async Task<IActionResult> Details(Guid id)
@@ -46,12 +46,34 @@ namespace ProjectManagement.Server.Controllers.v1.Project
             if (departmentId is null) return BadRequest();
             return Ok(await MicroBus.Send(new CreateFolderCommand(dto, GetUserId(), departmentId.Value)));
         }
+
+        [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
+        [HttpPost(URLConst.Folder.CreateForDepartment + "/{departmentId:int}")]
+        public async Task<IActionResult> CreateForDepartment(int departmentId, PostFolderDTO dto)
+        {
+            if (!CanUseTargetDepartment(departmentId))
+                return Forbid();
+
+            return Ok(await MicroBus.Send(new CreateFolderCommand(dto, GetUserId(), departmentId)));
+        }
+
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, PostFolderDTO dto)
         {
             return Ok(await MicroBus.Send(new UpdateFolderCommand( id, dto, GetUserId(), GetDepartmentId())));
         }
+
+        [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
+        [HttpPut(URLConst.Folder.Move + "/{id}/{targetDepartmentId:int}")]
+        public async Task<IActionResult> Move(Guid id, int targetDepartmentId)
+        {
+            if (!CanUseTargetDepartment(targetDepartmentId))
+                return Forbid();
+
+            return Ok(await MicroBus.Send(new MoveFolderCommand(id, targetDepartmentId, GetUserId(), GetDepartmentId())));
+        }
+
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)

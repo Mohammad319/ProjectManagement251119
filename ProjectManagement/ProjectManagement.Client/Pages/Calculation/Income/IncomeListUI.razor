@@ -13,7 +13,7 @@
                         <th class="px-3 py-2" width="120">
                             <button type="button"
                                     class="inline-flex items-center rounded border border-green-600 px-2 py-1 text-green-700 hover:bg-green-50 dark:border-green-500 dark:text-green-300 dark:hover:bg-green-900/30"
-                                    @onclick="()=>Incomes.Add(new IncomeListDTO())">
+                                    @onclick="AddIncome">
                                 @((MarkupString)Icons.Plus)
                             </button>
                         </th>
@@ -37,7 +37,7 @@
                                     </button>
                                 </AuthorizeView>
                             </td>
-                            <td class="px-3 py-2"><input type="number" @bind="Income.Year" class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100" /></td>
+                            <td class="px-3 py-2"><input type="number" min="@MinYear" value="@Income.Year" @onchange="e => SetIncomeYear(Income, e.Value)" class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100" /></td>
                             <td class="px-3 py-2"><input type="number" @bind="Income.Q1" class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100" /></td>
                             <td class="px-3 py-2"><input type="number" @bind="Income.Q2" class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100" /></td>
                             <td class="px-3 py-2"><input type="number" @bind="Income.Q3" class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100" /></td>
@@ -52,9 +52,29 @@
 </div>
 @code {
     [Parameter] public List<IncomeBase>? Incomes { get; set; }
-    protected override void OnInitialized()
+    [Parameter] public int? MinYear { get; set; }
+
+    protected override void OnParametersSet()
     {
         if (Incomes == null) Incomes = [];
+        if (MinYear.HasValue)
+            Incomes.RemoveAll(income => income.Year > 0 && income.Year < MinYear.Value);
+    }
+
+    void AddIncome()
+    {
+        Incomes ??= [];
+        Incomes.Add(new IncomeListDTO { Year = MinYear ?? DateTime.Today.Year });
+    }
+
+    void SetIncomeYear(IncomeBase income, object? value)
+    {
+        if (!int.TryParse(value?.ToString(), out var year))
+            return;
+
+        income.Year = MinYear.HasValue && year < MinYear.Value
+            ? MinYear.Value
+            : year;
     }
 
     void Remove(IncomeBase status)

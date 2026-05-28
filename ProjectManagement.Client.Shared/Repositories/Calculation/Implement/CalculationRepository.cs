@@ -35,6 +35,10 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
         {
             return await _httpRepository.GetAsync<int>(CalcURLBase + URLConst.Calculation.Copy + $"/{ProjectId}/{calcId}");
         }
+        public async Task<bool> MoveAsync(Guid ProjectId, int calcId)
+        {
+            return await _httpRepository.PutAsync(new { }, CalcURLBase + URLConst.Calculation.Move + $"/{ProjectId}/{calcId}");
+        }
         public async Task<List<ListCalculationMVVM>> GetAsync(Guid guid, bool isVisible = true)
             => [.. (await _httpRepository.GetAsync<List<ListCalculationDTO>>(CalcURLBase + guid + $"?isVisible={isVisible}"))
                 .Select(x => x.ToListCalculationMVVM())

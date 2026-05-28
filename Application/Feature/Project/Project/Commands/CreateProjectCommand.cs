@@ -21,6 +21,24 @@ namespace Application.Feature.Project.Project.Commands
             => service.UpdateAsync(request.Id, request.Dto, request.UserId, request.DepartmentId, ct);
     }
 
+    public sealed record MoveProjectCommand(Guid Id, Guid TargetFolderId, int UserId, int? DepartmentId, bool AllowCrossDepartment) : IRequest<bool>;
+
+    public sealed class MoveProjectCommandHandler(IProjectService service)
+        : IRequestHandler<MoveProjectCommand, bool>
+    {
+        public Task<bool> Handle(MoveProjectCommand request, CancellationToken ct)
+            => service.MoveAsync(request.Id, request.TargetFolderId, request.UserId, request.DepartmentId, request.AllowCrossDepartment, ct);
+    }
+
+    public sealed record CopyProjectCommand(Guid Id, Guid TargetFolderId, bool IncludeCalculations, int UserId, int? DepartmentId, bool AllowCrossDepartment) : IRequest<Guid>;
+
+    public sealed class CopyProjectCommandHandler(IProjectService service)
+        : IRequestHandler<CopyProjectCommand, Guid>
+    {
+        public Task<Guid> Handle(CopyProjectCommand request, CancellationToken ct)
+            => service.CopyAsync(request.Id, request.TargetFolderId, request.IncludeCalculations, request.UserId, request.DepartmentId, request.AllowCrossDepartment, ct);
+    }
+
     public sealed record DeleteProjectCommand(Guid Id, int UserId, int? DepartmentId) : IRequest<bool>;
 
     public sealed class DeleteProjectCommandHandler(IProjectService service)

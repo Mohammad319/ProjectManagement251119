@@ -21,15 +21,15 @@ namespace ProjectManagement.Server.Controllers.v1
         }
         [Authorize(Roles = Tenant.Users)]
         [HttpGet(URLConst.Project.GetByFolderDepartmentId + "/{folderId}")]
-        public async Task<IActionResult> GetByFolderId(Guid folderId, bool isVisible = false)
+        public async Task<IActionResult> GetByFolderId(Guid folderId, bool includeArchived = false)
         {
-            return Ok(await MicroBus.Send(new GetProjectsGroupsByFolderQuery(folderId, isVisible , GetUserId(), GetDepartmentId())));
+            return Ok(await MicroBus.Send(new GetProjectsGroupsByFolderQuery(folderId, includeArchived, GetUserId(), GetDepartmentId())));
         }
         [Authorize(Roles = Tenant.Users)]
         [HttpGet(URLConst.Project.GetProjectsOtherDepartment + "/{folderId}")]
-        public async Task<IActionResult> GetOtherDepartmentAsync(Guid folderId)
+        public async Task<IActionResult> GetOtherDepartmentAsync(Guid folderId, bool includeArchived = false)
         {
-            return Ok(await MicroBus.Send(new GetProjectsOtherGroupByFolderQuery(folderId, GetUserId() ,GetDepartmentId())));
+            return Ok(await MicroBus.Send(new GetProjectsOtherGroupByFolderQuery(folderId, GetUserId(), GetDepartmentId(), includeArchived)));
         }
         [Authorize(Roles = Tenant.Users)]
         [HttpPost(URLConst.Project.Search)]
@@ -74,10 +74,27 @@ namespace ProjectManagement.Server.Controllers.v1
         }
 
         [Authorize(Roles = Tenant.AdminManger)]
+        [HttpPut(URLConst.Project.Move + "/{id}/{targetFolderId}")]
+        public async Task<IActionResult> Move(Guid id, Guid targetFolderId)
+        {
+            return Ok(await MicroBus.Send(new MoveProjectCommand(id, targetFolderId, GetUserId(), GetDepartmentId(), CanUseTargetDepartmentAccessAcrossDepartments())));
+        }
+
+        [Authorize(Roles = Tenant.AdminManger)]
+        [HttpGet(URLConst.Project.Copy + "/{targetFolderId}/{id}")]
+        public async Task<IActionResult> Copy(Guid targetFolderId, Guid id, bool includeCalculations = true)
+        {
+            return Ok(await MicroBus.Send(new CopyProjectCommand(id, targetFolderId, includeCalculations, GetUserId(), GetDepartmentId(), CanUseTargetDepartmentAccessAcrossDepartments())));
+        }
+
+        [Authorize(Roles = Tenant.AdminManger)]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
             return Ok(await MicroBus.Send(new DeleteProjectCommand( id, GetUserId(),  GetDepartmentId() )));
         }
+
+        private bool CanUseTargetDepartmentAccessAcrossDepartments() =>
+            User.IsInRole(Tenant.Admin) || User.IsInRole(Tenant.SuperManger);
     }
 }

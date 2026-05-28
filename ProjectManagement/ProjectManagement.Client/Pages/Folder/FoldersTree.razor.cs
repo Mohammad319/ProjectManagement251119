@@ -4,6 +4,7 @@ using Microsoft.JSInterop;
 using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Helper.DropDown;
 using ProjectManagement.Client.Pages.Folder.Component;
+using ProjectManagement.Client.Pages.Project.ProjectPages;
 using ProjectManagement.Client.Shared.Model.Project;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Client.Shared.MVVM.Folder;
@@ -17,6 +18,9 @@ namespace ProjectManagement.Client.Pages.Folder
     {
         [Inject] private IJSRuntime JS { get; set; } = default!;
         [Inject] private IClientLogger ClientLogger { get; set; } = default!;
+
+        [Parameter] public string GroupingMode { get; set; } = ProjectTreeGroupingMode.FolderStructure;
+        [Parameter] public string SortMode { get; set; } = ProjectTreeSortMode.NameAscending;
 
         private const string LastSelectionKey = "LastSelection";
 
@@ -32,6 +36,99 @@ namespace ProjectManagement.Client.Pages.Folder
         private bool _restoreInProgress;
 
         private object? CalcDraging { get; set; }
+
+        private sealed record ProjectDateBucket(string Label, int Year, int Quarter, bool IsUnknown);
+        private sealed record GroupedProject(FolderMVVM Folder, ListProjectMVVM Project);
+        private sealed record FolderProjectGroup(FolderMVVM Folder, List<ListProjectMVVM> Projects);
+        private sealed record DateProjectGroup(string Label, bool IsUnknown, List<FolderProjectGroup> Folders);
+
+        private IEnumerable<FolderMVVM> GetSortedFolders(IEnumerable<FolderMVVM>? folders)
+        {
+            var list = folders ?? Enumerable.Empty<FolderMVVM>();
+
+            return SortMode switch
+            {
+                ProjectTreeSortMode.NameDescending => list
+                    .OrderByDescending(folder => folder.Name, StringComparer.CurrentCultureIgnoreCase)
+                    .ThenByDescending(folder => folder.Order),
+
+                ProjectTreeSortMode.Status => list
+                    .OrderBy(folder => folder.IsVisible ? 0 : 99)
+                    .ThenBy(folder => folder.Name, StringComparer.CurrentCultureIgnoreCase),
+
+                ProjectTreeSortMode.CreatedNewest or ProjectTreeSortMode.ModifiedNewest => list
+                    .OrderByDescending(folder => folder.Order)
+                    .ThenBy(folder => folder.Name, StringComparer.CurrentCultureIgnoreCase),
+
+                ProjectTreeSortMode.CreatedOldest => list
+                    .OrderBy(folder => folder.Order)
+                    .ThenBy(folder => folder.Name, StringComparer.CurrentCultureIgnoreCase),
+
+                _ => list
+                    .OrderBy(folder => folder.Name, StringComparer.CurrentCultureIgnoreCase)
+                    .ThenByDescending(folder => folder.Order)
+            };
+        }
+
+        private IEnumerable<ListProjectMVVM> GetSortedProjects(IEnumerable<ListProjectMVVM>? projects)
+        {
+            var list = projects ?? Enumerable.Empty<ListProjectMVVM>();
+
+            return SortMode switch
+            {
+                ProjectTreeSortMode.NameDescending => list
+                    .OrderByDescending(project => project.Name, StringComparer.CurrentCultureIgnoreCase)
+                    .ThenByDescending(project => project.Order),
+
+                ProjectTreeSortMode.CreatedNewest or ProjectTreeSortMode.ModifiedNewest => list
+                    .OrderByDescending(project => HasDate(project.StartDate))
+                    .ThenByDescending(project => project.StartDate)
+                    .ThenBy(project => project.Name, StringComparer.CurrentCultureIgnoreCase),
+
+                ProjectTreeSortMode.CreatedOldest => list
+                    .OrderByDescending(project => HasDate(project.StartDate))
+                    .ThenBy(project => project.StartDate)
+                    .ThenBy(project => project.Name, StringComparer.CurrentCultureIgnoreCase),
+
+                ProjectTreeSortMode.Status => list
+                    .OrderBy(project => GetStatusSortRank(project.Status, project.IsVisible))
+                    .ThenBy(project => project.Name, StringComparer.CurrentCultureIgnoreCase),
+
+                _ => list
+                    .OrderBy(project => project.Name, StringComparer.CurrentCultureIgnoreCase)
+                    .ThenByDescending(project => project.Order)
+            };
+        }
+
+        private IEnumerable<ListCalculationMVVM> GetSortedCalculations(IEnumerable<ListCalculationMVVM>? calculations)
+        {
+            var list = calculations ?? Enumerable.Empty<ListCalculationMVVM>();
+
+            return SortMode switch
+            {
+                ProjectTreeSortMode.NameDescending => list
+                    .OrderByDescending(calculation => calculation.Name, StringComparer.CurrentCultureIgnoreCase)
+                    .ThenByDescending(calculation => calculation.Order),
+
+                ProjectTreeSortMode.CreatedNewest or ProjectTreeSortMode.ModifiedNewest => list
+                    .OrderByDescending(calculation => HasDate(calculation.StartDate))
+                    .ThenByDescending(calculation => calculation.StartDate)
+                    .ThenBy(calculation => calculation.Name, StringComparer.CurrentCultureIgnoreCase),
+
+                ProjectTreeSortMode.CreatedOldest => list
+                    .OrderByDescending(calculation => HasDate(calculation.StartDate))
+                    .ThenBy(calculation => calculation.StartDate)
+                    .ThenBy(calculation => calculation.Name, StringComparer.CurrentCultureIgnoreCase),
+
+                ProjectTreeSortMode.Status => list
+                    .OrderBy(calculation => GetStatusSortRank(calculation.Status, true))
+                    .ThenBy(calculation => calculation.Name, StringComparer.CurrentCultureIgnoreCase),
+
+                _ => list
+                    .OrderBy(calculation => calculation.Name, StringComparer.CurrentCultureIgnoreCase)
+                    .ThenByDescending(calculation => calculation.Order)
+            };
+        }
 
         private async Task SeFolder(FolderMVVM folder)
         {
@@ -216,6 +313,111 @@ namespace ProjectManagement.Client.Pages.Folder
             await SaveLastSelection(folder, project, calculation);
         }
 
+        private IEnumerable<DateProjectGroup> GetDateGroupedProjects()
+        {
+            var folders = UoWService.Folder.State.FoldersList ?? [];
+
+            var entries = GetSortedFolders(folders)
+                .Where(folder => folder.Projects is not null)
+                .SelectMany(folder => GetSortedProjects(folder.Projects).Select(project => new GroupedProject(folder, project)));
+
+            return entries
+                .GroupBy(entry => GetProjectDateBucket(entry.Project))
+                .OrderBy(group => group.Key.IsUnknown)
+                .ThenBy(group => group.Key.Year)
+                .ThenBy(group => group.Key.Quarter)
+                .Select(group =>
+                {
+                    var unsortedFolderGroups = group
+                        .GroupBy(entry => entry.Folder.Id)
+                        .Select(folderGroup =>
+                        {
+                            var folder = folderGroup.First().Folder;
+                            var projects = GetSortedProjects(folderGroup.Select(entry => entry.Project)).ToList();
+
+                            return new FolderProjectGroup(folder, projects);
+                        });
+
+                    var folderGroups = GetSortedFolderGroups(unsortedFolderGroups).ToList();
+
+                    return new DateProjectGroup(group.Key.Label, group.Key.IsUnknown, folderGroups);
+                });
+        }
+
+        private ProjectDateBucket GetProjectDateBucket(ListProjectMVVM project)
+        {
+            var date = GetProjectGroupingDate(project);
+            if (!date.HasValue)
+                return new ProjectDateBucket("Okänt datum", int.MaxValue, int.MaxValue, true);
+
+            if (GroupingMode == ProjectTreeGroupingMode.Year)
+                return new ProjectDateBucket(date.Value.Year.ToString(), date.Value.Year, 0, false);
+
+            var quarter = ((date.Value.Month - 1) / 3) + 1;
+            return new ProjectDateBucket($"{date.Value.Year} Q{quarter}", date.Value.Year, quarter, false);
+        }
+
+        private static DateTime? GetProjectGroupingDate(ListProjectMVVM project) =>
+            project.StartDate == default ? null : project.StartDate;
+
+        private IEnumerable<FolderProjectGroup> GetSortedFolderGroups(IEnumerable<FolderProjectGroup> folderGroups)
+        {
+            var folderGroupById = folderGroups.ToDictionary(group => group.Folder.Id);
+            return GetSortedFolders(folderGroupById.Values.Select(group => group.Folder))
+                .Select(folder => folderGroupById[folder.Id]);
+        }
+
+        private static bool HasDate(DateTime date) =>
+            date != default;
+
+        private static int GetStatusSortRank(string? status, bool isVisible)
+        {
+            if (!isVisible)
+                return 90;
+
+            var value = (status ?? string.Empty).Trim().ToLowerInvariant();
+
+            if (string.IsNullOrWhiteSpace(value))
+                return 80;
+
+            if (value is "active" or "pågående" or "pagaende" or "aktiv" or "ongoing")
+                return 0;
+
+            if (value.Contains("väntar") || value.Contains("vantar") || value.Contains("svar") || value.Contains("review"))
+                return 10;
+
+            if (value is "won" or "vunnen" or "completed" or "klar" or "done")
+                return 20;
+
+            if (value is "lost" or "förlorad" or "forlorad" or "cancelled" or "canceled" or "avbruten" or "avslutad")
+                return 30;
+
+            if (value is "archived" or "arkiverad")
+                return 90;
+
+            return 50;
+        }
+
+        private static string GetCalculationIndicatorClass(ListCalculationMVVM calculation)
+        {
+            const string baseClasses = "block h-2.5 w-2.5 rounded-full border-2 bg-white shadow-sm transition-colors dark:bg-slate-950";
+            return $"{baseClasses} {GetCalculationStatusColorClass(calculation.Status)}";
+        }
+
+        private static string GetCalculationStatusColorClass(string? status)
+        {
+            return status?.Trim().ToLowerInvariant() switch
+            {
+                "draft" or "utkast" => "border-slate-400 dark:border-slate-500",
+                "active" or "ongoing" or "pagaende" => "border-sky-500 dark:border-sky-400",
+                "completed" or "done" or "klar" => "border-emerald-500 dark:border-emerald-400",
+                "needs review" or "review" or "warning" or "varning" => "border-amber-500 dark:border-amber-400",
+                "cancelled" or "canceled" or "avbruten" => "border-rose-500 dark:border-rose-400",
+                "archived" or "arkiverad" => "border-slate-400 opacity-60 dark:border-slate-500",
+                _ => "border-slate-400 dark:border-slate-500"
+            };
+        }
+
         private async Task HandleDrop(FolderMVVM folder)
         {
             if (CalcDraging is not FolderMVVM draggingFolder)
@@ -329,6 +531,28 @@ namespace ProjectManagement.Client.Pages.Folder
 
                 list.Add(new()
                 {
+                    IconHtml = Icons.Folder,
+                    Label = "Flytta mapp",
+                    OnClickAsync = () =>
+                    {
+                        OpenMoveCopyDialog(MoveCopyItemKind.Folder, MoveCopyOperation.Move, item);
+                        return Task.CompletedTask;
+                    }
+                });
+
+                list.Add(new()
+                {
+                    IconHtml = Icons.Copy,
+                    Label = "Kopiera mapp",
+                    OnClickAsync = () =>
+                    {
+                        OpenMoveCopyDialog(MoveCopyItemKind.Folder, MoveCopyOperation.Copy, item);
+                        return Task.CompletedTask;
+                    }
+                });
+
+                list.Add(new()
+                {
                     IconHtml = Icons.Delete,
                     Label = ResourceApp.delete,
                     OnClickAsync = () =>
@@ -351,6 +575,24 @@ namespace ProjectManagement.Client.Pages.Folder
             });
 
             await ContextService.ShowMenuAsync(list);
+        }
+
+        private void OpenMoveCopyDialog(string itemKind, string operation, FolderMVVM folder) =>
+            Modal.ShowComponent<MoveCopyDialog>(
+                operation == MoveCopyOperation.Copy ? "Kopiera" : "Flytta",
+                new Dictionary<string, object>
+                {
+                    [nameof(MoveCopyDialog.ItemKind)] = itemKind,
+                    [nameof(MoveCopyDialog.Operation)] = operation,
+                    [nameof(MoveCopyDialog.SourceFolder)] = folder,
+                    [nameof(MoveCopyDialog.OnCompleted)] = EventCallback.Factory.Create(this, RefreshAfterMoveCopyAsync)
+                },
+                BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
+
+        private async Task RefreshAfterMoveCopyAsync()
+        {
+            Folder.State.ClearSelection();
+            await UoWService.Folder.LoadPrivateAndGroupFoldersAsync();
         }
     }
 }

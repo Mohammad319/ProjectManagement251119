@@ -259,6 +259,7 @@ namespace ProjectManagement.Client.Shared.Mapping
                 Name = dto.Name ?? string.Empty,
                 Order = dto.Order,
                 Color = dto.Color ?? "#08bf66",
+                IsVisible = dto.IsVisible,
                 Projects = [],
             };
         }
@@ -280,6 +281,7 @@ namespace ProjectManagement.Client.Shared.Mapping
                 EndDate = dto.EndDate,
                 TenderDeadline = dto.TenderDeadline,
                 TenderQA = dto.TenderQA,
+                IsVisible = dto.IsVisible,
                 Calculations = [],
             };
         }

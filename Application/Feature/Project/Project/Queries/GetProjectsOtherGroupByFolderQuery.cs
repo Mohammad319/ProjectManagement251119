@@ -4,13 +4,13 @@ using System;
 
 namespace Application.Feature.Project.Project.Queries
 {
-    public sealed record GetProjectsOtherGroupByFolderQuery(Guid FolderId, int UserId, int? DepartmentId)
+    public sealed record GetProjectsOtherGroupByFolderQuery(Guid FolderId, int UserId, int? DepartmentId, bool IncludeArchived)
         : IRequest<IEnumerable<ListProjectDTO>>;
 
     public sealed class GetProjectsOtherGroupByFolderQueryHandler(IProjectService service)
         : IRequestHandler<GetProjectsOtherGroupByFolderQuery, IEnumerable<ListProjectDTO>>
     {
         public Task<IEnumerable<ListProjectDTO>> Handle(GetProjectsOtherGroupByFolderQuery request, CancellationToken ct)
-            => service.GetOtherGroupByFolderAsync(request.FolderId, request.UserId, request.DepartmentId, ct);
+            => service.GetOtherGroupByFolderAsync(request.FolderId, request.UserId, request.DepartmentId, request.IncludeArchived, ct);
     }
 }

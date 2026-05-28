@@ -1,0 +1,385 @@
+@using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Client.Shared.MVVM.Folder
+@using ProjectManagement.Shared.DTO.Folder
+@using ProjectManagement.Shared.DTO.Project
+
+@inherits AppComponentBase
+
+<div class="space-y-3 text-slate-800 dark:text-slate-100">
+    <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm dark:border-slate-800 dark:bg-slate-950">
+        <div class="font-semibold">@GetTitle()</div>
+        <div class="mt-1 text-xs text-slate-500 dark:text-slate-400">@GetCurrentLocation()</div>
+        @if (IsArchived)
+        {
+            <div class="mt-2 inline-flex rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                Arkiverad
+            </div>
+        }
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(_message))
+    {
+        <div class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
+            @_message
+        </div>
+    }
+
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div>
+            <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Åtgärd</label>
+            <select class="@SelectClass" @bind="Operation">
+                <option value="@MoveCopyOperation.Move">Flytta</option>
+                <option value="@MoveCopyOperation.Copy">Kopiera</option>
+            </select>
+        </div>
+
+        <div>
+            <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Mål-avdelning</label>
+            <select class="@SelectClass" value="@_targetDepartmentValue" @onchange="OnDepartmentChanged">
+                <option value="">Välj avdelning</option>
+                @foreach (var department in Folder.State.Departments)
+                {
+                    <option value="@department.Id">@department.Name</option>
+                }
+            </select>
+        </div>
+
+        @if (ItemKind != MoveCopyItemKind.Folder)
+        {
+            <div>
+                <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Mål-mapp</label>
+                <select class="@SelectClass" value="@_targetFolderValue" @onchange="OnFolderChanged" disabled="@(!_targetFolders.Any())">
+                    <option value="">Välj mapp</option>
+                    @foreach (var folder in _targetFolders)
+                    {
+                        <option value="@folder.Id">@folder.Name</option>
+                    }
+                </select>
+            </div>
+        }
+
+        @if (ItemKind == MoveCopyItemKind.Calculation)
+        {
+            <div>
+                <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Mål-projekt</label>
+                <select class="@SelectClass" @bind="_targetProjectValue" disabled="@(!_targetProjects.Any())">
+                    <option value="">Välj projekt</option>
+                    @foreach (var project in _targetProjects)
+                    {
+                        <option value="@project.Id">@project.Name</option>
+                    }
+                </select>
+            </div>
+        }
+    </div>
+
+    @if (ItemKind == MoveCopyItemKind.Folder && Operation == MoveCopyOperation.Copy)
+    {
+        <label class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-2 text-sm dark:border-slate-800 dark:bg-slate-950">
+            <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800" @bind="_includeChildren" />
+            <span>Kopiera mappen med projekt och kalkyler</span>
+        </label>
+    }
+
+    @if (ItemKind == MoveCopyItemKind.Project && Operation == MoveCopyOperation.Copy)
+    {
+        <label class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-2 text-sm dark:border-slate-800 dark:bg-slate-950">
+            <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800" @bind="_includeChildren" />
+            <span>Kopiera projekt med alla kalkyler</span>
+        </label>
+    }
+
+    @if (ItemKind == MoveCopyItemKind.Calculation && Operation == MoveCopyOperation.Copy)
+    {
+        <div class="grid grid-cols-1 gap-2">
+            <label class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-2 text-sm dark:border-slate-800 dark:bg-slate-950">
+                <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800" @bind="_copyIncome" />
+                <span>Kopiera kalkyl med inkomstvärden</span>
+            </label>
+            <label class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-2 text-sm dark:border-slate-800 dark:bg-slate-950">
+                <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800" @bind="_keepCalculationValues" />
+                <span>Behåll kalkylens egna värden</span>
+            </label>
+        </div>
+    }
+
+    <div class="rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
+        <div class="font-semibold text-slate-800 dark:text-slate-100">Vald målplats</div>
+        <div class="mt-1">@GetTargetSummary()</div>
+    </div>
+
+    <div class="flex justify-end gap-2">
+        <button type="button"
+                class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                @onclick="Modal.Close">
+            Avbryt
+        </button>
+        <button type="button"
+                class="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
+                disabled="@_isBusy"
+                @onclick="ExecuteAsync">
+            Bekräfta
+        </button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string ItemKind { get; set; } = MoveCopyItemKind.Project;
+    [Parameter] public string Operation { get; set; } = MoveCopyOperation.Move;
+    [Parameter] public FolderMVVM? SourceFolder { get; set; }
+    [Parameter] public ListProjectMVVM? SourceProject { get; set; }
+    [Parameter] public ListCalculationMVVM? SourceCalculation { get; set; }
+    [Parameter] public EventCallback OnCompleted { get; set; }
+
+    private const string SelectClass = "w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-800 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:disabled:bg-slate-900/60 dark:disabled:text-slate-400";
+
+    private string _targetDepartmentValue = string.Empty;
+    private string _targetFolderValue = string.Empty;
+    private string _targetProjectValue = string.Empty;
+    private bool _includeChildren;
+    private bool _copyIncome = true;
+    private bool _keepCalculationValues = true;
+    private bool _isBusy;
+    private string _message = string.Empty;
+    private List<FolderMVVM> _targetFolders = [];
+    private List<ListProjectMVVM> _targetProjects = [];
+
+    private bool IsArchived =>
+        SourceFolder?.IsVisible == false ||
+        SourceProject?.IsVisible == false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _targetDepartmentValue = Folder.State.Departments.FirstOrDefault()?.Id.ToString() ?? string.Empty;
+        await LoadTargetFoldersAsync();
+
+        if (SourceFolder is not null && ItemKind != MoveCopyItemKind.Folder)
+            _targetFolderValue = SourceFolder.Id.ToString();
+
+        if (SourceProject is not null && ItemKind == MoveCopyItemKind.Calculation)
+            _targetProjectValue = SourceProject.Id.ToString();
+
+        await LoadTargetProjectsAsync();
+        SetCapabilityMessage();
+    }
+
+    private async Task OnDepartmentChanged(ChangeEventArgs e)
+    {
+        _targetDepartmentValue = e.Value?.ToString() ?? string.Empty;
+        _targetFolderValue = string.Empty;
+        _targetProjectValue = string.Empty;
+        await LoadTargetFoldersAsync();
+        SetCapabilityMessage();
+    }
+
+    private async Task OnFolderChanged(ChangeEventArgs e)
+    {
+        _targetFolderValue = e.Value?.ToString() ?? string.Empty;
+        _targetProjectValue = string.Empty;
+        await LoadTargetProjectsAsync();
+        SetCapabilityMessage();
+    }
+
+    private async Task LoadTargetFoldersAsync()
+    {
+        _targetFolders = [];
+        if (!int.TryParse(_targetDepartmentValue, out var departmentId) || departmentId <= 0)
+            return;
+
+        _targetFolders = await Repo.Folder.GetByDepartmentAsync(departmentId, includeArchived: true);
+    }
+
+    private async Task LoadTargetProjectsAsync()
+    {
+        _targetProjects = [];
+        if (!Guid.TryParse(_targetFolderValue, out var folderId) || folderId == Guid.Empty)
+            return;
+
+        _targetProjects = await Repo.Project.GetByFolderIdAsync(folderId, includeArchived: true);
+    }
+
+    private void SetCapabilityMessage()
+    {
+        _message = string.Empty;
+    }
+
+    private async Task ExecuteAsync()
+    {
+        if (_isBusy)
+            return;
+
+        _isBusy = true;
+        _message = string.Empty;
+
+        try
+        {
+            var result = ItemKind switch
+            {
+                MoveCopyItemKind.Folder => await ExecuteFolderAsync(),
+                MoveCopyItemKind.Project => await ExecuteProjectAsync(),
+                MoveCopyItemKind.Calculation => await ExecuteCalculationAsync(),
+                _ => false
+            };
+
+            MHD.Notifications(Operation == MoveCopyOperation.Copy ? ToastType.Add : ToastType.Update, result);
+
+            if (result)
+            {
+                await OnCompleted.InvokeAsync();
+                Modal.Close();
+            }
+            else if (string.IsNullOrWhiteSpace(_message))
+            {
+                _message = "Åtgärden kunde inte genomföras. Kontrollera målplats och behörighet.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _message = "Åtgärden misslyckades. Kontrollera målplats och behörighet.";
+            await ClientLog.ErrorAsync("Move/copy operation failed", ex: ex);
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private async Task<bool> ExecuteFolderAsync()
+    {
+        if (SourceFolder is null)
+            return false;
+
+        if (!int.TryParse(_targetDepartmentValue, out var targetDepartmentId) || targetDepartmentId <= 0)
+            return false;
+
+        if (Operation == MoveCopyOperation.Move)
+        {
+            return await Repo.Folder.MoveAsync(SourceFolder.Id, targetDepartmentId);
+        }
+
+        var targetName = EnsureUniqueName(SourceFolder.Name, _targetFolders.Select(x => x.Name));
+        var newFolderId = await Repo.Folder.CreateAsync(new PostFolderDTO
+        {
+            Name = targetName,
+            Color = SourceFolder.Color,
+            IsVisible = SourceFolder.IsVisible,
+            Order = SourceFolder.Order
+        }, targetDepartmentId);
+
+        if (newFolderId == Guid.Empty)
+            return false;
+
+        if (!_includeChildren)
+            return true;
+
+        await Folder.SetProjectsToFolder(SourceFolder);
+        foreach (var project in SourceFolder.Projects)
+        {
+            await Repo.Project.CopyAsync(newFolderId, project.Id, includeCalculations: true);
+        }
+
+        return true;
+    }
+
+    private async Task<bool> ExecuteProjectAsync()
+    {
+        if (SourceProject is null || !Guid.TryParse(_targetFolderValue, out var targetFolderId) || targetFolderId == Guid.Empty)
+            return false;
+
+        if (Operation == MoveCopyOperation.Move)
+        {
+            return await Repo.Project.MoveAsync(SourceProject.Id, targetFolderId);
+        }
+
+        var newProjectId = await Repo.Project.CopyAsync(targetFolderId, SourceProject.Id, _includeChildren);
+        return newProjectId != Guid.Empty;
+    }
+
+    private async Task<bool> ExecuteCalculationAsync()
+    {
+        if (SourceCalculation is null ||
+            !Guid.TryParse(_targetProjectValue, out var targetProjectId) ||
+            targetProjectId == Guid.Empty)
+            return false;
+
+        if (Operation == MoveCopyOperation.Move)
+        {
+            return await Repo.Calculation.MoveAsync(targetProjectId, SourceCalculation.Id);
+        }
+
+        var newCalculationId = await Repo.Calculation.CopyAsync(targetProjectId, SourceCalculation.Id);
+        if (newCalculationId <= 0)
+            return false;
+
+        if (!_copyIncome)
+        {
+            var post = await Repo.Calculation.GetPostAsync(newCalculationId);
+            post.Income.Clear();
+            await Repo.Calculation.UpdateAsync(post, newCalculationId);
+        }
+
+        return true;
+    }
+
+    private string GetTitle() =>
+        ItemKind switch
+        {
+            MoveCopyItemKind.Folder => $"{OperationLabel} mapp: {SourceFolder?.Name}",
+            MoveCopyItemKind.Project => $"{OperationLabel} projekt: {SourceProject?.Name}",
+            MoveCopyItemKind.Calculation => $"{OperationLabel} kalkyl: {SourceCalculation?.Name}",
+            _ => OperationLabel
+        };
+
+    private string OperationLabel => Operation == MoveCopyOperation.Copy ? "Kopiera" : "Flytta";
+
+    private string GetCurrentLocation()
+    {
+        if (ItemKind == MoveCopyItemKind.Folder)
+            return "Nuvarande plats: avdelning";
+
+        if (ItemKind == MoveCopyItemKind.Project)
+            return $"Nuvarande plats: {SourceFolder?.Name}";
+
+        return $"Nuvarande plats: {SourceFolder?.Name} / {SourceProject?.Name}";
+    }
+
+    private string GetTargetSummary()
+    {
+        var department = Folder.State.Departments.FirstOrDefault(x => x.Id.ToString() == _targetDepartmentValue)?.Name ?? "-";
+        var folder = _targetFolders.FirstOrDefault(x => x.Id.ToString() == _targetFolderValue)?.Name ?? "-";
+        var project = _targetProjects.FirstOrDefault(x => x.Id.ToString() == _targetProjectValue)?.Name ?? "-";
+
+        return ItemKind switch
+        {
+            MoveCopyItemKind.Folder => $"Avdelning: {department}",
+            MoveCopyItemKind.Project => $"Avdelning: {department} / Mapp: {folder}",
+            MoveCopyItemKind.Calculation => $"Avdelning: {department} / Mapp: {folder} / Projekt: {project}",
+            _ => department
+        };
+    }
+
+    private static string EnsureUniqueName(string name, IEnumerable<string> existingNames)
+    {
+        var existing = existingNames.ToHashSet(StringComparer.CurrentCultureIgnoreCase);
+        if (!existing.Contains(name))
+            return name;
+
+        var baseName = $"{name} - kopia";
+        if (!existing.Contains(baseName))
+            return baseName;
+
+        var index = 2;
+        while (existing.Contains($"{baseName} {index}"))
+            index++;
+
+        return $"{baseName} {index}";
+    }
+
+    private static string EnsureUniqueCode(string code, IEnumerable<string> existingCodes)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+            return string.Empty;
+
+        return EnsureUniqueName(code, existingCodes);
+    }
+}

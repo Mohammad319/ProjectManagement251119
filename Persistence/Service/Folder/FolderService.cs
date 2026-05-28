@@ -56,6 +56,39 @@ namespace Persistence.Service.Folder
             return true;
         }
 
+        public async Task<bool> MoveAsync(Guid id, int targetDepartmentId, int userId, int? departmentId, CancellationToken ct = default)
+        {
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            var folder = await context.Folders
+                .Include(x => x.FolderProjects)
+                    .ThenInclude(x => x.Calculations)
+                .FirstOrDefaultAsync(x => x.Id == id, ct);
+
+            if (folder is null)
+                return false;
+
+            if (departmentId.HasValue && folder.DepartmentId != departmentId.Value)
+                return false;
+
+            var targetDepartmentExists = await context.Department
+                .AsNoTracking()
+                .AnyAsync(x => x.Id == targetDepartmentId, ct);
+
+            if (!targetDepartmentExists)
+                return false;
+
+            folder.MoveToDepartment(targetDepartmentId);
+            folder.UpdatedBy = userId;
+            folder.UpdatedAt = DateTime.UtcNow;
+
+            foreach (var calculation in folder.FolderProjects.SelectMany(project => project.Calculations))
+                calculation.AssignDepartment(targetDepartmentId);
+
+            await context.SaveChangesAsync(ct);
+            return true;
+        }
+
         public async Task<bool> DeleteAsync(Guid id, int userId, int? departmentId, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
@@ -104,18 +137,19 @@ namespace Persistence.Service.Folder
                     Id = x.Id,
                     Name = x.Name,
                     Color = x.Color,
-                    Order = (int)x.SortOrder
+                    Order = (int)x.SortOrder,
+                    IsVisible = x.IsVisible
                 })
                 .ToListAsync(ct);
         }
 
-        public async Task<List<ListFolderDTO>> GetByDepartmentAsync(bool isVisible, int? departmentId, CancellationToken ct = default)
+        public async Task<List<ListFolderDTO>> GetByDepartmentAsync(bool includeArchived, int? departmentId, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             return await context.Folders
                 .AsNoTracking()
-                .Where(x => x.IsVisible == isVisible && (!departmentId.HasValue || x.DepartmentId == departmentId))
+                .Where(x => (includeArchived || x.IsVisible) && (!departmentId.HasValue || x.DepartmentId == departmentId))
                 .OrderBy(x => x.SortOrder)
                 .ThenBy(x => x.Name)
                 .Select(x => new ListFolderDTO
@@ -123,17 +157,18 @@ namespace Persistence.Service.Folder
                     Id = x.Id,
                     Name = x.Name,
                     Color = x.Color,
-                    Order = (int)x.SortOrder
+                    Order = (int)x.SortOrder,
+                    IsVisible = x.IsVisible
                 })
                 .ToListAsync(ct);
         }
 
-        public async Task<List<ListFolderDTO>> GetFromOtherDepartmentAsync(int departmentId, CancellationToken ct = default)
+        public async Task<List<ListFolderDTO>> GetFromOtherDepartmentAsync(int departmentId, bool includeArchived, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
             return await context.Folders
                 .AsNoTracking()
-                .Where(x => x.IsVisible && x.DepartmentId == departmentId)
+                .Where(x => (includeArchived || x.IsVisible) && x.DepartmentId == departmentId)
                 .OrderBy(x => x.SortOrder)
                 .ThenBy(x => x.Name)
                 .Select(x => new ListFolderDTO
@@ -141,7 +176,8 @@ namespace Persistence.Service.Folder
                     Id = x.Id,
                     Name = x.Name,
                     Color = x.Color,
-                    Order = x.SortOrder
+                    Order = x.SortOrder,
+                    IsVisible = x.IsVisible
                 })
                 .ToListAsync(ct);
         }

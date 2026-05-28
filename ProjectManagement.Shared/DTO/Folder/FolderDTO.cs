@@ -16,5 +16,6 @@ namespace ProjectManagement.Shared.DTO.Folder
         public string Name { get; set; } = string.Empty;
         public int Order { get; set; }
         public string Color { get; set; } = "#08bf66";
+        public bool IsVisible { get; set; } = true;
     }
 }

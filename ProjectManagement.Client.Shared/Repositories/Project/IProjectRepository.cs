@@ -9,8 +9,8 @@ namespace ProjectManagement.Client.Shared.Repositories.Project
 {
     public interface IProjectRepository
     {
-        Task<List<ListProjectMVVM>> GetByFolderIdAsync(Guid folderId, bool IsVisible = true);
-        Task<List<ListProjectMVVM>> GetOtherDepartmentAsync(Guid folderId);
+        Task<List<ListProjectMVVM>> GetByFolderIdAsync(Guid folderId, bool includeArchived = false);
+        Task<List<ListProjectMVVM>> GetOtherDepartmentAsync(Guid folderId, bool includeArchived = false);
         Task<List<SearchProjectsMVVM>> FilterAsync(ProjectFilter filter);
         Task<GetProjectCalcConfigDTO> GetConfig(int? m, int? con, int? com, int? t);
         Task<ProjectDetailsDTO> DetailsAsync(Guid projectId);
@@ -18,6 +18,8 @@ namespace ProjectManagement.Client.Shared.Repositories.Project
         Task<bool> ReOrderAsync(Guid Id, int newOrder);
         Task<Guid> CreateAsync(PostProjectDTO create);
         Task<bool> UpdateAsync(Guid id, PostProjectDTO project);
+        Task<bool> MoveAsync(Guid id, Guid targetFolderId);
+        Task<Guid> CopyAsync(Guid targetFolderId, Guid projectId, bool includeCalculations);
         Task<bool> DeleteAsync(Guid id);
     }
 }

@@ -49,6 +49,19 @@ namespace ProjectManagement.Server.Controllers
                 : 0;
         }
 
+        protected bool CanUseTargetDepartment(int targetDepartmentId)
+        {
+            if (targetDepartmentId <= 0)
+                return false;
+
+            var currentDepartmentId = GetDepartmentId();
+            if (!currentDepartmentId.HasValue || currentDepartmentId.Value == targetDepartmentId)
+                return true;
+
+            return User.IsInRole(PMRolesConst.Tenant.Admin) ||
+                   User.IsInRole(PMRolesConst.Tenant.SuperManger);
+        }
+
         private ICommandDispatcher? _dispatcher;
         protected ICommandDispatcher MicroBus => _dispatcher ??= HttpContext.RequestServices.GetRequiredService<ICommandDispatcher>();
 

@@ -32,6 +32,15 @@ namespace Application.Feature.Calculation.Calculation
             Guid projectId,
             int? departmentId,
             int userId,
+            bool allowCrossDepartment,
+            CancellationToken cancellationToken = default);
+
+        Task<bool> MoveAsync(
+            int id,
+            Guid projectId,
+            int? departmentId,
+            int userId,
+            bool allowCrossDepartment,
             CancellationToken cancellationToken = default);
 
         Task<bool> NewOrderAsync(

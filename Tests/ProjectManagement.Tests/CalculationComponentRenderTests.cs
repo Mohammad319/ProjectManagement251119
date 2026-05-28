@@ -1285,6 +1285,7 @@ public class CalculationComponentRenderTests : BunitContext
     {
         public Task<bool> ReOrderAsync(int Id, int newOrder) => Task.FromResult(true);
         public Task<int> CopyAsync(Guid ProjectId, int calcId) => Task.FromResult(0);
+        public Task<bool> MoveAsync(Guid ProjectId, int calcId) => Task.FromResult(true);
         public Task<GetProjectCalcConfigDTO> GetConfig(int? m, int? con, int? com, int? t, int? st) => Task.FromResult(new GetProjectCalcConfigDTO());
         public Task<List<ListCalculationMVVM>> GetAsync(Guid projectId, bool isVisible = true) => Task.FromResult(new List<ListCalculationMVVM>());
         public Task<List<HourlyPriceListGroupDTO>> GetHourlyPriceListAsync(int calcid) => Task.FromResult(new List<HourlyPriceListGroupDTO>());

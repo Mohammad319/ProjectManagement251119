@@ -31,7 +31,14 @@ namespace ProjectManagement.Server.Controllers.v1.Project
         [HttpGet(URLConst.Calculation.Copy + "/{projectId}/{calcId}")]
         public async Task<IActionResult> Copy(Guid projectId, int calcId)
         {
-            return Ok(await MicroBus.Send(new CopyCalculationCommand(calcId, projectId, GetDepartmentId(), GetUserId())));
+            return Ok(await MicroBus.Send(new CopyCalculationCommand(calcId, projectId, GetDepartmentId(), GetUserId(), CanUseTargetDepartmentAccessAcrossDepartments())));
+        }
+
+        [Authorize(Roles = Tenant.AdminManger)]
+        [HttpPut(URLConst.Calculation.Move + "/{projectId}/{calcId}")]
+        public async Task<IActionResult> Move(Guid projectId, int calcId)
+        {
+            return Ok(await MicroBus.Send(new MoveCalculationCommand(calcId, projectId, GetDepartmentId(), GetUserId(), CanUseTargetDepartmentAccessAcrossDepartments())));
         }
 
         [Authorize(Roles = Tenant.Users)]
@@ -131,6 +138,9 @@ namespace ProjectManagement.Server.Controllers.v1.Project
         {
             return Ok(await MicroBus.Send(new UpdateDisplayPresetsCommand(store, id, GetDepartmentId())));
         }
+
+        private bool CanUseTargetDepartmentAccessAcrossDepartments() =>
+            User.IsInRole(Tenant.Admin) || User.IsInRole(Tenant.SuperManger);
 
     }
 }

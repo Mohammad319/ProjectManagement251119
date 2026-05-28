@@ -58,6 +58,7 @@ namespace ProjectManagement.Client.Services.Folder
                 existing.Name = updatedFolder.Name;
                 existing.Color = updatedFolder.Color;
                 existing.Order = updatedFolder.Order;
+                existing.IsVisible = updatedFolder.IsVisible;
                 Notify();
             }
         }
@@ -88,6 +89,13 @@ namespace ProjectManagement.Client.Services.Folder
         public void ClearFolders()
         {
             FoldersList.Clear();
+            Notify();
+        }
+
+        public void ClearSelection()
+        {
+            ControlUI = false;
+            SetSelection(null, null, null);
             Notify();
         }
 

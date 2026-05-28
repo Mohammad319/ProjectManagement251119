@@ -19,21 +19,21 @@ namespace Application.Feature.Project.Folder.Queries
         public Task<DetailsFolderDTO?> Handle(GetDetailsFoldersQuery request, CancellationToken ct)
             => service.GetDetailsAsync(request.Id, request.DepartmentId, ct);
     }
-    public sealed record GetFoldersDepartmentQuery(bool IsVisible, int? DepartmentId) : IRequest<List<ListFolderDTO>>;
+    public sealed record GetFoldersDepartmentQuery(bool IncludeArchived, int? DepartmentId) : IRequest<List<ListFolderDTO>>;
 
     public sealed class GetFoldersDepartmentQueryHandler(IFolderService service)
         : IRequestHandler<GetFoldersDepartmentQuery, List<ListFolderDTO>>
     {
         public Task<List<ListFolderDTO>> Handle(GetFoldersDepartmentQuery request, CancellationToken ct)
-            => service.GetByDepartmentAsync(request.IsVisible, request.DepartmentId, ct);
+            => service.GetByDepartmentAsync(request.IncludeArchived, request.DepartmentId, ct);
     }
-    public sealed record GetFoldersFromOtherDepartmentQuery(int DepartmentId) : IRequest<List<ListFolderDTO>>;
+    public sealed record GetFoldersFromOtherDepartmentQuery(int DepartmentId, bool IncludeArchived) : IRequest<List<ListFolderDTO>>;
 
     public sealed class GetFoldersFromOtherDepartmentQueryHandler(IFolderService service)
         : IRequestHandler<GetFoldersFromOtherDepartmentQuery, List<ListFolderDTO>>
     {
         public Task<List<ListFolderDTO>> Handle(GetFoldersFromOtherDepartmentQuery request, CancellationToken ct)
-            => service.GetFromOtherDepartmentAsync(request.DepartmentId, ct);
+            => service.GetFromOtherDepartmentAsync(request.DepartmentId, request.IncludeArchived, ct);
     }
 
 }

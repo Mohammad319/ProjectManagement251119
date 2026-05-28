@@ -33,6 +33,7 @@
         {
             public const string ReOrder = "reorder";
             public const string Copy = "copy";
+            public const string Move = "move";
             public const string Share = "share";
             public const string Page = "page";
             public const string SharedPage = "sharedpage";
@@ -99,6 +100,8 @@
         public static class Folder
         {
             public const string GetFoldersByDepartmentId = "getbyepart";
+            public const string Move = "move";
+            public const string CreateForDepartment = "createfordepartment";
         }
 
         public static class Project
@@ -107,6 +110,8 @@
             public const string GetProjectPost = "gpp";
             public const string GetProjectsOtherDepartment = "gpgog";
             public const string GetByFolderDepartmentId = "gpmyg";
+            public const string Move = "move";
+            public const string Copy = "copy";
         }
 
         public static class Auth

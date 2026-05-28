@@ -789,24 +789,58 @@ namespace ProjectManagement.Client.Helper
 
         static void ReSort(List<TaskPostDTO> sections, ISet<TaskPostDTO>? leafTasks = null)
         {
+            // Build a global code→task index so parent lookup is independent of input order.
+            var keyToTask = new Dictionary<string, TaskPostDTO>(StringComparer.OrdinalIgnoreCase);
+            foreach (var task in sections)
+            {
+                string k = CodeHierarchyKey(task.Metadata.Code ?? string.Empty);
+                if (!string.IsNullOrWhiteSpace(k))
+                    keyToTask.TryAdd(k, task);
+            }
+
             for (int child = sections.Count - 1; child >= 0; child--)
             {
-                for (int parent = child - 1; parent >= 0; parent--)
+                var childTask = sections[child];
+                string childKey = CodeHierarchyKey(childTask.Metadata.Code ?? string.Empty);
+
+                TaskPostDTO? bestParent = null;
+
+                if (!string.IsNullOrWhiteSpace(childKey))
                 {
-                    if (leafTasks?.Contains(sections[parent]) == true)
-                        continue;
-
-                    bool parentHasCode = !string.IsNullOrEmpty(sections[parent].Metadata.Code);
-                    bool childHasCode = !string.IsNullOrEmpty(sections[child].Metadata.Code);
-
-                    if ((parentHasCode && childHasCode && IsParentCode(sections[parent].Metadata.Code, sections[child].Metadata.Code))
-                        || (!childHasCode && parentHasCode))
+                    // Pick the most specific parent: longest key that is a strict prefix of childKey.
+                    // This ensures e.g. BBC always goes under BB (not B) when BB exists.
+                    int bestLen = 0;
+                    foreach (var (parentKey, parentTask) in keyToTask)
                     {
-                        sections[parent].Colspan = true;
-                        sections[parent].Tasks.Insert(0, sections[child]);
-                        sections.RemoveAt(child);
-                        break;
+                        if (ReferenceEquals(parentTask, childTask)) continue;
+                        if (leafTasks?.Contains(parentTask) == true) continue;
+                        if (parentKey.Length >= childKey.Length) continue;
+                        if (!childKey.StartsWith(parentKey, StringComparison.OrdinalIgnoreCase)) continue;
+                        if (parentKey.Length > bestLen)
+                        {
+                            bestLen = parentKey.Length;
+                            bestParent = parentTask;
+                        }
                     }
+                }
+                else
+                {
+                    // No code: place under the nearest preceding item that has a code.
+                    for (int p = child - 1; p >= 0; p--)
+                    {
+                        if (!string.IsNullOrWhiteSpace(sections[p].Metadata.Code) && leafTasks?.Contains(sections[p]) != true)
+                        {
+                            bestParent = sections[p];
+                            break;
+                        }
+                    }
+                }
+
+                if (bestParent != null)
+                {
+                    bestParent.Colspan = true;
+                    bestParent.Tasks.Insert(0, childTask);
+                    sections.RemoveAt(child);
                 }
             }
         }

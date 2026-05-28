@@ -1,4 +1,3 @@
-﻿@using BlazorMHD.UI.Components.Data.Card
 @using BlazorMHD.UI.Components.Navigation.Tabs
 @using ProjectManagement.Client.Constant
 @using Calculation
@@ -24,118 +23,202 @@
 @inherits AppComponentBase
 
 <div class="ml-1">
-    <!-- الهيدر: مسار المجلد + زر إضافة -->
-    <div class="flex justify-between items-center w-full p-1">
-        <div>
-            <div class="flex items-center space-x-2 text-gray-700 dark:text-gray-300 font-medium">
-                <span>📁 @Folder.State.FolderSelected?.Name</span>
-                <span>&gt;</span>
-                <span>📄 @Folder.State.ProjectSelected?.Name (@Folder.State.ProjectSelected?.Code)</span>
+    <div class="flex w-full flex-wrap items-center justify-between gap-2 p-1">
+        <div class="min-w-0">
+            <div class="flex flex-col text-gray-700 dark:text-gray-300">
+                <span class="truncate text-sm font-semibold">
+                    Kalkyler i @Folder.State.ProjectSelected?.Name
+                </span>
+                <span class="truncate text-xs text-slate-500 dark:text-slate-400">
+                    Mapp: @Folder.State.FolderSelected?.Name
+                    @if (!string.IsNullOrWhiteSpace(Folder.State.ProjectSelected?.Code))
+                    {
+                        <span> · Projektkod: @Folder.State.ProjectSelected?.Code</span>
+                    }
+                </span>
             </div>
         </div>
-        <div class="flex items-center gap-1">
+        <div class="flex items-center gap-2">
+            <details class="relative">
+                <summary class="inline-flex h-9 cursor-pointer list-none items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">
+                    Kolumner
+                </summary>
+                <div class="absolute right-0 z-20 mt-2 w-56 rounded-lg border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+                    @foreach (var column in CalculationColumnOptions)
+                    {
+                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">
+                            <input type="checkbox"
+                                   class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800"
+                                   checked="@IsCalculationColumnVisible(column.Key)"
+                                   @onchange="e => SetCalculationColumn(column.Key, e.Value)" />
+                            <span>@column.Label</span>
+                        </label>
+                    }
+                </div>
+            </details>
+
+            <button type="button"
+                    class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-sky-300 bg-sky-50 px-3 text-sm font-semibold text-sky-700 transition hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-300 dark:hover:bg-sky-950/50"
+                    disabled="@(Folder.State.ProjectSelected is null)"
+                    title="Intäktsöversikt"
+                    @onclick="OpenIncomeOverview">
+                <span>Intäktsöversikt</span>
+            </button>
+
             <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
                 @if (!Folder.State.OtherDepartment)
                 {
                     <button type="button"
-                            class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                            class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-white text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                            title="Uppdatera"
                             @onclick="RefreshCalculationsAsync">
                         <span aria-hidden="true">@((MarkupString)Icons.GetVisibleIcon(IaVisible))</span>
                     </button>
                 }
 
                 <button type="button"
-                        class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-emerald-300 bg-emerald-50 text-sm font-medium text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-950/50"
-                        disabled="@Folder.State.OtherDepartment"
+                        class="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-50 px-3 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-950/50"
+                        disabled="@(Folder.State.OtherDepartment || Folder.State.ProjectSelected is null)"
+                        title="Ny kalkyl"
                         @onclick="() => UpdateForm(new ListCalculationMVVM())">
-                    @((MarkupString)Icons.Plus2)
+                    <span aria-hidden="true">@((MarkupString)Icons.Plus)</span>
+                    <span>Ny kalkyl</span>
                 </button>
             </AuthorizeView>
         </div>
     </div>
 
-<div class="mr-1 space-y-1">
-    @if (FilteredCalculations is not null)
+    @if (FilteredCalculations.Any())
     {
-        @foreach (var calu in FilteredCalculations)
-            {
-     
-                <div @key="calu.Id"
-                     class="cursor-pointer"
-                     @oncontextmenu:preventDefault
-                     @oncontextmenu="() => Context(calu)"
-                     @onclick="async () => await NewCalculation(calu.Id)"
-                     @ondrop="async _ => await HandleDrop(calu)"
-                     @ondragleave="() => calu.IsDragOver = false"
-                     @ondragover:preventDefault="true"
-                     @ondragover="() => calu.IsDragOver = calcDraging is not null"
-                     @ondragstart="() => calcDraging = calu"
-                     @ondragend="() => calcDraging = null"
-                     draggable="true">
+        <div class="mr-1 overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
+            <table class="min-w-full table-auto text-left text-xs">
+                <thead class="bg-slate-50 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-900 dark:text-slate-400">
+                    <tr>
+                        @if (IsCalculationColumnVisible("code"))
+                        {
+                            <th class="whitespace-nowrap px-3 py-2">Kod</th>
+                        }
+                        @if (IsCalculationColumnVisible("name"))
+                        {
+                            <th class="min-w-52 px-3 py-2">Kalkylnamn</th>
+                        }
+                        @if (IsCalculationColumnVisible("status"))
+                        {
+                            <th class="whitespace-nowrap px-3 py-2">@CalcResource.status</th>
+                        }
+                        @if (IsCalculationColumnVisible("responsible"))
+                        {
+                            <th class="whitespace-nowrap px-3 py-2">@CalcResource.responsible</th>
+                        }
+                        @if (IsCalculationColumnVisible("start"))
+                        {
+                            <th class="whitespace-nowrap px-3 py-2">@CalcResource.startDate</th>
+                        }
+                        @if (IsCalculationColumnVisible("end"))
+                        {
+                            <th class="whitespace-nowrap px-3 py-2">@CalcResource.endDate</th>
+                        }
+                        @if (IsCalculationColumnVisible("deadline"))
+                        {
+                            <th class="whitespace-nowrap px-3 py-2">@CalcResource.tenderDeadline</th>
+                        }
+                        @if (IsCalculationColumnVisible("qa"))
+                        {
+                            <th class="whitespace-nowrap px-3 py-2">@CalcResource.tenderQA</th>
+                        }
+                        @if (IsCalculationColumnVisible("privacy"))
+                        {
+                            <th class="whitespace-nowrap px-3 py-2">@ResourceApp._private</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                    @foreach (var calu in FilteredCalculations)
+                    {
+                        var isSelected = Folder.State.Calculation?.Id == calu.Id;
+                        var rowClasses = GetCalculationRowClass(calu, isSelected);
 
-                    <MhdCard Compact="true"
-                             Elevated="true"
-                             Interaction="MhdCard.CardInteractionMode.HoverAndRipple"
-                             Class="@(calu.IsDragOver ? "ring-2 ring-blue-400" : string.Empty)">
-
-                        <div class="flex flex-col gap-1">
-                            <!-- سطر واحد: كود + اسم + حالة -->
-                            <div class="flex items-center gap-2 min-w-0">
-                                <span class="shrink-0 inline-flex items-center px-2 py-0.5 text-[11px] font-mono rounded bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
-                                    @calu.Code
-                                </span>
-                                <span class="flex-1 text-sm font-medium text-gray-800 dark:text-gray-100 truncate">
-                                    @calu.Name
-                                </span>
-                                <span class="shrink-0 text-xs px-2 py-0.5 rounded-full
-                                     @(calu.EndDate < DateTime.Today
-                                           ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
-                                           : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300")">
-                                    @(calu.EndDate < DateTime.Today ? AppLoc["finished"] : CalcResource.active)
-                                </span>
-                            </div>
-
-                            <!-- الصف الثاني: التواريخ -->
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-1 text-[11px] text-gray-600 dark:text-gray-300">
-                                <div>
-                                    <span class="font-semibold">@CalcResource.tenderQA:</span>
-                                    <span class="ml-1">@calu.TenderQA.ToString(ConstValues.DateFormat)</span>
-                                </div>
-                                <div>
-                                    <span class="font-semibold">@CalcResource.tenderDeadline:</span>
-                                    <span class="ml-1">@calu.TenderDeadline.ToString(ConstValues.DateFormat)</span>
-                                </div>
-                                <div>
-                                    <span class="font-semibold">@CalcResource.startDate:</span>
-                                    <span class="ml-1">@calu.StartDate.ToString(ConstValues.DateFormat)</span>
-                                </div>
-                                <div>
-                                    <span class="font-semibold">@CalcResource.endDate:</span>
-                                    <span class="ml-1">@calu.EndDate.ToString(ConstValues.DateFormat)</span>
-                                </div>
-                            </div>
-                        </div>
-                    </MhdCard>
-
-                </div>
-
-
-            }
-        }
-</div>
-
+                        <tr @key="calu.Id"
+                            class="@rowClasses"
+                            @oncontextmenu:preventDefault
+                            @oncontextmenu="() => Context(calu)"
+                            @onclick="async () => await NewCalculation(calu.Id)"
+                            @ondrop="async _ => await HandleDrop(calu)"
+                            @ondragleave="() => calu.IsDragOver = false"
+                            @ondragover:preventDefault="true"
+                            @ondragover="() => calu.IsDragOver = calcDraging is not null"
+                            @ondragstart="() => calcDraging = calu"
+                            @ondragend="() => calcDraging = null"
+                            draggable="true">
+                            @if (IsCalculationColumnVisible("code"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 font-mono text-[11px] text-slate-500 dark:text-slate-400">
+                                    @FormatText(calu.Code)
+                                </td>
+                            }
+                            @if (IsCalculationColumnVisible("name"))
+                            {
+                                <td class="max-w-80 px-3 py-2">
+                                    <span class="block truncate font-semibold text-slate-800 dark:text-slate-100" title="@calu.Name">@calu.Name</span>
+                                </td>
+                            }
+                            @if (IsCalculationColumnVisible("status"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2">
+                                    <span class="@GetCalculationStatusClass(calu)">
+                                        @GetCalculationStatusText(calu)
+                                    </span>
+                                </td>
+                            }
+                            @if (IsCalculationColumnVisible("responsible"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(calu.Responsible)</td>
+                            }
+                            @if (IsCalculationColumnVisible("start"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(calu.StartDate)</td>
+                            }
+                            @if (IsCalculationColumnVisible("end"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(calu.EndDate)</td>
+                            }
+                            @if (IsCalculationColumnVisible("deadline"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(calu.TenderDeadline)</td>
+                            }
+                            @if (IsCalculationColumnVisible("qa"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(calu.TenderQA)</td>
+                            }
+                            @if (IsCalculationColumnVisible("privacy"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2">
+                                    <span class="inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold @(calu.IsPrivate ? "bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300" : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300")">
+                                        @(calu.IsPrivate ? ResourceApp._private : "-")
+                                    </span>
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center dark:border-slate-700 dark:bg-slate-950/60">
+            <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">@CalcResource.calculation</div>
+            <h3 class="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-100">Inga kalkyler att visa</h3>
+        </div>
+    }
 </div>
 
 @code {
     private ListCalculationMVVM? calcDraging;
     private bool IaVisible { get; set; } = true;
 
-    // --- MhdTabs + Icons ---
-
-    // التاب الحالي (1 = الكل، 2 = جارية، 3 = منتهية)
     private int Part { get; set; } = 1;
 
-    // ربط MhdTabs مع Part
     private string _activeKey = "1";
     private string ActiveKey
     {
@@ -150,7 +233,6 @@
         }
     }
 
-    // التابات: نص + أيقونة (Unicode)
     private List<NavTabItem> Tabs => new()
     {
         new NavTabItem
@@ -173,7 +255,34 @@
         }
     };
 
-    // فلترة قائمة الحسابات حسب التاب
+    private readonly Dictionary<string, bool> _calculationColumns = new()
+    {
+        ["code"] = true,
+        ["name"] = true,
+        ["status"] = true,
+        ["responsible"] = true,
+        ["start"] = false,
+        ["end"] = true,
+        ["deadline"] = true,
+        ["qa"] = false,
+        ["privacy"] = false
+    };
+
+    private readonly record struct ColumnOption(string Key, string Label);
+
+    private List<ColumnOption> CalculationColumnOptions => new()
+    {
+        new("code", "Kod"),
+        new("name", "Kalkylnamn"),
+        new("status", CalcResource.status),
+        new("responsible", CalcResource.responsible),
+        new("start", CalcResource.startDate),
+        new("end", CalcResource.endDate),
+        new("deadline", CalcResource.tenderDeadline),
+        new("qa", CalcResource.tenderQA),
+        new("privacy", ResourceApp._private)
+    };
+
     private IEnumerable<ListCalculationMVVM> FilteredCalculations
     {
         get
@@ -183,17 +292,62 @@
 
             return Part switch
             {
-                // جارية: لم تنتهِ بعد (EndDate >= اليوم)
                 2 => list.Where(c => c.EndDate >= DateTime.Today),
-                // منتهية: انتهت (EndDate < اليوم)
                 3 => list.Where(c => c.EndDate < DateTime.Today),
-                // الكل
                 _ => list
             };
         }
     }
 
-    // --- Context Menu & Actions ---
+    private bool IsCalculationColumnVisible(string key) =>
+        _calculationColumns.TryGetValue(key, out var visible) && visible;
+
+    private void SetCalculationColumn(string key, object? value)
+    {
+        if (_calculationColumns.ContainsKey(key))
+            _calculationColumns[key] = value is bool checkedValue && checkedValue;
+    }
+
+    private static string FormatText(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? "-" : value;
+
+    private static string FormatDate(DateTime value) =>
+        value == default ? "-" : value.ToString(ConstValues.DateFormat);
+
+    private string GetCalculationStatusText(ListCalculationMVVM calculation)
+    {
+        if (!string.IsNullOrWhiteSpace(calculation.Status))
+            return calculation.Status;
+
+        return calculation.EndDate < DateTime.Today ? AppLoc["finished"] : CalcResource.active;
+    }
+
+    private string GetCalculationStatusClass(ListCalculationMVVM calculation)
+    {
+        if (!string.IsNullOrWhiteSpace(calculation.Status))
+            return "inline-flex rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-semibold text-sky-700 dark:bg-sky-950/50 dark:text-sky-300";
+
+        return calculation.EndDate < DateTime.Today
+            ? "inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300"
+            : "inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:bg-amber-950/50 dark:text-amber-300";
+    }
+
+    private static string GetCalculationRowClass(ListCalculationMVVM calculation, bool selected)
+    {
+        var classes = new List<string>
+        {
+            "cursor-pointer transition-colors",
+            "hover:bg-slate-50 dark:hover:bg-slate-900/80"
+        };
+
+        if (selected)
+            classes.Add("bg-violet-50 dark:bg-violet-950/30");
+
+        if (calculation.IsDragOver)
+            classes.Add("ring-2 ring-blue-400");
+
+        return string.Join(" ", classes);
+    }
 
     async Task Context(ListCalculationMVVM item)
     {
@@ -235,6 +389,24 @@
             });
             list.Add(new()
             {
+                Label = $"{Icons.Folder} Flytta kalkyl",
+                OnClickAsync = () =>
+                {
+                    OpenMoveCopyDialog(item, MoveCopyOperation.Move);
+                    return Task.CompletedTask;
+                }
+            });
+            list.Add(new()
+            {
+                Label = $"{Icons.Copy} Kopiera kalkyl",
+                OnClickAsync = () =>
+                {
+                    OpenMoveCopyDialog(item, MoveCopyOperation.Copy);
+                    return Task.CompletedTask;
+                }
+            });
+            list.Add(new()
+            {
                 Label = $"{Icons.Delete} {ResourceApp.delete}",
                 OnClickAsync = () =>
                 {
@@ -264,6 +436,42 @@
             new Dictionary<string, object>
             {
                 [nameof(ShareCalculationUI.ListCalculation)] = model
+            },
+            BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
+    }
+
+    void OpenMoveCopyDialog(ListCalculationMVVM calculation, string operation)
+    {
+        Modal.ShowComponent<MoveCopyDialog>(
+            operation == MoveCopyOperation.Copy ? "Kopiera kalkyl" : "Flytta kalkyl",
+            new Dictionary<string, object>
+            {
+                [nameof(MoveCopyDialog.ItemKind)] = MoveCopyItemKind.Calculation,
+                [nameof(MoveCopyDialog.Operation)] = operation,
+                [nameof(MoveCopyDialog.SourceFolder)] = Folder.State.FolderSelected!,
+                [nameof(MoveCopyDialog.SourceProject)] = Folder.State.ProjectSelected!,
+                [nameof(MoveCopyDialog.SourceCalculation)] = calculation,
+                [nameof(MoveCopyDialog.OnCompleted)] = EventCallback.Factory.Create(this, ReloadAfterMoveCopyAsync)
+            },
+            BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
+    }
+
+    private async Task ReloadAfterMoveCopyAsync()
+    {
+        await ReloadCalculationsAsync();
+    }
+
+    void OpenIncomeOverview()
+    {
+        if (Folder.State.ProjectSelected is null)
+            return;
+
+        Modal.ShowComponent<IncomeOverviewDialog>(
+            "Intäktsöversikt",
+            new Dictionary<string, object>
+            {
+                [nameof(IncomeOverviewDialog.FolderScope)] = Folder.State.FolderSelected!,
+                [nameof(IncomeOverviewDialog.ProjectScope)] = Folder.State.ProjectSelected
             },
             BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
     }

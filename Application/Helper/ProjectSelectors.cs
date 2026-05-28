@@ -17,7 +17,8 @@ namespace Application.Helper
                 EndDate = x.EndDate,
                 TenderDeadline = x.TenderDeadline,
                 TenderQA = x.TenderQA,
-                Order = x.SortOrder
+                Order = x.SortOrder,
+                IsVisible = x.IsVisible
             };
 
         public static Expression<Func<ProjectEntity, SearchProjectDTO>> Search =>
@@ -31,7 +32,8 @@ namespace Application.Helper
                 EndDate = x.EndDate,
                 TenderDeadline = x.TenderDeadline,
                 TenderQA = x.TenderQA,
-                Order = x.SortOrder
+                Order = x.SortOrder,
+                IsVisible = x.IsVisible
             };
     }
 }

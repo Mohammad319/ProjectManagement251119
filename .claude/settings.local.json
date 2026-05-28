@@ -45,7 +45,8 @@
       "Bash(xargs -0 grep \"interface.*IStorage\\\\|interface.*Parent\")",
       "Bash(grep -E \"\\\\.\\(resx|cs\\)$\")",
       "Bash(grep -E \"\\\\.\\(razor|cs\\)$\")",
-      "Bash(grep -E \"\\\\.\\(cs\\)$\")"
+      "Bash(grep -E \"\\\\.\\(cs\\)$\")",
+      "Bash(dotnet test *)"
     ]
   }
 }

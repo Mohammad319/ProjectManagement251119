@@ -12,11 +12,18 @@ namespace Application.Feature.Calculation.Calculation.Commands
             => service.DeleteAsync(request.Id, request.UserId, request.DepartmentId, ct);
     }
 
-    public sealed record CopyCalculationCommand(int Id, Guid ProjectId, int? DepartmentId, int UserId) : IRequest<int>;
+    public sealed record CopyCalculationCommand(int Id, Guid ProjectId, int? DepartmentId, int UserId, bool AllowCrossDepartment) : IRequest<int>;
     public class CopyCalculationCommandHandler(ICalculationService service) : IRequestHandler<CopyCalculationCommand, int>
     {
         public Task<int> Handle(CopyCalculationCommand request, CancellationToken ct)
-            => service.CopyAsync(request.Id, request.ProjectId, request.DepartmentId, request.UserId, ct);
+            => service.CopyAsync(request.Id, request.ProjectId, request.DepartmentId, request.UserId, request.AllowCrossDepartment, ct);
+    }
+
+    public sealed record MoveCalculationCommand(int Id, Guid ProjectId, int? DepartmentId, int UserId, bool AllowCrossDepartment) : IRequest<bool>;
+    public class MoveCalculationCommandHandler(ICalculationService service) : IRequestHandler<MoveCalculationCommand, bool>
+    {
+        public Task<bool> Handle(MoveCalculationCommand request, CancellationToken ct)
+            => service.MoveAsync(request.Id, request.ProjectId, request.DepartmentId, request.UserId, request.AllowCrossDepartment, ct);
     }
 
     public sealed record CreateCalculationCommand(CalculationPostDTO Dto, Guid ProjectId, int UserId, int? DepartmentId) : IRequest<int>;

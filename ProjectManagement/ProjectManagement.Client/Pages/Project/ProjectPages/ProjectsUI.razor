@@ -1,4 +1,3 @@
-@using BlazorMHD.UI.Components.Data.Card
 @using ProjectManagement.Client.Constant
 @using ProjectManagement.Client.Helper
 @using Microsoft.Extensions.Logging
@@ -16,25 +15,50 @@
 <div class="ml-1">
     @if (!Folder.State.OtherDepartment)
     {
-        <div class="flex justify-between items-center w-full p-1">
-            <div>
-                <div class="flex items-center space-x-2 text-gray-700 dark:text-gray-300 font-medium">
-                    <span>@ResourceLoc.folder: @Folder.State.FolderSelected?.Name</span>
+        <div class="flex w-full flex-wrap items-center justify-between gap-2 p-1">
+            <div class="min-w-0">
+                <div class="truncate text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    Projekt i @Folder.State.FolderSelected?.Name
+                </div>
+                <div class="text-xs text-slate-500 dark:text-slate-400">
+                    @(Folder.State.FolderSelected?.Projects?.Count ?? 0) @CalcResource.project
                 </div>
             </div>
-            <div class="flex items-center gap-1">
+            <div class="flex items-center gap-2">
+                <details class="relative">
+                    <summary class="inline-flex h-9 cursor-pointer list-none items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">
+                        Kolumner
+                    </summary>
+                    <div class="absolute right-0 z-20 mt-2 w-56 rounded-lg border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+                        @foreach (var column in ProjectColumnOptions)
+                        {
+                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">
+                                <input type="checkbox"
+                                       class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800"
+                                       checked="@IsProjectColumnVisible(column.Key)"
+                                       @onchange="e => SetProjectColumn(column.Key, e.Value)" />
+                                <span>@column.Label</span>
+                            </label>
+                        }
+                    </div>
+                </details>
+
+                <button type="button"
+                        class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-sky-300 bg-sky-50 px-3 text-sm font-semibold text-sky-700 transition hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-300 dark:hover:bg-sky-950/50"
+                        disabled="@(Folder.State.FolderSelected is null)"
+                        title="Intäktsöversikt"
+                        @onclick="OpenIncomeOverview">
+                    <span>Intäktsöversikt</span>
+                </button>
+
                 <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
                     <button type="button"
-                            class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-                            @onclick="async () => { IaVisible = !IaVisible; await GetAsync(); }">
-                        <span aria-hidden="true">@((MarkupString)Icons.GetVisibleIcon(IaVisible))</span>
-                    </button>
-
-                    <button type="button"
-                            class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-                            disabled="@Folder.State.OtherDepartment"
+                            class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-50 px-3 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-950/50"
+                            disabled="@(Folder.State.OtherDepartment || Folder.State.FolderSelected is null)"
+                            title="Nytt projekt"
                             @onclick="() => UpdateForm(new ListProjectMVVM())">
-                        @((MarkupString)Icons.Plus2)
+                        <span aria-hidden="true">@((MarkupString)Icons.Plus)</span>
+                        <span>Nytt projekt</span>
                     </button>
                 </AuthorizeView>
             </div>
@@ -43,71 +67,119 @@
 
     @if (Folder.State.FolderSelected?.Projects is not null && Folder.State.FolderSelected.Projects.Any())
     {
-        <div class="mr-1 space-y-1">
-            @foreach (var project in Folder.State.FolderSelected.Projects)
-            {
-                <div @key="project.Id"
-                     class="cursor-pointer"
-                     @oncontextmenu:preventDefault
-                     @oncontextmenu="() => Context(project)"
-                     @onclick="async () => await SetProject(project)"
-                     @ondrop="async _ => await HandleDrop(project)"
-                     @ondragleave="() => project.IsDragOver = false"
-                     @ondragover:preventDefault="true"
-                     @ondragover="() => project.IsDragOver = draggingProject is not null"
-                     @ondragstart="() => draggingProject = project"
-                     @ondragend="() => draggingProject = null"
-                     draggable="true">
+        <div class="mr-1 overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
+            <table class="min-w-full table-auto text-left text-xs">
+                <thead class="bg-slate-50 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-900 dark:text-slate-400">
+                    <tr>
+                        @if (IsProjectColumnVisible("code"))
+                        {
+                            <th class="whitespace-nowrap px-3 py-2">Kod</th>
+                        }
+                        @if (IsProjectColumnVisible("name"))
+                        {
+                            <th class="min-w-52 px-3 py-2">Projektnamn</th>
+                        }
+                        @if (IsProjectColumnVisible("status"))
+                        {
+                            <th class="whitespace-nowrap px-3 py-2">@CalcResource.status</th>
+                        }
+                        @if (IsProjectColumnVisible("responsible"))
+                        {
+                            <th class="whitespace-nowrap px-3 py-2">@CalcResource.responsible</th>
+                        }
+                        @if (IsProjectColumnVisible("start"))
+                        {
+                            <th class="whitespace-nowrap px-3 py-2">@CalcResource.startDate</th>
+                        }
+                        @if (IsProjectColumnVisible("end"))
+                        {
+                            <th class="whitespace-nowrap px-3 py-2">@CalcResource.endDate</th>
+                        }
+                        @if (IsProjectColumnVisible("deadline"))
+                        {
+                            <th class="whitespace-nowrap px-3 py-2">@CalcResource.tenderDeadline</th>
+                        }
+                        @if (IsProjectColumnVisible("qa"))
+                        {
+                            <th class="whitespace-nowrap px-3 py-2">@CalcResource.tenderQA</th>
+                        }
+                        @if (IsProjectColumnVisible("calculations"))
+                        {
+                            <th class="whitespace-nowrap px-3 py-2 text-right">Antal kalkyler</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                    @foreach (var project in Folder.State.FolderSelected.Projects)
+                    {
+                        var isProjectArchived = !project.IsVisible;
+                        var isProjectSelected = Folder.State.ProjectSelected?.Id == project.Id;
+                        var rowClasses = GetProjectRowClass(project, isProjectSelected, isProjectArchived);
 
-                    <MhdCard Compact="true"
-                             Elevated="true"
-                             Interaction="MhdCard.CardInteractionMode.HoverAndRipple"
-                             Class="@(project.IsDragOver ? "ring-2 ring-blue-400" : string.Empty)">
-
-                        <Header>
-                            <div class="grid grid-cols-[90px,1fr] items-center gap-2">
-                                <div class="flex items-center gap-2">
-                                    <span class="inline-block w-3 h-3 rounded-full border border-gray-300 dark:border-gray-600"
-                                          style="background-color:@project.Color"></span>
-
-                                    <span class="text-[12px] font-mono text-gray-700 dark:text-gray-200">
-                                        @project.Code
+                        <tr @key="project.Id"
+                            class="@rowClasses"
+                            @oncontextmenu:preventDefault
+                            @oncontextmenu="() => Context(project)"
+                            @onclick="async () => await SetProject(project)"
+                            @ondrop="async _ => await HandleDrop(project)"
+                            @ondragleave="() => project.IsDragOver = false"
+                            @ondragover:preventDefault="true"
+                            @ondragover="() => project.IsDragOver = draggingProject is not null"
+                            @ondragstart="() => draggingProject = project"
+                            @ondragend="() => draggingProject = null"
+                            draggable="true">
+                            @if (IsProjectColumnVisible("code"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 font-mono text-[11px] text-slate-500 dark:text-slate-400">
+                                    <span class="inline-flex items-center gap-1.5">
+                                        <span class="h-2.5 w-2.5 rounded-full border border-slate-300 dark:border-slate-700"
+                                              style="background-color:@project.Color"></span>
+                                        @(string.IsNullOrWhiteSpace(project.Code) ? "-" : project.Code)
                                     </span>
-                                </div>
-
-                                <div class="flex items-center justify-between gap-2">
-                                    <span class="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">
-                                        @project.Name
+                                </td>
+                            }
+                            @if (IsProjectColumnVisible("name"))
+                            {
+                                <td class="max-w-80 px-3 py-2">
+                                    <span class="block truncate font-semibold text-slate-800 dark:text-slate-100" title="@project.Name">@project.Name</span>
+                                </td>
+                            }
+                            @if (IsProjectColumnVisible("status"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2">
+                                    <span class="@GetProjectStatusClass(project)">
+                                        @GetProjectStatusText(project)
                                     </span>
-                                </div>
-                            </div>
-                        </Header>
-
-
-                        <ChildContent>
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-1 text-[11px] text-gray-600 dark:text-gray-300">
-                                <div>
-                                    <span class="font-semibold">@CalcResource.tenderQA:</span>
-                                    <span class="ml-1">@project.TenderQA.ToString(ConstValues.DateFormat)</span>
-                                </div>
-                                <div>
-                                    <span class="font-semibold">@CalcResource.tenderDeadline:</span>
-                                    <span class="ml-1">@project.TenderDeadline.ToString(ConstValues.DateFormat)</span>
-                                </div>
-                                <div>
-                                    <span class="font-semibold">@CalcResource.startDate:</span>
-                                    <span class="ml-1">@project.StartDate.ToString(ConstValues.DateFormat)</span>
-                                </div>
-                                <div>
-                                    <span class="font-semibold">@CalcResource.endDate:</span>
-                                    <span class="ml-1">@project.EndDate.ToString(ConstValues.DateFormat)</span>
-                                </div>
-                            </div>
-                        </ChildContent>
-
-                    </MhdCard>
-                </div>
-            }
+                                </td>
+                            }
+                            @if (IsProjectColumnVisible("responsible"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Responsible)</td>
+                            }
+                            @if (IsProjectColumnVisible("start"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.StartDate)</td>
+                            }
+                            @if (IsProjectColumnVisible("end"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.EndDate)</td>
+                            }
+                            @if (IsProjectColumnVisible("deadline"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.TenderDeadline)</td>
+                            }
+                            @if (IsProjectColumnVisible("qa"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.TenderQA)</td>
+                            }
+                            @if (IsProjectColumnVisible("calculations"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-right text-slate-600 dark:text-slate-300">@FormatCalculationCount(project)</td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     }
     else
@@ -125,8 +197,35 @@
 @code {
 
     Guid UpdateProject = Guid.Empty;
-    bool IaVisible { get; set; } = true;
     private ListProjectMVVM? draggingProject;
+
+    private readonly Dictionary<string, bool> _projectColumns = new()
+    {
+        ["code"] = true,
+        ["name"] = true,
+        ["status"] = true,
+        ["responsible"] = true,
+        ["start"] = true,
+        ["end"] = true,
+        ["deadline"] = false,
+        ["qa"] = false,
+        ["calculations"] = true
+    };
+
+    private readonly record struct ColumnOption(string Key, string Label);
+
+    private List<ColumnOption> ProjectColumnOptions => new()
+    {
+        new("code", "Kod"),
+        new("name", "Projektnamn"),
+        new("status", CalcResource.status),
+        new("responsible", CalcResource.responsible),
+        new("start", CalcResource.startDate),
+        new("end", CalcResource.endDate),
+        new("deadline", CalcResource.tenderDeadline),
+        new("qa", CalcResource.tenderQA),
+        new("calculations", "Antal kalkyler")
+    };
 
     protected override void OnInitialized()
     {
@@ -139,6 +238,57 @@
     }
 
     private void ToastChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);
+
+    private bool IsProjectColumnVisible(string key) =>
+        _projectColumns.TryGetValue(key, out var visible) && visible;
+
+    private void SetProjectColumn(string key, object? value)
+    {
+        if (_projectColumns.ContainsKey(key))
+            _projectColumns[key] = value is bool checkedValue && checkedValue;
+    }
+
+    private static string FormatText(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? "-" : value;
+
+    private static string FormatDate(DateTime value) =>
+        value == default ? "-" : value.ToString(ConstValues.DateFormat);
+
+    private static string FormatCalculationCount(ListProjectMVVM project) =>
+        project.CalculationsLoaded ? (project.Calculations?.Count ?? 0).ToString() : "-";
+
+    private static string GetProjectStatusText(ListProjectMVVM project)
+    {
+        if (!project.IsVisible)
+            return "Arkiverad";
+
+        return string.IsNullOrWhiteSpace(project.Status) ? "Aktiv" : project.Status;
+    }
+
+    private static string GetProjectStatusClass(ListProjectMVVM project) =>
+        !project.IsVisible
+            ? "inline-flex rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+            : "inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300";
+
+    private static string GetProjectRowClass(ListProjectMVVM project, bool selected, bool archived)
+    {
+        var classes = new List<string>
+        {
+            "cursor-pointer transition-colors",
+            "hover:bg-slate-50 dark:hover:bg-slate-900/80"
+        };
+
+        if (selected)
+            classes.Add("bg-sky-50 dark:bg-sky-950/30");
+
+        if (project.IsDragOver)
+            classes.Add("ring-2 ring-blue-400");
+
+        if (archived)
+            classes.Add("text-slate-500 opacity-75 grayscale dark:text-slate-400");
+
+        return string.Join(" ", classes);
+    }
 
     async Task Context(ListProjectMVVM item)
     {
@@ -157,6 +307,24 @@
                 OnClickAsync = () =>
                 {
                     UpdateForm(item); return Task.CompletedTask;
+                }
+            });
+            list.Add(new()
+            {
+                Label = $"{Icons.Folder} Flytta projekt",
+                OnClickAsync = () =>
+                {
+                    OpenMoveCopyDialog(item, MoveCopyOperation.Move);
+                    return Task.CompletedTask;
+                }
+            });
+            list.Add(new()
+            {
+                Label = $"{Icons.Copy} Kopiera projekt",
+                OnClickAsync = () =>
+                {
+                    OpenMoveCopyDialog(item, MoveCopyOperation.Copy);
+                    return Task.CompletedTask;
                 }
             });
             list.Add(new()
@@ -187,6 +355,39 @@
                 [nameof(ProjectDetailsUI.ProjectId)] = model.Id,
             }, BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
 
+    void OpenMoveCopyDialog(ListProjectMVVM project, string operation) =>
+        Modal.ShowComponent<MoveCopyDialog>(
+            operation == MoveCopyOperation.Copy ? "Kopiera projekt" : "Flytta projekt",
+            new Dictionary<string, object>
+            {
+                [nameof(MoveCopyDialog.ItemKind)] = MoveCopyItemKind.Project,
+                [nameof(MoveCopyDialog.Operation)] = operation,
+                [nameof(MoveCopyDialog.SourceFolder)] = Folder.State.FolderSelected!,
+                [nameof(MoveCopyDialog.SourceProject)] = project,
+                [nameof(MoveCopyDialog.OnCompleted)] = EventCallback.Factory.Create(this, ReloadAfterMoveCopyAsync)
+            },
+            BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
+
+    async Task ReloadAfterMoveCopyAsync()
+    {
+        await GetAsync(refresh: true);
+        UoWService.Folder.State.Notify();
+    }
+
+    void OpenIncomeOverview()
+    {
+        if (Folder.State.FolderSelected is null)
+            return;
+
+        Modal.ShowComponent<IncomeOverviewDialog>(
+            "Intäktsöversikt",
+            new Dictionary<string, object>
+            {
+                [nameof(IncomeOverviewDialog.FolderScope)] = Folder.State.FolderSelected
+            },
+            BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
+    }
+
     void UpdateForm(ListProjectMVVM model)
     {
         UpdateProject = model.Id;
@@ -213,7 +414,7 @@
         if (refresh && Folder.State.FolderSelected is not null)
         {
             Folder.State.FolderSelected.Projects =
-                await Repo.Project.GetByFolderIdAsync(Folder.State.FolderSelected.Id, IaVisible);
+                await Repo.Project.GetByFolderIdAsync(Folder.State.FolderSelected.Id, UoWService.Folder.ShowArchived);
 
             if (Folder.State.FolderSelected.Projects != null)
                 Folder.State.FolderSelected.Projects =
@@ -234,11 +435,11 @@
         }
 
         var project = callBack.Item2;
-        bool isVisibleMatches = callBack.Item1 == IaVisible;
+        bool shouldKeepInList = UoWService.Folder.ShowArchived || callBack.Item1;
 
         if (UpdateProject == Guid.Empty)
         {
-            if (project.Id != Guid.Empty && isVisibleMatches)
+            if (project.Id != Guid.Empty && shouldKeepInList)
             {
                 Folder.State.FolderSelected!.Projects.Insert(0, project);
             }
@@ -248,7 +449,7 @@
             var existing = Folder.State.FolderSelected!.Projects.FirstOrDefault(x => x.Id == UpdateProject);
             if (existing != null)
             {
-                if (!isVisibleMatches)
+                if (!shouldKeepInList)
                 {
                     Folder.State.FolderSelected.Projects.Remove(existing);
                 }

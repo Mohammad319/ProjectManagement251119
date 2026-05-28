@@ -3,6 +3,7 @@
 @inherits AppComponentBase
 
 @inject ProjectManagement.Client.Shared.Repositories.Folder.IFolderRepository _folderRepo
+@inject ProjectManagement.Client.Shared.Repositories.Project.IProjectRepository _projectRepo
 <EditForm id="@DialogFormId"
           class="w-full max-w-3xl space-y-4 p-3 text-slate-800 dark:text-slate-100"
           Model="@PostFolder"
@@ -22,7 +23,7 @@
 
         <div class="col-span-1 flex min-w-0 flex-col gap-1.5 lg:col-span-3">
             <label aria-hidden="true" class="select-none text-sm font-medium text-transparent">
-                @ResourceApp.isVisible
+                Aktiv
             </label>
             <label for="folderVisible"
                    class="flex h-10 w-full items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 dark:border-slate-700 dark:bg-slate-800/50">
@@ -30,7 +31,7 @@
                                class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900"
                                @bind-Value="@PostFolder.IsVisible" />
                 <span class="truncate text-sm font-medium text-slate-700 dark:text-slate-200">
-                    @ResourceApp.isVisible
+                    @(PostFolder.IsVisible ? "Aktiv" : "Arkiverad")
                 </span>
             </label>
         </div>
@@ -60,6 +61,32 @@
     }
 
     private async Task HandleSubmitAsync()
+    {
+        if (ShouldConfirmArchiveFolder() && await HasActiveProjectsAsync())
+        {
+            MHD.MessageYesNo(
+                "Arkivera mapp",
+                "Mappen innehåller aktiva projekt. Är du säker på att du vill arkivera mappen?",
+                BlazorMHD.UI.Core.DesignSystem.MhdState.Warning,
+                EventCallback.Factory.Create(this, SubmitAsync));
+            return;
+        }
+
+        await SubmitAsync();
+    }
+
+    private bool ShouldConfirmArchiveFolder() =>
+        FolderForm.Id != Guid.Empty &&
+        FolderForm.IsVisible &&
+        !PostFolder.IsVisible;
+
+    private async Task<bool> HasActiveProjectsAsync()
+    {
+        var projects = await _projectRepo.GetByFolderIdAsync(FolderForm.Id, includeArchived: false);
+        return projects.Any();
+    }
+
+    private async Task SubmitAsync()
     {
         if (btnSubmitDisabled)
             return;

@@ -1,6 +1,8 @@
 using Application.Feature.Project.Project;
+using Application.Mapping.Calculation;
 using Application.Helper;
 using Application.Mapping.Project;
+using Domain.Entities.Calculation;
 using Domain.Entities.Project;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Context;
@@ -80,6 +82,130 @@ namespace Persistence.Service.Project
 
             await context.SaveChangesAsync(ct);
             return true;
+        }
+
+        public async Task<bool> MoveAsync(Guid id, Guid targetFolderId, int userId, int? departmentId, bool allowCrossDepartment, CancellationToken ct)
+        {
+            if (targetFolderId == Guid.Empty)
+                return false;
+
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            var project = await context.Projects
+                .Include(x => x.Folder)
+                .Include(x => x.Calculations)
+                .FirstOrDefaultAsync(x => x.Id == id &&
+                    (departmentId == null || x.Folder.DepartmentId == departmentId), ct);
+
+            if (project is null)
+                return false;
+
+            var targetDepartmentId = await context.Folders
+                .AsNoTracking()
+                .Where(x => x.Id == targetFolderId)
+                .Select(x => (int?)x.DepartmentId)
+                .FirstOrDefaultAsync(ct);
+
+            if (!targetDepartmentId.HasValue)
+                return false;
+
+            if (departmentId.HasValue && targetDepartmentId.Value != departmentId.Value && !allowCrossDepartment)
+                return false;
+
+            project.MoveToFolder(targetFolderId);
+            project.UpdatedBy = userId;
+            project.UpdatedAt = DateTime.UtcNow;
+
+            foreach (var calculation in project.Calculations)
+                calculation.AssignDepartment(targetDepartmentId.Value);
+
+            await context.SaveChangesAsync(ct);
+            return true;
+        }
+
+        public async Task<Guid> CopyAsync(Guid id, Guid targetFolderId, bool includeCalculations, int userId, int? departmentId, bool allowCrossDepartment, CancellationToken ct)
+        {
+            if (targetFolderId == Guid.Empty)
+                return Guid.Empty;
+
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            var original = await context.Projects
+                .AsNoTracking()
+                .Include(x => x.Folder)
+                .Include(x => x.Calculations)
+                    .ThenInclude(x => x.Tasks)
+                        .ThenInclude(x => x.Resources)
+                .FirstOrDefaultAsync(x => x.Id == id &&
+                    (departmentId == null || x.Folder.DepartmentId == departmentId || x.CreatedBy == userId), ct);
+
+            if (original is null)
+                return Guid.Empty;
+
+            var targetDepartmentId = await context.Folders
+                .AsNoTracking()
+                .Where(x => x.Id == targetFolderId)
+                .Select(x => (int?)x.DepartmentId)
+                .FirstOrDefaultAsync(ct);
+
+            if (!targetDepartmentId.HasValue)
+                return Guid.Empty;
+
+            if (departmentId.HasValue && targetDepartmentId.Value != departmentId.Value && !allowCrossDepartment)
+                return Guid.Empty;
+
+            var existingProjectNames = await context.Projects
+                .AsNoTracking()
+                .Where(x => x.FolderId == targetFolderId)
+                .Select(x => x.Name)
+                .ToListAsync(ct);
+
+            var existingProjectCodes = await context.Projects
+                .AsNoTracking()
+                .Select(x => x.Code ?? string.Empty)
+                .ToListAsync(ct);
+
+            var copyDto = original.ToPostDto();
+            copyDto.FolderId = targetFolderId;
+            copyDto.Name = EnsureUniqueName(copyDto.Name, existingProjectNames);
+            copyDto.Code = EnsureUniqueCode(copyDto.Code, existingProjectCodes);
+
+            var maxOrder = await context.Projects
+                .AsNoTracking()
+                .Where(x => x.FolderId == targetFolderId)
+                .OrderByDescending(x => x.SortOrder)
+                .Select(x => (int?)x.SortOrder)
+                .FirstOrDefaultAsync(ct) ?? 0;
+
+            var copy = ProjectEntity.Create(copyDto, targetFolderId, userId, maxOrder + 100);
+            copy.Id = Guid.NewGuid();
+            context.Projects.Add(copy);
+
+            if (includeCalculations)
+            {
+                var existingCalculationNames = new List<string>();
+                var existingCalculationCodes = new List<string>();
+
+                var calcOrder = 0;
+                foreach (var calculation in original.Calculations.OrderBy(x => x.SortOrder))
+                {
+                    var calculationCopy = CalculationEntity.CreateCopy(calculation, copy.Id, userId);
+                    calculationCopy.AssignDepartment(targetDepartmentId.Value);
+
+                    var calculationDto = calculation.ToPostDto();
+                    calculationDto.Name = EnsureUniqueName(calculationDto.Name, existingCalculationNames);
+                    calculationDto.Code = EnsureUniqueCode(calculationDto.Code, existingCalculationCodes);
+                    calculationDto.Order = calcOrder += 100;
+                    calculationCopy.Update(calculationDto);
+
+                    existingCalculationNames.Add(calculationDto.Name);
+                    existingCalculationCodes.Add(calculationDto.Code);
+                    copy.Calculations.Add(calculationCopy);
+                }
+            }
+
+            await context.SaveChangesAsync(ct);
+            return copy.Id;
         }
 
         public async Task<bool> DeleteAsync(Guid id, int userId, int? departmentId, CancellationToken ct)
@@ -184,12 +310,12 @@ namespace Persistence.Service.Project
             return project?.ToPostDto();
         }
 
-        public async Task<IEnumerable<ListProjectDTO>> GetByFolderAsync(Guid folderId, bool isVisible, int userId, int? departmentId, CancellationToken ct)
+        public async Task<IEnumerable<ListProjectDTO>> GetByFolderAsync(Guid folderId, bool includeArchived, int userId, int? departmentId, CancellationToken ct)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             return await context.Projects.AsNoTracking()
-                .Where(x => x.FolderId == folderId && x.IsVisible == isVisible &&
+                .Where(x => x.FolderId == folderId && (includeArchived || x.IsVisible) &&
                        (departmentId == null || x.Folder.DepartmentId == departmentId || x.CreatedBy == userId))
                 .OrderBy(x => x.SortOrder)
                 .ThenBy(x => x.Name)
@@ -197,12 +323,12 @@ namespace Persistence.Service.Project
                 .ToListAsync(ct);
         }
 
-        public async Task<IEnumerable<ListProjectDTO>> GetOtherGroupByFolderAsync(Guid folderId, int userId, int? departmentId, CancellationToken ct)
+        public async Task<IEnumerable<ListProjectDTO>> GetOtherGroupByFolderAsync(Guid folderId, int userId, int? departmentId, bool includeArchived, CancellationToken ct)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             return await context.Projects.AsNoTracking()
-                .Where(x => x.FolderId == folderId && x.IsVisible &&
+                .Where(x => x.FolderId == folderId && (includeArchived || x.IsVisible) &&
                     x.Calculations.SelectMany(c => c.SharesCalc)
                         .Any(s => s.CreatedBy == userId || s.DepartmentId == departmentId))
                 .OrderBy(x => x.SortOrder)
@@ -280,6 +406,31 @@ namespace Persistence.Service.Project
 
         private static string? NormalizeCode(string? code)
             => string.IsNullOrWhiteSpace(code) ? null : code.Trim();
+
+        private static string EnsureUniqueName(string name, IEnumerable<string> existingNames)
+        {
+            var existing = existingNames.ToHashSet(StringComparer.CurrentCultureIgnoreCase);
+            if (!existing.Contains(name))
+                return name;
+
+            var baseName = $"{name} - kopia";
+            if (!existing.Contains(baseName))
+                return baseName;
+
+            var index = 2;
+            while (existing.Contains($"{baseName} {index}"))
+                index++;
+
+            return $"{baseName} {index}";
+        }
+
+        private static string EnsureUniqueCode(string? code, IEnumerable<string> existingCodes)
+        {
+            if (string.IsNullOrWhiteSpace(code))
+                return string.Empty;
+
+            return EnsureUniqueName(code, existingCodes);
+        }
 
         private static async Task<bool> ValidateProjectReferencesAsync(
             ShardingSingleDbContext context,

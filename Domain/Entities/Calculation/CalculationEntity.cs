@@ -305,6 +305,12 @@ namespace Domain.Entities.Calculation
             ProjectId = projectId;
         }
 
+        public void MoveToProject(Guid projectId, int departmentId)
+        {
+            AssignToProject(projectId);
+            AssignDepartment(departmentId);
+        }
+
         public void UpdateOrder(int newOrder)
         {
             if (double.IsNaN(newOrder) || double.IsInfinity(newOrder))
