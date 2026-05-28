@@ -241,9 +241,10 @@
                     <tbody>
                         @if (VisiblePreviewRows.Any())
                         {
-                            @foreach (var row in VisiblePreviewRows)
+                            var _rowIdx = 0;
+                            foreach (var row in VisiblePreviewRows)
                             {
-                                @TaskRow(row)
+                                @TaskRow(row, _rowIdx++)
                             }
                         }
                         else
@@ -263,7 +264,7 @@
 </div>
 
 @code {
-    RenderFragment TaskRow(PreviewRow row) => __builder =>
+    RenderFragment TaskRow(PreviewRow row, int rowIndex = 0) => __builder =>
     {
         var Task = row.Task;
         var siblings = row.Siblings;
@@ -272,7 +273,7 @@
         bool hasChildren = Task.Tasks.Any();
         bool showTreeAnchor = IsTreeView && (hasCode || hasChildren);
 
-        <tr class="@GetPreviewRowClass(row)">
+        <tr class="@GetPreviewRowClass(row, rowIndex)">
             <td class="border border-slate-300 px-1.5 py-0.5 text-xs font-medium text-slate-500 dark:border-slate-700 dark:text-slate-400">
                 @GetOriginalRowNumber(Task)
             </td>
@@ -304,13 +305,13 @@
                         {
                             <button type="button"
                                     @onclick="() => Task.Colspan = !Task.Colspan"
-                                    class="relative z-[1] inline-flex h-5 w-5 shrink-0 items-center justify-center rounded border border-slate-300 bg-white/90 text-base font-bold leading-none text-slate-600 transition hover:border-slate-400 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-300 dark:hover:border-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-100">
-                                @(Task.Colspan ? "−" : "+")
+                                    class="relative z-[1] inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-[11px] font-bold leading-none text-slate-500 transition hover:bg-slate-100/80 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-slate-200">
+                                @(Task.Colspan ? "−−" : "+")
                             </button>
                         }
                         else
                         {
-                            <span class="relative z-[1] inline-block h-5 w-5 shrink-0"></span>
+                            <span class="relative z-[1] inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden text-[9px] font-normal leading-none tracking-tighter select-none text-slate-300 dark:text-slate-600">────</span>
                         }
                         <input class="relative z-[1] h-5 min-w-[2.5rem] max-w-[8rem] flex-shrink truncate rounded border border-slate-300 bg-white px-1 text-xs text-slate-900 outline-none transition focus:border-blue-400 focus:ring-1 focus:ring-blue-400/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-500 dark:focus:ring-blue-500/20"
                                type="text"
@@ -333,7 +334,7 @@
                     <input class="h-6 min-w-0 flex-1 truncate rounded-md border border-slate-300 bg-white px-1.5 text-xs text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
                            type="text"
                            value="@Task.Name"
-                           title="@Task.Name"
+                           onmouseenter="this.title = this.scrollWidth > this.offsetWidth ? this.value : ''"
                            @onchange="args => OnNameChanged(Task, args.Value?.ToString())" />
                     <button type="button"
                             class="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-xs font-semibold text-slate-500 transition hover:border-blue-300 hover:text-blue-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-blue-700 dark:hover:text-blue-300"
@@ -469,7 +470,7 @@
     private string TreeConnectorVerticalClass => $"pointer-events-none absolute bottom-1 top-1 border-l border-dashed {TreeConnectorColorClass}";
     private string TreeConnectorCurrentTopClass => $"pointer-events-none absolute top-1 border-l border-dashed {TreeConnectorColorClass}";
     private string TreeConnectorCurrentBottomClass => $"pointer-events-none absolute bottom-1 border-l border-dashed {TreeConnectorColorClass}";
-    private string TreeConnectorHorizontalClass => $"pointer-events-none absolute top-1/2 w-2.5 border-t border-dashed {TreeConnectorColorClass}";
+    private string TreeConnectorHorizontalClass => $"pointer-events-none absolute top-1/2 w-5 border-t border-dashed {TreeConnectorColorClass}";
     private readonly Dictionary<TaskPostDTO, string> AmountDrafts = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<TaskPostDTO, string> InvalidQuantityDrafts = new(ReferenceEqualityComparer.Instance);
     private readonly HashSet<TaskPostDTO> ChangedTasks = new(ReferenceEqualityComparer.Instance);
@@ -962,6 +963,7 @@
         try
         {
             XLWorkbook currentWorkbook = workbook!;
+            CancelImportSuccessTimer();
             ImportMessage = T("Importerar...", "Importing...");
             ImportMessageIsSuccess = false;
             if (manageWait)
@@ -1002,6 +1004,7 @@
             if (!string.IsNullOrWhiteSpace(completionPrefix))
                 ImportMessage = $"{completionPrefix}{Environment.NewLine}{Environment.NewLine}{ImportMessage}";
             ImportMessageIsSuccess = true;
+            StartImportSuccessTimer();
         }
         catch (Exception ex)
         {
@@ -1048,10 +1051,40 @@
             loadingOverlayActive = false;
         }
 
+        CancelImportSuccessTimer();
         workbook?.Dispose();
         workbook = null;
         workbookStream?.Dispose();
         workbookStream = null;
+    }
+
+    private CancellationTokenSource? _importMsgTimer;
+
+    private void StartImportSuccessTimer()
+    {
+        CancelImportSuccessTimer();
+        _importMsgTimer = new CancellationTokenSource();
+        var token = _importMsgTimer.Token;
+        _ = Task.Delay(TimeSpan.FromSeconds(30), token).ContinueWith(t =>
+        {
+            if (t.IsCanceled) return;
+            _ = InvokeAsync(() =>
+            {
+                if (ImportMessageIsSuccess)
+                {
+                    ImportMessage = string.Empty;
+                    ImportMessageIsSuccess = false;
+                    StateHasChanged();
+                }
+            });
+        }, TaskScheduler.Default);
+    }
+
+    private void CancelImportSuccessTimer()
+    {
+        _importMsgTimer?.Cancel();
+        _importMsgTimer?.Dispose();
+        _importMsgTimer = null;
     }
 
     bool EnsureWorkbook()
@@ -1089,6 +1122,7 @@
         if (!HasImportedPreview && !transferCompleted)
             return;
 
+        CancelImportSuccessTimer();
         Sections = null;
         AmountDrafts.Clear();
         InvalidQuantityDrafts.Clear();
@@ -1492,6 +1526,9 @@
         if (!IsDash(value))
             ConvertDashRowToEditableTask(task);
 
+        if (!string.IsNullOrWhiteSpace(value) && !IsDash(value))
+            PromoteCodeNameToTask(task);
+
         task.Unit = value;
         MarkPreviewChanged(task);
     }
@@ -1508,6 +1545,9 @@
         }
 
         ConvertDashRowToEditableTask(task);
+        if (!string.IsNullOrWhiteSpace(value))
+            PromoteCodeNameToTask(task);
+
         if (TryReadDecimal(value, out var quantity))
         {
             task.Quantity = quantity;
@@ -1537,6 +1577,7 @@
         }
 
         ConvertDashRowToEditableTask(task);
+        PromoteCodeNameToTask(task);
         task.Metadata.PriceSubDB = TryReadDecimal(value, out var price) && price != 0m ? price : null;
         MarkPreviewChanged(task);
     }
@@ -1551,6 +1592,7 @@
             return;
         }
 
+        PromoteCodeNameToTask(task);
         AmountDrafts[task] = TryReadDecimal(value, out var amount) && amount != 0m
             ? FormatDecimal(amount)
             : string.Empty;
@@ -1570,6 +1612,17 @@
         task.Quantity = includeAmount ? null : 1m;
         AmountDrafts[task] = includeAmount ? "-" : FormatAmountDraft(task);
         MarkPreviewChanged(task);
+    }
+
+    private void PromoteCodeNameToTask(TaskPostDTO task)
+    {
+        if (task.Metadata.Type != TaskType.CodeName)
+            return;
+        task.Metadata.Type = TaskType.Task;
+        task.Quantity ??= 1m;
+        task.Metadata.BaseQuantity ??= task.Quantity;
+        task.Metadata.QuantityParam = ConstValues.FixedQ;
+        AmountDrafts[task] = string.Empty;
     }
 
     private void ConvertDashRowToEditableTask(TaskPostDTO task)
@@ -1974,10 +2027,11 @@
         ?? diagnostics.FirstOrDefault()?.ShortText
         ?? string.Empty;
 
-    private string GetPreviewRowClass(PreviewRow row)
+    private string GetPreviewRowClass(PreviewRow row, int rowIndex = 0)
     {
         bool hasWarning = GetTaskDiagnostics(row.Task, row.Depth).Any(x => x.Kind == DiagnosticKind.Warning);
         bool hasCode = !string.IsNullOrWhiteSpace(row.Task.Metadata.Code);
+        bool isOdd = rowIndex % 2 == 1;
         string weight = hasCode
             ? (row.Depth == 0
                 ? "font-bold"
@@ -1986,16 +2040,16 @@
                     : "font-normal")
             : "font-normal";
         string background = hasWarning
-            ? "bg-amber-50/55 dark:bg-amber-950/15"
+            ? (isOdd ? "bg-amber-50/75 dark:bg-amber-950/25" : "bg-amber-50/55 dark:bg-amber-950/15")
             : row.Task.Metadata.Type switch
             {
-                TaskType.CodeName => "bg-slate-50/60 dark:bg-slate-900/35",
-                TaskType.ThreeBarCode => "bg-blue-50/30 dark:bg-blue-950/10",
-                TaskType.FourBarCode => "bg-violet-50/30 dark:bg-violet-950/10",
-                _ => "bg-white dark:bg-slate-950/20"
+                TaskType.CodeName => isOdd ? "bg-slate-100/70 dark:bg-slate-800/50" : "bg-slate-50/60 dark:bg-slate-900/35",
+                TaskType.ThreeBarCode => isOdd ? "bg-blue-50/50 dark:bg-blue-950/20" : "bg-blue-50/30 dark:bg-blue-950/10",
+                TaskType.FourBarCode => isOdd ? "bg-violet-50/50 dark:bg-violet-950/20" : "bg-violet-50/30 dark:bg-violet-950/10",
+                _ => isOdd ? "bg-slate-50/80 dark:bg-slate-900/40" : "bg-white dark:bg-slate-950/20"
             };
 
-        return $"{background} {weight} border-b border-slate-200 transition-colors hover:bg-blue-50/40 dark:border-slate-700 dark:hover:bg-blue-950/20";
+        return $"{background} {weight} border-b border-slate-200 transition-colors hover:bg-blue-50/50 dark:border-slate-700 dark:hover:bg-blue-950/25";
     }
 
     private string GetTaskTypeSelectClass(TaskPostDTO task, IReadOnlyList<DiagnosticItem> diagnostics)
