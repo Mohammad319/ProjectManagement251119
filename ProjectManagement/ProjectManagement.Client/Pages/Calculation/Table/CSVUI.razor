@@ -299,12 +299,12 @@
                                       style="left:@($"{GetTreeGuideLeftPx(row.Depth - 1)}px");height:calc(50% - 0.25rem)"></span>
                             }
                             <span class="@TreeConnectorHorizontalClass"
-                                  style="left:@($"{GetTreeGuideLeftPx(row.Depth - 1)}px")">@(hasChildren ? "− - " : "─ ─ ─ ─ ")</span>
+                                  style="left:@($"{GetTreeGuideLeftPx(row.Depth - 1)}px");width:@(hasChildren ? "10px" : "24px")"></span>
                         }
                         @if (!HasActivePreviewFilter && hasChildren)
                         {
                             <button type="button"
-                                    @onclick="() => Task.Colspan = !Task.Colspan"
+                                    @onclick="() => Task.Colspan = !Task.Colspan" style="padding-bottom: 2px"
                                     class="relative z-[1] inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-[11px] font-bold leading-none text-slate-500 transition hover:bg-slate-100/80 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-slate-200">
                                 @(Task.Colspan ? "−" : "+")
                             </button>
@@ -317,6 +317,7 @@
                                type="text"
                                value="@Task.Metadata.Code"
                                title="@Task.Metadata.Code"
+                               style="padding-top:0;padding-bottom:2px"
                                @onchange="args => OnCodeChanged(Task, args.Value?.ToString())" />
                     </div>
                 }
@@ -470,7 +471,7 @@
     private string TreeConnectorVerticalClass => $"pointer-events-none absolute bottom-1 top-1 border-l border-dashed {TreeConnectorColorClass}";
     private string TreeConnectorCurrentTopClass => $"pointer-events-none absolute top-1 border-l border-dashed {TreeConnectorColorClass}";
     private string TreeConnectorCurrentBottomClass => $"pointer-events-none absolute bottom-1 border-l border-dashed {TreeConnectorColorClass}";
-    private string TreeConnectorHorizontalClass => "pointer-events-none absolute top-1/2 -translate-y-1/2 select-none text-[8px] scale-75 origin-left leading-none text-slate-400/75 dark:text-slate-500/65";
+    private string TreeConnectorHorizontalClass => $"pointer-events-none absolute top-1/2 border-t border-dashed {TreeConnectorColorClass}";
     private readonly Dictionary<TaskPostDTO, string> AmountDrafts = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<TaskPostDTO, string> InvalidQuantityDrafts = new(ReferenceEqualityComparer.Instance);
     private readonly HashSet<TaskPostDTO> ChangedTasks = new(ReferenceEqualityComparer.Instance);
