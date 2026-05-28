@@ -299,19 +299,19 @@
                                       style="left:@($"{GetTreeGuideLeftPx(row.Depth - 1)}px");height:calc(50% - 0.25rem)"></span>
                             }
                             <span class="@TreeConnectorHorizontalClass"
-                                  style="left:@($"{GetTreeGuideLeftPx(row.Depth - 1)}px")"></span>
+                                  style="left:@($"{GetTreeGuideLeftPx(row.Depth - 1)}px")">@(hasChildren ? "− - " : "─ ─ ─ ─ ")</span>
                         }
                         @if (!HasActivePreviewFilter && hasChildren)
                         {
                             <button type="button"
                                     @onclick="() => Task.Colspan = !Task.Colspan"
                                     class="relative z-[1] inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-[11px] font-bold leading-none text-slate-500 transition hover:bg-slate-100/80 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-slate-200">
-                                @(Task.Colspan ? "−−" : "+")
+                                @(Task.Colspan ? "−" : "+")
                             </button>
                         }
                         else
                         {
-                            <span class="relative z-[1] inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden text-[9px] font-normal leading-none tracking-tighter select-none text-slate-300 dark:text-slate-600">────</span>
+                            <span class="relative z-[1] inline-block h-5 w-5 shrink-0"></span>
                         }
                         <input class="relative z-[1] h-5 min-w-[2.5rem] max-w-[8rem] flex-shrink truncate rounded border border-slate-300 bg-white px-1 text-xs text-slate-900 outline-none transition focus:border-blue-400 focus:ring-1 focus:ring-blue-400/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-500 dark:focus:ring-blue-500/20"
                                type="text"
@@ -470,7 +470,7 @@
     private string TreeConnectorVerticalClass => $"pointer-events-none absolute bottom-1 top-1 border-l border-dashed {TreeConnectorColorClass}";
     private string TreeConnectorCurrentTopClass => $"pointer-events-none absolute top-1 border-l border-dashed {TreeConnectorColorClass}";
     private string TreeConnectorCurrentBottomClass => $"pointer-events-none absolute bottom-1 border-l border-dashed {TreeConnectorColorClass}";
-    private string TreeConnectorHorizontalClass => $"pointer-events-none absolute top-1/2 w-5 border-t border-dashed {TreeConnectorColorClass}";
+    private string TreeConnectorHorizontalClass => "pointer-events-none absolute top-1/2 -translate-y-1/2 select-none text-[8px] scale-75 origin-left leading-none text-slate-400/75 dark:text-slate-500/65";
     private readonly Dictionary<TaskPostDTO, string> AmountDrafts = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<TaskPostDTO, string> InvalidQuantityDrafts = new(ReferenceEqualityComparer.Instance);
     private readonly HashSet<TaskPostDTO> ChangedTasks = new(ReferenceEqualityComparer.Instance);
@@ -1527,7 +1527,7 @@
             ConvertDashRowToEditableTask(task);
 
         if (!string.IsNullOrWhiteSpace(value) && !IsDash(value))
-            PromoteCodeNameToTask(task);
+            PromoteCodeNameToTask(task, setDefaultQuantity: false);
 
         task.Unit = value;
         MarkPreviewChanged(task);
@@ -1614,13 +1614,16 @@
         MarkPreviewChanged(task);
     }
 
-    private void PromoteCodeNameToTask(TaskPostDTO task)
+    private void PromoteCodeNameToTask(TaskPostDTO task, bool setDefaultQuantity = true)
     {
         if (task.Metadata.Type != TaskType.CodeName)
             return;
         task.Metadata.Type = TaskType.Task;
-        task.Quantity ??= 1m;
-        task.Metadata.BaseQuantity ??= task.Quantity;
+        if (setDefaultQuantity)
+        {
+            task.Quantity ??= 1m;
+            task.Metadata.BaseQuantity ??= task.Quantity;
+        }
         task.Metadata.QuantityParam = ConstValues.FixedQ;
         AmountDrafts[task] = string.Empty;
     }
@@ -2040,16 +2043,16 @@
                     : "font-normal")
             : "font-normal";
         string background = hasWarning
-            ? (isOdd ? "bg-amber-50/75 dark:bg-amber-950/25" : "bg-amber-50/55 dark:bg-amber-950/15")
+            ? (isOdd ? "bg-amber-100/60 dark:bg-amber-900/30" : "bg-amber-50/55 dark:bg-amber-950/15")
             : row.Task.Metadata.Type switch
             {
-                TaskType.CodeName => isOdd ? "bg-slate-100/70 dark:bg-slate-800/50" : "bg-slate-50/60 dark:bg-slate-900/35",
-                TaskType.ThreeBarCode => isOdd ? "bg-blue-50/50 dark:bg-blue-950/20" : "bg-blue-50/30 dark:bg-blue-950/10",
-                TaskType.FourBarCode => isOdd ? "bg-violet-50/50 dark:bg-violet-950/20" : "bg-violet-50/30 dark:bg-violet-950/10",
-                _ => isOdd ? "bg-slate-50/80 dark:bg-slate-900/40" : "bg-white dark:bg-slate-950/20"
+                TaskType.CodeName => isOdd ? "bg-slate-200/50 dark:bg-slate-700/50" : "bg-slate-50/60 dark:bg-slate-900/35",
+                TaskType.ThreeBarCode => isOdd ? "bg-blue-100/35 dark:bg-blue-900/25" : "bg-blue-50/30 dark:bg-blue-950/10",
+                TaskType.FourBarCode => isOdd ? "bg-violet-100/35 dark:bg-violet-900/25" : "bg-violet-50/30 dark:bg-violet-950/10",
+                _ => isOdd ? "bg-slate-100 dark:bg-slate-800/55" : "bg-white dark:bg-slate-950/20"
             };
 
-        return $"{background} {weight} border-b border-slate-200 transition-colors hover:bg-blue-50/50 dark:border-slate-700 dark:hover:bg-blue-950/25";
+        return $"{background} {weight} border-b border-slate-200 transition-colors hover:bg-blue-50/30 dark:border-slate-700 dark:hover:bg-blue-950/15";
     }
 
     private string GetTaskTypeSelectClass(TaskPostDTO task, IReadOnlyList<DiagnosticItem> diagnostics)
