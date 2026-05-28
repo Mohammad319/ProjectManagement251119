@@ -280,28 +280,25 @@
                 @if (IsTreeView)
                 {
                     <div class="relative flex h-6 min-w-0 items-center" style="padding-left:@($"{GetTreeIndentPx(row.Depth)}px")">
-                        @if (showTreeAnchor)
+                        @if (row.Depth > 0)
                         {
-                            @for (int g = 0; g < row.Depth; g++)
+                            @for (int g = 1; g < row.Depth; g++)
                             {
                                 @if (row.AncestorHasNextSibling?[g] == true)
                                 {
                                     <span class="@TreeConnectorVerticalClass"
-                                          style="left:@($"{GetTreeGuideLeftPx(g)}px")"></span>
+                                          style="left:@($"{GetTreeGuideLeftPx(g - 1)}px")"></span>
                                 }
                             }
-                            @if (row.Depth > 0)
+                            <span class="@TreeConnectorCurrentTopClass"
+                                  style="left:@($"{GetTreeGuideLeftPx(row.Depth - 1)}px");height:calc(50% - 0.25rem)"></span>
+                            @if (row.HasNextSibling)
                             {
-                                <span class="@TreeConnectorCurrentTopClass"
+                                <span class="@TreeConnectorCurrentBottomClass"
                                       style="left:@($"{GetTreeGuideLeftPx(row.Depth - 1)}px");height:calc(50% - 0.25rem)"></span>
-                                @if (row.HasNextSibling)
-                                {
-                                    <span class="@TreeConnectorCurrentBottomClass"
-                                          style="left:@($"{GetTreeGuideLeftPx(row.Depth - 1)}px");height:calc(50% - 0.25rem)"></span>
-                                }
-                                <span class="@TreeConnectorHorizontalClass"
-                                      style="left:@($"{GetTreeGuideLeftPx(row.Depth - 1)}px")"></span>
                             }
+                            <span class="@TreeConnectorHorizontalClass"
+                                  style="left:@($"{GetTreeGuideLeftPx(row.Depth - 1)}px")"></span>
                         }
                         @if (!HasActivePreviewFilter && hasChildren)
                         {
@@ -1675,13 +1672,7 @@
         for (int i = 0; i < siblings.Count; i++)
         {
             var task = siblings[i];
-            // In tree view: a sibling only extends the vertical guide line if at least one
-            // later sibling will actually render a tree anchor (has code or children).
-            // This ensures └─ is used for the last real tree-node and no vertical line
-            // continues past it, while code-less rows between anchors are invisible to the guide.
-            bool hasNextSibling = IsTreeView
-                ? siblings.Skip(i + 1).Any(IsTreeAnchor)
-                : i < siblings.Count - 1;
+            bool hasNextSibling = i < siblings.Count - 1;
             int effectiveDepth = IsTreeView ? depth : 0;
             bool matches = MatchesPreviewFilter(task, effectiveDepth);
             if (matches)
@@ -1986,11 +1977,14 @@
     private string GetPreviewRowClass(PreviewRow row)
     {
         bool hasWarning = GetTaskDiagnostics(row.Task, row.Depth).Any(x => x.Kind == DiagnosticKind.Warning);
-        string weight = row.Depth == 0
-            ? "font-bold"
-            : row.Depth == 1
-                ? "font-semibold"
-                : "font-normal";
+        bool hasCode = !string.IsNullOrWhiteSpace(row.Task.Metadata.Code);
+        string weight = hasCode
+            ? (row.Depth == 0
+                ? "font-bold"
+                : row.Depth == 1
+                    ? "font-semibold"
+                    : "font-normal")
+            : "font-normal";
         string background = hasWarning
             ? "bg-amber-50/55 dark:bg-amber-950/15"
             : row.Task.Metadata.Type switch

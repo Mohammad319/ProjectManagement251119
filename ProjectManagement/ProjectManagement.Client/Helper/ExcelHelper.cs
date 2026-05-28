@@ -166,7 +166,11 @@ namespace ProjectManagement.Client.Helper
                     if (LooksLikeNumber(unit) && IsLikelyUnit(quantityStr))
                         (unit, quantityStr) = (quantityStr, unit);
 
-                    bool isLocalOrdinalCode = IsLocalOrdinalCode(code);
+                    // Local ordinals (1, 2, 3.) are only ordinals when structural codes already exist.
+                    // If the import only has numeric codes, bare numbers are structural (not ordinal).
+                    bool hasPrecedingLetterCode = sections.Any(t =>
+                        !string.IsNullOrWhiteSpace(t.Metadata.Code) && t.Metadata.Code.Any(char.IsLetter));
+                    bool isLocalOrdinalCode = IsLocalOrdinalCode(code) && hasPrecedingLetterCode;
                     string sourceName = isLocalOrdinalCode ? JoinCodeAndName(code, name) : name;
                     if (string.IsNullOrWhiteSpace(sourceName))
                         sourceName = MissingNameText();
@@ -789,37 +793,66 @@ namespace ProjectManagement.Client.Helper
 
         static void ReSort(List<TaskPostDTO> sections, ISet<TaskPostDTO>? leafTasks = null)
         {
-            // Build a global code→task index so parent lookup is independent of input order.
+            // Build two indexes: stripped key (for AMA/BSAB/slash) and raw code (for numeric-dot).
             var keyToTask = new Dictionary<string, TaskPostDTO>(StringComparer.OrdinalIgnoreCase);
+            var codeToTask = new Dictionary<string, TaskPostDTO>(StringComparer.OrdinalIgnoreCase);
             foreach (var task in sections)
             {
-                string k = CodeHierarchyKey(task.Metadata.Code ?? string.Empty);
+                string rawCode = NormalizeCode(task.Metadata.Code ?? string.Empty);
+                string k = CodeHierarchyKey(rawCode);
                 if (!string.IsNullOrWhiteSpace(k))
                     keyToTask.TryAdd(k, task);
+                if (!string.IsNullOrWhiteSpace(rawCode))
+                    codeToTask.TryAdd(rawCode, task);
             }
 
             for (int child = sections.Count - 1; child >= 0; child--)
             {
                 var childTask = sections[child];
-                string childKey = CodeHierarchyKey(childTask.Metadata.Code ?? string.Empty);
+                string childCode = NormalizeCode(childTask.Metadata.Code ?? string.Empty);
+                string childKey = CodeHierarchyKey(childCode);
 
                 TaskPostDTO? bestParent = null;
 
                 if (!string.IsNullOrWhiteSpace(childKey))
                 {
-                    // Pick the most specific parent: longest key that is a strict prefix of childKey.
-                    // This ensures e.g. BBC always goes under BB (not B) when BB exists.
-                    int bestLen = 0;
-                    foreach (var (parentKey, parentTask) in keyToTask)
+                    if (IsNumericDotCode(childCode))
                     {
-                        if (ReferenceEquals(parentTask, childTask)) continue;
-                        if (leafTasks?.Contains(parentTask) == true) continue;
-                        if (parentKey.Length >= childKey.Length) continue;
-                        if (!childKey.StartsWith(parentKey, StringComparison.OrdinalIgnoreCase)) continue;
-                        if (parentKey.Length > bestLen)
+                        // Segment-based matching for multi-part numeric dot codes (1.1, 1.12, 2.1.3).
+                        // Ensures 1.12 and 1.1 are siblings under 1 — 1.1 is NOT a parent of 1.12.
+                        int bestLen = 0;
+                        foreach (var (parentCode, parentTask) in codeToTask)
                         {
-                            bestLen = parentKey.Length;
-                            bestParent = parentTask;
+                            if (ReferenceEquals(parentTask, childTask)) continue;
+                            if (leafTasks?.Contains(parentTask) == true) continue;
+                            // IsNumericDotParent handles all types: single numbers ("1", "2")
+                            // and multi-part dot codes ("1.1") are both valid parents.
+                            // Non-numeric codes are automatically excluded by the -1 sentinel.
+                            if (!IsNumericDotParent(parentCode, childCode)) continue;
+                            int[] parentParts = NumericDotParts(parentCode);
+                            if (parentParts.Length > bestLen)
+                            {
+                                bestLen = parentParts.Length;
+                                bestParent = parentTask;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Key-prefix matching for AMA, BSAB-colon, BSAB-numeric-letter, and slash codes.
+                        // Most-specific match wins (longest matching key prefix).
+                        int bestLen = 0;
+                        foreach (var (parentKey, parentTask) in keyToTask)
+                        {
+                            if (ReferenceEquals(parentTask, childTask)) continue;
+                            if (leafTasks?.Contains(parentTask) == true) continue;
+                            if (parentKey.Length >= childKey.Length) continue;
+                            if (!childKey.StartsWith(parentKey, StringComparison.OrdinalIgnoreCase)) continue;
+                            if (parentKey.Length > bestLen)
+                            {
+                                bestLen = parentKey.Length;
+                                bestParent = parentTask;
+                            }
                         }
                     }
                 }
@@ -919,6 +952,33 @@ namespace ProjectManagement.Client.Helper
             char suffix = code[^1];
             string number = suffix is '.' or ')' ? code[..^1] : code;
             return number.Length > 0 && number.All(char.IsDigit);
+        }
+
+        // Returns true for purely numeric multi-part codes such as 1.1, 1.12, 2.1.3.
+        // Single-segment codes (1, 31) return false and use key-prefix matching instead.
+        static bool IsNumericDotCode(string code)
+        {
+            if (string.IsNullOrWhiteSpace(code)) return false;
+            if (!code.Contains('.')) return false;
+            if (code[0] == '.' || code[^1] == '.') return false;
+            if (code.Contains("..")) return false;
+            return code.All(c => char.IsDigit(c) || c == '.');
+        }
+
+        static int[] NumericDotParts(string code)
+            => code.Split('.').Select(p => int.TryParse(p, NumberStyles.None, CultureInfo.InvariantCulture, out int v) ? v : -1).ToArray();
+
+        // Returns true when parentCode's parts are a strict prefix of childCode's parts.
+        // Example: "1" is parent of "1.1" and "1.12", but "1.1" is NOT parent of "1.12".
+        static bool IsNumericDotParent(string parentCode, string childCode)
+        {
+            int[] parentParts = NumericDotParts(parentCode);
+            int[] childParts = NumericDotParts(childCode);
+            if (parentParts.Length >= childParts.Length) return false;
+            if (Array.Exists(parentParts, p => p < 0) || Array.Exists(childParts, p => p < 0)) return false;
+            for (int i = 0; i < parentParts.Length; i++)
+                if (parentParts[i] != childParts[i]) return false;
+            return true;
         }
 
         static string JoinCodeAndName(string code, string name)

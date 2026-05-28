@@ -46,7 +46,9 @@
       "Bash(grep -E \"\\\\.\\(resx|cs\\)$\")",
       "Bash(grep -E \"\\\\.\\(razor|cs\\)$\")",
       "Bash(grep -E \"\\\\.\\(cs\\)$\")",
-      "Bash(dotnet test *)"
+      "Bash(dotnet test *)",
+      "Read(//c/Users/ataya/Downloads/AvedasD/**)",
+      "Bash(dir \"C:\\\\Users\\\\ataya\\\\Downloads\\\\AvedasD\")"
     ]
   }
 }

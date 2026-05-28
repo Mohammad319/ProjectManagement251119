@@ -414,6 +414,141 @@ public class ExcelHelperTests
     }
 
     [Fact]
+    public void Import_BsabColonCodes_BuildsCorrectHierarchy()
+    {
+        // BV:EBB/B must nest under BV:EBB, not BV:EB or BV:E.
+        using var workbook = new XLWorkbook();
+        var sheet = workbook.AddWorksheet("Import");
+
+        sheet.Cell(1, 1).Value = "BV";       sheet.Cell(1, 2).Value = "Byggnadsverk";
+        sheet.Cell(2, 1).Value = "BV:E";     sheet.Cell(2, 2).Value = "E-grupp";
+        sheet.Cell(3, 1).Value = "BV:EB";    sheet.Cell(3, 2).Value = "EB-grupp";
+        sheet.Cell(4, 1).Value = "BV:EBA";   sheet.Cell(4, 2).Value = "EBA";
+        sheet.Cell(5, 1).Value = "BV:EBB";   sheet.Cell(5, 2).Value = "EBB";
+        sheet.Cell(6, 1).Value = "BV:EBB/B"; sheet.Cell(6, 2).Value = "EBB/B";
+        sheet.Cell(7, 1).Value = "BV:EBB/C"; sheet.Cell(7, 2).Value = "EBB/C";
+
+        var tasks = ExcelHelper.Import(1, workbook, 1, 1, 2, 4, 5, 6, isOH: false);
+
+        var root = Assert.Single(tasks);
+        Assert.Equal("BV", root.Metadata.Code);
+        var bvE = Assert.Single(root.Tasks);
+        Assert.Equal("BV:E", bvE.Metadata.Code);
+        var bvEb = Assert.Single(bvE.Tasks);
+        Assert.Equal("BV:EB", bvEb.Metadata.Code);
+        Assert.Equal(2, bvEb.Tasks.Count);
+        Assert.Equal("BV:EBA", bvEb.Tasks[0].Metadata.Code);
+        var bvEbb = bvEb.Tasks[1];
+        Assert.Equal("BV:EBB", bvEbb.Metadata.Code);
+        Assert.Equal(2, bvEbb.Tasks.Count);
+        Assert.Equal("BV:EBB/B", bvEbb.Tasks[0].Metadata.Code);
+        Assert.Equal("BV:EBB/C", bvEbb.Tasks[1].Metadata.Code);
+    }
+
+    [Fact]
+    public void Import_BsabNumericLetterCodes_BuildsCorrectHierarchy()
+    {
+        // 31.BC must nest under 31.B, and 31.B under 31, and 31 under 3.
+        using var workbook = new XLWorkbook();
+        var sheet = workbook.AddWorksheet("Import");
+
+        sheet.Cell(1, 1).Value = "3";     sheet.Cell(1, 2).Value = "Byggdelar";
+        sheet.Cell(2, 1).Value = "31";    sheet.Cell(2, 2).Value = "Grundläggning";
+        sheet.Cell(3, 1).Value = "31.B";  sheet.Cell(3, 2).Value = "Pålning";
+        sheet.Cell(4, 1).Value = "31.BC"; sheet.Cell(4, 2).Value = "Stålpålar";
+        sheet.Cell(5, 1).Value = "31.BD"; sheet.Cell(5, 2).Value = "Träpålar";
+        sheet.Cell(6, 1).Value = "31.C";  sheet.Cell(6, 2).Value = "Spontning";
+        sheet.Cell(7, 1).Value = "31.CB"; sheet.Cell(7, 2).Value = "Spont stål";
+        sheet.Cell(8, 1).Value = "31.E";  sheet.Cell(8, 2).Value = "Jordankare";
+        sheet.Cell(9, 1).Value = "31.EB"; sheet.Cell(9, 2).Value = "Injektionsankare";
+
+        var tasks = ExcelHelper.Import(1, workbook, 1, 1, 2, 4, 5, 6, isOH: false);
+
+        var root = Assert.Single(tasks);
+        Assert.Equal("3", root.Metadata.Code);
+        var t31 = Assert.Single(root.Tasks);
+        Assert.Equal("31", t31.Metadata.Code);
+        Assert.Equal(3, t31.Tasks.Count);
+
+        var t31b = t31.Tasks[0];
+        Assert.Equal("31.B", t31b.Metadata.Code);
+        Assert.Equal(2, t31b.Tasks.Count);
+        Assert.Equal("31.BC", t31b.Tasks[0].Metadata.Code);
+        Assert.Equal("31.BD", t31b.Tasks[1].Metadata.Code);
+
+        var t31c = t31.Tasks[1];
+        Assert.Equal("31.C", t31c.Metadata.Code);
+        var t31cb = Assert.Single(t31c.Tasks);
+        Assert.Equal("31.CB", t31cb.Metadata.Code);
+
+        var t31e = t31.Tasks[2];
+        Assert.Equal("31.E", t31e.Metadata.Code);
+        var t31eb = Assert.Single(t31e.Tasks);
+        Assert.Equal("31.EB", t31eb.Metadata.Code);
+    }
+
+    [Fact]
+    public void Import_NumericDotCodes_OnePointOneAndOnePointTwelveAreSiblings()
+    {
+        // 1.12 must NOT nest under 1.1 — they are siblings under 1.
+        using var workbook = new XLWorkbook();
+        var sheet = workbook.AddWorksheet("Import");
+
+        sheet.Cell(1, 1).Value = "1";    sheet.Cell(1, 2).Value = "Kapitel 1";
+        sheet.Cell(2, 1).Value = "1.1";  sheet.Cell(2, 2).Value = "Avsnitt 1.1";
+        sheet.Cell(3, 1).Value = "1.12"; sheet.Cell(3, 2).Value = "Avsnitt 1.12";
+        sheet.Cell(4, 1).Value = "2";    sheet.Cell(4, 2).Value = "Kapitel 2";
+        sheet.Cell(5, 1).Value = "2.1";  sheet.Cell(5, 2).Value = "Avsnitt 2.1";
+        sheet.Cell(6, 1).Value = "2.2";  sheet.Cell(6, 2).Value = "Avsnitt 2.2";
+
+        var tasks = ExcelHelper.Import(1, workbook, 1, 1, 2, 4, 5, 6, isOH: false);
+
+        Assert.Equal(2, tasks.Count);
+
+        var ch1 = tasks[0];
+        Assert.Equal("1", ch1.Metadata.Code);
+        Assert.Equal(2, ch1.Tasks.Count);
+        Assert.Equal("1.1", ch1.Tasks[0].Metadata.Code);
+        Assert.Equal("1.12", ch1.Tasks[1].Metadata.Code);
+        Assert.Empty(ch1.Tasks[0].Tasks);
+        Assert.Empty(ch1.Tasks[1].Tasks);
+
+        var ch2 = tasks[1];
+        Assert.Equal("2", ch2.Metadata.Code);
+        Assert.Equal(2, ch2.Tasks.Count);
+        Assert.Equal("2.1", ch2.Tasks[0].Metadata.Code);
+        Assert.Equal("2.2", ch2.Tasks[1].Metadata.Code);
+    }
+
+    [Fact]
+    public void Import_NumericSlashCodes_ExactPrefixDeterminesParent()
+    {
+        // 21/800.81 must nest under 21/800 (exact prefix).
+        // 21/300, 21/800, 21/900 are siblings under 21.
+        using var workbook = new XLWorkbook();
+        var sheet = workbook.AddWorksheet("Import");
+
+        sheet.Cell(1, 1).Value = "21";        sheet.Cell(1, 2).Value = "Kap 21";
+        sheet.Cell(2, 1).Value = "21/300";    sheet.Cell(2, 2).Value = "Grupp 300";
+        sheet.Cell(3, 1).Value = "21/800";    sheet.Cell(3, 2).Value = "Grupp 800";
+        sheet.Cell(4, 1).Value = "21/800.81"; sheet.Cell(4, 2).Value = "Post 800.81";
+        sheet.Cell(5, 1).Value = "21/900";    sheet.Cell(5, 2).Value = "Grupp 900";
+
+        var tasks = ExcelHelper.Import(1, workbook, 1, 1, 2, 4, 5, 6, isOH: false);
+
+        var root = Assert.Single(tasks);
+        Assert.Equal("21", root.Metadata.Code);
+        Assert.Equal(3, root.Tasks.Count);
+        Assert.Equal("21/300", root.Tasks[0].Metadata.Code);
+        var g800 = root.Tasks[1];
+        Assert.Equal("21/800", g800.Metadata.Code);
+        var leaf = Assert.Single(g800.Tasks);
+        Assert.Equal("21/800.81", leaf.Metadata.Code);
+        Assert.Equal("21/900", root.Tasks[2].Metadata.Code);
+        Assert.Empty(root.Tasks[2].Tasks);
+    }
+
+    [Fact]
     public void DetectLayout_UnlabeledSwedishRows_FindsColumnsAndStartRow()
     {
         using var workbook = new XLWorkbook();
