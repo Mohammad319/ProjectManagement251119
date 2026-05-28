@@ -167,9 +167,13 @@
                     @if (IsTreeView)
                     {
                         <select class="h-7 shrink-0 rounded-lg border border-slate-300 bg-white px-2 text-xs text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                                value="@TreeViewMode"
+                                value="@(_treeViewCustomized ? "current" : TreeViewMode)"
                                 @onchange="OnTreeViewModeChanged"
                                 title="@T("Visa nivå", "Show level")">
+                            @if (_treeViewCustomized)
+                            {
+                                <option value="current">@T("Nuvarande vy", "Current view")</option>
+                            }
                             <option value="all">@T("Expandera alla", "Expand all")</option>
                             <option value="none">@T("Fäll ihop alla", "Collapse all")</option>
                             @for (int level = 1; level <= MaxTreeLevel; level++)
@@ -304,7 +308,7 @@
                         @if (!HasActivePreviewFilter && hasChildren)
                         {
                             <button type="button"
-                                    @onclick="() => Task.Colspan = !Task.Colspan" style="padding-bottom: 2px"
+                                    @onclick="() => { Task.Colspan = !Task.Colspan; _treeViewCustomized = true; }" style="padding-bottom: 2px"
                                     class="relative z-[1] inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-[11px] font-bold leading-none text-slate-500 transition hover:bg-slate-100/80 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-slate-200">
                                 @(Task.Colspan ? "−" : "+")
                             </button>
@@ -485,6 +489,7 @@
     private string _fullTextDraft = string.Empty;
     private ImportPreviewTypeFilter PreviewTypeFilter = ImportPreviewTypeFilter.All;
     private string TreeViewMode = "all";
+    private bool _treeViewCustomized = false;
     private string DisplayMode = "overview";
     private bool IsTreeView => DisplayMode == "tree";
     private bool WarningsOnly;
@@ -731,6 +736,7 @@
             PreviewSearchText = string.Empty;
             PreviewTypeFilter = ImportPreviewTypeFilter.All;
             TreeViewMode = "all";
+            _treeViewCustomized = false;
             DisplayMode = "overview";
             WarningsOnly = false;
             PreviewRequiresImport = false;
@@ -981,6 +987,7 @@
             ChangedTasks.Clear();
             NewTasks.Clear();
             AppCompletedBarCodeRows.Clear();
+            _treeViewCustomized = false;
             foreach (var t in importResult.AppCompletedBarCodeRows) AppCompletedBarCodeRows.Add(t);
             DismissedBarCodeWarnings.Clear();
             transferCompleted = false;
@@ -1135,6 +1142,7 @@
         PreviewRequiresImport = false;
         ImportMessage = string.Empty;
         ImportMessageIsSuccess = false;
+        _treeViewCustomized = false;
     }
 
     private async Task<bool> RestoreSavedLayoutAsync()
@@ -1813,6 +1821,7 @@
             PreviewTypeFilter = ImportPreviewTypeFilter.All;
             WarningsOnly = false;
         }
+        _treeViewCustomized = false;
     }
 
     private void MoveTaskIn(List<TaskPostDTO> siblings, TaskPostDTO task)
@@ -1844,7 +1853,12 @@
 
     private void OnTreeViewModeChanged(ChangeEventArgs args)
     {
-        TreeViewMode = args.Value?.ToString() ?? "all";
+        string newMode = args.Value?.ToString() ?? "all";
+        if (newMode == "current")
+            return;
+
+        _treeViewCustomized = false;
+        TreeViewMode = newMode;
         if (TreeViewMode == "all")
         {
             ExpandAll();
