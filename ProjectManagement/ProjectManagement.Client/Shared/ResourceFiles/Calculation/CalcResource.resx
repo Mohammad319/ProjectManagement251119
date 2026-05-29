@@ -507,4 +507,13 @@
   <data name="allowsProductionCalculation" xml:space="preserve">
     <value>Allow production calculation</value>
   </data>
+  <data name="showHiddenStatuses" xml:space="preserve">
+    <value>Show hidden statuses</value>
+  </data>
+  <data name="hideHiddenStatuses" xml:space="preserve">
+    <value>Hide hidden statuses</value>
+  </data>
+  <data name="noHiddenStatusesToShow" xml:space="preserve">
+    <value>No hidden statuses to display.</value>
+  </data>
 </root>

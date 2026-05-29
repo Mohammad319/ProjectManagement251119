@@ -117,14 +117,16 @@ namespace Persistence.Service.CalculationItems.Project
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
             var all = await context.Set<TS>().OrderBy(x => x.SortOrder).ToListAsync(ct);
-            var idx = all.FindIndex(x => x.Id == id);
-            if (idx < 0) return false;
+            var item = all.FirstOrDefault(x => x.Id == id);
+            if (item is null) return false;
 
-            var swapIdx = moveUp ? idx - 1 : idx + 1;
-            if (swapIdx < 0 || swapIdx >= all.Count) return false;
+            var sameGroup = all.Where(x => x.IsVisible == item.IsVisible).ToList();
+            var groupIdx = sameGroup.FindIndex(x => x.Id == id);
 
-            var item     = all[idx];
-            var neighbor = all[swapIdx];
+            var swapIdx = moveUp ? groupIdx - 1 : groupIdx + 1;
+            if (swapIdx < 0 || swapIdx >= sameGroup.Count) return false;
+
+            var neighbor      = sameGroup[swapIdx];
             var itemOrder     = item.SortOrder;
             var neighborOrder = neighbor.SortOrder;
             item.Update(item.Name, item.Color, neighborOrder, item.IsVisible);

@@ -65,12 +65,16 @@ public static class TenantSeedCatalog
 
     public static readonly CalcStatusSeed[] CalculationStatuses =
     [
-        new("Planerad",              "#2563eb", 100),
-        new("Pågående",              "#f59e0b", 200),
-        new("Behöver granskas",      "#f97316", 300),
-        new("Granskad",              "#8b5cf6", 400),
-        new("Godkänd/låst",          "#16a34a", 500, IsApprovalStatus: true, LocksCalculation: true),
-        new("Skickad/inlämnad",      "#0ea5e9", 600, IsApprovalStatus: true, LocksCalculation: true, AllowsProductionCalculation: true),
+        new("Planerad",           "#2563eb", 100),
+        new("Pågående",           "#f59e0b", 200),
+        new("Behöver granskas",   "#f97316", 300),
+        new("Granskad",           "#8b5cf6", 400),
+        new("Godkänd / låst",     "#16a34a", 500, IsApprovalStatus: true, LocksCalculation: true, AllowsProductionCalculation: true),
+        new("Skickad / inlämnad", "#0ea5e9", 600, IsApprovalStatus: true, LocksCalculation: true, AllowsProductionCalculation: true),
+        new("Tilldelad / vunnen", "#22c55e", 700, IsApprovalStatus: true, LocksCalculation: true, AllowsProductionCalculation: true),
+        new("Förlorad",           "#dc2626", 800),
+        new("Avbruten",           "#6b7280", 900),
+        new("Ej intressant",      "#94a3b8", 1000),
     ];
 
     public static readonly LookupSeed[] ProjectTypes =

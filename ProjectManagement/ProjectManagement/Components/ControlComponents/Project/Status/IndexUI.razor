@@ -21,8 +21,8 @@ else
                 </button>
                 <button @onclick="ToggleVisibleAsync"
                         class="pm-icon-btn"
-                        title="@AppLoc[nameof(ResourceApp.isVisible)]"
-                        aria-label="@AppLoc[nameof(ResourceApp.isVisible)]">
+                        title="@(IsVisible ? CalcLoc[nameof(CalcResource.showHiddenStatuses)] : CalcLoc[nameof(CalcResource.hideHiddenStatuses)])"
+                        aria-label="@(IsVisible ? CalcLoc[nameof(CalcResource.showHiddenStatuses)] : CalcLoc[nameof(CalcResource.hideHiddenStatuses)])">
                     @((MarkupString)Icons.GetVisibleIcon(IsVisible))
                 </button>
             </div>
@@ -80,7 +80,9 @@ else
         }
         else
         {
-            <div class="pm-empty">@AppLoc[nameof(ResourceApp.ThereAreNoItemsToDisplay)]</div>
+            <div class="pm-empty">
+                @(IsVisible ? AppLoc[nameof(ResourceApp.ThereAreNoItemsToDisplay)] : CalcLoc[nameof(CalcResource.noHiddenStatusesToShow)])
+            </div>
         }
     </div>
 }

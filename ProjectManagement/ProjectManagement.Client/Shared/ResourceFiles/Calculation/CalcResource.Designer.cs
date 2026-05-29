@@ -985,5 +985,8 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.Calculation {
         public static string newStatus                  => ResourceManager.GetString("newStatus", resourceCulture)!;
         public static string approvesAndLocksCalculation => ResourceManager.GetString("approvesAndLocksCalculation", resourceCulture)!;
         public static string allowsProductionCalculation => ResourceManager.GetString("allowsProductionCalculation", resourceCulture)!;
+        public static string showHiddenStatuses           => ResourceManager.GetString("showHiddenStatuses", resourceCulture)!;
+        public static string hideHiddenStatuses           => ResourceManager.GetString("hideHiddenStatuses", resourceCulture)!;
+        public static string noHiddenStatusesToShow       => ResourceManager.GetString("noHiddenStatusesToShow", resourceCulture)!;
     }
 }

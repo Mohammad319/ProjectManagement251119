@@ -507,4 +507,13 @@
   <data name="allowsProductionCalculation" xml:space="preserve">
     <value>Tillåt produktionskalkyl</value>
   </data>
+  <data name="showHiddenStatuses" xml:space="preserve">
+    <value>Visa dolda statusar</value>
+  </data>
+  <data name="hideHiddenStatuses" xml:space="preserve">
+    <value>Dölj dolda statusar</value>
+  </data>
+  <data name="noHiddenStatusesToShow" xml:space="preserve">
+    <value>Inga dolda statusar att visa.</value>
+  </data>
 </root>
