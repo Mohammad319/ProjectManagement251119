@@ -21,7 +21,7 @@ namespace ProjectManagement.Client.Pages.Folder
         int? CurrentUserDepartmentId { get; set; }
         int? SelectedDepartmentId { get; set; }
         string TreeGroupingMode { get; set; } = ProjectTreeGroupingMode.FolderStructure;
-        string TreeSortMode { get; set; } = ProjectTreeSortMode.NameAscending;
+        string TreeSortMode { get; set; } = ProjectTreeSortMode.CreatedNewest;
         bool KeepFolderStructure { get; set; } = true;
 
         [Inject] private IJSRuntime JS { get; set; } = default!;
@@ -35,7 +35,7 @@ namespace ProjectManagement.Client.Pages.Folder
         private int ActiveTreeFilterCount =>
             (TreeGroupingMode == ProjectTreeGroupingMode.FolderStructure ? 0 : 1) +
             (TreeGroupingMode != ProjectTreeGroupingMode.FolderStructure && !KeepFolderStructure ? 1 : 0) +
-            (TreeSortMode == ProjectTreeSortMode.NameAscending ? 0 : 1) +
+            (TreeSortMode == ProjectTreeSortMode.CreatedNewest ? 0 : 1) +
             (UoWService.Folder.ShowArchived ? 1 : 0);
 
         private string SelectedDepartmentValue =>
@@ -52,7 +52,7 @@ namespace ProjectManagement.Client.Pages.Folder
         //    });
         Modal.Show(new DialogModel
         {
-            Title = AppLoc["searchProjects"],
+            Title = CalcLoc["searchFoldersProjectsCalcs"],
             Content = builder =>
             {
                 builder.OpenComponent(0, typeof(ProjectsSearch));
@@ -232,7 +232,7 @@ namespace ProjectManagement.Client.Pages.Folder
             if (TreeGroupingMode != ProjectTreeGroupingMode.FolderStructure &&
                 TreeSortMode == ProjectTreeSortMode.Manual)
             {
-                TreeSortMode = ProjectTreeSortMode.NameAscending;
+                TreeSortMode = ProjectTreeSortMode.CreatedNewest;
                 await SaveTreeSortModeAsync();
             }
 
@@ -255,7 +255,7 @@ namespace ProjectManagement.Client.Pages.Folder
             var reloadNeeded = UoWService.Folder.ShowArchived;
 
             TreeGroupingMode = ProjectTreeGroupingMode.FolderStructure;
-            TreeSortMode = ProjectTreeSortMode.NameAscending;
+            TreeSortMode = ProjectTreeSortMode.CreatedNewest;
             KeepFolderStructure = true;
             await SaveTreeSortModeAsync();
 
@@ -264,6 +264,14 @@ namespace ProjectManagement.Client.Pages.Folder
                 Folder.ToggleArchivedFilter();
                 await LoadSelectedDepartmentAsync(preserveOpenNodes: true);
             }
+        }
+
+        private async Task ToggleManualOrderModeAsync()
+        {
+            TreeSortMode = TreeSortMode == ProjectTreeSortMode.Manual
+                ? ProjectTreeSortMode.CreatedNewest
+                : ProjectTreeSortMode.Manual;
+            await SaveTreeSortModeAsync();
         }
 
         private async Task SaveTreeSortModeAsync()
@@ -354,7 +362,7 @@ namespace ProjectManagement.Client.Pages.Folder
                 ProjectTreeSortMode.LastOpenedNewest => ProjectTreeSortMode.LastOpenedNewest,
                 ProjectTreeSortMode.Status => ProjectTreeSortMode.Status,
                 ProjectTreeSortMode.Manual => ProjectTreeSortMode.Manual,
-                _ => ProjectTreeSortMode.NameAscending
+                _ => ProjectTreeSortMode.CreatedNewest
             };
     }
 }

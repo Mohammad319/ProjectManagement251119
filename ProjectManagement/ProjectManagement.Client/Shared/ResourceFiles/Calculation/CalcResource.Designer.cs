@@ -987,6 +987,23 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.Calculation {
         public static string allowsProductionCalculation => ResourceManager.GetString("allowsProductionCalculation", resourceCulture)!;
         public static string showHiddenStatuses           => ResourceManager.GetString("showHiddenStatuses", resourceCulture)!;
         public static string hideHiddenStatuses           => ResourceManager.GetString("hideHiddenStatuses", resourceCulture)!;
-        public static string noHiddenStatusesToShow       => ResourceManager.GetString("noHiddenStatusesToShow", resourceCulture)!;
+        public static string noHiddenStatusesToShow          => ResourceManager.GetString("noHiddenStatusesToShow", resourceCulture)!;
+        public static string matchType                       => ResourceManager.GetString("matchType", resourceCulture)!;
+        public static string matchContains                   => ResourceManager.GetString("matchContains", resourceCulture)!;
+        public static string matchEquals                     => ResourceManager.GetString("matchEquals", resourceCulture)!;
+        public static string matchNotEquals                  => ResourceManager.GetString("matchNotEquals", resourceCulture)!;
+        public static string matchStartsWith                 => ResourceManager.GetString("matchStartsWith", resourceCulture)!;
+        public static string matchEndsWith                   => ResourceManager.GetString("matchEndsWith", resourceCulture)!;
+        public static string includeArchived                 => ResourceManager.GetString("includeArchived", resourceCulture)!;
+        public static string typeFilter                      => ResourceManager.GetString("typeFilter", resourceCulture)!;
+        public static string allTypes                        => ResourceManager.GetString("allTypes", resourceCulture)!;
+        public static string foldersLabel                    => ResourceManager.GetString("foldersLabel", resourceCulture)!;
+        public static string projectsLabel                   => ResourceManager.GetString("projectsLabel", resourceCulture)!;
+        public static string calculationsLabel               => ResourceManager.GetString("calculationsLabel", resourceCulture)!;
+        public static string noResultsFound                  => ResourceManager.GetString("noResultsFound", resourceCulture)!;
+        public static string checkSpellingOrFilter           => ResourceManager.GetString("checkSpellingOrFilter", resourceCulture)!;
+        public static string searchFoldersProjectsCalcs      => ResourceManager.GetString("searchFoldersProjectsCalcs", resourceCulture)!;
+        public static string searchNameOrCodePlaceholder     => ResourceManager.GetString("searchNameOrCodePlaceholder", resourceCulture)!;
+        public static string resultSummaryFormat             => ResourceManager.GetString("resultSummaryFormat", resourceCulture)!;
     }
 }

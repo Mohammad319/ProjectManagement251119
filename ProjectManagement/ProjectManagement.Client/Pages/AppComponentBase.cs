@@ -4,6 +4,7 @@ using Microsoft.Extensions.Localization;
 using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Services;
 using ProjectManagement.Client.Shared.ResourceFiles.APP;
+using ProjectManagement.Client.Shared.ResourceFiles.Calculation;
 using ProjectManagement.Client.Services.Calculation;
 using ProjectManagement.Client.Services.Folder;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
@@ -15,6 +16,7 @@ namespace ProjectManagement.Client.Pages
     {
         [Inject] protected IStringLocalizer<ResourceApp> AppLoc { get; set; } = default!;
         [Inject] protected IStringLocalizer<ResourceStorage> StorageLoc { get; set; } = default!;
+        [Inject] protected IStringLocalizer<CalcResource> CalcLoc { get; set; } = default!;
 
         // 🟩 Common Services
         [Inject] protected DialogService Modal { get; set; } = default!;

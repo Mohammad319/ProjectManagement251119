@@ -33,129 +33,141 @@
                     </button> *@
                     <div class="space-y-1.5 border-b border-slate-200 px-1.5 py-1.5 dark:border-slate-800">
 
-                        <div>
-                            @if (HasDepartmentAccess)
-                            {
-                                <select class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm font-medium text-slate-800 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-default disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:disabled:bg-slate-900/60 dark:disabled:text-slate-400"
+                        <!-- Row 1: Search + Filter & Sorting -->
+                        <div class="flex items-center gap-1.5">
+                            <button type="button"
+                                    class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                                    @onclick="ModalSeachForm"
+                                    title="@AppLoc["search"]"
+                                    aria-label="@AppLoc["search"]">
+                                <span aria-hidden="true">@((MarkupString)Icons.Search)</span>
+                            </button>
+
+                            <MhdDropdownPanel Text="@AppLoc["filterAndSorting"]"
+                                              BadgeCount="@ActiveTreeFilterCount"
+                                              Size="MhdSize.Sm"
+                                              PanelWidth="w-64"
+                                              PanelWidthPx="256">
+                                <div class="space-y-2">
+                                    <div>
+                                        <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                                               title="@AppLoc["groupByTooltip"]">
+                                            @AppLoc["groupBy"]
+                                        </label>
+                                        <select class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs font-medium text-slate-800 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-default disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:disabled:bg-slate-900/60 dark:disabled:text-slate-400"
+                                                value="@TreeGroupingMode"
+                                                disabled="@(!SelectedDepartmentId.HasValue)"
+                                                @onchange="OnTreeGroupingModeChanged">
+                                            <option value="@ProjectTreeGroupingMode.FolderStructure">@AppLoc["folderStructure"]</option>
+                                            <option value="@ProjectTreeGroupingMode.Year">@AppLoc["year"]</option>
+                                            <option value="@ProjectTreeGroupingMode.YearQuarter">@AppLoc["yearAndQuarter"]</option>
+                                            <option value="@ProjectTreeGroupingMode.Status">@CalcResource.status</option>
+                                        </select>
+                                    </div>
+
+                                    <label class="flex items-center gap-2 rounded-lg px-1 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">
+                                        <input type="checkbox"
+                                               class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-950"
+                                               checked="@KeepFolderStructure"
+                                               disabled="@(TreeGroupingMode == ProjectTreeGroupingMode.FolderStructure || !SelectedDepartmentId.HasValue)"
+                                               @onchange="OnKeepFolderStructureChanged" />
+                                        <span>@AppLoc["keepFolderStructure"]</span>
+                                    </label>
+
+                                    <div>
+                                        <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                                               title="@AppLoc["sortTooltip"]">
+                                            @AppLoc["sort"]
+                                        </label>
+                                        <select class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs font-medium text-slate-800 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-default disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:disabled:bg-slate-900/60 dark:disabled:text-slate-400"
+                                                value="@TreeSortMode"
+                                                disabled="@(!SelectedDepartmentId.HasValue || TreeSortMode == ProjectTreeSortMode.Manual)"
+                                                @onchange="OnTreeSortModeChanged">
+                                            <option value="@ProjectTreeSortMode.NameAscending">@AppLoc["nameAscending"]</option>
+                                            <option value="@ProjectTreeSortMode.NameDescending">@AppLoc["nameDescending"]</option>
+                                            <option value="@ProjectTreeSortMode.CreatedNewest">@AppLoc["createdNewestFirst"]</option>
+                                            <option value="@ProjectTreeSortMode.CreatedOldest">@AppLoc["createdOldestFirst"]</option>
+                                            <option value="@ProjectTreeSortMode.ModifiedNewest">@AppLoc["modifiedNewestFirst"]</option>
+                                            <option value="@ProjectTreeSortMode.LastOpenedNewest">@AppLoc["lastOpenedFirst"]</option>
+                                            <option value="@ProjectTreeSortMode.Status" title="@AppLoc["statusSortTooltip"]">@CalcResource.status</option>
+                                        </select>
+                                    </div>
+
+                                    @if (TreeGroupingMode == ProjectTreeGroupingMode.FolderStructure)
+                                    {
+                                        <button type="button"
+                                                class="inline-flex h-8 w-full items-center justify-center rounded-lg border px-2 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 @(TreeSortMode == ProjectTreeSortMode.Manual ? "border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 dark:border-amber-800/60 dark:bg-amber-950/30 dark:text-amber-200 dark:hover:bg-amber-950/50" : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-800")"
+                                                title="@AppLoc["manualOrderTooltip"]"
+                                                disabled="@(!SelectedDepartmentId.HasValue)"
+                                                @onclick="ToggleManualOrderModeAsync">
+                                            @(TreeSortMode == ProjectTreeSortMode.Manual ? AppLoc["exitManualOrder"] : AppLoc["manualOrder"])
+                                        </button>
+                                    }
+
+                                    @if (SelectedDepartmentId.HasValue)
+                                    {
+                                        <label class="flex items-center gap-2 rounded-lg px-1 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">
+                                            <input type="checkbox"
+                                                   class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-950"
+                                                   checked="@UoWService.Folder.ShowArchived"
+                                                   @onchange="async _ => await ToggleArchivedAsync()" />
+                                            <span>@AppLoc["showArchived"]</span>
+                                        </label>
+                                    }
+
+                                    <button type="button"
+                                            class="inline-flex h-8 w-full items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-800"
+                                            disabled="@(ActiveTreeFilterCount == 0)"
+                                            @onclick="ResetTreeFiltersAsync">
+                                        @AppLoc["reset"]
+                                    </button>
+                                </div>
+                            </MhdDropdownPanel>
+                        </div>
+
+                        <!-- Row 2: Department + New Folder -->
+                        @if (HasDepartmentAccess)
+                        {
+                            <div class="flex items-center gap-1.5">
+                                <select class="flex-1 min-w-0 rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm font-medium text-slate-800 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-default disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:disabled:bg-slate-900/60 dark:disabled:text-slate-400"
                                         aria-label="@ResourceApp.department"
                                         title="@ResourceApp.department"
                                         value="@SelectedDepartmentValue"
                                         disabled="@(Folder.State.Departments.Count == 1)"
                                         @onchange="OnDepartmentChanged">
-                                    <option value="">@AppLoc["selectDepartment"]</option>
+                                    @if (!SelectedDepartmentId.HasValue)
+                                    {
+                                        <option value="" disabled>@AppLoc["selectDepartment"]</option>
+                                    }
                                     @foreach (var department in Folder.State.Departments)
                                     {
                                         <option value="@department.Id">@department.Name</option>
                                     }
                                 </select>
-                            }
-                            else
-                            {
-                                <div class="rounded-lg border border-amber-200 bg-amber-50 px-2 py-2 text-xs font-medium text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
-                                    @AppLoc["noDepartmentsAvailable"]
-                                </div>
-                            }
-                        </div>
 
-                        <div class="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-1.5">
-                                <button type="button"
-                                        class="inline-flex h-8 min-w-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2 text-xs font-medium text-slate-500 shadow-sm transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-                                        @onclick="ModalSeachForm"
-                                        title="@AppLoc["searchProjects"]">
-                                    <span aria-hidden="true">@((MarkupString)Icons.Search)</span>
-                                    <span class="truncate">@AppLoc["searchPlaceholder"]</span>
-                                </button>
-
-                                <MhdDropdownPanel Text="@AppLoc["filterAndSorting"]"
-                                                  BadgeCount="@ActiveTreeFilterCount"
-                                                  Size="MhdSize.Sm"
-                                                  PanelWidth="w-64"
-                                                  PanelWidthPx="256">
-                                    <div class="space-y-2">
-                                        <div>
-                                            <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                                                @AppLoc["groupBy"]
-                                            </label>
-                                            <select class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs font-medium text-slate-800 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-default disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:disabled:bg-slate-900/60 dark:disabled:text-slate-400"
-                                                    value="@TreeGroupingMode"
-                                                    disabled="@(!SelectedDepartmentId.HasValue)"
-                                                    @onchange="OnTreeGroupingModeChanged">
-                                                <option value="@ProjectTreeGroupingMode.FolderStructure">@AppLoc["folderStructure"]</option>
-                                                <option value="@ProjectTreeGroupingMode.Year">@AppLoc["year"]</option>
-                                                <option value="@ProjectTreeGroupingMode.YearQuarter">@AppLoc["yearAndQuarter"]</option>
-                                                <option value="@ProjectTreeGroupingMode.Status">@CalcResource.status</option>
-                                            </select>
-                                        </div>
-
-                                        <label class="flex items-center gap-2 rounded-lg px-1 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">
-                                            <input type="checkbox"
-                                                   class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-950"
-                                                   checked="@KeepFolderStructure"
-                                                   disabled="@(TreeGroupingMode == ProjectTreeGroupingMode.FolderStructure || !SelectedDepartmentId.HasValue)"
-                                                   @onchange="OnKeepFolderStructureChanged" />
-                                            <span>@AppLoc["keepFolderStructure"]</span>
-                                        </label>
-
-                                        <div>
-                                            <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                                                @AppLoc["sort"]
-                                            </label>
-                                            <select class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs font-medium text-slate-800 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-default disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:disabled:bg-slate-900/60 dark:disabled:text-slate-400"
-                                                    value="@TreeSortMode"
-                                                    disabled="@(!SelectedDepartmentId.HasValue)"
-                                                    @onchange="OnTreeSortModeChanged">
-                                                <option value="@ProjectTreeSortMode.NameAscending">@AppLoc["nameAscending"]</option>
-                                                <option value="@ProjectTreeSortMode.NameDescending">@AppLoc["nameDescending"]</option>
-                                                <option value="@ProjectTreeSortMode.CreatedNewest">@AppLoc["createdNewestFirst"]</option>
-                                                <option value="@ProjectTreeSortMode.CreatedOldest">@AppLoc["createdOldestFirst"]</option>
-                                                <option value="@ProjectTreeSortMode.ModifiedNewest">@AppLoc["modifiedNewestFirst"]</option>
-                                                <option value="@ProjectTreeSortMode.LastOpenedNewest">@AppLoc["lastOpenedFirst"]</option>
-                                                <option value="@ProjectTreeSortMode.Status" title="@AppLoc["statusSortTooltip"]">@CalcResource.status</option>
-                                                <option value="@ProjectTreeSortMode.Manual" disabled="@(TreeGroupingMode != ProjectTreeGroupingMode.FolderStructure)">@AppLoc["manualOrder"]</option>
-                                            </select>
-                                        </div>
-
-                                        @if (SelectedDepartmentId.HasValue)
-                                        {
-                                            <label class="flex items-center gap-2 rounded-lg px-1 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">
-                                                <input type="checkbox"
-                                                       class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-950"
-                                                       checked="@UoWService.Folder.ShowArchived"
-                                                       @onchange="async _ => await ToggleArchivedAsync()" />
-                                                <span>@AppLoc["showArchived"]</span>
-                                            </label>
-                                        }
-
+                                <AuthorizeView Roles="@PMRolesConst.Tenant.SuperManger">
+                                    @if (!Folder.State.OtherDepartment && SelectedDepartmentId.HasValue)
+                                    {
                                         <button type="button"
-                                                class="inline-flex h-8 w-full items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-800"
-                                                disabled="@(ActiveTreeFilterCount == 0)"
-                                                @onclick="ResetTreeFiltersAsync">
-                                            @AppLoc["reset"]
+                                                class="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2 text-xs font-semibold text-emerald-700 shadow-sm transition hover:bg-emerald-100 hover:text-emerald-900 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-950/50"
+                                                @onclick="() => ModalForm(new() { IsVisible = true })"
+                                                title="@AppLoc["newFolder"]">
+                                            <span aria-hidden="true">@((MarkupString)Icons.Plus)</span>
+                                            <span>@AppLoc["newFolder"]</span>
                                         </button>
-                                    </div>
-                                </MhdDropdownPanel>
-
-                            <AuthorizeView Roles="@PMRolesConst.Tenant.SuperManger">
-                                @if (!Folder.State.OtherDepartment && SelectedDepartmentId.HasValue)
-                                {
-                                    <button type="button"
-                                            class="inline-flex h-8 items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2 text-xs font-semibold text-emerald-700 shadow-sm transition hover:bg-emerald-100 hover:text-emerald-900 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-950/50"
-                                            @onclick="() => ModalForm(new() { IsVisible = true })"
-                                            title="@AppLoc["newFolder"]">
-                                        <span aria-hidden="true">@((MarkupString)Icons.Plus)</span>
-                                        <span>@AppLoc["newFolder"]</span>
-                                    </button>
-                                }
-                            </AuthorizeView>
-                        </div>
+                                    }
+                                </AuthorizeView>
+                            </div>
+                        }
 
                     </div>
 
                     <div class="min-h-0 flex-1 overflow-auto px-1 py-1.5">
                         @if (!HasDepartmentAccess)
                         {
-                            <div class="rounded-xl border border-dashed border-amber-300 bg-amber-50 px-2 py-6 text-center text-sm font-medium text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
-                                @AppLoc["noDepartmentsAvailable"]
+                            <div class="rounded-xl border border-dashed border-slate-300 bg-white px-4 py-8 text-center dark:border-slate-700 dark:bg-slate-900">
+                                <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">@AppLoc["noDepartmentsTitle"]</p>
+                                <p class="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">@AppLoc["noDepartmentsHint"]</p>
                             </div>
                         }
                         else if (!SelectedDepartmentId.HasValue)

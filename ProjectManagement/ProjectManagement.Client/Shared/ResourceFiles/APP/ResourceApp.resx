@@ -776,4 +776,10 @@
   <data name="moveUp" xml:space="preserve"><value>Move up</value></data>
   <data name="moveDown" xml:space="preserve"><value>Move down</value></data>
   <data name="showAllVersions" xml:space="preserve"><value>Show all versions</value></data>
+  <data name="noDepartmentsTitle" xml:space="preserve"><value>No departments</value></data>
+  <data name="noDepartmentsHint" xml:space="preserve"><value>An admin in your company can add you to a department.</value></data>
+  <data name="groupByTooltip" xml:space="preserve"><value>Group items by a shared property such as year or status.</value></data>
+  <data name="sortTooltip" xml:space="preserve"><value>Choose the order in which folders, projects and calculations are listed.</value></data>
+  <data name="manualOrderTooltip" xml:space="preserve"><value>Switch to manual order to drag or move items up and down manually.</value></data>
+  <data name="exitManualOrder" xml:space="preserve"><value>Exit manual order</value></data>
 </root>

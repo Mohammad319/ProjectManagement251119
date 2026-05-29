@@ -776,4 +776,10 @@
   <data name="moveUp" xml:space="preserve"><value>Flytta upp</value></data>
   <data name="moveDown" xml:space="preserve"><value>Flytta ned</value></data>
   <data name="showAllVersions" xml:space="preserve"><value>Visa alla versioner</value></data>
+  <data name="noDepartmentsTitle" xml:space="preserve"><value>Inga avdelningar</value></data>
+  <data name="noDepartmentsHint" xml:space="preserve"><value>Admin i ditt företag kan lägga till dig i en avdelning.</value></data>
+  <data name="groupByTooltip" xml:space="preserve"><value>Gruppera objekt efter en gemensam egenskap, t.ex. år eller status.</value></data>
+  <data name="sortTooltip" xml:space="preserve"><value>Välj i vilken ordning mappar, projekt och kalkyler visas.</value></data>
+  <data name="manualOrderTooltip" xml:space="preserve"><value>Växla till manuell ordning för att dra eller flytta objekt upp och ned för hand.</value></data>
+  <data name="exitManualOrder" xml:space="preserve"><value>Avsluta manuell ordning</value></data>
 </root>

@@ -626,25 +626,21 @@ namespace ProjectManagement.Client.Pages.Folder
             };
         }
 
-        private string GetFolderMeta(FolderMVVM folder)
-        {
-            if (!folder.IsVisible)
-                return AppLoc["archived"].Value;
+        private string GetFolderMeta(FolderMVVM folder) =>
+            !folder.IsVisible ? AppLoc["archived"].Value : string.Empty;
 
-            return folder.ProjectsLoaded
-                ? $"{folder.Projects?.Count ?? 0}"
-                : string.Empty;
-        }
+        private string GetProjectMeta(ListProjectMVVM project) =>
+            !project.IsVisible ? AppLoc["archived"].Value : string.Empty;
 
-        private string GetProjectMeta(ListProjectMVVM project)
-        {
-            if (!project.IsVisible)
-                return AppLoc["archived"].Value;
+        private string GetFolderTitle(FolderMVVM folder) =>
+            folder.ProjectsLoaded
+                ? $"{folder.Name} ({folder.Projects?.Count ?? 0})"
+                : folder.Name;
 
-            return project.CalculationsLoaded
-                ? $"{project.Calculations?.Count ?? 0}"
-                : string.Empty;
-        }
+        private string GetProjectTitle(ListProjectMVVM project) =>
+            project.CalculationsLoaded
+                ? $"{project.Name} ({project.Calculations?.Count ?? 0})"
+                : project.Name;
 
         private bool IsManualOrderMode => SortMode == ProjectTreeSortMode.Manual;
         private bool HasManualOrderChanges => _manualOrderDirty;

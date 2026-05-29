@@ -1,308 +1,440 @@
-﻿@using ProjectManagement.Client.Services.Folder
+@using ProjectManagement.Client.Services.Folder
+@using ProjectManagement.Client.Shared.MVVM.Calculation
 @using ProjectManagement.Client.Shared.MVVM.Folder
+@using ProjectManagement.Client.Shared.Model.Project
 @using ProjectManagement.Client.Shared.Repositories.Organisation
 @using ProjectManagement.Shared.DTO.App.List
 @using ProjectManagement.Shared.DTO.Organisation
 @using ProjectManagement.Shared.DTO.Project
-@using ProjectManagement.Client.Shared.Model.Project
 @using ProjectManagement.Shared.Enums
 @inherits AppComponentBase
 
-<div class="space-y-2">
+<div class="flex flex-col gap-3">
 
-    <!-- Search / Filter -->
-    <EditForm id="myForm"
-              Model="@projectFilter"
-              OnValidSubmit="HandleSubmitAsync"
-              class="overflow-hidden rounded border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+    <!-- Search bar -->
+    <div class="flex gap-2">
+        <input type="text"
+               @bind="SearchText"
+               @bind:event="oninput"
+               @onkeyup="OnKeyUp"
+               placeholder="@CalcLoc[nameof(CalcResource.searchNameOrCodePlaceholder)]"
+               class="h-9 flex-1 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-400 dark:focus:ring-blue-400/20" />
+        <button type="button"
+                @onclick="SearchAsync"
+                disabled="@IsLoading"
+                class="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-500 dark:hover:bg-blue-600">
+            <span aria-hidden="true">@((MarkupString)Icons.Search)</span>
+            <span>@AppLoc["search"]</span>
+        </button>
+    </div>
 
-        <DataAnnotationsValidator />
-        <FormValidationSummary />
-
-        <!-- Top bar -->
-        <div class="border-b border-slate-200 bg-slate-50 px-2 py-2 dark:border-slate-700 dark:bg-slate-800/70">
-            <div class="overflow-x-auto overflow-y-hidden">
-                <div class="flex min-w-max flex-nowrap items-end gap-2">
-                    <div class="min-w-[320px] flex-1">
-                        <InputText @bind-Value="@projectFilter.Name"
-                                   placeholder="@AppLoc["projectNamePlaceholder"]"
-                                   class="h-9 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-400 dark:focus:ring-blue-400/20" />
-                    </div>
-
-                    <button type="submit"
-                            form="myForm"
-                            disabled="@IsLoading"
-                            class="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-500 dark:hover:bg-blue-600">
-                        <span>@((MarkupString)Icons.Search)</span>
-                        <span>@AppLoc["search"]</span>
-                    </button>
-
-                    <button type="button"
-                            disabled="@IsLoading"
-                            @onclick="ToggleDetails"
-                            class="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">
-                        <span class="oi @(DetailsDiv ? "oi-chevron-top" : "oi-chevron-bottom")"></span>
-                        <span>@(DetailsDiv ? AppLoc["hideDetails"] : AppLoc["showDetails"])</span>
-                    </button>
-                </div>
-            </div>
+    <!-- Filter row -->
+    <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <!-- Type filter -->
+        <div>
+            <label class="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-400">
+                @CalcLoc[nameof(CalcResource.typeFilter)]
+            </label>
+            <select @bind="TypeFilter"
+                    class="h-8 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20">
+                <option value="@SearchTypeFilter.All">@CalcLoc[nameof(CalcResource.allTypes)]</option>
+                <option value="@SearchTypeFilter.Folders">@CalcLoc[nameof(CalcResource.foldersLabel)]</option>
+                <option value="@SearchTypeFilter.Projects">@CalcLoc[nameof(CalcResource.projectsLabel)]</option>
+                <option value="@SearchTypeFilter.Calculations">@CalcLoc[nameof(CalcResource.calculationsLabel)]</option>
+            </select>
         </div>
 
-        <!-- Advanced filters -->
-        @if (DetailsDiv)
-        {
-            <div class="border-t border-slate-200 bg-slate-50/70 px-2 py-2 dark:border-slate-700 dark:bg-slate-800/40">
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="min-w-0">
-                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                            @CalcResource.name
-                        </label>
-                        <InputSelect @bind-Value="projectFilter.NameOperator"
-                                     class="h-9 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20">
-                            <option value="%var%">%...%</option>
-                            <option value="==">==</option>
-                            <option value="!=">!=</option>
-                            <option value="%var">%...</option>
-                            <option value="var%">...%</option>
-                        </InputSelect>
-                    </div>
+        <!-- Match operator -->
+        <div>
+            <label class="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-400">
+                @CalcLoc[nameof(CalcResource.matchType)]
+            </label>
+            <select @bind="MatchOperator"
+                    class="h-8 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20">
+                <option value="%var%">@CalcLoc[nameof(CalcResource.matchContains)]</option>
+                <option value="==">@CalcLoc[nameof(CalcResource.matchEquals)]</option>
+                <option value="!=">@CalcLoc[nameof(CalcResource.matchNotEquals)]</option>
+                <option value="var%">@CalcLoc[nameof(CalcResource.matchStartsWith)]</option>
+                <option value="%var">@CalcLoc[nameof(CalcResource.matchEndsWith)]</option>
+            </select>
+        </div>
 
-                    <div class="min-w-0">
-                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                            @CalcResource.code
-                        </label>
-                        <InputText @bind-Value="@projectFilter.Code"
-                                   placeholder="@AppLoc["codePlaceholder"]"
-                                   class="h-9 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-400 dark:focus:ring-blue-400/20" />
-                    </div>
+        <!-- Calc status filter -->
+        <div>
+            <label class="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-400">
+                @CalcLoc[nameof(CalcResource.calculationStatus)]
+            </label>
+            <select @bind="CalcStatusFilter"
+                    class="h-8 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20">
+                <option value="">@AppLoc["allStatuses"]</option>
+                @foreach (var s in AvailableCalcStatuses)
+                {
+                    <option value="@s">@s</option>
+                }
+            </select>
+        </div>
 
-                    <div class="min-w-0">
-                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                            @ResourceIdentity.customer
-                        </label>
-                        <InputSelect @bind-Value="projectFilter.CustomerId"
-                                     class="h-9 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20">
-                            <option value=""></option>
-                            @if (Customers != null)
-                            {
-                                @foreach (var customer in Customers)
-                                {
-                                    <option value="@customer.Id">@customer.Name</option>
-                                }
-                            }
-                        </InputSelect>
-                    </div>
+        <!-- Archive checkbox -->
+        <div class="flex flex-col justify-end">
+            <label class="inline-flex h-8 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                <input type="checkbox"
+                       @bind="IncludeArchived"
+                       class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-blue-400" />
+                <span>@CalcLoc[nameof(CalcResource.includeArchived)]</span>
+            </label>
+        </div>
+    </div>
 
-                    <div class="min-w-0">
-                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                            @ResourceApp.isVisible
-                        </label>
-                        <label class="inline-flex h-9 w-full items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 shadow-sm whitespace-nowrap dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                            <InputCheckbox @bind-Value="@projectFilter.IsVisible"
-                                           class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-blue-400" />
-                            <span>@ResourceApp.isVisible</span>
-                        </label>
-                    </div>
-
-                    <div class="min-w-0">
-                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                            @CalcResource.startDate 1
-                        </label>
-                        <InputDate @bind-Value="@projectFilter.StartDate1"
-                                   class="h-9 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20" />
-                    </div>
-
-                    <div class="min-w-0">
-                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                            @CalcResource.startDate 2
-                        </label>
-                        <InputDate @bind-Value="@projectFilter.StartDate2"
-                                   class="h-9 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20" />
-                    </div>
-
-                    <div class="min-w-0">
-                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                            @CalcResource.endDate 1
-                        </label>
-                        <InputDate @bind-Value="@projectFilter.EndDate1"
-                                   class="h-9 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20" />
-                    </div>
-
-                    <div class="min-w-0">
-                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                            @CalcResource.endDate 2
-                        </label>
-                        <InputDate @bind-Value="@projectFilter.EndDate2"
-                                   class="h-9 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20" />
-                    </div>
-                </div>
+    <!-- Deadline filters (projects only) -->
+    @if (TypeFilter == SearchTypeFilter.All || TypeFilter == SearchTypeFilter.Projects)
+    {
+        <div class="grid grid-cols-2 gap-2">
+            <div>
+                <label class="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-400">
+                    @CalcLoc[nameof(CalcResource.tenderQA)]
+                </label>
+                <input type="date"
+                       @bind="TenderQADate"
+                       class="h-8 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20" />
             </div>
-        }
-    </EditForm>
+            <div>
+                <label class="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-400">
+                    @CalcLoc[nameof(CalcResource.tenderDeadline)]
+                </label>
+                <input type="date"
+                       @bind="TenderDeadlineDate"
+                       class="h-8 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20" />
+            </div>
+        </div>
+    }
 
     <!-- Results -->
-    <div class="overflow-hidden rounded border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
-        <div class="flex flex-col gap-2 border-b border-slate-200 bg-slate-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-slate-700 dark:bg-slate-800/70">
-            <div>
-                <h6 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+    @if (HasSearched)
+    {
+        <div class="overflow-hidden rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+
+            <!-- Result summary header -->
+            <div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2.5 dark:border-slate-700 dark:bg-slate-800/70">
+                <span class="text-sm font-semibold text-slate-800 dark:text-slate-100">
                     @AppLoc["searchResults"]
-                </h6>
-                <p class="text-xs text-slate-500 dark:text-slate-400">
-                    @AppLoc["projectsCount", projects?.Count ?? 0]
-                </p>
-            </div>
-
-            <div class="inline-flex w-fit items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                @(IsLoading ? AppLoc["loading"] : AppLoc["ready"])
-            </div>
-        </div>
-
-        @if (IsLoading)
-        {
-            <div class="px-4 py-10 text-center text-sm text-slate-500 dark:text-slate-400">
-                @AppLoc["loading"]
-            </div>
-        }
-        else if (projects == null || !projects.Any())
-        {
-            <div class="px-4 py-10 text-center text-sm text-slate-500 dark:text-slate-400">
-                @AppLoc["noProjectsFound"]
-            </div>
-        }
-        else
-        {
-            <!-- Mobile cards -->
-            <div class="grid gap-3 p-4 lg:hidden">
-                @foreach (var project in projects)
+                </span>
+                @if (IsLoading)
                 {
-                    <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/80">
-                        <div class="flex items-start justify-between gap-3">
-                            <div class="min-w-0">
-                                <button class="text-left text-sm font-semibold text-blue-700 underline decoration-transparent underline-offset-4 transition hover:decoration-current dark:text-blue-400"
-                                        @onclick="async () => await ProjectSelected(project)"
-                                        disabled="@IsLoading">
-                                    @project.Name
-                                </button>
-
-                                <div class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                                    @project.Code
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mt-4 grid grid-cols-2 gap-3 text-sm">
-                            <div>
-                                <div class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                                    @CalcResource.startDate
-                                </div>
-                                <div class="mt-1 text-slate-700 dark:text-slate-300">
-                                    @project.StartDate.ToString(ConstValues.DateFormat)
-                                </div>
-                            </div>
-
-                            <div>
-                                <div class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                                    @CalcResource.endDate
-                                </div>
-                                <div class="mt-1 text-slate-700 dark:text-slate-300">
-                                    @project.EndDate.ToString(ConstValues.DateFormat)
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-300">@AppLoc["loading"]</span>
+                }
+                else
+                {
+                    <span class="text-xs text-slate-500 dark:text-slate-400">
+                        @string.Format(CalcLoc[nameof(CalcResource.resultSummaryFormat)], FolderResults.Count, ProjectResults.Count, CalcResults.Count)
+                    </span>
                 }
             </div>
 
-            <!-- Desktop table -->
-            <div class="hidden overflow-x-auto lg:block">
-                <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
-                    <thead class="bg-slate-100 dark:bg-slate-800">
-                        <tr>
-                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-700 dark:text-slate-200">
-                                @CalcResource.name
-                            </th>
-                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-700 dark:text-slate-200">
-                                @CalcResource.code
-                            </th>
-                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-700 dark:text-slate-200">
-                                @CalcResource.startDate
-                            </th>
-                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-700 dark:text-slate-200">
-                                @CalcResource.endDate
-                            </th>
-                        </tr>
-                    </thead>
+            @if (IsLoading)
+            {
+                <div class="px-4 py-10 text-center text-sm text-slate-500 dark:text-slate-400">
+                    @AppLoc["loading"]
+                </div>
+            }
+            else if (!FolderResults.Any() && !ProjectResults.Any() && !CalcResults.Any())
+            {
+                <div class="px-4 py-10 text-center">
+                    <p class="text-sm font-medium text-slate-700 dark:text-slate-200">@CalcLoc[nameof(CalcResource.noResultsFound)]</p>
+                    <p class="mt-1 text-xs text-slate-400 dark:text-slate-500">@CalcLoc[nameof(CalcResource.checkSpellingOrFilter)]</p>
+                </div>
+            }
+            else
+            {
+                <div class="divide-y divide-slate-100 dark:divide-slate-800">
 
-                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                        @foreach (var project in projects)
-                        {
-                            <tr class="transition hover:bg-slate-50 dark:hover:bg-slate-800/60">
-                                <td class="px-4 py-3 align-middle">
-                                    <button class="text-left text-sm font-medium text-blue-700 underline decoration-transparent underline-offset-4 transition hover:decoration-current dark:text-blue-400"
-                                            @onclick="async () => await ProjectSelected(project)"
-                                            disabled="@IsLoading">
-                                        @project.Name
-                                    </button>
-                                </td>
-                                <td class="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">
-                                    @project.Code
-                                </td>
-                                <td class="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">
-                                    @project.StartDate.ToString(ConstValues.DateFormat)
-                                </td>
-                                <td class="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">
-                                    @project.EndDate.ToString(ConstValues.DateFormat)
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        }
-    </div>
+                    <!-- Folders section -->
+                    @if (FolderResults.Any())
+                    {
+                        <div>
+                            <div class="bg-slate-50/80 px-4 py-1.5 dark:bg-slate-800/50">
+                                <span class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                                    @CalcLoc[nameof(CalcResource.foldersLabel)]
+                                </span>
+                            </div>
+                            @foreach (var folder in FolderResults)
+                            {
+                                <button type="button"
+                                        @onclick="async () => await FolderSelected(folder)"
+                                        class="flex w-full items-center gap-3 px-4 py-2.5 text-left transition hover:bg-slate-50 dark:hover:bg-slate-800/60">
+                                    <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
+                                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                            <path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z"/>
+                                        </svg>
+                                    </span>
+                                    <div class="min-w-0 flex-1">
+                                        <div class="truncate text-sm font-medium text-slate-800 dark:text-slate-100">@folder.Name</div>
+                                        @if (!folder.IsVisible)
+                                        {
+                                            <span class="text-[11px] text-slate-400">@AppLoc["archived"]</span>
+                                        }
+                                    </div>
+                                </button>
+                            }
+                        </div>
+                    }
+
+                    <!-- Projects section -->
+                    @if (ProjectResults.Any())
+                    {
+                        <div>
+                            <div class="bg-slate-50/80 px-4 py-1.5 dark:bg-slate-800/50">
+                                <span class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                                    @CalcLoc[nameof(CalcResource.projectsLabel)]
+                                </span>
+                            </div>
+                            @foreach (var project in ProjectResults)
+                            {
+                                <button type="button"
+                                        @onclick="async () => await ProjectSelected(project)"
+                                        class="flex w-full items-center gap-3 px-4 py-2.5 text-left transition hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                                        disabled="@IsLoading">
+                                    <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-sky-100 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300">
+                                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4.5 5.5h15v13h-15z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 9h8M8 13h3M14 13h2M8 16h8" />
+                                        </svg>
+                                    </span>
+                                    <div class="min-w-0 flex-1">
+                                        <div class="truncate text-sm font-medium text-slate-800 dark:text-slate-100">@project.Name</div>
+                                        <div class="flex items-center gap-2 text-[11px] text-slate-400 dark:text-slate-500">
+                                            @if (!string.IsNullOrWhiteSpace(project.Code))
+                                            {
+                                                <span>@project.Code</span>
+                                            }
+                                            @if (project.TenderDeadline != default)
+                                            {
+                                                <span>@CalcLoc[nameof(CalcResource.tenderDeadline)]: @project.TenderDeadline.ToString("yyyy-MM-dd")</span>
+                                            }
+                                            @if (!project.IsVisible)
+                                            {
+                                                <span>@AppLoc["archived"]</span>
+                                            }
+                                        </div>
+                                    </div>
+                                </button>
+                            }
+                        </div>
+                    }
+
+                    <!-- Calculations section -->
+                    @if (CalcResults.Any())
+                    {
+                        <div>
+                            <div class="bg-slate-50/80 px-4 py-1.5 dark:bg-slate-800/50">
+                                <span class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                                    @CalcLoc[nameof(CalcResource.calculationsLabel)]
+                                </span>
+                            </div>
+                            @foreach (var (calc, project, folder) in CalcResults)
+                            {
+                                <button type="button"
+                                        @onclick="async () => await CalcSelected(calc, project, folder)"
+                                        class="flex w-full items-center gap-3 px-4 py-2.5 text-left transition hover:bg-slate-50 dark:hover:bg-slate-800/60">
+                                    <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                            <rect x="4" y="3" width="16" height="18" rx="2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 8h8M8 12h5M8 16h3"/>
+                                        </svg>
+                                    </span>
+                                    <div class="min-w-0 flex-1">
+                                        <div class="truncate text-sm font-medium text-slate-800 dark:text-slate-100">@calc.Name</div>
+                                        <div class="flex items-center gap-2 text-[11px] text-slate-400 dark:text-slate-500">
+                                            @if (!string.IsNullOrWhiteSpace(calc.Code))
+                                            {
+                                                <span>@calc.Code</span>
+                                            }
+                                            @if (!string.IsNullOrWhiteSpace(calc.Status))
+                                            {
+                                                <span class="rounded bg-slate-100 px-1 py-0.5 font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                                                    @calc.Status
+                                                </span>
+                                            }
+                                            <span>@folder.Name / @project.Name</span>
+                                        </div>
+                                    </div>
+                                </button>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
 </div>
 
 @code {
-    ProjectFilter projectFilter = new();
-    List<ListDTO>? Customers;
-    List<SearchProjectsMVVM>? projects;
-    bool DetailsDiv = false;
-    bool IsLoading = true;
+    private string SearchText = string.Empty;
+    private string MatchOperator = "%var%";
+    private SearchTypeFilter TypeFilter = SearchTypeFilter.All;
+    private string CalcStatusFilter = string.Empty;
+    private bool IncludeArchived = false;
+    private DateTime? TenderQADate = null;
+    private DateTime? TenderDeadlineDate = null;
 
-    [Parameter] public RenderFragment? ChildContent { get; set; }
+    private bool IsLoading = false;
+    private bool HasSearched = false;
+
+    private List<FolderMVVM> FolderResults = [];
+    private List<SearchProjectsMVVM> ProjectResults = [];
+    private List<(ListCalculationMVVM Calc, ListProjectMVVM Project, FolderMVVM Folder)> CalcResults = [];
+
     [Parameter] public EventCallback CallBack { get; set; }
 
-    void ToggleDetails()
+    private enum SearchTypeFilter { All, Folders, Projects, Calculations }
+
+    private IEnumerable<string> AvailableCalcStatuses =>
+        (UoWService?.Folder?.State?.FoldersList ?? [])
+            .SelectMany(f => f.Projects)
+            .SelectMany(p => p.Calculations)
+            .Select(c => c.Status)
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .Distinct()
+            .OrderBy(s => s);
+
+    private async Task OnKeyUp(KeyboardEventArgs e)
     {
-        DetailsDiv = !DetailsDiv;
+        if (e.Key == "Enter")
+            await SearchAsync();
     }
 
-    async Task HandleSubmitAsync()
+    private async Task SearchAsync()
     {
-        IsLoading = true;
-        StateHasChanged();
-        try { projects = await Repo.Project.FilterAsync(projectFilter); }
-        finally { IsLoading = false; }
-    }
-
-    async Task ProjectSelected(SearchProjectsMVVM pro)
-    {
-        ListProjectMVVM o = new();
-        FolderMVVM? folder = UoWService?.Folder?.State?.FoldersList?.FirstOrDefault(x => x.Id == pro.FolderId);
-
-        if (folder == null || pro == null)
+        if (string.IsNullOrWhiteSpace(SearchText) && string.IsNullOrWhiteSpace(CalcStatusFilter)
+            && TenderQADate == null && TenderDeadlineDate == null)
             return;
 
-        PropertyCopier.CopyPropertiesTo(pro, o);
+        IsLoading = true;
+        HasSearched = true;
+        StateHasChanged();
+
+        try
+        {
+            FolderResults = [];
+            ProjectResults = [];
+            CalcResults = [];
+
+            var folders = UoWService?.Folder?.State?.FoldersList ?? [];
+
+            // Folder search (client-side)
+            if (TypeFilter is SearchTypeFilter.All or SearchTypeFilter.Folders)
+                FolderResults = SearchFolders(folders);
+
+            // Project search (server-side)
+            if (TypeFilter is SearchTypeFilter.All or SearchTypeFilter.Projects)
+                ProjectResults = await SearchProjectsAsync();
+
+            // Calculation search (client-side from loaded data)
+            if (TypeFilter is SearchTypeFilter.All or SearchTypeFilter.Calculations)
+                CalcResults = SearchCalculations(folders);
+        }
+        finally
+        {
+            IsLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private List<FolderMVVM> SearchFolders(IEnumerable<FolderMVVM> folders)
+    {
+        return folders
+            .Where(f => IncludeArchived || f.IsVisible)
+            .Where(f => string.IsNullOrWhiteSpace(SearchText) || MatchesText(f.Name, SearchText))
+            .ToList();
+    }
+
+    private async Task<List<SearchProjectsMVVM>> SearchProjectsAsync()
+    {
+        try
+        {
+            var filter = new ProjectFilter
+            {
+                Name = SearchText ?? string.Empty,
+                NameOperator = MatchOperator,
+                IsVisible = !IncludeArchived,
+            };
+
+            if (TenderDeadlineDate.HasValue)
+                filter.EndDate1 = TenderDeadlineDate.Value;
+            if (TenderQADate.HasValue)
+                filter.StartDate1 = TenderQADate.Value;
+
+            return await Repo.Project.FilterAsync(filter);
+        }
+        catch
+        {
+            return [];
+        }
+    }
+
+    private List<(ListCalculationMVVM, ListProjectMVVM, FolderMVVM)> SearchCalculations(IEnumerable<FolderMVVM> folders)
+    {
+        var results = new List<(ListCalculationMVVM, ListProjectMVVM, FolderMVVM)>();
+
+        foreach (var folder in folders)
+        {
+            foreach (var project in folder.Projects)
+            {
+                if (!project.CalculationsLoaded) continue;
+
+                foreach (var calc in project.Calculations)
+                {
+                    bool matchesText = string.IsNullOrWhiteSpace(SearchText)
+                        || MatchesText(calc.Name, SearchText)
+                        || MatchesText(calc.Code, SearchText);
+
+                    bool matchesStatus = string.IsNullOrWhiteSpace(CalcStatusFilter)
+                        || string.Equals(calc.Status, CalcStatusFilter, StringComparison.OrdinalIgnoreCase);
+
+                    if (matchesText && matchesStatus)
+                        results.Add((calc, project, folder));
+                }
+            }
+        }
+
+        return results;
+    }
+
+    private bool MatchesText(string? value, string search)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return false;
+
+        return MatchOperator switch
+        {
+            "==" => string.Equals(value, search, StringComparison.OrdinalIgnoreCase),
+            "!=" => !string.Equals(value, search, StringComparison.OrdinalIgnoreCase),
+            "var%" => value.StartsWith(search, StringComparison.OrdinalIgnoreCase),
+            "%var" => value.EndsWith(search, StringComparison.OrdinalIgnoreCase),
+            _ => value.Contains(search, StringComparison.OrdinalIgnoreCase),
+        };
+    }
+
+    private async Task FolderSelected(FolderMVVM folder)
+    {
         await Folder.NewFolder(folder);
-        await Folder.NewProject(o);
         Modal.Close();
     }
 
-    protected override async Task OnInitializedAsync()
+    private async Task ProjectSelected(SearchProjectsMVVM pro)
     {
-        IsLoading = true;
-        try { Customers = await Repo.Org.GetVisibleOrIdAsync(); }
-        finally { IsLoading = false; }
+        var folder = UoWService?.Folder?.State?.FoldersList?.FirstOrDefault(x => x.Id == pro.FolderId);
+        if (folder == null) return;
+
+        var projectMvvm = new ListProjectMVVM();
+        PropertyCopier.CopyPropertiesTo(pro, projectMvvm);
+        await Folder.NewFolder(folder);
+        await Folder.NewProject(projectMvvm);
+        Modal.Close();
+    }
+
+    private async Task CalcSelected(ListCalculationMVVM calc, ListProjectMVVM project, FolderMVVM folder)
+    {
+        await Folder.NewFolder(folder);
+        await Folder.NewProject(project);
+        Modal.Close();
     }
 }

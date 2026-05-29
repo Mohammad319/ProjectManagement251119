@@ -516,4 +516,21 @@
   <data name="noHiddenStatusesToShow" xml:space="preserve">
     <value>No hidden statuses to display.</value>
   </data>
+  <data name="matchType" xml:space="preserve"><value>Matching</value></data>
+  <data name="matchContains" xml:space="preserve"><value>Contains</value></data>
+  <data name="matchEquals" xml:space="preserve"><value>Is equal to</value></data>
+  <data name="matchNotEquals" xml:space="preserve"><value>Is not equal to</value></data>
+  <data name="matchStartsWith" xml:space="preserve"><value>Starts with</value></data>
+  <data name="matchEndsWith" xml:space="preserve"><value>Ends with</value></data>
+  <data name="includeArchived" xml:space="preserve"><value>Include archived</value></data>
+  <data name="typeFilter" xml:space="preserve"><value>Type</value></data>
+  <data name="allTypes" xml:space="preserve"><value>All</value></data>
+  <data name="foldersLabel" xml:space="preserve"><value>Folders</value></data>
+  <data name="projectsLabel" xml:space="preserve"><value>Projects</value></data>
+  <data name="calculationsLabel" xml:space="preserve"><value>Calculations</value></data>
+  <data name="noResultsFound" xml:space="preserve"><value>No results found.</value></data>
+  <data name="checkSpellingOrFilter" xml:space="preserve"><value>Check spelling or change the filters.</value></data>
+  <data name="searchFoldersProjectsCalcs" xml:space="preserve"><value>Search folders, projects and calculations</value></data>
+  <data name="searchNameOrCodePlaceholder" xml:space="preserve"><value>Search name or code...</value></data>
+  <data name="resultSummaryFormat" xml:space="preserve"><value>{0} folders · {1} projects · {2} calculations</value></data>
 </root>

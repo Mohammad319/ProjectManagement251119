@@ -102,7 +102,7 @@
                         <button type="button" class="@ManualOrderButtonClass" disabled="@(!CanMoveDown(sortedFolders, folder))" title="@AppLoc["moveDown"]" @onclick:stopPropagation="true" @onclick="() => MoveFolder(folder, 1)">↓</button>
                     </span>
                 }
-                <span title="@folder.Name"
+                <span title="@GetFolderTitle(folder)"
                       class="truncate text-[14px] font-semibold leading-5 @(isFolderArchived ? "text-slate-500 dark:text-slate-400" : "text-slate-800 group-hover:text-emerald-800 dark:text-slate-100 dark:group-hover:text-emerald-200") @(isFolderSelected ? "text-emerald-900 dark:text-emerald-100" : "")">
                     @folder.Name
                 </span>
@@ -120,7 +120,7 @@
         <!-- Projects -->
         @if (folder.ShowProjects && folder.Projects is not null)
         {
-            <div class="ml-4 space-y-1 border-l border-dashed border-emerald-200 pl-2 dark:border-emerald-900/70">
+            <div class="ml-4 space-y-1 pl-2">
                 @{
                     var sortedProjects = GetSortedProjects(folder.Projects).ToList();
                 }
@@ -193,7 +193,7 @@
                                     <button type="button" class="@ManualOrderButtonClass" disabled="@(!CanMoveDown(sortedProjects, project))" title="@AppLoc["moveDown"]" @onclick:stopPropagation="true" @onclick="() => MoveProject(folder.Projects, project, 1)">↓</button>
                                 </span>
                             }
-                            <span title="@project.Name"
+                            <span title="@GetProjectTitle(project)"
                                   class="truncate text-[13px] font-medium leading-5 @(isProjectArchived ? "text-slate-500 dark:text-slate-400" : "text-slate-700 group-hover:text-sky-800 dark:text-slate-200 dark:group-hover:text-sky-200") @(isProjectSelected ? "text-sky-900 dark:text-sky-100 font-semibold" : "")">
                                 @project.Name
                             </span>
@@ -209,7 +209,7 @@
                     </div>
 
                     <!-- Calculations -->
-                    <div class="ml-4 space-y-1 border-l border-dashed border-sky-200 pl-2 dark:border-sky-900/70
+                    <div class="ml-4 space-y-1 pl-2
                                    overflow-hidden transition-all duration-200 ease-in-out
                                    @(project.ShowCalculations ? " max-h-[800px] opacity-100" : "max-h-0 opacity-0")">
                         @{
@@ -235,12 +235,9 @@
                                  @oncontextmenu="async () => await ContextCalc(folder, project, cal)"
                                  @onclick="async () => await NewCalculations(folder, project, cal)"
                                  class="@string.Join(" ", calcClasses)">
-                                <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded @GetCalculationIconBgClass(cal)"
+                                <span class="flex h-5 w-5 shrink-0 items-center justify-center"
                                       title="@($"{CalcResource.calculation}{(string.IsNullOrWhiteSpace(cal.Status) ? string.Empty : $": {cal.Status}")}")">
-                                    <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                                        <rect x="4" y="3" width="16" height="18" rx="2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 8h8M8 12h5M8 16h3"/>
-                                    </svg>
+                                    <span class="@GetCalculationIndicatorClass(cal)" aria-hidden="true"></span>
                                 </span>
 
                                 <span class="min-w-0 flex items-center gap-1.5">
@@ -267,7 +264,7 @@
 }
 else
 {
-    RenderFragment<CalculationGroupNode> groupContent = group => @<div class="ml-3 space-y-1 border-l border-dashed border-indigo-200 pl-2 dark:border-indigo-900/70">
+    RenderFragment<CalculationGroupNode> groupContent = group => @<div class="ml-3 space-y-1 pl-2">
             @if (KeepFolderStructure)
             {
                 @foreach (var folderGroup in GetFolderCalculationGroups(group.Calculations))
@@ -317,7 +314,7 @@ else
                             </svg>
                         </span>
 
-                        <span title="@folder.Name"
+                        <span title="@GetFolderTitle(folder)"
                               class="truncate text-[13px] font-semibold leading-5 @(isFolderArchived ? "text-slate-500 dark:text-slate-400" : "text-slate-800 group-hover:text-emerald-800 dark:text-slate-100 dark:group-hover:text-emerald-200") @(isFolderSelected ? "text-emerald-900 dark:text-emerald-100" : "")">
                             @folder.Name
                         </span>
@@ -333,7 +330,7 @@ else
 
                     @if (IsGroupExpanded(folderKey))
                     {
-                        <div class="ml-4 space-y-1 border-l border-dashed border-emerald-200 pl-2 dark:border-emerald-900/70">
+                        <div class="ml-4 space-y-1 pl-2">
                             @foreach (var projectGroup in folderGroup.Projects)
                             {
                                 var project = projectGroup.Project;
@@ -381,7 +378,7 @@ else
                                         </svg>
                                     </span>
 
-                                    <span title="@project.Name"
+                                    <span title="@GetProjectTitle(project)"
                                           class="truncate text-[13px] font-medium leading-5 @(isProjectArchived ? "text-slate-500 dark:text-slate-400" : "text-slate-700 group-hover:text-sky-800 dark:text-slate-200 dark:group-hover:text-sky-200") @(isProjectSelected ? "text-sky-900 dark:text-sky-100 font-semibold" : "")">
                                         @project.Name
                                     </span>
@@ -397,7 +394,7 @@ else
 
                                 @if (IsGroupExpanded(projectKey))
                                 {
-                                    <div class="ml-4 space-y-1 border-l border-dashed border-sky-200 pl-2 dark:border-sky-900/70">
+                                    <div class="ml-4 space-y-1 pl-2">
                                         @foreach (var cal in projectGroup.Calculations)
                                         {
                                             var calcSelected = Calc?.Id == cal.Id;
@@ -415,12 +412,9 @@ else
                                             <div @key="@($"{group.Key}-{folder.Id}-{project.Id}-{cal.Id}")"
                                                  @onclick="async () => await NewCalculations(folder, project, cal)"
                                                  class="@string.Join(" ", calcClasses)">
-                                                <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded @GetCalculationIconBgClass(cal)"
+                                                <span class="flex h-5 w-5 shrink-0 items-center justify-center"
                                                       title="@($"{CalcResource.calculation}{(string.IsNullOrWhiteSpace(cal.Status) ? string.Empty : $": {cal.Status}")}")">
-                                                    <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                                                        <rect x="4" y="3" width="16" height="18" rx="2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 8h8M8 12h5M8 16h3"/>
-                                                    </svg>
+                                                    <span class="@GetCalculationIndicatorClass(cal)" aria-hidden="true"></span>
                                                 </span>
                                                 <span title="@cal.Name"
                                                       class="truncate text-[12px] font-medium leading-5 @GetCalculationTextClass(cal, calcSelected)">
@@ -455,12 +449,9 @@ else
                     <div @key="@($"{group.Key}-flat-{cal.Id}")"
                          @onclick="async () => await NewCalculations(entry.Folder, entry.Project, cal)"
                          class="@string.Join(" ", calcClasses)">
-                        <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded @GetCalculationIconBgClass(cal)"
+                        <span class="flex h-5 w-5 shrink-0 items-center justify-center"
                               title="@($"{CalcResource.calculation}{(string.IsNullOrWhiteSpace(cal.Status) ? string.Empty : $": {cal.Status}")}")">
-                            <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                                <rect x="4" y="3" width="16" height="18" rx="2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 8h8M8 12h5M8 16h3"/>
-                            </svg>
+                            <span class="@GetCalculationIndicatorClass(cal)" aria-hidden="true"></span>
                         </span>
                         <span title="@cal.Name"
                               class="truncate text-[12px] font-medium leading-5 @GetCalculationTextClass(cal, calcSelected)">
@@ -505,7 +496,7 @@ else
                 {
                     @if (group.Children?.Any() == true)
                     {
-                        <div class="ml-3 space-y-1 border-l border-dashed border-indigo-200 pl-2 dark:border-indigo-900/70">
+                        <div class="ml-3 space-y-1 pl-2">
                             @foreach (var quarterGroup in group.Children)
                             {
                                 var quarterExpanded = IsGroupExpanded(quarterGroup.Key);
