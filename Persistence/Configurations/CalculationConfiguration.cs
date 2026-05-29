@@ -19,6 +19,7 @@ internal sealed class CalculationConfiguration : IEntityTypeConfiguration<Calcul
         builder.Property(e => e.Factors).HasJsonConversion();
         builder.Property(e => e.DisplayPresets).HasJsonConversion();
         builder.Property(e => e.RowVersion).IsRowVersion();
+        builder.Property(e => e.CalculationType).HasConversion<int>();
 
         builder.HasOne(x => x.ProcurementMethods)
             .WithMany(x => x.Calculations)
@@ -72,6 +73,7 @@ internal sealed class CalculationConfiguration : IEntityTypeConfiguration<Calcul
             t.HasCheckConstraint("CK_Calculations_DateRange", "[EndDate] >= [StartDate]");
             t.HasCheckConstraint("CK_Calculations_Code_NotEmpty", "LEN(LTRIM(RTRIM([Code]))) > 0");
             t.HasCheckConstraint("CK_Calculations_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+            t.HasCheckConstraint("CK_Calculations_CalculationType", "[CalculationType] IN (0, 1)");
         });
 
         builder.HasIndex(x => new { x.TenantId, x.ProjectId, x.DepartmentId, x.SortOrder })
@@ -96,6 +98,12 @@ internal sealed class CalculationConfiguration : IEntityTypeConfiguration<Calcul
 
         builder.HasIndex(x => new { x.TenantId, x.StatusId })
             .HasDatabaseName("IX_Calculations_Tenant_Status");
+
+        builder.HasIndex(x => new { x.TenantId, x.ProjectId, x.VersionGroupId, x.VersionNumber })
+            .HasDatabaseName("IX_Calculations_Tenant_Project_VersionGroup_Number");
+
+        builder.HasIndex(x => new { x.TenantId, x.ProjectId, x.VersionGroupId, x.IsCurrentVersion })
+            .HasDatabaseName("IX_Calculations_Tenant_Project_VersionGroup_Current");
 
         builder.HasIndex("TenantId", "CreatedBy")
             .HasDatabaseName("IX_Calculations_Tenant_CreatedBy");

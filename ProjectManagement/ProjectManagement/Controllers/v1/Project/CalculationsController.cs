@@ -35,6 +35,20 @@ namespace ProjectManagement.Server.Controllers.v1.Project
         }
 
         [Authorize(Roles = Tenant.AdminManger)]
+        [HttpPost(URLConst.Calculation.ProductionCopy + "/{calcId}")]
+        public async Task<IActionResult> CreateProductionCopy(int calcId)
+        {
+            return Ok(await MicroBus.Send(new CreateProductionCalculationCommand(calcId, GetDepartmentId(), GetUserId())));
+        }
+
+        [Authorize(Roles = Tenant.AdminManger)]
+        [HttpPost(URLConst.Calculation.VersionCopy + "/{calcId}")]
+        public async Task<IActionResult> CreateVersion(int calcId)
+        {
+            return Ok(await MicroBus.Send(new CreateCalculationVersionCommand(calcId, GetDepartmentId(), GetUserId())));
+        }
+
+        [Authorize(Roles = Tenant.AdminManger)]
         [HttpPut(URLConst.Calculation.Move + "/{projectId}/{calcId}")]
         public async Task<IActionResult> Move(Guid projectId, int calcId)
         {

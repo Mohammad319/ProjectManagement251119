@@ -3,8 +3,12 @@
 @using ProjectManagement.Client.Shared.SharedComponent.Contact
 @using ProjectManagement.Shared.Base.Project
 @using ProjectManagement.Shared.DTO.Calculation
+@using ProjectManagement.Shared.DTO.General
 @using ProjectManagement.Shared.DTO.Organisation
+@using ProjectManagement.Shared.Enums
 @using ProjectManagement.Client.Constant
+@using ProjectManagement.Shared.Constant
+@using System.Security.Claims
 
 @using BlazorMHD.UI.Core.Navigation
 @using BlazorMHD.UI.Core.DesignSystem
@@ -12,6 +16,7 @@
 
 @inherits AppComponentBase
 @attribute [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 @if (CalculationUpdate != null)
 {
@@ -31,7 +36,7 @@
 
         @if (Part == 1)
         {
-            <div class="mt-3 max-h-[72vh] overflow-y-auto pr-1">
+            <div class="mt-3 pr-1">
                 <div class="grid grid-cols-1 gap-3 xl:grid-cols-2">
                     <section class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
                         <h3 class="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">@CalcResource.calculation</h3>
@@ -44,6 +49,50 @@
                             <div>
                                 <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.name</label>
                                 <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.Name" />
+                            </div>
+
+                            <div class="sm:col-span-2">
+                                <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">Kalkyltyp</label>
+                                @if (CalculationUpdate.IsLocked)
+                                {
+                                    <div class="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
+                                        <div class="font-semibold">@GetCalculationTypeLabel(CalculationUpdate.CalculationType) - Låst</div>
+                                        <div class="mt-1 text-xs">Denna kalkyl är låst eftersom den är godkänd.</div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="w-full rounded border border-gray-300 bg-slate-50 px-2 py-1 text-sm text-slate-700 dark:border-gray-600 dark:bg-gray-800 dark:text-slate-100">
+                                        @GetCalculationTypeLabel(CalculationUpdate.CalculationType)
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="sm:col-span-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-950">
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <div>
+                                        <div class="text-sm font-semibold text-slate-800 dark:text-slate-100">Version @CalculationUpdate.VersionNumber</div>
+                                        <div class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                                            @(CalculationUpdate.IsCurrentVersion ? "Aktuell version" : "Äldre version")
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <button type="button"
+                                                class="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                                                @onclick="OpenVersionsDialog">
+                                            Visa versioner
+                                        </button>
+                                        @if (Calculation.Id > 0 && CalculationUpdate.IsCurrentVersion)
+                                        {
+                                            <button type="button"
+                                                    class="rounded-md border border-blue-300 bg-blue-50 px-2 py-1 text-xs font-semibold text-blue-700 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-300 dark:hover:bg-blue-950/50"
+                                                    disabled="@_isCreatingVersion"
+                                                    @onclick="CreateNewVersionAsync">
+                                                Skapa ny version
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
                             </div>
 
                             <div>
@@ -74,7 +123,7 @@
 
                             <div>
                                 <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.status</label>
-                                <InputSelect @bind-Value="CalculationUpdate.StatusId" class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
+                                <select value="@CalculationUpdate.StatusId" @onchange="OnStatusChanged" class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" disabled="@CalculationUpdate.IsLocked">
                                     <option></option>
                                     @if (Config?.Statuses != null)
                                     {
@@ -83,7 +132,7 @@
                                             <option value="@status.Id">@status.Name</option>
                                         }
                                     }
-                                </InputSelect>
+                                </select>
                             </div>
 
                             <div class="sm:col-span-2">
@@ -158,29 +207,46 @@
                     </section>
 
                     <section class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                        <h3 class="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">@ResourceApp.organisation</h3>
+                        <h3 class="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">Ansvar</h3>
                         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            @for (int i = 0; i < CalculationUpdate.Responsibles.Count; i++)
+                            <div>
+                                <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">Kalkylansvarig</label>
+                                <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100 disabled:text-slate-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:disabled:bg-gray-900"
+                                           @bind-Value="@CalculationUpdate.Responsibles[0]"
+                                           disabled="@CalculationUpdate.IsLocked" />
+                            </div>
+
+                            <div>
+                                <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">Granskare</label>
+                                <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100 disabled:text-slate-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:disabled:bg-gray-900"
+                                           @bind-Value="@CalculationUpdate.Inspector"
+                                           disabled="@CalculationUpdate.IsLocked" />
+                            </div>
+
+                            @if (CalculationUpdate.IsLocked)
                             {
-                                <div>
-                                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.responsible</label>
-                                    <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.Responsibles[i]" />
+                                <div class="sm:col-span-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300">
+                                    <div class="mb-1 inline-flex rounded-full bg-slate-200 px-2 py-0.5 font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">Låst</div>
+                                    <div>Denna kalkyl är låst eftersom den är godkänd.</div>
+                                    <div class="mt-1 grid grid-cols-1 gap-1 sm:grid-cols-2">
+                                        <span>Godkänd av: @FormatText(CalculationUpdate.ApprovedByName)</span>
+                                        <span>Godkänd datum: @FormatDateTime(CalculationUpdate.ApprovedAtUtc)</span>
+                                        <span>Låst av: @FormatUserId(CalculationUpdate.LockedByUserId)</span>
+                                        <span>Låst datum: @FormatDateTime(CalculationUpdate.LockedAtUtc)</span>
+                                    </div>
                                 </div>
                             }
 
-                            <div>
-                                <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.inspector</label>
-                                <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                                           @bind-Value="@CalculationUpdate.Inspector"
-                                           placeholder="@(CalcResource.inspector)" />
-                            </div>
-
-                            <div>
-                                <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@ResourceApp.organisation</label>
-                                <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                                           @bind-Value="@CalculationUpdate.Supervisor"
-                                           placeholder="@(ResourceApp.organisation)" />
-                            </div>
+                            @if (CanCreateProductionCalculation)
+                            {
+                                <div class="sm:col-span-2">
+                                    <button type="button"
+                                            class="rounded-lg border border-emerald-500 bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-emerald-700 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-600"
+                                            @onclick="OpenProductionDialog">
+                                        Skapa produktionskalkyl
+                                    </button>
+                                </div>
+                            }
                         </div>
                     </section>
 
@@ -320,16 +386,149 @@
         }
         else if (Part == 2)
         {
-            <div class="mt-3 max-h-[72vh] overflow-y-auto rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div class="mt-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
                 <ProjectManagement.Client.Pages.Calculation.Income.IncomeListUI Incomes="CalculationUpdate.Income" MinYear="CalculationIncomeStartYear" />
             </div>
         }
     </EditForm>
 }
 
+@if (_showProductionDialog)
+{
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-6">
+        <div class="w-full max-w-lg rounded-lg border border-slate-200 bg-white p-5 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
+            <div class="space-y-3 text-slate-700 dark:text-slate-200">
+                <h2 class="text-base font-semibold text-slate-900 dark:text-slate-50">Du håller på att skapa en produktionskalkyl.</h2>
+                <p class="text-sm leading-6">
+                    Den låsta anbudskalkylen kommer att sparas som historik.
+                    En kopia skapas som produktionskalkyl och öppnas för fortsatt arbete.
+                </p>
+                <p class="text-sm font-medium text-slate-900 dark:text-slate-100">Vill du fortsätta?</p>
+                @if (!string.IsNullOrWhiteSpace(_productionDialogMessage))
+                {
+                    <div class="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
+                        @_productionDialogMessage
+                    </div>
+                }
+            </div>
+
+            <div class="mt-5 flex flex-wrap justify-end gap-2">
+                <button type="button"
+                        class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                        disabled="@_isCreatingProductionCalculation"
+                        @onclick="CancelProductionDialog">
+                    Avbryt
+                </button>
+                <button type="button"
+                        class="rounded-lg border border-emerald-500 bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-600"
+                        disabled="@_isCreatingProductionCalculation"
+                        @onclick="CreateProductionCalculationAsync">
+                    Skapa produktionskalkyl
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (_showVersionsDialog)
+{
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-6">
+        <div class="w-full max-w-lg rounded-lg border border-slate-200 bg-white p-5 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
+            <div class="flex items-start justify-between gap-3">
+                <div>
+                    <h2 class="text-base font-semibold text-slate-900 dark:text-slate-50">Versioner</h2>
+                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">@(CalculationUpdate?.Name ?? string.Empty)</p>
+                </div>
+                <button type="button"
+                        class="rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                        @onclick="CloseVersionsDialog">
+                    Stäng
+                </button>
+            </div>
+
+            <div class="mt-4 space-y-2">
+                @foreach (var version in CalculationVersions)
+                {
+                    <div class="flex items-center justify-between gap-3 rounded-md border border-slate-200 px-3 py-2 dark:border-slate-700">
+                        <div class="min-w-0">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="text-sm font-semibold text-slate-800 dark:text-slate-100">Version @version.VersionNumber</span>
+                                @if (version.IsCurrentVersion)
+                                {
+                                    <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">aktuell</span>
+                                }
+                            </div>
+                            <div class="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">@FormatText(version.Status)</div>
+                        </div>
+                        <button type="button"
+                                class="shrink-0 rounded-md border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                                @onclick="async () => await OpenVersionAsync(version)">
+                            Öppna
+                        </button>
+                    </div>
+                }
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(_versionDialogMessage))
+            {
+                <div class="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
+                    @_versionDialogMessage
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@if (_showApprovalDialog)
+{
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-6">
+        <div class="w-full max-w-lg rounded-lg border border-slate-200 bg-white p-5 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
+            <div class="space-y-3 text-slate-700 dark:text-slate-200">
+                <h2 class="text-base font-semibold text-slate-900 dark:text-slate-50">Du håller på att godkänna och låsa kalkylen.</h2>
+                <p class="text-sm leading-6">
+                    Efter låsning kan kalkylen inte ändras direkt.
+                    Godkänd av och godkänd datum sparas automatiskt.
+                </p>
+                <p class="text-sm font-medium text-slate-900 dark:text-slate-100">Vill du fortsätta?</p>
+                @if (!string.IsNullOrWhiteSpace(_approvalDialogMessage))
+                {
+                    <div class="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
+                        @_approvalDialogMessage
+                    </div>
+                }
+            </div>
+
+            <div class="mt-5 flex flex-wrap justify-end gap-2">
+                <button type="button"
+                        class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                        disabled="@_isApprovingCalculation"
+                        @onclick="CancelApprovalDialog">
+                    Avbryt
+                </button>
+                <button type="button"
+                        class="rounded-lg border border-emerald-500 bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-600"
+                        disabled="@_isApprovingCalculation"
+                        @onclick="ApproveAndLockAsync">
+                    Godkänn och lås
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     public const string DialogFormId = "calcForm";
     bool btnSubmitDisabled = false;
+    private bool _showProductionDialog;
+    private bool _isCreatingProductionCalculation;
+    private string _productionDialogMessage = string.Empty;
+    private bool _showVersionsDialog;
+    private bool _isCreatingVersion;
+    private string _versionDialogMessage = string.Empty;
+    private bool _showApprovalDialog;
+    private bool _isApprovingCalculation;
+    private int? _pendingApprovalStatusId;
+    private string _approvalDialogMessage = string.Empty;
 
     [Parameter] public EventCallback<ListCalculationMVVM?> Callback { get; set; }
     [Parameter] public required ListCalculationMVVM Calculation { get; set; }
@@ -361,9 +560,225 @@
             ? DateTime.Today.Year
             : CalculationUpdate.StartDate.Year;
 
+    private static string GetCalculationTypeLabel(CalculationVersionType type) =>
+        type == CalculationVersionType.Production ? "Produktionskalkyl" : "Anbudskalkyl";
+
+    private bool CanCreateProductionCalculation =>
+        Calculation.Id > 0 &&
+        CalculationUpdate.CalculationType == CalculationVersionType.Tender &&
+        CalculationUpdate.IsLocked &&
+        SelectedStatus?.AllowsProductionCalculation == true;
+
+    private IEnumerable<ListCalculationMVVM> CalculationVersions =>
+        (Folder.State.ProjectSelected?.Calculations ?? [])
+            .Where(x => x.VersionGroupId == CalculationUpdate.VersionGroupId)
+            .OrderBy(x => x.VersionNumber);
+
+    private StatusListDTO? SelectedStatus =>
+        Config?.Statuses.FirstOrDefault(x => x.Id == CalculationUpdate.StatusId);
+
+    private void OnStatusChanged(ChangeEventArgs e)
+    {
+        var oldStatusId = CalculationUpdate.StatusId;
+        int? selectedStatusId = int.TryParse(e.Value?.ToString(), out var value) && value > 0
+            ? value
+            : null;
+
+        var selectedStatus = Config?.Statuses.FirstOrDefault(x => x.Id == selectedStatusId);
+        if (selectedStatus is { IsApprovalStatus: true, LocksCalculation: true } &&
+            Calculation.Id > 0 &&
+            !CalculationUpdate.IsLocked)
+        {
+            _pendingApprovalStatusId = selectedStatusId;
+            _approvalDialogMessage = string.Empty;
+            _showApprovalDialog = true;
+            CalculationUpdate.StatusId = oldStatusId;
+            return;
+        }
+
+        CalculationUpdate.StatusId = selectedStatusId;
+    }
+
+    private void CancelApprovalDialog()
+    {
+        if (_isApprovingCalculation)
+            return;
+
+        _pendingApprovalStatusId = null;
+        _approvalDialogMessage = string.Empty;
+        _showApprovalDialog = false;
+    }
+
+    private async Task ApproveAndLockAsync()
+    {
+        if (_isApprovingCalculation || _pendingApprovalStatusId is null)
+            return;
+
+        _isApprovingCalculation = true;
+        _approvalDialogMessage = string.Empty;
+
+        try
+        {
+            CalculationUpdate.StatusId = _pendingApprovalStatusId;
+            _showApprovalDialog = false;
+            await HandleSubmitAsync();
+        }
+        catch (Exception ex)
+        {
+            _approvalDialogMessage = "Kalkylen kunde inte godkännas och låsas.";
+            await ClientLog.ErrorAsync("Approve and lock calculation failed", ex: ex);
+        }
+        finally
+        {
+            _pendingApprovalStatusId = null;
+            _isApprovingCalculation = false;
+        }
+    }
+
+    private void OpenProductionDialog()
+    {
+        _productionDialogMessage = string.Empty;
+        _showProductionDialog = true;
+    }
+
+    private void CancelProductionDialog()
+    {
+        if (_isCreatingProductionCalculation)
+            return;
+
+        _showProductionDialog = false;
+        _productionDialogMessage = string.Empty;
+    }
+
+    private async Task CreateProductionCalculationAsync()
+    {
+        if (_isCreatingProductionCalculation || Calculation.Id <= 0)
+            return;
+
+        _isCreatingProductionCalculation = true;
+        _productionDialogMessage = string.Empty;
+
+        try
+        {
+            var newCalculationId = await Repo.Calculation.CreateProductionCopyAsync(Calculation.Id);
+            if (newCalculationId <= 0)
+            {
+                _productionDialogMessage = "Produktionskalkylen kunde inte skapas.";
+                return;
+            }
+
+            _showProductionDialog = false;
+            MHD.Notifications(ToastType.Add, true);
+            await Callback.InvokeAsync(Calculation);
+            await Callback.InvokeAsync(null);
+            await CalcService.SetCalc(newCalculationId);
+        }
+        catch (Exception ex)
+        {
+            _productionDialogMessage = "Ett fel uppstod när produktionskalkylen skulle skapas.";
+            await ClientLog.ErrorAsync("Create production calculation from form failed", ex: ex);
+        }
+        finally
+        {
+            _isCreatingProductionCalculation = false;
+        }
+    }
+
+    private void OpenVersionsDialog()
+    {
+        _versionDialogMessage = string.Empty;
+        _showVersionsDialog = true;
+    }
+
+    private void CloseVersionsDialog()
+    {
+        _showVersionsDialog = false;
+        _versionDialogMessage = string.Empty;
+    }
+
+    private async Task OpenVersionAsync(ListCalculationMVVM version)
+    {
+        _showVersionsDialog = false;
+        await Callback.InvokeAsync(null);
+        await CalcService.SetCalc(version.Id);
+    }
+
+    private async Task CreateNewVersionAsync()
+    {
+        if (_isCreatingVersion || Calculation.Id <= 0)
+            return;
+
+        _isCreatingVersion = true;
+        _versionDialogMessage = string.Empty;
+
+        try
+        {
+            var newCalculationId = await Repo.Calculation.CreateVersionAsync(Calculation.Id);
+            if (newCalculationId <= 0)
+            {
+                _versionDialogMessage = "Ny version kunde inte skapas.";
+                MHD.Notifications(ToastType.Add, false);
+                return;
+            }
+
+            _showVersionsDialog = false;
+            MHD.Notifications(ToastType.Add, true);
+            await Callback.InvokeAsync(Calculation);
+            await Callback.InvokeAsync(null);
+            await CalcService.SetCalc(newCalculationId);
+        }
+        catch (Exception ex)
+        {
+            _versionDialogMessage = "Ett fel uppstod när en ny version skulle skapas.";
+            MHD.Notifications(ToastType.Add, false);
+            await ClientLog.ErrorAsync("Create calculation version from form failed", ex: ex);
+        }
+        finally
+        {
+            _isCreatingVersion = false;
+        }
+    }
+
+    private static string FormatText(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? "-" : value;
+
+    private static string FormatDateTime(DateTime? value) =>
+        value.HasValue ? value.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm") : "-";
+
+    private static string FormatUserId(int? value) =>
+        value.HasValue && value.Value > 0 ? value.Value.ToString() : "-";
+
+    private async Task EnsureResponsibilityDefaultsAsync()
+    {
+        CalculationUpdate.Responsibles ??= [];
+
+        while (CalculationUpdate.Responsibles.Count == 0)
+            CalculationUpdate.Responsibles.Add(string.Empty);
+
+        if (Calculation.Id == 0 && string.IsNullOrWhiteSpace(CalculationUpdate.Responsibles[0]))
+            CalculationUpdate.Responsibles[0] = await GetCurrentUserDisplayNameAsync();
+    }
+
+    private async Task<string> GetCurrentUserDisplayNameAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        var fullName = user.FindFirst(PMClaimsConst.FullName)?.Value;
+        if (!string.IsNullOrWhiteSpace(fullName))
+            return fullName;
+
+        return user.Identity?.Name
+            ?? user.FindFirst(ClaimTypes.Email)?.Value
+            ?? string.Empty;
+    }
+
     protected override async Task OnInitializedAsync()
     {
         ResetEditContext();
+
+        if (CalculationUpdate.Responsibles.Count == 0)
+            CalculationUpdate.Responsibles.Add(string.Empty);
 
         if (Calculation.Id > 0)
         {
@@ -371,9 +786,9 @@
         }
 
         CalculationUpdate.Notes ??= [];
-        CalculationUpdate.Responsibles ??= [];
         CalculationUpdate.Contacts ??= [];
         CalculationUpdate.Income ??= [];
+        await EnsureResponsibilityDefaultsAsync();
 
         Config = await Repo.Calculation.GetConfig(
                 CalculationUpdate.ProcurementMethodsId,
@@ -396,6 +811,13 @@
     {
         if (btnSubmitDisabled)
             return;
+
+        if (CalculationUpdate.IsLocked)
+        {
+            MHD.Notifications(ToastType.Update, false);
+            await Callback.InvokeAsync(null);
+            return;
+        }
 
         btnSubmitDisabled = true;
         var shouldClose = true;

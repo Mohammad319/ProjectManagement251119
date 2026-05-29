@@ -264,7 +264,20 @@ namespace Persistence.Service.Project
                 Contracts = await OrderAndSelect(context.Contracts).ToListAsync(ct),
                 Compensations = await OrderAndSelect(context.Compensations).ToListAsync(ct),
                 Types = await OrderAndSelect(context.CalcProjectType).ToListAsync(ct),
-                Statuses = await OrderAndSelect(context.CalculationStatus).ToListAsync(ct),
+                Statuses = await context.CalculationStatus
+                    .AsNoTracking()
+                    .Where(x => x.IsVisible)
+                    .OrderBy(x => x.SortOrder)
+                    .ThenBy(x => x.Name)
+                    .Select(x => new StatusListDTO
+                    {
+                        Id = x.Id,
+                        Name = x.Name,
+                        IsApprovalStatus = x.IsApprovalStatus,
+                        LocksCalculation = x.LocksCalculation,
+                        AllowsProductionCalculation = x.AllowsProductionCalculation
+                    })
+                    .ToListAsync(ct),
                 Organisation = await context.Organisation
                     .AsNoTracking()
                     .Where(x => x.IsVisible)
@@ -314,27 +327,41 @@ namespace Persistence.Service.Project
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            return await context.Projects.AsNoTracking()
+            var projects = await context.Projects.AsNoTracking()
                 .Where(x => x.FolderId == folderId && (includeArchived || x.IsVisible) &&
                        (departmentId == null || x.Folder.DepartmentId == departmentId || x.CreatedBy == userId))
                 .OrderBy(x => x.SortOrder)
                 .ThenBy(x => x.Name)
-                .Select(ProjectSelectors.List)
                 .ToListAsync(ct);
+
+            var statusSortOrders = await GetStatusSortOrdersAsync(context, ct);
+            return projects.Select(x =>
+            {
+                var metadata = x.GetMetadataSnapshot();
+                statusSortOrders.TryGetValue(metadata.StatusId ?? 0, out var statusSortOrder);
+                return x.ToListDto(statusSortOrder);
+            }).ToList();
         }
 
         public async Task<IEnumerable<ListProjectDTO>> GetOtherGroupByFolderAsync(Guid folderId, int userId, int? departmentId, bool includeArchived, CancellationToken ct)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            return await context.Projects.AsNoTracking()
+            var projects = await context.Projects.AsNoTracking()
                 .Where(x => x.FolderId == folderId && (includeArchived || x.IsVisible) &&
                     x.Calculations.SelectMany(c => c.SharesCalc)
                         .Any(s => s.CreatedBy == userId || s.DepartmentId == departmentId))
                 .OrderBy(x => x.SortOrder)
                 .ThenBy(x => x.Name)
-                .Select(ProjectSelectors.List)
                 .ToListAsync(ct);
+
+            var statusSortOrders = await GetStatusSortOrdersAsync(context, ct);
+            return projects.Select(x =>
+            {
+                var metadata = x.GetMetadataSnapshot();
+                statusSortOrders.TryGetValue(metadata.StatusId ?? 0, out var statusSortOrder);
+                return x.ToListDto(statusSortOrder);
+            }).ToList();
         }
 
         public async Task<IEnumerable<SearchProjectDTO>> SearchAsync(ProjectFilter filter, int userId, int? departmentId, CancellationToken ct)
@@ -406,6 +433,16 @@ namespace Persistence.Service.Project
 
         private static string? NormalizeCode(string? code)
             => string.IsNullOrWhiteSpace(code) ? null : code.Trim();
+
+        private static Task<Dictionary<int, int>> GetStatusSortOrdersAsync(
+            Persistence.Context.ShardingSingleDbContext context,
+            CancellationToken ct)
+        {
+            return context.CalculationStatus
+                .AsNoTracking()
+                .Select(status => new { status.Id, status.SortOrder })
+                .ToDictionaryAsync(status => status.Id, status => status.SortOrder, ct);
+        }
 
         private static string EnsureUniqueName(string name, IEnumerable<string> existingNames)
         {

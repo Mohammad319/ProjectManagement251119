@@ -1,4 +1,5 @@
 ﻿using Application.Feature.General;
+using Domain.Entities.Project;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Factory;
 using ProjectManagement.Shared.DTO.Calculation;
@@ -15,8 +16,9 @@ namespace Persistence.Service.CalculationItems.Project
             // هنا نستخدم TS بدل TaskStatusEntity
             var entity = new TS();
             entity.Update(dto.Name, dto.Color, dto.Order, dto.IsVisible);
+            ApplyStatusSettings(entity, dto);
 
-           context.Set<TS>().Add(entity);
+            context.Set<TS>().Add(entity);
             await context.SaveChangesAsync(ct);
             return entity.Id;
         }
@@ -32,6 +34,7 @@ namespace Persistence.Service.CalculationItems.Project
                 return false;
 
             entity.Update(dto.Name, dto.Color, dto.Order, dto.IsVisible);
+            ApplyStatusSettings(entity, dto);
 
             await context.SaveChangesAsync(ct);
             return true;
@@ -107,6 +110,17 @@ namespace Persistence.Service.CalculationItems.Project
                     SortOrder = x.SortOrder
                 })
                 .ToListAsync(ct);
+        }
+
+        private static void ApplyStatusSettings(TS entity, PostTaskStatusDTO dto)
+        {
+            if (entity is StatusEntity status)
+            {
+                status.SetApprovalSettings(
+                    dto.IsApprovalStatus,
+                    dto.LocksCalculation,
+                    dto.AllowsProductionCalculation);
+            }
         }
 
     }

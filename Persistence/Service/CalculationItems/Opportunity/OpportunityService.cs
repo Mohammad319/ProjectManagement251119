@@ -28,6 +28,7 @@ namespace Persistence.Service.CalculationItems.Opportunity
             var calculationExists = await context.Calculations
                 .AsNoTracking()
                 .AnyAsync(x => x.Id == calculationId &&
+                    !x.IsLocked &&
                     (!departmentId.HasValue || x.DepartmentId == departmentId.Value), ct);
 
             if (!calculationExists)
@@ -56,6 +57,7 @@ namespace Persistence.Service.CalculationItems.Opportunity
             await using var context = await dbFactory.CreateDbContextAsync(ct);
             var entity = await context.Opportunity
                 .FirstOrDefaultAsync(x => x.Id == id &&
+                    !x.Calculation.IsLocked &&
                     (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value), ct);
 
             if (entity is null)
@@ -82,6 +84,7 @@ namespace Persistence.Service.CalculationItems.Opportunity
             await using var context = await dbFactory.CreateDbContextAsync(ct);
             var opp = await context.Opportunity
                 .FirstOrDefaultAsync(x => x.Id == id &&
+                    !x.Calculation.IsLocked &&
                     (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value), ct);
             if (opp is null)
                 return false;

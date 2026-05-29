@@ -249,6 +249,18 @@ namespace ProjectManagement.Client.Services.Calculation
             folderState.Calculation.Inspector = calcDto.Inspector ?? string.Empty;
             folderState.Calculation.TemplateId = calcDto.TemplateId;
             folderState.Calculation.TemplateColumnId = calcDto.TemplateColumnId;
+            folderState.Calculation.CalculationType = calcDto.CalculationType;
+            folderState.Calculation.IsLocked = calcDto.IsLocked;
+            folderState.Calculation.LockedAtUtc = calcDto.LockedAtUtc;
+            folderState.Calculation.LockedByUserId = calcDto.LockedByUserId;
+            folderState.Calculation.ApprovedByUserId = calcDto.ApprovedByUserId;
+            folderState.Calculation.ApprovedByName = calcDto.ApprovedByName ?? string.Empty;
+            folderState.Calculation.ApprovedAtUtc = calcDto.ApprovedAtUtc;
+            folderState.Calculation.SourceCalculationId = calcDto.SourceCalculationId;
+            folderState.Calculation.VersionGroupId = calcDto.VersionGroupId;
+            folderState.Calculation.VersionNumber = calcDto.VersionNumber;
+            folderState.Calculation.CreatedFromCalculationId = calcDto.CreatedFromCalculationId;
+            folderState.Calculation.IsCurrentVersion = calcDto.IsCurrentVersion;
             folderState.Calculation.Sort = calcDto.Sort?.Clone() ?? new();
             RequestGridRefresh(CalculationGridRefreshKind.Structure);
         }

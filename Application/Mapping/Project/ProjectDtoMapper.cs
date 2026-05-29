@@ -54,5 +54,29 @@ namespace Application.Mapping.Project
                 Data = entity.GetMetadataSnapshot()
             };
         }
+
+        public static ListProjectDTO ToListDto(this ProjectEntity entity, int? statusSortOrder = null)
+        {
+            ArgumentNullException.ThrowIfNull(entity);
+
+            var metadata = entity.GetMetadataSnapshot();
+
+            return new ListProjectDTO
+            {
+                Id = entity.Id,
+                Name = entity.Name ?? string.Empty,
+                Code = entity.Code ?? string.Empty,
+                StartDate = entity.StartDate,
+                EndDate = entity.EndDate,
+                TenderDeadline = entity.TenderDeadline,
+                TenderQA = entity.TenderQA,
+                Order = entity.SortOrder,
+                IsVisible = entity.IsVisible,
+                Status = metadata.StatusName,
+                StatusId = metadata.StatusId,
+                StatusSortOrder = statusSortOrder,
+                Responsible = metadata.Responsibles.FirstOrDefault(x => !string.IsNullOrWhiteSpace(x)) ?? string.Empty
+            };
+        }
     }
 }

@@ -176,6 +176,15 @@
   <line x1='19' y1='9' x2='19' y2='15' />
   <line x1='5' y1='15' x2='19' y2='15' />
 </svg>";
+        public const string Archive = @$"<svg {SVGHeader} fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
+  <polyline points='21 8 21 21 3 21 3 8' />
+  <rect x='1' y='3' width='22' height='5' />
+  <line x1='10' y1='12' x2='14' y2='12' />
+</svg>";
+        public const string Restore = @$"<svg {SVGHeader} fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
+  <polyline points='1 4 1 10 7 10' />
+  <path d='M3.51 15a9 9 0 1 0 .49-4.74L1 10' />
+</svg>";
         public const string Folder = @$"<svg {SVGHeader} fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
   <path d='M3 7a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z' /></svg>";
         public const string ChevronLeft = @$"<svg {SVGHeader} fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>

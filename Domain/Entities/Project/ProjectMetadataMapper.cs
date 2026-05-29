@@ -31,7 +31,15 @@ namespace Domain.Entities.Project
                 Inspector = Normalize(metadata.Inspector),
                 OverviewInfoProject = Normalize(metadata.OverviewInfoProject),
                 Responsibles = DomainMetadataCloneHelper.CloneStrings(metadata.Responsibles),
-                Supervisor = Normalize(metadata.Supervisor)
+                Supervisor = Normalize(metadata.Supervisor),
+                StatusId = metadata.StatusId,
+                StatusName = Normalize(metadata.StatusName),
+                ProcurementName = Normalize(metadata.ProcurementName),
+                ProcurementNumber = Normalize(metadata.ProcurementNumber),
+                CustomerReference = Normalize(metadata.CustomerReference),
+                ProcurementLink = Normalize(metadata.ProcurementLink),
+                PublicationDate = metadata.PublicationDate,
+                DecisionDate = metadata.DecisionDate
             };
         }
 

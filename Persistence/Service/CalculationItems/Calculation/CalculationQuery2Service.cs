@@ -3,6 +3,7 @@ using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Calculation.Template;
 using ProjectManagement.Shared.DTO.Offer;
+using ProjectManagement.Shared.Enums;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -20,6 +21,18 @@ namespace Persistence.Service.CalculationItems.Calculation
             public string Code { get; set; } = string.Empty;
             public int? TemplateId { get; set; }
             public int? TemplateColumnId { get; set; }
+            public CalculationVersionType CalculationType { get; set; } = CalculationVersionType.Tender;
+            public bool IsLocked { get; set; }
+            public DateTime? LockedAtUtc { get; set; }
+            public int? LockedByUserId { get; set; }
+            public int? ApprovedByUserId { get; set; }
+            public string ApprovedByName { get; set; } = string.Empty;
+            public DateTime? ApprovedAtUtc { get; set; }
+            public int? SourceCalculationId { get; set; }
+            public Guid VersionGroupId { get; set; }
+            public int VersionNumber { get; set; } = 1;
+            public int? CreatedFromCalculationId { get; set; }
+            public bool IsCurrentVersion { get; set; } = true;
             public SortConfig Sort { get; set; } = new();
             public List<OHFactors> Factors { get; set; } = [];
             public List<QuanityListDTO> QuanityList { get; set; } = [];
@@ -94,6 +107,18 @@ namespace Persistence.Service.CalculationItems.Calculation
                     Code = x.Code,
                     TemplateId = x.TemplateId,
                     TemplateColumnId = x.TemplateColumnId,
+                    CalculationType = x.CalculationType,
+                    IsLocked = x.IsLocked,
+                    LockedAtUtc = x.LockedAtUtc,
+                    LockedByUserId = x.LockedByUserId,
+                    ApprovedByUserId = x.ApprovedByUserId,
+                    ApprovedByName = x.ApprovedByName,
+                    ApprovedAtUtc = x.ApprovedAtUtc,
+                    SourceCalculationId = x.SourceCalculationId,
+                    VersionGroupId = x.VersionGroupId,
+                    VersionNumber = x.VersionNumber,
+                    CreatedFromCalculationId = x.CreatedFromCalculationId,
+                    IsCurrentVersion = x.IsCurrentVersion,
                     Sort = x.Sort,
                     Factors = x.Factors,
                     QuanityList = x.Metadata.QuanityList,
@@ -254,6 +279,18 @@ namespace Persistence.Service.CalculationItems.Calculation
                 Code = header.Code,
                 TemplateId = header.TemplateId,
                 TemplateColumnId = header.TemplateColumnId,
+                CalculationType = header.CalculationType,
+                IsLocked = header.IsLocked,
+                LockedAtUtc = header.LockedAtUtc,
+                LockedByUserId = header.LockedByUserId,
+                ApprovedByUserId = header.ApprovedByUserId,
+                ApprovedByName = header.ApprovedByName,
+                ApprovedAtUtc = header.ApprovedAtUtc,
+                SourceCalculationId = header.SourceCalculationId,
+                VersionGroupId = header.VersionGroupId,
+                VersionNumber = header.VersionNumber,
+                CreatedFromCalculationId = header.CreatedFromCalculationId,
+                IsCurrentVersion = header.IsCurrentVersion,
                 Sort = header.Sort,
                 Factors = header.Factors ?? [],
                 QuanityList = header.QuanityList ?? [],

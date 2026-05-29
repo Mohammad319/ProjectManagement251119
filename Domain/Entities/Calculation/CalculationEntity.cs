@@ -10,6 +10,7 @@ using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.App;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Calculation.Template;
+using ProjectManagement.Shared.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
@@ -85,6 +86,18 @@ namespace Domain.Entities.Calculation
 
         public bool IsPrivate { get; private set; }
         public bool IsVisible { get; private set; } = true;
+        public CalculationVersionType CalculationType { get; private set; } = CalculationVersionType.Tender;
+        public bool IsLocked { get; private set; }
+        public DateTime? LockedAtUtc { get; private set; }
+        public int? LockedByUserId { get; private set; }
+        public int? ApprovedByUserId { get; private set; }
+        public string ApprovedByName { get; private set; } = string.Empty;
+        public DateTime? ApprovedAtUtc { get; private set; }
+        public int? SourceCalculationId { get; private set; }
+        public Guid VersionGroupId { get; private set; } = Guid.NewGuid();
+        public int VersionNumber { get; private set; } = 1;
+        public int? CreatedFromCalculationId { get; private set; }
+        public bool IsCurrentVersion { get; private set; } = true;
 
         public int? OrganisationId { get; private set; }
 
@@ -181,6 +194,18 @@ namespace Domain.Entities.Calculation
                 IsPrivate = original.IsPrivate,
                 IsVisible = original.IsVisible,
                 TypeId = original.TypeId,
+                CalculationType = original.CalculationType,
+                IsLocked = false,
+                LockedAtUtc = null,
+                LockedByUserId = null,
+                ApprovedByUserId = null,
+                ApprovedByName = string.Empty,
+                ApprovedAtUtc = null,
+                SourceCalculationId = original.SourceCalculationId,
+                VersionGroupId = Guid.NewGuid(),
+                VersionNumber = 1,
+                CreatedFromCalculationId = null,
+                IsCurrentVersion = true,
                 StatusId = original.StatusId,
                 StartDate = original.StartDate,
                 EndDate = original.EndDate,
@@ -255,6 +280,83 @@ namespace Domain.Entities.Calculation
             ContractId = dto.ContractId;
             TemplateId = dto.TemplateId;
             TemplateColumnId = dto.TemplateColumnId;
+            CalculationType = dto.CalculationType;
+        }
+
+        public void InitializeVersionGroup()
+        {
+            if (VersionGroupId == Guid.Empty)
+                VersionGroupId = Guid.NewGuid();
+
+            VersionNumber = VersionNumber <= 0 ? 1 : VersionNumber;
+            IsCurrentVersion = true;
+        }
+
+        public void MarkAsNewVersion(Guid versionGroupId, int versionNumber, int createdFromCalculationId)
+        {
+            if (versionGroupId == Guid.Empty)
+                throw new ArgumentException("VersionGroupId cannot be empty.", nameof(versionGroupId));
+
+            if (versionNumber <= 0)
+                throw new ArgumentOutOfRangeException(nameof(versionNumber));
+
+            if (createdFromCalculationId <= 0)
+                throw new ArgumentOutOfRangeException(nameof(createdFromCalculationId));
+
+            VersionGroupId = versionGroupId;
+            VersionNumber = versionNumber;
+            CreatedFromCalculationId = createdFromCalculationId;
+            IsCurrentVersion = true;
+            IsLocked = false;
+            LockedAtUtc = null;
+            LockedByUserId = null;
+            ApprovedByUserId = null;
+            ApprovedByName = string.Empty;
+            ApprovedAtUtc = null;
+        }
+
+        public void MarkAsNotCurrentVersion()
+        {
+            IsCurrentVersion = false;
+        }
+
+        public void SetCalculationType(CalculationVersionType calculationType)
+        {
+            CalculationType = calculationType;
+        }
+
+        public void LockAsTenderHistory(int userId)
+        {
+            CalculationType = CalculationVersionType.Tender;
+            IsLocked = true;
+            LockedAtUtc = DateTime.UtcNow;
+            LockedByUserId = userId > 0 ? userId : null;
+        }
+
+        public void ApproveAndLock(int userId, string approvedByName)
+        {
+            var now = DateTime.UtcNow;
+            ApprovedByUserId = userId > 0 ? userId : null;
+            ApprovedByName = NormalizeOptionalText(approvedByName, 160) ?? string.Empty;
+            ApprovedAtUtc = now;
+            IsLocked = true;
+            LockedAtUtc = now;
+            LockedByUserId = userId > 0 ? userId : null;
+        }
+
+        public void MarkAsProductionCopy(int sourceCalculationId)
+        {
+            if (sourceCalculationId <= 0)
+                throw new ArgumentOutOfRangeException(nameof(sourceCalculationId));
+
+            CalculationType = CalculationVersionType.Production;
+            SourceCalculationId = sourceCalculationId;
+            IsLocked = false;
+            LockedAtUtc = null;
+            LockedByUserId = null;
+            ApprovedByUserId = null;
+            ApprovedByName = string.Empty;
+            ApprovedAtUtc = null;
         }
 
         public void SetTax(int tax)
@@ -340,6 +442,15 @@ namespace Domain.Entities.Calculation
                 throw new ValidationException($"{paramName} exceeds max length {maxLength}.");
 
             return normalized;
+        }
+
+        private static string? NormalizeOptionalText(string? value, int maxLength)
+        {
+            var normalized = value?.Trim();
+            if (string.IsNullOrWhiteSpace(normalized))
+                return null;
+
+            return normalized.Length > maxLength ? normalized[..maxLength] : normalized;
         }
 
         private static CalculationData CloneMetadata(CalculationData? metadata)

@@ -5,6 +5,7 @@ using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Calculation.Template;
+using ProjectManagement.Shared.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -83,6 +84,18 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 
         public int? TemplateId { get; set; }
         public int? TemplateColumnId { get; set; }
+        public CalculationVersionType CalculationType { get; set; } = CalculationVersionType.Tender;
+        public bool IsLocked { get; set; }
+        public DateTime? LockedAtUtc { get; set; }
+        public int? LockedByUserId { get; set; }
+        public int? ApprovedByUserId { get; set; }
+        public string ApprovedByName { get; set; } = string.Empty;
+        public DateTime? ApprovedAtUtc { get; set; }
+        public int? SourceCalculationId { get; set; }
+        public Guid VersionGroupId { get; set; }
+        public int VersionNumber { get; set; } = 1;
+        public int? CreatedFromCalculationId { get; set; }
+        public bool IsCurrentVersion { get; set; } = true;
         public SortConfig Sort { get; set; } = new();
 
         public bool Tap1 { get; set; } = true;

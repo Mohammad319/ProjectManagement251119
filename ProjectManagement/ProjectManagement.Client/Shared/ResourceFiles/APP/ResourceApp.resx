@@ -555,6 +555,7 @@
   <data name="openSidebar" xml:space="preserve">
     <value>Open sidebar</value>
   </data>
+  <data name="hideSidebar" xml:space="preserve"><value>Hide sidebar</value></data>
   <data name="workspace" xml:space="preserve">
     <value>Workspace</value>
   </data>
@@ -658,19 +659,118 @@
   <data name="deleteFilterPresetConfirm" xml:space="preserve">
     <value>Delete "{0}"?</value>
   </data>
-  <data name="_private" xml:space="preserve">
-    <value>Private</value>
-  </data>
-  <data name="department" xml:space="preserve">
-    <value>Department</value>
-  </data>
-  <data name="_public" xml:space="preserve">
-    <value>Public</value>
-  </data>
   <data name="program" xml:space="preserve">
     <value>Program</value>
   </data>
   <data name="ImportFromOtherCalc" xml:space="preserve">
     <value>Import from other calculation</value>
   </data>
+  <data name="selectDepartment" xml:space="preserve"><value>Select department</value></data>
+  <data name="noDepartmentsAvailable" xml:space="preserve"><value>No departments available.</value></data>
+  <data name="groupBy" xml:space="preserve"><value>Group by</value></data>
+  <data name="folderStructure" xml:space="preserve"><value>Folder structure</value></data>
+  <data name="year" xml:space="preserve"><value>Year</value></data>
+  <data name="quarter" xml:space="preserve"><value>Quarter</value></data>
+  <data name="sort" xml:space="preserve"><value>Sort</value></data>
+  <data name="nameAscending" xml:space="preserve"><value>Name A-Z</value></data>
+  <data name="nameDescending" xml:space="preserve"><value>Name Z-A</value></data>
+  <data name="createdNewestFirst" xml:space="preserve"><value>Created newest first</value></data>
+  <data name="createdOldestFirst" xml:space="preserve"><value>Created oldest first</value></data>
+  <data name="modifiedNewestFirst" xml:space="preserve"><value>Last modified first</value></data>
+  <data name="showArchived" xml:space="preserve"><value>Show archived</value></data>
+  <data name="archived" xml:space="preserve"><value>Archived</value></data>
+  <data name="newFolder" xml:space="preserve"><value>New folder</value></data>
+  <data name="newProject" xml:space="preserve"><value>New project</value></data>
+  <data name="newCalculation" xml:space="preserve"><value>New calculation</value></data>
+  <data name="columns" xml:space="preserve"><value>Columns</value></data>
+  <data name="incomeOverview" xml:space="preserve"><value>Revenue overview</value></data>
+  <data name="projectsInFolderFormat" xml:space="preserve"><value>Projects in {0}</value></data>
+  <data name="calculationsInProjectFormat" xml:space="preserve"><value>Calculations in {0}</value></data>
+  <data name="folderNameFormat" xml:space="preserve"><value>Folder: {0}</value></data>
+  <data name="projectNameFormat" xml:space="preserve"><value>Project: {0}</value></data>
+  <data name="projectCodeFormat" xml:space="preserve"><value>Project code: {0}</value></data>
+  <data name="projectName" xml:space="preserve"><value>Project name</value></data>
+  <data name="calculationName" xml:space="preserve"><value>Calculation name</value></data>
+  <data name="calculationCount" xml:space="preserve"><value>Calculations</value></data>
+  <data name="createdDate" xml:space="preserve"><value>Created date</value></data>
+  <data name="lastModified" xml:space="preserve"><value>Last modified</value></data>
+  <data name="version" xml:space="preserve"><value>Version</value></data>
+  <data name="total" xml:space="preserve"><value>Total</value></data>
+  <data name="owner" xml:space="preserve"><value>Owner</value></data>
+  <data name="selectFolderFirst" xml:space="preserve"><value>Select a folder first</value></data>
+  <data name="selectProjectFirst" xml:space="preserve"><value>Select a project first</value></data>
+  <data name="moveFolder" xml:space="preserve"><value>Move folder</value></data>
+  <data name="copyFolder" xml:space="preserve"><value>Copy folder</value></data>
+  <data name="moveProject" xml:space="preserve"><value>Move project</value></data>
+  <data name="copyProject" xml:space="preserve"><value>Copy project</value></data>
+  <data name="moveCalculation" xml:space="preserve"><value>Move calculation</value></data>
+  <data name="copyCalculation" xml:space="preserve"><value>Copy calculation</value></data>
+  <data name="archiveFolder" xml:space="preserve"><value>Archive folder</value></data>
+  <data name="archiveProject" xml:space="preserve"><value>Archive project</value></data>
+  <data name="archiveCalculation" xml:space="preserve"><value>Archive calculation</value></data>
+  <data name="restoreFromArchive" xml:space="preserve"><value>Restore from archive</value></data>
+  <data name="openCalculation" xml:space="preserve"><value>Open calculation</value></data>
+  <data name="move" xml:space="preserve"><value>Move</value></data>
+  <data name="copyAction" xml:space="preserve"><value>Copy</value></data>
+  <data name="action" xml:space="preserve"><value>Action</value></data>
+  <data name="targetDepartment" xml:space="preserve"><value>Target department</value></data>
+  <data name="targetFolder" xml:space="preserve"><value>Target folder</value></data>
+  <data name="targetProject" xml:space="preserve"><value>Target project</value></data>
+  <data name="selectFolder" xml:space="preserve"><value>Select folder</value></data>
+  <data name="selectProject" xml:space="preserve"><value>Select project</value></data>
+  <data name="copyFolderWithProjectsCalculations" xml:space="preserve"><value>Copy folder with projects and calculations</value></data>
+  <data name="copyProjectWithCalculations" xml:space="preserve"><value>Copy project with all calculations</value></data>
+  <data name="copyCalculationWithIncome" xml:space="preserve"><value>Copy calculation with income values</value></data>
+  <data name="keepCalculationValues" xml:space="preserve"><value>Keep the calculation's own values</value></data>
+  <data name="selectedTarget" xml:space="preserve"><value>Selected target</value></data>
+  <data name="confirm" xml:space="preserve"><value>Confirm</value></data>
+  <data name="operationCouldNotComplete" xml:space="preserve"><value>The operation could not be completed. Check the target location and permissions.</value></data>
+  <data name="operationFailed" xml:space="preserve"><value>The operation failed. Check the target location and permissions.</value></data>
+  <data name="currentLocationDepartment" xml:space="preserve"><value>Current location: department</value></data>
+  <data name="currentLocationFormat" xml:space="preserve"><value>Current location: {0}</value></data>
+  <data name="currentLocationPathFormat" xml:space="preserve"><value>Current location: {0} / {1}</value></data>
+  <data name="departmentTargetFormat" xml:space="preserve"><value>Department: {0}</value></data>
+  <data name="folderTargetFormat" xml:space="preserve"><value>Department: {0} / Folder: {1}</value></data>
+  <data name="projectTargetFormat" xml:space="preserve"><value>Department: {0} / Folder: {1} / Project: {2}</value></data>
+  <data name="revenueOverviewIntro" xml:space="preserve"><value>The revenue overview reads existing income from calculation Income tabs. Manual project income is not available in the current list data and is therefore not included in this step.</value></data>
+  <data name="incomeYear" xml:space="preserve"><value>Income year</value></data>
+  <data name="allYears" xml:space="preserve"><value>All years</value></data>
+  <data name="allQuarters" xml:space="preserve"><value>All quarters</value></data>
+  <data name="allStatuses" xml:space="preserve"><value>All statuses</value></data>
+  <data name="includeInTotal" xml:space="preserve"><value>Include</value></data>
+  <data name="incomeSource" xml:space="preserve"><value>Income source</value></data>
+  <data name="annualTotal" xml:space="preserve"><value>Annual total</value></data>
+  <data name="noIncomeMatchesFilters" xml:space="preserve"><value>No income matches the selected filters.</value></data>
+  <data name="fromCalculations" xml:space="preserve"><value>From calculations</value></data>
+  <data name="draft" xml:space="preserve"><value>Draft</value></data>
+  <data name="archiveFolderTitle" xml:space="preserve"><value>Archive folder</value></data>
+  <data name="archiveFolderConfirm" xml:space="preserve"><value>The folder contains active projects. Are you sure you want to archive the folder?</value></data>
+  <data name="unknownDate" xml:space="preserve"><value>Unknown date</value></data>
+  <data name="basicData" xml:space="preserve"><value>Basic data</value></data>
+  <data name="projectLocation" xml:space="preserve"><value>Project location</value></data>
+  <data name="municipalityCity" xml:space="preserve"><value>Municipality / city</value></data>
+  <data name="addressNumber" xml:space="preserve"><value>Address number</value></data>
+  <data name="zipCode" xml:space="preserve"><value>ZIP code</value></data>
+  <data name="responsibility" xml:space="preserve"><value>Responsibility</value></data>
+  <data name="calculationResponsible" xml:space="preserve"><value>Calculation responsible</value></data>
+  <data name="projectResponsible" xml:space="preserve"><value>Project responsible</value></data>
+  <data name="procurementAndReferences" xml:space="preserve"><value>Procurement and references</value></data>
+  <data name="procurementName" xml:space="preserve"><value>Procurement name</value></data>
+  <data name="procurementNumber" xml:space="preserve"><value>Procurement number</value></data>
+  <data name="customerReference" xml:space="preserve"><value>Customer reference</value></data>
+  <data name="procurementLink" xml:space="preserve"><value>Procurement link</value></data>
+  <data name="projectSchedule" xml:space="preserve"><value>Project schedule</value></data>
+  <data name="customerInformation" xml:space="preserve"><value>Customer information</value></data>
+  <data name="notesAndDescription" xml:space="preserve"><value>Notes / description</value></data>
+  <data name="searchPlaceholder" xml:space="preserve"><value>Search...</value></data>
+  <data name="filterAndSorting" xml:space="preserve"><value>Filter &amp; sorting</value></data>
+  <data name="reset" xml:space="preserve"><value>Reset</value></data>
+  <data name="lastOpenedFirst" xml:space="preserve"><value>Last opened first</value></data>
+  <data name="manualOrder" xml:space="preserve"><value>Manual order</value></data>
+  <data name="saveOrder" xml:space="preserve"><value>Save order</value></data>
+  <data name="cancelOrder" xml:space="preserve"><value>Cancel</value></data>
+  <data name="statusSortTooltip" xml:space="preserve"><value>Sorts according to the company's status order.</value></data>
+  <data name="yearAndQuarter" xml:space="preserve"><value>Year and quarter</value></data>
+  <data name="keepFolderStructure" xml:space="preserve"><value>Keep folder structure</value></data>
+  <data name="quarterLabel" xml:space="preserve"><value>Quarter {0}</value></data>
 </root>

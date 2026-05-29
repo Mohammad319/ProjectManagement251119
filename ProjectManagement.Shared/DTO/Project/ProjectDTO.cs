@@ -42,6 +42,26 @@ namespace ProjectManagement.Shared.DTO.Project
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string Inspector { get; set; } = string.Empty;
 
+        public int? StatusId { get; set; }
+
+        [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        public string StatusName { get; set; } = string.Empty;
+
+        [MaxLength(160, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        public string ProcurementName { get; set; } = string.Empty;
+
+        [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        public string ProcurementNumber { get; set; } = string.Empty;
+
+        [MaxLength(160, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        public string CustomerReference { get; set; } = string.Empty;
+
+        [MaxLength(300, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        public string ProcurementLink { get; set; } = string.Empty;
+
+        public DateTime? PublicationDate { get; set; }
+        public DateTime? DecisionDate { get; set; }
+
         public ProjectData Clone()
         {
             return new ProjectData
@@ -58,7 +78,15 @@ namespace ProjectManagement.Shared.DTO.Project
                 Supervisor = MetadataCloneHelper.CopyText(Supervisor),
                 OverviewInfoProject = MetadataCloneHelper.CopyText(OverviewInfoProject),
                 ClientsContactPersonTender = MetadataCloneHelper.CopyText(ClientsContactPersonTender),
-                Inspector = MetadataCloneHelper.CopyText(Inspector)
+                Inspector = MetadataCloneHelper.CopyText(Inspector),
+                StatusId = StatusId,
+                StatusName = MetadataCloneHelper.CopyText(StatusName),
+                ProcurementName = MetadataCloneHelper.CopyText(ProcurementName),
+                ProcurementNumber = MetadataCloneHelper.CopyText(ProcurementNumber),
+                CustomerReference = MetadataCloneHelper.CopyText(CustomerReference),
+                ProcurementLink = MetadataCloneHelper.CopyText(ProcurementLink),
+                PublicationDate = PublicationDate,
+                DecisionDate = DecisionDate
             };
         }
     }
@@ -162,6 +190,59 @@ namespace ProjectManagement.Shared.DTO.Project
             get => Data.Inspector;
             set => Data.Inspector = MetadataCloneHelper.CopyText(value);
         }
+
+        public int? StatusId
+        {
+            get => Data.StatusId;
+            set => Data.StatusId = value;
+        }
+
+        [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        public string StatusName
+        {
+            get => Data.StatusName;
+            set => Data.StatusName = MetadataCloneHelper.CopyText(value);
+        }
+
+        [MaxLength(160, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        public string ProcurementName
+        {
+            get => Data.ProcurementName;
+            set => Data.ProcurementName = MetadataCloneHelper.CopyText(value);
+        }
+
+        [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        public string ProcurementNumber
+        {
+            get => Data.ProcurementNumber;
+            set => Data.ProcurementNumber = MetadataCloneHelper.CopyText(value);
+        }
+
+        [MaxLength(160, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        public string CustomerReference
+        {
+            get => Data.CustomerReference;
+            set => Data.CustomerReference = MetadataCloneHelper.CopyText(value);
+        }
+
+        [MaxLength(300, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        public string ProcurementLink
+        {
+            get => Data.ProcurementLink;
+            set => Data.ProcurementLink = MetadataCloneHelper.CopyText(value);
+        }
+
+        public DateTime? PublicationDate
+        {
+            get => Data.PublicationDate;
+            set => Data.PublicationDate = value;
+        }
+
+        public DateTime? DecisionDate
+        {
+            get => Data.DecisionDate;
+            set => Data.DecisionDate = value;
+        }
     }
 
     public class PostProjectDTO : ProjectBaseData
@@ -204,6 +285,8 @@ namespace ProjectManagement.Shared.DTO.Project
         public int Order { get; set; }
         public string Code { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
+        public int? StatusId { get; set; }
+        public int? StatusSortOrder { get; set; }
         public string Color { get; set; } = string.Empty;
         public string Responsible { get; set; } = string.Empty;
         public DateTime StartDate { get; set; } = DateTime.Now;

@@ -4,6 +4,7 @@ namespace ProjectManagement.Client.Pages.Folder
     {
         public const string FolderStructure = "folder";
         public const string Year = "year";
-        public const string Quarter = "quarter";
+        public const string YearQuarter = "year-quarter";
+        public const string Status = "status";
     }
 }

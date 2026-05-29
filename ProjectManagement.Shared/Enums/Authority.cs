@@ -4,6 +4,13 @@
     {
         resource = 0, task = 1, calcList = 2, calculation = 3
     }
+
+    public enum CalculationVersionType
+    {
+        Tender = 0,
+        Production = 1
+    }
+
     public enum ObjectTypHub
     {
         task = 2, resource = 3, calculation = 4,

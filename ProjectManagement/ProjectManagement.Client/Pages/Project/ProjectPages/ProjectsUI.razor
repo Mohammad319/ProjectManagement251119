@@ -8,6 +8,9 @@
 @attribute [Authorize]
 @using ProjectManagement.Shared.DTO.Project
 @using System.Net.Http
+@using BlazorMHD.UI.Core.Data
+@using BlazorMHD.UI.Core.DesignSystem
+@using BlazorMHD.UI.Components.Data.ColumnPicker
 @inherits AppComponentBase
 @implements IDisposable
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -18,47 +21,34 @@
         <div class="flex w-full flex-wrap items-center justify-between gap-2 p-1">
             <div class="min-w-0">
                 <div class="truncate text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Projekt i @Folder.State.FolderSelected?.Name
+                    @AppLoc["projectsInFolderFormat", Folder.State.FolderSelected?.Name ?? "-"]
                 </div>
                 <div class="text-xs text-slate-500 dark:text-slate-400">
                     @(Folder.State.FolderSelected?.Projects?.Count ?? 0) @CalcResource.project
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                <details class="relative">
-                    <summary class="inline-flex h-9 cursor-pointer list-none items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">
-                        Kolumner
-                    </summary>
-                    <div class="absolute right-0 z-20 mt-2 w-56 rounded-lg border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900">
-                        @foreach (var column in ProjectColumnOptions)
-                        {
-                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">
-                                <input type="checkbox"
-                                       class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800"
-                                       checked="@IsProjectColumnVisible(column.Key)"
-                                       @onchange="e => SetProjectColumn(column.Key, e.Value)" />
-                                <span>@column.Label</span>
-                            </label>
-                        }
-                    </div>
-                </details>
+                <MhdColumnPicker Text="@AppLoc["columns"]"
+                                 Columns="@ProjectColumnOptions"
+                                 ColumnVisibility="_projectColumns"
+                                 OnChanged="StateHasChanged" />
 
                 <button type="button"
                         class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-sky-300 bg-sky-50 px-3 text-sm font-semibold text-sky-700 transition hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-300 dark:hover:bg-sky-950/50"
                         disabled="@(Folder.State.FolderSelected is null)"
-                        title="Intäktsöversikt"
+                    title="@AppLoc["incomeOverview"]"
                         @onclick="OpenIncomeOverview">
-                    <span>Intäktsöversikt</span>
+                    <span>@AppLoc["incomeOverview"]</span>
                 </button>
 
                 <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
                     <button type="button"
                             class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-50 px-3 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-950/50"
                             disabled="@(Folder.State.OtherDepartment || Folder.State.FolderSelected is null)"
-                            title="Nytt projekt"
+                            title="@AppLoc["newProject"]"
                             @onclick="() => UpdateForm(new ListProjectMVVM())">
                         <span aria-hidden="true">@((MarkupString)Icons.Plus)</span>
-                        <span>Nytt projekt</span>
+                        <span>@AppLoc["newProject"]</span>
                     </button>
                 </AuthorizeView>
             </div>
@@ -73,11 +63,11 @@
                     <tr>
                         @if (IsProjectColumnVisible("code"))
                         {
-                            <th class="whitespace-nowrap px-3 py-2">Kod</th>
+                            <th class="whitespace-nowrap px-3 py-2">@CalcResource.code</th>
                         }
                         @if (IsProjectColumnVisible("name"))
                         {
-                            <th class="min-w-52 px-3 py-2">Projektnamn</th>
+                            <th class="min-w-52 px-3 py-2">@AppLoc["projectName"]</th>
                         }
                         @if (IsProjectColumnVisible("status"))
                         {
@@ -105,7 +95,7 @@
                         }
                         @if (IsProjectColumnVisible("calculations"))
                         {
-                            <th class="whitespace-nowrap px-3 py-2 text-right">Antal kalkyler</th>
+                            <th class="whitespace-nowrap px-3 py-2 text-right">@AppLoc["calculationCount"]</th>
                         }
                     </tr>
                 </thead>
@@ -212,19 +202,17 @@
         ["calculations"] = true
     };
 
-    private readonly record struct ColumnOption(string Key, string Label);
-
-    private List<ColumnOption> ProjectColumnOptions => new()
+    private List<MhdColumnPickerItem> ProjectColumnOptions => new()
     {
-        new("code", "Kod"),
-        new("name", "Projektnamn"),
+        new("code", CalcResource.code),
+        new("name", AppLoc["projectName"].Value),
         new("status", CalcResource.status),
         new("responsible", CalcResource.responsible),
         new("start", CalcResource.startDate),
         new("end", CalcResource.endDate),
         new("deadline", CalcResource.tenderDeadline),
         new("qa", CalcResource.tenderQA),
-        new("calculations", "Antal kalkyler")
+        new("calculations", AppLoc["calculationCount"].Value)
     };
 
     protected override void OnInitialized()
@@ -242,12 +230,6 @@
     private bool IsProjectColumnVisible(string key) =>
         _projectColumns.TryGetValue(key, out var visible) && visible;
 
-    private void SetProjectColumn(string key, object? value)
-    {
-        if (_projectColumns.ContainsKey(key))
-            _projectColumns[key] = value is bool checkedValue && checkedValue;
-    }
-
     private static string FormatText(string? value) =>
         string.IsNullOrWhiteSpace(value) ? "-" : value;
 
@@ -257,12 +239,12 @@
     private static string FormatCalculationCount(ListProjectMVVM project) =>
         project.CalculationsLoaded ? (project.Calculations?.Count ?? 0).ToString() : "-";
 
-    private static string GetProjectStatusText(ListProjectMVVM project)
+    private string GetProjectStatusText(ListProjectMVVM project)
     {
         if (!project.IsVisible)
-            return "Arkiverad";
+            return AppLoc["archived"].Value;
 
-        return string.IsNullOrWhiteSpace(project.Status) ? "Aktiv" : project.Status;
+        return string.IsNullOrWhiteSpace(project.Status) ? AppLoc["active"].Value : project.Status;
     }
 
     private static string GetProjectStatusClass(ListProjectMVVM project) =>
@@ -301,50 +283,38 @@
 
         if (user.Identity?.IsAuthenticated == true && isInAnyRole)
         {
-            list.Add(new()
-            {
-                Label = $"{Icons.Edit} {ResourceApp.edit}",
-                OnClickAsync = () =>
-                {
-                    UpdateForm(item); return Task.CompletedTask;
-                }
-            });
-            list.Add(new()
-            {
-                Label = $"{Icons.Folder} Flytta projekt",
-                OnClickAsync = () =>
-                {
-                    OpenMoveCopyDialog(item, MoveCopyOperation.Move);
-                    return Task.CompletedTask;
-                }
-            });
-            list.Add(new()
-            {
-                Label = $"{Icons.Copy} Kopiera projekt",
-                OnClickAsync = () =>
-                {
-                    OpenMoveCopyDialog(item, MoveCopyOperation.Copy);
-                    return Task.CompletedTask;
-                }
-            });
-            list.Add(new()
-            {
-                Label = $"{Icons.Delete} {ResourceApp.delete}",
-                OnClickAsync = () =>
-                {
-                    Remove(item); return Task.CompletedTask;
-                }
-            });
+            list.Add(new() { IconHtml = Icons.Edit, Label = ResourceApp.edit, OnClickAsync = () => { UpdateForm(item); return Task.CompletedTask; } });
+            list.Add(new() { IconHtml = Icons.Folder, Label = AppLoc["moveProject"], OnClickAsync = () => { OpenMoveCopyDialog(item, MoveCopyOperation.Move); return Task.CompletedTask; } });
+            list.Add(new() { IconHtml = Icons.Copy, Label = AppLoc["copyProject"], OnClickAsync = () => { OpenMoveCopyDialog(item, MoveCopyOperation.Copy); return Task.CompletedTask; } });
+
+            if (item.IsVisible)
+                list.Add(new() { IconHtml = Icons.Archive, Label = AppLoc["archiveProject"], OnClickAsync = async () => await ArchiveOrRestoreProjectAsync(item, archive: true) });
+            else
+                list.Add(new() { IconHtml = Icons.Restore, Label = AppLoc["restoreFromArchive"], OnClickAsync = async () => await ArchiveOrRestoreProjectAsync(item, archive: false) });
+
+            list.Add(new() { IsSeparator = true });
+            list.Add(new() { IconHtml = Icons.Delete, Label = ResourceApp.delete, CssClass = "text-red-600 dark:text-red-400", OnClickAsync = () => { Remove(item); return Task.CompletedTask; } });
         }
-        list.Add(new()
-        {
-            Label = $"{Icons.Details} {ResourceLoc.details}",
-            OnClickAsync = () =>
-            {
-                ProjectDetailsDialog(item); return Task.CompletedTask;
-            }
-        });
+
         await ContextService.ShowMenuAsync(list);
+    }
+
+    async Task ArchiveOrRestoreProjectAsync(ListProjectMVVM project, bool archive)
+    {
+        var dto = await Repo.Project.GetToPostAsync(project.Id);
+        if (dto is null) return;
+        dto.IsVisible = !archive;
+        bool ok = await Repo.Project.UpdateAsync(project.Id, dto);
+        if (ok)
+        {
+            project.IsVisible = !archive;
+            bool shouldKeepInList = UoWService.Folder.ShowArchived || !archive;
+            if (!shouldKeepInList)
+                Folder.State.FolderSelected?.Projects?.Remove(project);
+            UoWService.Folder.State.Notify();
+            StateHasChanged();
+        }
+        MHD.Notifications(ToastType.Update, ok);
     }
 
     void ProjectDetailsDialog(ListProjectMVVM model) =>
@@ -357,7 +327,7 @@
 
     void OpenMoveCopyDialog(ListProjectMVVM project, string operation) =>
         Modal.ShowComponent<MoveCopyDialog>(
-            operation == MoveCopyOperation.Copy ? "Kopiera projekt" : "Flytta projekt",
+            operation == MoveCopyOperation.Copy ? AppLoc["copyProject"] : AppLoc["moveProject"],
             new Dictionary<string, object>
             {
                 [nameof(MoveCopyDialog.ItemKind)] = MoveCopyItemKind.Project,
@@ -380,7 +350,7 @@
             return;
 
         Modal.ShowComponent<IncomeOverviewDialog>(
-            "Intäktsöversikt",
+            AppLoc["incomeOverview"],
             new Dictionary<string, object>
             {
                 [nameof(IncomeOverviewDialog.FolderScope)] = Folder.State.FolderSelected

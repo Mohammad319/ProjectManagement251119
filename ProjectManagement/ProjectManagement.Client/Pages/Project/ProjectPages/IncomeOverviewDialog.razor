@@ -7,7 +7,7 @@
 
 <div class="space-y-3 text-slate-800 dark:text-slate-100">
     <div class="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-200">
-        Intäktsöversikten läser befintlig inkomst från kalkylernas Inkomst-tab. Manuell projektinkomst finns inte i nuvarande listdata och räknas därför inte i detta steg.
+        @AppLoc["revenueOverviewIntro"]
     </div>
 
     @if (_isLoading)
@@ -18,9 +18,9 @@
     {
         <div class="grid grid-cols-1 gap-2 rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:grid-cols-3">
             <div>
-                <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Inkomstår</label>
+                <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@AppLoc["incomeYear"]</label>
                 <select class="@SelectClass" @bind="_selectedYear">
-                    <option value="">Alla år</option>
+                    <option value="">@AppLoc["allYears"]</option>
                     @foreach (var year in AvailableYears)
                     {
                         <option value="@year.ToString()">@year</option>
@@ -28,9 +28,9 @@
                 </select>
             </div>
             <div>
-                <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Kvartal</label>
+                <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@AppLoc["quarter"]</label>
                 <select class="@SelectClass" @bind="_selectedQuarter">
-                    <option value="0">Alla kvartal</option>
+                    <option value="0">@AppLoc["allQuarters"]</option>
                     <option value="1">Q1</option>
                     <option value="2">Q2</option>
                     <option value="3">Q3</option>
@@ -38,9 +38,9 @@
                 </select>
             </div>
             <div>
-                <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Status</label>
+                <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.status</label>
                 <select class="@SelectClass" @bind="_selectedStatus">
-                    <option value="">Alla statusar</option>
+                    <option value="">@AppLoc["allStatuses"]</option>
                     @foreach (var status in AvailableStatuses)
                     {
                         <option value="@status">@status</option>
@@ -67,7 +67,7 @@
                 <strong>@FormatMoney(TotalQ4)</strong>
             </div>
             <div class="@TotalCardClass">
-                <span>Årssumma</span>
+                <span>@AppLoc["annualTotal"]</span>
                 <strong>@FormatMoney(TotalYear)</strong>
             </div>
         </div>
@@ -78,17 +78,17 @@
                 <table class="min-w-full table-auto text-left text-xs">
                     <thead class="sticky top-0 z-10 bg-slate-50 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-900 dark:text-slate-400">
                         <tr>
-                            <th class="whitespace-nowrap px-3 py-2">Räkna med</th>
-                            <th class="min-w-44 px-3 py-2">Projekt</th>
-                            <th class="min-w-44 px-3 py-2">Kalkyl</th>
-                            <th class="whitespace-nowrap px-3 py-2">Status</th>
-                            <th class="whitespace-nowrap px-3 py-2">Inkomstkälla</th>
-                            <th class="whitespace-nowrap px-3 py-2">År</th>
+                            <th class="whitespace-nowrap px-3 py-2">@AppLoc["includeInTotal"]</th>
+                            <th class="min-w-44 px-3 py-2">@CalcResource.project</th>
+                            <th class="min-w-44 px-3 py-2">@CalcResource.calculation</th>
+                            <th class="whitespace-nowrap px-3 py-2">@CalcResource.status</th>
+                            <th class="whitespace-nowrap px-3 py-2">@AppLoc["incomeSource"]</th>
+                            <th class="whitespace-nowrap px-3 py-2">@AppLoc["year"]</th>
                             <th class="whitespace-nowrap px-3 py-2 text-right">Q1</th>
                             <th class="whitespace-nowrap px-3 py-2 text-right">Q2</th>
                             <th class="whitespace-nowrap px-3 py-2 text-right">Q3</th>
                             <th class="whitespace-nowrap px-3 py-2 text-right">Q4</th>
-                            <th class="whitespace-nowrap px-3 py-2 text-right">Årssumma</th>
+                            <th class="whitespace-nowrap px-3 py-2 text-right">@AppLoc["annualTotal"]</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -127,7 +127,7 @@
         else
         {
             <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
-                Ingen inkomst matchar de valda filtren.
+                @AppLoc["noIncomeMatchesFilters"]
             </div>
         }
     }
@@ -231,7 +231,7 @@
         CalculationPostDTO post)
     {
         var minYear = GetIncomeStartYear(calculation, post);
-        var status = string.IsNullOrWhiteSpace(calculation.Status) ? "Utkast" : calculation.Status;
+        var status = string.IsNullOrWhiteSpace(calculation.Status) ? AppLoc["draft"].Value : calculation.Status;
 
         foreach (var income in post.Income ?? [])
         {
@@ -243,7 +243,7 @@
                 ProjectName = project.Name,
                 CalculationName = calculation.Name,
                 Status = status,
-                Source = "Från kalkyler",
+                Source = AppLoc["fromCalculations"].Value,
                 Year = income.Year,
                 Q1 = income.Q1,
                 Q2 = income.Q2,

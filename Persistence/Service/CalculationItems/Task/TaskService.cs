@@ -99,6 +99,7 @@ namespace Persistence.Service.CalculationItems.Task
                 var parentTask = await context.Tasks
                     .FirstOrDefaultAsync(x => x.Id == parentTaskId &&
                         x.CalculationId == targetCalcId &&
+                        !x.Calculation.IsLocked &&
                         (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value), ct);
 
                 if (parentTask == null)
@@ -116,6 +117,7 @@ namespace Persistence.Service.CalculationItems.Task
             {
                 bool calcExists = await context.Calculations
                     .AnyAsync(x => x.Id == targetCalcId &&
+                        !x.IsLocked &&
                         (!departmentId.HasValue || x.DepartmentId == departmentId.Value), ct);
 
                 if (!calcExists)
@@ -207,6 +209,7 @@ namespace Persistence.Service.CalculationItems.Task
                     .FirstOrDefaultAsync(
                         x => x.Id == parentTaskId &&
                             x.CalculationId == targetCalcId &&
+                            !x.Calculation.IsLocked &&
                             (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value),
                         ct);
 
@@ -227,6 +230,7 @@ namespace Persistence.Service.CalculationItems.Task
                     .AsNoTracking()
                     .Include(c => c.Tasks)
                     .FirstOrDefaultAsync(x => x.Id == targetCalcId &&
+                        !x.IsLocked &&
                         (!departmentId.HasValue || x.DepartmentId == departmentId.Value), ct);
 
                 if (calc == null)
@@ -264,6 +268,7 @@ namespace Persistence.Service.CalculationItems.Task
                             .FirstOrDefaultAsync(
                                 x => x.Id == item.Id &&
                                     x.CalculationId == sourceCalcId &&
+                                    !x.Calculation.IsLocked &&
                                     (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value),
                                 ct);
 
@@ -306,6 +311,7 @@ namespace Persistence.Service.CalculationItems.Task
                         .FirstOrDefaultAsync(
                             x => x.Id == item.Id &&
                                 x.CalculationId == sourceCalcId &&
+                                !x.Calculation.IsLocked &&
                                 (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value),
                             ct);
 
@@ -490,6 +496,7 @@ namespace Persistence.Service.CalculationItems.Task
 
             var taskWithCalcId = await context.Tasks
                 .Where(x => x.Id == taskId &&
+                    !x.Calculation.IsLocked &&
                     (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value))
                 .Select(x => new { Task = x, CalcId = x.CalculationId })
                 .FirstOrDefaultAsync(ct);
@@ -513,6 +520,7 @@ namespace Persistence.Service.CalculationItems.Task
             await using var context = await dbFactory.CreateDbContextAsync(ct);
             var taskWithCalcId = await context.Tasks
                 .Where(x => x.Id == taskId &&
+                    !x.Calculation.IsLocked &&
                     (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value))
                 .Select(x => new { Task = x, CalcId = x.CalculationId })
                 .FirstOrDefaultAsync(ct);
@@ -717,6 +725,7 @@ namespace Persistence.Service.CalculationItems.Task
             return context.Calculations
                 .AsNoTracking()
                 .AnyAsync(x => x.Id == calculationId &&
+                    !x.IsLocked &&
                     (!departmentId.HasValue || x.DepartmentId == departmentId.Value), ct);
         }
 
@@ -735,6 +744,7 @@ namespace Persistence.Service.CalculationItems.Task
                 .AnyAsync(x => x.Id == parentTaskId.Value &&
                     x.CalculationId == targetCalcId &&
                     x.Type != TaskType.FourBarCode &&
+                    !x.Calculation.IsLocked &&
                     (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value), ct);
         }
     }

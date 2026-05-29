@@ -57,6 +57,7 @@ namespace Persistence.Service.CalculationItems.Tender
             var tender = await context.Tenders
                 .FirstOrDefaultAsync(x => x.Id == id &&
                     x.CalculationId == calculationId &&
+                    !x.Calculation.IsLocked &&
                     (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value), ct);
 
             if (tender is null)
@@ -87,6 +88,7 @@ namespace Persistence.Service.CalculationItems.Tender
             var tender = await context.Tenders
                 .FirstOrDefaultAsync(x => x.Id == id &&
                     x.CalculationId == calculationId &&
+                    !x.Calculation.IsLocked &&
                     (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value), ct);
 
             if (tender is null)
@@ -116,6 +118,7 @@ namespace Persistence.Service.CalculationItems.Tender
             var tenderInfo = await context.Tenders
                 .AsNoTracking()
                 .Where(x => x.Id == tenderId &&
+                    !x.Calculation.IsLocked &&
                     (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value))
                 .Select(x => new { x.Id, x.CalculationId })
                 .FirstOrDefaultAsync(ct);
@@ -210,6 +213,7 @@ namespace Persistence.Service.CalculationItems.Tender
             return context.Calculations
                 .AsNoTracking()
                 .AnyAsync(x => x.Id == calculationId &&
+                    !x.IsLocked &&
                     (!departmentId.HasValue || x.DepartmentId == departmentId.Value), ct);
         }
     }

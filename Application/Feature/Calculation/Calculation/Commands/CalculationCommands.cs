@@ -19,6 +19,20 @@ namespace Application.Feature.Calculation.Calculation.Commands
             => service.CopyAsync(request.Id, request.ProjectId, request.DepartmentId, request.UserId, request.AllowCrossDepartment, ct);
     }
 
+    public sealed record CreateProductionCalculationCommand(int Id, int? DepartmentId, int UserId) : IRequest<int>;
+    public class CreateProductionCalculationCommandHandler(ICalculationService service) : IRequestHandler<CreateProductionCalculationCommand, int>
+    {
+        public Task<int> Handle(CreateProductionCalculationCommand request, CancellationToken ct)
+            => service.CreateProductionCopyAsync(request.Id, request.DepartmentId, request.UserId, ct);
+    }
+
+    public sealed record CreateCalculationVersionCommand(int Id, int? DepartmentId, int UserId) : IRequest<int>;
+    public class CreateCalculationVersionCommandHandler(ICalculationService service) : IRequestHandler<CreateCalculationVersionCommand, int>
+    {
+        public Task<int> Handle(CreateCalculationVersionCommand request, CancellationToken ct)
+            => service.CreateVersionAsync(request.Id, request.DepartmentId, request.UserId, ct);
+    }
+
     public sealed record MoveCalculationCommand(int Id, Guid ProjectId, int? DepartmentId, int UserId, bool AllowCrossDepartment) : IRequest<bool>;
     public class MoveCalculationCommandHandler(ICalculationService service) : IRequestHandler<MoveCalculationCommand, bool>
     {

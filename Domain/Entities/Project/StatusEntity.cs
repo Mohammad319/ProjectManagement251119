@@ -6,6 +6,10 @@ namespace Domain.Entities.Project
 {
     public sealed class StatusEntity : ColoredListEntity
     {
+        public bool IsApprovalStatus { get; private set; }
+        public bool LocksCalculation { get; private set; }
+        public bool AllowsProductionCalculation { get; private set; }
+
         [JsonIgnore]
         public ICollection<CalculationEntity> Calculations { get; private set; } = [];
 
@@ -13,5 +17,15 @@ namespace Domain.Entities.Project
 
         public StatusEntity(string name, string color, int sortOrder, bool isVisible = true)
             : base(name, color, sortOrder, isVisible) { }
+
+        public void SetApprovalSettings(
+            bool isApprovalStatus,
+            bool locksCalculation,
+            bool allowsProductionCalculation)
+        {
+            IsApprovalStatus = isApprovalStatus;
+            LocksCalculation = locksCalculation;
+            AllowsProductionCalculation = allowsProductionCalculation;
+        }
     }
 }

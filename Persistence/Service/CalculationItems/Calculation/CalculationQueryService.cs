@@ -66,7 +66,22 @@ namespace Persistence.Service.CalculationItems.Calculation
                     TenderQA = x.TenderQA,
                     StartDate = x.StartDate,
                     EndDate = x.EndDate,
-                    Status = x.Status != null ? x.Status.Name : string.Empty
+                    Status = x.Status != null ? x.Status.Name : string.Empty,
+                    StatusId = x.StatusId,
+                    StatusSortOrder = x.Status != null ? x.Status.SortOrder : null,
+                    CalculationType = x.CalculationType,
+                    IsLocked = x.IsLocked,
+                    LockedAtUtc = x.LockedAtUtc,
+                    LockedByUserId = x.LockedByUserId,
+                    ApprovedByUserId = x.ApprovedByUserId,
+                    ApprovedByName = x.ApprovedByName,
+                    ApprovedAtUtc = x.ApprovedAtUtc,
+                    SourceCalculationId = x.SourceCalculationId,
+                    VersionGroupId = x.VersionGroupId,
+                    VersionNumber = x.VersionNumber,
+                    CreatedFromCalculationId = x.CreatedFromCalculationId,
+                    IsCurrentVersion = x.IsCurrentVersion,
+                    StatusAllowsProductionCalculation = x.Status != null && x.Status.AllowsProductionCalculation
                 })
                 .ToListAsync(ct);
         }
@@ -140,7 +155,22 @@ namespace Persistence.Service.CalculationItems.Calculation
                     IsPrivate = x.IsPrivate,
                     EndDate = x.EndDate,
                     StartDate = x.StartDate,
-                    Status = x.Status != null ? x.Status.Name : string.Empty
+                    Status = x.Status != null ? x.Status.Name : string.Empty,
+                    StatusId = x.StatusId,
+                    StatusSortOrder = x.Status != null ? x.Status.SortOrder : null,
+                    CalculationType = x.CalculationType,
+                    IsLocked = x.IsLocked,
+                    LockedAtUtc = x.LockedAtUtc,
+                    LockedByUserId = x.LockedByUserId,
+                    ApprovedByUserId = x.ApprovedByUserId,
+                    ApprovedByName = x.ApprovedByName,
+                    ApprovedAtUtc = x.ApprovedAtUtc,
+                    SourceCalculationId = x.SourceCalculationId,
+                    VersionGroupId = x.VersionGroupId,
+                    VersionNumber = x.VersionNumber,
+                    CreatedFromCalculationId = x.CreatedFromCalculationId,
+                    IsCurrentVersion = x.IsCurrentVersion,
+                    StatusAllowsProductionCalculation = x.Status != null && x.Status.AllowsProductionCalculation
                 };
     }
 }

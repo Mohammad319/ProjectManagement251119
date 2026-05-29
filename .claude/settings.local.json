@@ -48,7 +48,9 @@
       "Bash(grep -E \"\\\\.\\(cs\\)$\")",
       "Bash(dotnet test *)",
       "Read(//c/Users/ataya/Downloads/AvedasD/**)",
-      "Bash(dir \"C:\\\\Users\\\\ataya\\\\Downloads\\\\AvedasD\")"
+      "Bash(dir \"C:\\\\Users\\\\ataya\\\\Downloads\\\\AvedasD\")",
+      "Bash(mkdir -p \"C:/Library/BlazorMHD/BlazorMHD.UI/Components/Data/DropdownPanel\")",
+      "Bash(mkdir -p \"C:/Library/BlazorMHD/BlazorMHD.UI/Components/Data/ColumnPicker\")"
     ]
   }
 }

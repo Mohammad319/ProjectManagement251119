@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Persistence.Context;
 
@@ -11,9 +12,11 @@ using Persistence.Context;
 namespace Persistence.Migrations
 {
     [DbContext(typeof(ShardingSingleDbContext))]
-    partial class ShardingSingleDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260529071112_AddCalculationVersionTypeLocking")]
+    partial class AddCalculationVersionTypeLocking
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -269,16 +272,6 @@ namespace Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime?>("ApprovedAtUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ApprovedByName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("ApprovedByUserId")
-                        .HasColumnType("int");
-
                     b.Property<int>("CalculationType")
                         .HasColumnType("int");
 
@@ -297,9 +290,6 @@ namespace Persistence.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<int?>("CreatedBy")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("CreatedFromCalculationId")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("DecisionDate")
@@ -328,9 +318,6 @@ namespace Persistence.Migrations
                     b.Property<string>("HourlyPrice")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsCurrentVersion")
-                        .HasColumnType("bit");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -423,12 +410,6 @@ namespace Persistence.Migrations
                     b.Property<int?>("UpdatedBy")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("VersionGroupId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("VersionNumber")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CompensationId");
@@ -482,12 +463,6 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "ProjectId", "IsPrivate", "SortOrder")
                         .HasDatabaseName("IX_Calculations_Tenant_Project_Private_Order");
-
-                    b.HasIndex("TenantId", "ProjectId", "VersionGroupId", "IsCurrentVersion")
-                        .HasDatabaseName("IX_Calculations_Tenant_Project_VersionGroup_Current");
-
-                    b.HasIndex("TenantId", "ProjectId", "VersionGroupId", "VersionNumber")
-                        .HasDatabaseName("IX_Calculations_Tenant_Project_VersionGroup_Number");
 
                     b.ToTable("Calculations", null, t =>
                         {
@@ -2492,9 +2467,6 @@ namespace Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<bool>("AllowsProductionCalculation")
-                        .HasColumnType("bit");
-
                     b.Property<string>("Color")
                         .IsRequired()
                         .HasMaxLength(7)
@@ -2506,13 +2478,7 @@ namespace Persistence.Migrations
                     b.Property<int?>("CreatedBy")
                         .HasColumnType("int");
 
-                    b.Property<bool>("IsApprovalStatus")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("IsVisible")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("LocksCalculation")
                         .HasColumnType("bit");
 
                     b.Property<string>("Name")

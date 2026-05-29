@@ -29,6 +29,7 @@ namespace Persistence.Service.CalculationItems.Resource
 
             var parent = await context.Tasks
                 .Where(x => x.Id == parentTaskId &&
+                    !x.Calculation.IsLocked &&
                     (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value))
                 .Select(x => new
                 {
@@ -118,6 +119,7 @@ namespace Persistence.Service.CalculationItems.Resource
 
             var parent = await context.Tasks
                 .Where(x => x.Id == parentTaskId &&
+                    !x.Calculation.IsLocked &&
                     (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value))
                 .Select(x => new
                 {
@@ -173,6 +175,7 @@ namespace Persistence.Service.CalculationItems.Resource
 
             var parent = await context.Tasks
                 .Where(x => x.Id == taskId &&
+                    !x.Calculation.IsLocked &&
                     (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value))
                 .Select(x => new
                 {
@@ -274,6 +277,7 @@ namespace Persistence.Service.CalculationItems.Resource
                 var affected = await context.Resources
                     .Where(x => batch.Contains(x.Id) &&
                         x.Task.CalculationId == calcId &&
+                        !x.Task.Calculation.IsLocked &&
                         (!departmentId.HasValue || x.Task.Calculation.DepartmentId == departmentId.Value))
                     .ExecuteDeleteAsync(ct);
 
@@ -302,6 +306,7 @@ namespace Persistence.Service.CalculationItems.Resource
 
             var resource = await context.Resources
                 .Where(x => x.Id == id &&
+                    !x.Task.Calculation.IsLocked &&
                     (!departmentId.HasValue || x.Task.Calculation.DepartmentId == departmentId.Value))
                 .Select(x => new { Res = x, CalID = x.Task.CalculationId })
                 .FirstOrDefaultAsync(ct);
@@ -338,6 +343,7 @@ namespace Persistence.Service.CalculationItems.Resource
             var entity = await context.Resources
                 .Include(x => x.Task)
                 .FirstOrDefaultAsync(x => x.Id == resourceId &&
+                    !x.Task.Calculation.IsLocked &&
                     (!departmentId.HasValue || x.Task.Calculation.DepartmentId == departmentId.Value), ct);
 
             if (entity is null) return false;
@@ -385,6 +391,7 @@ namespace Persistence.Service.CalculationItems.Resource
             return context.Calculations
                 .AsNoTracking()
                 .AnyAsync(x => x.Id == calculationId &&
+                    !x.IsLocked &&
                     (!departmentId.HasValue || x.DepartmentId == departmentId.Value), ct);
         }
     }

@@ -35,6 +35,18 @@ namespace Application.Feature.Calculation.Calculation
             bool allowCrossDepartment,
             CancellationToken cancellationToken = default);
 
+        Task<int> CreateProductionCopyAsync(
+            int id,
+            int? departmentId,
+            int userId,
+            CancellationToken cancellationToken = default);
+
+        Task<int> CreateVersionAsync(
+            int id,
+            int? departmentId,
+            int userId,
+            CancellationToken cancellationToken = default);
+
         Task<bool> MoveAsync(
             int id,
             Guid projectId,

@@ -13,5 +13,8 @@ namespace ProjectManagement.Shared.Base.Project
         public string Name { get; set; } = string.Empty;
         [StringLength(7, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize),MinimumLength = 7)]
         public string Color { get; set; } = "#00ff00";
+        public bool IsApprovalStatus { get; set; }
+        public bool LocksCalculation { get; set; }
+        public bool AllowsProductionCalculation { get; set; }
     }
 }

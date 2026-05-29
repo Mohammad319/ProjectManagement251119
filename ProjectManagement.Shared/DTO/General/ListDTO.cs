@@ -7,6 +7,14 @@ namespace ProjectManagement.Shared.DTO.General
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
     }
+
+    public class StatusListDTO : ListDTO
+    {
+        public bool IsApprovalStatus { get; set; }
+        public bool LocksCalculation { get; set; }
+        public bool AllowsProductionCalculation { get; set; }
+    }
+
     public class ListDTO<T>
     {
         public int Id { get; set; }
@@ -36,7 +44,7 @@ namespace ProjectManagement.Shared.DTO.General
         public List<ListDTO> Contracts { get; set; } = [];
         public List<ListDTO> Compensations { get; set; } = [];
         public List<ListDTO> Types { get; set; } = [];
-        public List<ListDTO> Statuses { get; set; } = [];
+        public List<StatusListDTO> Statuses { get; set; } = [];
         public List<ListDTO> Organisation { get; set; } = [];
     }
 }

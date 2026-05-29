@@ -70,6 +70,7 @@ namespace Persistence.Service.CalculationItems.Tender
             var attr = await context.AttributeNameTender
                 .FirstOrDefaultAsync(x => x.Id == id &&
                     x.CalculationId == calculationId &&
+                    !x.Calculation.IsLocked &&
                     (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value), ct);
 
             if (attr is null)
@@ -95,6 +96,7 @@ namespace Persistence.Service.CalculationItems.Tender
             var attr = await context.AttributeNameTender
                 .FirstOrDefaultAsync(x => x.Id == id &&
                     x.CalculationId == calculationId &&
+                    !x.Calculation.IsLocked &&
                     (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value), ct);
 
             if (attr is null)
@@ -123,6 +125,7 @@ namespace Persistence.Service.CalculationItems.Tender
             return context.Calculations
                 .AsNoTracking()
                 .AnyAsync(x => x.Id == calculationId &&
+                    !x.IsLocked &&
                     (!departmentId.HasValue || x.DepartmentId == departmentId.Value), ct);
         }
 
@@ -145,6 +148,7 @@ namespace Persistence.Service.CalculationItems.Tender
                 .AsNoTracking()
                 .Where(x => ids.Contains(x.Id) &&
                     x.CalculationId == calculationId &&
+                    !x.Calculation.IsLocked &&
                     (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value))
                 .CountAsync(ct);
 

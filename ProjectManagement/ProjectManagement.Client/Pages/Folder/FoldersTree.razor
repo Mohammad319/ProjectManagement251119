@@ -5,11 +5,32 @@
 
 @if (GroupingMode == ProjectTreeGroupingMode.FolderStructure)
 {
-<div id="folderTable" class="select-none space-y-1 text-sm">
-    @foreach (var folder in GetSortedFolders(UoWService.Folder.State.FoldersList))
+<div id="folderTable" class="select-none space-y-1 text-sm" @oncontextmenu:preventDefault="true">
+    @if (IsManualOrderMode && HasManualOrderChanges)
+    {
+        <div class="sticky top-0 z-20 mb-1 flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50/95 p-1 shadow-sm backdrop-blur dark:border-emerald-900/60 dark:bg-emerald-950/70">
+            <button type="button"
+                    class="h-7 rounded-md bg-emerald-600 px-2 text-xs font-semibold text-white transition hover:bg-emerald-700"
+                    @onclick="SaveManualOrderAsync">
+                @AppLoc["saveOrder"]
+            </button>
+            <button type="button"
+                    class="h-7 rounded-md border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                    @onclick="RestoreManualOrderSnapshot">
+                @AppLoc["cancelOrder"]
+            </button>
+        </div>
+    }
+
+    @{
+        var sortedFolders = GetSortedFolders(UoWService.Folder.State.FoldersList).ToList();
+    }
+
+    @foreach (var folder in sortedFolders)
     {
         var isFolderSelected = Folder.State.FolderSelected?.Id == folder.Id;
         var isFolderArchived = !folder.IsVisible;
+        var folderMeta = GetFolderMeta(folder);
 
         var folderClasses = new List<string>
         {
@@ -17,7 +38,7 @@
             "grid grid-cols-[1rem_1.5rem_minmax(0,1fr)_auto] items-center gap-1.5 px-1.5 py-1 rounded-md cursor-pointer",
             "transition-all duration-150",
             "bg-white dark:bg-slate-900/70",
-            "hover:bg-emerald-50 dark:hover:bg-emerald-950/25",
+            "hover:bg-slate-100/80 dark:hover:bg-slate-800/70",
             "active:scale-95"
         };
 
@@ -28,7 +49,7 @@
             folderClasses.Add("ring-1 ring-emerald-500 bg-emerald-50 dark:bg-emerald-950/40");
 
         if (isFolderSelected)
-            folderClasses.Add("bg-emerald-50 dark:bg-emerald-950/35 border-l-4 border-emerald-500 shadow-sm");
+            folderClasses.Add("border-l-2 border-emerald-500 bg-slate-100 dark:bg-slate-800/75 shadow-sm ring-1 ring-emerald-200/70 dark:ring-emerald-900/60");
 
         <div @key="folder.Id"
              @oncontextmenu:preventDefault
@@ -38,7 +59,7 @@
              @ondragleave="() => OnDragLeaveFolder(folder)"
              @ondragover:preventDefault
              @ondragstart="() => CalcDraging = folder"
-             draggable="true"
+             draggable="@(SortMode != ProjectTreeSortMode.Manual)"
              @onclick="async () => await SeFolder(folder)"
              role="button"
              tabindex="0"
@@ -58,7 +79,6 @@
 
             <!-- Folder / ort -->
             <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md @(isFolderArchived ? "bg-slate-200 text-slate-500 ring-1 ring-slate-300 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-700" : "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:ring-emerald-800")"
-                  style="@(!isFolderArchived && !string.IsNullOrWhiteSpace(folder.Color) ? $"color:{folder.Color}" : null)"
                   title="@ResourceLoc.folder">
                 @if (folder.ShowProjects)
                 {
@@ -74,24 +94,42 @@
                 }
             </span>
 
-            <span title="@folder.Name"
-                  class="truncate text-[14px] font-semibold leading-5 @(isFolderArchived ? "text-slate-500 dark:text-slate-400" : "text-slate-800 group-hover:text-emerald-800 dark:text-slate-100 dark:group-hover:text-emerald-200") @(isFolderSelected ? "text-emerald-900 dark:text-emerald-100" : "")">
-                @folder.Name
+            <span class="min-w-0 flex items-center gap-1.5">
+                @if (IsManualOrderMode)
+                {
+                    <span class="flex shrink-0 items-center gap-0.5">
+                        <button type="button" class="@ManualOrderButtonClass" disabled="@(!CanMoveUp(sortedFolders, folder))" title="@AppLoc["moveUp"]" @onclick:stopPropagation="true" @onclick="() => MoveFolder(folder, -1)">↑</button>
+                        <button type="button" class="@ManualOrderButtonClass" disabled="@(!CanMoveDown(sortedFolders, folder))" title="@AppLoc["moveDown"]" @onclick:stopPropagation="true" @onclick="() => MoveFolder(folder, 1)">↓</button>
+                    </span>
+                }
+                <span title="@folder.Name"
+                      class="truncate text-[14px] font-semibold leading-5 @(isFolderArchived ? "text-slate-500 dark:text-slate-400" : "text-slate-800 group-hover:text-emerald-800 dark:text-slate-100 dark:group-hover:text-emerald-200") @(isFolderSelected ? "text-emerald-900 dark:text-emerald-100" : "")">
+                    @folder.Name
+                </span>
             </span>
 
-            <span class="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase leading-none @(isFolderArchived ? "bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300" : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300")">
-                @(isFolderArchived ? "Arkiverad" : ResourceLoc.folder)
-            </span>
+            @if (!string.IsNullOrWhiteSpace(folderMeta))
+            {
+                <span class="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase leading-none @(isFolderArchived ? "bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300" : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300")"
+                      title="@ResourceLoc.folder">
+                    @folderMeta
+                </span>
+            }
         </div>
 
         <!-- Projects -->
         @if (folder.ShowProjects && folder.Projects is not null)
         {
             <div class="ml-4 space-y-1 border-l border-dashed border-emerald-200 pl-2 dark:border-emerald-900/70">
-                @foreach (var project in GetSortedProjects(folder.Projects))
+                @{
+                    var sortedProjects = GetSortedProjects(folder.Projects).ToList();
+                }
+
+                @foreach (var project in sortedProjects)
                 {
                     var isProjectSelected = Folder.State.ProjectSelected?.Id == project.Id;
                     var isProjectArchived = !project.IsVisible;
+                    var projectMeta = GetProjectMeta(project);
 
                     var projectClasses = new List<string>
                     {
@@ -99,7 +137,7 @@
                         "grid grid-cols-[1rem_1.5rem_minmax(0,1fr)_auto] items-center gap-1.5 px-1.5 py-1 rounded-md cursor-pointer",
                         "transition-all duration-150",
                         "bg-slate-50 dark:bg-slate-900/70",
-                        "hover:bg-sky-50 dark:hover:bg-sky-950/25",
+                        "hover:bg-slate-100/80 dark:hover:bg-slate-800/70",
                         "active:scale-95"
                     };
 
@@ -110,15 +148,16 @@
                         projectClasses.Add("ring-1 ring-sky-500 bg-sky-50 dark:bg-sky-950/40");
 
                     if (isProjectSelected)
-                        projectClasses.Add("bg-sky-50 dark:bg-sky-950/35 border-l-4 border-sky-500 shadow-sm");
+                        projectClasses.Add("border-l-2 border-sky-500 bg-sky-50/80 shadow-sm ring-1 ring-sky-200/70 dark:bg-sky-950/25 dark:ring-sky-900/60");
 
                     <div @key="project.Id"
                          @oncontextmenu:preventDefault
+                         @oncontextmenu="async () => await ContextProject(folder, project)"
                          @ondrop="async _ => await HandleDrop(project)"
                          @ondragleave="() => project.IsDragOver = false"
                          @ondragover="() => project.IsDragOver = CalcDraging is ListProjectMVVM"
                          @ondragstart="() => CalcDraging = project"
-                         draggable="true"
+                         draggable="@(SortMode != ProjectTreeSortMode.Manual)"
                          @onclick="async () => await SetProject(folder, project)"
                          role="button"
                          tabindex="0"
@@ -140,56 +179,82 @@
                         <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md @(isProjectArchived ? "bg-slate-200 text-slate-500 ring-1 ring-slate-300 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-700" : "bg-sky-100 text-sky-700 ring-1 ring-sky-200 dark:bg-sky-950/50 dark:text-sky-300 dark:ring-sky-800")"
                               title="@CalcResource.project">
                             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 20V5.5A1.5 1.5 0 0 1 5.5 4h7L20 11.5V20" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 4v7.5h8" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 16h8M8 13h2" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4.5 5.5h15v13h-15z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 9h8M8 13h3M14 13h2M8 16h8" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6.5 3.5v4M17.5 16.5v4" />
                             </svg>
                         </span>
 
-                        <span title="@project.Name"
-                              class="truncate text-[13px] font-medium leading-5 @(isProjectArchived ? "text-slate-500 dark:text-slate-400" : "text-slate-700 group-hover:text-sky-800 dark:text-slate-200 dark:group-hover:text-sky-200") @(isProjectSelected ? "text-sky-900 dark:text-sky-100 font-semibold" : "")">
-                            @project.Name
+                        <span class="min-w-0 flex items-center gap-1.5">
+                            @if (IsManualOrderMode)
+                            {
+                                <span class="flex shrink-0 items-center gap-0.5">
+                                    <button type="button" class="@ManualOrderButtonClass" disabled="@(!CanMoveUp(sortedProjects, project))" title="@AppLoc["moveUp"]" @onclick:stopPropagation="true" @onclick="() => MoveProject(folder.Projects, project, -1)">↑</button>
+                                    <button type="button" class="@ManualOrderButtonClass" disabled="@(!CanMoveDown(sortedProjects, project))" title="@AppLoc["moveDown"]" @onclick:stopPropagation="true" @onclick="() => MoveProject(folder.Projects, project, 1)">↓</button>
+                                </span>
+                            }
+                            <span title="@project.Name"
+                                  class="truncate text-[13px] font-medium leading-5 @(isProjectArchived ? "text-slate-500 dark:text-slate-400" : "text-slate-700 group-hover:text-sky-800 dark:text-slate-200 dark:group-hover:text-sky-200") @(isProjectSelected ? "text-sky-900 dark:text-sky-100 font-semibold" : "")">
+                                @project.Name
+                            </span>
                         </span>
 
-                        <span class="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase leading-none @(isProjectArchived ? "bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300" : "bg-sky-100 text-sky-700 dark:bg-sky-950/70 dark:text-sky-300")">
-                            @(isProjectArchived ? "Arkiverad" : CalcResource.project)
-                        </span>
+                        @if (!string.IsNullOrWhiteSpace(projectMeta))
+                        {
+                            <span class="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase leading-none @(isProjectArchived ? "bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300" : "bg-sky-100 text-sky-700 dark:bg-sky-950/70 dark:text-sky-300")"
+                                  title="@CalcResource.project">
+                                @projectMeta
+                            </span>
+                        }
                     </div>
 
                     <!-- Calculations -->
                     <div class="ml-4 space-y-1 border-l border-dashed border-sky-200 pl-2 dark:border-sky-900/70
                                    overflow-hidden transition-all duration-200 ease-in-out
                                    @(project.ShowCalculations ? " max-h-[800px] opacity-100" : "max-h-0 opacity-0")">
-                        @foreach (var cal in GetSortedCalculations(project.Calculations))
+                        @{
+                            var sortedCalculations = GetSortedCalculations(project.Calculations).ToList();
+                        }
+
+                        @foreach (var cal in sortedCalculations)
                         {
                             var calcSelected = Calc?.Id == cal.Id;
-                            var calcIndicatorClass = GetCalculationIndicatorClass(cal);
                             var calcClasses = new List<string>
                             {
-                                "group grid grid-cols-[1rem_minmax(0,1fr)_auto] items-center gap-1.5 px-1.5 py-1 rounded-md cursor-pointer transition-all duration-150",
+                                "group grid grid-cols-[1.5rem_minmax(0,1fr)] items-center gap-1.5 px-1.5 py-1 rounded-md cursor-pointer transition-all duration-150",
                                 "bg-slate-50/80 dark:bg-slate-900/60",
-                                "hover:bg-slate-100 dark:hover:bg-slate-800/80",
+                                "hover:bg-slate-100/80 dark:hover:bg-slate-800/70",
                                 "active:scale-95"
                             };
 
                             if (calcSelected)
-                                calcClasses.Add("bg-violet-50 dark:bg-violet-950/35 border-l-4 border-violet-500 shadow-sm ring-1 ring-violet-200 dark:ring-violet-900/70");
+                                calcClasses.Add(GetCalculationSelectedClass(cal));
 
                             <div @key="cal.Id"
+                                 @oncontextmenu:preventDefault
+                                 @oncontextmenu="async () => await ContextCalc(folder, project, cal)"
                                  @onclick="async () => await NewCalculations(folder, project, cal)"
                                  class="@string.Join(" ", calcClasses)">
-                                <span class="flex h-5 w-4 shrink-0 items-center justify-center"
+                                <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded @GetCalculationIconBgClass(cal)"
                                       title="@($"{CalcResource.calculation}{(string.IsNullOrWhiteSpace(cal.Status) ? string.Empty : $": {cal.Status}")}")">
-                                    <span class="@calcIndicatorClass" aria-hidden="true"></span>
+                                    <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                        <rect x="4" y="3" width="16" height="18" rx="2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 8h8M8 12h5M8 16h3"/>
+                                    </svg>
                                 </span>
 
-                                <span title="@cal.Name"
-                                      class="truncate text-[12px] font-medium leading-5 text-slate-600 group-hover:text-slate-900 dark:text-slate-300 dark:group-hover:text-slate-100 @(calcSelected ? "text-violet-900 dark:text-violet-100 font-semibold" : "")">
-                                    @cal.Name
-                                </span>
-
-                                <span class="shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase leading-none text-slate-500 dark:bg-slate-800 dark:text-slate-300">
-                                    Kalkyl
+                                <span class="min-w-0 flex items-center gap-1.5">
+                                    @if (IsManualOrderMode)
+                                    {
+                                        <span class="flex shrink-0 items-center gap-0.5">
+                                            <button type="button" class="@ManualOrderButtonClass" disabled="@(!CanMoveUp(sortedCalculations, cal))" title="@AppLoc["moveUp"]" @onclick:stopPropagation="true" @onclick="() => MoveCalculation(project.Calculations, cal, -1)">↑</button>
+                                            <button type="button" class="@ManualOrderButtonClass" disabled="@(!CanMoveDown(sortedCalculations, cal))" title="@AppLoc["moveDown"]" @onclick:stopPropagation="true" @onclick="() => MoveCalculation(project.Calculations, cal, 1)">↓</button>
+                                        </span>
+                                    }
+                                    <span title="@cal.Name"
+                                          class="truncate text-[12px] font-medium leading-5 @GetCalculationTextClass(cal, calcSelected)">
+                                        @cal.Name
+                                    </span>
                                 </span>
                             </div>
                         }
@@ -202,80 +267,86 @@
 }
 else
 {
-    <div id="folderTable" class="select-none space-y-1 text-sm">
-        @foreach (var dateGroup in GetDateGroupedProjects())
-        {
-            <div class="rounded-lg border border-slate-200 bg-slate-100/70 px-1.5 py-1 dark:border-slate-800 dark:bg-slate-900/70">
-                <div class="grid grid-cols-[1.5rem_minmax(0,1fr)_auto] items-center gap-1.5 px-1 py-1">
-                    <span class="flex h-6 w-6 items-center justify-center rounded-md bg-indigo-100 text-indigo-700 ring-1 ring-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-300 dark:ring-indigo-800"
-                          title="Visningsgrupp">
-                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 3.5v3M17 3.5v3M4.5 9h15M6 5h12a1.5 1.5 0 0 1 1.5 1.5v12A1.5 1.5 0 0 1 18 20H6a1.5 1.5 0 0 1-1.5-1.5v-12A1.5 1.5 0 0 1 6 5Z" />
-                        </svg>
-                    </span>
-                    <span class="truncate text-[13px] font-bold text-slate-800 dark:text-slate-100">
-                        @dateGroup.Label
-                    </span>
-                    <span class="rounded bg-indigo-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase leading-none text-indigo-700 dark:bg-indigo-950/70 dark:text-indigo-300">
-                        @(GroupingMode == ProjectTreeGroupingMode.Year ? "År" : "Kvartal")
-                    </span>
-                </div>
+    RenderFragment<CalculationGroupNode> groupContent = group => @<div class="ml-3 space-y-1 border-l border-dashed border-indigo-200 pl-2 dark:border-indigo-900/70">
+            @if (KeepFolderStructure)
+            {
+                @foreach (var folderGroup in GetFolderCalculationGroups(group.Calculations))
+                {
+                    var folder = folderGroup.Folder;
+                    var folderKey = GetGroupedFolderKey(folder);
+                    var isFolderSelected = Folder.State.FolderSelected?.Id == folder.Id;
+                    var isFolderArchived = !folder.IsVisible;
+                    var folderMeta = GetFolderMeta(folder);
 
-                <div class="ml-3 space-y-1 border-l border-dashed border-indigo-200 pl-2 dark:border-indigo-900/70">
-                    @foreach (var folderGroup in dateGroup.Folders)
+                    var groupedFolderClasses = new List<string>
                     {
-                        var folder = folderGroup.Folder;
-                        var isFolderSelected = Folder.State.FolderSelected?.Id == folder.Id;
-                        var isFolderArchived = !folder.IsVisible;
+                        "group grid grid-cols-[1rem_1.5rem_minmax(0,1fr)_auto] items-center gap-1.5 px-1.5 py-1 rounded-md cursor-pointer transition-all duration-150",
+                        "bg-white dark:bg-slate-900/70",
+                        "hover:bg-slate-100/80 dark:hover:bg-slate-800/70",
+                        "active:scale-95"
+                    };
 
-                        var groupedFolderClasses = new List<string>
+                    if (isFolderArchived)
+                        groupedFolderClasses.Add("border border-slate-200 bg-slate-100/80 text-slate-500 grayscale dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-400");
+
+                    if (isFolderSelected)
+                        groupedFolderClasses.Add("border-l-2 border-emerald-500 bg-slate-100 dark:bg-slate-800/75 shadow-sm ring-1 ring-emerald-200/70 dark:ring-emerald-900/60");
+
+                    <div @key="@($"{group.Key}-{folder.Id}")"
+                         @oncontextmenu:preventDefault
+                         @oncontextmenu="() => Context(folder)"
+                         @onclick="async () => await SeFolder(folder)"
+                         role="button"
+                         tabindex="0"
+                         class="@string.Join(" ", groupedFolderClasses)">
+                        <button @onclick:stopPropagation="true"
+                                @onclick="() => ToggleGroup(folderKey)"
+                                class="flex h-4 w-4 shrink-0 items-center justify-center rounded text-slate-400 transition-colors duration-150 group-hover:bg-emerald-100 group-hover:text-emerald-700 dark:text-slate-500 dark:group-hover:bg-emerald-950/60 dark:group-hover:text-emerald-300"
+                                title="@ResourceLoc.folder">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                 class="@GetGroupToggleClass(folderKey)"
+                                 fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+
+                        <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md @(isFolderArchived ? "bg-slate-200 text-slate-500 ring-1 ring-slate-300 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-700" : "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:ring-emerald-800")"
+                              title="@ResourceLoc.folder">
+                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z"/>
+                            </svg>
+                        </span>
+
+                        <span title="@folder.Name"
+                              class="truncate text-[13px] font-semibold leading-5 @(isFolderArchived ? "text-slate-500 dark:text-slate-400" : "text-slate-800 group-hover:text-emerald-800 dark:text-slate-100 dark:group-hover:text-emerald-200") @(isFolderSelected ? "text-emerald-900 dark:text-emerald-100" : "")">
+                            @folder.Name
+                        </span>
+
+                        @if (!string.IsNullOrWhiteSpace(folderMeta))
                         {
-                            "group grid grid-cols-[1.5rem_minmax(0,1fr)_auto] items-center gap-1.5 px-1.5 py-1 rounded-md cursor-pointer transition-all duration-150",
-                            "bg-white dark:bg-slate-900/70",
-                            "hover:bg-emerald-50 dark:hover:bg-emerald-950/25",
-                            "active:scale-95"
-                        };
-
-                        if (isFolderArchived)
-                            groupedFolderClasses.Add("border border-slate-200 bg-slate-100/80 text-slate-500 grayscale dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-400");
-
-                        if (isFolderSelected)
-                            groupedFolderClasses.Add("bg-emerald-50 dark:bg-emerald-950/35 border-l-4 border-emerald-500 shadow-sm");
-
-                        <div @key="@($"{dateGroup.Label}-{folder.Id}")"
-                             @oncontextmenu:preventDefault
-                             @oncontextmenu="() => Context(folder)"
-                             @onclick="async () => await SeFolder(folder)"
-                             role="button"
-                             tabindex="0"
-                             class="@string.Join(" ", groupedFolderClasses)">
-                            <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md @(isFolderArchived ? "bg-slate-200 text-slate-500 ring-1 ring-slate-300 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-700" : "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:ring-emerald-800")"
-                                  style="@(!isFolderArchived && !string.IsNullOrWhiteSpace(folder.Color) ? $"color:{folder.Color}" : null)"
+                            <span class="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase leading-none @(isFolderArchived ? "bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300" : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300")"
                                   title="@ResourceLoc.folder">
-                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                    <path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z"/>
-                                </svg>
+                                @folderMeta
                             </span>
-                            <span title="@folder.Name"
-                                  class="truncate text-[13px] font-semibold leading-5 @(isFolderArchived ? "text-slate-500 dark:text-slate-400" : "text-slate-800 group-hover:text-emerald-800 dark:text-slate-100 dark:group-hover:text-emerald-200") @(isFolderSelected ? "text-emerald-900 dark:text-emerald-100" : "")">
-                                @folder.Name
-                            </span>
-                            <span class="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase leading-none @(isFolderArchived ? "bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300" : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300")">
-                                @(isFolderArchived ? "Arkiverad" : ResourceLoc.folder)
-                            </span>
-                        </div>
+                        }
+                    </div>
 
+                    @if (IsGroupExpanded(folderKey))
+                    {
                         <div class="ml-4 space-y-1 border-l border-dashed border-emerald-200 pl-2 dark:border-emerald-900/70">
-                            @foreach (var project in GetSortedProjects(folderGroup.Projects))
+                            @foreach (var projectGroup in folderGroup.Projects)
                             {
+                                var project = projectGroup.Project;
+                                var projectKey = GetGroupedProjectKey(project);
                                 var isProjectSelected = Folder.State.ProjectSelected?.Id == project.Id;
                                 var isProjectArchived = !project.IsVisible;
+                                var projectMeta = GetProjectMeta(project);
 
                                 var groupedProjectClasses = new List<string>
                                 {
                                     "group grid grid-cols-[1rem_1.5rem_minmax(0,1fr)_auto] items-center gap-1.5 px-1.5 py-1 rounded-md cursor-pointer transition-all duration-150",
                                     "bg-slate-50 dark:bg-slate-900/70",
-                                    "hover:bg-sky-50 dark:hover:bg-sky-950/25",
+                                    "hover:bg-slate-100/80 dark:hover:bg-slate-800/70",
                                     "active:scale-95"
                                 };
 
@@ -283,19 +354,19 @@ else
                                     groupedProjectClasses.Add("border border-slate-200 bg-slate-100/80 text-slate-500 grayscale dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-400");
 
                                 if (isProjectSelected)
-                                    groupedProjectClasses.Add("bg-sky-50 dark:bg-sky-950/35 border-l-4 border-sky-500 shadow-sm");
+                                    groupedProjectClasses.Add("border-l-2 border-sky-500 bg-sky-50/80 shadow-sm ring-1 ring-sky-200/70 dark:bg-sky-950/25 dark:ring-sky-900/60");
 
-                                <div @key="@($"{dateGroup.Label}-{folder.Id}-{project.Id}")"
+                                <div @key="@($"{group.Key}-{folder.Id}-{project.Id}")"
                                      @onclick="async () => await SetProject(folder, project)"
                                      role="button"
                                      tabindex="0"
                                      class="@string.Join(" ", groupedProjectClasses)">
                                     <button @onclick:stopPropagation="true"
-                                            @onclick="async () => await CollapseProject(project)"
+                                            @onclick="() => ToggleGroup(projectKey)"
                                             class="flex h-4 w-4 shrink-0 items-center justify-center rounded text-slate-400 transition-colors duration-150 group-hover:bg-sky-100 group-hover:text-sky-700 dark:text-slate-500 dark:group-hover:bg-sky-950/60 dark:group-hover:text-sky-300"
                                             title="@CalcResource.project">
                                         <svg xmlns="http://www.w3.org/2000/svg"
-                                             class="h-3.5 w-3.5 transform transition-transform duration-200 @( project.ShowCalculations ? "rotate-90" : "rotate-0")"
+                                             class="@GetGroupToggleClass(projectKey)"
                                              fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                                         </svg>
@@ -304,9 +375,9 @@ else
                                     <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md @(isProjectArchived ? "bg-slate-200 text-slate-500 ring-1 ring-slate-300 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-700" : "bg-sky-100 text-sky-700 ring-1 ring-sky-200 dark:bg-sky-950/50 dark:text-sky-300 dark:ring-sky-800")"
                                           title="@CalcResource.project">
                                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 20V5.5A1.5 1.5 0 0 1 5.5 4h7L20 11.5V20" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 4v7.5h8" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 16h8M8 13h2" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4.5 5.5h15v13h-15z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 9h8M8 13h3M14 13h2M8 16h8" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6.5 3.5v4M17.5 16.5v4" />
                                         </svg>
                                     </span>
 
@@ -315,50 +386,166 @@ else
                                         @project.Name
                                     </span>
 
-                                    <span class="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase leading-none @(isProjectArchived ? "bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300" : "bg-sky-100 text-sky-700 dark:bg-sky-950/70 dark:text-sky-300")">
-                                        @(isProjectArchived ? "Arkiverad" : CalcResource.project)
-                                    </span>
+                                    @if (!string.IsNullOrWhiteSpace(projectMeta))
+                                    {
+                                        <span class="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase leading-none @(isProjectArchived ? "bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300" : "bg-sky-100 text-sky-700 dark:bg-sky-950/70 dark:text-sky-300")"
+                                              title="@CalcResource.project">
+                                            @projectMeta
+                                        </span>
+                                    }
                                 </div>
 
-                                <div class="ml-4 space-y-1 border-l border-dashed border-sky-200 pl-2 dark:border-sky-900/70
-                                               overflow-hidden transition-all duration-200 ease-in-out
-                                               @(project.ShowCalculations ? " max-h-[800px] opacity-100" : "max-h-0 opacity-0")">
-                                    @foreach (var cal in GetSortedCalculations(project.Calculations))
-                                    {
-                                        var calcSelected = Calc?.Id == cal.Id;
-                                        var calcIndicatorClass = GetCalculationIndicatorClass(cal);
-                                        var calcClasses = new List<string>
+                                @if (IsGroupExpanded(projectKey))
+                                {
+                                    <div class="ml-4 space-y-1 border-l border-dashed border-sky-200 pl-2 dark:border-sky-900/70">
+                                        @foreach (var cal in projectGroup.Calculations)
                                         {
-                                            "group grid grid-cols-[1rem_minmax(0,1fr)_auto] items-center gap-1.5 px-1.5 py-1 rounded-md cursor-pointer transition-all duration-150",
-                                            "bg-slate-50/80 dark:bg-slate-900/60",
-                                            "hover:bg-slate-100 dark:hover:bg-slate-800/80",
-                                            "active:scale-95"
-                                        };
+                                            var calcSelected = Calc?.Id == cal.Id;
+                                            var calcClasses = new List<string>
+                                            {
+                                                "group grid grid-cols-[1.5rem_minmax(0,1fr)] items-center gap-1.5 px-1.5 py-1 rounded-md cursor-pointer transition-all duration-150",
+                                                "bg-slate-50/80 dark:bg-slate-900/60",
+                                                "hover:bg-slate-100/80 dark:hover:bg-slate-800/70",
+                                                "active:scale-95"
+                                            };
 
-                                        if (calcSelected)
-                                            calcClasses.Add("bg-violet-50 dark:bg-violet-950/35 border-l-4 border-violet-500 shadow-sm ring-1 ring-violet-200 dark:ring-violet-900/70");
+                                            if (calcSelected)
+                                                calcClasses.Add(GetCalculationSelectedClass(cal));
 
-                                        <div @key="@($"{dateGroup.Label}-{folder.Id}-{project.Id}-{cal.Id}")"
-                                             @onclick="async () => await NewCalculations(folder, project, cal)"
-                                             class="@string.Join(" ", calcClasses)">
-                                            <span class="flex h-5 w-4 shrink-0 items-center justify-center"
-                                                  title="@($"{CalcResource.calculation}{(string.IsNullOrWhiteSpace(cal.Status) ? string.Empty : $": {cal.Status}")}")">
-                                                <span class="@calcIndicatorClass" aria-hidden="true"></span>
-                                            </span>
-                                            <span title="@cal.Name"
-                                                  class="truncate text-[12px] font-medium leading-5 text-slate-600 group-hover:text-slate-900 dark:text-slate-300 dark:group-hover:text-slate-100 @(calcSelected ? "text-violet-900 dark:text-violet-100 font-semibold" : "")">
-                                                @cal.Name
-                                            </span>
-                                            <span class="shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase leading-none text-slate-500 dark:bg-slate-800 dark:text-slate-300">
-                                                Kalkyl
-                                            </span>
-                                        </div>
+                                            <div @key="@($"{group.Key}-{folder.Id}-{project.Id}-{cal.Id}")"
+                                                 @onclick="async () => await NewCalculations(folder, project, cal)"
+                                                 class="@string.Join(" ", calcClasses)">
+                                                <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded @GetCalculationIconBgClass(cal)"
+                                                      title="@($"{CalcResource.calculation}{(string.IsNullOrWhiteSpace(cal.Status) ? string.Empty : $": {cal.Status}")}")">
+                                                    <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                                        <rect x="4" y="3" width="16" height="18" rx="2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 8h8M8 12h5M8 16h3"/>
+                                                    </svg>
+                                                </span>
+                                                <span title="@cal.Name"
+                                                      class="truncate text-[12px] font-medium leading-5 @GetCalculationTextClass(cal, calcSelected)">
+                                                    @cal.Name
+                                                </span>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            }
+                        </div>
+                    }
+                }
+            }
+            else
+            {
+                @foreach (var entry in GetSortedGroupedCalculations(group.Calculations))
+                {
+                    var cal = entry.Calculation;
+                    var calcSelected = Calc?.Id == cal.Id;
+                    var calcClasses = new List<string>
+                    {
+                        "group grid grid-cols-[1.5rem_minmax(0,1fr)] items-center gap-1.5 px-1.5 py-1 rounded-md cursor-pointer transition-all duration-150",
+                        "bg-slate-50/80 dark:bg-slate-900/60",
+                        "hover:bg-slate-100/80 dark:hover:bg-slate-800/70",
+                        "active:scale-95"
+                    };
+
+                    if (calcSelected)
+                        calcClasses.Add(GetCalculationSelectedClass(cal));
+
+                    <div @key="@($"{group.Key}-flat-{cal.Id}")"
+                         @onclick="async () => await NewCalculations(entry.Folder, entry.Project, cal)"
+                         class="@string.Join(" ", calcClasses)">
+                        <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded @GetCalculationIconBgClass(cal)"
+                              title="@($"{CalcResource.calculation}{(string.IsNullOrWhiteSpace(cal.Status) ? string.Empty : $": {cal.Status}")}")">
+                            <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                <rect x="4" y="3" width="16" height="18" rx="2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 8h8M8 12h5M8 16h3"/>
+                            </svg>
+                        </span>
+                        <span title="@cal.Name"
+                              class="truncate text-[12px] font-medium leading-5 @GetCalculationTextClass(cal, calcSelected)">
+                            @cal.Name
+                        </span>
+                    </div>
+                }
+            }
+        </div>;
+
+    <div id="folderTable" class="select-none space-y-1 text-sm" @oncontextmenu:preventDefault="true">
+        @foreach (var group in GetCalculationGroupNodes())
+        {
+            var isExpanded = IsGroupExpanded(group.Key);
+            var count = group.Children?.Sum(child => child.Calculations.Count) ?? group.Calculations.Count;
+
+            <div class="rounded-lg border border-slate-200 bg-slate-100/70 px-1.5 py-1 dark:border-slate-800 dark:bg-slate-900/70">
+                <div class="grid grid-cols-[1rem_1.5rem_minmax(0,1fr)_auto] items-center gap-1.5 px-1 py-1">
+                    <button @onclick="() => ToggleGroup(group.Key)"
+                            class="flex h-4 w-4 shrink-0 items-center justify-center rounded text-indigo-500 transition-colors duration-150 hover:bg-indigo-100 hover:text-indigo-700 dark:text-indigo-300 dark:hover:bg-indigo-950/60"
+                            title="@AppLoc["groupBy"]">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             class="@GetGroupToggleClass(group.Key)"
+                             fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                    <span class="flex h-6 w-6 items-center justify-center rounded-md bg-indigo-100 text-indigo-700 ring-1 ring-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-300 dark:ring-indigo-800">
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 3.5v3M17 3.5v3M4.5 9h15M6 5h12a1.5 1.5 0 0 1 1.5 1.5v12A1.5 1.5 0 0 1 18 20H6a1.5 1.5 0 0 1-1.5-1.5v-12A1.5 1.5 0 0 1 6 5Z" />
+                        </svg>
+                    </span>
+                    <span class="truncate text-[13px] font-bold text-slate-800 dark:text-slate-100">
+                        @group.Label
+                    </span>
+                    <span class="rounded bg-indigo-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase leading-none text-indigo-700 dark:bg-indigo-950/70 dark:text-indigo-300">
+                        @group.Badge · @count
+                    </span>
+                </div>
+
+                @if (isExpanded)
+                {
+                    @if (group.Children?.Any() == true)
+                    {
+                        <div class="ml-3 space-y-1 border-l border-dashed border-indigo-200 pl-2 dark:border-indigo-900/70">
+                            @foreach (var quarterGroup in group.Children)
+                            {
+                                var quarterExpanded = IsGroupExpanded(quarterGroup.Key);
+                                <div class="rounded-md bg-white/70 px-1 py-1 dark:bg-slate-900/50">
+                                    <div class="grid grid-cols-[1rem_1.5rem_minmax(0,1fr)_auto] items-center gap-1.5 px-1 py-1">
+                                        <button @onclick="() => ToggleGroup(quarterGroup.Key)"
+                                                class="flex h-4 w-4 shrink-0 items-center justify-center rounded text-violet-500 transition-colors duration-150 hover:bg-violet-100 hover:text-violet-700 dark:text-violet-300 dark:hover:bg-violet-950/60"
+                                                title="@AppLoc["quarter"]">
+                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                 class="@GetGroupToggleClass(quarterGroup.Key)"
+                                                 fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                            </svg>
+                                        </button>
+                                        <span class="flex h-6 w-6 items-center justify-center rounded-md bg-violet-100 text-violet-700 ring-1 ring-violet-200 dark:bg-violet-950/50 dark:text-violet-300 dark:ring-violet-800">
+                                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 5h16M4 10h16M4 15h16M4 20h16" />
+                                            </svg>
+                                        </span>
+                                        <span class="truncate text-[12px] font-bold text-slate-700 dark:text-slate-100">
+                                            @quarterGroup.Label
+                                        </span>
+                                        <span class="rounded bg-violet-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase leading-none text-violet-700 dark:bg-violet-950/70 dark:text-violet-300">
+                                            @quarterGroup.Badge · @quarterGroup.Calculations.Count
+                                        </span>
+                                    </div>
+
+                                    @if (quarterExpanded)
+                                    {
+                                        @groupContent(quarterGroup)
                                     }
                                 </div>
                             }
                         </div>
                     }
-                </div>
+                    else
+                    {
+                        @groupContent(group)
+                    }
+                }
             </div>
         }
     </div>

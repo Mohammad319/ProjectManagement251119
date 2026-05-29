@@ -5,6 +5,7 @@ using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.App;
 using ProjectManagement.Shared.DTO.Calculation.Template;
 using ProjectManagement.Shared.Helper;
+using ProjectManagement.Shared.Enums;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -409,6 +410,18 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public int? StatusId { get; set; }
         public int? ContractId { get; set; }
         public int? TypeId { get; set; }
+        public CalculationVersionType CalculationType { get; set; } = CalculationVersionType.Tender;
+        public bool IsLocked { get; set; }
+        public DateTime? LockedAtUtc { get; set; }
+        public int? LockedByUserId { get; set; }
+        public int? ApprovedByUserId { get; set; }
+        public string ApprovedByName { get; set; } = string.Empty;
+        public DateTime? ApprovedAtUtc { get; set; }
+        public int? SourceCalculationId { get; set; }
+        public Guid VersionGroupId { get; set; }
+        public int VersionNumber { get; set; } = 1;
+        public int? CreatedFromCalculationId { get; set; }
+        public bool IsCurrentVersion { get; set; } = true;
         public int? OrganisationId { get; set; }
         public int? ProcurementMethodsId { get; set; }
         public int? CompensationId { get; set; }
@@ -418,6 +431,18 @@ namespace ProjectManagement.Shared.DTO.Calculation
     public class CalculationDetailsDTO : CalculationDataBase
     {
         public string Type { get; set; } = string.Empty;
+        public CalculationVersionType CalculationType { get; set; } = CalculationVersionType.Tender;
+        public bool IsLocked { get; set; }
+        public DateTime? LockedAtUtc { get; set; }
+        public int? LockedByUserId { get; set; }
+        public int? ApprovedByUserId { get; set; }
+        public string ApprovedByName { get; set; } = string.Empty;
+        public DateTime? ApprovedAtUtc { get; set; }
+        public int? SourceCalculationId { get; set; }
+        public Guid VersionGroupId { get; set; }
+        public int VersionNumber { get; set; } = 1;
+        public int? CreatedFromCalculationId { get; set; }
+        public bool IsCurrentVersion { get; set; } = true;
         public string ProcurementMethods { get; set; } = string.Empty;
         public string Compensation { get; set; } = string.Empty;
         public string Contract { get; set; } = string.Empty;
@@ -442,6 +467,18 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public string Contract { get; set; } = string.Empty;
         public int? TemplateId { get; set; }
         public int? TemplateColumnId { get; set; }
+        public CalculationVersionType CalculationType { get; set; } = CalculationVersionType.Tender;
+        public bool IsLocked { get; set; }
+        public DateTime? LockedAtUtc { get; set; }
+        public int? LockedByUserId { get; set; }
+        public int? ApprovedByUserId { get; set; }
+        public string ApprovedByName { get; set; } = string.Empty;
+        public DateTime? ApprovedAtUtc { get; set; }
+        public int? SourceCalculationId { get; set; }
+        public Guid VersionGroupId { get; set; }
+        public int VersionNumber { get; set; } = 1;
+        public int? CreatedFromCalculationId { get; set; }
+        public bool IsCurrentVersion { get; set; } = true;
         public SortConfig Sort { get; set; } = new();
         public decimal AdditionalCostEarnings { get; set; } = 10m;
         public DisplayOptionsPresetStore DisplayPresets { get; set; } = new();
@@ -456,7 +493,22 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public string Name { get; set; } = string.Empty;
         public string Code { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
+        public int? StatusId { get; set; }
+        public int? StatusSortOrder { get; set; }
         public string Responsible { get; set; } = string.Empty;
+        public CalculationVersionType CalculationType { get; set; } = CalculationVersionType.Tender;
+        public bool IsLocked { get; set; }
+        public DateTime? LockedAtUtc { get; set; }
+        public int? LockedByUserId { get; set; }
+        public int? ApprovedByUserId { get; set; }
+        public string ApprovedByName { get; set; } = string.Empty;
+        public DateTime? ApprovedAtUtc { get; set; }
+        public int? SourceCalculationId { get; set; }
+        public bool StatusAllowsProductionCalculation { get; set; }
+        public Guid VersionGroupId { get; set; }
+        public int VersionNumber { get; set; } = 1;
+        public int? CreatedFromCalculationId { get; set; }
+        public bool IsCurrentVersion { get; set; } = true;
         public DateTime StartDate { get; set; } = DateTime.Now;
         public DateTime EndDate { get; set; } = DateTime.Now.AddMonths(1);
         public DateTime TenderDeadline { get; set; }

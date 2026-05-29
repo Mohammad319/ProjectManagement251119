@@ -35,6 +35,17 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
         {
             return await _httpRepository.GetAsync<int>(CalcURLBase + URLConst.Calculation.Copy + $"/{ProjectId}/{calcId}");
         }
+
+        public async Task<int> CreateProductionCopyAsync(int calcId)
+        {
+            return await _httpRepository.PostAsync<int, object>(new { }, CalcURLBase + URLConst.Calculation.ProductionCopy + $"/{calcId}");
+        }
+
+        public async Task<int> CreateVersionAsync(int calcId)
+        {
+            return await _httpRepository.PostAsync<int, object>(new { }, CalcURLBase + URLConst.Calculation.VersionCopy + $"/{calcId}");
+        }
+
         public async Task<bool> MoveAsync(Guid ProjectId, int calcId)
         {
             return await _httpRepository.PutAsync(new { }, CalcURLBase + URLConst.Calculation.Move + $"/{ProjectId}/{calcId}");

@@ -28,6 +28,26 @@
             <span class="pm-label">@AppLoc[nameof(ResourceApp.isVisible)]</span>
         </label>
     </div>
+
+    <div class="mt-3 grid grid-cols-1 gap-2 md:grid-cols-3">
+        <label class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900">
+            <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900"
+                           @bind-Value="@StatusUpdate.IsApprovalStatus" />
+            <span class="text-slate-700 dark:text-slate-200">Godkännandestatus</span>
+        </label>
+
+        <label class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900">
+            <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900"
+                           @bind-Value="@StatusUpdate.LocksCalculation" />
+            <span class="text-slate-700 dark:text-slate-200">Lås kalkyl</span>
+        </label>
+
+        <label class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900">
+            <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900"
+                           @bind-Value="@StatusUpdate.AllowsProductionCalculation" />
+            <span class="text-slate-700 dark:text-slate-200">Tillåt produktionskalkyl</span>
+        </label>
+    </div>
 </EditForm>
 
 <div class="flex items-center justify-end gap-2 border-t border-slate-200 px-3 py-2 dark:border-slate-700">
