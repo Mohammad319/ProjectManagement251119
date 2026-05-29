@@ -4,6 +4,13 @@ namespace Persistence.Seeding;
 
 public readonly record struct LookupSeed(string Name, string Color, int SortOrder, bool IsVisible = true);
 
+public readonly record struct CalcStatusSeed(
+    string Name, string Color, int SortOrder,
+    bool IsVisible = true,
+    bool IsApprovalStatus = false,
+    bool LocksCalculation = false,
+    bool AllowsProductionCalculation = false);
+
 public readonly record struct AccountSeed(string Code, string Name, string GroupName, bool IsVisible = true);
 
 public static class TenantSeedCatalog
@@ -56,14 +63,14 @@ public static class TenantSeedCatalog
         new("Open Tendering", "#00ff00", 300),
     ];
 
-    public static readonly LookupSeed[] CalculationStatuses =
+    public static readonly CalcStatusSeed[] CalculationStatuses =
     [
-        new("Not Started", "#22c55e", 100),
-        new("Planned", "#00aaff", 200),
-        new("In Progress", "#a2a239", 300),
-        new("Completed", "#2bc52b", 400),
-        new("Failed", "#ff0033", 500),
-        new("Cancelled", "#b98741", 600),
+        new("Planerad",              "#2563eb", 100),
+        new("Pågående",              "#f59e0b", 200),
+        new("Behöver granskas",      "#f97316", 300),
+        new("Granskad",              "#8b5cf6", 400),
+        new("Godkänd/låst",          "#16a34a", 500, IsApprovalStatus: true, LocksCalculation: true),
+        new("Skickad/inlämnad",      "#0ea5e9", 600, IsApprovalStatus: true, LocksCalculation: true, AllowsProductionCalculation: true),
     ];
 
     public static readonly LookupSeed[] ProjectTypes =

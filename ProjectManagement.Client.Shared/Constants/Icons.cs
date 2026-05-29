@@ -190,6 +190,12 @@
         public const string ChevronLeft = @$"<svg {SVGHeader} fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
   <polyline points='15 18 9 12 15 6' />
 </svg>";
+        public const string ChevronUp = @$"<svg {SVGHeader} fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
+  <polyline points='18 15 12 9 6 15' />
+</svg>";
+        public const string ChevronDown = @$"<svg {SVGHeader} fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
+  <polyline points='6 9 12 15 18 9' />
+</svg>";
         public const string Locked = @$"<svg {SVGHeader} fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
   <rect x='3' y='11' width='18' height='11' rx='2' ry='2' />
   <path d='M7 11V7a5 5 0 0 1 10 0v4' />

@@ -28,6 +28,23 @@ public partial class StatusFormUI
         LastStatusId = currentId;
         IsInitialized = true;
     }
+    private bool ApprovesAndLocksCalculation =>
+        StatusUpdate.IsApprovalStatus && StatusUpdate.LocksCalculation;
+
+    private void OnApprovesAndLocksChanged(ChangeEventArgs e)
+    {
+        var value = e.Value is bool b && b;
+        StatusUpdate.IsApprovalStatus = value;
+        StatusUpdate.LocksCalculation = value;
+        if (!value)
+            StatusUpdate.AllowsProductionCalculation = false;
+    }
+
+    private void OnAllowsProductionChanged(ChangeEventArgs e)
+    {
+        StatusUpdate.AllowsProductionCalculation = e.Value is bool b && b;
+    }
+
     private void CloseModal() => MHD.Modal.Close();
 
     private async Task HandleSubmitAsync()

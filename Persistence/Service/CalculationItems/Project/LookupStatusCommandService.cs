@@ -1,4 +1,5 @@
 ﻿using Application.Feature.General;
+using Domain.Entities.Calculation;
 using Domain.Entities.Project;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Factory;
@@ -110,6 +111,35 @@ namespace Persistence.Service.CalculationItems.Project
                     SortOrder = x.SortOrder
                 })
                 .ToListAsync(ct);
+        }
+
+        public async Task<bool> MoveAsync(int id, bool moveUp, CancellationToken ct = default)
+        {
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+            var all = await context.Set<TS>().OrderBy(x => x.SortOrder).ToListAsync(ct);
+            var idx = all.FindIndex(x => x.Id == id);
+            if (idx < 0) return false;
+
+            var swapIdx = moveUp ? idx - 1 : idx + 1;
+            if (swapIdx < 0 || swapIdx >= all.Count) return false;
+
+            var item     = all[idx];
+            var neighbor = all[swapIdx];
+            var itemOrder     = item.SortOrder;
+            var neighborOrder = neighbor.SortOrder;
+            item.Update(item.Name, item.Color, neighborOrder, item.IsVisible);
+            neighbor.Update(neighbor.Name, neighbor.Color, itemOrder, neighbor.IsVisible);
+            await context.SaveChangesAsync(ct);
+            return true;
+        }
+
+        public async Task<int> CountCalculationsByStatusAsync(int id, CancellationToken ct = default)
+        {
+            if (typeof(TS) != typeof(StatusEntity)) return 0;
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+            return await context.Set<CalculationEntity>()
+                .Where(x => x.StatusId == id)
+                .CountAsync(ct);
         }
 
         private static void ApplyStatusSettings(TS entity, PostTaskStatusDTO dto)

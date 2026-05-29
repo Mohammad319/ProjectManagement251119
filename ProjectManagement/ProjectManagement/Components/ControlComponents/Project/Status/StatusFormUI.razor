@@ -29,23 +29,22 @@
         </label>
     </div>
 
-    <div class="mt-3 grid grid-cols-1 gap-2 md:grid-cols-3">
+    <div class="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
         <label class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900">
-            <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900"
-                           @bind-Value="@StatusUpdate.IsApprovalStatus" />
-            <span class="text-slate-700 dark:text-slate-200">Godkännandestatus</span>
+            <input type="checkbox"
+                   class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900"
+                   checked="@ApprovesAndLocksCalculation"
+                   @onchange="OnApprovesAndLocksChanged" />
+            <span class="text-slate-700 dark:text-slate-200">@CalcLoc[nameof(CalcResource.approvesAndLocksCalculation)]</span>
         </label>
 
-        <label class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900">
-            <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900"
-                           @bind-Value="@StatusUpdate.LocksCalculation" />
-            <span class="text-slate-700 dark:text-slate-200">Lås kalkyl</span>
-        </label>
-
-        <label class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900">
-            <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900"
-                           @bind-Value="@StatusUpdate.AllowsProductionCalculation" />
-            <span class="text-slate-700 dark:text-slate-200">Tillåt produktionskalkyl</span>
+        <label class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900 @(ApprovesAndLocksCalculation ? "" : "opacity-50")">
+            <input type="checkbox"
+                   class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900"
+                   checked="@StatusUpdate.AllowsProductionCalculation"
+                   disabled="@(!ApprovesAndLocksCalculation)"
+                   @onchange="OnAllowsProductionChanged" />
+            <span class="text-slate-700 dark:text-slate-200">@CalcLoc[nameof(CalcResource.allowsProductionCalculation)]</span>
         </label>
     </div>
 </EditForm>

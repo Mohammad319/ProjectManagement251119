@@ -797,5 +797,9 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
                 return ResourceManager.GetString("yes", resourceCulture);
             }
         }
+
+        public static string moveUp           => ResourceManager.GetString("moveUp", resourceCulture)!;
+        public static string moveDown         => ResourceManager.GetString("moveDown", resourceCulture)!;
+        public static string showAllVersions  => ResourceManager.GetString("showAllVersions", resourceCulture)!;
     }
 }

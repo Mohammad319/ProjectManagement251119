@@ -773,4 +773,7 @@
   <data name="yearAndQuarter" xml:space="preserve"><value>Year and quarter</value></data>
   <data name="keepFolderStructure" xml:space="preserve"><value>Keep folder structure</value></data>
   <data name="quarterLabel" xml:space="preserve"><value>Quarter {0}</value></data>
+  <data name="moveUp" xml:space="preserve"><value>Move up</value></data>
+  <data name="moveDown" xml:space="preserve"><value>Move down</value></data>
+  <data name="showAllVersions" xml:space="preserve"><value>Show all versions</value></data>
 </root>

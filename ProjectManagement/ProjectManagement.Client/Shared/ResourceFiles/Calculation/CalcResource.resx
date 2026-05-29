@@ -492,4 +492,19 @@
   <data name="priceSubInfo" xml:space="preserve">
     <value>Updates the customer price proportionally when the price per unit changes, keeping the same percentage difference.</value>
   </data>
+  <data name="calculationStatus" xml:space="preserve">
+    <value>Calculation status</value>
+  </data>
+  <data name="addNewStatus" xml:space="preserve">
+    <value>Add new status</value>
+  </data>
+  <data name="newStatus" xml:space="preserve">
+    <value>New status</value>
+  </data>
+  <data name="approvesAndLocksCalculation" xml:space="preserve">
+    <value>Approved &amp; locks calculation</value>
+  </data>
+  <data name="allowsProductionCalculation" xml:space="preserve">
+    <value>Allow production calculation</value>
+  </data>
 </root>

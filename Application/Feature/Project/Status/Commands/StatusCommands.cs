@@ -37,4 +37,26 @@ namespace Application.Feature.Project.Status.Commands
         public Task<bool> Handle(DeleteStatusCommand request, CancellationToken ct)
             => service.DeleteAsync(request.Id, ct);
     }
+
+    // MOVE
+    public sealed record MoveStatusCommand(int Id, bool MoveUp) : IRequest<bool>;
+
+    public sealed class MoveStatusCommandHandler(
+        ILookupStatusCommandService<StatusEntity> service)
+        : IRequestHandler<MoveStatusCommand, bool>
+    {
+        public Task<bool> Handle(MoveStatusCommand request, CancellationToken ct)
+            => service.MoveAsync(request.Id, request.MoveUp, ct);
+    }
+
+    // COUNT CALCULATIONS USING STATUS
+    public sealed record CountCalculationsUsingStatusQuery(int Id) : IRequest<int>;
+
+    public sealed class CountCalculationsUsingStatusQueryHandler(
+        ILookupStatusCommandService<StatusEntity> service)
+        : IRequestHandler<CountCalculationsUsingStatusQuery, int>
+    {
+        public Task<int> Handle(CountCalculationsUsingStatusQuery request, CancellationToken ct)
+            => service.CountCalculationsByStatusAsync(request.Id, ct);
+    }
 }

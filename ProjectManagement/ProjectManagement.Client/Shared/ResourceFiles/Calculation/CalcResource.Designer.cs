@@ -979,5 +979,11 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.Calculation {
                 return ResourceManager.GetString("workedQPercent", resourceCulture);
             }
         }
+
+        public static string calculationStatus          => ResourceManager.GetString("calculationStatus", resourceCulture)!;
+        public static string addNewStatus               => ResourceManager.GetString("addNewStatus", resourceCulture)!;
+        public static string newStatus                  => ResourceManager.GetString("newStatus", resourceCulture)!;
+        public static string approvesAndLocksCalculation => ResourceManager.GetString("approvesAndLocksCalculation", resourceCulture)!;
+        public static string allowsProductionCalculation => ResourceManager.GetString("allowsProductionCalculation", resourceCulture)!;
     }
 }

@@ -323,6 +323,10 @@ namespace ProjectManagement.Adminstrator.Services.Users
                         defaultStatus.Color,
                         defaultStatus.SortOrder,
                         defaultStatus.IsVisible);
+                    status.SetApprovalSettings(
+                        defaultStatus.IsApprovalStatus,
+                        defaultStatus.LocksCalculation,
+                        defaultStatus.AllowsProductionCalculation);
                     dataAccess.CalculationStatus.Add(status);
                 }
             }

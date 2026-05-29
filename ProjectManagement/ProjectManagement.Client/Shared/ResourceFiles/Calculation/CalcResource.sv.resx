@@ -492,4 +492,19 @@
   <data name="priceSubInfo" xml:space="preserve">
     <value>Uppdaterar á-priset som skickas till kund proportionellt när á-pris per enhet ändras, så att samma procentuella skillnad behålls.</value>
   </data>
+  <data name="calculationStatus" xml:space="preserve">
+    <value>Kalkylstatus</value>
+  </data>
+  <data name="addNewStatus" xml:space="preserve">
+    <value>Lägg till ny status</value>
+  </data>
+  <data name="newStatus" xml:space="preserve">
+    <value>Ny status</value>
+  </data>
+  <data name="approvesAndLocksCalculation" xml:space="preserve">
+    <value>Godkänd &amp; låser kalkyl</value>
+  </data>
+  <data name="allowsProductionCalculation" xml:space="preserve">
+    <value>Tillåt produktionskalkyl</value>
+  </data>
 </root>

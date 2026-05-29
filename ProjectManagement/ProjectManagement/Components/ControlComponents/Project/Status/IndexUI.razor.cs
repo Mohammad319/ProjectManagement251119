@@ -12,8 +12,8 @@ public partial class IndexUI
     private bool IsVisible = true;
     private bool IsLoading;
 
-    private IEnumerable<StatusEntity> VisibleItems =>
-        (Status ?? []).Where(x => x.IsVisible == IsVisible).OrderByDescending(x => x.SortOrder);
+    private List<StatusEntity> VisibleItems =>
+        (Status ?? []).Where(x => x.IsVisible == IsVisible).OrderBy(x => x.SortOrder).ToList();
 
     protected override async Task OnInitializedAsync()
     {
@@ -50,12 +50,19 @@ public partial class IndexUI
 
     private void UpdateForm(StatusEntity model) =>
         MHD.Modal.ShowComponent<StatusFormUI>(
-            model.Id == 0 ? AppLoc[LocalizerConst.New, CalcResource.status] : AppLoc[LocalizerConst.Update, model.Name],
+            model.Id == 0 ? CalcLoc[nameof(CalcResource.newStatus)] : AppLoc[LocalizerConst.Update, model.Name],
             new Dictionary<string, object>
             {
                 [nameof(StatusFormUI.Status)] = model,
                 [nameof(StatusFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdateAsync)
             });
+
+    private async Task MoveItemAsync(StatusEntity status, bool moveUp)
+    {
+        var result = await Dispatcher.Send(new MoveStatusCommand(status.Id, moveUp));
+        if (result)
+            await LoadStatusesAsync();
+    }
 
     private void Remove(StatusEntity status)
     {
@@ -64,6 +71,13 @@ public partial class IndexUI
 
     private async Task ConfirmRemoveAsync(StatusEntity st)
     {
+        var count = await Dispatcher.Send(new CountCalculationsUsingStatusQuery(st.Id));
+        if (count > 0)
+        {
+            MHD.Notifications(ToastType.Delete, false);
+            return;
+        }
+
         var result = await Dispatcher.Send(new DeleteStatusCommand(st.Id));
 
         if (result)
