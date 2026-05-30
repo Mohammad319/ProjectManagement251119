@@ -32,14 +32,15 @@ else
             }
         </div>
 
-        @if (VisibleItems.Count > 0)
+        @{ var items = VisibleItems; }
+        @if (items.Count > 0)
         {
             <div class="space-y-1">
-                @for (var i = 0; i < VisibleItems.Count; i++)
+                @for (var i = 0; i < items.Count; i++)
                 {
-                    var status = VisibleItems[i];
+                    var status = items[i];
                     var isFirst = i == 0;
-                    var isLast = i == VisibleItems.Count - 1;
+                    var isLast = i == items.Count - 1;
 
                     <div class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900">
                         <div class="flex flex-col">

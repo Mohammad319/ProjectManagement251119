@@ -35,6 +35,8 @@ namespace ProjectManagement.Client.Pages.Project.ProjectPages
             }
 
             ProjectUpdate.Notes ??= [];
+            if (ProjectUpdate.Notes.Count == 0)
+                ProjectUpdate.Notes.Add(string.Empty);
             ProjectUpdate.Responsibles ??= [];
             ProjectUpdate.Contacts ??= [];
             ProjectUpdate.Address ??= [];

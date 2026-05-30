@@ -25,6 +25,9 @@ namespace ProjectManagement.Client.Pages.Folder
         string TreeSortMode { get; set; } = ProjectTreeSortMode.CreatedNewest;
         bool KeepFolderStructure { get; set; } = true;
 
+        private GroupSelectionInfo? _selectedGroupInfo;
+        private bool _isReorderMode;
+
         private MhdDropdownPanel? _filterPanel;
         private FoldersTree? _foldersTree;
 
@@ -90,7 +93,23 @@ namespace ProjectManagement.Client.Pages.Folder
             UoWService.Folder.State.OnChange -= Refresh;
         }
 
-        public void Refresh() => InvokeAsync(StateHasChanged);
+        public void Refresh()
+        {
+            if (_selectedGroupInfo != null &&
+                (Folder.State.FolderSelected != null || Folder.State.ProjectSelected != null || Folder.State.Calculation != null))
+            {
+                _selectedGroupInfo = null;
+            }
+            InvokeAsync(StateHasChanged);
+        }
+
+        private Task OnGroupSelectedAsync(GroupSelectionInfo? info)
+        {
+            _selectedGroupInfo = info;
+            if (info != null)
+                Folder.State.ClearSelection();
+            return Task.CompletedTask;
+        }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
@@ -251,6 +270,7 @@ namespace ProjectManagement.Client.Pages.Folder
         private async Task OnTreeSortModeChanged(ChangeEventArgs e)
         {
             TreeSortMode = NormalizeTreeSortMode(e.Value?.ToString());
+            _isReorderMode = false;
             await SaveTreeSortModeAsync();
         }
 
@@ -258,6 +278,7 @@ namespace ProjectManagement.Client.Pages.Folder
         {
             var reloadNeeded = UoWService.Folder.ShowArchived;
 
+            _isReorderMode = false;
             TreeGroupingMode = ProjectTreeGroupingMode.FolderStructure;
             TreeSortMode = ProjectTreeSortMode.CreatedNewest;
             KeepFolderStructure = true;
@@ -270,26 +291,21 @@ namespace ProjectManagement.Client.Pages.Folder
             }
         }
 
-        private async Task ToggleManualOrderModeAsync()
-        {
-            TreeSortMode = TreeSortMode == ProjectTreeSortMode.Manual
-                ? ProjectTreeSortMode.CreatedNewest
-                : ProjectTreeSortMode.Manual;
-            await SaveTreeSortModeAsync();
-        }
-
-        private async Task ToggleManualOrderAndCloseFilterAsync()
+        private async Task StartReorderModeAsync()
         {
             _filterPanel?.ClosePanel();
-            await ToggleManualOrderModeAsync();
+            if (TreeSortMode != ProjectTreeSortMode.Manual)
+            {
+                TreeSortMode = ProjectTreeSortMode.Manual;
+                await SaveTreeSortModeAsync();
+            }
+            _isReorderMode = true;
+            await InvokeAsync(StateHasChanged);
         }
 
         private async Task ExitManualOrderAsync()
         {
-            if (TreeSortMode != ProjectTreeSortMode.Manual)
-                return;
-            TreeSortMode = ProjectTreeSortMode.CreatedNewest;
-            await SaveTreeSortModeAsync();
+            _isReorderMode = false;
             await InvokeAsync(StateHasChanged);
         }
 

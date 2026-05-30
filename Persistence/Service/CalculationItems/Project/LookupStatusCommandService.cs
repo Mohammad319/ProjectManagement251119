@@ -116,21 +116,22 @@ namespace Persistence.Service.CalculationItems.Project
         public async Task<bool> MoveAsync(int id, bool moveUp, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
-            var all = await context.Set<TS>().OrderBy(x => x.SortOrder).ToListAsync(ct);
+            var all = await context.Set<TS>().OrderBy(x => x.SortOrder).ThenBy(x => x.Id).ToListAsync(ct);
             var item = all.FirstOrDefault(x => x.Id == id);
             if (item is null) return false;
 
             var sameGroup = all.Where(x => x.IsVisible == item.IsVisible).ToList();
             var groupIdx = sameGroup.FindIndex(x => x.Id == id);
-
             var swapIdx = moveUp ? groupIdx - 1 : groupIdx + 1;
             if (swapIdx < 0 || swapIdx >= sameGroup.Count) return false;
 
-            var neighbor      = sameGroup[swapIdx];
-            var itemOrder     = item.SortOrder;
-            var neighborOrder = neighbor.SortOrder;
-            item.Update(item.Name, item.Color, neighborOrder, item.IsVisible);
-            neighbor.Update(neighbor.Name, neighbor.Color, itemOrder, neighbor.IsVisible);
+            // Swap by position in list, then normalize SortOrder.
+            // Direct SortOrder-value swap fails when two adjacent items share the same value.
+            (sameGroup[groupIdx], sameGroup[swapIdx]) = (sameGroup[swapIdx], sameGroup[groupIdx]);
+
+            for (var i = 0; i < sameGroup.Count; i++)
+                sameGroup[i].Update(sameGroup[i].Name, sameGroup[i].Color, i, sameGroup[i].IsVisible);
+
             await context.SaveChangesAsync(ct);
             return true;
         }

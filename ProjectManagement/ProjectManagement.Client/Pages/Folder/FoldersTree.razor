@@ -450,10 +450,14 @@ else
         {
             var isExpanded = IsGroupExpanded(group.Key);
             var count = group.Children?.Sum(child => child.Calculations.Count) ?? group.Calculations.Count;
+            var isGroupSelected = _selectedGroupKey == group.Key;
+            var topGroupType = GroupingMode == ProjectTreeGroupingMode.Status ? "Status" : "Year";
 
             <div class="rounded-lg border border-slate-200 bg-slate-100/70 px-1.5 py-1 dark:border-slate-800 dark:bg-slate-900/70">
-                <div class="grid grid-cols-[1rem_1.5rem_1fr] items-center gap-1.5 px-1 py-1">
-                    <button @onclick="() => ToggleGroup(group.Key)"
+                <div class="grid grid-cols-[1rem_1.5rem_1fr] items-center gap-1.5 px-1 py-1 cursor-pointer rounded-md @(isGroupSelected ? "bg-indigo-100 ring-1 ring-indigo-300 dark:bg-indigo-950/40 dark:ring-indigo-700" : "hover:bg-indigo-50/60 dark:hover:bg-indigo-950/20")"
+                     @onclick="async () => await SelectGroupAsync(group, topGroupType)">
+                    <button @onclick:stopPropagation="true"
+                            @onclick="() => ToggleGroup(group.Key)"
                             class="flex h-4 w-4 shrink-0 items-center justify-center rounded text-indigo-500 transition-colors duration-150 hover:bg-indigo-100 hover:text-indigo-700 dark:text-indigo-300 dark:hover:bg-indigo-950/60"
                             title="@AppLoc["groupBy"]">
                         <svg xmlns="http://www.w3.org/2000/svg"
@@ -462,12 +466,12 @@ else
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                         </svg>
                     </button>
-                    <span class="flex h-6 w-6 items-center justify-center rounded-md bg-indigo-100 text-indigo-700 ring-1 ring-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-300 dark:ring-indigo-800">
+                    <span class="flex h-6 w-6 items-center justify-center rounded-md @(isGroupSelected ? "bg-indigo-200 text-indigo-800 ring-1 ring-indigo-300 dark:bg-indigo-900/60 dark:text-indigo-200 dark:ring-indigo-700" : "bg-indigo-100 text-indigo-700 ring-1 ring-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-300 dark:ring-indigo-800")">
                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 3.5v3M17 3.5v3M4.5 9h15M6 5h12a1.5 1.5 0 0 1 1.5 1.5v12A1.5 1.5 0 0 1 18 20H6a1.5 1.5 0 0 1-1.5-1.5v-12A1.5 1.5 0 0 1 6 5Z" />
                         </svg>
                     </span>
-                    <span class="truncate text-[13px] font-bold text-slate-800 dark:text-slate-100"
+                    <span class="truncate text-[13px] font-bold @(isGroupSelected ? "text-indigo-900 dark:text-indigo-100" : "text-slate-800 dark:text-slate-100")"
                           title="@($"{group.Label} ({count})")">
                         @group.Label
                     </span>
@@ -481,9 +485,12 @@ else
                             @foreach (var quarterGroup in group.Children)
                             {
                                 var quarterExpanded = IsGroupExpanded(quarterGroup.Key);
+                                var isQuarterSelected = _selectedGroupKey == quarterGroup.Key;
                                 <div class="rounded-md bg-white/70 px-1 py-1 dark:bg-slate-900/50">
-                                    <div class="grid grid-cols-[1rem_1.5rem_1fr] items-center gap-1.5 px-1 py-1">
-                                        <button @onclick="() => ToggleGroup(quarterGroup.Key)"
+                                    <div class="grid grid-cols-[1rem_1.5rem_1fr] items-center gap-1.5 px-1 py-1 cursor-pointer rounded-md @(isQuarterSelected ? "bg-violet-100 ring-1 ring-violet-300 dark:bg-violet-950/40 dark:ring-violet-700" : "hover:bg-violet-50/60 dark:hover:bg-violet-950/20")"
+                                         @onclick='async () => await SelectGroupAsync(quarterGroup, "Quarter", group.Label)'>
+                                        <button @onclick:stopPropagation="true"
+                                                @onclick="() => ToggleGroup(quarterGroup.Key)"
                                                 class="flex h-4 w-4 shrink-0 items-center justify-center rounded text-violet-500 transition-colors duration-150 hover:bg-violet-100 hover:text-violet-700 dark:text-violet-300 dark:hover:bg-violet-950/60"
                                                 title="@AppLoc["quarter"]">
                                             <svg xmlns="http://www.w3.org/2000/svg"
@@ -492,12 +499,12 @@ else
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                                             </svg>
                                         </button>
-                                        <span class="flex h-6 w-6 items-center justify-center rounded-md bg-violet-100 text-violet-700 ring-1 ring-violet-200 dark:bg-violet-950/50 dark:text-violet-300 dark:ring-violet-800">
+                                        <span class="flex h-6 w-6 items-center justify-center rounded-md @(isQuarterSelected ? "bg-violet-200 text-violet-800 ring-1 ring-violet-300 dark:bg-violet-900/60 dark:text-violet-200 dark:ring-violet-700" : "bg-violet-100 text-violet-700 ring-1 ring-violet-200 dark:bg-violet-950/50 dark:text-violet-300 dark:ring-violet-800")">
                                             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 5h16M4 10h16M4 15h16M4 20h16" />
                                             </svg>
                                         </span>
-                                        <span class="truncate text-[12px] font-bold text-slate-700 dark:text-slate-100"
+                                        <span class="truncate text-[12px] font-bold @(isQuarterSelected ? "text-violet-900 dark:text-violet-100" : "text-slate-700 dark:text-slate-100")"
                                               title="@($"{quarterGroup.Label} ({quarterGroup.Calculations.Count})")">
                                             @quarterGroup.Label
                                         </span>

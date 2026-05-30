@@ -1,0 +1,219 @@
+@using ProjectManagement.Client.Constant
+@using ProjectManagement.Client.Helper
+@using ProjectManagement.Client.Pages.Folder
+@using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Client.Shared.MVVM.Folder
+@using ProjectManagement.Shared.Enums
+@using ProjectManagement.Shared.Constant
+@inherits AppComponentBase
+
+<div class="ml-1">
+
+    @* ── Header ─────────────────────────────────── *@
+    <div class="flex w-full flex-wrap items-center justify-between gap-2 p-1">
+        <div class="min-w-0">
+            <div class="truncate text-sm font-semibold text-gray-700 dark:text-gray-300">
+                @Info.Header
+            </div>
+            <div class="text-xs text-slate-500 dark:text-slate-400">
+                @SortedEntries.Count() @CalcResource.calculation
+            </div>
+        </div>
+    </div>
+
+    @* ── Table ──────────────────────────────────── *@
+    @if (SortedEntries.Any())
+    {
+        <div class="mr-1 overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
+            <table class="min-w-full table-auto text-left text-xs">
+                <thead class="bg-slate-50 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-900 dark:text-slate-400">
+                    <tr>
+                        <th class="@SortableHeaderClass("code")" @onclick='() => SortBy("code")'>
+                            <span class="inline-flex items-center gap-1">@CalcResource.code @((MarkupString)SortIndicatorHtml("code"))</span>
+                        </th>
+                        <th class="@SortableHeaderClass("name") min-w-52" @onclick='() => SortBy("name")'>
+                            <span class="inline-flex items-center gap-1">@AppLoc["calculationName"] @((MarkupString)SortIndicatorHtml("name"))</span>
+                        </th>
+                        <th class="@SortableHeaderClass("project")" @onclick='() => SortBy("project")'>
+                            <span class="inline-flex items-center gap-1">@CalcResource.project @((MarkupString)SortIndicatorHtml("project"))</span>
+                        </th>
+                        <th class="@SortableHeaderClass("folder")" @onclick='() => SortBy("folder")'>
+                            <span class="inline-flex items-center gap-1">@ResourceLoc.folder @((MarkupString)SortIndicatorHtml("folder"))</span>
+                        </th>
+                        <th class="@SortableHeaderClass("calctype")" @onclick='() => SortBy("calctype")'>
+                            <span class="inline-flex items-center gap-1">Kalkyltyp @((MarkupString)SortIndicatorHtml("calctype"))</span>
+                        </th>
+                        <th class="@SortableHeaderClass("status")" @onclick='() => SortBy("status")'>
+                            <span class="inline-flex items-center gap-1">@CalcResource.status @((MarkupString)SortIndicatorHtml("status"))</span>
+                        </th>
+                        <th class="@SortableHeaderClass("responsible")" @onclick='() => SortBy("responsible")'>
+                            <span class="inline-flex items-center gap-1">@CalcResource.responsible @((MarkupString)SortIndicatorHtml("responsible"))</span>
+                        </th>
+                        <th class="@SortableHeaderClass("end")" @onclick='() => SortBy("end")'>
+                            <span class="inline-flex items-center gap-1">@CalcResource.endDate @((MarkupString)SortIndicatorHtml("end"))</span>
+                        </th>
+                        <th class="@SortableHeaderClass("deadline")" @onclick='() => SortBy("deadline")'>
+                            <span class="inline-flex items-center gap-1">@CalcResource.tenderDeadline @((MarkupString)SortIndicatorHtml("deadline"))</span>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                    @foreach (var entry in SortedEntries)
+                    {
+                        var cal = entry.Calculation;
+                        var isSelected = _selectedCalcId == cal.Id;
+                        <tr @key="cal.Id"
+                            class="cursor-pointer transition-colors @(isSelected ? "bg-violet-50 dark:bg-violet-950/30" : "hover:bg-slate-50 dark:hover:bg-slate-900/80")"
+                            @onclick="async () => await OpenCalculationAsync(entry)">
+                            <td class="whitespace-nowrap px-3 py-2 font-mono text-[11px] text-slate-500 dark:text-slate-400">
+                                @FormatText(cal.Code)
+                            </td>
+                            <td class="max-w-80 px-3 py-2">
+                                <span class="block truncate font-semibold text-slate-800 dark:text-slate-100" title="@cal.Name">@cal.Name</span>
+                            </td>
+                            <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">
+                                @FormatText(entry.Project.Name)
+                            </td>
+                            <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">
+                                @FormatText(entry.Folder.Name)
+                            </td>
+                            <td class="whitespace-nowrap px-3 py-2">
+                                <span class="@GetCalcTypeBadgeClass(cal)">@GetCalculationTypeLabel(cal.CalculationType)</span>
+                            </td>
+                            <td class="whitespace-nowrap px-3 py-2">
+                                <span class="inline-flex items-center gap-1.5">
+                                    <span class="h-2 w-2 shrink-0 rounded-full @GetStatusDotClass(cal)"></span>
+                                    <span class="text-slate-700 dark:text-slate-200">@FormatText(cal.Status)</span>
+                                </span>
+                            </td>
+                            <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">
+                                @FormatText(cal.Responsible)
+                            </td>
+                            <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">
+                                @FormatDate(cal.EndDate)
+                            </td>
+                            <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">
+                                @FormatDate(cal.TenderDeadline)
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center dark:border-slate-700 dark:bg-slate-950/60">
+            <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">@CalcResource.calculation</div>
+            <h3 class="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-100">@AppLoc["calculationsEmptyState"]</h3>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public GroupSelectionInfo Info { get; set; } = default!;
+
+    private string _sortColumn = "";
+    private bool _sortAscending = true;
+    private int _selectedCalcId;
+
+    private IEnumerable<GroupedCalcEntry> SortedEntries
+    {
+        get
+        {
+            var list = Info?.Calculations ?? [];
+            return _sortColumn switch
+            {
+                "code" => _sortAscending
+                    ? list.OrderBy(x => x.Calculation.Code)
+                    : list.OrderByDescending(x => x.Calculation.Code),
+                "name" => _sortAscending
+                    ? list.OrderBy(x => x.Calculation.Name)
+                    : list.OrderByDescending(x => x.Calculation.Name),
+                "project" => _sortAscending
+                    ? list.OrderBy(x => x.Project.Name)
+                    : list.OrderByDescending(x => x.Project.Name),
+                "folder" => _sortAscending
+                    ? list.OrderBy(x => x.Folder.Name)
+                    : list.OrderByDescending(x => x.Folder.Name),
+                "calctype" => _sortAscending
+                    ? list.OrderBy(x => (int)x.Calculation.CalculationType)
+                    : list.OrderByDescending(x => (int)x.Calculation.CalculationType),
+                "status" => _sortAscending
+                    ? list.OrderBy(x => x.Calculation.StatusSortOrder ?? int.MaxValue).ThenBy(x => x.Calculation.Status)
+                    : list.OrderByDescending(x => x.Calculation.StatusSortOrder ?? int.MinValue).ThenByDescending(x => x.Calculation.Status),
+                "responsible" => _sortAscending
+                    ? list.OrderBy(x => x.Calculation.Responsible)
+                    : list.OrderByDescending(x => x.Calculation.Responsible),
+                "end" => _sortAscending
+                    ? list.OrderBy(x => x.Calculation.EndDate)
+                    : list.OrderByDescending(x => x.Calculation.EndDate),
+                "deadline" => _sortAscending
+                    ? list.OrderBy(x => x.Calculation.TenderDeadline)
+                    : list.OrderByDescending(x => x.Calculation.TenderDeadline),
+                _ => list.OrderBy(x => x.Calculation.Name, StringComparer.CurrentCultureIgnoreCase)
+            };
+        }
+    }
+
+    private void SortBy(string column)
+    {
+        if (_sortColumn == column)
+            _sortAscending = !_sortAscending;
+        else
+        {
+            _sortColumn = column;
+            _sortAscending = true;
+        }
+    }
+
+    private string SortableHeaderClass(string column)
+    {
+        var active = _sortColumn == column;
+        return "cursor-pointer select-none whitespace-nowrap px-3 py-2 transition " +
+               (active ? "text-slate-800 dark:text-slate-200" : "hover:text-slate-700 dark:hover:text-slate-200");
+    }
+
+    private string SortIndicatorHtml(string column)
+    {
+        if (_sortColumn != column)
+            return "<svg class=\"h-3 w-3 opacity-30\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4\"/></svg>";
+
+        return _sortAscending
+            ? "<svg class=\"h-3 w-3\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M5 15l7-7 7 7\"/></svg>"
+            : "<svg class=\"h-3 w-3\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M19 9l-7 7-7-7\"/></svg>";
+    }
+
+    private static string FormatText(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? "-" : value;
+
+    private static string FormatDate(DateTime value) =>
+        value == default ? "-" : value.ToString(ConstValues.DateFormat);
+
+    private static string GetCalculationTypeLabel(CalculationVersionType type) =>
+        type == CalculationVersionType.Production ? "Produktionskalkyl" : "Anbudskalkyl";
+
+    private static string GetCalcTypeBadgeClass(ListCalculationMVVM calculation) =>
+        calculation.CalculationType == CalculationVersionType.Production
+            ? "inline-flex rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-semibold text-violet-700 dark:bg-violet-950/50 dark:text-violet-300"
+            : "inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200";
+
+    private static string GetStatusDotClass(ListCalculationMVVM calculation)
+    {
+        return calculation.Status?.Trim().ToLowerInvariant() switch
+        {
+            "active" or "ongoing" or "pagaende" or "pågående" => "bg-sky-500 dark:bg-sky-400",
+            "completed" or "done" or "klar" => "bg-emerald-500 dark:bg-emerald-400",
+            "needs review" or "review" or "warning" or "varning" => "bg-amber-400 dark:bg-amber-300",
+            "cancelled" or "canceled" or "avbruten" => "bg-rose-500 dark:bg-rose-400",
+            _ when !string.IsNullOrWhiteSpace(calculation.Status) => "bg-sky-500 dark:bg-sky-400",
+            _ => "bg-slate-400 dark:bg-slate-500"
+        };
+    }
+
+    private async Task OpenCalculationAsync(GroupedCalcEntry entry)
+    {
+        _selectedCalcId = entry.Calculation.Id;
+        await CalcService.SetCalc(entry.Calculation.Id, entry.Project, entry.Folder);
+    }
+}

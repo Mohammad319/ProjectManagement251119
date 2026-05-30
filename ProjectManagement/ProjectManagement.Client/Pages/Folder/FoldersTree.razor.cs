@@ -16,6 +16,17 @@ using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Folder;
 using System.Text.Json;
 
+public sealed class GroupSelectionInfo
+{
+    public string Key { get; init; } = "";
+    public string Label { get; init; } = "";
+    public string GroupType { get; init; } = "";
+    public string Header { get; init; } = "";
+    public List<GroupedCalcEntry> Calculations { get; init; } = [];
+}
+
+public sealed record GroupedCalcEntry(FolderMVVM Folder, ListProjectMVVM Project, ListCalculationMVVM Calculation);
+
 namespace ProjectManagement.Client.Pages.Folder
 {
     public partial class FoldersTree : IDisposable
@@ -27,6 +38,11 @@ namespace ProjectManagement.Client.Pages.Folder
         [Parameter] public string SortMode { get; set; } = ProjectTreeSortMode.NameAscending;
         [Parameter] public bool KeepFolderStructure { get; set; } = true;
         [Parameter] public EventCallback OnExitManualOrder { get; set; }
+        [Parameter] public EventCallback<GroupSelectionInfo?> OnGroupSelected { get; set; }
+        [Parameter] public bool IsReorderMode { get; set; }
+
+        private string? _selectedGroupKey;
+        private bool _previousIsReorderMode;
 
         private const string LastSelectionKey = "LastSelection";
         private const string LastOpenedStorageKey = "ProjectTreeLastOpened";
@@ -173,6 +189,7 @@ namespace ProjectManagement.Client.Pages.Folder
 
         private async Task SeFolder(FolderMVVM folder)
         {
+            _selectedGroupKey = null;
             await Folder.NewFolder(folder);
             await MarkOpenedAsync(GetFolderKey(folder));
             await SaveLastSelection(folder);
@@ -206,15 +223,20 @@ namespace ProjectManagement.Client.Pages.Folder
 
         protected override void OnParametersSet()
         {
-            if (_previousSortMode == SortMode)
-                return;
+            var sortModeChanged = _previousSortMode != SortMode;
+            var reorderModeChanged = _previousIsReorderMode != IsReorderMode;
 
-            if (SortMode == ProjectTreeSortMode.Manual)
-                CaptureManualOrderSnapshot();
-            else if (_previousSortMode == ProjectTreeSortMode.Manual && _manualOrderDirty)
-                RestoreManualOrderSnapshot();
+            if (reorderModeChanged)
+            {
+                if (IsReorderMode)
+                    CaptureManualOrderSnapshot();
+                else if (_manualOrderDirty)
+                    RestoreManualOrderSnapshot();
+                _previousIsReorderMode = IsReorderMode;
+            }
 
-            _previousSortMode = SortMode;
+            if (sortModeChanged)
+                _previousSortMode = SortMode;
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -365,6 +387,7 @@ namespace ProjectManagement.Client.Pages.Folder
 
         private async Task SetProject(FolderMVVM folder, ListProjectMVVM project)
         {
+            _selectedGroupKey = null;
             await Folder.SetCalcsToProject(project);
             AddMissingManualOrderSnapshot(folder);
             AddMissingManualOrderSnapshot(project);
@@ -376,9 +399,40 @@ namespace ProjectManagement.Client.Pages.Folder
 
         private async Task NewCalculations(FolderMVVM folder, ListProjectMVVM project, ListCalculationMVVM calculation)
         {
+            _selectedGroupKey = null;
             await CalcService.SetCalc(calculation.Id, project, folder);
             await MarkOpenedAsync(GetCalculationKey(calculation));
             await SaveLastSelection(folder, project, calculation);
+        }
+
+        private async Task SelectGroupAsync(CalculationGroupNode node, string groupType, string? parentLabel = null)
+        {
+            _selectedGroupKey = node.Key;
+
+            IEnumerable<GroupedCalculation> allCalcs = node.Children?.Any() == true
+                ? node.Children.SelectMany(c => c.Calculations)
+                : (IEnumerable<GroupedCalculation>)node.Calculations;
+
+            var header = groupType switch
+            {
+                "Status" => $"Kalkyler med status: {node.Label}",
+                "Quarter" => $"Kalkyler {parentLabel} · {node.Label}",
+                _ => $"Kalkyler år {node.Label}"
+            };
+
+            var info = new GroupSelectionInfo
+            {
+                Key = node.Key,
+                Label = node.Label,
+                GroupType = groupType,
+                Header = header,
+                Calculations = allCalcs
+                    .Select(gc => new GroupedCalcEntry(gc.Folder, gc.Project, gc.Calculation))
+                    .ToList()
+            };
+
+            await OnGroupSelected.InvokeAsync(info);
+            StateHasChanged();
         }
 
         private IEnumerable<CalculationGroupNode> GetCalculationGroupNodes()
@@ -628,7 +682,7 @@ namespace ProjectManagement.Client.Pages.Folder
             return $"{project.Name}{count}{archived}";
         }
 
-        private bool IsManualOrderMode => SortMode == ProjectTreeSortMode.Manual;
+        private bool IsManualOrderMode => IsReorderMode;
         private bool HasManualOrderChanges => _manualOrderDirty;
         private const string ManualOrderButtonClass =
             "inline-flex h-5 w-5 items-center justify-center rounded border border-slate-200 bg-white text-[10px] font-bold leading-none text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100";
