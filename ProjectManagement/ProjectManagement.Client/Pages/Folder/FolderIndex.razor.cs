@@ -136,7 +136,7 @@ namespace ProjectManagement.Client.Pages.Folder
             CurrentUserDepartmentId = GetUserDepartmentId(user);
             CanChooseAllDepartments =
                 user.IsInRole(PMRolesConst.Tenant.Admin) ||
-                user.IsInRole(PMRolesConst.Tenant.SuperManger);
+                user.IsInRole(PMRolesConst.Tenant.Manger);
 
             var departments = await GetAllowedDepartmentsAsync();
             Folder.State.SetDepartments(departments);

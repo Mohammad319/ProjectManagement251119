@@ -59,7 +59,7 @@ namespace ProjectManagement.Server.Controllers
                 return true;
 
             return User.IsInRole(PMRolesConst.Tenant.Admin) ||
-                   User.IsInRole(PMRolesConst.Tenant.SuperManger);
+                   User.IsInRole(PMRolesConst.Tenant.Manger);
         }
 
         private ICommandDispatcher? _dispatcher;

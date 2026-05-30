@@ -1,12 +1,8 @@
 @using AuthPermissions.Entity
-@using Domain.Repository.AuthPermissions
-@using Domain.Settings
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.EntityFrameworkCore
-@using Persistence.Factory
 @using ProjectManagement.Adminstrator.Services.Users
-@using ProjectManagement.Shared.DTO.Tenant
-@attribute [Authorize(Roles = PMRolesConst.APP.AdminSuperManger)]
+@attribute [Authorize(Roles = PMRolesConst.APP.AdminManger)]
 @implements IDisposable
 @inherits AppComponentBase
 @inject IUsersService sersService

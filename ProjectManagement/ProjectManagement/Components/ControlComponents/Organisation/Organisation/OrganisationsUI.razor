@@ -24,7 +24,7 @@ else
     <div class="mb-1 flex flex-wrap items-center justify-between gap-1">
 
         <div class="flex items-center gap-1">
-            <AuthorizeView Roles="@PMRolesConst.Tenant.AdminSuperManger">
+            <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
                 <button class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-emerald-300 bg-emerald-50 text-emerald-600 transition hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50"
                         @onclick="() => UpdateForm(new ShortListOrganisationDTO())"
                         title="@WebLoc[nameof(PMWebResource.NewOrganisation)]">

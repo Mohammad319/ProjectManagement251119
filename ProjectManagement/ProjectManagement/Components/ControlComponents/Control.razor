@@ -38,8 +38,8 @@
         var user = authState.User;
 
         var isAdmin = user.IsInRole(PMRolesConst.Tenant.Admin);
-        var isSuperManager = user.IsInRole(PMRolesConst.Tenant.Super_Manger)
-                             || user.IsInRole(PMRolesConst.Tenant.SuperManger);
+        var isSuperManager = user.IsInRole(PMRolesConst.Tenant.AdminManger)
+                             || user.IsInRole(PMRolesConst.Tenant.Manger);
 
         if (isAdmin)
         {

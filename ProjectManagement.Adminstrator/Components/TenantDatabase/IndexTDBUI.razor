@@ -5,7 +5,7 @@
 @using Microsoft.EntityFrameworkCore
 @using ProjectManagement.Adminstrator.Services.Users
 @using ProjectManagement.Shared.DTO.Tenant
-@attribute [Authorize(Roles = PMRolesConst.APP.AdminSuperManger)]
+@attribute [Authorize(Roles = PMRolesConst.APP.AdminManger)]
 @inherits AppComponentBase
 @inject IUsersService sersService
 @inject IDbContextFactory<ApplicationDbContext> DbFactory

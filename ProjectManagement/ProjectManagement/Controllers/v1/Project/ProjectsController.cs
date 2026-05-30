@@ -95,6 +95,6 @@ namespace ProjectManagement.Server.Controllers.v1
         }
 
         private bool CanUseTargetDepartmentAccessAcrossDepartments() =>
-            User.IsInRole(Tenant.Admin) || User.IsInRole(Tenant.SuperManger);
+            User.IsInRole(Tenant.Admin) || User.IsInRole(Tenant.Manger);
     }
 }

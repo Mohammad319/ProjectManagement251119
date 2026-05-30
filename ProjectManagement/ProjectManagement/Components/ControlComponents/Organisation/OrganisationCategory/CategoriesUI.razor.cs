@@ -43,7 +43,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
             if (user.Identity?.IsAuthenticated != true)
                 return false;
 
-            return PMRolesConst.Tenant.AdminSuperManger
+            return PMRolesConst.Tenant.AdminManger
                 .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                 .Any(user.IsInRole);
         }

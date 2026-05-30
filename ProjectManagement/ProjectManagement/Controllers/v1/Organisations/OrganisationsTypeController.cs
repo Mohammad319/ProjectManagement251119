@@ -20,12 +20,12 @@ namespace ProjectManagement.Server.Controllers.v1.Organisations
         {
             return Ok(await MicroBus.Send(new GetListOrganisationsTypeQuery(id,cus)));
         }
-        [Authorize(Roles = PMRolesConst.Tenant.AdminSuperManger), HttpPost]
+        [Authorize(Roles = PMRolesConst.Tenant.AdminManger), HttpPost]
         public async Task<IActionResult> Create(PostOrganisationTypeDTO dto)
         {
             return Ok(await MicroBus.Send(new CreateOrganisationTypeCommand(dto)));
         }
-        [Authorize(Roles = PMRolesConst.Tenant.AdminSuperManger)]
+        [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, PostOrganisationTypeDTO dto)
         {

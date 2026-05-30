@@ -1,4 +1,4 @@
-﻿using ProjectManagement.Shared.DTO.Calculation.Template;
+﻿ using ProjectManagement.Shared.DTO.Calculation.Template;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -395,27 +395,22 @@ namespace ProjectManagement.Shared.Constant
         public class APP
         {
             public const string Admin = "AA";
-            public const string SuperManger = "SA";
             public const string Manger = "MA";
             public const string User = "UA";
 
-            public const string AdminSuperManger = Admin + "," + SuperManger;
-            public const string AdminManger = AdminSuperManger + "," + Manger;
+            public const string AdminManger = Admin + "," + Manger;
             public const string Users = AdminManger + "," + User;
         }
 
         public class Tenant
         {
             public const string Admin = "AT";
-            public const string SuperManger = "AD";
             public const string Manger = "MT";
             public const string User = "UT";
 
-            public const string AdminSuperManger = Admin + "," + SuperManger;
-            public const string AdminManger = AdminSuperManger + "," + Manger;
+            public const string AdminManger = Admin + "," + Manger;
             public const string Users = AdminManger + "," + User;
-            public const string Super_Manger = Manger + "," + SuperManger;
-            public const string UsersNotAdmin = User + "," + Super_Manger;
+            public const string UsersNotAdmin = User + "," + Manger;
         }
 
         public const string MangerTenantMangerApp = APP.AdminManger + "," + Tenant.AdminManger;

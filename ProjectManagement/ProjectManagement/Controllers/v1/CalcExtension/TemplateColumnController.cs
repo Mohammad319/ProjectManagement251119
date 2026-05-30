@@ -34,7 +34,7 @@ namespace ProjectManagement.Server.Controllers.v1.Calculation
             return Ok(await MicroBus.Send(new SetDefaultTemplateColumnCommand(id, templateColumnId, GetDepartmentId())));
         }
 
-        [Authorize(Roles = PMRolesConst.Tenant.AdminSuperManger)]
+        [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpPost]
         public async Task<IActionResult> Post(TemplateColumnPostDTO dto)
         {
@@ -59,7 +59,7 @@ namespace ProjectManagement.Server.Controllers.v1.Calculation
             return Ok(await MicroBus.Send(new UpdateTemplateColumnCommand(dto, id, GetDepartmentId())));
         }
 
-        [Authorize(Roles = PMRolesConst.Tenant.AdminSuperManger)]
+        [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {

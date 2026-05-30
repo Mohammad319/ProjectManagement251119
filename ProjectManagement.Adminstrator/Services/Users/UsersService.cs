@@ -117,7 +117,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
 
         public async Task<bool> AddBasicCompanyInfoAsync(int tenantId, int? userId = null)
         {
-            if (!await HasAnyRoleAsync(PMRolesConst.APP.AdminSuperManger))
+            if (!await HasAnyRoleAsync(PMRolesConst.APP.AdminManger))
                 return false;
 
             if (tenantId <= 0 || !await TenantExistsAsync(tenantId))
@@ -383,7 +383,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
 
         public async Task<int> CreateAsync(TenantEntity tenant)
         {
-            if (!await HasAnyRoleAsync(PMRolesConst.APP.AdminSuperManger))
+            if (!await HasAnyRoleAsync(PMRolesConst.APP.AdminManger))
                 return 0;
 
             if (tenant == null || string.IsNullOrWhiteSpace(tenant.Name))
@@ -424,7 +424,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
 
         public async Task<bool> UpdateAsync(TenantEntity tenant)
         {
-            if (!await HasAnyRoleAsync(PMRolesConst.APP.AdminSuperManger))
+            if (!await HasAnyRoleAsync(PMRolesConst.APP.AdminManger))
                 return false;
 
             if (tenant == null || tenant.Id <= 0 || string.IsNullOrWhiteSpace(tenant.Name))
@@ -492,8 +492,8 @@ namespace ProjectManagement.Adminstrator.Services.Users
             if (tenantId.HasValue)
             {
                 return await HasAnyRoleAsync(writeOperation
-                    ? PMRolesConst.APP.AdminSuperManger
-                    : PMRolesConst.APP.AdminManger);
+                    ? PMRolesConst.APP.AdminManger
+                    : PMRolesConst.APP.User);
             }
 
             return await HasAnyRoleAsync(writeOperation
@@ -728,7 +728,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
 
         public async Task<bool> BlockTenantAsync(int TenantId, bool block)
         {
-            if (!await HasAnyRoleAsync(PMRolesConst.APP.AdminSuperManger))
+            if (!await HasAnyRoleAsync(PMRolesConst.APP.AdminManger))
                 return false;
 
             if (TenantId <= 0 || !await TenantExistsAsync(TenantId))

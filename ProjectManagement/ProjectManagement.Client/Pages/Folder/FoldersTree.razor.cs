@@ -1041,7 +1041,7 @@ namespace ProjectManagement.Client.Pages.Folder
 
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             var user = authState.User;
-            bool isInAnyRole = PMRolesConst.Tenant.AdminSuperManger.Split(',').Any(r => user.IsInRole(r));
+            bool isInAnyRole = PMRolesConst.Tenant.AdminManger.Split(',').Any(r => user.IsInRole(r));
 
             list.Add(new() { IconHtml = Icons.Active, Label = AppLoc["openCalculation"], OnClickAsync = async () => await NewCalculations(folder, project, cal) });
 

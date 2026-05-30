@@ -42,7 +42,7 @@
                             @* + New Folder (first) *@
                             @if (HasDepartmentAccess)
                             {
-                                <AuthorizeView Roles="@PMRolesConst.Tenant.SuperManger">
+                                <AuthorizeView Roles="@PMRolesConst.Tenant.Manger">
                                     @if (!Folder.State.OtherDepartment && SelectedDepartmentId.HasValue)
                                     {
                                         <button type="button"

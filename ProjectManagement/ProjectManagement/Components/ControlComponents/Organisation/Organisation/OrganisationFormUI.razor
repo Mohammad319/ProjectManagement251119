@@ -1,23 +1,11 @@
-@using Application.Feature.Organisation.Organisation.Commands
-@using Application.Feature.Organisation.Organisation.Queries
-@using Application.Feature.Organisation.OrganisationCategory.Queries
-@using Application.Feature.Organisation.OrganisationType.Queries
 @using Domain.DTO.Category
-@using Domain.Entities.Organisation
-@using ProjectManagement.Client.Shared.Model.Project
 @using ProjectManagement.Client.Shared.SharedComponent
 @using ProjectManagement.Client.Shared.SharedComponent.Contact
-@using ProjectManagement.Shared.DTO.App
-@using ProjectManagement.Shared.DTO.App.List
-@using ProjectManagement.Shared.DTO.General
-@using ProjectManagement.Shared.DTO.Offer
 @using Microsoft.AspNetCore.Authorization
-@using ProjectManagement.Shared.DTO.Organisation
 @using ProjectManagement.Shared.Base.Organisation
-@using System.Text.Json
 @using ProjectManagement.Shared
 
-@attribute [Authorize(Roles = PMRolesConst.Tenant.AdminSuperManger)]
+@attribute [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
 
 @if (PostCompany is not null)
 {

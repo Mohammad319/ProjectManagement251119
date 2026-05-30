@@ -79,7 +79,7 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
         {
             var authState = await AuthStateProvider.GetAuthenticationStateAsync();
             var principal = authState.User;
-            CanManageTenants = principal.IsInRole(PMRolesConst.APP.Admin) || principal.IsInRole(PMRolesConst.APP.SuperManger);
+            CanManageTenants = principal.IsInRole(PMRolesConst.APP.Admin) || principal.IsInRole(PMRolesConst.APP.Manger);
 
             await GetTenantsAsync();
         }

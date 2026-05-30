@@ -38,7 +38,7 @@ namespace ProjectManagement.Server.Controllers.v1.Project
             return Ok(await MicroBus.Send(new NewOrderFolderCommand(Id, NewOrder, GetDepartmentId())));
         }
 
-        [Authorize(Roles = PMRolesConst.Tenant.Super_Manger)]
+        [Authorize(Roles = PMRolesConst.Tenant.Manger)]
         [HttpPost]
         public async Task<IActionResult> Create(PostFolderDTO dto)
         {

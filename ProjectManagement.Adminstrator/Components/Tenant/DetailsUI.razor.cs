@@ -76,7 +76,7 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
         {
             var authState = await AuthStateProvider.GetAuthenticationStateAsync();
             var principal = authState.User;
-            CanManageTenantUsers = principal.IsInRole(PMRolesConst.APP.Admin) || principal.IsInRole(PMRolesConst.APP.SuperManger);
+            CanManageTenantUsers = principal.IsInRole(PMRolesConst.APP.Admin) || principal.IsInRole(PMRolesConst.APP.Manger);
 
             using var appContext = ContextFactory.CreateDbContext();
             if (Id > 0)

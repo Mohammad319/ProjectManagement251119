@@ -11,7 +11,6 @@ public static class IdentityUserSyncHelper
     private static readonly string[] AppRoles =
     [
         PMRolesConst.APP.Admin,
-        PMRolesConst.APP.SuperManger,
         PMRolesConst.APP.Manger,
         PMRolesConst.APP.User
     ];
@@ -19,7 +18,6 @@ public static class IdentityUserSyncHelper
     private static readonly string[] TenantRoles =
     [
         PMRolesConst.Tenant.Admin,
-        PMRolesConst.Tenant.SuperManger,
         PMRolesConst.Tenant.Manger,
         PMRolesConst.Tenant.User
     ];

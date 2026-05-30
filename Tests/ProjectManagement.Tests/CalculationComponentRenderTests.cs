@@ -169,7 +169,7 @@ public class CalculationComponentRenderTests : BunitContext
         auth.SetAuthorized("tester");
         auth.SetRoles(
             PMRolesConst.Tenant.Admin,
-            PMRolesConst.Tenant.SuperManger,
+            PMRolesConst.Tenant.Manger,
             PMRolesConst.Tenant.Manger);
 
         var coordinator = new FakeCalculationTableCoordinator { CanPasteResult = true };
@@ -210,7 +210,7 @@ public class CalculationComponentRenderTests : BunitContext
         auth.SetAuthorized("tester");
         auth.SetRoles(
             PMRolesConst.Tenant.Admin,
-            PMRolesConst.Tenant.SuperManger,
+            PMRolesConst.Tenant.Manger,
             PMRolesConst.Tenant.Manger);
 
         var coordinator = new FakeCalculationTableCoordinator();
