@@ -610,6 +610,12 @@
   <data name="projectsEmptyStateHint" xml:space="preserve">
     <value>Create a project in this folder to start working with calculations and offers.</value>
   </data>
+  <data name="calculationsEmptyState" xml:space="preserve">
+    <value>No calculations found</value>
+  </data>
+  <data name="calculationsEmptyStateHint" xml:space="preserve">
+    <value>Create a new calculation to start working.</value>
+  </data>
   <data name="taskActions" xml:space="preserve">
     <value>Task actions</value>
   </data>
@@ -692,6 +698,7 @@
   <data name="projectName" xml:space="preserve"><value>Project name</value></data>
   <data name="calculationName" xml:space="preserve"><value>Calculation name</value></data>
   <data name="calculationCount" xml:space="preserve"><value>Calculations</value></data>
+  <data name="showCalculations" xml:space="preserve"><value>Show calculations</value></data>
   <data name="createdDate" xml:space="preserve"><value>Created date</value></data>
   <data name="lastModified" xml:space="preserve"><value>Last modified</value></data>
   <data name="version" xml:space="preserve"><value>Version</value></data>
@@ -782,4 +789,8 @@
   <data name="sortTooltip" xml:space="preserve"><value>Choose the order in which folders, projects and calculations are listed.</value></data>
   <data name="manualOrderTooltip" xml:space="preserve"><value>Switch to manual order to drag or move items up and down manually.</value></data>
   <data name="exitManualOrder" xml:space="preserve"><value>Exit manual order</value></data>
+  <data name="collapseAll" xml:space="preserve"><value>Collapse all</value></data>
+  <data name="expandAll" xml:space="preserve"><value>Expand all</value></data>
+  <data name="hidePanelTree" xml:space="preserve"><value>Hide project structure</value></data>
+  <data name="showPanelTree" xml:space="preserve"><value>Show project structure</value></data>
 </root>

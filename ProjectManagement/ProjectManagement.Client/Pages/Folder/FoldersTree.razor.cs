@@ -26,6 +26,7 @@ namespace ProjectManagement.Client.Pages.Folder
         [Parameter] public string GroupingMode { get; set; } = ProjectTreeGroupingMode.FolderStructure;
         [Parameter] public string SortMode { get; set; } = ProjectTreeSortMode.NameAscending;
         [Parameter] public bool KeepFolderStructure { get; set; } = true;
+        [Parameter] public EventCallback OnExitManualOrder { get; set; }
 
         private const string LastSelectionKey = "LastSelection";
         private const string LastOpenedStorageKey = "ProjectTreeLastOpened";
@@ -599,32 +600,13 @@ namespace ProjectManagement.Client.Pages.Folder
             };
         }
 
-        private static string GetCalculationSelectedClass(ListCalculationMVVM calculation)
-        {
-            return calculation.Status?.Trim().ToLowerInvariant() switch
-            {
-                "active" or "ongoing" or "pagaende" or "pågående" => "border-l-2 border-sky-500 bg-sky-50/80 shadow-sm ring-1 ring-sky-200/70 dark:bg-sky-950/25 dark:ring-sky-900/60",
-                "completed" or "done" or "klar" => "border-l-2 border-emerald-500 bg-emerald-50/80 shadow-sm ring-1 ring-emerald-200/70 dark:bg-emerald-950/25 dark:ring-emerald-900/60",
-                "needs review" or "review" or "warning" or "varning" => "border-l-2 border-amber-500 bg-amber-50/80 shadow-sm ring-1 ring-amber-200/70 dark:bg-amber-950/25 dark:ring-amber-900/60",
-                "cancelled" or "canceled" or "avbruten" => "border-l-2 border-rose-500 bg-rose-50/80 shadow-sm ring-1 ring-rose-200/70 dark:bg-rose-950/25 dark:ring-rose-900/60",
-                _ => "border-l-2 border-slate-500 bg-slate-100 dark:bg-slate-800/75 shadow-sm ring-1 ring-slate-200/70 dark:ring-slate-700/60"
-            };
-        }
+        private static string GetCalculationSelectedClass(ListCalculationMVVM calculation) =>
+            "border-l-2 border-slate-400/60 bg-slate-100/70 shadow-sm ring-1 ring-slate-300/50 dark:bg-slate-800/50 dark:ring-slate-700/40";
 
-        private static string GetCalculationTextClass(ListCalculationMVVM calculation, bool isSelected)
-        {
-            if (!isSelected)
-                return "text-slate-600 group-hover:text-slate-900 dark:text-slate-300 dark:group-hover:text-slate-100";
-
-            return calculation.Status?.Trim().ToLowerInvariant() switch
-            {
-                "active" or "ongoing" or "pagaende" or "pågående" => "font-semibold text-sky-900 dark:text-sky-100",
-                "completed" or "done" or "klar" => "font-semibold text-emerald-900 dark:text-emerald-100",
-                "needs review" or "review" or "warning" or "varning" => "font-semibold text-amber-900 dark:text-amber-100",
-                "cancelled" or "canceled" or "avbruten" => "font-semibold text-rose-900 dark:text-rose-100",
-                _ => "font-semibold text-slate-900 dark:text-slate-100"
-            };
-        }
+        private static string GetCalculationTextClass(ListCalculationMVVM calculation, bool isSelected) =>
+            isSelected
+                ? "font-semibold text-slate-900 dark:text-slate-100"
+                : "text-slate-600 group-hover:text-slate-900 dark:text-slate-300 dark:group-hover:text-slate-100";
 
         private string GetFolderMeta(FolderMVVM folder) =>
             !folder.IsVisible ? AppLoc["archived"].Value : string.Empty;
@@ -632,15 +614,19 @@ namespace ProjectManagement.Client.Pages.Folder
         private string GetProjectMeta(ListProjectMVVM project) =>
             !project.IsVisible ? AppLoc["archived"].Value : string.Empty;
 
-        private string GetFolderTitle(FolderMVVM folder) =>
-            folder.ProjectsLoaded
-                ? $"{folder.Name} ({folder.Projects?.Count ?? 0})"
-                : folder.Name;
+        private string GetFolderTitle(FolderMVVM folder)
+        {
+            var count = folder.ProjectsLoaded ? $" ({folder.Projects?.Count ?? 0})" : string.Empty;
+            var archived = !folder.IsVisible ? $" – {AppLoc["archived"]}" : string.Empty;
+            return $"{folder.Name}{count}{archived}";
+        }
 
-        private string GetProjectTitle(ListProjectMVVM project) =>
-            project.CalculationsLoaded
-                ? $"{project.Name} ({project.Calculations?.Count ?? 0})"
-                : project.Name;
+        private string GetProjectTitle(ListProjectMVVM project)
+        {
+            var count = project.CalculationsLoaded ? $" ({project.Calculations?.Count ?? 0})" : string.Empty;
+            var archived = !project.IsVisible ? $" – {AppLoc["archived"]}" : string.Empty;
+            return $"{project.Name}{count}{archived}";
+        }
 
         private bool IsManualOrderMode => SortMode == ProjectTreeSortMode.Manual;
         private bool HasManualOrderChanges => _manualOrderDirty;
@@ -824,7 +810,84 @@ namespace ProjectManagement.Client.Pages.Folder
             MHD.Notifications(ToastType.Update, success);
 
             if (success)
+            {
                 CaptureManualOrderSnapshot();
+                if (OnExitManualOrder.HasDelegate)
+                    await OnExitManualOrder.InvokeAsync();
+            }
+        }
+
+        private async Task CancelManualOrderAsync()
+        {
+            RestoreManualOrderSnapshot();
+            if (OnExitManualOrder.HasDelegate)
+                await OnExitManualOrder.InvokeAsync();
+        }
+
+        public async Task ExpandAllAsync()
+        {
+            if (GroupingMode == ProjectTreeGroupingMode.FolderStructure)
+            {
+                foreach (var folder in UoWService.Folder.State.FoldersList)
+                {
+                    if (!folder.ProjectsLoaded)
+                        await Folder.SetProjectsToFolder(folder);
+
+                    if (folder.Projects?.Count > 0)
+                    {
+                        folder.ShowProjects = true;
+                        foreach (var project in folder.Projects)
+                        {
+                            if (!project.CalculationsLoaded)
+                                await Folder.SetCalcsToProject(project);
+
+                            if (project.Calculations?.Count > 0)
+                                project.ShowCalculations = true;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                _collapsedGroupKeys.Clear();
+            }
+
+            await InvokeAsync(StateHasChanged);
+        }
+
+        public void CollapseAll()
+        {
+            if (GroupingMode == ProjectTreeGroupingMode.FolderStructure)
+            {
+                foreach (var folder in UoWService.Folder.State.FoldersList)
+                {
+                    folder.ShowProjects = false;
+                    foreach (var project in folder.Projects ?? [])
+                        project.ShowCalculations = false;
+                }
+            }
+            else
+            {
+                foreach (var group in GetCalculationGroupNodes())
+                {
+                    _collapsedGroupKeys.Add(group.Key);
+                    if (group.Children != null)
+                        foreach (var child in group.Children)
+                            _collapsedGroupKeys.Add(child.Key);
+                }
+
+                if (KeepFolderStructure)
+                {
+                    foreach (var folder in UoWService.Folder.State.FoldersList)
+                    {
+                        _collapsedGroupKeys.Add(GetGroupedFolderKey(folder));
+                        foreach (var project in folder.Projects ?? [])
+                            _collapsedGroupKeys.Add(GetGroupedProjectKey(project));
+                    }
+                }
+            }
+
+            StateHasChanged();
         }
 
         private bool HasOrderChanged(string key, int order) =>

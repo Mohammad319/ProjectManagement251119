@@ -16,18 +16,30 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
 <div class="ml-1">
-    @if (!Folder.State.OtherDepartment)
-    {
-        <div class="flex w-full flex-wrap items-center justify-between gap-2 p-1">
-            <div class="min-w-0">
-                <div class="truncate text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    @AppLoc["projectsInFolderFormat", Folder.State.FolderSelected?.Name ?? "-"]
-                </div>
-                <div class="text-xs text-slate-500 dark:text-slate-400">
-                    @(Folder.State.FolderSelected?.Projects?.Count ?? 0) @CalcResource.project
-                </div>
+
+    @* ── Header toolbar ─────────────────────────────────── *@
+    <div class="flex w-full flex-wrap items-center justify-between gap-2 p-1">
+        <div class="min-w-0">
+            <div class="truncate text-sm font-semibold text-gray-700 dark:text-gray-300">
+                @AppLoc["projectsInFolderFormat", Folder.State.FolderSelected?.Name ?? "-"]
             </div>
-            <div class="flex items-center gap-2">
+            <div class="text-xs text-slate-500 dark:text-slate-400">
+                @SortedProjects.Count() @CalcResource.project
+            </div>
+        </div>
+
+        @if (!Folder.State.OtherDepartment)
+        {
+            <div class="flex flex-wrap items-center gap-2">
+
+                @* Archive filter toggle *@
+                <button type="button"
+                        class="inline-flex h-9 items-center gap-1.5 rounded-lg border px-3 text-sm font-semibold transition @(UoWService.Folder.ShowArchived ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-800/60 dark:bg-amber-950/30 dark:text-amber-300 dark:hover:bg-amber-950/50" : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800")"
+                        title="@AppLoc["showArchived"]"
+                        @onclick="async () => await OnToggleArchived.InvokeAsync()">
+                    <span>@AppLoc["showArchived"]</span>
+                </button>
+
                 <MhdColumnPicker Text="@AppLoc["columns"]"
                                  Columns="@ProjectColumnOptions"
                                  ColumnVisibility="_projectColumns"
@@ -36,7 +48,7 @@
                 <button type="button"
                         class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-sky-300 bg-sky-50 px-3 text-sm font-semibold text-sky-700 transition hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-300 dark:hover:bg-sky-950/50"
                         disabled="@(Folder.State.FolderSelected is null)"
-                    title="@AppLoc["incomeOverview"]"
+                        title="@AppLoc["incomeOverview"]"
                         @onclick="OpenIncomeOverview">
                     <span>@AppLoc["incomeOverview"]</span>
                 </button>
@@ -52,10 +64,11 @@
                     </button>
                 </AuthorizeView>
             </div>
-        </div>
-    }
+        }
+    </div>
 
-    @if (Folder.State.FolderSelected?.Projects is not null && Folder.State.FolderSelected.Projects.Any())
+    @* ── Project table ───────────────────────────────────── *@
+    @if (SortedProjects.Any())
     {
         <div class="mr-1 overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
             <table class="min-w-full table-auto text-left text-xs">
@@ -63,44 +76,89 @@
                     <tr>
                         @if (IsProjectColumnVisible("code"))
                         {
-                            <th class="whitespace-nowrap px-3 py-2">@CalcResource.code</th>
+                            <th class="@SortableHeaderClass("code")" @onclick='() => SortBy("code")'>
+                                <span class="inline-flex items-center gap-1">
+                                    @CalcResource.code
+                                    @((MarkupString)SortIndicatorHtml("code"))
+                                </span>
+                            </th>
                         }
                         @if (IsProjectColumnVisible("name"))
                         {
-                            <th class="min-w-52 px-3 py-2">@AppLoc["projectName"]</th>
+                            <th class="@SortableHeaderClass("name") min-w-52" @onclick='() => SortBy("name")'>
+                                <span class="inline-flex items-center gap-1">
+                                    @AppLoc["projectName"]
+                                    @((MarkupString)SortIndicatorHtml("name"))
+                                </span>
+                            </th>
                         }
                         @if (IsProjectColumnVisible("status"))
                         {
-                            <th class="whitespace-nowrap px-3 py-2">@CalcResource.status</th>
+                            <th class="@SortableHeaderClass("status")" @onclick='() => SortBy("status")'>
+                                <span class="inline-flex items-center gap-1">
+                                    @CalcResource.status
+                                    @((MarkupString)SortIndicatorHtml("status"))
+                                </span>
+                            </th>
                         }
                         @if (IsProjectColumnVisible("responsible"))
                         {
-                            <th class="whitespace-nowrap px-3 py-2">@CalcResource.responsible</th>
+                            <th class="@SortableHeaderClass("responsible")" @onclick='() => SortBy("responsible")'>
+                                <span class="inline-flex items-center gap-1">
+                                    @CalcResource.responsible
+                                    @((MarkupString)SortIndicatorHtml("responsible"))
+                                </span>
+                            </th>
                         }
                         @if (IsProjectColumnVisible("start"))
                         {
-                            <th class="whitespace-nowrap px-3 py-2">@CalcResource.startDate</th>
+                            <th class="@SortableHeaderClass("start")" @onclick='() => SortBy("start")'>
+                                <span class="inline-flex items-center gap-1">
+                                    @CalcResource.startDate
+                                    @((MarkupString)SortIndicatorHtml("start"))
+                                </span>
+                            </th>
                         }
                         @if (IsProjectColumnVisible("end"))
                         {
-                            <th class="whitespace-nowrap px-3 py-2">@CalcResource.endDate</th>
+                            <th class="@SortableHeaderClass("end")" @onclick='() => SortBy("end")'>
+                                <span class="inline-flex items-center gap-1">
+                                    @CalcResource.endDate
+                                    @((MarkupString)SortIndicatorHtml("end"))
+                                </span>
+                            </th>
                         }
                         @if (IsProjectColumnVisible("deadline"))
                         {
-                            <th class="whitespace-nowrap px-3 py-2">@CalcResource.tenderDeadline</th>
+                            <th class="@SortableHeaderClass("deadline")" @onclick='() => SortBy("deadline")'>
+                                <span class="inline-flex items-center gap-1">
+                                    @CalcResource.tenderDeadline
+                                    @((MarkupString)SortIndicatorHtml("deadline"))
+                                </span>
+                            </th>
                         }
                         @if (IsProjectColumnVisible("qa"))
                         {
-                            <th class="whitespace-nowrap px-3 py-2">@CalcResource.tenderQA</th>
+                            <th class="@SortableHeaderClass("qa")" @onclick='() => SortBy("qa")'>
+                                <span class="inline-flex items-center gap-1">
+                                    @CalcResource.tenderQA
+                                    @((MarkupString)SortIndicatorHtml("qa"))
+                                </span>
+                            </th>
                         }
                         @if (IsProjectColumnVisible("calculations"))
                         {
-                            <th class="whitespace-nowrap px-3 py-2 text-right">@AppLoc["calculationCount"]</th>
+                            <th class="@SortableHeaderClass("calculations") text-right" @onclick='() => SortBy("calculations")'>
+                                <span class="inline-flex items-center justify-end gap-1">
+                                    @AppLoc["calculationCount"]
+                                    @((MarkupString)SortIndicatorHtml("calculations"))
+                                </span>
+                            </th>
                         }
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                    @foreach (var project in Folder.State.FolderSelected.Projects)
+                    @foreach (var project in SortedProjects)
                     {
                         var isProjectArchived = !project.IsVisible;
                         var isProjectSelected = Folder.State.ProjectSelected?.Id == project.Id;
@@ -164,7 +222,15 @@
                             }
                             @if (IsProjectColumnVisible("calculations"))
                             {
-                                <td class="whitespace-nowrap px-3 py-2 text-right text-slate-600 dark:text-slate-300">@FormatCalculationCount(project)</td>
+                                <td class="whitespace-nowrap px-3 py-2 text-right">
+                                    <button type="button"
+                                            class="inline-flex min-w-[2rem] items-center justify-center rounded-md px-1.5 py-0.5 text-xs font-semibold text-slate-600 transition hover:bg-sky-100 hover:text-sky-700 dark:text-slate-300 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
+                                            title="@AppLoc["showCalculations"]"
+                                            @onclick:stopPropagation
+                                            @onclick="async () => await SetProject(project)">
+                                        @FormatCalculationCount(project)
+                                    </button>
+                                </td>
                             }
                         </tr>
                     }
@@ -180,24 +246,109 @@
             <p class="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
                 @AppLoc["projectsEmptyStateHint"]
             </p>
+            @if (!Folder.State.OtherDepartment && Folder.State.FolderSelected is not null)
+            {
+                <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
+                    <button type="button"
+                            class="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-950/50"
+                            @onclick="() => UpdateForm(new ListProjectMVVM())">
+                        <span aria-hidden="true">@((MarkupString)Icons.Plus)</span>
+                        <span>@AppLoc["newProject"]</span>
+                    </button>
+                </AuthorizeView>
+            }
         </div>
     }
 </div>
 
 @code {
 
+    [Parameter] public EventCallback OnToggleArchived { get; set; }
+
     Guid UpdateProject = Guid.Empty;
     private ListProjectMVVM? draggingProject;
+
+    private string _sortColumn = "";
+    private bool _sortAscending = true;
+
+    private IEnumerable<ListProjectMVVM> SortedProjects
+    {
+        get
+        {
+            var projects = Folder.State.FolderSelected?.Projects ?? [];
+            return _sortColumn switch
+            {
+                "code" => _sortAscending
+                    ? projects.OrderBy(x => x.Code)
+                    : projects.OrderByDescending(x => x.Code),
+                "name" => _sortAscending
+                    ? projects.OrderBy(x => x.Name)
+                    : projects.OrderByDescending(x => x.Name),
+                "status" => _sortAscending
+                    ? projects.OrderBy(x => x.Status)
+                    : projects.OrderByDescending(x => x.Status),
+                "responsible" => _sortAscending
+                    ? projects.OrderBy(x => x.Responsible)
+                    : projects.OrderByDescending(x => x.Responsible),
+                "start" => _sortAscending
+                    ? projects.OrderBy(x => x.StartDate)
+                    : projects.OrderByDescending(x => x.StartDate),
+                "end" => _sortAscending
+                    ? projects.OrderBy(x => x.EndDate)
+                    : projects.OrderByDescending(x => x.EndDate),
+                "deadline" => _sortAscending
+                    ? projects.OrderBy(x => x.TenderDeadline)
+                    : projects.OrderByDescending(x => x.TenderDeadline),
+                "qa" => _sortAscending
+                    ? projects.OrderBy(x => x.TenderQA)
+                    : projects.OrderByDescending(x => x.TenderQA),
+                "calculations" => _sortAscending
+                    ? projects.OrderBy(x => x.Calculations?.Count ?? 0)
+                    : projects.OrderByDescending(x => x.Calculations?.Count ?? 0),
+                _ => projects
+            };
+        }
+    }
+
+    private void SortBy(string column)
+    {
+        if (_sortColumn == column)
+            _sortAscending = !_sortAscending;
+        else
+        {
+            _sortColumn = column;
+            _sortAscending = true;
+        }
+    }
+
+    private string SortableHeaderClass(string column)
+    {
+        var active = _sortColumn == column;
+        return "cursor-pointer select-none whitespace-nowrap px-3 py-2 transition " +
+               (active
+                   ? "text-slate-800 dark:text-slate-200"
+                   : "hover:text-slate-700 dark:hover:text-slate-200");
+    }
+
+    private string SortIndicatorHtml(string column)
+    {
+        if (_sortColumn != column)
+            return "<svg class=\"h-3 w-3 opacity-30\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4\"/></svg>";
+
+        return _sortAscending
+            ? "<svg class=\"h-3 w-3\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M5 15l7-7 7 7\"/></svg>"
+            : "<svg class=\"h-3 w-3\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M19 9l-7 7-7-7\"/></svg>";
+    }
 
     private readonly Dictionary<string, bool> _projectColumns = new()
     {
         ["code"] = true,
         ["name"] = true,
-        ["status"] = true,
-        ["responsible"] = true,
+        ["status"] = false,
+        ["responsible"] = false,
         ["start"] = true,
         ["end"] = true,
-        ["deadline"] = false,
+        ["deadline"] = true,
         ["qa"] = false,
         ["calculations"] = true
     };

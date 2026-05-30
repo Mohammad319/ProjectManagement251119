@@ -24,6 +24,8 @@
 @inherits AppComponentBase
 
 <div class="ml-1">
+
+    @* ── Header toolbar ─────────────────────────────────── *@
     <div class="flex w-full flex-wrap items-center justify-between gap-2 p-1">
         <div class="min-w-0">
             <div class="flex flex-col text-gray-700 dark:text-gray-300">
@@ -36,11 +38,13 @@
                     {
                         <span> · @AppLoc["projectCodeFormat", Folder.State.ProjectSelected?.Code ?? "-"]</span>
                     }
+                    <span> · @SortedCalculations.Count() @CalcResource.calculation</span>
                 </span>
             </div>
         </div>
-        <div class="flex items-center gap-2">
-            <label class="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+
+        <div class="flex flex-wrap items-center gap-2">
+            <label class="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">
                 <input type="checkbox"
                        class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800"
                        @bind="_showAllVersions" />
@@ -83,7 +87,8 @@
         </div>
     </div>
 
-    @if (FilteredCalculations.Any())
+    @* ── Calculation table ──────────────────────────────── *@
+    @if (SortedCalculations.Any())
     {
         <div class="mr-1 overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
             <table class="min-w-full table-auto text-left text-xs">
@@ -91,39 +96,57 @@
                     <tr>
                         @if (IsCalculationColumnVisible("code"))
                         {
-                            <th class="whitespace-nowrap px-3 py-2">@CalcResource.code</th>
+                            <th class="@SortableHeaderClass("code")" @onclick='() => SortBy("code")'>
+                                <span class="inline-flex items-center gap-1">@CalcResource.code @((MarkupString)SortIndicatorHtml("code"))</span>
+                            </th>
                         }
                         @if (IsCalculationColumnVisible("name"))
                         {
-                            <th class="min-w-52 px-3 py-2">@AppLoc["calculationName"]</th>
+                            <th class="@SortableHeaderClass("name") min-w-52" @onclick='() => SortBy("name")'>
+                                <span class="inline-flex items-center gap-1">@AppLoc["calculationName"] @((MarkupString)SortIndicatorHtml("name"))</span>
+                            </th>
                         }
                         @if (IsCalculationColumnVisible("calculationType"))
                         {
-                            <th class="whitespace-nowrap px-3 py-2">Kalkyltyp</th>
+                            <th class="@SortableHeaderClass("calculationType")" @onclick='() => SortBy("calculationType")'>
+                                <span class="inline-flex items-center gap-1">Kalkyltyp @((MarkupString)SortIndicatorHtml("calculationType"))</span>
+                            </th>
                         }
                         @if (IsCalculationColumnVisible("status"))
                         {
-                            <th class="whitespace-nowrap px-3 py-2">@CalcResource.status</th>
+                            <th class="@SortableHeaderClass("status")" @onclick='() => SortBy("status")'>
+                                <span class="inline-flex items-center gap-1">@CalcResource.status @((MarkupString)SortIndicatorHtml("status"))</span>
+                            </th>
                         }
                         @if (IsCalculationColumnVisible("responsible"))
                         {
-                            <th class="whitespace-nowrap px-3 py-2">@CalcResource.responsible</th>
+                            <th class="@SortableHeaderClass("responsible")" @onclick='() => SortBy("responsible")'>
+                                <span class="inline-flex items-center gap-1">@CalcResource.responsible @((MarkupString)SortIndicatorHtml("responsible"))</span>
+                            </th>
                         }
                         @if (IsCalculationColumnVisible("start"))
                         {
-                            <th class="whitespace-nowrap px-3 py-2">@CalcResource.startDate</th>
+                            <th class="@SortableHeaderClass("start")" @onclick='() => SortBy("start")'>
+                                <span class="inline-flex items-center gap-1">@CalcResource.startDate @((MarkupString)SortIndicatorHtml("start"))</span>
+                            </th>
                         }
                         @if (IsCalculationColumnVisible("end"))
                         {
-                            <th class="whitespace-nowrap px-3 py-2">@CalcResource.endDate</th>
+                            <th class="@SortableHeaderClass("end")" @onclick='() => SortBy("end")'>
+                                <span class="inline-flex items-center gap-1">@CalcResource.endDate @((MarkupString)SortIndicatorHtml("end"))</span>
+                            </th>
                         }
                         @if (IsCalculationColumnVisible("deadline"))
                         {
-                            <th class="whitespace-nowrap px-3 py-2">@CalcResource.tenderDeadline</th>
+                            <th class="@SortableHeaderClass("deadline")" @onclick='() => SortBy("deadline")'>
+                                <span class="inline-flex items-center gap-1">@CalcResource.tenderDeadline @((MarkupString)SortIndicatorHtml("deadline"))</span>
+                            </th>
                         }
                         @if (IsCalculationColumnVisible("qa"))
                         {
-                            <th class="whitespace-nowrap px-3 py-2">@CalcResource.tenderQA</th>
+                            <th class="@SortableHeaderClass("qa")" @onclick='() => SortBy("qa")'>
+                                <span class="inline-flex items-center gap-1">@CalcResource.tenderQA @((MarkupString)SortIndicatorHtml("qa"))</span>
+                            </th>
                         }
                         @if (IsCalculationColumnVisible("privacy"))
                         {
@@ -132,7 +155,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                    @foreach (var calu in FilteredCalculations)
+                    @foreach (var calu in SortedCalculations)
                     {
                         var isSelected = Folder.State.Calculation?.Id == calu.Id;
                         var rowClasses = GetCalculationRowClass(calu, isSelected);
@@ -178,11 +201,16 @@
                                             </button>
                                         }
                                     </div>
-                                    @if (calu.IsLocked && calu.CalculationType == CalculationVersionType.Tender)
+                                    @if (calu.IsLocked)
                                     {
-                                        <span class="mt-1 inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">
-                                            Låst anbudskalkyl
-                                        </span>
+                                        <div class="mt-1 flex flex-wrap items-center gap-1">
+                                            <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">
+                                                <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                                </svg>
+                                                @(calu.CalculationType == CalculationVersionType.Production ? "Produktionskalkyl · Låst" : "Anbudskalkyl · Låst")
+                                            </span>
+                                        </div>
                                     }
                                 </td>
                             }
@@ -193,15 +221,12 @@
                                     {
                                         <div class="flex flex-col gap-1">
                                             <span class="text-xs font-semibold text-slate-700 dark:text-slate-200">
-                                                @GetCalculationTypeLabel(calu.CalculationType) - Låst
-                                            </span>
-                                            <span class="max-w-64 whitespace-normal text-[11px] leading-4 text-slate-500 dark:text-slate-400">
-                                                Denna kalkyl är låst eftersom den är godkänd.
+                                                @GetCalculationTypeLabel(calu.CalculationType) · Låst
                                             </span>
                                             @if (CanCreateProductionCalculation(calu))
                                             {
                                                 <button type="button"
-                                                        class="mt-1 w-fit rounded-md border border-emerald-500 bg-emerald-600 px-2 py-1 text-[11px] font-semibold text-white transition hover:bg-emerald-700 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-600"
+                                                        class="w-fit rounded-md border border-emerald-500 bg-emerald-600 px-2 py-1 text-[11px] font-semibold text-white transition hover:bg-emerald-700 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-600"
                                                         @onclick="() => OpenProductionDialog(calu)">
                                                     Skapa produktionskalkyl
                                                 </button>
@@ -210,7 +235,7 @@
                                     }
                                     else
                                     {
-                                        <span class="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                                        <span class="@GetCalcTypeBadgeClass(calu)">
                                             @GetCalculationTypeLabel(calu.CalculationType)
                                         </span>
                                     }
@@ -219,8 +244,9 @@
                             @if (IsCalculationColumnVisible("status"))
                             {
                                 <td class="whitespace-nowrap px-3 py-2">
-                                    <span class="@GetCalculationStatusClass(calu)">
-                                        @GetCalculationStatusText(calu)
+                                    <span class="inline-flex items-center gap-1.5">
+                                        <span class="h-2 w-2 shrink-0 rounded-full @GetStatusDotClass(calu)"></span>
+                                        <span class="text-slate-700 dark:text-slate-200">@GetCalculationStatusText(calu)</span>
                                     </span>
                                 </td>
                             }
@@ -262,11 +288,24 @@
     {
         <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center dark:border-slate-700 dark:bg-slate-950/60">
             <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">@CalcResource.calculation</div>
-            <h3 class="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-100">@AppLoc["selectProjectFirst"]</h3>
+            <h3 class="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-100">@AppLoc["calculationsEmptyState"]</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">@AppLoc["calculationsEmptyStateHint"]</p>
+            @if (!Folder.State.OtherDepartment && Folder.State.ProjectSelected is not null)
+            {
+                <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
+                    <button type="button"
+                            class="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-950/50"
+                            @onclick="() => UpdateForm(new ListCalculationMVVM())">
+                        <span aria-hidden="true">@((MarkupString)Icons.Plus)</span>
+                        <span>@AppLoc["newCalculation"]</span>
+                    </button>
+                </AuthorizeView>
+            }
         </div>
     }
 </div>
 
+@* ── Production calculation dialog ──────────────────── *@
 @if (_productionDialogCalculation is not null)
 {
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-6">
@@ -285,7 +324,6 @@
                     </div>
                 }
             </div>
-
             <div class="mt-5 flex flex-wrap justify-end gap-2">
                 <button type="button"
                         class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
@@ -304,6 +342,7 @@
     </div>
 }
 
+@* ── Versions dialog ─────────────────────────────────── *@
 @if (_versionDialogCalculation is not null)
 {
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-6">
@@ -319,7 +358,6 @@
                     Stäng
                 </button>
             </div>
-
             <div class="mt-4 space-y-2">
                 @foreach (var version in GetVersions(_versionDialogCalculation))
                 {
@@ -344,7 +382,6 @@
                     </div>
                 }
             </div>
-
             @if (!string.IsNullOrWhiteSpace(_versionDialogMessage))
             {
                 <div class="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
@@ -366,6 +403,9 @@
     private bool _isCreatingVersion;
     private string _versionDialogMessage = string.Empty;
 
+    private string _sortColumn = "";
+    private bool _sortAscending = true;
+
     private int Part { get; set; } = 1;
 
     private string _activeKey = "1";
@@ -376,32 +416,15 @@
         {
             _activeKey = value;
             if (int.TryParse(value, out var p))
-            {
                 Part = p;
-            }
         }
     }
 
     private List<NavTabItem> Tabs => new()
     {
-        new NavTabItem
-        {
-            Key = "1",
-            Text = AppLoc["all"],
-            Icon = "📄"
-        },
-        new NavTabItem
-        {
-            Key = "2",
-            Text = CalcResource.active,
-            Icon = "▶️"
-        },
-        new NavTabItem
-        {
-            Key = "3",
-            Text = AppLoc["finished"],
-            Icon = "✅"
-        }
+        new NavTabItem { Key = "1", Text = AppLoc["all"], Icon = "📄" },
+        new NavTabItem { Key = "2", Text = CalcResource.active, Icon = "▶️" },
+        new NavTabItem { Key = "3", Text = AppLoc["finished"], Icon = "✅" }
     };
 
     private readonly Dictionary<string, bool> _calculationColumns = new()
@@ -451,6 +474,73 @@
         }
     }
 
+    private IEnumerable<ListCalculationMVVM> SortedCalculations
+    {
+        get
+        {
+            var list = FilteredCalculations;
+            return _sortColumn switch
+            {
+                "code" => _sortAscending
+                    ? list.OrderBy(x => x.Code)
+                    : list.OrderByDescending(x => x.Code),
+                "name" => _sortAscending
+                    ? list.OrderBy(x => x.Name)
+                    : list.OrderByDescending(x => x.Name),
+                "calculationType" => _sortAscending
+                    ? list.OrderBy(x => (int)x.CalculationType).ThenBy(x => x.IsLocked)
+                    : list.OrderByDescending(x => (int)x.CalculationType).ThenByDescending(x => x.IsLocked),
+                "status" => _sortAscending
+                    ? list.OrderBy(x => x.StatusSortOrder ?? int.MaxValue).ThenBy(x => x.Status)
+                    : list.OrderByDescending(x => x.StatusSortOrder ?? int.MinValue).ThenByDescending(x => x.Status),
+                "responsible" => _sortAscending
+                    ? list.OrderBy(x => x.Responsible)
+                    : list.OrderByDescending(x => x.Responsible),
+                "start" => _sortAscending
+                    ? list.OrderBy(x => x.StartDate)
+                    : list.OrderByDescending(x => x.StartDate),
+                "end" => _sortAscending
+                    ? list.OrderBy(x => x.EndDate)
+                    : list.OrderByDescending(x => x.EndDate),
+                "deadline" => _sortAscending
+                    ? list.OrderBy(x => x.TenderDeadline)
+                    : list.OrderByDescending(x => x.TenderDeadline),
+                "qa" => _sortAscending
+                    ? list.OrderBy(x => x.TenderQA)
+                    : list.OrderByDescending(x => x.TenderQA),
+                _ => list
+            };
+        }
+    }
+
+    private void SortBy(string column)
+    {
+        if (_sortColumn == column)
+            _sortAscending = !_sortAscending;
+        else
+        {
+            _sortColumn = column;
+            _sortAscending = true;
+        }
+    }
+
+    private string SortableHeaderClass(string column)
+    {
+        var active = _sortColumn == column;
+        return "cursor-pointer select-none whitespace-nowrap px-3 py-2 transition " +
+               (active ? "text-slate-800 dark:text-slate-200" : "hover:text-slate-700 dark:hover:text-slate-200");
+    }
+
+    private string SortIndicatorHtml(string column)
+    {
+        if (_sortColumn != column)
+            return "<svg class=\"h-3 w-3 opacity-30\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4\"/></svg>";
+
+        return _sortAscending
+            ? "<svg class=\"h-3 w-3\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M5 15l7-7 7 7\"/></svg>"
+            : "<svg class=\"h-3 w-3\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M19 9l-7 7-7-7\"/></svg>";
+    }
+
     private bool IsCalculationColumnVisible(string key) =>
         _calculationColumns.TryGetValue(key, out var visible) && visible;
 
@@ -470,6 +560,11 @@
         calculation.IsCurrentVersion
             ? "inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300"
             : "inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-300";
+
+    private static string GetCalcTypeBadgeClass(ListCalculationMVVM calculation) =>
+        calculation.CalculationType == CalculationVersionType.Production
+            ? "inline-flex rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-semibold text-violet-700 dark:bg-violet-950/50 dark:text-violet-300"
+            : "inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200";
 
     private IEnumerable<ListCalculationMVVM> GetVersions(ListCalculationMVVM calculation) =>
         (Folder.State.ProjectSelected?.Calculations ?? [])
@@ -590,14 +685,14 @@
         return calculation.EndDate < DateTime.Today ? AppLoc["finished"] : CalcResource.active;
     }
 
-    private string GetCalculationStatusClass(ListCalculationMVVM calculation)
+    private string GetStatusDotClass(ListCalculationMVVM calculation)
     {
         if (!string.IsNullOrWhiteSpace(calculation.Status))
-            return "inline-flex rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-semibold text-sky-700 dark:bg-sky-950/50 dark:text-sky-300";
+            return "bg-sky-500 dark:bg-sky-400";
 
         return calculation.EndDate < DateTime.Today
-            ? "inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300"
-            : "inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:bg-amber-950/50 dark:text-amber-300";
+            ? "bg-emerald-500 dark:bg-emerald-400"
+            : "bg-amber-400 dark:bg-amber-300";
     }
 
     private static string GetCalculationRowClass(ListCalculationMVVM calculation, bool selected)

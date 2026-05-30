@@ -1,4 +1,5 @@
-﻿using BlazorMHD.UI.Core.Services;
+﻿using BlazorMHD.UI.Components.Data.DropdownPanel;
+using BlazorMHD.UI.Core.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.JSInterop;
@@ -23,6 +24,9 @@ namespace ProjectManagement.Client.Pages.Folder
         string TreeGroupingMode { get; set; } = ProjectTreeGroupingMode.FolderStructure;
         string TreeSortMode { get; set; } = ProjectTreeSortMode.CreatedNewest;
         bool KeepFolderStructure { get; set; } = true;
+
+        private MhdDropdownPanel? _filterPanel;
+        private FoldersTree? _foldersTree;
 
         [Inject] private IJSRuntime JS { get; set; } = default!;
 
@@ -274,6 +278,32 @@ namespace ProjectManagement.Client.Pages.Folder
             await SaveTreeSortModeAsync();
         }
 
+        private async Task ToggleManualOrderAndCloseFilterAsync()
+        {
+            _filterPanel?.ClosePanel();
+            await ToggleManualOrderModeAsync();
+        }
+
+        private async Task ExitManualOrderAsync()
+        {
+            if (TreeSortMode != ProjectTreeSortMode.Manual)
+                return;
+            TreeSortMode = ProjectTreeSortMode.CreatedNewest;
+            await SaveTreeSortModeAsync();
+            await InvokeAsync(StateHasChanged);
+        }
+
+        private async Task ExpandAllAsync()
+        {
+            if (_foldersTree != null)
+                await _foldersTree.ExpandAllAsync();
+        }
+
+        private void CollapseAll()
+        {
+            _foldersTree?.CollapseAll();
+        }
+
         private async Task SaveTreeSortModeAsync()
         {
             try
@@ -355,6 +385,7 @@ namespace ProjectManagement.Client.Pages.Folder
         private static string NormalizeTreeSortMode(string? sortMode) =>
             sortMode switch
             {
+                ProjectTreeSortMode.NameAscending => ProjectTreeSortMode.NameAscending,
                 ProjectTreeSortMode.NameDescending => ProjectTreeSortMode.NameDescending,
                 ProjectTreeSortMode.CreatedNewest => ProjectTreeSortMode.CreatedNewest,
                 ProjectTreeSortMode.CreatedOldest => ProjectTreeSortMode.CreatedOldest,

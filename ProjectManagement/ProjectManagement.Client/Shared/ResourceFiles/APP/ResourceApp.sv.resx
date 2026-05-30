@@ -610,6 +610,12 @@
   <data name="projectsEmptyStateHint" xml:space="preserve">
     <value>Skapa ett projekt i den här mappen för att börja arbeta med kalkyler och offerter.</value>
   </data>
+  <data name="calculationsEmptyState" xml:space="preserve">
+    <value>Inga kalkyler hittades</value>
+  </data>
+  <data name="calculationsEmptyStateHint" xml:space="preserve">
+    <value>Skapa en ny kalkyl för att börja arbeta.</value>
+  </data>
   <data name="taskActions" xml:space="preserve">
     <value>Uppgiftsåtgärder</value>
   </data>
@@ -692,6 +698,7 @@
   <data name="projectName" xml:space="preserve"><value>Projektnamn</value></data>
   <data name="calculationName" xml:space="preserve"><value>Kalkylnamn</value></data>
   <data name="calculationCount" xml:space="preserve"><value>Antal kalkyler</value></data>
+  <data name="showCalculations" xml:space="preserve"><value>Visa kalkyler</value></data>
   <data name="createdDate" xml:space="preserve"><value>Skapad datum</value></data>
   <data name="lastModified" xml:space="preserve"><value>Senast ändrad</value></data>
   <data name="version" xml:space="preserve"><value>Version</value></data>
@@ -782,4 +789,8 @@
   <data name="sortTooltip" xml:space="preserve"><value>Välj i vilken ordning mappar, projekt och kalkyler visas.</value></data>
   <data name="manualOrderTooltip" xml:space="preserve"><value>Växla till manuell ordning för att dra eller flytta objekt upp och ned för hand.</value></data>
   <data name="exitManualOrder" xml:space="preserve"><value>Avsluta manuell ordning</value></data>
+  <data name="collapseAll" xml:space="preserve"><value>Fäll ihop alla</value></data>
+  <data name="expandAll" xml:space="preserve"><value>Expandera alla</value></data>
+  <data name="hidePanelTree" xml:space="preserve"><value>Dölj projektstruktur</value></data>
+  <data name="showPanelTree" xml:space="preserve"><value>Visa projektstruktur</value></data>
 </root>
