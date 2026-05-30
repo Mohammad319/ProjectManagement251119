@@ -195,7 +195,13 @@ else
                           MaxTopHeight="900"
                           SplitterThickness="6"
                           LiveResize="true"
-                          StorageKey="calc-main-vertical-splitter">
+                          StorageKey="calc-main-vertical-splitter"
+                          ShowCollapseButton="true"
+                          IsBottomCollapsed="@_bottomPaneCollapsed"
+                          CollapseButtonTitle="@AppLoc["hidePanelTree"]"
+                          ExpandButtonTitle="@AppLoc["showPanelTree"]"
+                          OnCollapseBottom="() => { _bottomPaneCollapsed = true; }"
+                          OnExpandBottom="() => { _bottomPaneCollapsed = false; }">
 
             <TopContent>
         

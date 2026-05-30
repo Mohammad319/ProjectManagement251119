@@ -29,6 +29,8 @@ public partial class NelCalculationPage : ComponentBase, IDisposable
     [Inject] private DialogService DialogService { get; set; } = default!;
     [Inject] private IJSRuntime JS { get; set; } = default!;
 
+    private bool _bottomPaneCollapsed;
+
     private Action? _onFolderChanged;
     private Action? _onInteractionChanged;
     private Action? _onCommentsVisibilityChanged;

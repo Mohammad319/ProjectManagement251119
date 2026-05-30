@@ -306,6 +306,8 @@
                     ? projects.OrderBy(x => x.Calculations?.Count ?? 0)
                     : projects.OrderByDescending(x => x.Calculations?.Count ?? 0),
                 _ => projects
+                    .OrderBy(x => x.Name, StringComparer.CurrentCultureIgnoreCase)
+                    .ThenByDescending(x => x.Order)
             };
         }
     }
