@@ -65,16 +65,17 @@ public static class TenantSeedCatalog
 
     public static readonly CalcStatusSeed[] CalculationStatuses =
     [
-        new("Planerad",           "#2563eb", 100),
-        new("Pågående",           "#f59e0b", 200),
-        new("Behöver granskas",   "#f97316", 300),
-        new("Granskad",           "#8b5cf6", 400),
-        new("Godkänd / låst",     "#16a34a", 500, IsApprovalStatus: true, LocksCalculation: true, AllowsProductionCalculation: true),
-        new("Skickad / inlämnad", "#0ea5e9", 600, IsApprovalStatus: true, LocksCalculation: true, AllowsProductionCalculation: true),
-        new("Tilldelad / vunnen", "#22c55e", 700, IsApprovalStatus: true, LocksCalculation: true, AllowsProductionCalculation: true),
-        new("Förlorad",           "#dc2626", 800),
-        new("Avbruten",           "#6b7280", 900),
-        new("Ej intressant",      "#94a3b8", 1000),
+        new("Förfrågan",              "#6B7280", 100),
+        new("Planerad",               "#93C5FD", 200),
+        new("Pågående",               "#1D4ED8", 300),
+        new("Behöver granskas",       "#5EEAD4", 400),
+        new("Granskad",               "#0D9488", 500),
+        new("Godkänd / låst",         "#0F766E", 600, IsApprovalStatus: true, LocksCalculation: true, AllowsProductionCalculation: true),
+        new("Skickad / inlämnad",     "#EAB308", 700, IsApprovalStatus: true, LocksCalculation: true, AllowsProductionCalculation: true),
+        new("Tilldelad / vunnen",     "#166534", 800, IsApprovalStatus: true, LocksCalculation: true, AllowsProductionCalculation: true),
+        new("Förlorad",               "#DC2626", 900),
+        new("Avbruten",               "#F97316", 1000),
+        new("Ej intressant / ej lämnat", "#FEF08A", 1100),
     ];
 
     public static readonly LookupSeed[] ProjectTypes =

@@ -313,22 +313,37 @@ namespace ProjectManagement.Adminstrator.Services.Users
                     defaultProcurementMethod.IsVisible);
             }
 
-            if (!await dataAccess.CalculationStatus.AnyAsync())
+            var existingCalcStatuses = await dataAccess.CalculationStatus.ToListAsync();
+            foreach (var defaultStatus in TenantSeedCatalog.CalculationStatuses)
             {
-                foreach (var defaultStatus in TenantSeedCatalog.CalculationStatuses)
+                var calcStatus = existingCalcStatuses.FirstOrDefault(x =>
+                    string.Equals(x.Name, defaultStatus.Name, StringComparison.OrdinalIgnoreCase));
+
+                if (calcStatus is null)
                 {
-                    var status = new StatusEntity();
-                    status.Update(
+                    var newStatus = new StatusEntity();
+                    newStatus.Update(
                         defaultStatus.Name,
                         defaultStatus.Color,
                         defaultStatus.SortOrder,
                         defaultStatus.IsVisible);
-                    status.SetApprovalSettings(
+                    newStatus.SetApprovalSettings(
                         defaultStatus.IsApprovalStatus,
                         defaultStatus.LocksCalculation,
                         defaultStatus.AllowsProductionCalculation);
-                    dataAccess.CalculationStatus.Add(status);
+                    dataAccess.CalculationStatus.Add(newStatus);
+                    continue;
                 }
+
+                calcStatus.Update(
+                    defaultStatus.Name,
+                    defaultStatus.Color,
+                    defaultStatus.SortOrder,
+                    defaultStatus.IsVisible);
+                calcStatus.SetApprovalSettings(
+                    defaultStatus.IsApprovalStatus,
+                    defaultStatus.LocksCalculation,
+                    defaultStatus.AllowsProductionCalculation);
             }
 
             if (!await dataAccess.CalcProjectType.AnyAsync())
