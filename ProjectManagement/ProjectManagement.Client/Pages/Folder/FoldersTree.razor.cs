@@ -14,6 +14,7 @@ using ProjectManagement.Client.Shared.ResourceFiles.Calculation;
 using ProjectManagement.Client.Shared.ResourceFiles;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Folder;
+using ProjectManagement.Shared.Helper;
 using System.Text.Json;
 
 public sealed class GroupSelectionInfo
@@ -94,12 +95,16 @@ namespace ProjectManagement.Client.Pages.Folder
                     .OrderBy(folder => folder.IsVisible ? 0 : 99)
                     .ThenBy(folder => folder.Name, StringComparer.CurrentCultureIgnoreCase),
 
-                ProjectTreeSortMode.CreatedNewest or ProjectTreeSortMode.ModifiedNewest => list
-                    .OrderByDescending(folder => folder.Order)
+                ProjectTreeSortMode.CreatedNewest => list
+                    .OrderByDescending(folder => folder.CreatedAt)
                     .ThenBy(folder => folder.Name, StringComparer.CurrentCultureIgnoreCase),
 
                 ProjectTreeSortMode.CreatedOldest => list
-                    .OrderBy(folder => folder.Order)
+                    .OrderBy(folder => folder.CreatedAt)
+                    .ThenBy(folder => folder.Name, StringComparer.CurrentCultureIgnoreCase),
+
+                ProjectTreeSortMode.ModifiedNewest => list
+                    .OrderByDescending(folder => folder.UpdatedAt ?? folder.CreatedAt)
                     .ThenBy(folder => folder.Name, StringComparer.CurrentCultureIgnoreCase),
 
                 _ => list
@@ -126,14 +131,16 @@ namespace ProjectManagement.Client.Pages.Folder
                     .OrderByDescending(project => GetLastOpenedTicks(GetProjectKey(project)))
                     .ThenBy(project => project.Name, StringComparer.CurrentCultureIgnoreCase),
 
-                ProjectTreeSortMode.CreatedNewest or ProjectTreeSortMode.ModifiedNewest => list
-                    .OrderByDescending(project => HasDate(project.StartDate))
-                    .ThenByDescending(project => project.StartDate)
+                ProjectTreeSortMode.CreatedNewest => list
+                    .OrderByDescending(project => project.CreatedAt)
                     .ThenBy(project => project.Name, StringComparer.CurrentCultureIgnoreCase),
 
                 ProjectTreeSortMode.CreatedOldest => list
-                    .OrderByDescending(project => HasDate(project.StartDate))
-                    .ThenBy(project => project.StartDate)
+                    .OrderBy(project => project.CreatedAt)
+                    .ThenBy(project => project.Name, StringComparer.CurrentCultureIgnoreCase),
+
+                ProjectTreeSortMode.ModifiedNewest => list
+                    .OrderByDescending(project => project.UpdatedAt ?? project.CreatedAt)
                     .ThenBy(project => project.Name, StringComparer.CurrentCultureIgnoreCase),
 
                 ProjectTreeSortMode.Status => list
@@ -150,7 +157,7 @@ namespace ProjectManagement.Client.Pages.Folder
 
         private IEnumerable<ListCalculationMVVM> GetSortedCalculations(IEnumerable<ListCalculationMVVM>? calculations)
         {
-            var list = calculations ?? Enumerable.Empty<ListCalculationMVVM>();
+            var list = CalculationVersionSelector.SelectCurrentVersions(calculations);
 
             return SortMode switch
             {
@@ -166,14 +173,16 @@ namespace ProjectManagement.Client.Pages.Folder
                     .OrderByDescending(calculation => GetLastOpenedTicks(GetCalculationKey(calculation)))
                     .ThenBy(calculation => calculation.Name, StringComparer.CurrentCultureIgnoreCase),
 
-                ProjectTreeSortMode.CreatedNewest or ProjectTreeSortMode.ModifiedNewest => list
-                    .OrderByDescending(calculation => HasDate(calculation.StartDate))
-                    .ThenByDescending(calculation => calculation.StartDate)
+                ProjectTreeSortMode.CreatedNewest => list
+                    .OrderByDescending(calculation => calculation.CreatedAt)
                     .ThenBy(calculation => calculation.Name, StringComparer.CurrentCultureIgnoreCase),
 
                 ProjectTreeSortMode.CreatedOldest => list
-                    .OrderByDescending(calculation => HasDate(calculation.StartDate))
-                    .ThenBy(calculation => calculation.StartDate)
+                    .OrderBy(calculation => calculation.CreatedAt)
+                    .ThenBy(calculation => calculation.Name, StringComparer.CurrentCultureIgnoreCase),
+
+                ProjectTreeSortMode.ModifiedNewest => list
+                    .OrderByDescending(calculation => calculation.UpdatedAt ?? calculation.CreatedAt)
                     .ThenBy(calculation => calculation.Name, StringComparer.CurrentCultureIgnoreCase),
 
                 ProjectTreeSortMode.Status => list
@@ -415,10 +424,22 @@ namespace ProjectManagement.Client.Pages.Folder
 
             var header = groupType switch
             {
-                "Status" => $"Kalkyler med status: {node.Label}",
-                "Quarter" => $"Kalkyler {parentLabel} · {node.Label}",
-                _ => $"Kalkyler år {node.Label}"
+                "Status" => AppLoc["calculationsWithStatusFormat", node.Label],
+                "Quarter" => AppLoc["calculationsQuarterFormat", parentLabel ?? string.Empty, node.Label],
+                _ => AppLoc["calculationsYearFormat", node.Label]
             };
+
+            // Expand each current-version entry to include all versions in its family,
+            // so the group panel can support the "Visa alla versioner" toggle.
+            var expandedCalcs = allCalcs
+                .SelectMany(gc =>
+                {
+                    var family = CalculationVersionSelector
+                        .GetVersions(gc.Project.Calculations, gc.Calculation);
+
+                    return family.Select(v => new GroupedCalcEntry(gc.Folder, gc.Project, v));
+                })
+                .ToList();
 
             var info = new GroupSelectionInfo
             {
@@ -426,9 +447,7 @@ namespace ProjectManagement.Client.Pages.Folder
                 Label = node.Label,
                 GroupType = groupType,
                 Header = header,
-                Calculations = allCalcs
-                    .Select(gc => new GroupedCalcEntry(gc.Folder, gc.Project, gc.Calculation))
-                    .ToList()
+                Calculations = expandedCalcs
             };
 
             await OnGroupSelected.InvokeAsync(info);
@@ -677,7 +696,10 @@ namespace ProjectManagement.Client.Pages.Folder
 
         private string GetProjectTitle(ListProjectMVVM project)
         {
-            var count = project.CalculationsLoaded ? $" ({project.Calculations?.Count ?? 0})" : string.Empty;
+            var calculationCount = project.CalculationsLoaded
+                ? CalculationVersionSelector.CountCurrentVersions(project.Calculations)
+                : project.CalculationCount;
+            var count = $" ({calculationCount})";
             var archived = !project.IsVisible ? $" – {AppLoc["archived"]}" : string.Empty;
             return $"{project.Name}{count}{archived}";
         }
@@ -1105,8 +1127,6 @@ namespace ProjectManagement.Client.Pages.Folder
                 list.Add(new() { IconHtml = Icons.Folder, Label = AppLoc["moveCalculation"], OnClickAsync = () => { OpenMoveCopyCalcDialog(folder, project, cal, MoveCopyOperation.Move); return Task.CompletedTask; } });
                 list.Add(new() { IconHtml = Icons.Copy, Label = AppLoc["copyCalculation"], OnClickAsync = () => { OpenMoveCopyCalcDialog(folder, project, cal, MoveCopyOperation.Copy); return Task.CompletedTask; } });
                 list.Add(new() { IconHtml = Icons.Archive, Label = AppLoc["archiveCalculation"], OnClickAsync = async () => await ArchiveCalculationFromTreeAsync(project, cal) });
-                list.Add(new() { IsSeparator = true });
-                list.Add(new() { IconHtml = Icons.Delete, Label = ResourceApp.delete, CssClass = "text-red-600 dark:text-red-400", OnClickAsync = () => { RemoveCalculationFromTree(project, cal); return Task.CompletedTask; } });
             }
 
             await ContextService.ShowMenuAsync(list);
@@ -1164,7 +1184,8 @@ namespace ProjectManagement.Client.Pages.Folder
             bool ok = await Repo.Calculation.UpdateAsync(dto, cal.Id);
             if (ok)
             {
-                project.Calculations?.Remove(cal);
+                project.CalculationsLoaded = false;
+                await Folder.SetCalcsToProject(project);
                 UoWService.Folder.State.Notify();
             }
             MHD.Notifications(ToastType.Update, ok);

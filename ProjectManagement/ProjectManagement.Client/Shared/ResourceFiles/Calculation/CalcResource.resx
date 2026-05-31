@@ -533,4 +533,16 @@
   <data name="searchFoldersProjectsCalcs" xml:space="preserve"><value>Search folders, projects and calculations</value></data>
   <data name="searchNameOrCodePlaceholder" xml:space="preserve"><value>Search name or code...</value></data>
   <data name="resultSummaryFormat" xml:space="preserve"><value>{0} folders · {1} projects · {2} calculations</value></data>
+  <data name="lockedAndApproved" xml:space="preserve"><value>Locked &amp; approved!</value></data>
+  <data name="lockedBecauseApproved" xml:space="preserve"><value>This calculation is locked because it has been approved.</value></data>
+  <data name="approvedBy" xml:space="preserve"><value>Approved by:</value></data>
+  <data name="approvedDate" xml:space="preserve"><value>Approval date:</value></data>
+  <data name="unknownUser" xml:space="preserve"><value>Unknown user</value></data>
+  <data name="addNote" xml:space="preserve"><value>Add note</value></data>
+  <data name="approveAndLockTitle" xml:space="preserve"><value>Approve and lock calculation?</value></data>
+  <data name="approveAndLockDescription" xml:space="preserve"><value>You are about to approve and lock the calculation. After locking, the calculation cannot be changed directly. The approver and approval date are saved automatically.</value></data>
+  <data name="approveAndLock" xml:space="preserve"><value>Approve and lock</value></data>
+  <data name="approvalBlockedNoResponsible" xml:space="preserve"><value>The calculation cannot be approved because no responsible person or reviewer has been specified. Please select a responsible person or reviewer first.</value></data>
+  <data name="approvalBlockedInspectorOnly" xml:space="preserve"><value>Only the reviewer ({0}) or an admin may approve this calculation.</value></data>
+  <data name="approvalBlockedResponsibleOnly" xml:space="preserve"><value>Only the responsible person ({0}) or an admin may approve this calculation.</value></data>
 </root>

@@ -685,7 +685,7 @@
   <data name="modifiedNewestFirst" xml:space="preserve"><value>Senast ändrad först</value></data>
   <data name="showArchived" xml:space="preserve"><value>Visa arkiverade</value></data>
   <data name="archived" xml:space="preserve"><value>Arkiverad</value></data>
-  <data name="newFolder" xml:space="preserve"><value>Ny mapp</value></data>
+  <data name="newFolder" xml:space="preserve"><value>Mapp</value></data>
   <data name="newProject" xml:space="preserve"><value>Nytt projekt</value></data>
   <data name="newCalculation" xml:space="preserve"><value>Ny kalkyl</value></data>
   <data name="columns" xml:space="preserve"><value>Kolumner</value></data>
@@ -780,8 +780,6 @@
   <data name="yearAndQuarter" xml:space="preserve"><value>År och kvartal</value></data>
   <data name="keepFolderStructure" xml:space="preserve"><value>Behåll mappstruktur</value></data>
   <data name="quarterLabel" xml:space="preserve"><value>Kvartal {0}</value></data>
-  <data name="moveUp" xml:space="preserve"><value>Flytta upp</value></data>
-  <data name="moveDown" xml:space="preserve"><value>Flytta ned</value></data>
   <data name="showAllVersions" xml:space="preserve"><value>Visa alla versioner</value></data>
   <data name="noDepartmentsTitle" xml:space="preserve"><value>Inga avdelningar</value></data>
   <data name="noDepartmentsHint" xml:space="preserve"><value>Admin i ditt företag kan lägga till dig i en avdelning.</value></data>
@@ -793,4 +791,85 @@
   <data name="expandAll" xml:space="preserve"><value>Expandera alla</value></data>
   <data name="hidePanelTree" xml:space="preserve"><value>Dölj projektstruktur</value></data>
   <data name="showPanelTree" xml:space="preserve"><value>Visa projektstruktur</value></data>
+  <data name="reports" xml:space="preserve"><value>Rapporter</value></data>
+  <data name="hitRate" xml:space="preserve"><value>Hit rate / träffsäkerhet</value></data>
+  <data name="calculationListReport" xml:space="preserve"><value>Kalkyllista</value></data>
+  <data name="projectListReport" xml:space="preserve"><value>Projektlista</value></data>
+  <data name="exportPrint" xml:space="preserve"><value>Export / utskrift</value></data>
+  <data name="folder" xml:space="preserve"><value>Mapp</value></data>
+  <data name="project" xml:space="preserve"><value>Projekt</value></data>
+  <data name="calculation" xml:space="preserve"><value>Kalkyl</value></data>
+  <data name="calculationType" xml:space="preserve"><value>Kalkyltyp</value></data>
+  <data name="allFolders" xml:space="preserve"><value>Alla mappar</value></data>
+  <data name="allProjects" xml:space="preserve"><value>Alla projekt</value></data>
+  <data name="allCalculationTypes" xml:space="preserve"><value>Alla kalkyltyper</value></data>
+  <data name="tenderCalculation" xml:space="preserve"><value>Anbudskalkyl</value></data>
+  <data name="contractCalculation" xml:space="preserve"><value>Kontraktskalkyl</value></data>
+  <data name="productionCalculation" xml:space="preserve"><value>Produktionskalkyl</value></data>
+  <data name="reviewer" xml:space="preserve"><value>Granskare</value></data>
+  <data name="archivedItems" xml:space="preserve"><value>Arkiverade</value></data>
+  <data name="notArchived" xml:space="preserve"><value>Ej arkiverade</value></data>
+  <data name="allItems" xml:space="preserve"><value>Alla</value></data>
+  <data name="archivedOnly" xml:space="preserve"><value>Endast arkiverade</value></data>
+  <data name="automatic" xml:space="preserve"><value>Automatiskt</value></data>
+  <data name="currentDepartment" xml:space="preserve"><value>Aktuell avdelning</value></data>
+  <data name="reportCurrentVersionRule" xml:space="preserve"><value>Aktuell version används per kalkylfamilj. Intäkt räknas en gång per kalkylkedja.</value></data>
+  <data name="exportExcel" xml:space="preserve"><value>Exportera Excel</value></data>
+  <data name="exportPdf" xml:space="preserve"><value>Exportera PDF</value></data>
+  <data name="revenue" xml:space="preserve"><value>Intäkt</value></data>
+  <data name="forecast" xml:space="preserve"><value>Prognos</value></data>
+  <data name="calculationChains" xml:space="preserve"><value>Kalkylkedjor</value></data>
+  <data name="rows" xml:space="preserve"><value>Rader</value></data>
+  <data name="submitted" xml:space="preserve"><value>Inlämnade</value></data>
+  <data name="won" xml:space="preserve"><value>Vunna</value></data>
+  <data name="lost" xml:space="preserve"><value>Förlorade</value></data>
+  <data name="undecided" xml:space="preserve"><value>Ej beslutade</value></data>
+  <data name="hitRateClassificationNotice" xml:space="preserve"><value>Vunna/förlorade klassificeras från statusnamnet tills uttryckliga rapportflaggor finns i admininställningarna.</value></data>
+  <data name="reportExportHint" xml:space="preserve"><value>Välj rapport och använd knapparna ovan. Export och utskrift följer aktuella filter.</value></data>
+  <data name="source" xml:space="preserve"><value>Källa</value></data>
+  <data name="probability" xml:space="preserve"><value>Sannolikhet</value></data>
+  <data name="type" xml:space="preserve"><value>Typ</value></data>
+  <data name="responsible" xml:space="preserve"><value>Ansvarig</value></data>
+  <data name="code" xml:space="preserve"><value>Kod</value></data>
+  <data name="startDate" xml:space="preserve"><value>Startdatum</value></data>
+  <data name="endDate" xml:space="preserve"><value>Slutdatum</value></data>
+  <data name="tenderDeadline" xml:space="preserve"><value>Anbudsdeadline</value></data>
+  <data name="status" xml:space="preserve"><value>Status</value></data>
+  <data name="hideArchived" xml:space="preserve"><value>Dölj arkiverade</value></data>
+  <data name="deadlineFrom" xml:space="preserve"><value>Deadline från</value></data>
+  <data name="deadlineTo" xml:space="preserve"><value>Deadline till</value></data>
+  <data name="locked" xml:space="preserve"><value>Låst</value></data>
+  <data name="unlocked" xml:space="preserve"><value>Olåst</value></data>
+  <data name="hasMultipleVersions" xml:space="preserve"><value>Har flera versioner</value></data>
+  <data name="projectDurationMonths" xml:space="preserve"><value>Projekttid (mån)</value></data>
+  <data name="vatPercent" xml:space="preserve"><value>Moms %</value></data>
+  <data name="current" xml:space="preserve"><value>Aktuell</value></data>
+  <data name="open" xml:space="preserve"><value>Öppna</value></data>
+  <data name="restoreAsNewVersion" xml:space="preserve"><value>Återställ som ny version</value></data>
+  <data name="archiveVersion" xml:space="preserve"><value>Arkivera version</value></data>
+  <data name="createNewVersion" xml:space="preserve"><value>Skapa ny version</value></data>
+  <data name="versions" xml:space="preserve"><value>Versioner</value></data>
+  <data name="projectListTitleFormat" xml:space="preserve"><value>Projektlista - {0}</value></data>
+  <data name="calculationListTitleFormat" xml:space="preserve"><value>Kalkyllista - {0}</value></data>
+  <data name="calculationsWithStatusFormat" xml:space="preserve"><value>Kalkyler med status: {0}</value></data>
+  <data name="calculationsQuarterFormat" xml:space="preserve"><value>Kalkyler {0} · {1}</value></data>
+  <data name="calculationsYearFormat" xml:space="preserve"><value>Kalkyler år {0}</value></data>
+  <data name="show" xml:space="preserve"><value>Visa</value></data>
+  <data name="perPage" xml:space="preserve"><value>per sida</value></data>
+  <data name="showingAllFormat" xml:space="preserve"><value>Visar alla {0}</value></data>
+  <data name="showingRangeFormat" xml:space="preserve"><value>Visar {0}-{1} av {2}</value></data>
+  <data name="previous" xml:space="preserve"><value>Föregående</value></data>
+  <data name="next" xml:space="preserve"><value>Nästa</value></data>
+  <data name="showVersions" xml:space="preserve"><value>Visa versioner</value></data>
+  <data name="filterStatusPlaceholder" xml:space="preserve"><value>Filtrera status...</value></data>
+  <data name="filterResponsiblePlaceholder" xml:space="preserve"><value>Filtrera ansvarig...</value></data>
+  <data name="filterReviewerPlaceholder" xml:space="preserve"><value>Filtrera granskare...</value></data>
+  <data name="createProductionCalculation" xml:space="preserve"><value>Skapa produktionskalkyl</value></data>
+  <data name="createProductionCalculationTitle" xml:space="preserve"><value>Du håller på att skapa en produktionskalkyl.</value></data>
+  <data name="createProductionCalculationDescription" xml:space="preserve"><value>Den låsta anbudskalkylen kommer att sparas som historik. En kopia skapas som produktionskalkyl och öppnas för fortsatt arbete.</value></data>
+  <data name="continueQuestion" xml:space="preserve"><value>Vill du fortsätta?</value></data>
+  <data name="productionCalculationCreateFailed" xml:space="preserve"><value>Produktionskalkylen kunde inte skapas.</value></data>
+  <data name="createContractCalculationTitle" xml:space="preserve"><value>Skapa kontraktskalkyl?</value></data>
+  <data name="createContractCalculationDescription" xml:space="preserve"><value>Den låsta anbudskalkylen sparas som historik. En kopia skapas som kontraktskalkyl och öppnas för fortsatt arbete.</value></data>
+  <data name="contractCalculationCreateFailed" xml:space="preserve"><value>Kontraktskalkylen kunde inte skapas.</value></data>
 </root>

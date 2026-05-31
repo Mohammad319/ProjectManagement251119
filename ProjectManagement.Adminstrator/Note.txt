@@ -22,5 +22,12 @@ D1
 U1d1sm@co2.se
 D2
 U1d2sm@co2.se
+Company 3
+Admin
+U1@co3.se
+D1
+U1d1sm@co3.se
+D2
+U1d2sm@co3.se
 id="ProjectsTable"
  id="projectui"

@@ -228,14 +228,11 @@ namespace Persistence.Service.Project
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            var project = await context.Projects
-                .FirstOrDefaultAsync(x => x.Id == id &&
-                    (departmentId == null || x.Folder.DepartmentId == departmentId), ct);
-            if (project == null) return false;
-
-            project.UpdateOrder(newOrder);
-            await context.SaveChangesAsync(ct);
-            return true;
+            var rows = await context.Projects
+                .Where(x => x.Id == id &&
+                    (departmentId == null || x.Folder.DepartmentId == departmentId))
+                .ExecuteUpdateAsync(s => s.SetProperty(x => x.SortOrder, newOrder), ct);
+            return rows > 0;
         }
 
 
@@ -328,6 +325,9 @@ namespace Persistence.Service.Project
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var projects = await context.Projects.AsNoTracking()
+                .Include(x => x.Organisation)
+                .Include(x => x.Contract)
+                .Include(x => x.ProjectType)
                 .Where(x => x.FolderId == folderId && (includeArchived || x.IsVisible) &&
                        (departmentId == null || x.Folder.DepartmentId == departmentId || x.CreatedBy == userId))
                 .OrderBy(x => x.SortOrder)
@@ -335,11 +335,13 @@ namespace Persistence.Service.Project
                 .ToListAsync(ct);
 
             var statusSortOrders = await GetStatusSortOrdersAsync(context, ct);
+            var calculationCounts = await GetCalculationCountsAsync(context, projects.Select(x => x.Id), ct);
             return projects.Select(x =>
             {
                 var metadata = x.GetMetadataSnapshot();
                 statusSortOrders.TryGetValue(metadata.StatusId ?? 0, out var statusSortOrder);
-                return x.ToListDto(statusSortOrder);
+                calculationCounts.TryGetValue(x.Id, out var calculationCount);
+                return x.ToListDto(statusSortOrder, calculationCount);
             }).ToList();
         }
 
@@ -348,6 +350,9 @@ namespace Persistence.Service.Project
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var projects = await context.Projects.AsNoTracking()
+                .Include(x => x.Organisation)
+                .Include(x => x.Contract)
+                .Include(x => x.ProjectType)
                 .Where(x => x.FolderId == folderId && (includeArchived || x.IsVisible) &&
                     x.Calculations.SelectMany(c => c.SharesCalc)
                         .Any(s => s.CreatedBy == userId || s.DepartmentId == departmentId))
@@ -356,11 +361,13 @@ namespace Persistence.Service.Project
                 .ToListAsync(ct);
 
             var statusSortOrders = await GetStatusSortOrdersAsync(context, ct);
+            var calculationCounts = await GetCalculationCountsAsync(context, projects.Select(x => x.Id), ct);
             return projects.Select(x =>
             {
                 var metadata = x.GetMetadataSnapshot();
                 statusSortOrders.TryGetValue(metadata.StatusId ?? 0, out var statusSortOrder);
-                return x.ToListDto(statusSortOrder);
+                calculationCounts.TryGetValue(x.Id, out var calculationCount);
+                return x.ToListDto(statusSortOrder, calculationCount);
             }).ToList();
         }
 
@@ -442,6 +449,52 @@ namespace Persistence.Service.Project
                 .AsNoTracking()
                 .Select(status => new { status.Id, status.SortOrder })
                 .ToDictionaryAsync(status => status.Id, status => status.SortOrder, ct);
+        }
+
+        private static async Task<Dictionary<Guid, int>> GetCalculationCountsAsync(
+            ShardingSingleDbContext context,
+            IEnumerable<Guid> projectIds,
+            CancellationToken ct)
+        {
+            var ids = projectIds.Distinct().ToList();
+            if (ids.Count == 0)
+                return [];
+
+            var calculations = await context.Calculations
+                .AsNoTracking()
+                .Where(calculation => !calculation.IsDeleted && ids.Contains(calculation.ProjectId))
+                .Select(calculation => new
+                {
+                    calculation.Id,
+                    calculation.ProjectId,
+                    calculation.VersionGroupId,
+                    calculation.VersionNumber,
+                    calculation.IsCurrentVersion,
+                    calculation.IsVisible,
+                    calculation.CreatedAt,
+                    calculation.UpdatedAt
+                })
+                .ToListAsync(ct);
+
+            return calculations
+                .GroupBy(calculation => calculation.ProjectId)
+                .ToDictionary(
+                    group => group.Key,
+                    group => group
+                        .GroupBy(calculation => calculation.VersionGroupId == Guid.Empty
+                            ? $"legacy:{calculation.Id}"
+                            : calculation.VersionGroupId.ToString())
+                        .Select(family => family
+                            .OrderByDescending(calculation => calculation.IsCurrentVersion)
+                            .ThenByDescending(calculation => calculation.VersionNumber > 0
+                                ? calculation.VersionNumber
+                                : int.MinValue)
+                            .ThenByDescending(calculation => calculation.UpdatedAt ?? calculation.CreatedAt)
+                            .ThenByDescending(calculation => calculation.CreatedAt)
+                            .ThenByDescending(calculation => calculation.Id)
+                            .First())
+                        .Where(calculation => calculation.IsVisible)
+                        .Count());
         }
 
         private static string EnsureUniqueName(string name, IEnumerable<string> existingNames)

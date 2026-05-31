@@ -533,4 +533,16 @@
   <data name="searchFoldersProjectsCalcs" xml:space="preserve"><value>Sök mappar, projekt och kalkyler</value></data>
   <data name="searchNameOrCodePlaceholder" xml:space="preserve"><value>Sök namn eller kod...</value></data>
   <data name="resultSummaryFormat" xml:space="preserve"><value>{0} mappar · {1} projekt · {2} kalkyler</value></data>
+  <data name="lockedAndApproved" xml:space="preserve"><value>Låst &amp; godkänd!</value></data>
+  <data name="lockedBecauseApproved" xml:space="preserve"><value>Denna kalkyl är låst eftersom den är godkänd.</value></data>
+  <data name="approvedBy" xml:space="preserve"><value>Godkänd av:</value></data>
+  <data name="approvedDate" xml:space="preserve"><value>Godkänd datum:</value></data>
+  <data name="unknownUser" xml:space="preserve"><value>Okänd användare</value></data>
+  <data name="addNote" xml:space="preserve"><value>Lägg till anteckning</value></data>
+  <data name="approveAndLockTitle" xml:space="preserve"><value>Godkänn och lås kalkyl?</value></data>
+  <data name="approveAndLockDescription" xml:space="preserve"><value>Du håller på att godkänna och låsa kalkylen. Efter låsning kan kalkylen inte ändras direkt. Godkänd av och godkänd datum sparas automatiskt.</value></data>
+  <data name="approveAndLock" xml:space="preserve"><value>Godkänn och lås</value></data>
+  <data name="approvalBlockedNoResponsible" xml:space="preserve"><value>Kalkylen kan inte godkännas eftersom ingen kalkylansvarig eller granskare är angiven. Välj kalkylansvarig eller granskare först.</value></data>
+  <data name="approvalBlockedInspectorOnly" xml:space="preserve"><value>Bara granskaren ({0}) eller admin får godkänna denna kalkyl.</value></data>
+  <data name="approvalBlockedResponsibleOnly" xml:space="preserve"><value>Bara kalkylansvarig ({0}) eller admin får godkänna denna kalkyl.</value></data>
 </root>

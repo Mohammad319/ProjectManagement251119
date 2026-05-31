@@ -49,7 +49,7 @@
             folderClasses.Add("ring-1 ring-emerald-500 bg-emerald-50 dark:bg-emerald-950/40");
 
         if (isFolderSelected)
-            folderClasses.Add("border-l-2 border-emerald-500 bg-slate-100 dark:bg-slate-800/75 shadow-sm ring-1 ring-emerald-200/70 dark:ring-emerald-900/60");
+            folderClasses.Add("border-l-2 border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 shadow-sm ring-1 ring-emerald-200 dark:ring-emerald-800/60");
 
         <div @key="folder.Id"
              @oncontextmenu:preventDefault
@@ -74,7 +74,7 @@
             {
                 <button @onclick:stopPropagation="true"
                         @onclick="async () => await CollapseFolder(folder)"
-                        class="flex h-4 w-4 shrink-0 items-center justify-center rounded text-slate-400 transition-colors duration-150 group-hover:bg-emerald-100 group-hover:text-emerald-700 dark:text-slate-500 dark:group-hover:bg-emerald-950/60 dark:group-hover:text-emerald-300"
+                        class="flex h-4 w-4 shrink-0 items-center justify-center rounded text-slate-400 transition-colors duration-150 group-hover:bg-slate-100 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:bg-slate-800/60 dark:group-hover:text-slate-300"
                         title="@ResourceLoc.folder">
                     <svg xmlns="http://www.w3.org/2000/svg"
                          class="@($"h-3.5 w-3.5 transform transition-transform duration-200 {(folder.ShowProjects ? "rotate-90" : "rotate-0")}")"
@@ -85,7 +85,7 @@
             }
 
             <!-- Folder / ort -->
-            <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md @(isFolderArchived ? "bg-slate-200 text-slate-500 ring-1 ring-slate-300 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-700" : "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:ring-emerald-800")"
+            <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md @(isFolderArchived ? "bg-slate-200 text-slate-500 ring-1 ring-slate-300 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-700" : isFolderSelected ? "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:ring-emerald-800" : "bg-slate-100 text-slate-500 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-700")"
                   title="@ResourceLoc.folder">
                 @if (folder.ShowProjects)
                 {
@@ -110,7 +110,7 @@
                     </span>
                 }
                 <span title="@GetFolderTitle(folder)"
-                      class="truncate text-[14px] font-semibold leading-5 @(isFolderArchived ? "text-slate-500 dark:text-slate-400" : "text-slate-800 group-hover:text-emerald-800 dark:text-slate-100 dark:group-hover:text-emerald-200") @(isFolderSelected ? "text-emerald-900 dark:text-emerald-100" : "")">
+                      class="truncate text-[14px] font-semibold leading-5 @(isFolderArchived ? "text-slate-500 dark:text-slate-400" : "text-slate-800 group-hover:text-slate-900 dark:text-slate-100 dark:group-hover:text-slate-100") @(isFolderSelected ? "text-emerald-800 dark:text-emerald-100" : "")">
                     @folder.Name
                 </span>
             </span>
@@ -285,7 +285,7 @@ else
                         groupedFolderClasses.Add("border border-slate-200 bg-slate-100/80 text-slate-500 grayscale dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-400");
 
                     if (isFolderSelected)
-                        groupedFolderClasses.Add("border-l-2 border-emerald-500 bg-slate-100 dark:bg-slate-800/75 shadow-sm ring-1 ring-emerald-200/70 dark:ring-emerald-900/60");
+                        groupedFolderClasses.Add("border-l-2 border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 shadow-sm ring-1 ring-emerald-200 dark:ring-emerald-800/60");
 
                     <div @key="@($"{group.Key}-{folder.Id}")"
                          @oncontextmenu:preventDefault
@@ -296,7 +296,7 @@ else
                          class="@string.Join(" ", groupedFolderClasses)">
                         <button @onclick:stopPropagation="true"
                                 @onclick="() => ToggleGroup(folderKey)"
-                                class="flex h-4 w-4 shrink-0 items-center justify-center rounded text-slate-400 transition-colors duration-150 group-hover:bg-emerald-100 group-hover:text-emerald-700 dark:text-slate-500 dark:group-hover:bg-emerald-950/60 dark:group-hover:text-emerald-300"
+                                class="flex h-4 w-4 shrink-0 items-center justify-center rounded text-slate-400 transition-colors duration-150 group-hover:bg-slate-100 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:bg-slate-800/60 dark:group-hover:text-slate-300"
                                 title="@ResourceLoc.folder">
                             <svg xmlns="http://www.w3.org/2000/svg"
                                  class="@GetGroupToggleClass(folderKey)"
@@ -305,7 +305,7 @@ else
                             </svg>
                         </button>
 
-                        <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md @(isFolderArchived ? "bg-slate-200 text-slate-500 ring-1 ring-slate-300 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-700" : "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:ring-emerald-800")"
+                        <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md @(isFolderArchived ? "bg-slate-200 text-slate-500 ring-1 ring-slate-300 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-700" : isFolderSelected ? "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:ring-emerald-800" : "bg-slate-100 text-slate-500 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-700")"
                               title="@ResourceLoc.folder">
                             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                                 <path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z"/>
@@ -313,7 +313,7 @@ else
                         </span>
 
                         <span title="@GetFolderTitle(folder)"
-                              class="truncate text-[13px] font-semibold leading-5 @(isFolderArchived ? "text-slate-500 dark:text-slate-400" : "text-slate-800 group-hover:text-emerald-800 dark:text-slate-100 dark:group-hover:text-emerald-200") @(isFolderSelected ? "text-emerald-900 dark:text-emerald-100" : "")">
+                              class="truncate text-[13px] font-semibold leading-5 @(isFolderArchived ? "text-slate-500 dark:text-slate-400" : "text-slate-800 group-hover:text-slate-900 dark:text-slate-100 dark:group-hover:text-slate-100") @(isFolderSelected ? "text-emerald-800 dark:text-emerald-100" : "")">
                             @folder.Name
                         </span>
 

@@ -6,6 +6,7 @@
 @using ProjectManagement.Shared.Enums
 @using ProjectManagement.Shared.Constant
 @inherits AppComponentBase
+@inject IJSRuntime JS
 
 <div class="ml-1">
 
@@ -18,6 +19,23 @@
             <div class="text-xs text-slate-500 dark:text-slate-400">
                 @SortedEntries.Count() @CalcResource.calculation
             </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-1.5">
+            @if (HasAnyMultipleVersions)
+            {
+            <button type="button"
+                    class="@(_showAllVersions ? "inline-flex items-center gap-1.5 rounded-lg bg-violet-100 px-2.5 py-1 text-xs font-semibold text-violet-700 transition hover:bg-violet-200 dark:bg-violet-950/50 dark:text-violet-300 dark:hover:bg-violet-900/60" : "inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700")"
+                    @onclick="() => _showAllVersions = !_showAllVersions">
+                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+                @AppLoc["showAllVersions"]
+            </button>
+            }
+            <button type="button" class="@ToolbarButtonClass" @onclick="ExportExcelAsync">@AppLoc["exportExcel"]</button>
+            <button type="button" class="@ToolbarButtonClass" @onclick="ExportPdfAsync">@AppLoc["exportPdf"]</button>
+            <button type="button" class="@ToolbarButtonClass" @onclick="PrintAsync">@AppLoc["print"]</button>
+            <button type="button" class="@ToolbarButtonClass" @onclick="OpenReports">@AppLoc["reports"]</button>
         </div>
     </div>
 
@@ -41,7 +59,7 @@
                             <span class="inline-flex items-center gap-1">@ResourceLoc.folder @((MarkupString)SortIndicatorHtml("folder"))</span>
                         </th>
                         <th class="@SortableHeaderClass("calctype")" @onclick='() => SortBy("calctype")'>
-                            <span class="inline-flex items-center gap-1">Kalkyltyp @((MarkupString)SortIndicatorHtml("calctype"))</span>
+                            <span class="inline-flex items-center gap-1">@AppLoc["calculationType"] @((MarkupString)SortIndicatorHtml("calctype"))</span>
                         </th>
                         <th class="@SortableHeaderClass("status")" @onclick='() => SortBy("status")'>
                             <span class="inline-flex items-center gap-1">@CalcResource.status @((MarkupString)SortIndicatorHtml("status"))</span>
@@ -116,12 +134,21 @@
     private string _sortColumn = "";
     private bool _sortAscending = true;
     private int _selectedCalcId;
+    private bool _showAllVersions;
+    private const string ToolbarButtonClass = "inline-flex h-8 items-center rounded-lg border border-slate-300 bg-white px-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800";
+
+    private bool HasAnyMultipleVersions =>
+        (Info?.Calculations ?? [])
+            .GroupBy(e => CalculationVersionSelector.GetFamilyKey(e.Calculation))
+            .Any(g => g.Count() > 1);
 
     private IEnumerable<GroupedCalcEntry> SortedEntries
     {
         get
         {
-            var list = Info?.Calculations ?? [];
+            var list = (Info?.Calculations ?? []).AsEnumerable();
+            if (!_showAllVersions)
+                list = SelectCurrentVersionEntries(list);
             return _sortColumn switch
             {
                 "code" => _sortAscending
@@ -154,6 +181,18 @@
                 _ => list.OrderBy(x => x.Calculation.Name, StringComparer.CurrentCultureIgnoreCase)
             };
         }
+    }
+
+    private static IEnumerable<GroupedCalcEntry> SelectCurrentVersionEntries(
+        IEnumerable<GroupedCalcEntry> entries)
+    {
+        var list = entries.ToList();
+        var currentIds = CalculationVersionSelector
+            .SelectCurrentVersions(list.Select(entry => entry.Calculation))
+            .Select(calculation => calculation.Id)
+            .ToHashSet();
+
+        return list.Where(entry => currentIds.Contains(entry.Calculation.Id));
     }
 
     private void SortBy(string column)
@@ -190,13 +229,19 @@
     private static string FormatDate(DateTime value) =>
         value == default ? "-" : value.ToString(ConstValues.DateFormat);
 
-    private static string GetCalculationTypeLabel(CalculationVersionType type) =>
-        type == CalculationVersionType.Production ? "Produktionskalkyl" : "Anbudskalkyl";
+    private string GetCalculationTypeLabel(CalculationVersionType type) => type switch
+    {
+        CalculationVersionType.Production => AppLoc["productionCalculation"].Value,
+        CalculationVersionType.Contract   => AppLoc["contractCalculation"].Value,
+        _                                 => AppLoc["tenderCalculation"].Value
+    };
 
-    private static string GetCalcTypeBadgeClass(ListCalculationMVVM calculation) =>
-        calculation.CalculationType == CalculationVersionType.Production
-            ? "inline-flex rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-semibold text-violet-700 dark:bg-violet-950/50 dark:text-violet-300"
-            : "inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200";
+    private static string GetCalcTypeBadgeClass(ListCalculationMVVM calculation) => calculation.CalculationType switch
+    {
+        CalculationVersionType.Production => "inline-flex rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-semibold text-violet-700 dark:bg-violet-950/50 dark:text-violet-300",
+        CalculationVersionType.Contract   => "inline-flex rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-semibold text-sky-700 dark:bg-sky-950/50 dark:text-sky-300",
+        _                                 => "inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200"
+    };
 
     private static string GetStatusDotClass(ListCalculationMVVM calculation)
     {
@@ -215,5 +260,49 @@
     {
         _selectedCalcId = entry.Calculation.Id;
         await CalcService.SetCalc(entry.Calculation.Id, entry.Project, entry.Folder);
+    }
+
+    private void OpenReports()
+    {
+        var parameters = new Dictionary<string, object>
+        {
+            [nameof(CentralReportsDialog.InitialView)] = CentralReportsDialog.ReportView.Income
+        };
+
+        if (Info.GroupType == "Status")
+            parameters[nameof(CentralReportsDialog.InitialStatus)] = Info.Label;
+        else if (Info.GroupType is "Year" or "Quarter")
+            parameters[nameof(CentralReportsDialog.InitialYear)] = Info.Header.Split(' ').FirstOrDefault(value => int.TryParse(value, out _)) ?? string.Empty;
+
+        Modal.ShowComponent<CentralReportsDialog>(
+            AppLoc["reports"].Value,
+            parameters,
+            BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
+    }
+
+    private Task ExportExcelAsync() => ExportAsync(pdfMode: false, printOnly: false);
+    private Task ExportPdfAsync() => ExportAsync(pdfMode: true, printOnly: true);
+    private Task PrintAsync() => ExportAsync(pdfMode: false, printOnly: true);
+
+    private async Task ExportAsync(bool pdfMode, bool printOnly)
+    {
+        string[] columns = [AppLoc["code"].Value, AppLoc["calculation"].Value, AppLoc["project"].Value, AppLoc["folder"].Value, AppLoc["calculationType"].Value, AppLoc["status"].Value, AppLoc["responsible"].Value, AppLoc["endDate"].Value, AppLoc["tenderDeadline"].Value];
+        var rows = SortedEntries.Select(entry => new object?[]
+        {
+            entry.Calculation.Code,
+            entry.Calculation.Name,
+            entry.Project.Name,
+            entry.Folder.Name,
+            GetCalculationTypeLabel(entry.Calculation.CalculationType),
+            entry.Calculation.Status,
+            entry.Calculation.Responsible,
+            FormatDate(entry.Calculation.EndDate),
+            FormatDate(entry.Calculation.TenderDeadline)
+        });
+
+        if (printOnly)
+            await ReportExportInterop.PrintAsync(JS, Info.Header, columns, rows, pdfMode);
+        else
+            await ReportExportInterop.ExportExcelAsync(JS, "kalkyllista", Info.Header, columns, rows);
     }
 }

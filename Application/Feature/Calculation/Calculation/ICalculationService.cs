@@ -41,6 +41,12 @@ namespace Application.Feature.Calculation.Calculation
             int userId,
             CancellationToken cancellationToken = default);
 
+        Task<int> CreateContractCopyAsync(
+            int id,
+            int? departmentId,
+            int userId,
+            CancellationToken cancellationToken = default);
+
         Task<int> CreateVersionAsync(
             int id,
             int? departmentId,

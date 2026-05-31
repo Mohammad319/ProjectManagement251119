@@ -214,14 +214,33 @@
     {
         if (!project.CalculationsLoaded)
         {
-            project.Calculations = Folder.State.OtherDepartment
-                ? await Repo.Calculation.GetShareCalculationsAsync(project.Id)
-                : await Repo.Calculation.GetAsync(project.Id, UoWService.Folder.ShowArchived);
+            if (Folder.State.OtherDepartment)
+            {
+                var sharedCalculations = await Repo.Calculation.GetShareCalculationsAsync(project.Id);
+                project.Calculations = CalculationVersionSelector
+                    .FilterFamiliesByCurrentVisibility(
+                        sharedCalculations,
+                        UoWService.Folder.ShowArchived)
+                    .ToList();
+            }
+            else
+            {
+                project.Calculations = await Repo.Calculation.GetAsync(project.Id);
+                if (UoWService.Folder.ShowArchived)
+                {
+                    project.Calculations.AddRange(
+                        await Repo.Calculation.GetAsync(project.Id, isVisible: false));
+                }
+            }
 
             project.CalculationsLoaded = true;
+            project.CalculationCount = CalculationVersionSelector
+                .CountCurrentVersions(project.Calculations);
         }
 
-        return project.Calculations ?? [];
+        return CalculationVersionSelector
+            .SelectCurrentVersions(project.Calculations)
+            .ToList();
     }
 
     private void AddCalculationIncomeRows(

@@ -42,6 +42,13 @@ namespace ProjectManagement.Server.Controllers.v1.Project
         }
 
         [Authorize(Roles = Tenant.AdminManger)]
+        [HttpPost(URLConst.Calculation.ContractCopy + "/{calcId}")]
+        public async Task<IActionResult> CreateContractCopy(int calcId)
+        {
+            return Ok(await MicroBus.Send(new CreateContractCalculationCommand(calcId, GetDepartmentId(), GetUserId())));
+        }
+
+        [Authorize(Roles = Tenant.AdminManger)]
         [HttpPost(URLConst.Calculation.VersionCopy + "/{calcId}")]
         public async Task<IActionResult> CreateVersion(int calcId)
         {

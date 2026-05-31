@@ -74,9 +74,21 @@ namespace Persistence.Service.CalculationItems.Calculation
         {
             await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
 
-            var calculation = await GetEditableCalculationAsync(db, id, departmentId, cancellationToken);
+            var calculation = await GetUnlockedCalculationAsync(db, id, departmentId, cancellationToken);
             if (calculation is null)
                 return false;
+
+            if (!calculation.IsCurrentVersion)
+            {
+                if (dto.IsVisible == calculation.IsVisible)
+                    return false;
+
+                if (!dto.IsVisible &&
+                    await HasDerivedCalculationsAsync(db, calculation.Id, cancellationToken))
+                {
+                    return false;
+                }
+            }
 
             var effectiveDepartmentId = departmentId ?? calculation.DepartmentId;
             if (!await ValidateCalculationReferencesAsync(db, dto, calculation.ProjectId, effectiveDepartmentId, id, cancellationToken))
@@ -122,9 +134,13 @@ namespace Persistence.Service.CalculationItems.Calculation
         {
             await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
 
-            var calculation = await GetEditableCalculationAsync(db, id, departmentId, cancellationToken);
-            if (calculation is null)
+            var calculation = await GetUnlockedCalculationAsync(db, id, departmentId, cancellationToken);
+            if (calculation is null ||
+                calculation.IsCurrentVersion ||
+                await HasDerivedCalculationsAsync(db, calculation.Id, cancellationToken))
+            {
                 return false;
+            }
 
             calculation.IsDeleted = true;
             calculation.DeletedAt = DateTime.UtcNow;
@@ -213,8 +229,10 @@ namespace Persistence.Service.CalculationItems.Calculation
                     (!departmentId.HasValue || x.DepartmentId == departmentId.Value), cancellationToken);
 
             if (original is null ||
+                !original.IsCurrentVersion ||
                 !original.IsLocked ||
-                original.CalculationType != CalculationVersionType.Tender ||
+                (original.CalculationType != CalculationVersionType.Tender &&
+                 original.CalculationType != CalculationVersionType.Contract) ||
                 original.Status is not { AllowsProductionCalculation: true })
             {
                 return 0;
@@ -242,6 +260,71 @@ namespace Persistence.Service.CalculationItems.Calculation
             copy.Update(copyDto);
             copy.AssignDepartment(original.DepartmentId);
             copy.MarkAsProductionCopy(original.Id);
+
+            var maxOrder = await db.Calculations
+                .Where(x => x.ProjectId == original.ProjectId)
+                .MaxAsync(x => (int?)x.SortOrder, cancellationToken);
+
+            copy.UpdateOrder((maxOrder ?? 0) + 100);
+
+            db.Calculations.Add(copy);
+            await db.SaveChangesAsync(cancellationToken);
+
+            await notification.SendNotificationAsync(
+                original.Id.ToString(),
+                ObjectTypHub.calculation,
+                OperationType.Update,
+                BuildPageDto(original));
+
+            return copy.Id;
+        }
+
+        public async Task<int> CreateContractCopyAsync(
+            int id,
+            int? departmentId,
+            int userId,
+            CancellationToken cancellationToken = default)
+        {
+            await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
+
+            var original = await db.Calculations
+                .Include(c => c.Status)
+                .Include(c => c.Tasks)
+                    .ThenInclude(t => t.Resources)
+                .FirstOrDefaultAsync(x => x.Id == id &&
+                    (!departmentId.HasValue || x.DepartmentId == departmentId.Value), cancellationToken);
+
+            if (original is null ||
+                !original.IsCurrentVersion ||
+                !original.IsLocked ||
+                original.CalculationType != CalculationVersionType.Tender ||
+                original.Status is not { AllowsProductionCalculation: true })
+            {
+                return 0;
+            }
+
+            var copy = CalculationEntity.CreateCopy(original, original.ProjectId, userId);
+
+            var existingNames = await db.Calculations
+                .AsNoTracking()
+                .Where(x => x.ProjectId == original.ProjectId)
+                .Select(x => x.Name)
+                .ToListAsync(cancellationToken);
+
+            var existingCodes = await db.Calculations
+                .AsNoTracking()
+                .Where(x => x.ProjectId == original.ProjectId)
+                .Select(x => x.Code)
+                .ToListAsync(cancellationToken);
+
+            var copyDto = original.ToPostDto();
+            copyDto.Name = EnsureUniqueName(copyDto.Name, existingNames);
+            copyDto.Code = EnsureUniqueCode(copyDto.Code, existingCodes);
+            copyDto.CalculationType = CalculationVersionType.Contract;
+
+            copy.Update(copyDto);
+            copy.AssignDepartment(original.DepartmentId);
+            copy.MarkAsContractCopy(original.Id);
 
             var maxOrder = await db.Calculations
                 .Where(x => x.ProjectId == original.ProjectId)
@@ -296,6 +379,7 @@ namespace Persistence.Service.CalculationItems.Calculation
             var copy = CalculationEntity.CreateCopy(original, original.ProjectId, userId);
             var copyDto = original.ToPostDto();
             copyDto.Code = EnsureVersionCode(copyDto.Code, nextVersionNumber, existingCodes);
+            copyDto.IsVisible = true;
 
             copy.Update(copyDto);
             copy.AssignDepartment(original.DepartmentId);
@@ -405,16 +489,12 @@ namespace Persistence.Service.CalculationItems.Calculation
         {
             await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
 
-            var calculation = await db.Calculations
-                .FirstOrDefaultAsync(x => x.Id == id &&
+            var rows = await db.Calculations
+                .Where(x => x.Id == id &&
                     !x.IsLocked &&
-                    (!departmentId.HasValue || x.DepartmentId == departmentId.Value), cancellationToken);
-            if (calculation is null)
-                return false;
-
-            calculation.UpdateOrder(newOrder);
-            await db.SaveChangesAsync(cancellationToken);
-            return true;
+                    (!departmentId.HasValue || x.DepartmentId == departmentId.Value))
+                .ExecuteUpdateAsync(s => s.SetProperty(x => x.SortOrder, newOrder), cancellationToken);
+            return rows > 0;
         }
 
         public async Task<bool> UpdateSortAsync(
@@ -546,8 +626,34 @@ namespace Persistence.Service.CalculationItems.Calculation
         {
             return await db.Calculations
                 .FirstOrDefaultAsync(x => x.Id == id &&
+                    x.IsCurrentVersion &&
                     !x.IsLocked &&
                     (!departmentId.HasValue || x.DepartmentId == departmentId.Value), cancellationToken);
+        }
+
+        private static async Task<CalculationEntity?> GetUnlockedCalculationAsync(
+            ShardingSingleDbContext db,
+            int id,
+            int? departmentId,
+            CancellationToken cancellationToken)
+        {
+            return await db.Calculations
+                .FirstOrDefaultAsync(x => x.Id == id &&
+                    !x.IsLocked &&
+                    (!departmentId.HasValue || x.DepartmentId == departmentId.Value), cancellationToken);
+        }
+
+        private static Task<bool> HasDerivedCalculationsAsync(
+            ShardingSingleDbContext db,
+            int sourceCalculationId,
+            CancellationToken cancellationToken)
+        {
+            return db.Calculations
+                .AsNoTracking()
+                .AnyAsync(
+                    calculation => !calculation.IsDeleted &&
+                        calculation.SourceCalculationId == sourceCalculationId,
+                    cancellationToken);
         }
 
         private static async Task<bool> ValidateCalculationReferencesAsync(

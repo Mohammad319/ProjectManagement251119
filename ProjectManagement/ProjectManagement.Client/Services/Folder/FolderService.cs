@@ -5,6 +5,7 @@ using ProjectManagement.Client.Shared.MVVM.Folder;
 using ProjectManagement.Client.Shared.Repositories.Calculation;
 using ProjectManagement.Client.Shared.Repositories.Folder;
 using ProjectManagement.Client.Shared.Repositories.Project;
+using ProjectManagement.Shared.Helper;
 
 namespace ProjectManagement.Client.Services.Folder
 {
@@ -150,9 +151,23 @@ namespace ProjectManagement.Client.Services.Folder
 
             if (!project.CalculationsLoaded)
             {
-                project.Calculations = folderState.OtherDepartment
-                    ? await calcRepo.GetShareCalculationsAsync(project.Id)
-                    : await calcRepo.GetAsync(project.Id);
+                List<ProjectManagement.Client.Shared.MVVM.Calculation.ListCalculationMVVM> all;
+                if (folderState.OtherDepartment)
+                {
+                    all = await calcRepo.GetShareCalculationsAsync(project.Id);
+                    all = CalculationVersionSelector
+                        .FilterFamiliesByCurrentVisibility(all, ShowArchived)
+                        .ToList();
+                }
+                else
+                {
+                    all = await calcRepo.GetAsync(project.Id);
+                    if (ShowArchived)
+                        all.AddRange(await calcRepo.GetAsync(project.Id, isVisible: false));
+                }
+
+                project.Calculations = all.ToList();
+                project.CalculationCount = CalculationVersionSelector.CountCurrentVersions(project.Calculations);
                 project.CalculationsLoaded = true;
             }
 

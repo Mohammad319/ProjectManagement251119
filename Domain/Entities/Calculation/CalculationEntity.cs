@@ -359,6 +359,21 @@ namespace Domain.Entities.Calculation
             ApprovedAtUtc = null;
         }
 
+        public void MarkAsContractCopy(int sourceCalculationId)
+        {
+            if (sourceCalculationId <= 0)
+                throw new ArgumentOutOfRangeException(nameof(sourceCalculationId));
+
+            CalculationType = CalculationVersionType.Contract;
+            SourceCalculationId = sourceCalculationId;
+            IsLocked = false;
+            LockedAtUtc = null;
+            LockedByUserId = null;
+            ApprovedByUserId = null;
+            ApprovedByName = string.Empty;
+            ApprovedAtUtc = null;
+        }
+
         public void SetTax(int tax)
         {
             if (tax < 0 || tax > 100)

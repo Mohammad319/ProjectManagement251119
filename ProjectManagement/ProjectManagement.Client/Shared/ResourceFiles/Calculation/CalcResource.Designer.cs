@@ -1004,6 +1004,18 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.Calculation {
         public static string checkSpellingOrFilter           => ResourceManager.GetString("checkSpellingOrFilter", resourceCulture)!;
         public static string searchFoldersProjectsCalcs      => ResourceManager.GetString("searchFoldersProjectsCalcs", resourceCulture)!;
         public static string searchNameOrCodePlaceholder     => ResourceManager.GetString("searchNameOrCodePlaceholder", resourceCulture)!;
-        public static string resultSummaryFormat             => ResourceManager.GetString("resultSummaryFormat", resourceCulture)!;
+        public static string resultSummaryFormat               => ResourceManager.GetString("resultSummaryFormat", resourceCulture)!;
+        public static string lockedAndApproved                 => ResourceManager.GetString("lockedAndApproved", resourceCulture)!;
+        public static string lockedBecauseApproved             => ResourceManager.GetString("lockedBecauseApproved", resourceCulture)!;
+        public static string approvedBy                        => ResourceManager.GetString("approvedBy", resourceCulture)!;
+        public static string approvedDate                      => ResourceManager.GetString("approvedDate", resourceCulture)!;
+        public static string unknownUser                       => ResourceManager.GetString("unknownUser", resourceCulture)!;
+        public static string addNote                           => ResourceManager.GetString("addNote", resourceCulture)!;
+        public static string approveAndLockTitle               => ResourceManager.GetString("approveAndLockTitle", resourceCulture)!;
+        public static string approveAndLockDescription         => ResourceManager.GetString("approveAndLockDescription", resourceCulture)!;
+        public static string approveAndLock                    => ResourceManager.GetString("approveAndLock", resourceCulture)!;
+        public static string approvalBlockedNoResponsible      => ResourceManager.GetString("approvalBlockedNoResponsible", resourceCulture)!;
+        public static string approvalBlockedInspectorOnly      => ResourceManager.GetString("approvalBlockedInspectorOnly", resourceCulture)!;
+        public static string approvalBlockedResponsibleOnly    => ResourceManager.GetString("approvalBlockedResponsibleOnly", resourceCulture)!;
     }
 }

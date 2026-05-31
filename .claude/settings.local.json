@@ -51,7 +51,9 @@
       "Bash(dir \"C:\\\\Users\\\\ataya\\\\Downloads\\\\AvedasD\")",
       "Bash(mkdir -p \"C:/Library/BlazorMHD/BlazorMHD.UI/Components/Data/DropdownPanel\")",
       "Bash(mkdir -p \"C:/Library/BlazorMHD/BlazorMHD.UI/Components/Data/ColumnPicker\")",
-      "Read(//c/Users/Library/**)"
+      "Read(//c/Users/Library/**)",
+      "Bash(cat)",
+      "Read(//tmp/**)"
     ]
   }
 }

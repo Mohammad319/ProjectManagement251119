@@ -513,6 +513,15 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public DateTime EndDate { get; set; } = DateTime.Now.AddMonths(1);
         public DateTime TenderDeadline { get; set; }
         public DateTime TenderQA { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+        public int Tax { get; set; }
+        public bool IsVisible { get; set; } = true;
+        public string Inspector { get; set; } = string.Empty;
+        public string ProjectName { get; set; } = string.Empty;
+        public string FolderName { get; set; } = string.Empty;
+        public int Priority { get; set; }
+        public decimal TimeMonth { get; set; }
     }
 
     public class CalculationPageOtherDepartmentDTO : CalculationPageDTO

@@ -19,233 +19,263 @@ else if (ProjectUpdate is not null)
         <div class="pr-1">
             <div class="grid grid-cols-1 gap-3 xl:grid-cols-2">
 
-                @* ── Row 1, Col 1: Grunddata ─────────────────────────── *@
-                <section class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                    <h3 class="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">@AppLoc["basicData"]</h3>
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        <div>
-                            <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.code</label>
-                            <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.Code" />
-                        </div>
-                        <div>
-                            <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.name</label>
-                            <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.Name" />
-                        </div>
-                        <div class="sm:col-span-2">
-                            <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.projectType</label>
-                            <InputSelect @bind-Value="ProjectUpdate.TypeId" class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
-                                <option></option>
-                                @if (Config?.Types != null)
-                                {
-                                    foreach (var t in Config.Types)
-                                    {
-                                        <option value="@t.Id">@t.Name</option>
-                                    }
-                                }
-                            </InputSelect>
-                        </div>
-                        <div class="sm:col-span-2">
-                            <label class="inline-flex cursor-pointer items-center gap-2 rounded-md border border-slate-200 px-2.5 py-1.5 transition hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
-                                <input type="checkbox"
-                                       class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-500"
-                                       checked="@(!ProjectUpdate.IsVisible)"
-                                       @onchange="e => ProjectUpdate.IsVisible = !(bool)(e.Value ?? false)" />
-                                <span class="select-none text-sm text-slate-700 dark:text-slate-300">@AppLoc["archived"]</span>
-                            </label>
-                        </div>
-                    </div>
-                </section>
+                @* ── Left column: Grunddata, Ansvar, Tidsplan, Kundgrupper ─ *@
+                <div class="flex flex-col gap-3">
 
-                @* ── Row 1, Col 2: Projektplats ──────────────────────── *@
-                <section class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                    <h3 class="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">@AppLoc["projectLocation"]</h3>
-                    <div class="grid grid-cols-1 gap-3">
-                        <div>
-                            <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@AppLoc["municipalityCity"]</label>
-                            <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@MainAddress.City" />
-                        </div>
-                        <div>
-                            <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">Geografisk plats</label>
-                            <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                                       placeholder="Text, koordinat, kartlänk …"
-                                       @bind-Value="@MainAddress.Street" />
-                        </div>
-                    </div>
-                </section>
-
-                @* ── Row 2, Col 1: Ansvar ────────────────────────────── *@
-                <section class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                    <h3 class="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">@AppLoc["responsibility"]</h3>
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        @for (int i = 0; i < ProjectUpdate.Responsibles.Count; i++)
-                        {
+                    @* Grunddata *@
+                    <section class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                        <h3 class="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">@AppLoc["basicData"]</h3>
+                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                             <div>
-                                <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">Standard kalkylansvarig</label>
-                                <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                                           @bind-Value="@ProjectUpdate.Responsibles[i]" />
+                                <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.code</label>
+                                <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.Code" />
                             </div>
-                        }
-                        <div>
-                            <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">Standardgranskare</label>
-                            <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.Inspector" />
-                        </div>
-                    </div>
-                </section>
-
-                @* ── Row 2, Col 2: Upphandling och referenser ───────── *@
-                <section class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                    <h3 class="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">@AppLoc["procurementAndReferences"]</h3>
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        <div>
-                            <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@AppLoc["procurementName"]</label>
-                            <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.ProcurementName" />
-                        </div>
-                        <div>
-                            <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@AppLoc["procurementNumber"]</label>
-                            <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.ProcurementNumber" />
-                        </div>
-                        <div>
-                            <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@AppLoc["customerReference"]</label>
-                            <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.CustomerReference" />
-                        </div>
-                        <div>
-                            <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@AppLoc["procurementLink"]</label>
-                            <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.ProcurementLink" />
-                        </div>
-                        <div>
-                            <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.projectContract</label>
-                            <InputSelect @bind-Value="ProjectUpdate.ContractId" class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
-                                <option></option>
-                                @if (Config?.Contracts != null)
-                                {
-                                    foreach (var t in Config.Contracts)
-                                    {
-                                        <option value="@t.Id">@t.Name</option>
-                                    }
-                                }
-                            </InputSelect>
-                        </div>
-                        <div>
-                            <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.projectCompensation</label>
-                            <InputSelect @bind-Value="ProjectUpdate.CompensationId" class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
-                                <option></option>
-                                @if (Config?.Compensations != null)
-                                {
-                                    foreach (var t in Config.Compensations)
-                                    {
-                                        <option value="@t.Id">@t.Name</option>
-                                    }
-                                }
-                            </InputSelect>
-                        </div>
-                        <div>
-                            <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.procurement</label>
-                            <InputSelect @bind-Value="ProjectUpdate.Procurement" class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
-                                <option value="@Procurement.A">@Procurement.A</option>
-                                <option value="@Procurement.B">@Procurement.B</option>
-                            </InputSelect>
-                        </div>
-                        <div>
-                            <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.procurementMethods</label>
-                            <InputSelect @bind-Value="ProjectUpdate.ProcurementMethodsId" class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
-                                <option></option>
-                                @if (Config?.Methods != null)
-                                {
-                                    foreach (var t in Config.Methods)
-                                    {
-                                        <option value="@t.Id">@t.Name</option>
-                                    }
-                                }
-                            </InputSelect>
-                        </div>
-                        <div>
-                            <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.publicationDate</label>
-                            <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.PublicationDate" />
-                        </div>
-                        <div>
-                            <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.tenderQA</label>
-                            <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.TenderQA" />
-                        </div>
-                        <div>
-                            <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.tenderDeadline</label>
-                            <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.TenderDeadline" />
-                        </div>
-                        <div>
-                            <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.decisionDate</label>
-                            <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.DecisionDate" />
-                        </div>
-                    </div>
-                </section>
-
-                @* ── Row 3, Col 1: Projektets tidsplan ──────────────── *@
-                <section class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                    <h3 class="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">@AppLoc["projectSchedule"]</h3>
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        <div>
-                            <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.startDate</label>
-                            <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.StartDate" />
-                        </div>
-                        <div>
-                            <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.endDate</label>
-                            <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.EndDate" />
-                        </div>
-                    </div>
-                </section>
-
-                @* ── Row 3, Col 2: Kundgrupper / kundinformation ─────── *@
-                <section class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                    <h3 class="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">@AppLoc["customerInformation"]</h3>
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        @if (Config?.Organisation != null)
-                        {
                             <div>
-                                <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@ResourceApp.organisation</label>
-                                <InputSelect @bind-Value="ProjectUpdate.OrganisationId" class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
+                                <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.name</label>
+                                <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.Name" />
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.projectType</label>
+                                <InputSelect @bind-Value="ProjectUpdate.TypeId" class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
                                     <option></option>
-                                    @foreach (var t in Config.Organisation)
+                                    @if (Config?.Types != null)
                                     {
-                                        <option value="@t.Id">@t.Name</option>
+                                        foreach (var t in Config.Types)
+                                        {
+                                            <option value="@t.Id">@t.Name</option>
+                                        }
                                     }
                                 </InputSelect>
                             </div>
-                        }
-                        <div>
-                            <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.developer</label>
-                            <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.Developer" />
+                            <div class="sm:col-span-2">
+                                <label class="inline-flex cursor-pointer items-center gap-2 rounded-md border border-slate-200 px-2.5 py-1.5 transition hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
+                                    <input type="checkbox"
+                                           class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-500"
+                                           checked="@(!ProjectUpdate.IsVisible)"
+                                           @onchange="e => ProjectUpdate.IsVisible = !(bool)(e.Value ?? false)" />
+                                    <span class="select-none text-sm text-slate-700 dark:text-slate-300">@AppLoc["archived"]</span>
+                                </label>
+                            </div>
                         </div>
-                        <div>
-                            <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@ResourceLoc.clientsProjectmanager</label>
-                            <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.ClientsManager" />
-                        </div>
-                        <div>
-                            <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@ResourceLoc.designer</label>
-                            <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.Designer" />
-                        </div>
-                        <div>
-                            <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">Kundens kontaktperson under upphandlingstiden</label>
-                            <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.Supervisor" />
-                        </div>
-                        <div class="sm:col-span-2">
-                            <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.overviewInfoProject</label>
-                            <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.OverviewInfoProject" />
-                        </div>
-                    </div>
-                </section>
+                    </section>
 
-                @* ── Row 4: Kontakter (full width) ───────────────────── *@
+                    @* Ansvar *@
+                    <section class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                        <h3 class="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">@AppLoc["responsibility"]</h3>
+                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            @for (int i = 0; i < ProjectUpdate.Responsibles.Count; i++)
+                            {
+                                <div>
+                                    <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">Kalkylansvarig</label>
+                                    <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                                               @bind-Value="@ProjectUpdate.Responsibles[i]" />
+                                </div>
+                            }
+                            <div>
+                                <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">Granskare</label>
+                                <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.Inspector" />
+                            </div>
+                        </div>
+                    </section>
+
+                    @* Tidsplan *@
+                    <section class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                        <h3 class="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">@AppLoc["projectSchedule"]</h3>
+                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <div>
+                                <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.startDate</label>
+                                <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.StartDate" />
+                            </div>
+                            <div>
+                                <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.endDate</label>
+                                <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.EndDate" />
+                            </div>
+                        </div>
+                    </section>
+
+                    @* Kundgrupper *@
+                    <section class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                        <h3 class="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">@AppLoc["customerInformation"]</h3>
+                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            @if (Config?.Organisation != null)
+                            {
+                                <div>
+                                    <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@ResourceApp.organisation</label>
+                                    <InputSelect @bind-Value="ProjectUpdate.OrganisationId" class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
+                                        <option></option>
+                                        @foreach (var t in Config.Organisation)
+                                        {
+                                            <option value="@t.Id">@t.Name</option>
+                                        }
+                                    </InputSelect>
+                                </div>
+                            }
+                            <div>
+                                <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.developer</label>
+                                <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.Developer" />
+                            </div>
+                            <div>
+                                <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@ResourceLoc.clientsProjectmanager</label>
+                                <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.ClientsManager" />
+                            </div>
+                            <div>
+                                <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@ResourceLoc.designer</label>
+                                <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.Designer" />
+                            </div>
+                            <div>
+                                <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">Kundens kontaktperson under upphandlingstiden</label>
+                                <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.Supervisor" />
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.overviewInfoProject</label>
+                                <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.OverviewInfoProject" />
+                            </div>
+                        </div>
+                    </section>
+
+                </div>
+
+                @* ── Right column: Projektplats, Upphandling ─────────── *@
+                <div class="flex flex-col gap-3">
+
+                    @* Projektplats *@
+                    <section class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                        <h3 class="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">@AppLoc["projectLocation"]</h3>
+                        <div class="grid grid-cols-1 gap-3">
+                            <div>
+                                <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">Adress</label>
+                                <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@MainAddress.City" />
+                            </div>
+                            <div>
+                                <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">Geografisk plats</label>
+                                <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                                           placeholder="Text, koordinat, kartlänk …"
+                                           @bind-Value="@MainAddress.Street" />
+                            </div>
+                        </div>
+                    </section>
+
+                    @* Upphandling *@
+                    <section class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                        <h3 class="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">@AppLoc["procurementAndReferences"]</h3>
+                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <div>
+                                <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@AppLoc["procurementName"]</label>
+                                <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.ProcurementName" />
+                            </div>
+                            <div>
+                                <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@AppLoc["procurementNumber"]</label>
+                                <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.ProcurementNumber" />
+                            </div>
+                            <div>
+                                <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@AppLoc["customerReference"]</label>
+                                <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.CustomerReference" />
+                            </div>
+                            <div>
+                                <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@AppLoc["procurementLink"]</label>
+                                <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.ProcurementLink" />
+                            </div>
+                            <div>
+                                <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.projectContract</label>
+                                <InputSelect @bind-Value="ProjectUpdate.ContractId" class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
+                                    <option></option>
+                                    @if (Config?.Contracts != null)
+                                    {
+                                        foreach (var t in Config.Contracts)
+                                        {
+                                            <option value="@t.Id">@t.Name</option>
+                                        }
+                                    }
+                                </InputSelect>
+                            </div>
+                            <div>
+                                <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.projectCompensation</label>
+                                <InputSelect @bind-Value="ProjectUpdate.CompensationId" class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
+                                    <option></option>
+                                    @if (Config?.Compensations != null)
+                                    {
+                                        foreach (var t in Config.Compensations)
+                                        {
+                                            <option value="@t.Id">@t.Name</option>
+                                        }
+                                    }
+                                </InputSelect>
+                            </div>
+                            <div>
+                                <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.procurement</label>
+                                <InputSelect @bind-Value="ProjectUpdate.Procurement" class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
+                                    <option value="@Procurement.A">@Procurement.A</option>
+                                    <option value="@Procurement.B">@Procurement.B</option>
+                                </InputSelect>
+                            </div>
+                            <div>
+                                <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.procurementMethods</label>
+                                <InputSelect @bind-Value="ProjectUpdate.ProcurementMethodsId" class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
+                                    <option></option>
+                                    @if (Config?.Methods != null)
+                                    {
+                                        foreach (var t in Config.Methods)
+                                        {
+                                            <option value="@t.Id">@t.Name</option>
+                                        }
+                                    }
+                                </InputSelect>
+                            </div>
+                            <div>
+                                <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.publicationDate</label>
+                                <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.PublicationDate" />
+                            </div>
+                            <div>
+                                <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.tenderQA</label>
+                                <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.TenderQA" />
+                            </div>
+                            <div>
+                                <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.tenderDeadline</label>
+                                <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.TenderDeadline" />
+                            </div>
+                            <div>
+                                <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.decisionDate</label>
+                                <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@ProjectUpdate.DecisionDate" />
+                            </div>
+                        </div>
+                    </section>
+
+                </div>
+
+                @* ── Bottom: Kontakter ───────────────────────────────── *@
                 <section class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900 xl:col-span-2">
                     <h3 class="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">@ResourceIdentity.contact</h3>
                     <ContactsUI Contacts="ProjectUpdate.Contacts" />
                 </section>
 
-                @* ── Row 5: Anteckning / beskrivning (full width) ────── *@
+                @* ── Bottom: Anteckning ──────────────────────────────── *@
                 <section class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900 xl:col-span-2">
-                    <h3 class="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">@AppLoc["notesAndDescription"]</h3>
-                    <div>
-                        <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">Projektbeskrivning</label>
-                        <textarea class="min-h-32 w-full resize-y rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                                  @bind="ProjectUpdate.Notes[0]">
-                        </textarea>
+                    <h3 class="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">Anteckning</h3>
+                    <div class="space-y-2">
+                        @for (int i = 0; i < ProjectUpdate.Notes.Count; i++)
+                        {
+                            var idx = i;
+                            <div class="flex items-start gap-2">
+                                <textarea class="min-h-24 flex-1 resize-y rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                                          placeholder="Anteckning"
+                                          @bind="ProjectUpdate.Notes[idx]">
+                                </textarea>
+                                @if (ProjectUpdate.Notes.Count > 1)
+                                {
+                                    <button type="button"
+                                            class="mt-1 rounded-md p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400"
+                                            title="Ta bort"
+                                            @onclick="() => RemoveNote(idx)">
+                                        ×
+                                    </button>
+                                }
+                            </div>
+                        }
+                        <button type="button"
+                                class="mt-1 inline-flex items-center gap-1.5 text-sm text-sky-600 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300"
+                                @onclick="AddNote">
+                            + Lägg till anteckning
+                        </button>
                     </div>
                 </section>
 

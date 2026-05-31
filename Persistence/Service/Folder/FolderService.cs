@@ -112,14 +112,12 @@ namespace Persistence.Service.Folder
         public async Task<bool> UpdateOrderAsync(Guid id, int newOrder, int? departmentId, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
-            var folder = await context.Folders
-                .FirstOrDefaultAsync(x => x.Id == id &&
-                    (!departmentId.HasValue || x.DepartmentId == departmentId.Value), ct);
-            if (folder == null) return false;
 
-            folder.UpdateOrder(newOrder);
-            await context.SaveChangesAsync(ct);
-            return true;
+            var rows = await context.Folders
+                .Where(x => x.Id == id &&
+                    (!departmentId.HasValue || x.DepartmentId == departmentId.Value))
+                .ExecuteUpdateAsync(s => s.SetProperty(x => x.SortOrder, newOrder), ct);
+            return rows > 0;
         }
 
         // ---------------- Queries ----------------
@@ -138,7 +136,9 @@ namespace Persistence.Service.Folder
                     Name = x.Name,
                     Color = x.Color,
                     Order = (int)x.SortOrder,
-                    IsVisible = x.IsVisible
+                    IsVisible = x.IsVisible,
+                    CreatedAt = x.CreatedAt,
+                    UpdatedAt = x.UpdatedAt
                 })
                 .ToListAsync(ct);
         }
@@ -158,7 +158,9 @@ namespace Persistence.Service.Folder
                     Name = x.Name,
                     Color = x.Color,
                     Order = (int)x.SortOrder,
-                    IsVisible = x.IsVisible
+                    IsVisible = x.IsVisible,
+                    CreatedAt = x.CreatedAt,
+                    UpdatedAt = x.UpdatedAt
                 })
                 .ToListAsync(ct);
         }
@@ -177,7 +179,9 @@ namespace Persistence.Service.Folder
                     Name = x.Name,
                     Color = x.Color,
                     Order = x.SortOrder,
-                    IsVisible = x.IsVisible
+                    IsVisible = x.IsVisible,
+                    CreatedAt = x.CreatedAt,
+                    UpdatedAt = x.UpdatedAt
                 })
                 .ToListAsync(ct);
         }

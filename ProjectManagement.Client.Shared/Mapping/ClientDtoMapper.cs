@@ -48,6 +48,15 @@ namespace ProjectManagement.Client.Shared.Mapping
                 EndDate = dto.EndDate,
                 TenderDeadline = dto.TenderDeadline,
                 TenderQA = dto.TenderQA,
+                CreatedAt = dto.CreatedAt,
+                UpdatedAt = dto.UpdatedAt,
+                Tax = dto.Tax,
+                IsVisible = dto.IsVisible,
+                Inspector = dto.Inspector ?? string.Empty,
+                ProjectName = dto.ProjectName ?? string.Empty,
+                FolderName = dto.FolderName ?? string.Empty,
+                Priority = dto.Priority,
+                TimeMonth = dto.TimeMonth,
             };
         }
 
@@ -285,6 +294,8 @@ namespace ProjectManagement.Client.Shared.Mapping
                 Order = dto.Order,
                 Color = dto.Color ?? "#08bf66",
                 IsVisible = dto.IsVisible,
+                CreatedAt = dto.CreatedAt,
+                UpdatedAt = dto.UpdatedAt,
                 Projects = [],
             };
         }
@@ -307,6 +318,19 @@ namespace ProjectManagement.Client.Shared.Mapping
                 TenderDeadline = dto.TenderDeadline,
                 TenderQA = dto.TenderQA,
                 IsVisible = dto.IsVisible,
+                CalculationCount = dto.CalculationCount,
+                StatusId = dto.StatusId,
+                StatusSortOrder = dto.StatusSortOrder,
+                CreatedAt = dto.CreatedAt,
+                UpdatedAt = dto.UpdatedAt,
+                Developer = dto.Developer ?? string.Empty,
+                Organisation = dto.Organisation ?? string.Empty,
+                ProcurementName = dto.ProcurementName ?? string.Empty,
+                ProcurementNumber = dto.ProcurementNumber ?? string.Empty,
+                CustomerReference = dto.CustomerReference ?? string.Empty,
+                Contract = dto.Contract ?? string.Empty,
+                Type = dto.Type ?? string.Empty,
+                Inspector = dto.Inspector ?? string.Empty,
                 Calculations = [],
             };
         }

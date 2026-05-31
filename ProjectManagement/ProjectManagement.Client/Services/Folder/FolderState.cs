@@ -7,6 +7,7 @@ namespace ProjectManagement.Client.Services.Folder
     {
         public List<ListDTO> Departments { get; private set; } = [];
         public List<FolderMVVM> FoldersList { get; private set; } = [];
+        public int? SelectedDepartmentId { get; private set; }
 
         public FolderMVVM? FolderSelected { get; private set; }
         public ListProjectMVVM? ProjectSelected { get; private set; }
@@ -28,6 +29,12 @@ namespace ProjectManagement.Client.Services.Folder
         public void SetDepartments(List<ListDTO> departments)
         {
             Departments = departments ?? [];
+            Notify();
+        }
+
+        public void SetSelectedDepartment(int? departmentId)
+        {
+            SelectedDepartmentId = departmentId;
             Notify();
         }
 

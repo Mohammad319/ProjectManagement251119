@@ -8,7 +8,8 @@
     public enum CalculationVersionType
     {
         Tender = 0,
-        Production = 1
+        Production = 1,
+        Contract = 2
     }
 
     public enum ObjectTypHub

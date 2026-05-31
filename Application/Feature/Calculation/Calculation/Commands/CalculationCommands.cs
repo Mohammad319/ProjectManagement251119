@@ -26,6 +26,13 @@ namespace Application.Feature.Calculation.Calculation.Commands
             => service.CreateProductionCopyAsync(request.Id, request.DepartmentId, request.UserId, ct);
     }
 
+    public sealed record CreateContractCalculationCommand(int Id, int? DepartmentId, int UserId) : IRequest<int>;
+    public class CreateContractCalculationCommandHandler(ICalculationService service) : IRequestHandler<CreateContractCalculationCommand, int>
+    {
+        public Task<int> Handle(CreateContractCalculationCommand request, CancellationToken ct)
+            => service.CreateContractCopyAsync(request.Id, request.DepartmentId, request.UserId, ct);
+    }
+
     public sealed record CreateCalculationVersionCommand(int Id, int? DepartmentId, int UserId) : IRequest<int>;
     public class CreateCalculationVersionCommandHandler(ICalculationService service) : IRequestHandler<CreateCalculationVersionCommand, int>
     {

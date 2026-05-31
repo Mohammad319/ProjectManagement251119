@@ -55,7 +55,10 @@ namespace Application.Mapping.Project
             };
         }
 
-        public static ListProjectDTO ToListDto(this ProjectEntity entity, int? statusSortOrder = null)
+        public static ListProjectDTO ToListDto(
+            this ProjectEntity entity,
+            int? statusSortOrder = null,
+            int calculationCount = 0)
         {
             ArgumentNullException.ThrowIfNull(entity);
 
@@ -72,10 +75,21 @@ namespace Application.Mapping.Project
                 TenderQA = entity.TenderQA,
                 Order = entity.SortOrder,
                 IsVisible = entity.IsVisible,
+                CalculationCount = calculationCount,
                 Status = metadata.StatusName,
                 StatusId = metadata.StatusId,
                 StatusSortOrder = statusSortOrder,
-                Responsible = metadata.Responsibles.FirstOrDefault(x => !string.IsNullOrWhiteSpace(x)) ?? string.Empty
+                Responsible = metadata.Responsibles.FirstOrDefault(x => !string.IsNullOrWhiteSpace(x)) ?? string.Empty,
+                CreatedAt = entity.CreatedAt,
+                UpdatedAt = entity.UpdatedAt,
+                Developer = metadata.Developer,
+                Organisation = entity.Organisation?.Name ?? string.Empty,
+                ProcurementName = metadata.ProcurementName,
+                ProcurementNumber = metadata.ProcurementNumber,
+                CustomerReference = metadata.CustomerReference,
+                Contract = entity.Contract?.Name ?? string.Empty,
+                Type = entity.ProjectType?.Name ?? string.Empty,
+                Inspector = metadata.Inspector
             };
         }
     }

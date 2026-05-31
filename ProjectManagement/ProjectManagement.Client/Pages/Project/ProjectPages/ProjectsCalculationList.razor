@@ -22,6 +22,7 @@
 @using NavTabItem = BlazorMHD.UI.Core.Navigation.TabItem
 
 @inherits AppComponentBase
+@inject IJSRuntime JS
 
 <div class="ml-1">
 
@@ -38,7 +39,7 @@
                     {
                         <span> · @AppLoc["projectCodeFormat", Folder.State.ProjectSelected?.Code ?? "-"]</span>
                     }
-                    <span> · @SortedCalculations.Count() @CalcResource.calculation</span>
+                    <span> · @FilteredCalculations.Count() @CalcResource.calculation</span>
                 </span>
             </div>
         </div>
@@ -48,31 +49,55 @@
                 <input type="checkbox"
                        class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed dark:border-slate-600 dark:bg-slate-800"
                        @bind="_showAllVersions"
+                       @bind:after="ResetPage"
                        disabled="@(!HasAnyMultipleVersions)" />
                 <span>@AppLoc["showAllVersions"]</span>
             </label>
+
+            <button type="button"
+                    class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                    @onclick="() => _showFilters = !_showFilters">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
+                </svg>
+                <span>@AppLoc["filter"]</span>
+                @if (HasActiveFilters)
+                {
+                    <span class="inline-flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white">!</span>
+                }
+            </button>
 
             <MhdColumnPicker Text="@AppLoc["columns"]"
                              Columns="@CalculationColumnOptions"
                              ColumnVisibility="_calculationColumns"
                              OnChanged="StateHasChanged" />
 
+            <button type="button" class="@ToolbarButtonClass" @onclick="ExportCalculationListAsync">@AppLoc["exportExcel"]</button>
+            <button type="button" class="@ToolbarButtonClass" @onclick="ExportCalculationPdfAsync">@AppLoc["exportPdf"]</button>
+            <button type="button" class="@ToolbarButtonClass" @onclick="PrintCalculationListAsync">@AppLoc["print"]</button>
+
             <button type="button"
                     class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-sky-300 bg-sky-50 px-3 text-sm font-semibold text-sky-700 transition hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-300 dark:hover:bg-sky-950/50"
                     disabled="@(Folder.State.ProjectSelected is null)"
-                    title="@AppLoc["incomeOverview"]"
-                    @onclick="OpenIncomeOverview">
-                <span>@AppLoc["incomeOverview"]</span>
+                    title="@AppLoc["reports"]"
+                    @onclick="OpenReports">
+                <span>@AppLoc["reports"]</span>
             </button>
 
             <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
                 @if (!Folder.State.OtherDepartment)
                 {
                     <button type="button"
-                            class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-white text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-                            title="Uppdatera"
+                            class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
                             @onclick="RefreshCalculationsAsync">
-                        <span aria-hidden="true">@((MarkupString)Icons.GetVisibleIcon(IaVisible))</span>
+                        @if (IaVisible)
+                        {
+                            <span>@AppLoc["showArchived"]</span>
+                        }
+                        else
+                        {
+                            <span>@AppLoc["hideArchived"]</span>
+                        }
                     </button>
                 }
 
@@ -88,75 +113,215 @@
         </div>
     </div>
 
+    @* ── Filter panel ────────────────────────────────────── *@
+    @if (_showFilters)
+    {
+        <div class="mx-1 mb-2 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/60">
+            <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+
+                <div class="flex flex-col gap-1">
+                    <label class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">@AppLoc["status"]</label>
+                    <input type="text" placeholder="@AppLoc["filterStatusPlaceholder"]"
+                           class="h-8 rounded border border-slate-300 bg-white px-2 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                           @bind="_filterStatus" @bind:event="oninput" @bind:after="ResetPage" />
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">@AppLoc["calculationType"]</label>
+                    <select class="h-8 rounded border border-slate-300 bg-white px-2 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                            @bind="_filterCalcType" @bind:after="ResetPage">
+                        <option value="">@AppLoc["allItems"]</option>
+                        <option value="Tender">@AppLoc["tenderCalculation"]</option>
+                        <option value="Contract">@AppLoc["contractCalculation"]</option>
+                        <option value="Production">@AppLoc["productionCalculation"]</option>
+                    </select>
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">@AppLoc["calculationResponsible"]</label>
+                    <input type="text" placeholder="@AppLoc["filterResponsiblePlaceholder"]"
+                           class="h-8 rounded border border-slate-300 bg-white px-2 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                           @bind="_filterResponsible" @bind:event="oninput" @bind:after="ResetPage" />
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">@AppLoc["reviewer"]</label>
+                    <input type="text" placeholder="@AppLoc["filterReviewerPlaceholder"]"
+                           class="h-8 rounded border border-slate-300 bg-white px-2 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                           @bind="_filterInspector" @bind:event="oninput" @bind:after="ResetPage" />
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">@AppLoc["deadlineFrom"]</label>
+                    <input type="date"
+                           class="h-8 rounded border border-slate-300 bg-white px-2 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                           @bind="_filterDeadlineFrom" @bind:after="ResetPage" />
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">@AppLoc["deadlineTo"]</label>
+                    <input type="date"
+                           class="h-8 rounded border border-slate-300 bg-white px-2 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                           @bind="_filterDeadlineTo" @bind:after="ResetPage" />
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">@AppLoc["locked"]</label>
+                    <select class="h-8 rounded border border-slate-300 bg-white px-2 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                            @bind="_filterLocked" @bind:after="ResetPage">
+                        <option value="">@AppLoc["allItems"]</option>
+                        <option value="true">@AppLoc["locked"]</option>
+                        <option value="false">@AppLoc["unlocked"]</option>
+                    </select>
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">@AppLoc["hasMultipleVersions"]</label>
+                    <select class="h-8 rounded border border-slate-300 bg-white px-2 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                            @bind="_filterMultipleVersions" @bind:after="ResetPage">
+                        <option value="">@AppLoc["allItems"]</option>
+                        <option value="true">@AppLoc["yes"]</option>
+                        <option value="false">@AppLoc["no"]</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mt-2 flex justify-end">
+                <button type="button"
+                        class="rounded px-2 py-1 text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                        @onclick="ClearFilters">
+                    @AppLoc["clearFilters"]
+                </button>
+            </div>
+        </div>
+    }
+
     @* ── Calculation table ──────────────────────────────── *@
     @if (SortedCalculations.Any())
     {
         <div class="mr-1 overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
             <table class="min-w-full table-auto text-left text-xs">
-                <thead class="bg-slate-50 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-900 dark:text-slate-400">
+                <thead class="sticky top-0 z-10 bg-slate-50 text-[11px] font-semibold text-slate-500 dark:bg-slate-900 dark:text-slate-400">
                     <tr>
                         @if (IsCalculationColumnVisible("code"))
                         {
-                            <th class="@SortableHeaderClass("code")" @onclick='() => SortBy("code")'>
+                            <th class="@SortableHeaderClass("code") sticky left-0 z-[1] w-28 bg-slate-50 dark:bg-slate-900" @onclick='() => SortBy("code")'>
                                 <span class="inline-flex items-center gap-1">@CalcResource.code @((MarkupString)SortIndicatorHtml("code"))</span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("name"))
                         {
-                            <th class="@SortableHeaderClass("name") min-w-52" @onclick='() => SortBy("name")'>
+                            <th class="@SortableHeaderClass("name") sticky left-28 z-[1] min-w-52 bg-slate-50 dark:bg-slate-900" @onclick='() => SortBy("name")'>
                                 <span class="inline-flex items-center gap-1">@AppLoc["calculationName"] @((MarkupString)SortIndicatorHtml("name"))</span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("calculationType"))
                         {
-                            <th class="@SortableHeaderClass("calculationType")" @onclick='() => SortBy("calculationType")'>
-                                <span class="inline-flex items-center gap-1">Kalkyltyp @((MarkupString)SortIndicatorHtml("calculationType"))</span>
+                            <th class="@SortableHeaderClass("calculationType")" style="min-width:100px;resize:horizontal;overflow:hidden;" @onclick='() => SortBy("calculationType")'>
+                                <span class="inline-flex items-center gap-1">@AppLoc["calculationType"] @((MarkupString)SortIndicatorHtml("calculationType"))</span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("status"))
                         {
-                            <th class="@SortableHeaderClass("status")" @onclick='() => SortBy("status")'>
+                            <th class="@SortableHeaderClass("status")" style="min-width:80px;resize:horizontal;overflow:hidden;" @onclick='() => SortBy("status")'>
                                 <span class="inline-flex items-center gap-1">@CalcResource.status @((MarkupString)SortIndicatorHtml("status"))</span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("responsible"))
                         {
-                            <th class="@SortableHeaderClass("responsible")" @onclick='() => SortBy("responsible")'>
-                                <span class="inline-flex items-center gap-1">@CalcResource.responsible @((MarkupString)SortIndicatorHtml("responsible"))</span>
+                            <th class="@SortableHeaderClass("responsible")" style="min-width:80px;resize:horizontal;overflow:hidden;" @onclick='() => SortBy("responsible")'>
+                                <span class="inline-flex items-center gap-1">@AppLoc["calculationResponsible"] @((MarkupString)SortIndicatorHtml("responsible"))</span>
+                            </th>
+                        }
+                        @if (IsCalculationColumnVisible("inspector"))
+                        {
+                            <th class="@SortableHeaderClass("inspector")" style="min-width:80px;resize:horizontal;overflow:hidden;" @onclick='() => SortBy("inspector")'>
+                                <span class="inline-flex items-center gap-1">@AppLoc["reviewer"] @((MarkupString)SortIndicatorHtml("inspector"))</span>
+                            </th>
+                        }
+                        @if (IsCalculationColumnVisible("project"))
+                        {
+                            <th class="@SortableHeaderClass("project")" style="min-width:80px;resize:horizontal;overflow:hidden;" @onclick='() => SortBy("project")'>
+                                <span class="inline-flex items-center gap-1">@AppLoc["project"] @((MarkupString)SortIndicatorHtml("project"))</span>
+                            </th>
+                        }
+                        @if (IsCalculationColumnVisible("folder"))
+                        {
+                            <th class="@SortableHeaderClass("folder")" style="min-width:80px;resize:horizontal;overflow:hidden;" @onclick='() => SortBy("folder")'>
+                                <span class="inline-flex items-center gap-1">@AppLoc["folder"] @((MarkupString)SortIndicatorHtml("folder"))</span>
+                            </th>
+                        }
+                        @if (IsCalculationColumnVisible("priority"))
+                        {
+                            <th class="@SortableHeaderClass("priority")" style="min-width:80px;resize:horizontal;overflow:hidden;" @onclick='() => SortBy("priority")'>
+                                <span class="inline-flex items-center gap-1">@AppLoc["probability"] @((MarkupString)SortIndicatorHtml("priority"))</span>
+                            </th>
+                        }
+                        @if (IsCalculationColumnVisible("timeMonth"))
+                        {
+                            <th class="@SortableHeaderClass("timeMonth")" style="min-width:80px;resize:horizontal;overflow:hidden;" @onclick='() => SortBy("timeMonth")'>
+                                <span class="inline-flex items-center gap-1">@AppLoc["projectDurationMonths"] @((MarkupString)SortIndicatorHtml("timeMonth"))</span>
+                            </th>
+                        }
+                        @if (IsCalculationColumnVisible("tax"))
+                        {
+                            <th class="@SortableHeaderClass("tax")" style="min-width:60px;resize:horizontal;overflow:hidden;" @onclick='() => SortBy("tax")'>
+                                <span class="inline-flex items-center gap-1">@AppLoc["vatPercent"] @((MarkupString)SortIndicatorHtml("tax"))</span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("start"))
                         {
-                            <th class="@SortableHeaderClass("start")" @onclick='() => SortBy("start")'>
+                            <th class="@SortableHeaderClass("start")" style="min-width:80px;resize:horizontal;overflow:hidden;" @onclick='() => SortBy("start")'>
                                 <span class="inline-flex items-center gap-1">@CalcResource.startDate @((MarkupString)SortIndicatorHtml("start"))</span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("end"))
                         {
-                            <th class="@SortableHeaderClass("end")" @onclick='() => SortBy("end")'>
+                            <th class="@SortableHeaderClass("end")" style="min-width:80px;resize:horizontal;overflow:hidden;" @onclick='() => SortBy("end")'>
                                 <span class="inline-flex items-center gap-1">@CalcResource.endDate @((MarkupString)SortIndicatorHtml("end"))</span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("deadline"))
                         {
-                            <th class="@SortableHeaderClass("deadline")" @onclick='() => SortBy("deadline")'>
+                            <th class="@SortableHeaderClass("deadline")" style="min-width:80px;resize:horizontal;overflow:hidden;" @onclick='() => SortBy("deadline")'>
                                 <span class="inline-flex items-center gap-1">@CalcResource.tenderDeadline @((MarkupString)SortIndicatorHtml("deadline"))</span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("qa"))
                         {
-                            <th class="@SortableHeaderClass("qa")" @onclick='() => SortBy("qa")'>
+                            <th class="@SortableHeaderClass("qa")" style="min-width:80px;resize:horizontal;overflow:hidden;" @onclick='() => SortBy("qa")'>
                                 <span class="inline-flex items-center gap-1">@CalcResource.tenderQA @((MarkupString)SortIndicatorHtml("qa"))</span>
                             </th>
                         }
+                        @if (IsCalculationColumnVisible("createdAt"))
+                        {
+                            <th class="@SortableHeaderClass("createdAt")" style="min-width:80px;resize:horizontal;overflow:hidden;" @onclick='() => SortBy("createdAt")'>
+                                <span class="inline-flex items-center gap-1">@AppLoc["createdDate"] @((MarkupString)SortIndicatorHtml("createdAt"))</span>
+                            </th>
+                        }
+                        @if (IsCalculationColumnVisible("updatedAt"))
+                        {
+                            <th class="@SortableHeaderClass("updatedAt")" style="min-width:80px;resize:horizontal;overflow:hidden;" @onclick='() => SortBy("updatedAt")'>
+                                <span class="inline-flex items-center gap-1">@AppLoc["lastModified"] @((MarkupString)SortIndicatorHtml("updatedAt"))</span>
+                            </th>
+                        }
+                        @if (IsCalculationColumnVisible("version"))
+                        {
+                            <th class="@SortableHeaderClass("version")" style="min-width:60px;resize:horizontal;overflow:hidden;" @onclick='() => SortBy("version")'>
+                                <span class="inline-flex items-center gap-1">@AppLoc["version"] @((MarkupString)SortIndicatorHtml("version"))</span>
+                            </th>
+                        }
+                        @if (IsCalculationColumnVisible("archived"))
+                        {
+                            <th class="whitespace-nowrap px-3 py-2" style="min-width:60px;resize:horizontal;overflow:hidden;">@AppLoc["archived"]</th>
+                        }
                         @if (IsCalculationColumnVisible("privacy"))
                         {
-                            <th class="whitespace-nowrap px-3 py-2">@ResourceApp._private</th>
+                            <th class="whitespace-nowrap px-3 py-2" style="min-width:60px;resize:horizontal;overflow:hidden;">@ResourceApp._private</th>
                         }
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                    @foreach (var calu in SortedCalculations)
+                    @foreach (var calu in PagedCalculations)
                     {
                         var isSelected = Folder.State.Calculation?.Id == calu.Id;
                         var rowClasses = GetCalculationRowClass(calu, isSelected);
@@ -175,77 +340,47 @@
                             draggable="true">
                             @if (IsCalculationColumnVisible("code"))
                             {
-                                <td class="whitespace-nowrap px-3 py-2 font-mono text-[11px] text-slate-500 dark:text-slate-400">
+                                <td class="sticky left-0 z-[1] w-28 whitespace-nowrap bg-white px-3 py-2 font-mono text-[11px] text-slate-500 dark:bg-slate-950 dark:text-slate-400">
                                     @FormatText(calu.Code)
                                 </td>
                             }
                             @if (IsCalculationColumnVisible("name"))
                             {
-                                <td class="max-w-80 px-3 py-2">
-                                    <span class="block truncate font-semibold text-slate-800 dark:text-slate-100" title="@calu.Name">
-                                        @calu.Name · @FormatVersion(calu.VersionNumber)
-                                    </span>
-                                    <div class="mt-1 flex flex-wrap items-center gap-1.5" @onclick:stopPropagation="true">
+                                <td class="sticky left-28 z-[1] max-w-80 bg-white px-3 py-2 dark:bg-slate-950">
+                                    <div class="flex items-center gap-2">
+                                        <span class="truncate font-semibold text-slate-800 dark:text-slate-100" title="@calu.Name">
+                                            @calu.Name · @FormatVersion(calu.VersionNumber)
+                                        </span>
                                         @if (_showAllVersions && calu.IsCurrentVersion)
                                         {
-                                            <span class="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">Aktuell</span>
+                                            <span class="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">@AppLoc["current"]</span>
                                         }
                                         @if (HasMultipleVersions(calu))
                                         {
                                             <button type="button"
-                                                    class="rounded-md border border-slate-300 px-2 py-0.5 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                                                    class="shrink-0 rounded border border-slate-300 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 transition hover:border-slate-400 hover:text-slate-700 dark:border-slate-700 dark:text-slate-400 dark:hover:border-slate-500 dark:hover:text-slate-200"
+                                                    @onclick:stopPropagation="true"
                                                     @onclick="() => OpenVersionsDialog(calu)">
-                                                Visa versioner
-                                            </button>
-                                        }
-                                        @if (calu.IsCurrentVersion)
-                                        {
-                                            <button type="button"
-                                                    class="rounded-md border border-blue-300 bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-300 dark:hover:bg-blue-950/50"
-                                                    disabled="@_isCreatingVersion"
-                                                    @onclick="() => CreateNewVersionAsync(calu)">
-                                                + Ny version
+                                                @AppLoc["showVersions"]
                                             </button>
                                         }
                                     </div>
-                                    @if (calu.IsLocked)
-                                    {
-                                        <div class="mt-1 flex flex-wrap items-center gap-1">
-                                            <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">
-                                                <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                                </svg>
-                                                @(calu.CalculationType == CalculationVersionType.Production ? "Produktionskalkyl · Låst" : "Anbudskalkyl · Låst")
-                                            </span>
-                                        </div>
-                                    }
                                 </td>
                             }
                             @if (IsCalculationColumnVisible("calculationType"))
                             {
-                                <td class="whitespace-nowrap px-3 py-2" @onclick:stopPropagation="true">
-                                    @if (calu.IsLocked)
-                                    {
-                                        <div class="flex flex-col gap-1">
-                                            <span class="text-xs font-semibold text-slate-700 dark:text-slate-200">
-                                                @GetCalculationTypeLabel(calu.CalculationType) · Låst
-                                            </span>
-                                            @if (CanCreateProductionCalculation(calu))
-                                            {
-                                                <button type="button"
-                                                        class="w-fit rounded-md border border-emerald-500 bg-emerald-600 px-2 py-1 text-[11px] font-semibold text-white transition hover:bg-emerald-700 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-600"
-                                                        @onclick="() => OpenProductionDialog(calu)">
-                                                    Skapa produktionskalkyl
-                                                </button>
-                                            }
-                                        </div>
-                                    }
-                                    else
-                                    {
+                                <td class="whitespace-nowrap px-3 py-2">
+                                    <span class="inline-flex items-center gap-1">
                                         <span class="@GetCalcTypeBadgeClass(calu)">
                                             @GetCalculationTypeLabel(calu.CalculationType)
                                         </span>
-                                    }
+                                        @if (calu.IsLocked)
+                                        {
+                                            <svg class="h-3 w-3 shrink-0 text-amber-500 dark:text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-label="@AppLoc["locked"]">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                            </svg>
+                                        }
+                                    </span>
                                 </td>
                             }
                             @if (IsCalculationColumnVisible("status"))
@@ -260,6 +395,30 @@
                             @if (IsCalculationColumnVisible("responsible"))
                             {
                                 <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(calu.Responsible)</td>
+                            }
+                            @if (IsCalculationColumnVisible("inspector"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(calu.Inspector)</td>
+                            }
+                            @if (IsCalculationColumnVisible("project"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(calu.ProjectName)</td>
+                            }
+                            @if (IsCalculationColumnVisible("folder"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(calu.FolderName)</td>
+                            }
+                            @if (IsCalculationColumnVisible("priority"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@calu.Priority %</td>
+                            }
+                            @if (IsCalculationColumnVisible("timeMonth"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@calu.TimeMonth</td>
+                            }
+                            @if (IsCalculationColumnVisible("tax"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@calu.Tax %</td>
                             }
                             @if (IsCalculationColumnVisible("start"))
                             {
@@ -277,6 +436,26 @@
                             {
                                 <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(calu.TenderQA)</td>
                             }
+                            @if (IsCalculationColumnVisible("createdAt"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(calu.CreatedAt)</td>
+                            }
+                            @if (IsCalculationColumnVisible("updatedAt"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@(calu.UpdatedAt.HasValue ? FormatDate(calu.UpdatedAt.Value) : "-")</td>
+                            }
+                            @if (IsCalculationColumnVisible("version"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 font-mono text-slate-600 dark:text-slate-300">@FormatVersion(calu.VersionNumber)</td>
+                            }
+                            @if (IsCalculationColumnVisible("archived"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2">
+                                    <span class="inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold @(!calu.IsVisible ? "bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300" : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300")">
+                                        @(!calu.IsVisible ? AppLoc["archived"].Value : "-")
+                                    </span>
+                                </td>
+                            }
                             @if (IsCalculationColumnVisible("privacy"))
                             {
                                 <td class="whitespace-nowrap px-3 py-2">
@@ -289,6 +468,55 @@
                     }
                 </tbody>
             </table>
+        </div>
+
+        @* ── Pagination bar ──────────────────────────────── *@
+        <div class="mr-1 mt-1 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs dark:border-slate-800 dark:bg-slate-950">
+            <div class="flex items-center gap-2">
+                <span class="text-slate-500 dark:text-slate-400">@AppLoc["show"]</span>
+                <select class="h-7 rounded border border-slate-300 bg-white px-1.5 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        @bind="_pageSize" @bind:after="() => _currentPage = 1">
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                    <option value="0">@AppLoc["allItems"]</option>
+                </select>
+                <span class="text-slate-500 dark:text-slate-400">@AppLoc["perPage"]</span>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <span class="text-slate-500 dark:text-slate-400">
+                    @if (_pageSize <= 0 || TotalFilteredCount == 0)
+                    {
+                        @AppLoc["showingAllFormat", TotalFilteredCount]
+                    }
+                    else
+                    {
+                        @AppLoc["showingRangeFormat", PageStart, PageEnd, TotalFilteredCount]
+                    }
+                </span>
+                <div class="flex items-center gap-1">
+                    <button type="button"
+                            disabled="@(_currentPage <= 1)"
+                            class="rounded border border-slate-300 px-2 py-0.5 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                            @onclick="PreviousPage">
+                        @AppLoc["previous"]
+                    </button>
+                    <span class="min-w-12 text-center text-slate-500 dark:text-slate-400">
+                        @if (TotalPages > 1)
+                        {
+                            @($"{_currentPage} / {TotalPages}")
+                        }
+                    </span>
+                    <button type="button"
+                            disabled="@(_currentPage >= TotalPages)"
+                            class="rounded border border-slate-300 px-2 py-0.5 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                            @onclick="NextPage">
+                        @AppLoc["next"]
+                    </button>
+                </div>
+            </div>
         </div>
     }
     else
@@ -318,12 +546,11 @@
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-6">
         <div class="w-full max-w-lg rounded-lg border border-slate-200 bg-white p-5 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
             <div class="space-y-3 text-slate-700 dark:text-slate-200">
-                <h2 class="text-base font-semibold text-slate-900 dark:text-slate-50">Du håller på att skapa en produktionskalkyl.</h2>
+                <h2 class="text-base font-semibold text-slate-900 dark:text-slate-50">@AppLoc["createProductionCalculationTitle"]</h2>
                 <p class="text-sm leading-6">
-                    Den låsta anbudskalkylen kommer att sparas som historik.
-                    En kopia skapas som produktionskalkyl och öppnas för fortsatt arbete.
+                    @AppLoc["createProductionCalculationDescription"]
                 </p>
-                <p class="text-sm font-medium text-slate-900 dark:text-slate-100">Vill du fortsätta?</p>
+                <p class="text-sm font-medium text-slate-900 dark:text-slate-100">@AppLoc["continueQuestion"]</p>
                 @if (!string.IsNullOrWhiteSpace(_productionDialogMessage))
                 {
                     <div class="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
@@ -336,13 +563,13 @@
                         class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
                         disabled="@_isCreatingProductionCalculation"
                         @onclick="CancelProductionDialog">
-                    Avbryt
+                    @AppLoc["cancelOrder"]
                 </button>
                 <button type="button"
                         class="rounded-lg border border-emerald-500 bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-600"
                         disabled="@_isCreatingProductionCalculation"
                         @onclick="CreateProductionCalculationAsync">
-                    Skapa produktionskalkyl
+                    @AppLoc["createProductionCalculation"]
                 </button>
             </div>
         </div>
@@ -356,23 +583,23 @@
         <div class="w-full max-w-2xl rounded-lg border border-slate-200 bg-white p-5 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
             <div class="flex items-start justify-between gap-3">
                 <div>
-                    <h2 class="text-base font-semibold text-slate-900 dark:text-slate-50">Versioner</h2>
+                    <h2 class="text-base font-semibold text-slate-900 dark:text-slate-50">@AppLoc["versions"]</h2>
                     <p class="mt-0.5 text-sm text-slate-600 dark:text-slate-300">@_versionDialogCalculation.Name</p>
                 </div>
                 <button type="button"
                         class="rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                         @onclick="CloseVersionsDialog">
-                    Stäng
+                    @AppLoc["close"]
                 </button>
             </div>
             <div class="mt-4 overflow-x-auto">
                 <table class="min-w-full text-xs">
                     <thead>
                         <tr class="border-b border-slate-200 dark:border-slate-700">
-                            <th class="pb-2 pr-4 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Version</th>
-                            <th class="pb-2 pr-4 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Kod</th>
-                            <th class="pb-2 pr-4 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Kalkylnamn</th>
-                            <th class="pb-2 pr-4 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Anbudsdeadline</th>
+                            <th class="pb-2 pr-4 text-left text-[11px] font-semibold text-slate-500 dark:text-slate-400">@AppLoc["version"]</th>
+                            <th class="pb-2 pr-4 text-left text-[11px] font-semibold text-slate-500 dark:text-slate-400">@AppLoc["code"]</th>
+                            <th class="pb-2 pr-4 text-left text-[11px] font-semibold text-slate-500 dark:text-slate-400">@AppLoc["calculationName"]</th>
+                            <th class="pb-2 pr-4 text-left text-[11px] font-semibold text-slate-500 dark:text-slate-400">@AppLoc["tenderDeadline"]</th>
                             <th class="pb-2"></th>
                         </tr>
                     </thead>
@@ -385,7 +612,7 @@
                                         <span class="font-mono font-semibold text-slate-800 dark:text-slate-100">@FormatVersion(version.VersionNumber)</span>
                                         @if (version.IsCurrentVersion)
                                         {
-                                            <span class="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">Aktuell</span>
+                                            <span class="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">@AppLoc["current"]</span>
                                         }
                                     </div>
                                 </td>
@@ -404,11 +631,30 @@
                                     }
                                 </td>
                                 <td class="py-2 text-right">
-                                    <button type="button"
-                                            class="rounded-md border border-slate-300 px-2 py-1 font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
-                                            @onclick="async () => await OpenVersionAsync(version)">
-                                        Öppna
-                                    </button>
+                                    <div class="flex flex-wrap justify-end gap-1.5">
+                                        <button type="button"
+                                                class="rounded-md border border-slate-300 px-2 py-1 font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                                                @onclick="async () => await OpenVersionAsync(version)">
+                                            @AppLoc["open"]
+                                        </button>
+                                        @if (!version.IsCurrentVersion)
+                                        {
+                                            <button type="button"
+                                                    class="rounded-md border border-violet-300 px-2 py-1 font-medium text-violet-700 transition hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-violet-800 dark:text-violet-300 dark:hover:bg-violet-950/40"
+                                                    disabled="@_isCreatingVersion"
+                                                    @onclick="async () => await RestoreAsNewVersionAsync(version)">
+                                                @AppLoc["restoreAsNewVersion"]
+                                            </button>
+                                        }
+                                        @if (CanArchiveVersion(version))
+                                        {
+                                            <button type="button"
+                                                    class="rounded-md border border-amber-300 px-2 py-1 font-medium text-amber-700 transition hover:bg-amber-50 dark:border-amber-800 dark:text-amber-300 dark:hover:bg-amber-950/40"
+                                                    @onclick="async () => await ArchiveOrRestoreCalculationAsync(version, archive: true)">
+                                                @AppLoc["archiveVersion"]
+                                            </button>
+                                        }
+                                    </div>
                                 </td>
                             </tr>
                         }
@@ -439,6 +685,57 @@
     private string _sortColumn = "";
     private bool _sortAscending = true;
 
+    private int _pageSize = 25;
+    private int _currentPage = 1;
+    private const string ToolbarButtonClass = "inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800";
+
+    private int TotalFilteredCount => FilteredCalculations.Count();
+    private int TotalPages => _pageSize <= 0 ? 1 : Math.Max(1, (int)Math.Ceiling((double)TotalFilteredCount / _pageSize));
+    private int PageStart => TotalFilteredCount == 0 ? 0 : (_currentPage - 1) * _pageSize + 1;
+    private int PageEnd => Math.Min(_currentPage * _pageSize, TotalFilteredCount);
+
+    private IEnumerable<ListCalculationMVVM> PagedCalculations =>
+        _pageSize <= 0
+            ? SortedCalculations
+            : SortedCalculations.Skip((_currentPage - 1) * _pageSize).Take(_pageSize);
+
+    private void ResetPage() => _currentPage = 1;
+    private void PreviousPage() { if (_currentPage > 1) _currentPage--; }
+    private void NextPage() { if (_currentPage < TotalPages) _currentPage++; }
+
+    private bool _showFilters;
+    private string _filterStatus = string.Empty;
+    private string _filterCalcType = string.Empty;
+    private string _filterResponsible = string.Empty;
+    private string _filterInspector = string.Empty;
+    private DateTime? _filterDeadlineFrom;
+    private DateTime? _filterDeadlineTo;
+    private string _filterLocked = string.Empty;
+    private string _filterMultipleVersions = string.Empty;
+
+    private bool HasActiveFilters =>
+        !string.IsNullOrWhiteSpace(_filterStatus) ||
+        !string.IsNullOrWhiteSpace(_filterCalcType) ||
+        !string.IsNullOrWhiteSpace(_filterResponsible) ||
+        !string.IsNullOrWhiteSpace(_filterInspector) ||
+        _filterDeadlineFrom.HasValue ||
+        _filterDeadlineTo.HasValue ||
+        !string.IsNullOrWhiteSpace(_filterLocked) ||
+        !string.IsNullOrWhiteSpace(_filterMultipleVersions);
+
+    private void ClearFilters()
+    {
+        _filterStatus = string.Empty;
+        _filterCalcType = string.Empty;
+        _filterResponsible = string.Empty;
+        _filterInspector = string.Empty;
+        _filterDeadlineFrom = null;
+        _filterDeadlineTo = null;
+        _filterLocked = string.Empty;
+        _filterMultipleVersions = string.Empty;
+        _currentPage = 1;
+    }
+
     private int Part { get; set; } = 1;
 
     private string _activeKey = "1";
@@ -450,6 +747,7 @@
             _activeKey = value;
             if (int.TryParse(value, out var p))
                 Part = p;
+            _currentPage = 1;
         }
     }
 
@@ -467,10 +765,20 @@
         ["calculationType"] = true,
         ["status"] = true,
         ["responsible"] = true,
+        ["inspector"] = false,
+        ["project"] = false,
+        ["folder"] = false,
+        ["priority"] = false,
+        ["timeMonth"] = false,
+        ["tax"] = false,
         ["start"] = false,
         ["end"] = true,
         ["deadline"] = true,
         ["qa"] = false,
+        ["createdAt"] = true,
+        ["updatedAt"] = true,
+        ["version"] = true,
+        ["archived"] = false,
         ["privacy"] = false
     };
 
@@ -478,13 +786,23 @@
     {
         new("code", CalcResource.code),
         new("name", AppLoc["calculationName"].Value),
-        new("calculationType", "Kalkyltyp"),
+        new("calculationType", AppLoc["calculationType"].Value),
         new("status", CalcResource.status),
-        new("responsible", CalcResource.responsible),
+        new("responsible", AppLoc["calculationResponsible"].Value),
+        new("inspector", AppLoc["reviewer"].Value),
+        new("project", AppLoc["project"].Value),
+        new("folder", AppLoc["folder"].Value),
+        new("priority", AppLoc["probability"].Value),
+        new("timeMonth", AppLoc["projectDurationMonths"].Value),
+        new("tax", AppLoc["vatPercent"].Value),
         new("start", CalcResource.startDate),
         new("end", CalcResource.endDate),
         new("deadline", CalcResource.tenderDeadline),
         new("qa", CalcResource.tenderQA),
+        new("createdAt", AppLoc["createdDate"].Value),
+        new("updatedAt", AppLoc["lastModified"].Value),
+        new("version", "Version"),
+        new("archived", AppLoc["archived"].Value),
         new("privacy", ResourceApp._private)
     };
 
@@ -496,14 +814,58 @@
                        ?? Enumerable.Empty<ListCalculationMVVM>();
 
             if (!_showAllVersions)
-                list = list.Where(c => c.IsCurrentVersion);
+                list = CalculationVersionSelector.SelectCurrentVersions(list);
 
-            return Part switch
+            list = Part switch
             {
                 2 => list.Where(c => c.EndDate >= DateTime.Today),
                 3 => list.Where(c => c.EndDate < DateTime.Today),
                 _ => list
             };
+
+            if (!string.IsNullOrWhiteSpace(_filterStatus))
+                list = list.Where(c => c.Status.Contains(_filterStatus, StringComparison.OrdinalIgnoreCase));
+
+            if (!string.IsNullOrWhiteSpace(_filterCalcType))
+            {
+                if (_filterCalcType == "Production")
+                    list = list.Where(c => c.CalculationType == CalculationVersionType.Production);
+                else if (_filterCalcType == "Contract")
+                    list = list.Where(c => c.CalculationType == CalculationVersionType.Contract);
+                else if (_filterCalcType == "Tender")
+                    list = list.Where(c => c.CalculationType == CalculationVersionType.Tender);
+            }
+
+            if (!string.IsNullOrWhiteSpace(_filterResponsible))
+                list = list.Where(c => c.Responsible.Contains(_filterResponsible, StringComparison.OrdinalIgnoreCase));
+
+            if (!string.IsNullOrWhiteSpace(_filterInspector))
+                list = list.Where(c => c.Inspector.Contains(_filterInspector, StringComparison.OrdinalIgnoreCase));
+
+            if (_filterDeadlineFrom.HasValue)
+                list = list.Where(c => c.TenderDeadline.Date >= _filterDeadlineFrom.Value.Date);
+
+            if (_filterDeadlineTo.HasValue)
+                list = list.Where(c => c.TenderDeadline.Date <= _filterDeadlineTo.Value.Date);
+
+            if (!string.IsNullOrWhiteSpace(_filterLocked))
+            {
+                bool locked = _filterLocked == "true";
+                list = list.Where(c => c.IsLocked == locked);
+            }
+
+            if (!string.IsNullOrWhiteSpace(_filterMultipleVersions))
+            {
+                bool multi = _filterMultipleVersions == "true";
+                var allCalcs = Folder.State.ProjectSelected?.Calculations ?? [];
+                list = list.Where(c =>
+                {
+                    bool hasMulti = CalculationVersionSelector.HasMultipleVersions(allCalcs, c);
+                    return hasMulti == multi;
+                });
+            }
+
+            return list;
         }
     }
 
@@ -529,6 +891,24 @@
                 "responsible" => _sortAscending
                     ? list.OrderBy(x => x.Responsible)
                     : list.OrderByDescending(x => x.Responsible),
+                "inspector" => _sortAscending
+                    ? list.OrderBy(x => x.Inspector)
+                    : list.OrderByDescending(x => x.Inspector),
+                "project" => _sortAscending
+                    ? list.OrderBy(x => x.ProjectName)
+                    : list.OrderByDescending(x => x.ProjectName),
+                "folder" => _sortAscending
+                    ? list.OrderBy(x => x.FolderName)
+                    : list.OrderByDescending(x => x.FolderName),
+                "priority" => _sortAscending
+                    ? list.OrderBy(x => x.Priority)
+                    : list.OrderByDescending(x => x.Priority),
+                "timeMonth" => _sortAscending
+                    ? list.OrderBy(x => x.TimeMonth)
+                    : list.OrderByDescending(x => x.TimeMonth),
+                "tax" => _sortAscending
+                    ? list.OrderBy(x => x.Tax)
+                    : list.OrderByDescending(x => x.Tax),
                 "start" => _sortAscending
                     ? list.OrderBy(x => x.StartDate)
                     : list.OrderByDescending(x => x.StartDate),
@@ -541,6 +921,15 @@
                 "qa" => _sortAscending
                     ? list.OrderBy(x => x.TenderQA)
                     : list.OrderByDescending(x => x.TenderQA),
+                "createdAt" => _sortAscending
+                    ? list.OrderBy(x => x.CreatedAt)
+                    : list.OrderByDescending(x => x.CreatedAt),
+                "updatedAt" => _sortAscending
+                    ? list.OrderBy(x => x.UpdatedAt)
+                    : list.OrderByDescending(x => x.UpdatedAt),
+                "version" => _sortAscending
+                    ? list.OrderBy(x => x.VersionNumber)
+                    : list.OrderByDescending(x => x.VersionNumber),
                 _ => list
             };
         }
@@ -555,6 +944,7 @@
             _sortColumn = column;
             _sortAscending = true;
         }
+        _currentPage = 1;
     }
 
     private string SortableHeaderClass(string column)
@@ -583,8 +973,12 @@
     private static string FormatDate(DateTime value) =>
         value == default ? "-" : value.ToString(ConstValues.DateFormat);
 
-    private static string GetCalculationTypeLabel(CalculationVersionType type) =>
-        type == CalculationVersionType.Production ? "Produktionskalkyl" : "Anbudskalkyl";
+    private string GetCalculationTypeLabel(CalculationVersionType type) => type switch
+    {
+        CalculationVersionType.Production => AppLoc["productionCalculation"].Value,
+        CalculationVersionType.Contract   => AppLoc["contractCalculation"].Value,
+        _                                 => AppLoc["tenderCalculation"].Value
+    };
 
     private static string GetCalculationVersionTitle(ListCalculationMVVM calculation) =>
         $"{calculation.Name} · {FormatVersion(calculation.VersionNumber)}";
@@ -592,12 +986,13 @@
     private static string FormatVersion(int versionNumber) => $"V.{versionNumber:D2}";
 
     private bool HasMultipleVersions(ListCalculationMVVM calculation) =>
-        (Folder.State.ProjectSelected?.Calculations ?? [])
-            .Count(x => x.VersionGroupId == calculation.VersionGroupId) > 1;
+        CalculationVersionSelector.HasMultipleVersions(
+            Folder.State.ProjectSelected?.Calculations,
+            calculation);
 
     private bool HasAnyMultipleVersions =>
         (Folder.State.ProjectSelected?.Calculations ?? [])
-            .GroupBy(x => x.VersionGroupId)
+            .GroupBy(CalculationVersionSelector.GetFamilyKey)
             .Any(g => g.Count() > 1);
 
     private static string GetVersionBadgeClass(ListCalculationMVVM calculation) =>
@@ -606,14 +1001,24 @@
             : "inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-300";
 
     private static string GetCalcTypeBadgeClass(ListCalculationMVVM calculation) =>
-        calculation.CalculationType == CalculationVersionType.Production
-            ? "inline-flex rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-semibold text-violet-700 dark:bg-violet-950/50 dark:text-violet-300"
-            : "inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200";
+        calculation.CalculationType switch
+        {
+            CalculationVersionType.Production => "inline-flex rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-semibold text-violet-700 dark:bg-violet-950/50 dark:text-violet-300",
+            CalculationVersionType.Contract   => "inline-flex rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-semibold text-sky-700 dark:bg-sky-950/50 dark:text-sky-300",
+            _                                 => "inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200"
+        };
 
     private IEnumerable<ListCalculationMVVM> GetVersions(ListCalculationMVVM calculation) =>
-        (Folder.State.ProjectSelected?.Calculations ?? [])
-            .Where(x => x.VersionGroupId == calculation.VersionGroupId)
-            .OrderBy(x => x.VersionNumber);
+        CalculationVersionSelector.GetVersions(
+            Folder.State.ProjectSelected?.Calculations,
+            calculation);
+
+    private bool CanArchiveVersion(ListCalculationMVVM version) =>
+        !version.IsCurrentVersion &&
+        !version.IsLocked &&
+        version.IsVisible &&
+        !(Folder.State.ProjectSelected?.Calculations ?? [])
+            .Any(calculation => calculation.SourceCalculationId == version.Id);
 
     private void OpenVersionsDialog(ListCalculationMVVM calculation)
     {
@@ -665,6 +1070,9 @@
         }
     }
 
+    private Task RestoreAsNewVersionAsync(ListCalculationMVVM version) =>
+        CreateNewVersionAsync(version);
+
     private static bool CanCreateProductionCalculation(ListCalculationMVVM calculation) =>
         calculation.CalculationType == CalculationVersionType.Tender &&
         calculation.IsLocked &&
@@ -701,7 +1109,7 @@
             var newCalculationId = await Repo.Calculation.CreateProductionCopyAsync(_productionDialogCalculation.Id);
             if (newCalculationId <= 0)
             {
-                _productionDialogMessage = "Produktionskalkylen kunde inte skapas.";
+                _productionDialogMessage = AppLoc["productionCalculationCreateFailed"].Value;
                 return;
             }
 
@@ -764,13 +1172,12 @@
         var user = authState.User;
         bool isInAnyRole = PMRolesConst.Tenant.AdminManger.Split(',').Any(r => user.IsInRole(r));
 
-        list.Add(new() { IconHtml = Icons.Active, Label = AppLoc["openCalculation"], OnClickAsync = async () => await NewCalculation(item.Id) });
-
         if (user.Identity?.IsAuthenticated == true && isInAnyRole)
         {
-            list.Add(new() { IconHtml = Icons.Edit, Label = ResourceApp.edit, OnClickAsync = () => { UpdateForm(item); return Task.CompletedTask; } });
             if (item.IsCurrentVersion)
-                list.Add(new() { IconHtml = Icons.Copy, Label = "Skapa ny version", OnClickAsync = async () => await CreateNewVersionAsync(item) });
+                list.Add(new() { IconHtml = Icons.Edit, Label = ResourceApp.edit, OnClickAsync = () => { UpdateForm(item); return Task.CompletedTask; } });
+            if (item.IsCurrentVersion)
+                list.Add(new() { IconHtml = Icons.Copy, Label = AppLoc["createNewVersion"].Value, OnClickAsync = async () => await CreateNewVersionAsync(item) });
             list.Add(new() { IconHtml = Icons.PermissionShield, Label = ResourceApp.share, OnClickAsync = () => { ShareForm(item); return Task.CompletedTask; } });
             list.Add(new() { IconHtml = Icons.Tender, Label = ResourceLoc.tender, OnClickAsync = () => { TenderPage(item); return Task.CompletedTask; } });
             list.Add(new() { IconHtml = Icons.Folder, Label = AppLoc["moveCalculation"], OnClickAsync = () => { OpenMoveCopyDialog(item, MoveCopyOperation.Move); return Task.CompletedTask; } });
@@ -781,8 +1188,6 @@
             else
                 list.Add(new() { IconHtml = Icons.Restore, Label = AppLoc["restoreFromArchive"], OnClickAsync = async () => await ArchiveOrRestoreCalculationAsync(item, archive: false) });
 
-            list.Add(new() { IsSeparator = true });
-            list.Add(new() { IconHtml = Icons.Delete, Label = ResourceApp.delete, CssClass = "text-red-600 dark:text-red-400", OnClickAsync = () => { Remove(item); return Task.CompletedTask; } });
         }
 
         await ContextService.ShowMenuAsync(list);
@@ -796,9 +1201,7 @@
         bool ok = await Repo.Calculation.UpdateAsync(dto, cal.Id);
         if (ok)
         {
-            Folder.State.ProjectSelected?.Calculations?.Remove(cal);
-            UoWService.Folder.State.Notify();
-            StateHasChanged();
+            await ReloadCalculationsAsync();
         }
         MHD.Notifications(ToastType.Update, ok);
     }
@@ -835,20 +1238,66 @@
         await ReloadCalculationsAsync();
     }
 
-    void OpenIncomeOverview()
+    void OpenReports()
     {
         if (Folder.State.ProjectSelected is null)
             return;
 
-        Modal.ShowComponent<IncomeOverviewDialog>(
-            AppLoc["incomeOverview"],
+        Modal.ShowComponent<CentralReportsDialog>(
+            AppLoc["reports"].Value,
             new Dictionary<string, object>
             {
-                [nameof(IncomeOverviewDialog.FolderScope)] = Folder.State.FolderSelected!,
-                [nameof(IncomeOverviewDialog.ProjectScope)] = Folder.State.ProjectSelected
+                [nameof(CentralReportsDialog.FolderScope)] = Folder.State.FolderSelected!,
+                [nameof(CentralReportsDialog.ProjectScope)] = Folder.State.ProjectSelected,
+                [nameof(CentralReportsDialog.InitialView)] = CentralReportsDialog.ReportView.Income,
+                [nameof(CentralReportsDialog.InitialStatus)] = _filterStatus,
+                [nameof(CentralReportsDialog.InitialCalculationType)] = _filterCalcType,
+                [nameof(CentralReportsDialog.InitialResponsible)] = _filterResponsible,
+                [nameof(CentralReportsDialog.InitialInspector)] = _filterInspector
             },
             BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
     }
+
+    private Task ExportCalculationListAsync() => ExportCalculationListAsync(pdfMode: false, printOnly: false);
+    private Task ExportCalculationPdfAsync() => ExportCalculationListAsync(pdfMode: true, printOnly: true);
+    private Task PrintCalculationListAsync() => ExportCalculationListAsync(pdfMode: false, printOnly: true);
+
+    private async Task ExportCalculationListAsync(bool pdfMode, bool printOnly)
+    {
+        var columns = CalculationColumnOptions.Where(column => IsCalculationColumnVisible(column.Key)).ToList();
+        var rows = SortedCalculations.Select(calculation => columns.Select(column => GetCalculationExportValue(calculation, column.Key)));
+        var title = AppLoc["calculationListTitleFormat", Folder.State.ProjectSelected?.Name ?? "-"].Value;
+
+        if (printOnly)
+            await ReportExportInterop.PrintAsync(JS, title, columns.Select(column => column.Label), rows, pdfMode);
+        else
+            await ReportExportInterop.ExportExcelAsync(JS, "kalkyllista", title, columns.Select(column => column.Label), rows);
+    }
+
+    private object? GetCalculationExportValue(ListCalculationMVVM calculation, string key) => key switch
+    {
+        "code" => calculation.Code,
+        "name" => calculation.Name,
+        "calculationType" => GetCalculationTypeLabel(calculation.CalculationType),
+        "status" => GetCalculationStatusText(calculation),
+        "responsible" => calculation.Responsible,
+        "inspector" => calculation.Inspector,
+        "project" => calculation.ProjectName,
+        "folder" => calculation.FolderName,
+        "priority" => $"{calculation.Priority} %",
+        "timeMonth" => calculation.TimeMonth,
+        "tax" => $"{calculation.Tax} %",
+        "start" => FormatDate(calculation.StartDate),
+        "end" => FormatDate(calculation.EndDate),
+        "deadline" => FormatDate(calculation.TenderDeadline),
+        "qa" => FormatDate(calculation.TenderQA),
+        "createdAt" => FormatDate(calculation.CreatedAt),
+        "updatedAt" => calculation.UpdatedAt.HasValue ? FormatDate(calculation.UpdatedAt.Value) : "-",
+        "version" => FormatVersion(calculation.VersionNumber),
+        "archived" => calculation.IsVisible ? AppLoc["no"].Value : AppLoc["yes"].Value,
+        "privacy" => calculation.IsPrivate ? AppLoc["yes"].Value : AppLoc["no"].Value,
+        _ => string.Empty
+    };
 
     void UpdateForm(ListCalculationMVVM model)
     {
@@ -953,6 +1402,7 @@
     private async Task RefreshCalculationsAsync()
     {
         IaVisible = !IaVisible;
+        _currentPage = 1;
         await ReloadCalculationsAsync();
     }
 
@@ -963,6 +1413,7 @@
             return;
 
         project.Calculations = await Repo.Calculation.GetAsync(project.Id, IaVisible);
+        project.CalculationCount = CalculationVersionSelector.CountCurrentVersions(project.Calculations);
         UoWService.Folder.State.Notify();
 
         if (closeModal)

@@ -17,5 +17,7 @@ namespace ProjectManagement.Shared.DTO.Folder
         public int Order { get; set; }
         public string Color { get; set; } = "#08bf66";
         public bool IsVisible { get; set; } = true;
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
     }
 }

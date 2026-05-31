@@ -294,5 +294,16 @@ namespace ProjectManagement.Shared.DTO.Project
         public DateTime TenderDeadline { get; set; } = DateTime.Now;
         public DateTime TenderQA { get; set; } = DateTime.Now;
         public bool IsVisible { get; set; } = true;
+        public int CalculationCount { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+        public string Developer { get; set; } = string.Empty;
+        public string Organisation { get; set; } = string.Empty;
+        public string ProcurementName { get; set; } = string.Empty;
+        public string ProcurementNumber { get; set; } = string.Empty;
+        public string CustomerReference { get; set; } = string.Empty;
+        public string Contract { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;
+        public string Inspector { get; set; } = string.Empty;
     }
 }

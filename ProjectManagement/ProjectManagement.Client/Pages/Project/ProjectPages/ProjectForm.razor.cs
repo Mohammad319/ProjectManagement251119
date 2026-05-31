@@ -112,5 +112,13 @@ namespace ProjectManagement.Client.Pages.Project.ProjectPages
                 : string.Empty;
         }
 
+        private void AddNote() => ProjectUpdate.Notes.Add(string.Empty);
+
+        private void RemoveNote(int idx)
+        {
+            if (idx >= 0 && idx < ProjectUpdate.Notes.Count && ProjectUpdate.Notes.Count > 1)
+                ProjectUpdate.Notes.RemoveAt(idx);
+        }
+
     }
 }

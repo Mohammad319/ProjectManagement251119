@@ -12,7 +12,7 @@
 @inject IJSRuntime JS
 @inject SignInManager<ApplicationUser> SignInManager
 
-<nav class="shadow-md bg-white dark:bg-gray-800">
+<nav>
     <div class="w-full flex flex-wrap items-center justify-between p-0.5">
         <a class="flex items-center" href="/" aria-label="@PMWebResource.ProjectManagementHome">
             <img src="Icons/Logo.png" alt="Logo" class="h-8 w-auto" />
@@ -50,15 +50,15 @@
                     </li>
                 </AuthorizeView>
 
-                 <li class="text-right md:text-left md:flex-none">
+                <li class="text-right md:text-left md:flex-none">
                     <NavLink href="price-import"
                              class="inline-flex h-8 items-center rounded-lg px-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-700"
                              @onclick="() => isNavOpen = false">
                         Prisimport
                     </NavLink>
                 </li> 
-               
-<li class="text-right md:text-left md:flex-none">
+
+                <li class="text-right md:text-left md:flex-none">
                     <button class="btn nav-link" @onclick='@(() => OpenDialog("control"))' title="@PMWebResource.Settings" aria-label="@PMWebResource.Settings">
                         <span aria-hidden="true">@((MarkupString)Icons.Settings)</span>
                     </button>

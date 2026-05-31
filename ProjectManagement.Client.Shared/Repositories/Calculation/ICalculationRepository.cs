@@ -16,6 +16,7 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation
         Task<bool> ReOrderAsync(int Id, int newOrder);
         Task<int> CopyAsync(Guid ProjectId, int calcId);
         Task<int> CreateProductionCopyAsync(int calcId);
+        Task<int> CreateContractCopyAsync(int calcId);
         Task<int> CreateVersionAsync(int calcId);
         Task<bool> MoveAsync(Guid ProjectId, int calcId);
         Task<GetProjectCalcConfigDTO> GetConfig(int? m, int? con, int? com, int? t, int? st);

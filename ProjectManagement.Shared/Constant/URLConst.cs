@@ -34,6 +34,7 @@
             public const string ReOrder = "reorder";
             public const string Copy = "copy";
             public const string ProductionCopy = "productioncopy";
+            public const string ContractCopy = "contractcopy";
             public const string VersionCopy = "versioncopy";
             public const string Move = "move";
             public const string Share = "share";

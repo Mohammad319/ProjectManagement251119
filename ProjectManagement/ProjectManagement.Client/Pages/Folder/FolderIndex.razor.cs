@@ -18,6 +18,7 @@ namespace ProjectManagement.Client.Pages.Folder
     public partial class FolderIndex : IDisposable
     {
         bool SideBarVisible { get; set; } = true;
+        private bool _treeExpanded;
         bool CanChooseAllDepartments { get; set; }
         int? CurrentUserDepartmentId { get; set; }
         int? SelectedDepartmentId { get; set; }
@@ -209,6 +210,8 @@ namespace ProjectManagement.Client.Pages.Folder
         {
             var openNodes = preserveOpenNodes ? SnapshotOpenNodes() : null;
 
+            _treeExpanded = false;
+            Folder.State.SetSelectedDepartment(SelectedDepartmentId);
             Folder.State.ClearSelection();
             Folder.State.ClearFolders();
 
@@ -309,15 +312,25 @@ namespace ProjectManagement.Client.Pages.Folder
             await InvokeAsync(StateHasChanged);
         }
 
+        private async Task ToggleExpandCollapseAsync()
+        {
+            if (_treeExpanded)
+                CollapseAll();
+            else
+                await ExpandAllAsync();
+        }
+
         private async Task ExpandAllAsync()
         {
             if (_foldersTree != null)
                 await _foldersTree.ExpandAllAsync();
+            _treeExpanded = true;
         }
 
         private void CollapseAll()
         {
             _foldersTree?.CollapseAll();
+            _treeExpanded = false;
         }
 
         private async Task SaveTreeSortModeAsync()

@@ -6,6 +6,7 @@ namespace Persistence.Service.CalculationItems.Calculation
     using Microsoft.EntityFrameworkCore;
     using Persistence.Factory;
     using ProjectManagement.Shared.DTO.Calculation;
+    using ProjectManagement.Shared.Helper;
     using System;
     using System.Collections.Generic;
     using System.Linq;
@@ -23,16 +24,26 @@ namespace Persistence.Service.CalculationItems.Calculation
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            return await context.Calculations
+            var calculations = await context.Calculations
                 .AsNoTracking()
                 .Where(x => !x.IsDeleted &&
                     x.ProjectId == projectId &&
-                    x.IsVisible == isVisible &&
                     (!departmentId.HasValue || x.Project.Folder.DepartmentId == departmentId.Value || x.CreatedBy == userId) &&
                     (!x.IsPrivate || x.CreatedBy == userId))
                 .OrderBy(x => x.SortOrder)
                 .Select(ListCalculationProjection)
                 .ToListAsync(ct);
+
+            var matchingFamilies = CalculationVersionSelector
+                .SelectCurrentVersions(calculations)
+                .Where(calculation => calculation.IsVisible == isVisible)
+                .Select(CalculationVersionSelector.GetFamilyKey)
+                .ToHashSet();
+
+            return calculations
+                .Where(calculation => matchingFamilies.Contains(
+                    CalculationVersionSelector.GetFamilyKey(calculation)))
+                .ToList();
         }
 
         public async Task<IEnumerable<ListCalculationDTO>> GetByDepartmentAsync(
@@ -81,7 +92,16 @@ namespace Persistence.Service.CalculationItems.Calculation
                     VersionNumber = x.VersionNumber,
                     CreatedFromCalculationId = x.CreatedFromCalculationId,
                     IsCurrentVersion = x.IsCurrentVersion,
-                    StatusAllowsProductionCalculation = x.Status != null && x.Status.AllowsProductionCalculation
+                    StatusAllowsProductionCalculation = x.Status != null && x.Status.AllowsProductionCalculation,
+                    CreatedAt = x.CreatedAt,
+                    UpdatedAt = x.UpdatedAt,
+                    Tax = x.Tax,
+                    IsVisible = x.IsVisible,
+                    Inspector = x.Metadata.Inspector,
+                    ProjectName = x.Project != null ? x.Project.Name : string.Empty,
+                    FolderName = x.Project != null && x.Project.Folder != null ? x.Project.Folder.Name : string.Empty,
+                    Priority = x.Metadata.Priority,
+                    TimeMonth = x.Metadata.TimeMonth
                 })
                 .ToListAsync(ct);
         }
@@ -170,7 +190,16 @@ namespace Persistence.Service.CalculationItems.Calculation
                     VersionNumber = x.VersionNumber,
                     CreatedFromCalculationId = x.CreatedFromCalculationId,
                     IsCurrentVersion = x.IsCurrentVersion,
-                    StatusAllowsProductionCalculation = x.Status != null && x.Status.AllowsProductionCalculation
+                    StatusAllowsProductionCalculation = x.Status != null && x.Status.AllowsProductionCalculation,
+                    CreatedAt = x.CreatedAt,
+                    UpdatedAt = x.UpdatedAt,
+                    Tax = x.Tax,
+                    IsVisible = x.IsVisible,
+                    Inspector = x.Metadata.Inspector,
+                    ProjectName = x.Project != null ? x.Project.Name : string.Empty,
+                    FolderName = x.Project != null && x.Project.Folder != null ? x.Project.Folder.Name : string.Empty,
+                    Priority = x.Metadata.Priority,
+                    TimeMonth = x.Metadata.TimeMonth
                 };
     }
 }

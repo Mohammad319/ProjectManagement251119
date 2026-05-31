@@ -14,6 +14,7 @@
 @inherits AppComponentBase
 @implements IDisposable
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JS
 
 <div class="ml-1">
 
@@ -28,43 +29,46 @@
             </div>
         </div>
 
-        @if (!Folder.State.OtherDepartment)
-        {
-            <div class="flex flex-wrap items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2">
 
-                @* Archive filter toggle *@
+            @if (!Folder.State.OtherDepartment)
+            {
                 <button type="button"
                         class="inline-flex h-9 items-center gap-1.5 rounded-lg border px-3 text-sm font-semibold transition @(UoWService.Folder.ShowArchived ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-800/60 dark:bg-amber-950/30 dark:text-amber-300 dark:hover:bg-amber-950/50" : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800")"
                         title="@AppLoc["showArchived"]"
-                        @onclick="async () => await OnToggleArchived.InvokeAsync()">
+                        @onclick="HandleToggleArchived">
                     <span>@AppLoc["showArchived"]</span>
                 </button>
+            }
 
-                <MhdColumnPicker Text="@AppLoc["columns"]"
-                                 Columns="@ProjectColumnOptions"
-                                 ColumnVisibility="_projectColumns"
-                                 OnChanged="StateHasChanged" />
+            <MhdColumnPicker Text="@AppLoc["columns"]"
+                             Columns="@ProjectColumnOptions"
+                             ColumnVisibility="_projectColumns"
+                             OnChanged="StateHasChanged" />
 
+            <button type="button" class="@ToolbarButtonClass" @onclick="ExportProjectListAsync">@AppLoc["exportExcel"]</button>
+            <button type="button" class="@ToolbarButtonClass" @onclick="ExportProjectPdfAsync">@AppLoc["exportPdf"]</button>
+            <button type="button" class="@ToolbarButtonClass" @onclick="PrintProjectListAsync">@AppLoc["print"]</button>
+
+            <button type="button"
+                    class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-sky-300 bg-sky-50 px-3 text-sm font-semibold text-sky-700 transition hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-300 dark:hover:bg-sky-950/50"
+                    disabled="@(Folder.State.FolderSelected is null)"
+                    title="@AppLoc["reports"]"
+                    @onclick="OpenReports">
+                <span>@AppLoc["reports"]</span>
+            </button>
+
+            <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
                 <button type="button"
-                        class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-sky-300 bg-sky-50 px-3 text-sm font-semibold text-sky-700 transition hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-300 dark:hover:bg-sky-950/50"
-                        disabled="@(Folder.State.FolderSelected is null)"
-                        title="@AppLoc["incomeOverview"]"
-                        @onclick="OpenIncomeOverview">
-                    <span>@AppLoc["incomeOverview"]</span>
+                        class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-50 px-3 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-950/50"
+                        disabled="@(Folder.State.OtherDepartment || Folder.State.FolderSelected is null)"
+                        title="@AppLoc["newProject"]"
+                        @onclick="() => UpdateForm(new ListProjectMVVM())">
+                    <span aria-hidden="true">@((MarkupString)Icons.Plus)</span>
+                    <span>@AppLoc["newProject"]</span>
                 </button>
-
-                <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
-                    <button type="button"
-                            class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-50 px-3 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-950/50"
-                            disabled="@(Folder.State.OtherDepartment || Folder.State.FolderSelected is null)"
-                            title="@AppLoc["newProject"]"
-                            @onclick="() => UpdateForm(new ListProjectMVVM())">
-                        <span aria-hidden="true">@((MarkupString)Icons.Plus)</span>
-                        <span>@AppLoc["newProject"]</span>
-                    </button>
-                </AuthorizeView>
-            </div>
-        }
+            </AuthorizeView>
+        </div>
     </div>
 
     @* ── Project table ───────────────────────────────────── *@
@@ -72,11 +76,11 @@
     {
         <div class="mr-1 overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
             <table class="min-w-full table-auto text-left text-xs">
-                <thead class="bg-slate-50 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-900 dark:text-slate-400">
+                <thead class="sticky top-0 z-10 bg-slate-50 text-[11px] font-semibold text-slate-500 dark:bg-slate-900 dark:text-slate-400">
                     <tr>
                         @if (IsProjectColumnVisible("code"))
                         {
-                            <th class="@SortableHeaderClass("code")" @onclick='() => SortBy("code")'>
+                            <th class="@SortableHeaderClass("code") sticky left-0 z-[1] w-28 bg-slate-50 dark:bg-slate-900" @onclick='() => SortBy("code")'>
                                 <span class="inline-flex items-center gap-1">
                                     @CalcResource.code
                                     @((MarkupString)SortIndicatorHtml("code"))
@@ -85,7 +89,7 @@
                         }
                         @if (IsProjectColumnVisible("name"))
                         {
-                            <th class="@SortableHeaderClass("name") min-w-52" @onclick='() => SortBy("name")'>
+                            <th class="@SortableHeaderClass("name") sticky left-28 z-[1] min-w-52 bg-slate-50 dark:bg-slate-900" @onclick='() => SortBy("name")'>
                                 <span class="inline-flex items-center gap-1">
                                     @AppLoc["projectName"]
                                     @((MarkupString)SortIndicatorHtml("name"))
@@ -105,7 +109,7 @@
                         {
                             <th class="@SortableHeaderClass("responsible")" @onclick='() => SortBy("responsible")'>
                                 <span class="inline-flex items-center gap-1">
-                                    @CalcResource.responsible
+                                    @AppLoc["calculationResponsible"]
                                     @((MarkupString)SortIndicatorHtml("responsible"))
                                 </span>
                             </th>
@@ -155,10 +159,82 @@
                                 </span>
                             </th>
                         }
+                        @if (IsProjectColumnVisible("byggherre"))
+                        {
+                            <th class="@SortableHeaderClass("byggherre")" @onclick='() => SortBy("byggherre")'>
+                                <span class="inline-flex items-center gap-1">
+                                    @CalcResource.developer
+                                    @((MarkupString)SortIndicatorHtml("byggherre"))
+                                </span>
+                            </th>
+                        }
+                        @if (IsProjectColumnVisible("organisation"))
+                        {
+                            <th class="@SortableHeaderClass("organisation")" @onclick='() => SortBy("organisation")'>
+                                <span class="inline-flex items-center gap-1">
+                                    @ResourceApp.organisation
+                                    @((MarkupString)SortIndicatorHtml("organisation"))
+                                </span>
+                            </th>
+                        }
+                        @if (IsProjectColumnVisible("procurementName"))
+                        {
+                            <th class="@SortableHeaderClass("procurementName")" @onclick='() => SortBy("procurementName")'>
+                                <span class="inline-flex items-center gap-1">
+                                    @AppLoc["procurementName"]
+                                    @((MarkupString)SortIndicatorHtml("procurementName"))
+                                </span>
+                            </th>
+                        }
+                        @if (IsProjectColumnVisible("procurementNumber"))
+                        {
+                            <th class="@SortableHeaderClass("procurementNumber")" @onclick='() => SortBy("procurementNumber")'>
+                                <span class="inline-flex items-center gap-1">
+                                    @AppLoc["procurementNumber"]
+                                    @((MarkupString)SortIndicatorHtml("procurementNumber"))
+                                </span>
+                            </th>
+                        }
+                        @if (IsProjectColumnVisible("customerReference"))
+                        {
+                            <th class="@SortableHeaderClass("customerReference")" @onclick='() => SortBy("customerReference")'>
+                                <span class="inline-flex items-center gap-1">
+                                    @AppLoc["customerReference"]
+                                    @((MarkupString)SortIndicatorHtml("customerReference"))
+                                </span>
+                            </th>
+                        }
+                        @if (IsProjectColumnVisible("contract"))
+                        {
+                            <th class="@SortableHeaderClass("contract")" @onclick='() => SortBy("contract")'>
+                                <span class="inline-flex items-center gap-1">
+                                    @CalcResource.projectContract
+                                    @((MarkupString)SortIndicatorHtml("contract"))
+                                </span>
+                            </th>
+                        }
+                        @if (IsProjectColumnVisible("projectType"))
+                        {
+                            <th class="@SortableHeaderClass("projectType")" @onclick='() => SortBy("projectType")'>
+                                <span class="inline-flex items-center gap-1">
+                                    @CalcResource.projectType
+                                    @((MarkupString)SortIndicatorHtml("projectType"))
+                                </span>
+                            </th>
+                        }
+                        @if (IsProjectColumnVisible("inspector"))
+                        {
+                            <th class="@SortableHeaderClass("inspector")" @onclick='() => SortBy("inspector")'>
+                                <span class="inline-flex items-center gap-1">
+                                    @CalcResource.inspector
+                                    @((MarkupString)SortIndicatorHtml("inspector"))
+                                </span>
+                            </th>
+                        }
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                    @foreach (var project in SortedProjects)
+                    @foreach (var project in PagedProjects)
                     {
                         var isProjectArchived = !project.IsVisible;
                         var isProjectSelected = Folder.State.ProjectSelected?.Id == project.Id;
@@ -178,7 +254,7 @@
                             draggable="true">
                             @if (IsProjectColumnVisible("code"))
                             {
-                                <td class="whitespace-nowrap px-3 py-2 font-mono text-[11px] text-slate-500 dark:text-slate-400">
+                                <td class="sticky left-0 z-[1] w-28 bg-white whitespace-nowrap px-3 py-2 font-mono text-[11px] text-slate-500 dark:bg-slate-950 dark:text-slate-400">
                                     <span class="inline-flex items-center gap-1.5">
                                         <span class="h-2.5 w-2.5 rounded-full border border-slate-300 dark:border-slate-700"
                                               style="background-color:@project.Color"></span>
@@ -188,7 +264,7 @@
                             }
                             @if (IsProjectColumnVisible("name"))
                             {
-                                <td class="max-w-80 px-3 py-2">
+                                <td class="sticky left-28 z-[1] max-w-80 bg-white px-3 py-2 dark:bg-slate-950">
                                     <span class="block truncate font-semibold text-slate-800 dark:text-slate-100" title="@project.Name">@project.Name</span>
                                 </td>
                             }
@@ -232,10 +308,74 @@
                                     </button>
                                 </td>
                             }
+                            @if (IsProjectColumnVisible("byggherre"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Developer)</td>
+                            }
+                            @if (IsProjectColumnVisible("organisation"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Organisation)</td>
+                            }
+                            @if (IsProjectColumnVisible("procurementName"))
+                            {
+                                <td class="px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.ProcurementName)</td>
+                            }
+                            @if (IsProjectColumnVisible("procurementNumber"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.ProcurementNumber)</td>
+                            }
+                            @if (IsProjectColumnVisible("customerReference"))
+                            {
+                                <td class="px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.CustomerReference)</td>
+                            }
+                            @if (IsProjectColumnVisible("contract"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Contract)</td>
+                            }
+                            @if (IsProjectColumnVisible("projectType"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Type)</td>
+                            }
+                            @if (IsProjectColumnVisible("inspector"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Inspector)</td>
+                            }
                         </tr>
                     }
                 </tbody>
             </table>
+        </div>
+        @* ── Pagination bar ─────────────────────────────── *@
+        <div class="mr-1 mt-1 flex flex-wrap items-center justify-between gap-2 px-1 py-1 text-xs text-slate-500 dark:text-slate-400">
+            <div class="flex items-center gap-1.5">
+                <span>@AppLoc["show"]</span>
+                <select class="rounded border border-slate-200 bg-white px-1.5 py-0.5 text-xs dark:border-slate-700 dark:bg-slate-900"
+                        value="@_pageSize"
+                        @onchange="HandlePageSizeChanged">
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                    <option value="0">@AppLoc["allItems"]</option>
+                </select>
+                <span>@AppLoc["perPage"]</span>
+            </div>
+            @if (TotalProjectCount > 0)
+            {
+                <span>@AppLoc["showingRangeFormat", FirstProjectIndex, LastProjectIndex, TotalProjectCount]</span>
+                <div class="flex items-center gap-1">
+                    <button class="rounded border border-slate-200 bg-white px-2.5 py-0.5 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800"
+                            disabled="@(_currentPage <= 1)"
+                            @onclick="() => _currentPage--">
+                        @AppLoc["previous"]
+                    </button>
+                    <button class="rounded border border-slate-200 bg-white px-2.5 py-0.5 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800"
+                            disabled="@(_currentPage >= TotalProjectPages)"
+                            @onclick="() => _currentPage++">
+                        @AppLoc["next"]
+                    </button>
+                </div>
+            }
         </div>
     }
     else
@@ -271,6 +411,10 @@
     private string _sortColumn = "";
     private bool _sortAscending = true;
 
+    private int _pageSize = 25;
+    private int _currentPage = 1;
+    private const string ToolbarButtonClass = "inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800";
+
     private IEnumerable<ListProjectMVVM> SortedProjects
     {
         get
@@ -303,12 +447,50 @@
                     ? projects.OrderBy(x => x.TenderQA)
                     : projects.OrderByDescending(x => x.TenderQA),
                 "calculations" => _sortAscending
-                    ? projects.OrderBy(x => x.Calculations?.Count ?? 0)
-                    : projects.OrderByDescending(x => x.Calculations?.Count ?? 0),
+                    ? projects.OrderBy(GetCalculationCount)
+                    : projects.OrderByDescending(GetCalculationCount),
+                "byggherre" => _sortAscending
+                    ? projects.OrderBy(x => x.Developer)
+                    : projects.OrderByDescending(x => x.Developer),
+                "organisation" => _sortAscending
+                    ? projects.OrderBy(x => x.Organisation)
+                    : projects.OrderByDescending(x => x.Organisation),
+                "procurementName" => _sortAscending
+                    ? projects.OrderBy(x => x.ProcurementName)
+                    : projects.OrderByDescending(x => x.ProcurementName),
+                "procurementNumber" => _sortAscending
+                    ? projects.OrderBy(x => x.ProcurementNumber)
+                    : projects.OrderByDescending(x => x.ProcurementNumber),
+                "customerReference" => _sortAscending
+                    ? projects.OrderBy(x => x.CustomerReference)
+                    : projects.OrderByDescending(x => x.CustomerReference),
+                "contract" => _sortAscending
+                    ? projects.OrderBy(x => x.Contract)
+                    : projects.OrderByDescending(x => x.Contract),
+                "projectType" => _sortAscending
+                    ? projects.OrderBy(x => x.Type)
+                    : projects.OrderByDescending(x => x.Type),
+                "inspector" => _sortAscending
+                    ? projects.OrderBy(x => x.Inspector)
+                    : projects.OrderByDescending(x => x.Inspector),
                 _ => projects
                     .OrderBy(x => x.Name, StringComparer.CurrentCultureIgnoreCase)
                     .ThenByDescending(x => x.Order)
             };
+        }
+    }
+
+    private IEnumerable<ListProjectMVVM> PagedProjects
+    {
+        get
+        {
+            var sorted = SortedProjects;
+            if (_pageSize == 0) return sorted;
+            var total = sorted.Count();
+            var maxPage = (int)Math.Ceiling((double)total / _pageSize);
+            if (maxPage < 1) maxPage = 1;
+            if (_currentPage > maxPage) _currentPage = maxPage;
+            return sorted.Skip((_currentPage - 1) * _pageSize).Take(_pageSize);
         }
     }
 
@@ -321,6 +503,19 @@
             _sortColumn = column;
             _sortAscending = true;
         }
+        _currentPage = 1;
+    }
+
+    private void HandlePageSizeChanged(ChangeEventArgs e)
+    {
+        _pageSize = int.TryParse(e.Value?.ToString(), out var pageSize) ? pageSize : 25;
+        _currentPage = 1;
+    }
+
+    private async Task HandleToggleArchived()
+    {
+        _currentPage = 1;
+        await OnToggleArchived.InvokeAsync();
     }
 
     private string SortableHeaderClass(string column)
@@ -352,7 +547,15 @@
         ["end"] = true,
         ["deadline"] = true,
         ["qa"] = false,
-        ["calculations"] = true
+        ["calculations"] = true,
+        ["byggherre"] = false,
+        ["organisation"] = false,
+        ["procurementName"] = false,
+        ["procurementNumber"] = false,
+        ["customerReference"] = false,
+        ["contract"] = false,
+        ["projectType"] = false,
+        ["inspector"] = false
     };
 
     private List<MhdColumnPickerItem> ProjectColumnOptions => new()
@@ -360,12 +563,20 @@
         new("code", CalcResource.code),
         new("name", AppLoc["projectName"].Value),
         new("status", CalcResource.status),
-        new("responsible", CalcResource.responsible),
+        new("responsible", AppLoc["calculationResponsible"].Value),
         new("start", CalcResource.startDate),
         new("end", CalcResource.endDate),
         new("deadline", CalcResource.tenderDeadline),
         new("qa", CalcResource.tenderQA),
-        new("calculations", AppLoc["calculationCount"].Value)
+        new("calculations", AppLoc["calculationCount"].Value),
+        new("byggherre", CalcResource.developer),
+        new("organisation", ResourceApp.organisation),
+        new("procurementName", AppLoc["procurementName"].Value),
+        new("procurementNumber", AppLoc["procurementNumber"].Value),
+        new("customerReference", AppLoc["customerReference"].Value),
+        new("contract", CalcResource.projectContract),
+        new("projectType", CalcResource.projectType),
+        new("inspector", CalcResource.inspector)
     };
 
     protected override void OnInitialized()
@@ -390,7 +601,17 @@
         value == default ? "-" : value.ToString(ConstValues.DateFormat);
 
     private static string FormatCalculationCount(ListProjectMVVM project) =>
-        project.CalculationsLoaded ? (project.Calculations?.Count ?? 0).ToString() : "-";
+        GetCalculationCount(project).ToString();
+
+    private static int GetCalculationCount(ListProjectMVVM project) =>
+        project.CalculationsLoaded
+            ? CalculationVersionSelector.CountCurrentVersions(project.Calculations)
+            : project.CalculationCount;
+
+    private int TotalProjectCount => SortedProjects.Count();
+    private int TotalProjectPages => _pageSize == 0 ? 1 : (int)Math.Ceiling((double)TotalProjectCount / _pageSize);
+    private int FirstProjectIndex => TotalProjectCount == 0 ? 0 : (_pageSize == 0 ? 1 : (_currentPage - 1) * _pageSize + 1);
+    private int LastProjectIndex => _pageSize == 0 ? TotalProjectCount : Math.Min(_currentPage * _pageSize, TotalProjectCount);
 
     private string GetProjectStatusText(ListProjectMVVM project)
     {
@@ -497,19 +718,58 @@
         UoWService.Folder.State.Notify();
     }
 
-    void OpenIncomeOverview()
+    void OpenReports()
     {
         if (Folder.State.FolderSelected is null)
             return;
 
-        Modal.ShowComponent<IncomeOverviewDialog>(
-            AppLoc["incomeOverview"],
+        Modal.ShowComponent<CentralReportsDialog>(
+            AppLoc["reports"].Value,
             new Dictionary<string, object>
             {
-                [nameof(IncomeOverviewDialog.FolderScope)] = Folder.State.FolderSelected
+                [nameof(CentralReportsDialog.FolderScope)] = Folder.State.FolderSelected,
+                [nameof(CentralReportsDialog.InitialView)] = CentralReportsDialog.ReportView.Income
             },
             BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
     }
+
+    private Task ExportProjectListAsync() => ExportProjectListAsync(pdfMode: false, printOnly: false);
+    private Task ExportProjectPdfAsync() => ExportProjectListAsync(pdfMode: true, printOnly: true);
+    private Task PrintProjectListAsync() => ExportProjectListAsync(pdfMode: false, printOnly: true);
+
+    private async Task ExportProjectListAsync(bool pdfMode, bool printOnly)
+    {
+        var columns = ProjectColumnOptions.Where(column => IsProjectColumnVisible(column.Key)).ToList();
+        var rows = SortedProjects.Select(project => columns.Select(column => GetProjectExportValue(project, column.Key)));
+        var title = AppLoc["projectListTitleFormat", Folder.State.FolderSelected?.Name ?? "-"].Value;
+
+        if (printOnly)
+            await ReportExportInterop.PrintAsync(JS, title, columns.Select(column => column.Label), rows, pdfMode);
+        else
+            await ReportExportInterop.ExportExcelAsync(JS, "projektlista", title, columns.Select(column => column.Label), rows);
+    }
+
+    private object? GetProjectExportValue(ListProjectMVVM project, string key) => key switch
+    {
+        "code" => project.Code,
+        "name" => project.Name,
+        "status" => GetProjectStatusText(project),
+        "responsible" => project.Responsible,
+        "start" => FormatDate(project.StartDate),
+        "end" => FormatDate(project.EndDate),
+        "deadline" => FormatDate(project.TenderDeadline),
+        "qa" => FormatDate(project.TenderQA),
+        "calculations" => GetCalculationCount(project),
+        "byggherre" => project.Developer,
+        "organisation" => project.Organisation,
+        "procurementName" => project.ProcurementName,
+        "procurementNumber" => project.ProcurementNumber,
+        "customerReference" => project.CustomerReference,
+        "contract" => project.Contract,
+        "projectType" => project.Type,
+        "inspector" => project.Inspector,
+        _ => string.Empty
+    };
 
     void UpdateForm(ListProjectMVVM model)
     {
