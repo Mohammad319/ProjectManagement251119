@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/engmo/Desktop/PM/b07/ProjectManagement251119/**)",
+      "Bash(dotnet build *)"
+    ]
+  }
+}

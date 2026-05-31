@@ -82,14 +82,43 @@
 		<Content Update="**\postcss.config.js" CopyToPublishDirectory="Never" />
 	</ItemGroup>
 
-	<Target Name="BuildTailwindCssForPublish"
-			BeforeTargets="ComputeFilesToPublish"
-			Condition="Exists('$(MSBuildProjectDirectory)\package.json')">
+	<Target Name="BuildTailwindCssForRelease"
+			BeforeTargets="PrepareForBuild"
+			Condition="'$(Configuration)' == 'Release' And Exists('$(MSBuildProjectDirectory)\package.json')">
 
 		<Exec Command="node -v" WorkingDirectory="$(MSBuildProjectDirectory)" />
 		<Exec Command="npm -v" WorkingDirectory="$(MSBuildProjectDirectory)" />
 		<Exec Command="npm ci" WorkingDirectory="$(MSBuildProjectDirectory)" />
 		<Exec Command="npm run tw:build" WorkingDirectory="$(MSBuildProjectDirectory)" />
+
+	</Target>
+
+	<Target Name="ValidatePublishedTailwindCss"
+			AfterTargets="Publish"
+			Condition="'$(Configuration)' == 'Release'">
+
+		<PropertyGroup>
+			<_EmptyFileSha256>E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855</_EmptyFileSha256>
+		</PropertyGroup>
+
+		<ItemGroup>
+			<_RequiredPublishedCssAssets Include="$(PublishDir)wwwroot\css\app.css" />
+			<_RequiredPublishedCssAssets Include="$(PublishDir)wwwroot\css\app.css.br" />
+			<_RequiredPublishedCssAssets Include="$(PublishDir)wwwroot\css\app.css.gz" />
+			<_RequiredPublishedCssAssets Include="$(PublishDir)wwwroot\css\custom.css" />
+			<_RequiredPublishedCssAssets Include="$(PublishDir)wwwroot\css\custom.css.br" />
+			<_RequiredPublishedCssAssets Include="$(PublishDir)wwwroot\css\custom.css.gz" />
+		</ItemGroup>
+
+		<Error Condition="!Exists('%(_RequiredPublishedCssAssets.Identity)')"
+			   Text="Published CSS asset is missing: %(_RequiredPublishedCssAssets.Identity)" />
+
+		<GetFileHash Files="@(_RequiredPublishedCssAssets)" Algorithm="SHA256">
+			<Output TaskParameter="Items" ItemName="_PublishedCssAssetHashes" />
+		</GetFileHash>
+
+		<Error Condition="'%(_PublishedCssAssetHashes.FileHash)' == '$(_EmptyFileSha256)'"
+			   Text="Published CSS asset is empty: %(_PublishedCssAssetHashes.Identity)" />
 
 	</Target>
 </Project>

@@ -2,6 +2,23 @@
     border: 5px solid red;
 }
 
+/* Column resize handle used by resizableTable.js */
+.resizer {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 5px;
+    height: 100%;
+    cursor: col-resize;
+    user-select: none;
+    z-index: 1;
+}
+
+.resizer:hover,
+.resizer.resizing {
+    border-right: 2px solid #aba8a6;
+}
+
 h1:focus {
     outline: none;
 }

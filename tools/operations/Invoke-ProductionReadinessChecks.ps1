@@ -1,7 +1,8 @@
 [CmdletBinding()]
 param(
     [switch] $SkipTests,
-    [switch] $SkipVulnerabilityScan
+    [switch] $SkipVulnerabilityScan,
+    [string] $PublishDirectory
 )
 
 $ErrorActionPreference = "Stop"
@@ -18,6 +19,10 @@ try {
 
     if (-not $SkipVulnerabilityScan) {
         dotnet list "ProjectManagement.slnx" package --vulnerable --include-transitive
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($PublishDirectory)) {
+        & (Join-Path $PSScriptRoot "Test-PublishedWebAssets.ps1") -PublishDirectory $PublishDirectory
     }
 
     Write-Host "Production readiness checks completed."

@@ -23,6 +23,10 @@ const createResizableTable = (table) => {
         if (col.querySelector(':scope > .resizer'))
             return;
 
+        // Ensure th is a positioning context for the absolute-positioned resizer
+        const pos = window.getComputedStyle(col).position;
+        if (pos === 'static') col.style.position = 'relative';
+
         const resizer = document.createElement('div');
         resizer.classList.add('resizer');
         resizer.style.height = `${table.offsetHeight}px`;

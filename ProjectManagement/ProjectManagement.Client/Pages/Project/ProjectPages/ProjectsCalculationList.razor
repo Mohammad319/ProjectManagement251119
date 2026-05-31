@@ -23,11 +23,12 @@
 
 @inherits AppComponentBase
 @inject IJSRuntime JS
+@implements IDisposable
 
-<div class="ml-1">
+<div class="ml-1 flex flex-col overflow-hidden h-[calc(100dvh-2.25rem)]">
 
     @* ── Sticky header: toolbar + filters ──────────────── *@
-    <div class="sticky top-0 z-20 -mx-1 border-b border-slate-200 bg-white px-1 pb-1 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+    <div class="sticky top-0 z-30 shrink-0 -mx-1 border-b border-slate-200 bg-white px-1 pb-1 shadow-sm dark:border-slate-800 dark:bg-slate-950">
 
     @* ── Header toolbar ─────────────────────────────────── *@
     <div class="flex w-full flex-wrap items-center justify-between gap-1.5 px-1 pt-1 pb-0.5">
@@ -258,127 +259,127 @@
     @* ── Calculation table ──��───────────────────────────── *@
     @if (SortedCalculations.Any())
     {
-        <div class="mr-1 mt-2 max-h-[calc(100dvh-11rem)] overflow-auto rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
-            <table class="min-w-full table-auto text-left text-xs">
+        <div class="divNetCalc mr-1 mt-2 flex-1 min-h-0 overflow-auto rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
+            <table id="resizeMe" class="min-w-full table-auto text-left text-xs">
                 <thead class="sticky top-0 z-20 bg-slate-50 text-[11px] font-semibold text-slate-500 dark:bg-slate-900 dark:text-slate-400">
                     <tr>
                         @if (IsCalculationColumnVisible("code"))
                         {
-                            <th class="@SortableHeaderClass("code") sticky left-0 z-[11] w-28 bg-slate-50 dark:bg-slate-900" style="min-width:70px;resize:horizontal;overflow:hidden;" @onclick='() => SortBy("code")'>
+                            <th id="hcode" class="@SortableHeaderClass("code") sticky left-0 z-[11] w-28 bg-slate-50 dark:bg-slate-900" style="min-width:70px;" @onclick='() => SortBy("code")'>
                                 <span class="inline-flex items-center gap-1">@CalcResource.code @((MarkupString)SortIndicatorHtml("code")) <TableColumnFilter FilterState='CF("code")' OnChanged="OnColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("name"))
                         {
-                            <th class="@SortableHeaderClass("name") sticky left-28 z-[11] min-w-52 border-r border-slate-300 bg-slate-50 dark:border-slate-600 dark:bg-slate-900" style="min-width:160px;resize:horizontal;overflow:hidden;" @onclick='() => SortBy("name")'>
+                            <th id="hname" class="@SortableHeaderClass("name") sticky left-28 z-[11] min-w-52 border-r border-slate-300 bg-slate-50 dark:border-slate-600 dark:bg-slate-900" style="min-width:160px;" @onclick='() => SortBy("name")'>
                                 <span class="inline-flex items-center gap-1">@AppLoc["calculationName"] @((MarkupString)SortIndicatorHtml("name")) <TableColumnFilter FilterState='CF("name")' OnChanged="OnColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (ShowVersionColumn)
                         {
-                            <th class="@SortableHeaderClass("version")" style="min-width:80px;resize:horizontal;overflow:hidden;" @onclick='() => SortBy("version")'>
+                            <th id="hversion" class="@SortableHeaderClass("version")" style="min-width:80px;" @onclick='() => SortBy("version")'>
                                 <span class="inline-flex items-center gap-1">@AppLoc["version"] @((MarkupString)SortIndicatorHtml("version"))</span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("project"))
                         {
-                            <th class="@SortableHeaderClass("project")" style="min-width:80px;resize:horizontal;overflow:hidden;" @onclick='() => SortBy("project")'>
+                            <th id="hproject" class="@SortableHeaderClass("project")" style="min-width:80px;" @onclick='() => SortBy("project")'>
                                 <span class="inline-flex items-center gap-1">@AppLoc["project"] @((MarkupString)SortIndicatorHtml("project"))</span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("folder"))
                         {
-                            <th class="@SortableHeaderClass("folder")" style="min-width:80px;resize:horizontal;overflow:hidden;" @onclick='() => SortBy("folder")'>
+                            <th id="hfolder" class="@SortableHeaderClass("folder")" style="min-width:80px;" @onclick='() => SortBy("folder")'>
                                 <span class="inline-flex items-center gap-1">@AppLoc["folder"] @((MarkupString)SortIndicatorHtml("folder"))</span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("calculationType"))
                         {
-                            <th class="@SortableHeaderClass("calculationType")" style="min-width:150px;resize:horizontal;overflow:hidden;" @onclick='() => SortBy("calculationType")'>
+                            <th id="hcalculationType" class="@SortableHeaderClass("calculationType")" style="min-width:150px;" @onclick='() => SortBy("calculationType")'>
                                 <span class="inline-flex items-center gap-1">@AppLoc["calculationType"] @((MarkupString)SortIndicatorHtml("calculationType")) <TableColumnFilter FilterState='CF("calculationType")' OnChanged="OnColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("status"))
                         {
-                            <th class="@SortableHeaderClass("status")" style="min-width:80px;resize:horizontal;overflow:hidden;" @onclick='() => SortBy("status")'>
+                            <th id="hstatus" class="@SortableHeaderClass("status")" style="min-width:80px;" @onclick='() => SortBy("status")'>
                                 <span class="inline-flex items-center gap-1">@CalcResource.status @((MarkupString)SortIndicatorHtml("status")) <TableColumnFilter FilterState='CF("status")' OnChanged="OnColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("responsible"))
                         {
-                            <th class="@SortableHeaderClass("responsible")" style="min-width:80px;resize:horizontal;overflow:hidden;" @onclick='() => SortBy("responsible")'>
+                            <th id="hresponsible" class="@SortableHeaderClass("responsible")" style="min-width:80px;" @onclick='() => SortBy("responsible")'>
                                 <span class="inline-flex items-center gap-1">@AppLoc["calculationResponsible"] @((MarkupString)SortIndicatorHtml("responsible")) <TableColumnFilter FilterState='CF("responsible")' OnChanged="OnColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("inspector"))
                         {
-                            <th class="@SortableHeaderClass("inspector")" style="min-width:80px;resize:horizontal;overflow:hidden;" @onclick='() => SortBy("inspector")'>
+                            <th id="hinspector" class="@SortableHeaderClass("inspector")" style="min-width:80px;" @onclick='() => SortBy("inspector")'>
                                 <span class="inline-flex items-center gap-1">@AppLoc["reviewer"] @((MarkupString)SortIndicatorHtml("inspector")) <TableColumnFilter FilterState='CF("inspector")' OnChanged="OnColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("qa"))
                         {
-                            <th class="@SortableHeaderClass("qa")" style="min-width:120px;resize:horizontal;overflow:hidden;" title="Sista dag för frågor och svar" @onclick='() => SortBy("qa")'>
+                            <th id="hqa" class="@SortableHeaderClass("qa")" style="min-width:120px;" title="Sista dag för frågor och svar" @onclick='() => SortBy("qa")'>
                                 <span class="inline-flex items-center gap-1">Sista dag frågor/svar @((MarkupString)SortIndicatorHtml("qa")) <TableColumnFilter FilterState='CF("qa")' OnChanged="OnColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("deadline"))
                         {
-                            <th class="@SortableHeaderClass("deadline")" style="min-width:80px;resize:horizontal;overflow:hidden;" @onclick='() => SortBy("deadline")'>
+                            <th id="hdeadline" class="@SortableHeaderClass("deadline")" style="min-width:80px;" @onclick='() => SortBy("deadline")'>
                                 <span class="inline-flex items-center gap-1">@CalcResource.tenderDeadline @((MarkupString)SortIndicatorHtml("deadline")) <TableColumnFilter FilterState='CF("deadline")' OnChanged="OnColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("priority"))
                         {
-                            <th class="@SortableHeaderClass("priority")" style="min-width:80px;resize:horizontal;overflow:hidden;" @onclick='() => SortBy("priority")'>
+                            <th id="hpriority" class="@SortableHeaderClass("priority")" style="min-width:80px;" @onclick='() => SortBy("priority")'>
                                 <span class="inline-flex items-center gap-1">@AppLoc["probability"] @((MarkupString)SortIndicatorHtml("priority")) <TableColumnFilter FilterState='CF("priority")' OnChanged="OnColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("createdAt"))
                         {
-                            <th class="@SortableHeaderClass("createdAt")" style="min-width:80px;resize:horizontal;overflow:hidden;" @onclick='() => SortBy("createdAt")'>
+                            <th id="hcreatedAt" class="@SortableHeaderClass("createdAt")" style="min-width:80px;" @onclick='() => SortBy("createdAt")'>
                                 <span class="inline-flex items-center gap-1">@AppLoc["createdDate"] @((MarkupString)SortIndicatorHtml("createdAt")) <TableColumnFilter FilterState='CF("createdAt")' OnChanged="OnColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("updatedAt"))
                         {
-                            <th class="@SortableHeaderClass("updatedAt")" style="min-width:80px;resize:horizontal;overflow:hidden;" @onclick='() => SortBy("updatedAt")'>
+                            <th id="hupdatedAt" class="@SortableHeaderClass("updatedAt")" style="min-width:80px;" @onclick='() => SortBy("updatedAt")'>
                                 <span class="inline-flex items-center gap-1">@AppLoc["lastModified"] @((MarkupString)SortIndicatorHtml("updatedAt")) <TableColumnFilter FilterState='CF("updatedAt")' OnChanged="OnColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("start"))
                         {
-                            <th class="@SortableHeaderClass("start")" style="min-width:80px;resize:horizontal;overflow:hidden;" @onclick='() => SortBy("start")'>
+                            <th id="hstart" class="@SortableHeaderClass("start")" style="min-width:80px;" @onclick='() => SortBy("start")'>
                                 <span class="inline-flex items-center gap-1">@CalcResource.startDate @((MarkupString)SortIndicatorHtml("start")) <TableColumnFilter FilterState='CF("start")' OnChanged="OnColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("end"))
                         {
-                            <th class="@SortableHeaderClass("end")" style="min-width:80px;resize:horizontal;overflow:hidden;" @onclick='() => SortBy("end")'>
+                            <th id="hend" class="@SortableHeaderClass("end")" style="min-width:80px;" @onclick='() => SortBy("end")'>
                                 <span class="inline-flex items-center gap-1">@CalcResource.endDate @((MarkupString)SortIndicatorHtml("end")) <TableColumnFilter FilterState='CF("end")' OnChanged="OnColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("timeMonth"))
                         {
-                            <th class="@SortableHeaderClass("timeMonth")" style="min-width:80px;resize:horizontal;overflow:hidden;" @onclick='() => SortBy("timeMonth")'>
+                            <th id="htimeMonth" class="@SortableHeaderClass("timeMonth")" style="min-width:80px;" @onclick='() => SortBy("timeMonth")'>
                                 <span class="inline-flex items-center gap-1">@AppLoc["projectDurationMonths"] @((MarkupString)SortIndicatorHtml("timeMonth")) <TableColumnFilter FilterState='CF("timeMonth")' OnChanged="OnColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("tax"))
                         {
-                            <th class="@SortableHeaderClass("tax")" style="min-width:60px;resize:horizontal;overflow:hidden;" @onclick='() => SortBy("tax")'>
+                            <th id="htax" class="@SortableHeaderClass("tax")" style="min-width:60px;" @onclick='() => SortBy("tax")'>
                                 <span class="inline-flex items-center gap-1">@AppLoc["vatPercent"] @((MarkupString)SortIndicatorHtml("tax")) <TableColumnFilter FilterState='CF("tax")' OnChanged="OnColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("archived"))
                         {
-                            <th class="whitespace-nowrap px-3 py-2" style="min-width:60px;resize:horizontal;overflow:hidden;">
+                            <th id="harchived" class="whitespace-nowrap px-3 py-2 relative" style="min-width:60px;">
                                 <span class="inline-flex items-center gap-1">@AppLoc["archived"] <TableColumnFilter FilterState='CF("archived")' OnChanged="OnColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("privacy"))
                         {
-                            <th class="whitespace-nowrap px-3 py-2" style="min-width:60px;resize:horizontal;overflow:hidden;">
+                            <th id="hprivacy" class="whitespace-nowrap px-3 py-2 relative" style="min-width:60px;">
                                 <span class="inline-flex items-center gap-1">@ResourceApp._private <TableColumnFilter FilterState='CF("privacy")' OnChanged="OnColumnFilterChanged" /></span>
                             </th>
                         }
@@ -535,7 +536,7 @@
         </div>
 
         @* ── Pagination bar ──────────────────────────────── *@
-        <div class="sticky bottom-0 z-10 mr-1 mt-1 grid grid-cols-3 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs shadow-sm dark:border-slate-800 dark:bg-slate-950">
+        <div class="shrink-0 mr-1 mt-1 grid grid-cols-3 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs shadow-sm dark:border-slate-800 dark:bg-slate-950">
             @* Left: page size *@
             <div class="flex items-center gap-1.5">
                 <select class="h-6 rounded border border-slate-300 bg-white px-1 text-[11px] text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
@@ -734,6 +735,19 @@
 }
 
 @code {
+    private DotNetObjectReference<ProjectsCalculationList>? _dotNetRef;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        _dotNetRef ??= DotNetObjectReference.Create(this);
+        await JS.InvokeVoidAsync("initializeResizableColumns", _dotNetRef);
+    }
+
+    [JSInvokable]
+    public void SaveTemplateBlazor(string data) { }
+
+    public void Dispose() => _dotNetRef?.Dispose();
+
     private ListCalculationMVVM? calcDraging;
     private bool IaVisible { get; set; } = true;
     private ListCalculationMVVM? _productionDialogCalculation;

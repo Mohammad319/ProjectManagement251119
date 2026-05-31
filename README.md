@@ -49,6 +49,7 @@ Useful release helpers:
 
 ```powershell
 .\tools\operations\Invoke-ProductionReadinessChecks.ps1
+.\tools\operations\Test-PublishedWebAssets.ps1 -PublishDirectory C:\Publish\ProjectManagement
 .\tools\operations\New-MigrationScripts.ps1
 .\tools\operations\New-BackupRunbook.ps1 -DatabaseName ProjectManagement,TaskResourceBlueprints -BackupDirectory D:\SqlBackups
 ```

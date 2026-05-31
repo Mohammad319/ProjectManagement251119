@@ -65,11 +65,43 @@
     <Content Update="**\postcss.config.js" CopyToPublishDirectory="Never" />
   </ItemGroup>
 
-  <Target Name="BuildTailwindCss" BeforeTargets="Build;Publish" Condition="Exists('$(MSBuildProjectDirectory)\package.json')">
-    <Exec Command="npm ci" WorkingDirectory="$(MSBuildProjectDirectory)" Condition="!Exists('$(MSBuildProjectDirectory)\node_modules')" ContinueOnError="WarnAndContinue" />
-    <Exec Command="npm run tw:build" WorkingDirectory="$(MSBuildProjectDirectory)" ContinueOnError="WarnAndContinue" />
+  <Target Name="BuildTailwindCss" BeforeTargets="PrepareForBuild" Condition="Exists('$(MSBuildProjectDirectory)\package.json')">
+    <Exec Command="npm ci"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          Condition="'$(Configuration)' == 'Release' Or (!Exists('$(MSBuildProjectDirectory)\node_modules\.bin\tailwindcss.cmd') And !Exists('$(MSBuildProjectDirectory)\node_modules\.bin\tailwindcss'))" />
+    <Exec Command="npm run tw:build" WorkingDirectory="$(MSBuildProjectDirectory)" />
   </Target>
 
+  <Target Name="ValidatePublishedCssAssets"
+          AfterTargets="Publish"
+          Condition="'$(Configuration)' == 'Release'">
 
+    <PropertyGroup>
+      <_EmptyFileSha256>E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855</_EmptyFileSha256>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <_RequiredPublishedCssAssets Include="$(PublishDir)wwwroot\css\app.css" />
+      <_RequiredPublishedCssAssets Include="$(PublishDir)wwwroot\css\app.css.br" />
+      <_RequiredPublishedCssAssets Include="$(PublishDir)wwwroot\css\app.css.gz" />
+      <_RequiredPublishedCssAssets Include="$(PublishDir)wwwroot\css\custom.css" />
+      <_RequiredPublishedCssAssets Include="$(PublishDir)wwwroot\css\custom.css.br" />
+      <_RequiredPublishedCssAssets Include="$(PublishDir)wwwroot\css\custom.css.gz" />
+      <_RequiredPublishedCssAssets Include="$(PublishDir)wwwroot\css\tailwind.css" />
+      <_RequiredPublishedCssAssets Include="$(PublishDir)wwwroot\css\tailwind.css.br" />
+      <_RequiredPublishedCssAssets Include="$(PublishDir)wwwroot\css\tailwind.css.gz" />
+    </ItemGroup>
+
+    <Error Condition="!Exists('%(_RequiredPublishedCssAssets.Identity)')"
+           Text="Published CSS asset is missing: %(_RequiredPublishedCssAssets.Identity)" />
+
+    <GetFileHash Files="@(_RequiredPublishedCssAssets)" Algorithm="SHA256">
+      <Output TaskParameter="Items" ItemName="_PublishedCssAssetHashes" />
+    </GetFileHash>
+
+    <Error Condition="'%(_PublishedCssAssetHashes.FileHash)' == '$(_EmptyFileSha256)'"
+           Text="Published CSS asset is empty: %(_PublishedCssAssetHashes.Identity)" />
+
+  </Target>
 
 </Project>

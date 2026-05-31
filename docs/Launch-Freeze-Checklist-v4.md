@@ -22,6 +22,7 @@
 - Confirm backup and restore have been tested before the first real customer launch.
 
 ## Smoke test after deploy
+- Validate the staged publish directory with `.\tools\operations\Test-PublishedWebAssets.ps1 -PublishDirectory C:\Publish\ProjectManagement`.
 - Open `/health/live`.
 - Open `/health/ready`.
 - Sign in and sign out.

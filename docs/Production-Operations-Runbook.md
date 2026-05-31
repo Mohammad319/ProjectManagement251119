@@ -23,6 +23,10 @@
   - `dotnet test "ProjectManagement.slnx" --no-build`
 - Run the local readiness script before release candidates:
   - `.\tools\operations\Invoke-ProductionReadinessChecks.ps1`
+- Validate CSS files, compressed variants, and fingerprinted static-asset routes in the staged publish directory:
+  - `.\tools\operations\Test-PublishedWebAssets.ps1 -PublishDirectory C:\Publish\ProjectManagement`
+  - For the administrator app, use `.\tools\operations\Test-PublishedWebAssets.ps1 -PublishDirectory C:\Publish\ProjectManagement.Adminstrator -ApplicationName ProjectManagement.Adminstrator -CssAssets app.css,custom.css,tailwind.css`
+  - Or include the published-asset check in the readiness run with `.\tools\operations\Invoke-ProductionReadinessChecks.ps1 -PublishDirectory C:\Publish\ProjectManagement`
 - Deploy with `ASPNETCORE_ENVIRONMENT=Production`.
 - Verify startup fails fast if unsafe production settings are present.
 - Verify `/health/live` and `/health/ready` after deployment.
