@@ -272,7 +272,10 @@ namespace Persistence.Service.Project
                         Name = x.Name,
                         IsApprovalStatus = x.IsApprovalStatus,
                         LocksCalculation = x.LocksCalculation,
-                        AllowsProductionCalculation = x.AllowsProductionCalculation
+                        AllowsProductionCalculation = x.AllowsProductionCalculation,
+                        CountsAsSubmittedBid = x.CountsAsSubmittedBid,
+                        CountsAsWonBid = x.CountsAsWonBid,
+                        CountsAsLostBid = x.CountsAsLostBid
                     })
                     .ToListAsync(ct),
                 Organisation = await context.Organisation

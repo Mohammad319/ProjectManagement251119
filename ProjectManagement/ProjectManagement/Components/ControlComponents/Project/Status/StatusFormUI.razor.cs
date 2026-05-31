@@ -45,6 +45,36 @@ public partial class StatusFormUI
         StatusUpdate.AllowsProductionCalculation = e.Value is bool b && b;
     }
 
+    private void OnCountsAsSubmittedChanged(ChangeEventArgs e)
+    {
+        StatusUpdate.CountsAsSubmittedBid = e.Value is bool b && b;
+        if (!StatusUpdate.CountsAsSubmittedBid)
+        {
+            StatusUpdate.CountsAsWonBid = false;
+            StatusUpdate.CountsAsLostBid = false;
+        }
+    }
+
+    private void OnCountsAsWonChanged(ChangeEventArgs e)
+    {
+        StatusUpdate.CountsAsWonBid = e.Value is bool b && b;
+        if (StatusUpdate.CountsAsWonBid)
+        {
+            StatusUpdate.CountsAsSubmittedBid = true;
+            StatusUpdate.CountsAsLostBid = false;
+        }
+    }
+
+    private void OnCountsAsLostChanged(ChangeEventArgs e)
+    {
+        StatusUpdate.CountsAsLostBid = e.Value is bool b && b;
+        if (StatusUpdate.CountsAsLostBid)
+        {
+            StatusUpdate.CountsAsSubmittedBid = true;
+            StatusUpdate.CountsAsWonBid = false;
+        }
+    }
+
     private void CloseModal() => MHD.Modal.Close();
 
     private async Task HandleSubmitAsync()

@@ -9,6 +9,9 @@ namespace Domain.Entities.Project
         public bool IsApprovalStatus { get; private set; }
         public bool LocksCalculation { get; private set; }
         public bool AllowsProductionCalculation { get; private set; }
+        public bool CountsAsSubmittedBid { get; private set; }
+        public bool CountsAsWonBid { get; private set; }
+        public bool CountsAsLostBid { get; private set; }
 
         [JsonIgnore]
         public ICollection<CalculationEntity> Calculations { get; private set; } = [];
@@ -26,6 +29,16 @@ namespace Domain.Entities.Project
             IsApprovalStatus = isApprovalStatus;
             LocksCalculation = locksCalculation;
             AllowsProductionCalculation = allowsProductionCalculation;
+        }
+
+        public void SetHitRateSettings(
+            bool countsAsSubmittedBid,
+            bool countsAsWonBid,
+            bool countsAsLostBid)
+        {
+            CountsAsSubmittedBid = countsAsSubmittedBid || countsAsWonBid || countsAsLostBid;
+            CountsAsWonBid = countsAsWonBid;
+            CountsAsLostBid = !countsAsWonBid && countsAsLostBid;
         }
     }
 }

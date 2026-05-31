@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Persistence.Context;
 
@@ -11,9 +12,11 @@ using Persistence.Context;
 namespace Persistence.Migrations
 {
     [DbContext(typeof(ShardingSingleDbContext))]
-    partial class ShardingSingleDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260531150750_AddBidHitRateMetadata")]
+    partial class AddBidHitRateMetadata
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1814,7 +1817,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "ImportJobId", "Status");
 
-                    b.ToTable("PriceImportCandidates", null, t =>
+                    b.ToTable("PriceImportCandidates", t =>
                         {
                             t.HasCheckConstraint("CK_PriceImportCandidates_BasePrice_NonNegative", "[BasePrice] IS NULL OR [BasePrice] >= 0");
 
@@ -1892,7 +1895,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "SupplierName");
 
-                    b.ToTable("PriceImportJobs", null, t =>
+                    b.ToTable("PriceImportJobs", t =>
                         {
                             t.HasCheckConstraint("CK_PriceImportJobs_Counts_NonNegative", "[TotalCandidates] >= 0 AND [ReadyCount] >= 0 AND [ReviewCount] >= 0 AND [ErrorCount] >= 0 AND [ApprovedCount] >= 0");
 
@@ -1938,7 +1941,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "SupplierName", "ExternalColumnName");
 
-                    b.ToTable("PriceImportMappings", null, t =>
+                    b.ToTable("PriceImportMappings", t =>
                         {
                             t.HasCheckConstraint("CK_PriceImportMappings_ExternalColumnName_NotEmpty", "LEN(LTRIM(RTRIM([ExternalColumnName]))) > 0");
 
@@ -2006,7 +2009,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "SupplierName");
 
-                    b.ToTable("PriceLists", null, t =>
+                    b.ToTable("PriceLists", t =>
                         {
                             t.HasCheckConstraint("CK_PriceLists_DateRange", "[ValidTo] IS NULL OR [ValidFrom] IS NULL OR [ValidTo] >= [ValidFrom]");
 
@@ -2127,7 +2130,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "PriceListId", "ArticleNumber");
 
-                    b.ToTable("PriceListItems", null, t =>
+                    b.ToTable("PriceListItems", t =>
                         {
                             t.HasCheckConstraint("CK_PriceListItems_BasePrice_NonNegative", "[BasePrice] IS NULL OR [BasePrice] >= 0");
 
@@ -2569,11 +2572,11 @@ namespace Persistence.Migrations
 
                     b.ToTable("Statuses", null, t =>
                         {
+                            t.HasCheckConstraint("CK_Statuses_Color_Hex", "[Color] LIKE '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'");
+
                             t.HasCheckConstraint("CK_Statuses_BidResult_NotWonAndLost", "[CountsAsWonBid] = 0 OR [CountsAsLostBid] = 0");
 
                             t.HasCheckConstraint("CK_Statuses_BidResult_RequiresSubmitted", "[CountsAsSubmittedBid] = 1 OR ([CountsAsWonBid] = 0 AND [CountsAsLostBid] = 0)");
-
-                            t.HasCheckConstraint("CK_Statuses_Color_Hex", "[Color] LIKE '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'");
 
                             t.HasCheckConstraint("CK_Statuses_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
 

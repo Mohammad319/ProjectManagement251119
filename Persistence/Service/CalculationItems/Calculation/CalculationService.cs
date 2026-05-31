@@ -817,6 +817,7 @@ namespace Persistence.Service.CalculationItems.Calculation
                 TemplateId = x.TemplateId,
                 TemplateColumnId = x.TemplateColumnId,
                 CalculationType = x.CalculationType,
+                BidRole = x.BidRole,
                 IsLocked = x.IsLocked,
                 LockedAtUtc = x.LockedAtUtc,
                 LockedByUserId = x.LockedByUserId,

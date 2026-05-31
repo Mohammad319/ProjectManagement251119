@@ -16,5 +16,8 @@ namespace ProjectManagement.Shared.Base.Project
         public bool IsApprovalStatus { get; set; }
         public bool LocksCalculation { get; set; }
         public bool AllowsProductionCalculation { get; set; }
+        public bool CountsAsSubmittedBid { get; set; }
+        public bool CountsAsWonBid { get; set; }
+        public bool CountsAsLostBid { get; set; }
     }
 }

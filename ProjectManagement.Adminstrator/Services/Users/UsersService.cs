@@ -331,6 +331,10 @@ namespace ProjectManagement.Adminstrator.Services.Users
                         defaultStatus.IsApprovalStatus,
                         defaultStatus.LocksCalculation,
                         defaultStatus.AllowsProductionCalculation);
+                    newStatus.SetHitRateSettings(
+                        defaultStatus.CountsAsSubmittedBid,
+                        defaultStatus.CountsAsWonBid,
+                        defaultStatus.CountsAsLostBid);
                     dataAccess.CalculationStatus.Add(newStatus);
                     continue;
                 }
@@ -344,6 +348,10 @@ namespace ProjectManagement.Adminstrator.Services.Users
                     defaultStatus.IsApprovalStatus,
                     defaultStatus.LocksCalculation,
                     defaultStatus.AllowsProductionCalculation);
+                calcStatus.SetHitRateSettings(
+                    defaultStatus.CountsAsSubmittedBid,
+                    defaultStatus.CountsAsWonBid,
+                    defaultStatus.CountsAsLostBid);
             }
 
             if (!await dataAccess.CalcProjectType.AnyAsync())

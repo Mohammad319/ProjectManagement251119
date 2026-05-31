@@ -26,6 +26,16 @@
             </div>
             <div class="text-xs text-slate-500 dark:text-slate-400">
                 @SortedProjects.Count() @CalcResource.project
+                @if (HasActiveProjectFilters)
+                {
+                    <button type="button"
+                            class="ml-2 inline-flex items-center gap-0.5 rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-semibold text-blue-600 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-950/60"
+                            @onclick="ClearProjectFilters"
+                            title="Rensa alla kolumnfilter">
+                        <svg class="h-2.5 w-2.5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L13 10.414V15a1 1 0 01-.553.894l-4 2A1 1 0 017 19v-8.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd"/></svg>
+                        Rensa filter
+                    </button>
+                }
             </div>
         </div>
 
@@ -84,6 +94,7 @@
                                 <span class="inline-flex items-center gap-1">
                                     @CalcResource.code
                                     @((MarkupString)SortIndicatorHtml("code"))
+                                    <TableColumnFilter FilterState='PF("code")' OnChanged="OnProjectColumnFilterChanged" />
                                 </span>
                             </th>
                         }
@@ -93,6 +104,7 @@
                                 <span class="inline-flex items-center gap-1">
                                     @AppLoc["projectName"]
                                     @((MarkupString)SortIndicatorHtml("name"))
+                                    <TableColumnFilter FilterState='PF("name")' OnChanged="OnProjectColumnFilterChanged" />
                                 </span>
                             </th>
                         }
@@ -102,6 +114,7 @@
                                 <span class="inline-flex items-center gap-1">
                                     @CalcResource.status
                                     @((MarkupString)SortIndicatorHtml("status"))
+                                    <TableColumnFilter FilterState='PF("status")' OnChanged="OnProjectColumnFilterChanged" />
                                 </span>
                             </th>
                         }
@@ -111,6 +124,7 @@
                                 <span class="inline-flex items-center gap-1">
                                     @AppLoc["calculationResponsible"]
                                     @((MarkupString)SortIndicatorHtml("responsible"))
+                                    <TableColumnFilter FilterState='PF("responsible")' OnChanged="OnProjectColumnFilterChanged" />
                                 </span>
                             </th>
                         }
@@ -120,6 +134,7 @@
                                 <span class="inline-flex items-center gap-1">
                                     @CalcResource.startDate
                                     @((MarkupString)SortIndicatorHtml("start"))
+                                    <TableColumnFilter FilterState='PF("start")' OnChanged="OnProjectColumnFilterChanged" />
                                 </span>
                             </th>
                         }
@@ -129,6 +144,7 @@
                                 <span class="inline-flex items-center gap-1">
                                     @CalcResource.endDate
                                     @((MarkupString)SortIndicatorHtml("end"))
+                                    <TableColumnFilter FilterState='PF("end")' OnChanged="OnProjectColumnFilterChanged" />
                                 </span>
                             </th>
                         }
@@ -138,6 +154,7 @@
                                 <span class="inline-flex items-center gap-1">
                                     @CalcResource.tenderDeadline
                                     @((MarkupString)SortIndicatorHtml("deadline"))
+                                    <TableColumnFilter FilterState='PF("deadline")' OnChanged="OnProjectColumnFilterChanged" />
                                 </span>
                             </th>
                         }
@@ -147,6 +164,7 @@
                                 <span class="inline-flex items-center gap-1">
                                     @CalcResource.tenderQA
                                     @((MarkupString)SortIndicatorHtml("qa"))
+                                    <TableColumnFilter FilterState='PF("qa")' OnChanged="OnProjectColumnFilterChanged" />
                                 </span>
                             </th>
                         }
@@ -165,6 +183,7 @@
                                 <span class="inline-flex items-center gap-1">
                                     @CalcResource.developer
                                     @((MarkupString)SortIndicatorHtml("byggherre"))
+                                    <TableColumnFilter FilterState='PF("byggherre")' OnChanged="OnProjectColumnFilterChanged" />
                                 </span>
                             </th>
                         }
@@ -174,6 +193,7 @@
                                 <span class="inline-flex items-center gap-1">
                                     @ResourceApp.organisation
                                     @((MarkupString)SortIndicatorHtml("organisation"))
+                                    <TableColumnFilter FilterState='PF("organisation")' OnChanged="OnProjectColumnFilterChanged" />
                                 </span>
                             </th>
                         }
@@ -228,6 +248,7 @@
                                 <span class="inline-flex items-center gap-1">
                                     @CalcResource.inspector
                                     @((MarkupString)SortIndicatorHtml("inspector"))
+                                    <TableColumnFilter FilterState='PF("inspector")' OnChanged="OnProjectColumnFilterChanged" />
                                 </span>
                             </th>
                         }
@@ -346,10 +367,10 @@
             </table>
         </div>
         @* ── Pagination bar ─────────────────────────────── *@
-        <div class="mr-1 mt-1 flex flex-wrap items-center justify-between gap-2 px-1 py-1 text-xs text-slate-500 dark:text-slate-400">
+        <div class="sticky bottom-0 z-10 mr-1 mt-1 grid grid-cols-3 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs shadow-sm dark:border-slate-800 dark:bg-slate-950">
+            @* Left: page size *@
             <div class="flex items-center gap-1.5">
-                <span>@AppLoc["show"]</span>
-                <select class="rounded border border-slate-200 bg-white px-1.5 py-0.5 text-xs dark:border-slate-700 dark:bg-slate-900"
+                <select class="h-6 rounded border border-slate-300 bg-white px-1 text-[11px] text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                         value="@_pageSize"
                         @onchange="HandlePageSizeChanged">
                     <option value="10">10</option>
@@ -358,24 +379,39 @@
                     <option value="100">100</option>
                     <option value="0">@AppLoc["allItems"]</option>
                 </select>
-                <span>@AppLoc["perPage"]</span>
+                <span class="text-[11px] text-slate-500 dark:text-slate-400">/ sida</span>
             </div>
-            @if (TotalProjectCount > 0)
-            {
-                <span>@AppLoc["showingRangeFormat", FirstProjectIndex, LastProjectIndex, TotalProjectCount]</span>
-                <div class="flex items-center gap-1">
-                    <button class="rounded border border-slate-200 bg-white px-2.5 py-0.5 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800"
-                            disabled="@(_currentPage <= 1)"
-                            @onclick="() => _currentPage--">
-                        @AppLoc["previous"]
-                    </button>
-                    <button class="rounded border border-slate-200 bg-white px-2.5 py-0.5 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800"
-                            disabled="@(_currentPage >= TotalProjectPages)"
-                            @onclick="() => _currentPage++">
-                        @AppLoc["next"]
-                    </button>
-                </div>
-            }
+
+            @* Center: range info *@
+            <div class="text-center text-[11px] text-slate-500 dark:text-slate-400">
+                @if (_pageSize == 0 || TotalProjectCount == 0)
+                {
+                    @AppLoc["showingAllFormat", TotalProjectCount]
+                }
+                else
+                {
+                    @AppLoc["showingRangeFormat", FirstProjectIndex, LastProjectIndex, TotalProjectCount]
+                }
+            </div>
+
+            @* Right: navigation *@
+            <div class="flex items-center justify-end gap-1">
+                <button type="button" disabled="@(_currentPage <= 1)" class="@ProjPaginationBtnCls" @onclick="() => _currentPage = 1" title="Första">
+                    <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7M18 19l-7-7 7-7" /></svg>
+                </button>
+                <button type="button" disabled="@(_currentPage <= 1)" class="@ProjPaginationBtnCls" @onclick="() => _currentPage--" title="Föregående">
+                    <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+                </button>
+                <span class="min-w-[2.5rem] text-center text-[11px] text-slate-500 dark:text-slate-400">
+                    @if (TotalProjectPages > 1) { @($"{_currentPage}/{TotalProjectPages}") }
+                </span>
+                <button type="button" disabled="@(_currentPage >= TotalProjectPages)" class="@ProjPaginationBtnCls" @onclick="() => _currentPage++" title="Nästa">
+                    <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                </button>
+                <button type="button" disabled="@(_currentPage >= TotalProjectPages)" class="@ProjPaginationBtnCls" @onclick="() => _currentPage = TotalProjectPages" title="Sista">
+                    <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M6 5l7 7-7 7" /></svg>
+                </button>
+            </div>
         </div>
     }
     else
@@ -414,12 +450,70 @@
     private int _pageSize = 25;
     private int _currentPage = 1;
     private const string ToolbarButtonClass = "inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800";
+    private const string ProjPaginationBtnCls = "inline-flex h-6 w-6 items-center justify-center rounded border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-35 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800";
+
+    private readonly Dictionary<string, ColumnFilterState> _projColFilters = new()
+    {
+        ["code"]          = new() { Type = ColumnFilterType.Text },
+        ["name"]          = new() { Type = ColumnFilterType.Text },
+        ["status"]        = new() { Type = ColumnFilterType.Text },
+        ["responsible"]   = new() { Type = ColumnFilterType.Text },
+        ["inspector"]     = new() { Type = ColumnFilterType.Text },
+        ["deadline"]      = new() { Type = ColumnFilterType.Date },
+        ["qa"]            = new() { Type = ColumnFilterType.Date },
+        ["start"]         = new() { Type = ColumnFilterType.Date },
+        ["end"]           = new() { Type = ColumnFilterType.Date },
+        ["byggherre"]     = new() { Type = ColumnFilterType.Text },
+        ["organisation"]  = new() { Type = ColumnFilterType.Text },
+    };
+
+    private bool HasActiveProjectFilters => _projColFilters.Values.Any(f => f.IsActive);
+
+    private void ClearProjectFilters()
+    {
+        foreach (var f in _projColFilters.Values) f.Clear();
+        _currentPage = 1;
+    }
+
+    private void OnProjectColumnFilterChanged() => _currentPage = 1;
+    private ColumnFilterState PF(string key) => _projColFilters[key];
+
+    private IEnumerable<ListProjectMVVM> FilteredProjects
+    {
+        get
+        {
+            var projects = Folder.State.FolderSelected?.Projects ?? (IEnumerable<ListProjectMVVM>)[];
+            if (_projColFilters["code"].IsActive)
+                projects = projects.Where(p => _projColFilters["code"].MatchesText(p.Code));
+            if (_projColFilters["name"].IsActive)
+                projects = projects.Where(p => _projColFilters["name"].MatchesText(p.Name));
+            if (_projColFilters["status"].IsActive)
+                projects = projects.Where(p => _projColFilters["status"].MatchesText(p.Status));
+            if (_projColFilters["responsible"].IsActive)
+                projects = projects.Where(p => _projColFilters["responsible"].MatchesText(p.Responsible));
+            if (_projColFilters["inspector"].IsActive)
+                projects = projects.Where(p => _projColFilters["inspector"].MatchesText(p.Inspector));
+            if (_projColFilters["deadline"].IsActive)
+                projects = projects.Where(p => _projColFilters["deadline"].MatchesDate(p.TenderDeadline == default ? null : p.TenderDeadline));
+            if (_projColFilters["qa"].IsActive)
+                projects = projects.Where(p => _projColFilters["qa"].MatchesDate(p.TenderQA == default ? null : p.TenderQA));
+            if (_projColFilters["start"].IsActive)
+                projects = projects.Where(p => _projColFilters["start"].MatchesDate(p.StartDate == default ? null : p.StartDate));
+            if (_projColFilters["end"].IsActive)
+                projects = projects.Where(p => _projColFilters["end"].MatchesDate(p.EndDate == default ? null : p.EndDate));
+            if (_projColFilters["byggherre"].IsActive)
+                projects = projects.Where(p => _projColFilters["byggherre"].MatchesText(p.Developer));
+            if (_projColFilters["organisation"].IsActive)
+                projects = projects.Where(p => _projColFilters["organisation"].MatchesText(p.Organisation));
+            return projects;
+        }
+    }
 
     private IEnumerable<ListProjectMVVM> SortedProjects
     {
         get
         {
-            var projects = Folder.State.FolderSelected?.Projects ?? [];
+            var projects = FilteredProjects;
             return _sortColumn switch
             {
                 "code" => _sortAscending

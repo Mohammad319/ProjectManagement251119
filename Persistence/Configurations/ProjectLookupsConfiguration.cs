@@ -28,6 +28,8 @@ internal sealed class StatusLookupConfiguration : IEntityTypeConfiguration<Statu
             t.HasCheckConstraint("CK_Statuses_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
             t.HasCheckConstraint("CK_Statuses_Color_Hex", LookupChecks.HexColorCheck);
             t.HasCheckConstraint("CK_Statuses_SortOrder_NonNegative", LookupChecks.NonNegativeSortOrderCheck);
+            t.HasCheckConstraint("CK_Statuses_BidResult_RequiresSubmitted", "[CountsAsSubmittedBid] = 1 OR ([CountsAsWonBid] = 0 AND [CountsAsLostBid] = 0)");
+            t.HasCheckConstraint("CK_Statuses_BidResult_NotWonAndLost", "[CountsAsWonBid] = 0 OR [CountsAsLostBid] = 0");
         });
     }
 }

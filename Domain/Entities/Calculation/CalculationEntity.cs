@@ -87,6 +87,7 @@ namespace Domain.Entities.Calculation
         public bool IsPrivate { get; private set; }
         public bool IsVisible { get; private set; } = true;
         public CalculationVersionType CalculationType { get; private set; } = CalculationVersionType.Tender;
+        public BidRole BidRole { get; private set; } = BidRole.MainBid;
         public bool IsLocked { get; private set; }
         public DateTime? LockedAtUtc { get; private set; }
         public int? LockedByUserId { get; private set; }
@@ -195,6 +196,7 @@ namespace Domain.Entities.Calculation
                 IsVisible = original.IsVisible,
                 TypeId = original.TypeId,
                 CalculationType = original.CalculationType,
+                BidRole = original.BidRole,
                 IsLocked = false,
                 LockedAtUtc = null,
                 LockedByUserId = null,
@@ -281,6 +283,7 @@ namespace Domain.Entities.Calculation
             TemplateId = dto.TemplateId;
             TemplateColumnId = dto.TemplateColumnId;
             CalculationType = dto.CalculationType;
+            BidRole = dto.BidRole;
         }
 
         public void InitializeVersionGroup()
@@ -536,6 +539,8 @@ namespace Domain.Entities.Calculation
             => new()
             {
                 Year = source.Year,
+                Description = source.Description,
+                SubType = source.SubType,
                 Q1 = source.Q1,
                 Q2 = source.Q2,
                 Q3 = source.Q3,

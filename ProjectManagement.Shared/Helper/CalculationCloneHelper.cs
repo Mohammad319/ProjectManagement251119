@@ -24,6 +24,8 @@ namespace ProjectManagement.Shared.Helper
             => new()
             {
                 Year = value?.Year ?? 0,
+                Description = MetadataCloneHelper.CopyText(value?.Description),
+                SubType = value?.SubType ?? default,
                 Q1 = value?.Q1 ?? 0m,
                 Q2 = value?.Q2 ?? 0m,
                 Q3 = value?.Q3 ?? 0m,

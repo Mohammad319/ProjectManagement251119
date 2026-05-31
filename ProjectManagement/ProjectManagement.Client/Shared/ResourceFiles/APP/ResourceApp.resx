@@ -824,7 +824,20 @@
   <data name="won" xml:space="preserve"><value>Won</value></data>
   <data name="lost" xml:space="preserve"><value>Lost</value></data>
   <data name="undecided" xml:space="preserve"><value>Undecided</value></data>
-  <data name="hitRateClassificationNotice" xml:space="preserve"><value>Won/lost is classified from the status name until explicit report flags are available in admin settings.</value></data>
+  <data name="hitRateClassificationNotice" xml:space="preserve"><value>Main hit rate is calculated once per project/procurement from current calculations with bid role Main bid. Options, additional work and internal objects are excluded.</value></data>
+  <data name="hitRateClassification" xml:space="preserve"><value>Hit rate classification</value></data>
+  <data name="reporting" xml:space="preserve"><value>Reporting</value></data>
+  <data name="hitRateStatusSettingsHelp" xml:space="preserve"><value>These settings are used in reports such as Hit rate / accuracy. The report also considers the calculation's Bid role.</value></data>
+  <data name="countsAsSubmittedBid" xml:space="preserve"><value>Counts as submitted bid</value></data>
+  <data name="countsAsWonBid" xml:space="preserve"><value>Counts as won bid</value></data>
+  <data name="countsAsLostBid" xml:space="preserve"><value>Counts as lost bid</value></data>
+  <data name="calculateBy" xml:space="preserve"><value>Calculate by</value></data>
+  <data name="projectProcurement" xml:space="preserve"><value>Project / procurement</value></data>
+  <data name="bidRole" xml:space="preserve"><value>Bid role</value></data>
+  <data name="mainBid" xml:space="preserve"><value>Main bid</value></data>
+  <data name="option" xml:space="preserve"><value>Option</value></data>
+  <data name="additionalWork" xml:space="preserve"><value>Additional work</value></data>
+  <data name="internalObject" xml:space="preserve"><value>Internal object</value></data>
   <data name="reportExportHint" xml:space="preserve"><value>Select a report and use the buttons above. Export and print follow the current filters.</value></data>
   <data name="source" xml:space="preserve"><value>Source</value></data>
   <data name="probability" xml:space="preserve"><value>Probability</value></data>

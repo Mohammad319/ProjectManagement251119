@@ -48,6 +48,8 @@ public sealed class EfModelConfigurationTests
         Assert.True(project.FindProperty(nameof(AuditableEntity<int>.RowVersion))!.IsConcurrencyToken);
         Assert.Contains(status.GetIndexes(), i => i.IsUnique && HasProperties(i, "TenantId", "Name"));
         Assert.Contains(taskStatus.GetIndexes(), i => i.IsUnique && HasProperties(i, "TenantId", "Name"));
+        Assert.Contains(status.GetCheckConstraints(), c => c.Name == "CK_Statuses_BidResult_RequiresSubmitted");
+        Assert.Contains(status.GetCheckConstraints(), c => c.Name == "CK_Statuses_BidResult_NotWonAndLost");
         Assert.Contains(task.GetCheckConstraints(), c => c.Name == "CK_Tasks_Quantity_NonNegative");
         Assert.Contains(resource.GetCheckConstraints(), c => c.Name == "CK_Resources_Quantity_NonNegative");
     }

@@ -824,7 +824,20 @@
   <data name="won" xml:space="preserve"><value>Vunna</value></data>
   <data name="lost" xml:space="preserve"><value>Förlorade</value></data>
   <data name="undecided" xml:space="preserve"><value>Ej beslutade</value></data>
-  <data name="hitRateClassificationNotice" xml:space="preserve"><value>Vunna/förlorade klassificeras från statusnamnet tills uttryckliga rapportflaggor finns i admininställningarna.</value></data>
+  <data name="hitRateClassificationNotice" xml:space="preserve"><value>Huvud-Hit rate beräknas en gång per projekt/upphandling från aktuella kalkyler med anbudsroll Huvudanbud. Optioner, ÄTA och interna objekt räknas inte med.</value></data>
+  <data name="hitRateClassification" xml:space="preserve"><value>Hit rate-klassificering</value></data>
+  <data name="reporting" xml:space="preserve"><value>Rapportering</value></data>
+  <data name="hitRateStatusSettingsHelp" xml:space="preserve"><value>Dessa inställningar används i rapporter som Hit rate / träffsäkerhet. Rapporten tar även hänsyn till kalkylens Anbudsroll.</value></data>
+  <data name="countsAsSubmittedBid" xml:space="preserve"><value>Räknas som inlämnat anbud</value></data>
+  <data name="countsAsWonBid" xml:space="preserve"><value>Räknas som vunnet anbud</value></data>
+  <data name="countsAsLostBid" xml:space="preserve"><value>Räknas som förlorat anbud</value></data>
+  <data name="calculateBy" xml:space="preserve"><value>Beräkna efter</value></data>
+  <data name="projectProcurement" xml:space="preserve"><value>Projekt / upphandling</value></data>
+  <data name="bidRole" xml:space="preserve"><value>Anbudsroll</value></data>
+  <data name="mainBid" xml:space="preserve"><value>Huvudanbud</value></data>
+  <data name="option" xml:space="preserve"><value>Option</value></data>
+  <data name="additionalWork" xml:space="preserve"><value>ÄTA</value></data>
+  <data name="internalObject" xml:space="preserve"><value>Internt objekt</value></data>
   <data name="reportExportHint" xml:space="preserve"><value>Välj rapport och använd knapparna ovan. Export och utskrift följer aktuella filter.</value></data>
   <data name="source" xml:space="preserve"><value>Källa</value></data>
   <data name="probability" xml:space="preserve"><value>Sannolikhet</value></data>

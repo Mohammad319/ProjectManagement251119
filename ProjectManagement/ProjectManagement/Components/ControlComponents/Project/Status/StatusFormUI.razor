@@ -47,6 +47,34 @@
             <span class="text-slate-700 dark:text-slate-200">@CalcLoc[nameof(CalcResource.allowsProductionCalculation)]</span>
         </label>
     </div>
+
+    <div class="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/50">
+        <div class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@AppLoc["reporting"]</div>
+        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">@AppLoc["hitRateStatusSettingsHelp"]</p>
+        <div class="mt-3 grid grid-cols-1 gap-2 md:grid-cols-3">
+            <label class="flex cursor-pointer items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                <input type="checkbox"
+                       class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900"
+                       checked="@StatusUpdate.CountsAsSubmittedBid"
+                       @onchange="OnCountsAsSubmittedChanged" />
+                <span>@AppLoc["countsAsSubmittedBid"]</span>
+            </label>
+            <label class="flex cursor-pointer items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                <input type="checkbox"
+                       class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900"
+                       checked="@StatusUpdate.CountsAsWonBid"
+                       @onchange="OnCountsAsWonChanged" />
+                <span>@AppLoc["countsAsWonBid"]</span>
+            </label>
+            <label class="flex cursor-pointer items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                <input type="checkbox"
+                       class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900"
+                       checked="@StatusUpdate.CountsAsLostBid"
+                       @onchange="OnCountsAsLostChanged" />
+                <span>@AppLoc["countsAsLostBid"]</span>
+            </label>
+        </div>
+    </div>
 </EditForm>
 
 <div class="flex items-center justify-end gap-2 border-t border-slate-200 px-3 py-2 dark:border-slate-700">

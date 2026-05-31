@@ -411,6 +411,7 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public int? ContractId { get; set; }
         public int? TypeId { get; set; }
         public CalculationVersionType CalculationType { get; set; } = CalculationVersionType.Tender;
+        public BidRole BidRole { get; set; } = BidRole.MainBid;
         public bool IsLocked { get; set; }
         public DateTime? LockedAtUtc { get; set; }
         public int? LockedByUserId { get; set; }
@@ -468,6 +469,7 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public int? TemplateId { get; set; }
         public int? TemplateColumnId { get; set; }
         public CalculationVersionType CalculationType { get; set; } = CalculationVersionType.Tender;
+        public BidRole BidRole { get; set; } = BidRole.MainBid;
         public bool IsLocked { get; set; }
         public DateTime? LockedAtUtc { get; set; }
         public int? LockedByUserId { get; set; }
@@ -497,6 +499,7 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public int? StatusSortOrder { get; set; }
         public string Responsible { get; set; } = string.Empty;
         public CalculationVersionType CalculationType { get; set; } = CalculationVersionType.Tender;
+        public BidRole BidRole { get; set; } = BidRole.MainBid;
         public bool IsLocked { get; set; }
         public DateTime? LockedAtUtc { get; set; }
         public int? LockedByUserId { get; set; }
@@ -505,6 +508,9 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public DateTime? ApprovedAtUtc { get; set; }
         public int? SourceCalculationId { get; set; }
         public bool StatusAllowsProductionCalculation { get; set; }
+        public bool CountsAsSubmittedBid { get; set; }
+        public bool CountsAsWonBid { get; set; }
+        public bool CountsAsLostBid { get; set; }
         public Guid VersionGroupId { get; set; }
         public int VersionNumber { get; set; } = 1;
         public int? CreatedFromCalculationId { get; set; }

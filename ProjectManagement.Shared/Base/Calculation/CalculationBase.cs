@@ -36,6 +36,7 @@ namespace ProjectManagement.Shared.Base.Calculation
 
         public double Tax { get; set; } = 25;
         public Procurement Procurement { get; set; }
+        public BidRole BidRole { get; set; } = BidRole.MainBid;
 
         public DateTime TenderDeadline { get; set; } = DateTime.Now;
         public DateTime TenderQA { get; set; } = DateTime.Now;

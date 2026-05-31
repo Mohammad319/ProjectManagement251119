@@ -1,8 +1,10 @@
-@using ProjectManagement.Client.Shared.MVVM.Calculation;
+@using ProjectManagement.Client.Shared.MVVM.Calculation
 @using ProjectManagement.Shared.Base.Calculation
 @using ProjectManagement.Shared.DTO.Calculation
+@using ProjectManagement.Shared.Enums
 @inherits AppComponentBase
-<div class="p-4 text-gray-800 dark:text-gray-100">
+
+<div class="text-gray-800 dark:text-gray-100">
 
     @if (Incomes != null)
     {
@@ -10,38 +12,82 @@
             <table class="min-w-full border-collapse text-xs text-left">
                 <thead class="bg-gray-100 dark:bg-gray-800/80">
                     <tr>
-                        <th class="px-3 py-2" width="120">
+                        <th class="px-2 py-2 w-10">
                             <button type="button"
                                     class="inline-flex items-center rounded border border-green-600 px-2 py-1 text-green-700 hover:bg-green-50 dark:border-green-500 dark:text-green-300 dark:hover:bg-green-900/30"
                                     @onclick="AddIncome">
                                 @((MarkupString)Icons.Plus)
                             </button>
                         </th>
-                        <th class="px-3 py-2">@ResourceLoc.year</th>
-                        <th class="px-3 py-2">@AppLoc["quarter1"]</th>
-                        <th class="px-3 py-2">@AppLoc["quarter2"]</th>
-                        <th class="px-3 py-2">@AppLoc["quarter3"]</th>
-                        <th class="px-3 py-2">@AppLoc["quarter4"]</th>
+                        <th class="px-2 py-2 whitespace-nowrap font-semibold text-gray-600 dark:text-gray-300">@ResourceLoc.year</th>
+                        <th class="px-2 py-2 min-w-[140px] font-semibold text-gray-600 dark:text-gray-300">Beskrivning</th>
+                        <th class="px-2 py-2 w-28 font-semibold text-gray-600 dark:text-gray-300">Deltyp</th>
+                        <th class="px-2 py-2 w-28 font-semibold text-gray-600 dark:text-gray-300">Årssumma</th>
+                        <th class="px-2 py-2 w-24 font-semibold text-gray-600 dark:text-gray-300">@AppLoc["quarter1"]</th>
+                        <th class="px-2 py-2 w-24 font-semibold text-gray-600 dark:text-gray-300">@AppLoc["quarter2"]</th>
+                        <th class="px-2 py-2 w-24 font-semibold text-gray-600 dark:text-gray-300">@AppLoc["quarter3"]</th>
+                        <th class="px-2 py-2 w-24 font-semibold text-gray-600 dark:text-gray-300">@AppLoc["quarter4"]</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                    @foreach (var Income in Incomes)
+                    @foreach (var income in Incomes)
                     {
                         <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/70">
-                            <td class="px-3 py-2">
+                            <td class="px-2 py-1">
                                 <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
                                     <button type="button"
                                             class="inline-flex items-center rounded border border-red-600 px-2 py-1 text-red-700 hover:bg-red-50 dark:border-red-500 dark:text-red-300 dark:hover:bg-red-900/30"
-                                            @onclick="()=> Remove(Income)">
+                                            @onclick="() => Remove(income)">
                                         @((MarkupString)Icons.DeleteSVG)
                                     </button>
                                 </AuthorizeView>
                             </td>
-                            <td class="px-3 py-2"><input type="number" min="@MinYear" value="@Income.Year" @onchange="e => SetIncomeYear(Income, e.Value)" class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100" /></td>
-                            <td class="px-3 py-2"><input type="number" @bind="Income.Q1" class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100" /></td>
-                            <td class="px-3 py-2"><input type="number" @bind="Income.Q2" class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100" /></td>
-                            <td class="px-3 py-2"><input type="number" @bind="Income.Q3" class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100" /></td>
-                            <td class="px-3 py-2"><input type="number" @bind="Income.Q4" class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100" /></td>
+                            <td class="px-2 py-1">
+                                <input type="number" min="@MinYear" value="@income.Year"
+                                       @onchange="e => SetIncomeYear(income, e.Value)"
+                                       class="w-20 rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100" />
+                            </td>
+                            <td class="px-2 py-1">
+                                <input type="text" placeholder="Beskrivning (valfri)"
+                                       value="@income.Description"
+                                       @onchange="e => income.Description = e.Value?.ToString()"
+                                       class="w-full min-w-[120px] rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100" />
+                            </td>
+                            <td class="px-2 py-1">
+                                <select value="@((int)income.SubType)"
+                                        @onchange="e => SetSubType(income, e.Value)"
+                                        class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
+                                    <option value="0">Grunddel</option>
+                                    <option value="1">Option</option>
+                                    <option value="2">ÄTA</option>
+                                </select>
+                            </td>
+                            <td class="px-2 py-1">
+                                <input type="number"
+                                       value="@GetYearly(income)"
+                                       @onchange="e => DistributeYearly(income, e.Value)"
+                                       class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100" />
+                            </td>
+                            <td class="px-2 py-1">
+                                <input type="number" value="@income.Q1"
+                                       @onchange="e => OnQChanged(income, 1, e.Value)"
+                                       class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100" />
+                            </td>
+                            <td class="px-2 py-1">
+                                <input type="number" value="@income.Q2"
+                                       @onchange="e => OnQChanged(income, 2, e.Value)"
+                                       class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100" />
+                            </td>
+                            <td class="px-2 py-1">
+                                <input type="number" value="@income.Q3"
+                                       @onchange="e => OnQChanged(income, 3, e.Value)"
+                                       class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100" />
+                            </td>
+                            <td class="px-2 py-1">
+                                <input type="number" value="@income.Q4"
+                                       @onchange="e => OnQChanged(income, 4, e.Value)"
+                                       class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100" />
+                            </td>
                         </tr>
                     }
                 </tbody>
@@ -50,6 +96,7 @@
     }
 
 </div>
+
 @code {
     [Parameter] public List<IncomeBase>? Incomes { get; set; }
     [Parameter] public int? MinYear { get; set; }
@@ -77,13 +124,51 @@
             : year;
     }
 
-    void Remove(IncomeBase status)
+    void SetSubType(IncomeBase income, object? value)
     {
-        MHD.DeleteMessage(string.Empty, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(status)));
+        if (int.TryParse(value?.ToString(), out var v) && Enum.IsDefined(typeof(IncomeSubType), v))
+            income.SubType = (IncomeSubType)v;
     }
-    bool ConfirmRemoveAsync(IncomeBase st)
+
+    void OnQChanged(IncomeBase income, int quarter, object? value)
     {
-        Incomes?.Remove(st);
+        if (!decimal.TryParse(value?.ToString(), System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out var v))
+            decimal.TryParse(value?.ToString(), out v);
+
+        switch (quarter)
+        {
+            case 1: income.Q1 = v; break;
+            case 2: income.Q2 = v; break;
+            case 3: income.Q3 = v; break;
+            case 4: income.Q4 = v; break;
+        }
+    }
+
+    void DistributeYearly(IncomeBase income, object? value)
+    {
+        if (!decimal.TryParse(value?.ToString(), System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out var total))
+            if (!decimal.TryParse(value?.ToString(), out total))
+                return;
+
+        var q = Math.Floor(total / 4);
+        income.Q1 = q;
+        income.Q2 = q;
+        income.Q3 = q;
+        income.Q4 = total - 3 * q;
+    }
+
+    static decimal GetYearly(IncomeBase income) => income.Q1 + income.Q2 + income.Q3 + income.Q4;
+
+    void Remove(IncomeBase income)
+    {
+        MHD.DeleteMessage(string.Empty, EventCallback.Factory.Create(this, () => ConfirmRemove(income)));
+    }
+
+    bool ConfirmRemove(IncomeBase income)
+    {
+        Incomes?.Remove(income);
         return true;
     }
 }

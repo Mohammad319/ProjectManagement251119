@@ -153,6 +153,10 @@ namespace Persistence.Service.CalculationItems.Project
                     dto.IsApprovalStatus,
                     dto.LocksCalculation,
                     dto.AllowsProductionCalculation);
+                status.SetHitRateSettings(
+                    dto.CountsAsSubmittedBid,
+                    dto.CountsAsWonBid,
+                    dto.CountsAsLostBid);
             }
         }
 

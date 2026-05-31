@@ -72,6 +72,16 @@
                                     }
                                 </div>
                                 <div class="sm:col-span-2">
+                                    <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@AppLoc["bidRole"]</label>
+                                    <InputSelect class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                                                 @bind-Value="@CalculationUpdate.BidRole">
+                                        <option value="@BidRole.MainBid">@AppLoc["mainBid"]</option>
+                                        <option value="@BidRole.Option">@AppLoc["option"]</option>
+                                        <option value="@BidRole.AdditionalWork">@AppLoc["additionalWork"]</option>
+                                        <option value="@BidRole.InternalObject">@AppLoc["internalObject"]</option>
+                                    </InputSelect>
+                                </div>
+                                <div class="sm:col-span-2">
                                     <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.status</label>
                                     <select value="@CalculationUpdate.StatusId"
                                             @onchange="OnStatusChanged"
@@ -220,17 +230,37 @@
                         <section class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
                             <h3 class="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">@ResourceApp.date</h3>
                             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                <div class="sm:col-span-2">
+                                <div>
+                                    <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">Sista dag frågor/svar</label>
+                                    <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@CalculationUpdate.TenderQA" />
+                                    @if (CalculationUpdate.TenderQA != default && CalculationUpdate.TenderQA < DateTime.Today)
+                                    {
+                                        <p class="mt-0.5 text-[11px] text-amber-600 dark:text-amber-400">Sista dag för frågor/svar är passerad.</p>
+                                    }
+                                </div>
+                                <div>
                                     <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.tenderDeadline</label>
                                     <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@CalculationUpdate.TenderDeadline" />
+                                    @if (CalculationUpdate.TenderDeadline != default && CalculationUpdate.TenderDeadline < DateTime.Today)
+                                    {
+                                        <p class="mt-0.5 text-[11px] text-amber-600 dark:text-amber-400">Anbudsdeadline är passerad.</p>
+                                    }
                                 </div>
                                 <div>
                                     <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.startDate</label>
                                     <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@CalculationUpdate.StartDate" />
+                                    @if (CalculationUpdate.StartDate != default && CalculationUpdate.StartDate < DateTime.Today)
+                                    {
+                                        <p class="mt-0.5 text-[11px] text-amber-600 dark:text-amber-400">Igångsättningstid är passerad.</p>
+                                    }
                                 </div>
                                 <div>
                                     <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.endDate</label>
                                     <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@CalculationUpdate.EndDate" />
+                                    @if (CalculationUpdate.EndDate != default && CalculationUpdate.StartDate != default && CalculationUpdate.EndDate < CalculationUpdate.StartDate)
+                                    {
+                                        <p class="mt-0.5 text-[11px] text-red-600 dark:text-red-400">Färdigställandetid får inte vara före Igångsättningstid.</p>
+                                    }
                                 </div>
                             </div>
                         </section>
@@ -294,30 +324,14 @@
                         @* Projektplats *@
                         <section class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
                             <h3 class="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">Projektplats</h3>
-                            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <div class="flex flex-col gap-3">
                                 <div>
-                                    <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">Gatuadress</label>
-                                    <div class="flex gap-1.5">
-                                        <InputText class="min-w-0 flex-1 rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                                                   placeholder="Gatunamn"
-                                                   @bind-Value="@CalcMainAddress.Street" />
-                                        <InputText class="w-16 shrink-0 rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                                                   placeholder="Nr"
-                                                   @bind-Value="@CalcMainAddress.Nr" />
-                                    </div>
+                                    <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">Adress</label>
+                                    <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                                               placeholder="Gatuadress, postnummer, stad"
+                                               @bind-Value="@CalcMainAddress.Street" />
                                 </div>
                                 <div>
-                                    <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">Ort</label>
-                                    <div class="flex gap-1.5">
-                                        <InputText class="w-20 shrink-0 rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                                                   placeholder="Postnr"
-                                                   @bind-Value="@CalcMainAddress.ZIPCode" />
-                                        <InputText class="min-w-0 flex-1 rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                                                   placeholder="Stad"
-                                                   @bind-Value="@CalcMainAddress.City" />
-                                    </div>
-                                </div>
-                                <div class="sm:col-span-2">
                                     <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">Geografisk plats / karta</label>
                                     <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                                                placeholder="Koordinater, länk eller beskrivning"

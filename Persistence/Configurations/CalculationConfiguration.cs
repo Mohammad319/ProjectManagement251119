@@ -20,6 +20,7 @@ internal sealed class CalculationConfiguration : IEntityTypeConfiguration<Calcul
         builder.Property(e => e.DisplayPresets).HasJsonConversion();
         builder.Property(e => e.RowVersion).IsRowVersion();
         builder.Property(e => e.CalculationType).HasConversion<int>();
+        builder.Property(e => e.BidRole).HasConversion<int>();
 
         builder.HasOne(x => x.ProcurementMethods)
             .WithMany(x => x.Calculations)
@@ -73,7 +74,8 @@ internal sealed class CalculationConfiguration : IEntityTypeConfiguration<Calcul
             t.HasCheckConstraint("CK_Calculations_DateRange", "[EndDate] >= [StartDate]");
             t.HasCheckConstraint("CK_Calculations_Code_NotEmpty", "LEN(LTRIM(RTRIM([Code]))) > 0");
             t.HasCheckConstraint("CK_Calculations_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
-            t.HasCheckConstraint("CK_Calculations_CalculationType", "[CalculationType] IN (0, 1)");
+            t.HasCheckConstraint("CK_Calculations_CalculationType", "[CalculationType] IN (0, 1, 2)");
+            t.HasCheckConstraint("CK_Calculations_BidRole", "[BidRole] IN (0, 1, 2, 3)");
         });
 
         builder.HasIndex(x => new { x.TenantId, x.ProjectId, x.DepartmentId, x.SortOrder })

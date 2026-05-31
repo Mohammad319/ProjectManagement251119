@@ -1,0 +1,178 @@
+@namespace ProjectManagement.Client.Shared.Components
+@using ProjectManagement.Client.Shared.Model.Filter
+
+@* Compact filter icon that opens a fixed popup. Works inside sticky / overflow:hidden headers. *@
+
+<button type="button"
+        title="Filtrera"
+        class="@ButtonCss"
+        @onclick:stopPropagation="true"
+        @onclick="ToggleOpen">
+    <svg class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L13 10.414V15a1 1 0 01-.553.894l-4 2A1 1 0 017 19v-8.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" />
+    </svg>
+    @if (FilterState.IsActive)
+    {
+        <span class="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-blue-500" aria-hidden="true"></span>
+    }
+</button>
+
+@if (_open)
+{
+    @* Click-away overlay *@
+    <div class="fixed inset-0 z-40" @onclick="ClosePopup" @onclick:stopPropagation="true"></div>
+
+    @* Popup — fixed so it escapes overflow:hidden table cells *@
+    <div class="fixed z-50 w-56 rounded-lg border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-700 dark:bg-slate-900"
+         style="top:@(_popY.ToString("F0"))px;left:min(calc(100vw - 15rem),max(4px,@(_popX.ToString("F0"))px))"
+         @onclick:stopPropagation="true">
+
+        @if (FilterState.Type == ColumnFilterType.Text)
+        {
+            <div class="mb-2">
+                <select class="@SelectCss"
+                        value="@((int)FilterState.TextOp)"
+                        @onchange="e => { FilterState.TextOp = (TextFilterOp)int.Parse(e.Value!.ToString()!); _ = Notify(); }">
+                    <option value="0">Innehåller</option>
+                    <option value="1">Är lika med</option>
+                    <option value="2">Är inte lika med</option>
+                    <option value="3">Är tomt</option>
+                </select>
+            </div>
+            @if (FilterState.TextOp != TextFilterOp.IsEmpty)
+            {
+                <input type="text" class="@InputCss" placeholder="Sök..."
+                       value="@FilterState.TextValue"
+                       @oninput="e => { FilterState.TextValue = e.Value?.ToString() ?? string.Empty; _ = Notify(); }" />
+            }
+        }
+        else if (FilterState.Type == ColumnFilterType.Date)
+        {
+            <div class="mb-2">
+                <select class="@SelectCss"
+                        value="@((int)FilterState.DateOp)"
+                        @onchange="e => { FilterState.DateOp = (DateFilterOp)int.Parse(e.Value!.ToString()!); _ = Notify(); }">
+                    <option value="0">Är lika med</option>
+                    <option value="1">Före</option>
+                    <option value="2">Efter</option>
+                    <option value="3">Mellan</option>
+                    <option value="4">Är tomt</option>
+                </select>
+            </div>
+            @if (FilterState.DateOp != DateFilterOp.IsEmpty)
+            {
+                <input type="date" class="@InputCss"
+                       value="@(FilterState.DateFrom?.ToString("yyyy-MM-dd") ?? string.Empty)"
+                       @onchange="e => { FilterState.DateFrom = DateTime.TryParse(e.Value?.ToString(), out var d) ? d : null; _ = Notify(); }" />
+                @if (FilterState.DateOp == DateFilterOp.Between)
+                {
+                    <label class="mt-1 block text-[10px] text-slate-400">Till</label>
+                    <input type="date" class="@InputCss mt-0.5"
+                           value="@(FilterState.DateTo?.ToString("yyyy-MM-dd") ?? string.Empty)"
+                           @onchange="e => { FilterState.DateTo = DateTime.TryParse(e.Value?.ToString(), out var d) ? d : null; _ = Notify(); }" />
+                }
+            }
+        }
+        else if (FilterState.Type == ColumnFilterType.Number)
+        {
+            <div class="mb-2">
+                <select class="@SelectCss"
+                        value="@((int)FilterState.NumberOp)"
+                        @onchange="e => { FilterState.NumberOp = (NumberFilterOp)int.Parse(e.Value!.ToString()!); _ = Notify(); }">
+                    <option value="0">Är lika med</option>
+                    <option value="1">Större än</option>
+                    <option value="2">Mindre än</option>
+                    <option value="3">Mellan</option>
+                    <option value="4">Är tomt</option>
+                </select>
+            </div>
+            @if (FilterState.NumberOp != NumberFilterOp.IsEmpty)
+            {
+                <input type="number" class="@InputCss" placeholder="Värde"
+                       value="@FilterState.NumberFrom"
+                       @onchange="e => { FilterState.NumberFrom = decimal.TryParse(e.Value?.ToString(), out var n) ? n : null; _ = Notify(); }" />
+                @if (FilterState.NumberOp == NumberFilterOp.Between)
+                {
+                    <label class="mt-1 block text-[10px] text-slate-400">Till</label>
+                    <input type="number" class="@InputCss mt-0.5" placeholder="Till"
+                           value="@FilterState.NumberTo"
+                           @onchange="e => { FilterState.NumberTo = decimal.TryParse(e.Value?.ToString(), out var n) ? n : null; _ = Notify(); }" />
+                }
+            }
+        }
+        else if (FilterState.Type == ColumnFilterType.Boolean)
+        {
+            <select class="@SelectCss"
+                    value="@FilterState.BoolValue"
+                    @onchange="e => { FilterState.BoolValue = e.Value?.ToString() ?? string.Empty; _ = Notify(); }">
+                <option value="">Alla</option>
+                <option value="true">Ja</option>
+                <option value="false">Nej</option>
+            </select>
+        }
+        else if (FilterState.Type == ColumnFilterType.Dropdown)
+        {
+            <div class="max-h-40 space-y-0.5 overflow-y-auto">
+                @foreach (var option in FilterState.AvailableValues)
+                {
+                    var isChecked = FilterState.SelectedValues.Contains(option);
+                    <label class="flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 text-[11px] hover:bg-slate-50 dark:hover:bg-slate-800">
+                        <input type="checkbox" class="h-3 w-3" checked="@isChecked"
+                               @onchange="e => { if ((bool)(e.Value ?? false)) FilterState.SelectedValues.Add(option); else FilterState.SelectedValues.Remove(option); _ = Notify(); }" />
+                        <span class="text-slate-700 dark:text-slate-200">@option</span>
+                    </label>
+                }
+            </div>
+        }
+
+        <div class="mt-2 flex items-center justify-between gap-1 border-t border-slate-100 pt-2 dark:border-slate-700">
+            <button type="button"
+                    class="rounded px-2 py-1 text-[11px] font-medium text-red-600 hover:bg-red-50 disabled:opacity-30 dark:text-red-400 dark:hover:bg-red-950/30"
+                    disabled="@(!FilterState.IsActive)"
+                    @onclick="ClearFilter">
+                Rensa
+            </button>
+            <button type="button"
+                    class="rounded px-2 py-1 text-[11px] font-medium text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800"
+                    @onclick="ClosePopup">
+                Stäng
+            </button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public ColumnFilterState FilterState { get; set; } = null!;
+    [Parameter] public EventCallback OnChanged { get; set; }
+
+    private bool _open;
+    private double _popX;
+    private double _popY;
+
+    private void ToggleOpen(MouseEventArgs e)
+    {
+        if (_open) { _open = false; return; }
+        _popX = e.ClientX - 10;
+        _popY = e.ClientY + 14;
+        _open = true;
+    }
+
+    private void ClosePopup() => _open = false;
+
+    private async Task ClearFilter()
+    {
+        FilterState.Clear();
+        _open = false;
+        await OnChanged.InvokeAsync();
+    }
+
+    private async Task Notify() => await OnChanged.InvokeAsync();
+
+    private string ButtonCss => "relative inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded transition " +
+        (FilterState.IsActive
+            ? "text-blue-600 dark:text-blue-400"
+            : "text-slate-400 opacity-50 hover:opacity-100 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300");
+
+    private const string SelectCss = "w-full rounded border border-slate-300 bg-white px-2 py-1 text-[11px] text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200";
+    private const string InputCss  = "w-full rounded border border-slate-300 bg-white px-2 py-1 text-[11px] text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200";
+}

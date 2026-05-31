@@ -5,6 +5,7 @@
 @using ProjectManagement.Shared.Base.Calculation
 @using ProjectManagement.Shared.DTO.Calculation
 @using ProjectManagement.Shared.Enums
+@using ProjectManagement.Shared.Helper
 @inject IJSRuntime JS
 @inherits AppComponentBase
 
@@ -142,6 +143,10 @@
         }
         else if (_activeView == ReportView.HitRate)
         {
+            <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                <span class="font-semibold">@AppLoc["calculateBy"]:</span>
+                @AppLoc["projectProcurement"]
+            </div>
             <div class="grid grid-cols-2 gap-2 md:grid-cols-5">
                 <div class="@TotalCardClass"><span>@AppLoc["submitted"]</span><strong>@SubmittedCount</strong></div>
                 <div class="@TotalCardClass"><span>@AppLoc["won"]</span><strong>@WonCount</strong></div>
@@ -152,7 +157,7 @@
             <p class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
                 @AppLoc["hitRateClassificationNotice"]
             </p>
-            @CalculationTable(HitRateEntries)
+            @HitRateProjectTable()
         }
         else if (_activeView == ReportView.Calculations)
         {
@@ -257,16 +262,25 @@
     private IEnumerable<IncomeRow> FilteredIncomeRows =>
         BuildIncomeRows().Where(MatchesIncome);
 
-    private IEnumerable<CalculationEntry> HitRateEntries =>
+    private IEnumerable<ProjectHitRateEntry> HitRateProjectEntries =>
         FilteredCalculations
-            .GroupBy(entry => $"{entry.Project.Id}:{entry.ChainKey}")
-            .Select(group => ChooseIncomeSource(group) ?? group.OrderByDescending(entry => SourcePriority(entry.Calculation.CalculationType)).First());
+            .GroupBy(entry => entry.Project.Id)
+            .Select(group =>
+            {
+                var first = group.First();
+                return new ProjectHitRateEntry(
+                    first.Folder,
+                    first.Project,
+                    BidHitRateClassifier.ClassifyProject(group.Select(entry => entry.Calculation)),
+                    group.Count(entry => entry.Calculation.BidRole == BidRole.MainBid));
+            })
+            .Where(entry => entry.Result != BidHitRateResult.Excluded);
 
-    private int SubmittedCount => HitRateEntries.Count(entry => !string.IsNullOrWhiteSpace(entry.Calculation.Status));
-    private int WonCount => HitRateEntries.Count(entry => IsWon(entry.Calculation.Status));
-    private int LostCount => HitRateEntries.Count(entry => IsLost(entry.Calculation.Status));
-    private int UndecidedCount => Math.Max(0, SubmittedCount - WonCount - LostCount);
-    private decimal HitRate => SubmittedCount == 0 ? 0 : (decimal)WonCount / SubmittedCount * 100m;
+    private int SubmittedCount => HitRateProjectEntries.Count();
+    private int WonCount => HitRateProjectEntries.Count(entry => entry.Result == BidHitRateResult.Won);
+    private int LostCount => HitRateProjectEntries.Count(entry => entry.Result == BidHitRateResult.Lost);
+    private int UndecidedCount => HitRateProjectEntries.Count(entry => entry.Result == BidHitRateResult.Undecided);
+    private decimal HitRate => WonCount + LostCount == 0 ? 0 : (decimal)WonCount / (WonCount + LostCount) * 100m;
 
     protected override async Task OnInitializedAsync()
     {
@@ -454,6 +468,18 @@
         </table>
     </div>;
 
+    private RenderFragment HitRateProjectTable() => @<div class="@TableContainerClass">
+        <table class="@TableClass">
+            <thead class="@TableHeadClass"><tr><th>@AppLoc["folder"]</th><th>@AppLoc["project"]</th><th>@AppLoc["status"]</th><th>@AppLoc["mainBid"]</th></tr></thead>
+            <tbody class="@TableBodyClass">
+                @foreach (var entry in HitRateProjectEntries)
+                {
+                    <tr><td>@entry.Folder.Name</td><td>@entry.Project.Name</td><td>@HitRateResultLabel(entry.Result)</td><td>@entry.MainBidCalculationCount</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>;
+
     private RenderFragment ProjectTable() => @<div class="@TableContainerClass">
         <table class="@TableClass">
             <thead class="@TableHeadClass"><tr><th>@AppLoc["folder"]</th><th>@AppLoc["project"]</th><th>@AppLoc["code"]</th><th>@AppLoc["status"]</th><th>@AppLoc["calculationCount"]</th><th>@AppLoc["startDate"]</th><th>@AppLoc["endDate"]</th></tr></thead>
@@ -500,7 +526,8 @@
             FilteredIncomeRows.Select(row => new object?[] { row.Entry.Project.Name, row.Entry.Calculation.Name, TypeLabel(row.Entry.Calculation.CalculationType), row.Entry.Calculation.Status, row.Year, row.Amount, $"{row.Probability} %", row.Forecast })),
         ReportView.Projects => new(L("projectListReport"), [L("folder"), L("project"), L("code"), L("status"), L("calculationCount"), L("startDate"), L("endDate")],
             FilteredProjects.Select(entry => new object?[] { entry.Folder.Name, entry.Project.Name, entry.Project.Code, entry.Project.Status, CurrentCalculationCount(entry.Project), FormatDate(entry.Project.StartDate), FormatDate(entry.Project.EndDate) })),
-        ReportView.HitRate => BuildCalculationExport(L("hitRate"), HitRateEntries),
+        ReportView.HitRate => new(L("hitRate"), [L("folder"), L("project"), L("status"), L("mainBid")],
+            HitRateProjectEntries.Select(entry => new object?[] { entry.Folder.Name, entry.Project.Name, HitRateResultLabel(entry.Result), entry.MainBidCalculationCount })),
         _ => BuildCalculationExport(L("calculationListReport"), FilteredCalculations)
     };
 
@@ -531,14 +558,12 @@
         _ => L("tenderCalculation")
     };
 
-    private static bool IsWon(string? status) =>
-        ContainsAny(status, "vunnen", "vinst", "won", "tilldelad", "accepted", "godkänd");
-
-    private static bool IsLost(string? status) =>
-        ContainsAny(status, "förlorad", "förlust", "lost", "avslagen", "rejected");
-
-    private static bool ContainsAny(string? value, params string[] terms) =>
-        !string.IsNullOrWhiteSpace(value) && terms.Any(term => value.Contains(term, StringComparison.OrdinalIgnoreCase));
+    private string HitRateResultLabel(BidHitRateResult result) => result switch
+    {
+        BidHitRateResult.Won => L("won"),
+        BidHitRateResult.Lost => L("lost"),
+        _ => L("undecided")
+    };
 
     private static bool HasIncome(IncomeBase income) =>
         income.Q1 != 0 || income.Q2 != 0 || income.Q3 != 0 || income.Q4 != 0;
@@ -552,6 +577,7 @@
 
     private sealed record ProjectEntry(FolderMVVM Folder, ListProjectMVVM Project);
     private sealed record CalculationEntry(FolderMVVM Folder, ListProjectMVVM Project, ListCalculationMVVM Calculation, string ChainKey);
+    private sealed record ProjectHitRateEntry(FolderMVVM Folder, ListProjectMVVM Project, BidHitRateResult Result, int MainBidCalculationCount);
     private sealed record IncomeRow(CalculationEntry Entry, int Year, decimal Q1, decimal Q2, decimal Q3, decimal Q4, decimal Amount, decimal Forecast, int Probability)
     {
         public string ChainKey => $"{Entry.Project.Id}:{Entry.ChainKey}";

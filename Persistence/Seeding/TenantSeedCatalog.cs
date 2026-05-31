@@ -9,7 +9,10 @@ public readonly record struct CalcStatusSeed(
     bool IsVisible = true,
     bool IsApprovalStatus = false,
     bool LocksCalculation = false,
-    bool AllowsProductionCalculation = false);
+    bool AllowsProductionCalculation = false,
+    bool CountsAsSubmittedBid = false,
+    bool CountsAsWonBid = false,
+    bool CountsAsLostBid = false);
 
 public readonly record struct AccountSeed(string Code, string Name, string GroupName, bool IsVisible = true);
 
@@ -71,9 +74,9 @@ public static class TenantSeedCatalog
         new("Behöver granskas",       "#5EEAD4", 400),
         new("Granskad",               "#0D9488", 500),
         new("Godkänd / låst",         "#0F766E", 600, IsApprovalStatus: true, LocksCalculation: true, AllowsProductionCalculation: true),
-        new("Skickad / inlämnad",     "#EAB308", 700, IsApprovalStatus: true, LocksCalculation: true, AllowsProductionCalculation: true),
-        new("Tilldelad / vunnen",     "#166534", 800, IsApprovalStatus: true, LocksCalculation: true, AllowsProductionCalculation: true),
-        new("Förlorad",               "#DC2626", 900),
+        new("Skickad / inlämnad",     "#EAB308", 700, IsApprovalStatus: true, LocksCalculation: true, AllowsProductionCalculation: true, CountsAsSubmittedBid: true),
+        new("Tilldelad / vunnen",     "#166534", 800, IsApprovalStatus: true, LocksCalculation: true, AllowsProductionCalculation: true, CountsAsSubmittedBid: true, CountsAsWonBid: true),
+        new("Förlorad",               "#DC2626", 900, CountsAsSubmittedBid: true, CountsAsLostBid: true),
         new("Avbruten",               "#F97316", 1000),
         new("Ej intressant / ej lämnat", "#FEF08A", 1100),
     ];
