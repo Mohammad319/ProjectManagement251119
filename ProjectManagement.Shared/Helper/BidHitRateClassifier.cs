@@ -1,24 +1,18 @@
-using ProjectManagement.Shared.DTO.Calculation;
-using ProjectManagement.Shared.Enums;
+using ProjectManagement.Shared.DTO.Project;
 
 namespace ProjectManagement.Shared.Helper;
 
 public static class BidHitRateClassifier
 {
-    public static BidHitRateResult ClassifyProject(IEnumerable<ListCalculationDTO>? calculations)
+    public static BidHitRateResult ClassifyProject(ListProjectDTO? project)
     {
-        var currentMainBids = CalculationVersionSelector
-            .SelectCurrentVersions(calculations)
-            .Where(calculation => calculation.BidRole == BidRole.MainBid)
-            .ToList();
-
-        if (!currentMainBids.Any(calculation => calculation.CountsAsSubmittedBid))
+        if (project is null || !project.CountsAsSubmittedBid)
             return BidHitRateResult.Excluded;
 
-        if (currentMainBids.Any(calculation => calculation.CountsAsWonBid))
+        if (project.CountsAsWonBid)
             return BidHitRateResult.Won;
 
-        return currentMainBids.Any(calculation => calculation.CountsAsLostBid)
+        return project.CountsAsLostBid
             ? BidHitRateResult.Lost
             : BidHitRateResult.Undecided;
     }

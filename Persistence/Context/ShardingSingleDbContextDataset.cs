@@ -18,6 +18,7 @@ public partial class ShardingSingleDbContext
     public DbSet<ProjectEntity> Projects { get; set; } = default!;
     public DbSet<FolderEntity> Folders { get; set; } = default!;
     public DbSet<StatusEntity> CalculationStatus { get; set; } = default!;
+    public DbSet<ProjectStatusEntity> ProjectStatus { get; set; } = default!;
     public DbSet<CalculationEntity> Calculations { get; set; } = default!;
     public DbSet<TaskEntity> Tasks { get; set; } = default!;
     public DbSet<ResourceEntity> Resources { get; set; } = default!;

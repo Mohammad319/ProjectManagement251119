@@ -40,6 +40,8 @@ namespace Persistence.Service.CalculationItems.Calculation
 
             var effectiveDepartmentId = departmentId ?? projectDepartmentId.Value;
 
+            dto.StatusId ??= await GetDefaultCalculationStatusIdAsync(db, cancellationToken);
+
             if (!await ValidateCalculationReferencesAsync(db, dto, projectId, effectiveDepartmentId, null, cancellationToken))
                 return 0;
 
@@ -731,6 +733,18 @@ namespace Persistence.Service.CalculationItems.Calculation
             return true;
         }
 
+        private static Task<int?> GetDefaultCalculationStatusIdAsync(
+            ShardingSingleDbContext db,
+            CancellationToken cancellationToken)
+        {
+            return db.CalculationStatus
+                .AsNoTracking()
+                .Where(x => x.IsVisible && x.Name == "Utkast")
+                .OrderBy(x => x.SortOrder)
+                .Select(x => (int?)x.Id)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
         private static string? NormalizeCode(string? code)
             => string.IsNullOrWhiteSpace(code) ? null : code.Trim();
 
@@ -818,6 +832,8 @@ namespace Persistence.Service.CalculationItems.Calculation
                 TemplateColumnId = x.TemplateColumnId,
                 CalculationType = x.CalculationType,
                 BidRole = x.BidRole,
+                CalculationRole = x.CalculationRole,
+                CustomCalculationRoleName = x.CustomCalculationRoleName,
                 IsLocked = x.IsLocked,
                 LockedAtUtc = x.LockedAtUtc,
                 LockedByUserId = x.LockedByUserId,

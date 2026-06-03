@@ -86,6 +86,8 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public int? TemplateColumnId { get; set; }
         public CalculationVersionType CalculationType { get; set; } = CalculationVersionType.Tender;
         public BidRole BidRole { get; set; } = BidRole.MainBid;
+        public CalculationRole CalculationRole { get; set; } = CalculationRole.MainBid;
+        public string CustomCalculationRoleName { get; set; } = string.Empty;
         public bool IsLocked { get; set; }
         public DateTime? LockedAtUtc { get; set; }
         public int? LockedByUserId { get; set; }

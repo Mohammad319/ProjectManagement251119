@@ -250,7 +250,9 @@
                                             }
                                             @if (!string.IsNullOrWhiteSpace(calc.Status))
                                             {
-                                                <span class="rounded bg-slate-100 px-1 py-0.5 font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                                                <span class="inline-flex items-center gap-1 rounded bg-slate-100 px-1 py-0.5 font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                                                    <span class="h-1.5 w-1.5 rounded-full"
+                                                          style="background-color:@GetCalculationStatusColor(calc)"></span>
                                                     @calc.Status
                                                 </span>
                                             }
@@ -295,6 +297,9 @@
             .Where(s => !string.IsNullOrWhiteSpace(s))
             .Distinct()
             .OrderBy(s => s);
+
+    private static string GetCalculationStatusColor(ListCalculationMVVM calculation)
+        => string.IsNullOrWhiteSpace(calculation.StatusColor) ? "#0ea5e9" : calculation.StatusColor;
 
     private async Task OnKeyUp(KeyboardEventArgs e)
     {

@@ -74,6 +74,16 @@
                 </select>
             </div>
             <div>
+                <label class="@LabelClass">Kalkylroll</label>
+                <select class="@SelectClass" @bind="_selectedCalculationRole">
+                    <option value="">@AppLoc["allItems"]</option>
+                    @foreach (var role in CalculationRoles)
+                    {
+                        <option value="@role">@GetCalculationRoleLabel(role)</option>
+                    }
+                </select>
+            </div>
+            <div>
                 <label class="@LabelClass">@AppLoc["year"]</label>
                 <select class="@SelectClass" @bind="_selectedYear">
                     <option value="">@AppLoc["allYears"]</option>
@@ -192,6 +202,7 @@
     [Parameter] public string InitialStatus { get; set; } = string.Empty;
     [Parameter] public string InitialYear { get; set; } = string.Empty;
     [Parameter] public string InitialCalculationType { get; set; } = string.Empty;
+    [Parameter] public string InitialCalculationRole { get; set; } = string.Empty;
     [Parameter] public string InitialResponsible { get; set; } = string.Empty;
     [Parameter] public string InitialInspector { get; set; } = string.Empty;
 
@@ -200,6 +211,7 @@
     private string _selectedFolderId = string.Empty;
     private string _selectedProjectId = string.Empty;
     private string _selectedCalculationType = string.Empty;
+    private string _selectedCalculationRole = string.Empty;
     private string _selectedStatus = string.Empty;
     private string _selectedYear = string.Empty;
     private int _selectedQuarter;
@@ -271,8 +283,8 @@
                 return new ProjectHitRateEntry(
                     first.Folder,
                     first.Project,
-                    BidHitRateClassifier.ClassifyProject(group.Select(entry => entry.Calculation)),
-                    group.Count(entry => entry.Calculation.BidRole == BidRole.MainBid));
+                    BidHitRateClassifier.ClassifyProject(first.Project),
+                    group.Count(entry => entry.Calculation.CalculationRole == CalculationRole.MainBid));
             })
             .Where(entry => entry.Result != BidHitRateResult.Excluded);
 
@@ -288,6 +300,7 @@
         _selectedStatus = InitialStatus;
         _selectedYear = InitialYear;
         _selectedCalculationType = InitialCalculationType;
+        _selectedCalculationRole = InitialCalculationRole;
         _selectedResponsible = InitialResponsible;
         _selectedInspector = InitialInspector;
         _selectedFolderId = FolderScope?.Id.ToString() ?? string.Empty;
@@ -396,6 +409,8 @@
         if (!MatchesFolder(entry.Folder) || !MatchesProject(entry.Project) || !MatchesArchive(calculation.IsVisible))
             return false;
         if (!string.IsNullOrWhiteSpace(_selectedCalculationType) && calculation.CalculationType.ToString() != _selectedCalculationType)
+            return false;
+        if (Enum.TryParse<CalculationRole>(_selectedCalculationRole, out var calculationRole) && calculation.CalculationRole != calculationRole)
             return false;
         if (!string.IsNullOrWhiteSpace(_selectedStatus) && !string.Equals(calculation.Status, _selectedStatus, StringComparison.OrdinalIgnoreCase))
             return false;
@@ -556,6 +571,27 @@
         CalculationVersionType.Production => L("productionCalculation"),
         CalculationVersionType.Contract => L("contractCalculation"),
         _ => L("tenderCalculation")
+    };
+
+    private static readonly CalculationRole[] CalculationRoles =
+    [
+        CalculationRole.MainBid,
+        CalculationRole.SubObject,
+        CalculationRole.Option,
+        CalculationRole.ChangeOrder,
+        CalculationRole.InternalObject,
+        CalculationRole.Custom
+    ];
+
+    private static string GetCalculationRoleLabel(CalculationRole role) => role switch
+    {
+        CalculationRole.MainBid => "Huvudkalkyl / Huvudanbud",
+        CalculationRole.SubObject => "Delobjekt",
+        CalculationRole.Option => "Option",
+        CalculationRole.ChangeOrder => "ÄTA",
+        CalculationRole.InternalObject => "Internt objekt",
+        CalculationRole.Custom => "Egen roll",
+        _ => "Huvudkalkyl / Huvudanbud"
     };
 
     private string HitRateResultLabel(BidHitRateResult result) => result switch

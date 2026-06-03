@@ -15,7 +15,7 @@ public partial class IndexUI
     private IEnumerable<StatusResourcesEntity> VisibleStatuses =>
         (Status ?? [])
             .Where(x => x.IsVisible == IsVisible)
-            .OrderByDescending(x => x.SortOrder);
+            .OrderBy(x => x.SortOrder);
 
     protected override async Task OnInitializedAsync()
     {
@@ -61,6 +61,13 @@ public partial class IndexUI
             });
 
         return Task.CompletedTask;
+    }
+
+    private async Task MoveItemAsync(StatusResourcesEntity status, bool moveUp)
+    {
+        var result = await Dispatcher.Send(new MoveResourceStatusCommand(status.Id, moveUp));
+        if (result)
+            await LoadStatusesAsync();
     }
 
     private void Remove(StatusResourcesEntity status)

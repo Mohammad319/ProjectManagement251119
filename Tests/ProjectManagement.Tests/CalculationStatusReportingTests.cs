@@ -28,7 +28,25 @@ public class CalculationStatusReportingTests
     }
 
     [Fact]
-    public void CalculationStatusSeeds_HaveExpectedHitRateFlags()
+    public void CalculationStatusSeeds_IncludeStandardWorkflowStatuses()
+    {
+        var names = TenantSeedCatalog.CalculationStatuses.Select(status => status.Name).ToHashSet();
+
+        Assert.Contains("Utkast", names);
+        Assert.Contains("Planerad", names);
+        Assert.Contains("Pågående", names);
+        Assert.Contains("Behöver granskas", names);
+        Assert.Contains("Granskad", names);
+        Assert.Contains("Godkänd / låst", names);
+        Assert.Contains("Skickad / inlämnad", names);
+        Assert.Contains("Tilldelad / vunnen", names);
+        Assert.Contains("Förlorad", names);
+        Assert.Contains("Avbruten", names);
+        Assert.Contains("Ej intressant / ej lämnat", names);
+    }
+
+    [Fact]
+    public void CalculationStatusSeeds_HaveExpectedOutcomeFlags()
     {
         var seeds = TenantSeedCatalog.CalculationStatuses.ToDictionary(status => status.Name);
 

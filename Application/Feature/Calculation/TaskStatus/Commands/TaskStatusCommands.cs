@@ -34,4 +34,13 @@ namespace Application.Feature.Calculation.TaskStatus.Commands
         public Task<bool> Handle(DeleteTaskStatusCommand request, CancellationToken ct)
             => service.DeleteAsync(request.Id, ct);
     }
+
+    public sealed record MoveTaskStatusCommand(int Id, bool MoveUp) : IRequest<bool>;
+
+    public sealed class MoveTaskStatusCommandHandler(ILookupStatusCommandService<TaskStatusEntity> service)
+        : IRequestHandler<MoveTaskStatusCommand, bool>
+    {
+        public Task<bool> Handle(MoveTaskStatusCommand request, CancellationToken ct)
+            => service.MoveAsync(request.Id, request.MoveUp, ct);
+    }
 }

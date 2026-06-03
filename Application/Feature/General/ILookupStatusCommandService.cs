@@ -27,5 +27,6 @@ namespace Application.Feature.General
         Task<bool> DeleteAsync(int id, CancellationToken ct = default);
         Task<bool> MoveAsync(int id, bool moveUp, CancellationToken ct = default);
         Task<int> CountCalculationsByStatusAsync(int id, CancellationToken ct = default);
+        Task<int> CountProjectsByStatusAsync(int id, CancellationToken ct = default);
     }
 }

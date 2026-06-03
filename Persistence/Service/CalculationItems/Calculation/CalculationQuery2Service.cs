@@ -22,6 +22,8 @@ namespace Persistence.Service.CalculationItems.Calculation
             public int? TemplateId { get; set; }
             public int? TemplateColumnId { get; set; }
             public CalculationVersionType CalculationType { get; set; } = CalculationVersionType.Tender;
+            public CalculationRole CalculationRole { get; set; } = CalculationRole.MainBid;
+            public string CustomCalculationRoleName { get; set; } = string.Empty;
             public bool IsLocked { get; set; }
             public DateTime? LockedAtUtc { get; set; }
             public int? LockedByUserId { get; set; }
@@ -108,6 +110,8 @@ namespace Persistence.Service.CalculationItems.Calculation
                     TemplateId = x.TemplateId,
                     TemplateColumnId = x.TemplateColumnId,
                     CalculationType = x.CalculationType,
+                    CalculationRole = x.CalculationRole,
+                    CustomCalculationRoleName = x.CustomCalculationRoleName,
                     IsLocked = x.IsLocked,
                     LockedAtUtc = x.LockedAtUtc,
                     LockedByUserId = x.LockedByUserId,
@@ -280,6 +284,8 @@ namespace Persistence.Service.CalculationItems.Calculation
                 TemplateId = header.TemplateId,
                 TemplateColumnId = header.TemplateColumnId,
                 CalculationType = header.CalculationType,
+                CalculationRole = header.CalculationRole,
+                CustomCalculationRoleName = header.CustomCalculationRoleName,
                 IsLocked = header.IsLocked,
                 LockedAtUtc = header.LockedAtUtc,
                 LockedByUserId = header.LockedByUserId,

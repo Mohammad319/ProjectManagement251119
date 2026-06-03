@@ -21,6 +21,8 @@ internal sealed class CalculationConfiguration : IEntityTypeConfiguration<Calcul
         builder.Property(e => e.RowVersion).IsRowVersion();
         builder.Property(e => e.CalculationType).HasConversion<int>();
         builder.Property(e => e.BidRole).HasConversion<int>();
+        builder.Property(e => e.CalculationRole).HasConversion<int>();
+        builder.Property(e => e.CustomCalculationRoleName).HasMaxLength(80);
 
         builder.HasOne(x => x.ProcurementMethods)
             .WithMany(x => x.Calculations)
@@ -76,6 +78,7 @@ internal sealed class CalculationConfiguration : IEntityTypeConfiguration<Calcul
             t.HasCheckConstraint("CK_Calculations_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
             t.HasCheckConstraint("CK_Calculations_CalculationType", "[CalculationType] IN (0, 1, 2)");
             t.HasCheckConstraint("CK_Calculations_BidRole", "[BidRole] IN (0, 1, 2, 3)");
+            t.HasCheckConstraint("CK_Calculations_CalculationRole", "[CalculationRole] IN (0, 1, 2, 3, 4, 5)");
         });
 
         builder.HasIndex(x => new { x.TenantId, x.ProjectId, x.DepartmentId, x.SortOrder })

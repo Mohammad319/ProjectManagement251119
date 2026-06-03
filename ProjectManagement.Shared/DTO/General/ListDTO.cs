@@ -40,6 +40,9 @@ namespace ProjectManagement.Shared.DTO.General
         public int SortOrder { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Color { get; set; } = "#00ff00";
+        public string Code { get; set; } = string.Empty;
+        public bool IsDefault { get; set; }
+        public bool IsSystemDefault { get; set; }
     }
     public class GetProjectCalcConfigDTO
     {
@@ -48,6 +51,7 @@ namespace ProjectManagement.Shared.DTO.General
         public List<ListDTO> Compensations { get; set; } = [];
         public List<ListDTO> Types { get; set; } = [];
         public List<StatusListDTO> Statuses { get; set; } = [];
+        public List<StatusListDTO> ProjectStatuses { get; set; } = [];
         public List<ListDTO> Organisation { get; set; } = [];
     }
 }

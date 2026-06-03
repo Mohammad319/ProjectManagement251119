@@ -197,6 +197,18 @@
                 </div>
 
                 <div class="flex flex-col gap-1">
+                    <label class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Kalkylroll</label>
+                    <select class="h-8 rounded border border-slate-300 bg-white px-2 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                            @bind="_filterCalculationRole" @bind:after="ResetPage">
+                        <option value="">@AppLoc["allItems"]</option>
+                        @foreach (var role in CalculationRoles)
+                        {
+                            <option value="@role">@GetCalculationRoleLabel(role)</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="flex flex-col gap-1">
                     <label class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">@AppLoc["calculationResponsible"]</label>
                     <input type="text" placeholder="@AppLoc["filterResponsiblePlaceholder"]"
                            class="h-8 rounded border border-slate-300 bg-white px-2 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
@@ -303,6 +315,12 @@
                         {
                             <th id="hstatus" class="@SortableHeaderClass("status")" style="min-width:80px;" @onclick='() => SortBy("status")'>
                                 <span class="inline-flex items-center gap-1">@CalcResource.status @((MarkupString)SortIndicatorHtml("status")) <TableColumnFilter FilterState='CF("status")' OnChanged="OnColumnFilterChanged" /></span>
+                            </th>
+                        }
+                        @if (IsCalculationColumnVisible("calculationRole"))
+                        {
+                            <th id="hcalculationRole" class="@SortableHeaderClass("calculationRole")" style="min-width:150px;" @onclick='() => SortBy("calculationRole")'>
+                                <span class="inline-flex items-center gap-1">Kalkylroll @((MarkupString)SortIndicatorHtml("calculationRole")) <TableColumnFilter FilterState='CF("calculationRole")' OnChanged="OnColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("responsible"))
@@ -464,10 +482,15 @@
                             {
                                 <td class="whitespace-nowrap px-3 py-2">
                                     <span class="inline-flex items-center gap-1.5">
-                                        <span class="h-2 w-2 shrink-0 rounded-full @GetStatusDotClass(calu)"></span>
-                                        <span class="text-slate-700 dark:text-slate-200">@GetCalculationStatusText(calu)</span>
+                                        <span class="h-2 w-2 shrink-0 rounded-full"
+                                              style="background-color:@GetCalculationStatusColor(calu)"></span>
+                                        <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">@GetCalculationStatusText(calu)</span>
                                     </span>
                                 </td>
+                            }
+                            @if (IsCalculationColumnVisible("calculationRole"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@GetCalculationRoleDisplay(calu)</td>
                             }
                             @if (IsCalculationColumnVisible("responsible"))
                             {
@@ -786,6 +809,7 @@
     private bool _showFilters;
     private string _filterStatus = string.Empty;
     private string _filterCalcType = string.Empty;
+    private string _filterCalculationRole = string.Empty;
     private string _filterResponsible = string.Empty;
     private string _filterInspector = string.Empty;
     private DateTime? _filterDeadlineFrom;
@@ -798,6 +822,7 @@
         ["code"]            = new() { Type = ColumnFilterType.Text },
         ["name"]            = new() { Type = ColumnFilterType.Text },
         ["calculationType"] = new() { Type = ColumnFilterType.Dropdown },
+        ["calculationRole"] = new() { Type = ColumnFilterType.Dropdown },
         ["status"]          = new() { Type = ColumnFilterType.Text },
         ["responsible"]     = new() { Type = ColumnFilterType.Text },
         ["inspector"]       = new() { Type = ColumnFilterType.Text },
@@ -822,6 +847,9 @@
             AppLoc["contractCalculation"].Value,
             AppLoc["productionCalculation"].Value,
         ];
+        _calcColFilters["calculationRole"].AvailableValues = CalculationRoles
+            .Select(GetCalculationRoleLabel)
+            .ToList();
     }
 
     private void OnColumnFilterChanged() => ResetPage();
@@ -830,6 +858,7 @@
     private bool HasActiveFilters =>
         !string.IsNullOrWhiteSpace(_filterStatus) ||
         !string.IsNullOrWhiteSpace(_filterCalcType) ||
+        !string.IsNullOrWhiteSpace(_filterCalculationRole) ||
         !string.IsNullOrWhiteSpace(_filterResponsible) ||
         !string.IsNullOrWhiteSpace(_filterInspector) ||
         _filterDeadlineFrom.HasValue ||
@@ -842,6 +871,7 @@
     {
         _filterStatus = string.Empty;
         _filterCalcType = string.Empty;
+        _filterCalculationRole = string.Empty;
         _filterResponsible = string.Empty;
         _filterInspector = string.Empty;
         _filterDeadlineFrom = null;
@@ -881,6 +911,7 @@
         ["project"] = false,
         ["folder"] = false,
         ["calculationType"] = true,
+        ["calculationRole"] = false,
         ["status"] = true,
         ["responsible"] = true,
         ["inspector"] = false,
@@ -904,6 +935,7 @@
         new("project", AppLoc["project"].Value),
         new("folder", AppLoc["folder"].Value),
         new("calculationType", AppLoc["calculationType"].Value),
+        new("calculationRole", "Kalkylroll"),
         new("status", CalcResource.status),
         new("responsible", AppLoc["calculationResponsible"].Value),
         new("inspector", AppLoc["reviewer"].Value),
@@ -950,6 +982,9 @@
                     list = list.Where(c => c.CalculationType == CalculationVersionType.Tender);
             }
 
+            if (Enum.TryParse<CalculationRole>(_filterCalculationRole, out var calculationRole))
+                list = list.Where(c => c.CalculationRole == calculationRole);
+
             if (!string.IsNullOrWhiteSpace(_filterResponsible))
                 list = list.Where(c => c.Responsible.Contains(_filterResponsible, StringComparison.OrdinalIgnoreCase));
 
@@ -986,6 +1021,8 @@
                 list = list.Where(c => _calcColFilters["name"].MatchesText(c.Name));
             if (_calcColFilters["calculationType"].IsActive)
                 list = list.Where(c => _calcColFilters["calculationType"].MatchesDropdown(GetCalculationTypeLabel(c.CalculationType)));
+            if (_calcColFilters["calculationRole"].IsActive)
+                list = list.Where(c => _calcColFilters["calculationRole"].MatchesDropdown(GetCalculationRoleLabel(c.CalculationRole)));
             if (_calcColFilters["status"].IsActive)
                 list = list.Where(c => _calcColFilters["status"].MatchesText(c.Status));
             if (_calcColFilters["responsible"].IsActive)
@@ -1035,6 +1072,9 @@
                 "calculationType" => _sortAscending
                     ? list.OrderBy(x => (int)x.CalculationType).ThenBy(x => x.IsLocked)
                     : list.OrderByDescending(x => (int)x.CalculationType).ThenByDescending(x => x.IsLocked),
+                "calculationRole" => _sortAscending
+                    ? list.OrderBy(x => (int)x.CalculationRole).ThenBy(x => x.CustomCalculationRoleName)
+                    : list.OrderByDescending(x => (int)x.CalculationRole).ThenByDescending(x => x.CustomCalculationRoleName),
                 "status" => _sortAscending
                     ? list.OrderBy(x => x.StatusSortOrder ?? int.MaxValue).ThenBy(x => x.Status)
                     : list.OrderByDescending(x => x.StatusSortOrder ?? int.MinValue).ThenByDescending(x => x.Status),
@@ -1129,6 +1169,32 @@
         CalculationVersionType.Contract   => AppLoc["contractCalculation"].Value,
         _                                 => AppLoc["tenderCalculation"].Value
     };
+
+    private static readonly CalculationRole[] CalculationRoles =
+    [
+        CalculationRole.MainBid,
+        CalculationRole.SubObject,
+        CalculationRole.Option,
+        CalculationRole.ChangeOrder,
+        CalculationRole.InternalObject,
+        CalculationRole.Custom
+    ];
+
+    private static string GetCalculationRoleLabel(CalculationRole role) => role switch
+    {
+        CalculationRole.MainBid => "Huvudkalkyl / Huvudanbud",
+        CalculationRole.SubObject => "Delobjekt",
+        CalculationRole.Option => "Option",
+        CalculationRole.ChangeOrder => "ÄTA",
+        CalculationRole.InternalObject => "Internt objekt",
+        CalculationRole.Custom => "Egen roll",
+        _ => "Huvudkalkyl / Huvudanbud"
+    };
+
+    private static string GetCalculationRoleDisplay(ListCalculationMVVM calculation) =>
+        calculation.CalculationRole == CalculationRole.Custom && !string.IsNullOrWhiteSpace(calculation.CustomCalculationRoleName)
+            ? $"{GetCalculationRoleLabel(calculation.CalculationRole)}: {calculation.CustomCalculationRoleName}"
+            : GetCalculationRoleLabel(calculation.CalculationRole);
 
     private static string GetCalculationVersionTitle(ListCalculationMVVM calculation) =>
         $"{calculation.Name} · {FormatVersion(calculation.VersionNumber)}";
@@ -1290,15 +1356,10 @@
         return calculation.EndDate < DateTime.Today ? AppLoc["finished"] : CalcResource.active;
     }
 
-    private string GetStatusDotClass(ListCalculationMVVM calculation)
-    {
-        if (!string.IsNullOrWhiteSpace(calculation.Status))
-            return "bg-sky-500 dark:bg-sky-400";
-
-        return calculation.EndDate < DateTime.Today
-            ? "bg-emerald-500 dark:bg-emerald-400"
-            : "bg-amber-400 dark:bg-amber-300";
-    }
+    private string GetCalculationStatusColor(ListCalculationMVVM calculation)
+        => !string.IsNullOrWhiteSpace(calculation.StatusColor)
+            ? calculation.StatusColor
+            : calculation.EndDate < DateTime.Today ? "#10b981" : "#f59e0b";
 
     private static string GetCalculationRowClass(ListCalculationMVVM calculation, bool selected)
     {
@@ -1404,6 +1465,7 @@
                 [nameof(CentralReportsDialog.InitialView)] = CentralReportsDialog.ReportView.Income,
                 [nameof(CentralReportsDialog.InitialStatus)] = _filterStatus,
                 [nameof(CentralReportsDialog.InitialCalculationType)] = _filterCalcType,
+                [nameof(CentralReportsDialog.InitialCalculationRole)] = _filterCalculationRole,
                 [nameof(CentralReportsDialog.InitialResponsible)] = _filterResponsible,
                 [nameof(CentralReportsDialog.InitialInspector)] = _filterInspector
             },
@@ -1436,6 +1498,7 @@
         "code" => calculation.Code,
         "name" => calculation.Name,
         "calculationType" => GetCalculationTypeLabel(calculation.CalculationType),
+        "calculationRole" => GetCalculationRoleDisplay(calculation),
         "status" => GetCalculationStatusText(calculation),
         "responsible" => calculation.Responsible,
         "inspector" => calculation.Inspector,

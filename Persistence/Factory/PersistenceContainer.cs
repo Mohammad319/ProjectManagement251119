@@ -93,6 +93,7 @@ namespace Persistence.Factory
             services.AddScoped<ILookupStatusCommandService<ContractEntity>, LookupStatusCommandService<ContractEntity>>();
             services.AddScoped<ILookupStatusCommandService<TypeEntity>, LookupStatusCommandService<TypeEntity>>();
             services.AddScoped<ILookupStatusCommandService<StatusEntity>, LookupStatusCommandService<StatusEntity>>();
+            services.AddScoped<ILookupStatusCommandService<ProjectStatusEntity>, LookupStatusCommandService<ProjectStatusEntity>>();
             services.AddScoped<ILookupStatusCommandService<CompensationEntity>, LookupStatusCommandService<CompensationEntity>>();
             services.AddScoped<ILookupStatusCommandService<ProcurementMethodEntity>, LookupStatusCommandService<ProcurementMethodEntity>>();
             services.AddScoped<ILookupStatusCommandService<StatusResourcesEntity>, LookupStatusCommandService<StatusResourcesEntity>>();

@@ -7,4 +7,7 @@ public sealed class LookupAdminListItemDto
     public string Color { get; set; } = "#00ff00";
     public int SortOrder { get; set; }
     public bool IsVisible { get; set; }
+    public string Code { get; set; } = string.Empty;
+    public bool IsDefault { get; set; }
+    public bool IsSystemDefault { get; set; }
 }

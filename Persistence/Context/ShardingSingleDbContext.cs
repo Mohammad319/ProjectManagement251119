@@ -129,6 +129,10 @@ public partial class ShardingSingleDbContext(DbContextOptions<ShardingSingleDbCo
             .Property(o => o.SortOrder)
             .HasDefaultValueSql("NEXT VALUE FOR OrderSeq");
 
+        modelBuilder.Entity<ProjectStatusEntity>()
+            .Property(o => o.SortOrder)
+            .HasDefaultValueSql("NEXT VALUE FOR OrderSeq");
+
         modelBuilder.Entity<TaskStatusEntity>()
             .Property(o => o.SortOrder)
             .HasDefaultValueSql("NEXT VALUE FOR OrderSeq");

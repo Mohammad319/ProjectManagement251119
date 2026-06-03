@@ -412,6 +412,8 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public int? TypeId { get; set; }
         public CalculationVersionType CalculationType { get; set; } = CalculationVersionType.Tender;
         public BidRole BidRole { get; set; } = BidRole.MainBid;
+        public CalculationRole CalculationRole { get; set; } = CalculationRole.MainBid;
+        public string CustomCalculationRoleName { get; set; } = string.Empty;
         public bool IsLocked { get; set; }
         public DateTime? LockedAtUtc { get; set; }
         public int? LockedByUserId { get; set; }
@@ -433,6 +435,8 @@ namespace ProjectManagement.Shared.DTO.Calculation
     {
         public string Type { get; set; } = string.Empty;
         public CalculationVersionType CalculationType { get; set; } = CalculationVersionType.Tender;
+        public CalculationRole CalculationRole { get; set; } = CalculationRole.MainBid;
+        public string CustomCalculationRoleName { get; set; } = string.Empty;
         public bool IsLocked { get; set; }
         public DateTime? LockedAtUtc { get; set; }
         public int? LockedByUserId { get; set; }
@@ -470,6 +474,8 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public int? TemplateColumnId { get; set; }
         public CalculationVersionType CalculationType { get; set; } = CalculationVersionType.Tender;
         public BidRole BidRole { get; set; } = BidRole.MainBid;
+        public CalculationRole CalculationRole { get; set; } = CalculationRole.MainBid;
+        public string CustomCalculationRoleName { get; set; } = string.Empty;
         public bool IsLocked { get; set; }
         public DateTime? LockedAtUtc { get; set; }
         public int? LockedByUserId { get; set; }
@@ -497,9 +503,12 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public string Status { get; set; } = string.Empty;
         public int? StatusId { get; set; }
         public int? StatusSortOrder { get; set; }
+        public string StatusColor { get; set; } = string.Empty;
         public string Responsible { get; set; } = string.Empty;
         public CalculationVersionType CalculationType { get; set; } = CalculationVersionType.Tender;
         public BidRole BidRole { get; set; } = BidRole.MainBid;
+        public CalculationRole CalculationRole { get; set; } = CalculationRole.MainBid;
+        public string CustomCalculationRoleName { get; set; } = string.Empty;
         public bool IsLocked { get; set; }
         public DateTime? LockedAtUtc { get; set; }
         public int? LockedByUserId { get; set; }

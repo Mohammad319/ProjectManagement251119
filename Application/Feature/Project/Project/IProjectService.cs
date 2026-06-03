@@ -24,6 +24,7 @@ namespace Application.Feature.Project.Project
      int compensations,
      int types,
      int statuses,
+     int projectStatuses,
      int orgId,
      CancellationToken ct = default);
     

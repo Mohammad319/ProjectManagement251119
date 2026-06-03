@@ -19,6 +19,13 @@ namespace Application.Helper
                 TenderQA = x.TenderQA,
                 Order = x.SortOrder,
                 IsVisible = x.IsVisible,
+                Status = x.ProjectStatus != null ? x.ProjectStatus.Name : string.Empty,
+                StatusId = x.ProjectStatusId,
+                StatusSortOrder = x.ProjectStatus != null ? x.ProjectStatus.SortOrder : null,
+                Color = x.ProjectStatus != null ? x.ProjectStatus.Color : string.Empty,
+                CountsAsSubmittedBid = x.ProjectStatus != null && x.ProjectStatus.CountsAsSubmittedBid,
+                CountsAsWonBid = x.ProjectStatus != null && x.ProjectStatus.CountsAsWonBid,
+                CountsAsLostBid = x.ProjectStatus != null && x.ProjectStatus.CountsAsLostBid,
                 CreatedAt = x.CreatedAt,
                 UpdatedAt = x.UpdatedAt
             };
@@ -35,7 +42,14 @@ namespace Application.Helper
                 TenderDeadline = x.TenderDeadline,
                 TenderQA = x.TenderQA,
                 Order = x.SortOrder,
-                IsVisible = x.IsVisible
+                IsVisible = x.IsVisible,
+                Status = x.ProjectStatus != null ? x.ProjectStatus.Name : string.Empty,
+                StatusId = x.ProjectStatusId,
+                StatusSortOrder = x.ProjectStatus != null ? x.ProjectStatus.SortOrder : null,
+                Color = x.ProjectStatus != null ? x.ProjectStatus.Color : string.Empty,
+                CountsAsSubmittedBid = x.ProjectStatus != null && x.ProjectStatus.CountsAsSubmittedBid,
+                CountsAsWonBid = x.ProjectStatus != null && x.ProjectStatus.CountsAsWonBid,
+                CountsAsLostBid = x.ProjectStatus != null && x.ProjectStatus.CountsAsLostBid
             };
     }
 }

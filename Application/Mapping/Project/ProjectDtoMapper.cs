@@ -25,7 +25,8 @@ namespace Application.Mapping.Project
                 TypeId = entity.ProjectTypeId,
                 IsVisible = entity.IsVisible,
                 Order = entity.SortOrder,
-                Data = entity.GetMetadataSnapshot()
+                Data = entity.GetMetadataSnapshot(),
+                StatusId = entity.ProjectStatusId
             };
         }
 
@@ -43,15 +44,18 @@ namespace Application.Mapping.Project
                 TenderQA = entity.TenderQA,
                 Order = entity.SortOrder,
                 IsVisible = entity.IsVisible,
+                Data = entity.GetMetadataSnapshot(),
                 Folder = entity.Folder?.Name ?? string.Empty,
                 Organisation = entity.Organisation?.Name ?? string.Empty,
                 ProcurementMethods = entity.ProcurementMethod?.Name ?? string.Empty,
                 Compensation = entity.Compensation?.Name ?? string.Empty,
                 Contract = entity.Contract?.Name ?? string.Empty,
                 Type = entity.ProjectType?.Name ?? string.Empty,
+                Status = entity.ProjectStatus?.Name ?? string.Empty,
+                StatusId = entity.ProjectStatusId,
+                StatusName = entity.ProjectStatus?.Name ?? string.Empty,
                 Created = entity.CreatedAt,
-                LastModified = entity.UpdatedAt,
-                Data = entity.GetMetadataSnapshot()
+                LastModified = entity.UpdatedAt
             };
         }
 
@@ -76,9 +80,13 @@ namespace Application.Mapping.Project
                 Order = entity.SortOrder,
                 IsVisible = entity.IsVisible,
                 CalculationCount = calculationCount,
-                Status = metadata.StatusName,
-                StatusId = metadata.StatusId,
+                Status = entity.ProjectStatus?.Name ?? metadata.StatusName,
+                StatusId = entity.ProjectStatusId ?? metadata.StatusId,
                 StatusSortOrder = statusSortOrder,
+                Color = entity.ProjectStatus?.Color ?? string.Empty,
+                CountsAsSubmittedBid = entity.ProjectStatus?.CountsAsSubmittedBid ?? false,
+                CountsAsWonBid = entity.ProjectStatus?.CountsAsWonBid ?? false,
+                CountsAsLostBid = entity.ProjectStatus?.CountsAsLostBid ?? false,
                 Responsible = metadata.Responsibles.FirstOrDefault(x => !string.IsNullOrWhiteSpace(x)) ?? string.Empty,
                 CreatedAt = entity.CreatedAt,
                 UpdatedAt = entity.UpdatedAt,

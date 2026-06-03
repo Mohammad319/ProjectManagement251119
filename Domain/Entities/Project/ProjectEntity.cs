@@ -44,6 +44,10 @@ namespace Domain.Entities.Project
         [JsonIgnore]
         public TypeEntity? ProjectType { get; private set; }
 
+        public int? ProjectStatusId { get; private set; }
+        [JsonIgnore]
+        public ProjectStatusEntity? ProjectStatus { get; private set; }
+
         public Guid FolderId { get; private set; }
         [JsonIgnore]
         public FolderEntity Folder { get; private set; } = null!;
@@ -102,6 +106,7 @@ namespace Domain.Entities.Project
             IsVisible = dto.IsVisible;
 
             ProjectTypeId = dto.TypeId;
+            ProjectStatusId = dto.StatusId;
             OrganisationId = dto.OrganisationId;
             ProcurementMethodId = dto.ProcurementMethodsId;
             CompensationId = dto.CompensationId;

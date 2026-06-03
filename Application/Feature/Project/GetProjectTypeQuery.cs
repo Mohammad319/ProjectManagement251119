@@ -13,6 +13,7 @@ namespace Application.Feature.Project.Type.Queries
         public int Compensations;
         public int Types;
         public int Statuses;
+        public int ProjectStatuses;
         public int OrgId;
 
     }
@@ -27,6 +28,7 @@ namespace Application.Feature.Project.Type.Queries
                 request.Compensations,
                 request.Types,
                 request.Statuses,
+                request.ProjectStatuses,
                 request.OrgId,
                 ct);
     }

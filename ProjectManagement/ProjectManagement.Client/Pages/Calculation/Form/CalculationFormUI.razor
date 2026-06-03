@@ -72,15 +72,24 @@
                                     }
                                 </div>
                                 <div class="sm:col-span-2">
-                                    <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@AppLoc["bidRole"]</label>
+                                    <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">Kalkylroll</label>
                                     <InputSelect class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                                                 @bind-Value="@CalculationUpdate.BidRole">
-                                        <option value="@BidRole.MainBid">@AppLoc["mainBid"]</option>
-                                        <option value="@BidRole.Option">@AppLoc["option"]</option>
-                                        <option value="@BidRole.AdditionalWork">@AppLoc["additionalWork"]</option>
-                                        <option value="@BidRole.InternalObject">@AppLoc["internalObject"]</option>
+                                                 @bind-Value="@CalculationUpdate.CalculationRole">
+                                        @foreach (var role in CalculationRoles)
+                                        {
+                                            <option value="@role">@GetCalculationRoleLabel(role)</option>
+                                        }
                                     </InputSelect>
                                 </div>
+                                @if (CalculationUpdate.CalculationRole == CalculationRole.Custom)
+                                {
+                                    <div class="sm:col-span-2">
+                                        <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">Egen roll, beskrivning</label>
+                                        <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                                                   @bind-Value="@CalculationUpdate.CustomCalculationRoleName"
+                                                   placeholder="Miljökalkyl, Riskkalkyl, Kontrollkalkyl..." />
+                                    </div>
+                                }
                                 <div class="sm:col-span-2">
                                     <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.status</label>
                                     <select value="@CalculationUpdate.StatusId"
@@ -601,6 +610,27 @@
         _                                 => AppLoc["tenderCalculation"]
     };
 
+    private static readonly CalculationRole[] CalculationRoles =
+    [
+        CalculationRole.MainBid,
+        CalculationRole.SubObject,
+        CalculationRole.Option,
+        CalculationRole.ChangeOrder,
+        CalculationRole.InternalObject,
+        CalculationRole.Custom
+    ];
+
+    private static string GetCalculationRoleLabel(CalculationRole role) => role switch
+    {
+        CalculationRole.MainBid => "Huvudkalkyl / Huvudanbud",
+        CalculationRole.SubObject => "Delobjekt",
+        CalculationRole.Option => "Option",
+        CalculationRole.ChangeOrder => "ÄTA",
+        CalculationRole.InternalObject => "Internt objekt",
+        CalculationRole.Custom => "Egen roll",
+        _ => "Huvudkalkyl / Huvudanbud"
+    };
+
     private bool CanCreateProductionCalculation =>
         Calculation.Id > 0 &&
         (CalculationUpdate.CalculationType == CalculationVersionType.Tender ||
@@ -1026,6 +1056,9 @@
                 CalculationUpdate.TypeId,
                 CalculationUpdate.StatusId
             );
+
+        if (Calculation.Id == 0 && !CalculationUpdate.StatusId.HasValue)
+            CalculationUpdate.StatusId = Config.Statuses.FirstOrDefault(status => status.Name == "Utkast")?.Id;
 
         ResetEditContext();
     }

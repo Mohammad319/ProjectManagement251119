@@ -134,9 +134,17 @@ namespace Persistence.Service.CalculationItems.Resource
 
             var entities = new List<ResourceEntity>(items.Count);
             int nextOrder = parent.MaxOrder.HasValue ? parent.MaxOrder.Value + 100 : 100;
+            var defaultStatusId = await context.ResourceStatus
+                .Where(x => x.IsDefault && x.IsVisible)
+                .OrderBy(x => x.SortOrder)
+                .Select(x => (int?)x.Id)
+                .FirstOrDefaultAsync(ct);
 
             foreach (var dto in items)
             {
+                if (defaultStatusId.HasValue && (!dto.StatusId.HasValue || dto.StatusId <= 0))
+                    dto.StatusId = defaultStatusId;
+
                 var resource = ResourceEntity.Create(dto, nextOrder, parentTaskId);
                 nextOrder += 100;
                 entities.Add(resource);

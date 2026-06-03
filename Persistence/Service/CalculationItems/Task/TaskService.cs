@@ -124,6 +124,18 @@ namespace Persistence.Service.CalculationItems.Task
                     return [];
             }
 
+            var defaultStatusId = await context.TaskStatus
+                .Where(x => x.IsDefault && x.IsVisible)
+                .OrderBy(x => x.SortOrder)
+                .Select(x => (int?)x.Id)
+                .FirstOrDefaultAsync(ct);
+
+            if (defaultStatusId.HasValue)
+            {
+                foreach (var task in safeTasks.Where(task => !task.StatusId.HasValue || task.StatusId <= 0))
+                    task.StatusId = defaultStatusId;
+            }
+
             var entities = safeTasks
                 .Select(t => TaskMapper.MapToTaskEntity(t, targetCalcId))
                 .ToList();

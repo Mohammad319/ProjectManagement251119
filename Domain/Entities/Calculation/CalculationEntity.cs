@@ -88,6 +88,10 @@ namespace Domain.Entities.Calculation
         public bool IsVisible { get; private set; } = true;
         public CalculationVersionType CalculationType { get; private set; } = CalculationVersionType.Tender;
         public BidRole BidRole { get; private set; } = BidRole.MainBid;
+        public CalculationRole CalculationRole { get; private set; } = CalculationRole.MainBid;
+
+        [MaxLength(FieldLengths.Name)]
+        public string CustomCalculationRoleName { get; private set; } = string.Empty;
         public bool IsLocked { get; private set; }
         public DateTime? LockedAtUtc { get; private set; }
         public int? LockedByUserId { get; private set; }
@@ -197,6 +201,8 @@ namespace Domain.Entities.Calculation
                 TypeId = original.TypeId,
                 CalculationType = original.CalculationType,
                 BidRole = original.BidRole,
+                CalculationRole = original.CalculationRole,
+                CustomCalculationRoleName = original.CustomCalculationRoleName,
                 IsLocked = false,
                 LockedAtUtc = null,
                 LockedByUserId = null,
@@ -283,7 +289,7 @@ namespace Domain.Entities.Calculation
             TemplateId = dto.TemplateId;
             TemplateColumnId = dto.TemplateColumnId;
             CalculationType = dto.CalculationType;
-            BidRole = dto.BidRole;
+            SetCalculationRole(dto.CalculationRole, dto.CustomCalculationRoleName);
         }
 
         public void InitializeVersionGroup()
@@ -326,6 +332,15 @@ namespace Domain.Entities.Calculation
         public void SetCalculationType(CalculationVersionType calculationType)
         {
             CalculationType = calculationType;
+        }
+
+        public void SetCalculationRole(CalculationRole role, string? customRoleName)
+        {
+            CalculationRole = role;
+            CustomCalculationRoleName = role == CalculationRole.Custom
+                ? NormalizeOptionalText(customRoleName, FieldLengths.Name) ?? string.Empty
+                : string.Empty;
+            BidRole = ToBidRole(role);
         }
 
         public void LockAsTenderHistory(int userId)
@@ -470,6 +485,14 @@ namespace Domain.Entities.Calculation
 
             return normalized.Length > maxLength ? normalized[..maxLength] : normalized;
         }
+
+        private static BidRole ToBidRole(CalculationRole role) => role switch
+        {
+            CalculationRole.Option => BidRole.Option,
+            CalculationRole.ChangeOrder => BidRole.AdditionalWork,
+            CalculationRole.InternalObject => BidRole.InternalObject,
+            _ => BidRole.MainBid
+        };
 
         private static CalculationData CloneMetadata(CalculationData? metadata)
         {

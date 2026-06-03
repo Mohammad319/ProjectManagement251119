@@ -243,6 +243,7 @@ namespace Persistence.Service.Project
             int compensations,
             int types,
             int statuses,
+            int projectStatuses,
             int orgId,
             CancellationToken ct = default)
         {
@@ -261,9 +262,23 @@ namespace Persistence.Service.Project
                 Contracts = await OrderAndSelect(context.Contracts).ToListAsync(ct),
                 Compensations = await OrderAndSelect(context.Compensations).ToListAsync(ct),
                 Types = await OrderAndSelect(context.CalcProjectType).ToListAsync(ct),
+                ProjectStatuses = await context.ProjectStatus
+                    .AsNoTracking()
+                    .Where(x => x.IsVisible || x.Id == projectStatuses)
+                    .OrderBy(x => x.SortOrder)
+                    .ThenBy(x => x.Name)
+                    .Select(x => new StatusListDTO
+                    {
+                        Id = x.Id,
+                        Name = x.Name,
+                        CountsAsSubmittedBid = x.CountsAsSubmittedBid,
+                        CountsAsWonBid = x.CountsAsWonBid,
+                        CountsAsLostBid = x.CountsAsLostBid
+                    })
+                    .ToListAsync(ct),
                 Statuses = await context.CalculationStatus
                     .AsNoTracking()
-                    .Where(x => x.IsVisible)
+                    .Where(x => x.IsVisible || x.Id == statuses)
                     .OrderBy(x => x.SortOrder)
                     .ThenBy(x => x.Name)
                     .Select(x => new StatusListDTO
@@ -303,6 +318,7 @@ namespace Persistence.Service.Project
                 .Include(x => x.Compensation)
                 .Include(x => x.Contract)
                 .Include(x => x.ProjectType)
+                .Include(x => x.ProjectStatus)
                 .Where(x => x.Id == id &&
                     (departmentId == null || x.Folder.DepartmentId == departmentId || x.CreatedBy == userId))
                 .FirstOrDefaultAsync(ct);
@@ -331,18 +347,19 @@ namespace Persistence.Service.Project
                 .Include(x => x.Organisation)
                 .Include(x => x.Contract)
                 .Include(x => x.ProjectType)
+                .Include(x => x.ProjectStatus)
                 .Where(x => x.FolderId == folderId && (includeArchived || x.IsVisible) &&
                        (departmentId == null || x.Folder.DepartmentId == departmentId || x.CreatedBy == userId))
                 .OrderBy(x => x.SortOrder)
                 .ThenBy(x => x.Name)
                 .ToListAsync(ct);
 
-            var statusSortOrders = await GetStatusSortOrdersAsync(context, ct);
+            var statusSortOrders = await GetProjectStatusSortOrdersAsync(context, ct);
             var calculationCounts = await GetCalculationCountsAsync(context, projects.Select(x => x.Id), ct);
             return projects.Select(x =>
             {
                 var metadata = x.GetMetadataSnapshot();
-                statusSortOrders.TryGetValue(metadata.StatusId ?? 0, out var statusSortOrder);
+                statusSortOrders.TryGetValue(x.ProjectStatusId ?? metadata.StatusId ?? 0, out var statusSortOrder);
                 calculationCounts.TryGetValue(x.Id, out var calculationCount);
                 return x.ToListDto(statusSortOrder, calculationCount);
             }).ToList();
@@ -356,6 +373,7 @@ namespace Persistence.Service.Project
                 .Include(x => x.Organisation)
                 .Include(x => x.Contract)
                 .Include(x => x.ProjectType)
+                .Include(x => x.ProjectStatus)
                 .Where(x => x.FolderId == folderId && (includeArchived || x.IsVisible) &&
                     x.Calculations.SelectMany(c => c.SharesCalc)
                         .Any(s => s.CreatedBy == userId || s.DepartmentId == departmentId))
@@ -363,12 +381,12 @@ namespace Persistence.Service.Project
                 .ThenBy(x => x.Name)
                 .ToListAsync(ct);
 
-            var statusSortOrders = await GetStatusSortOrdersAsync(context, ct);
+            var statusSortOrders = await GetProjectStatusSortOrdersAsync(context, ct);
             var calculationCounts = await GetCalculationCountsAsync(context, projects.Select(x => x.Id), ct);
             return projects.Select(x =>
             {
                 var metadata = x.GetMetadataSnapshot();
-                statusSortOrders.TryGetValue(metadata.StatusId ?? 0, out var statusSortOrder);
+                statusSortOrders.TryGetValue(x.ProjectStatusId ?? metadata.StatusId ?? 0, out var statusSortOrder);
                 calculationCounts.TryGetValue(x.Id, out var calculationCount);
                 return x.ToListDto(statusSortOrder, calculationCount);
             }).ToList();
@@ -444,11 +462,11 @@ namespace Persistence.Service.Project
         private static string? NormalizeCode(string? code)
             => string.IsNullOrWhiteSpace(code) ? null : code.Trim();
 
-        private static Task<Dictionary<int, int>> GetStatusSortOrdersAsync(
+        private static Task<Dictionary<int, int>> GetProjectStatusSortOrdersAsync(
             Persistence.Context.ShardingSingleDbContext context,
             CancellationToken ct)
         {
-            return context.CalculationStatus
+            return context.ProjectStatus
                 .AsNoTracking()
                 .Select(status => new { status.Id, status.SortOrder })
                 .ToDictionaryAsync(status => status.Id, status => status.SortOrder, ct);
@@ -560,6 +578,10 @@ namespace Persistence.Service.Project
 
             if (dto.TypeId.HasValue &&
                 !await context.CalcProjectType.AsNoTracking().AnyAsync(x => x.Id == dto.TypeId.Value, ct))
+                return false;
+
+            if (dto.StatusId.HasValue &&
+                !await context.ProjectStatus.AsNoTracking().AnyAsync(x => x.Id == dto.StatusId.Value, ct))
                 return false;
 
             var normalizedCode = NormalizeCode(dto.Code);

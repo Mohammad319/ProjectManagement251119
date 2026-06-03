@@ -1,0 +1,64 @@
+@inherits AppComponentBase
+
+<EditForm id="projectProcurementStatusForm"
+          class="px-3 pt-3 pb-1"
+          Model="@StatusUpdate"
+          OnValidSubmit="HandleSubmitAsync">
+    <DataAnnotationsValidator />
+
+    <div class="flex flex-wrap items-end gap-3">
+        <div class="flex min-w-[180px] flex-1 flex-col gap-1">
+            <label class="pm-label">@CalcLoc[nameof(CalcResource.name)]</label>
+            <InputText class="pm-input" @bind-Value="@StatusUpdate.Name" />
+            <ValidationMessage For="@(() => StatusUpdate.Name)" class="text-xs text-rose-600 dark:text-rose-400" />
+        </div>
+
+        <div class="flex w-20 flex-col gap-1">
+            <label class="pm-label">@Loc[nameof(ResourceLoc.color)]</label>
+            <InputText type="color"
+                       class="h-9 w-full rounded-lg border border-slate-300 bg-white p-1 shadow-sm dark:border-slate-700 dark:bg-slate-950"
+                       @bind-Value="StatusUpdate.Color" />
+        </div>
+
+        <label for="projectProcurementStatusVisible"
+               class="flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 dark:border-slate-700 dark:bg-slate-800/50">
+            <InputCheckbox id="projectProcurementStatusVisible"
+                           class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900"
+                           @bind-Value="@StatusUpdate.IsVisible" />
+            <span class="pm-label">@AppLoc[nameof(ResourceApp.isVisible)]</span>
+        </label>
+    </div>
+
+    <div class="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/50">
+        <div class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@AppLoc["reporting"]</div>
+        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">@AppLoc["hitRateStatusSettingsHelp"]</p>
+        <div class="mt-3 grid grid-cols-1 gap-2 md:grid-cols-3">
+            <label class="flex cursor-pointer items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                <input type="checkbox"
+                       class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900"
+                       checked="@StatusUpdate.CountsAsSubmittedBid"
+                       @onchange="OnCountsAsSubmittedChanged" />
+                <span>@AppLoc["countsAsSubmittedBid"]</span>
+            </label>
+            <label class="flex cursor-pointer items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                <input type="checkbox"
+                       class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900"
+                       checked="@StatusUpdate.CountsAsWonBid"
+                       @onchange="OnCountsAsWonChanged" />
+                <span>@AppLoc["countsAsWonBid"]</span>
+            </label>
+            <label class="flex cursor-pointer items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                <input type="checkbox"
+                       class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900"
+                       checked="@StatusUpdate.CountsAsLostBid"
+                       @onchange="OnCountsAsLostChanged" />
+                <span>@AppLoc["countsAsLostBid"]</span>
+            </label>
+        </div>
+    </div>
+</EditForm>
+
+<div class="flex items-center justify-end gap-2 border-t border-slate-200 px-3 py-2 dark:border-slate-700">
+    <button type="button" class="pm-btn pm-btn-neutral" @onclick="CloseModal" disabled="@IsLoading">@AppLoc[nameof(ResourceApp.cancel)]</button>
+    <button type="submit" class="pm-btn pm-btn-success" form="projectProcurementStatusForm" disabled="@IsLoading">@AppLoc[nameof(ResourceApp.save)]</button>
+</div>

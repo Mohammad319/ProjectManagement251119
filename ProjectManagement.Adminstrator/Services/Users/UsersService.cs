@@ -130,15 +130,23 @@ namespace ProjectManagement.Adminstrator.Services.Users
             foreach (var defaultResourceStatus in TenantSeedCatalog.ResourceStatuses)
             {
                 var status = existingResourceStatuses.FirstOrDefault(x =>
+                    !string.IsNullOrWhiteSpace(defaultResourceStatus.Code) &&
+                    string.Equals(x.Code, defaultResourceStatus.Code, StringComparison.OrdinalIgnoreCase)) ??
+                    existingResourceStatuses.FirstOrDefault(x =>
                     string.Equals(x.Name, defaultResourceStatus.Name, StringComparison.OrdinalIgnoreCase));
 
                 if (status is null)
                 {
-                    dataAccess.ResourceStatus.Add(new StatusResourcesEntity(
+                    var newStatus = new StatusResourcesEntity(
                         defaultResourceStatus.Name,
                         defaultResourceStatus.Color,
                         defaultResourceStatus.SortOrder,
-                        defaultResourceStatus.IsVisible));
+                        defaultResourceStatus.IsVisible);
+                    newStatus.SetControlStatusSettings(
+                        defaultResourceStatus.Code,
+                        defaultResourceStatus.IsDefault,
+                        defaultResourceStatus.IsSystemDefault);
+                    dataAccess.ResourceStatus.Add(newStatus);
                     continue;
                 }
 
@@ -147,21 +155,33 @@ namespace ProjectManagement.Adminstrator.Services.Users
                     defaultResourceStatus.Color,
                     defaultResourceStatus.SortOrder,
                     defaultResourceStatus.IsVisible);
+                status.SetControlStatusSettings(
+                    string.IsNullOrWhiteSpace(status.Code) ? defaultResourceStatus.Code : status.Code,
+                    defaultResourceStatus.IsDefault,
+                    defaultResourceStatus.IsSystemDefault || status.IsSystemDefault);
             }
 
             var existingTaskStatuses = await dataAccess.TaskStatus.ToListAsync();
             foreach (var defaultTaskStatus in TenantSeedCatalog.TaskStatuses)
             {
                 var status = existingTaskStatuses.FirstOrDefault(x =>
+                    !string.IsNullOrWhiteSpace(defaultTaskStatus.Code) &&
+                    string.Equals(x.Code, defaultTaskStatus.Code, StringComparison.OrdinalIgnoreCase)) ??
+                    existingTaskStatuses.FirstOrDefault(x =>
                     string.Equals(x.Name, defaultTaskStatus.Name, StringComparison.OrdinalIgnoreCase));
 
                 if (status is null)
                 {
-                    dataAccess.TaskStatus.Add(new TaskStatusEntity(
+                    var newStatus = new TaskStatusEntity(
                         defaultTaskStatus.Name,
                         defaultTaskStatus.Color,
                         defaultTaskStatus.SortOrder,
-                        defaultTaskStatus.IsVisible));
+                        defaultTaskStatus.IsVisible);
+                    newStatus.SetControlStatusSettings(
+                        defaultTaskStatus.Code,
+                        defaultTaskStatus.IsDefault,
+                        defaultTaskStatus.IsSystemDefault);
+                    dataAccess.TaskStatus.Add(newStatus);
                     continue;
                 }
 
@@ -170,6 +190,10 @@ namespace ProjectManagement.Adminstrator.Services.Users
                     defaultTaskStatus.Color,
                     defaultTaskStatus.SortOrder,
                     defaultTaskStatus.IsVisible);
+                status.SetControlStatusSettings(
+                    string.IsNullOrWhiteSpace(status.Code) ? defaultTaskStatus.Code : status.Code,
+                    defaultTaskStatus.IsDefault,
+                    defaultTaskStatus.IsSystemDefault || status.IsSystemDefault);
             }
 
             var existingAccountGroups = await dataAccess.AccountGroup.ToListAsync();
@@ -349,6 +373,39 @@ namespace ProjectManagement.Adminstrator.Services.Users
                     defaultStatus.LocksCalculation,
                     defaultStatus.AllowsProductionCalculation);
                 calcStatus.SetHitRateSettings(
+                    defaultStatus.CountsAsSubmittedBid,
+                    defaultStatus.CountsAsWonBid,
+                    defaultStatus.CountsAsLostBid);
+            }
+
+            var existingProjectStatuses = await dataAccess.ProjectStatus.ToListAsync();
+            foreach (var defaultStatus in TenantSeedCatalog.ProjectStatuses)
+            {
+                var projectStatus = existingProjectStatuses.FirstOrDefault(x =>
+                    string.Equals(x.Name, defaultStatus.Name, StringComparison.OrdinalIgnoreCase));
+
+                if (projectStatus is null)
+                {
+                    var newStatus = new ProjectStatusEntity();
+                    newStatus.Update(
+                        defaultStatus.Name,
+                        defaultStatus.Color,
+                        defaultStatus.SortOrder,
+                        defaultStatus.IsVisible);
+                    newStatus.SetHitRateSettings(
+                        defaultStatus.CountsAsSubmittedBid,
+                        defaultStatus.CountsAsWonBid,
+                        defaultStatus.CountsAsLostBid);
+                    dataAccess.ProjectStatus.Add(newStatus);
+                    continue;
+                }
+
+                projectStatus.Update(
+                    defaultStatus.Name,
+                    defaultStatus.Color,
+                    defaultStatus.SortOrder,
+                    defaultStatus.IsVisible);
+                projectStatus.SetHitRateSettings(
                     defaultStatus.CountsAsSubmittedBid,
                     defaultStatus.CountsAsWonBid,
                     defaultStatus.CountsAsLostBid);

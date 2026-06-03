@@ -34,6 +34,30 @@ internal sealed class StatusLookupConfiguration : IEntityTypeConfiguration<Statu
     }
 }
 
+internal sealed class ProjectStatusLookupConfiguration : IEntityTypeConfiguration<ProjectStatusEntity>
+{
+    public void Configure(EntityTypeBuilder<ProjectStatusEntity> builder)
+    {
+        builder.ToTable("ProjectStatuses");
+
+        builder.HasIndex(x => new { x.TenantId, x.IsVisible, x.SortOrder })
+            .HasDatabaseName("IX_ProjectStatuses_Tenant_Visible_Order");
+
+        builder.HasIndex(x => new { x.TenantId, x.Name })
+            .IsUnique()
+            .HasDatabaseName("IX_ProjectStatuses_Tenant_Name");
+
+        builder.ToTable(t =>
+        {
+            t.HasCheckConstraint("CK_ProjectStatuses_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+            t.HasCheckConstraint("CK_ProjectStatuses_Color_Hex", LookupChecks.HexColorCheck);
+            t.HasCheckConstraint("CK_ProjectStatuses_SortOrder_NonNegative", LookupChecks.NonNegativeSortOrderCheck);
+            t.HasCheckConstraint("CK_ProjectStatuses_BidResult_RequiresSubmitted", "[CountsAsSubmittedBid] = 1 OR ([CountsAsWonBid] = 0 AND [CountsAsLostBid] = 0)");
+            t.HasCheckConstraint("CK_ProjectStatuses_BidResult_NotWonAndLost", "[CountsAsWonBid] = 0 OR [CountsAsLostBid] = 0");
+        });
+    }
+}
+
 internal sealed class TypeLookupConfiguration : IEntityTypeConfiguration<TypeEntity>
 {
     public void Configure(EntityTypeBuilder<TypeEntity> builder)

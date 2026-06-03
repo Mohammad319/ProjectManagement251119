@@ -288,6 +288,9 @@ namespace ProjectManagement.Shared.DTO.Project
         public int? StatusId { get; set; }
         public int? StatusSortOrder { get; set; }
         public string Color { get; set; } = string.Empty;
+        public bool CountsAsSubmittedBid { get; set; }
+        public bool CountsAsWonBid { get; set; }
+        public bool CountsAsLostBid { get; set; }
         public string Responsible { get; set; } = string.Empty;
         public DateTime StartDate { get; set; } = DateTime.Now;
         public DateTime EndDate { get; set; } = DateTime.Now.AddMonths(2);

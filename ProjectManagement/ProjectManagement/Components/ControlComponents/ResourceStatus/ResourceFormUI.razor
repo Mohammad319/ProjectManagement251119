@@ -13,6 +13,13 @@
             <ValidationMessage For="@(() => PostStatus.Name)" class="text-xs text-rose-600 dark:text-rose-400" />
         </div>
 
+        <div class="flex min-w-[160px] flex-1 flex-col gap-1">
+            <label class="pm-label">Code</label>
+            <InputText class="pm-input"
+                       @bind-Value="@PostStatus.Code"
+                       disabled="@PostStatus.IsSystemDefault" />
+        </div>
+
         <div class="flex w-20 flex-col gap-1">
             <label class="pm-label">@Loc[nameof(ResourceLoc.color)]</label>
             <InputText type="color"
@@ -26,6 +33,14 @@
                            class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900"
                            @bind-Value="@PostStatus.IsVisible" />
             <span class="pm-label">@AppLoc[nameof(ResourceApp.isVisible)]</span>
+        </label>
+
+        <label for="resourceStatusDefault"
+               class="flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 dark:border-slate-700 dark:bg-slate-800/50">
+            <InputCheckbox id="resourceStatusDefault"
+                           class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900"
+                           @bind-Value="@PostStatus.IsDefault" />
+            <span class="pm-label">Standard</span>
         </label>
     </div>
 </EditForm>

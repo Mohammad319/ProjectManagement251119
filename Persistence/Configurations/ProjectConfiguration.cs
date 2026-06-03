@@ -44,6 +44,11 @@ public sealed class ProjectConfiguration : IEntityTypeConfiguration<ProjectEntit
             .HasForeignKey(x => x.ProjectTypeId)
             .OnDelete(DeleteBehavior.ClientSetNull);
 
+        builder.HasOne(x => x.ProjectStatus)
+            .WithMany(x => x.Projects)
+            .HasForeignKey(x => x.ProjectStatusId)
+            .OnDelete(DeleteBehavior.ClientSetNull);
+
         builder.HasOne(x => x.Compensation)
             .WithMany(x => x.Projects)
             .HasForeignKey(x => x.CompensationId)

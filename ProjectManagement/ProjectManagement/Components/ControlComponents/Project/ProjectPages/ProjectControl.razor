@@ -37,7 +37,13 @@
             },
             new TabItem
             {
-                Key = "status",
+                Key = "project-status",
+                Text = "Projektstatus / Upphandlingsstatus",
+                Content = @<ProjectManagement.Components.ControlComponents.Project.ProjectStatus.IndexUI />
+            },
+            new TabItem
+            {
+                Key = "calculation-status",
                 Text = CalcResource.calculationStatus,
                 Content = @<ProjectManagement.Components.ControlComponents.Project.Status.IndexUI />
             },

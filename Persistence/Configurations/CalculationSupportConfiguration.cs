@@ -86,6 +86,12 @@ internal sealed class StatusResourcesConfiguration : IEntityTypeConfiguration<St
             .IsUnique()
             .HasDatabaseName("IX_StatusResources_Tenant_Name");
 
+        builder.Property(x => x.Code).HasMaxLength(64);
+
+        builder.HasIndex(x => new { x.TenantId, x.Code })
+            .HasFilter("[Code] <> ''")
+            .HasDatabaseName("IX_StatusResources_Tenant_Code");
+
         builder.ToTable(t =>
         {
             t.HasCheckConstraint("CK_StatusResources_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
@@ -107,6 +113,12 @@ internal sealed class TaskStatusConfiguration : IEntityTypeConfiguration<TaskSta
         builder.HasIndex(x => new { x.TenantId, x.Name })
             .IsUnique()
             .HasDatabaseName("IX_TaskStatuses_Tenant_Name");
+
+        builder.Property(x => x.Code).HasMaxLength(64);
+
+        builder.HasIndex(x => new { x.TenantId, x.Code })
+            .HasFilter("[Code] <> ''")
+            .HasDatabaseName("IX_TaskStatuses_Tenant_Code");
 
         builder.ToTable(t =>
         {
