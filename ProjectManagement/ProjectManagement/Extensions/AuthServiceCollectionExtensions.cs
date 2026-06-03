@@ -22,10 +22,10 @@ public static class AuthRegistration
         services.AddScoped<IdentityRedirectManager>();
         services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 
-        services.AddDbContextPool<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
+        services.AddDbContextPool<AuthPermissionDbContext>(options => options.UseSqlServer(connectionString));
 
         services.AddIdentity<ApplicationUser, IdentityRole>()
-            .AddEntityFrameworkStores<ApplicationDbContext>()
+            .AddEntityFrameworkStores<AuthPermissionDbContext>()
             .AddDefaultTokenProviders();
 
         services.ConfigureApplicationCookie(options =>

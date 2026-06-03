@@ -37,7 +37,8 @@ namespace ProjectManagement.Client.Pages.Folder
 
         [Parameter] public string GroupingMode { get; set; } = ProjectTreeGroupingMode.FolderStructure;
         [Parameter] public string SortMode { get; set; } = ProjectTreeSortMode.NameAscending;
-        [Parameter] public bool KeepFolderStructure { get; set; } = true;
+        [Parameter] public bool ShowFoldersInTree { get; set; } = true;
+        [Parameter] public bool ShowProjectsInTree { get; set; } = true;
         [Parameter] public EventCallback OnExitManualOrder { get; set; }
         [Parameter] public EventCallback<GroupSelectionInfo?> OnGroupSelected { get; set; }
         [Parameter] public bool IsReorderMode { get; set; }
@@ -71,6 +72,7 @@ namespace ProjectManagement.Client.Pages.Folder
         private sealed record GroupedCalculation(FolderMVVM Folder, ListProjectMVVM Project, ListCalculationMVVM Calculation);
         private sealed record ProjectCalculationGroup(ListProjectMVVM Project, List<ListCalculationMVVM> Calculations);
         private sealed record FolderCalculationGroup(FolderMVVM Folder, List<ProjectCalculationGroup> Projects);
+        private sealed record ProjectWithFolderGroup(FolderMVVM Folder, ListProjectMVVM Project, List<ListCalculationMVVM> Calculations);
         private sealed record CalculationGroupNode(string Key, string Label, string Badge, List<GroupedCalculation> Calculations, List<CalculationGroupNode>? Children = null);
 
         private IEnumerable<FolderMVVM> GetSortedFolders(IEnumerable<FolderMVVM>? folders)
@@ -185,7 +187,7 @@ namespace ProjectManagement.Client.Pages.Folder
                     .OrderByDescending(calculation => calculation.UpdatedAt ?? calculation.CreatedAt)
                     .ThenBy(calculation => calculation.Name, StringComparer.CurrentCultureIgnoreCase),
 
-                ProjectTreeSortMode.Status => list
+                ProjectTreeSortMode.Status or ProjectTreeSortMode.StatusOrder => list
                     .OrderBy(calculation => calculation.StatusSortOrder ?? int.MaxValue)
                     .ThenBy(calculation => GetStatusSortRank(calculation.Status, true))
                     .ThenBy(calculation => calculation.Name, StringComparer.CurrentCultureIgnoreCase),
@@ -525,6 +527,23 @@ namespace ProjectManagement.Client.Pages.Folder
                     group.Key.Label,
                     CalcResource.status,
                     GetSortedGroupedCalculations(group).ToList()));
+
+        private IEnumerable<ProjectWithFolderGroup> GetProjectCalculationGroupsFlat(IEnumerable<GroupedCalculation> entries)
+        {
+            var projectGroups = entries
+                .GroupBy(entry => entry.Project.Id)
+                .Select(projectGroup =>
+                {
+                    var first = projectGroup.First();
+                    var calculations = GetSortedCalculations(projectGroup.Select(e => e.Calculation)).ToList();
+                    return new ProjectWithFolderGroup(first.Folder, first.Project, calculations);
+                })
+                .ToList();
+
+            var projectById = projectGroups.ToDictionary(g => g.Project.Id);
+            return GetSortedProjects(projectGroups.Select(g => g.Project))
+                .Select(project => projectById[project.Id]);
+        }
 
         private IEnumerable<FolderCalculationGroup> GetFolderCalculationGroups(IEnumerable<GroupedCalculation> entries)
         {
@@ -952,15 +971,14 @@ namespace ProjectManagement.Client.Pages.Folder
                             _collapsedGroupKeys.Add(child.Key);
                 }
 
-                if (KeepFolderStructure)
-                {
+                if (ShowFoldersInTree)
                     foreach (var folder in UoWService.Folder.State.FoldersList)
-                    {
                         _collapsedGroupKeys.Add(GetGroupedFolderKey(folder));
+
+                if (ShowProjectsInTree)
+                    foreach (var folder in UoWService.Folder.State.FoldersList)
                         foreach (var project in folder.Projects ?? [])
                             _collapsedGroupKeys.Add(GetGroupedProjectKey(project));
-                    }
-                }
             }
 
             StateHasChanged();

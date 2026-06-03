@@ -41,6 +41,8 @@ namespace Persistence.Service.ResourceType
             if (entity == null) return false;
 
             entity.Update(dto);
+            if (dto.Order >= 0)
+                entity.UpdateOrder(dto.Order);
             await context.SaveChangesAsync(ct);
             await lookupCache.InvalidateAsync<ResourceTypeEntity>(ct);
             return true;
@@ -105,6 +107,8 @@ namespace Persistence.Service.ResourceType
             if (entity == null) return false;
 
             entity.Update(dto);
+            if (dto.Order >= 0)
+                entity.UpdateOrder(dto.Order);
             await context.SaveChangesAsync(ct);
             return true;
         }

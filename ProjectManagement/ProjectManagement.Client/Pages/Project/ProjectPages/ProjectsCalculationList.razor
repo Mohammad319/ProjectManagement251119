@@ -49,19 +49,6 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-1">
-            @* Toggle: Versioner *@
-            <button type="button"
-                    class="@(_showAllVersions ? "inline-flex h-7 items-center gap-1 rounded border border-blue-300 bg-blue-50 px-2 text-[11px] font-medium text-blue-700 transition dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300" : "inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800") + " disabled:cursor-not-allowed disabled:opacity-40"
-                    disabled="@(!HasAnyMultipleVersions)"
-                    @onclick="async () => { _showAllVersions = !_showAllVersions; ResetPage(); }">
-                <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
-                </svg>
-                <span>@AppLoc["showAllVersions"]</span>
-            </button>
-
-            <div class="h-4 w-px bg-slate-200 dark:bg-slate-700"></div>
-
             @* Filtrera *@
             <button type="button"
                     class="@(_showFilters || HasActiveFilters ? "inline-flex h-7 items-center gap-1 rounded border border-blue-300 bg-blue-50 px-2 text-[11px] font-medium text-blue-700 transition dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300" : "inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800")"
@@ -76,87 +63,80 @@
                 }
             </button>
 
-            @* Kolumner *@
-            <MhdColumnPicker Text="Kolumner"
-                             Columns="@CalculationColumnOptions"
-                             ColumnVisibility="_calculationColumns"
-                             OnChanged="StateHasChanged" />
-
-            <div class="h-4 w-px bg-slate-200 dark:bg-slate-700"></div>
-
-            @* Excel *@
-            <button type="button"
-                    class="inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-                    @onclick="ExportCalculationListAsync">
-                <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                <span>Excel</span>
-            </button>
-
-            @* PDF *@
-            <button type="button"
-                    class="inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-                    @onclick="ExportCalculationPdfAsync">
-                <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
-                <span>PDF</span>
-            </button>
-
-            @* Skriv ut *@
-            <button type="button"
-                    class="inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-                    @onclick="PrintCalculationListAsync">
-                <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                </svg>
-                <span>Skriv ut</span>
-            </button>
-
-            @* Rapporter dropdown *@
+            @* Vy dropdown *@
             <div class="relative">
                 <button type="button"
-                        class="inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-                        disabled="@(Folder.State.ProjectSelected is null)"
-                        @onclick="() => _reportsMenuOpen = !_reportsMenuOpen">
+                        class="inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                        @onclick="() => _viewMenuOpen = !_viewMenuOpen">
                     <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
-                    <span>Rapporter</span>
+                    <span>Vy</span>
                     <svg class="h-2.5 w-2.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                         <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                     </svg>
                 </button>
-                @if (_reportsMenuOpen)
+                @if (_viewMenuOpen)
                 {
-                    <div class="fixed inset-0 z-30" @onclick="() => _reportsMenuOpen = false"></div>
-                    <div class="absolute right-0 top-full z-40 mt-1 w-44 rounded-md border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+                    <div class="fixed inset-0 z-30" @onclick="() => _viewMenuOpen = false"></div>
+                    <div class="absolute left-0 top-full z-40 mt-1 w-52 rounded-md border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
                         <button type="button"
-                                class="flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
-                                @onclick="() => { _reportsMenuOpen = false; OpenReports(); }">
-                            @AppLoc["reports"]
+                                class="@(_showAllVersions ? "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-blue-700 dark:text-blue-300" : "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800") + " disabled:cursor-not-allowed disabled:opacity-40"
+                                disabled="@(!HasAnyMultipleVersions)"
+                                @onclick="async () => { _showAllVersions = !_showAllVersions; ResetPage(); }">
+                            <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                            </svg>
+                            <span>@AppLoc["showAllVersions"]</span>
+                            @if (_showAllVersions)
+                            {
+                                <svg class="ml-auto h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
+                            }
                         </button>
+                        <div class="border-t border-slate-100 px-2 py-1 dark:border-slate-800">
+                            <MhdColumnPicker Text="Kolumner"
+                                             Columns="@CalculationColumnOptions"
+                                             ColumnVisibility="_calculationColumns"
+                                             OnChanged="StateHasChanged" />
+                        </div>
+                        <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
+                            @if (!Folder.State.OtherDepartment)
+                            {
+                                <div class="border-t border-slate-100 pt-1 dark:border-slate-800">
+                                    <button type="button"
+                                            class="@(!IaVisible ? "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-amber-700 dark:text-amber-300" : "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800")"
+                                            @onclick="async () => { _viewMenuOpen = false; await RefreshCalculationsAsync(); }">
+                                        <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                                        </svg>
+                                        <span>@(IaVisible ? AppLoc["showArchived"] : AppLoc["hideArchived"])</span>
+                                        @if (!IaVisible)
+                                        {
+                                            <span class="ml-auto inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-amber-500 text-[9px] font-bold text-white">!</span>
+                                        }
+                                    </button>
+                                </div>
+                            }
+                        </AuthorizeView>
                     </div>
                 }
             </div>
 
+            @* Rapporter (direct button) *@
+            <button type="button"
+                    class="inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                    disabled="@(Folder.State.ProjectSelected is null)"
+                    @onclick="OpenReports">
+                <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>Rapporter</span>
+            </button>
+
             <div class="h-4 w-px bg-slate-200 dark:bg-slate-700"></div>
 
             <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
-                @* Toggle: Visa arkiverade *@
-                @if (!Folder.State.OtherDepartment)
-                {
-                    <button type="button"
-                            class="@(!IaVisible ? "inline-flex h-7 items-center gap-1 rounded border border-amber-300 bg-amber-50 px-2 text-[11px] font-medium text-amber-700 transition dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300" : "inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800")"
-                            @onclick="RefreshCalculationsAsync">
-                        <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                        </svg>
-                        <span>@(IaVisible ? AppLoc["showArchived"] : AppLoc["hideArchived"])</span>
-                    </button>
-                }
-
                 @* Ny kalkyl *@
                 <button type="button"
                         class="inline-flex h-7 shrink-0 items-center gap-1 rounded border border-emerald-400 bg-emerald-500 px-2 text-[11px] font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-40 dark:border-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700"
@@ -780,7 +760,7 @@
     private ListCalculationMVVM? _versionDialogCalculation;
     private bool _isCreatingVersion;
     private string _versionDialogMessage = string.Empty;
-    private bool _reportsMenuOpen;
+    private bool _viewMenuOpen;
 
     private string _sortColumn = "";
     private bool _sortAscending = true;

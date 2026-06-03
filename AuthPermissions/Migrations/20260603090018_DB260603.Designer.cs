@@ -11,16 +11,16 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace AuthPermissions.Migrations
 {
-    [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260520121156_DB260520_1")]
-    partial class DB260520_1
+    [DbContext(typeof(AuthPermissionDbContext))]
+    [Migration("20260603090018_DB260603")]
+    partial class DB260603
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.7")
+                .HasAnnotation("ProductVersion", "10.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);

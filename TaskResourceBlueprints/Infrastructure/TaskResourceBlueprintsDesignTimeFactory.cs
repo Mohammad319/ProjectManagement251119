@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.Configuration;
 
 namespace TaskResourceBlueprints.Infrastructure;
 
@@ -7,8 +8,16 @@ public sealed class TaskResourceBlueprintsDesignTimeFactory : IDesignTimeDbConte
 {
     public TaskResourceBlueprintsContext CreateDbContext(string[] args)
     {
-        var conn = Environment.GetEnvironmentVariable("PM_BLUEPRINT_CONN")
-                   ?? @"Data Source=.\SQLEXPRESS;Initial Catalog=TaskResourceBlueprints2;Integrated Security=True;Connect Timeout=30;Encrypt=False;Trust Server Certificate=True;Application Intent=ReadWrite;MultipleActiveResultSets=True";
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: true)
+            .AddJsonFile("appsettings.Development.json", optional: true)
+            .AddEnvironmentVariables()
+            .Build();
+
+        var conn = configuration.GetConnectionString("BlueprintsConnection")
+                   ?? throw new InvalidOperationException(
+                       "BlueprintsConnection not found. Run dotnet ef from the startup project directory.");
 
         var options = new DbContextOptionsBuilder<TaskResourceBlueprintsContext>()
             .UseSqlServer(conn, sql => sql.EnableRetryOnFailure())

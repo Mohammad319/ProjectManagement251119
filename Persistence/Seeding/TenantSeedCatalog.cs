@@ -113,13 +113,18 @@ public static class TenantSeedCatalog
         new("General", "#3b82f6", 10),
     ];
 
-    public static IEnumerable<(ResourceTypesEnum Kind, int SortOrder)> ResourceTypes()
+    public static IEnumerable<(ResourceTypesEnum Kind, string Name, int SortOrder)> ResourceTypes()
     {
-        var order = 10;
-        foreach (var type in Enum.GetValues<ResourceTypesEnum>())
-        {
-            yield return (type, order);
-            order += 10;
-        }
+        yield return (ResourceTypesEnum.Materials,             "Material",                 100);
+        yield return (ResourceTypesEnum.MachinesAndEquipments, "Maskiner och utrustning",  200);
+        yield return (ResourceTypesEnum.Worker,                "Arbetare",                 300);
+        yield return (ResourceTypesEnum.Managers,              "Tjänstemän / ledning",     400);
+        yield return (ResourceTypesEnum.Design,                "Projektering / design",    500);
+        yield return (ResourceTypesEnum.Subcontractors,        "Underleverantörer",        600);
+        yield return (ResourceTypesEnum.ProjectOverheadCosts,  "Projektomkostnader",       700);
+        yield return (ResourceTypesEnum.overheadCosts,         "Allmänna omkostnader",     800);
+        yield return (ResourceTypesEnum.Risk,                  "Risk",                     900);
+        yield return (ResourceTypesEnum.Adjustment,            "Justering",               1000);
+        yield return (ResourceTypesEnum.Information,           "Information",             1100);
     }
 }

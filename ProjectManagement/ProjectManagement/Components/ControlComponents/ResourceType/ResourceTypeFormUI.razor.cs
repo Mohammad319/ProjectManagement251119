@@ -5,11 +5,9 @@ using Microsoft.AspNetCore.Components.Forms;
 using ProjectManagement.Client.Shared.ResourceFiles.Calculation;
 using ProjectManagement.Shared.DTO.Account;
 using ProjectManagement.Shared.DTO.ResourceType;
-using ProjectManagement.Shared.Enums;
-
 namespace ProjectManagement.Components.ControlComponents.ResourceType;
 
-public partial class ResourceTypeFormUI : IDisposable
+public partial class ResourceTypeFormUI
 {
     public const string DialogFormId = "resourceTypeForm";
     [Parameter] public EventCallback<bool> Callback { get; set; }
@@ -20,15 +18,12 @@ public partial class ResourceTypeFormUI : IDisposable
     private List<ListAccountGroupIncludeAccountDTO>? AccountGroups;
     private ListAccountGroupIncludeAccountDTO? AccountGroupSelected;
     private EditContext? editContext;
-    private ValidationMessageStore? messageStore;
     private ResourceTypeModel? loadedResourceType;
     private int loadedResourceTypeId = -1;
 
     protected override void OnInitialized()
     {
         editContext = new EditContext(ResourceTypeUpdate);
-        editContext.OnValidationRequested += HandleValidationRequested;
-        messageStore = new ValidationMessageStore(editContext);
     }
 
     protected override async Task OnParametersSetAsync()
@@ -98,20 +93,4 @@ public partial class ResourceTypeFormUI : IDisposable
         }
     }
 
-    private void HandleValidationRequested(object? sender, ValidationRequestedEventArgs args)
-    {
-        messageStore?.Clear();
-
-        if (ResourceTypeUpdate.Type == ResourceTypesEnum.Materials &&
-            (ResourceTypeUpdate.CapWaste < 0 || ResourceTypeUpdate.CapWaste > 999))
-        {
-            messageStore?.Add(() => ResourceTypeUpdate.CapWaste, AppLoc[LocalizerConst.CapWasteValid, CalcResource.waste]);
-        }
-    }
-
-    public void Dispose()
-    {
-        if (editContext is not null)
-            editContext.OnValidationRequested -= HandleValidationRequested;
-    }
 }

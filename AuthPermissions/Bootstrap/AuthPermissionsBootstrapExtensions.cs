@@ -17,7 +17,7 @@ public static class AuthPermissionsBootstrapExtensions
 
         using var scope = app.Services.CreateScope();
 
-        var authDbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var authDbContext = scope.ServiceProvider.GetRequiredService<AuthPermissionDbContext>();
         var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 

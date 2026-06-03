@@ -9,6 +9,7 @@ namespace ProjectManagement.Client.Pages.Folder
         public const string ModifiedNewest = "modified-newest";
         public const string LastOpenedNewest = "last-opened-newest";
         public const string Status = "status";
+        public const string StatusOrder = "status-order";
         public const string Manual = "manual";
     }
 }

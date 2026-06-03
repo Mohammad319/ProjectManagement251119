@@ -2921,8 +2921,7 @@ namespace Persistence.Migrations
                     b.HasIndex("TenantId", "AccountId");
 
                     b.HasIndex("TenantId", "Kind")
-                        .IsUnique()
-                        .HasDatabaseName("UX_ResourceTypes_Tenant_Kind");
+                        .HasDatabaseName("IX_ResourceTypes_Tenant_Kind");
 
                     b.HasIndex("TenantId", "Name")
                         .IsUnique()

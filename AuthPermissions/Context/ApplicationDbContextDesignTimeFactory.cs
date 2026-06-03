@@ -6,9 +6,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace AuthPermissions.Context;
 
-public sealed class ApplicationDbContextDesignTimeFactory : IDesignTimeDbContextFactory<ApplicationDbContext>
+public sealed class ApplicationDbContextDesignTimeFactory : IDesignTimeDbContextFactory<AuthPermissionDbContext>
 {
-    public ApplicationDbContext CreateDbContext(string[] args)
+    public AuthPermissionDbContext CreateDbContext(string[] args)
     {
         var connectionString = ResolveConnectionString();
         var services = new ServiceCollection();
@@ -19,12 +19,12 @@ public sealed class ApplicationDbContextDesignTimeFactory : IDesignTimeDbContext
 
         var applicationServices = services.BuildServiceProvider();
 
-        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+        var options = new DbContextOptionsBuilder<AuthPermissionDbContext>()
             .UseApplicationServiceProvider(applicationServices)
             .UseSqlServer(connectionString, sql => sql.EnableRetryOnFailure())
             .Options;
 
-        return new ApplicationDbContext(options);
+        return new AuthPermissionDbContext(options);
     }
 
     private static string ResolveConnectionString()

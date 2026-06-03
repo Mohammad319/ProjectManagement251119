@@ -12,15 +12,15 @@ using TaskResourceBlueprints.Infrastructure;
 namespace TaskResourceBlueprints.Migrations
 {
     [DbContext(typeof(TaskResourceBlueprintsContext))]
-    [Migration("20260520115257_DB260520_1")]
-    partial class DB260520_1
+    [Migration("20260603092236_DB260603")]
+    partial class DB260603
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.7")
+                .HasAnnotation("ProductVersion", "10.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -178,6 +178,8 @@ namespace TaskResourceBlueprints.Migrations
                     b.HasIndex("FolderId", "SortOrder", "Name");
 
                     b.HasIndex("IsActive", "IsVisible", "Name");
+
+                    b.HasIndex("IsActive", "IsVisible", "Unit");
 
                     b.ToTable("Resources", t =>
                         {
@@ -427,11 +429,16 @@ namespace TaskResourceBlueprints.Migrations
                     b.HasIndex("HierarchyPath")
                         .HasDatabaseName("IX_Tasks_HierarchyPath");
 
+                    b.HasIndex("Name")
+                        .HasDatabaseName("IX_Tasks_Name");
+
                     b.HasIndex("NormalizedTextSv");
 
                     b.HasIndex("ParentCode");
 
                     b.HasIndex("Status", "SortOrder");
+
+                    b.HasIndex("Status", "UsageCount", "Code");
 
                     b.ToTable("Tasks", t =>
                         {

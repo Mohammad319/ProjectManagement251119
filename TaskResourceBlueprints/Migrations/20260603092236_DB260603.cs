@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace TaskResourceBlueprints.Migrations
 {
     /// <inheritdoc />
-    public partial class DB260520_1 : Migration
+    public partial class DB260603 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -311,6 +311,11 @@ namespace TaskResourceBlueprints.Migrations
                 columns: new[] { "IsActive", "IsVisible", "Name" });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Resources_IsActive_IsVisible_Unit",
+                table: "Resources",
+                columns: new[] { "IsActive", "IsVisible", "Unit" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ResourceTenantLinks_ResourceId",
                 table: "ResourceTenantLinks",
                 column: "ResourceId");
@@ -375,6 +380,11 @@ namespace TaskResourceBlueprints.Migrations
                 column: "HierarchyPath");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Tasks_Name",
+                table: "Tasks",
+                column: "Name");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Tasks_NormalizedTextSv",
                 table: "Tasks",
                 column: "NormalizedTextSv");
@@ -388,6 +398,11 @@ namespace TaskResourceBlueprints.Migrations
                 name: "IX_Tasks_Status_SortOrder",
                 table: "Tasks",
                 columns: new[] { "Status", "SortOrder" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tasks_Status_UsageCount_Code",
+                table: "Tasks",
+                columns: new[] { "Status", "UsageCount", "Code" });
 
             migrationBuilder.CreateIndex(
                 name: "UX_TaskStateGroups_Name",

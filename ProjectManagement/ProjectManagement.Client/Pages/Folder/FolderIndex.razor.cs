@@ -24,7 +24,8 @@ namespace ProjectManagement.Client.Pages.Folder
         int? SelectedDepartmentId { get; set; }
         string TreeGroupingMode { get; set; } = ProjectTreeGroupingMode.FolderStructure;
         string TreeSortMode { get; set; } = ProjectTreeSortMode.CreatedNewest;
-        bool KeepFolderStructure { get; set; } = true;
+        bool ShowFoldersInTree { get; set; } = true;
+        bool ShowProjectsInTree { get; set; } = true;
 
         private GroupSelectionInfo? _selectedGroupInfo;
         private bool _isReorderMode;
@@ -36,13 +37,16 @@ namespace ProjectManagement.Client.Pages.Folder
 
         private const string TreeSortModeStorageKey = "ProjectTreeSortMode";
         private const string SideBarCollapsedKey = "ProjectTreeSideBarCollapsed";
+        private const string ShowFoldersStorageKey = "ProjectTreeShowFolders";
+        private const string ShowProjectsStorageKey = "ProjectTreeShowProjects";
         private bool _sortPreferenceLoaded;
 
         private bool HasDepartmentAccess => Folder.State.Departments?.Any() == true;
 
         private int ActiveTreeFilterCount =>
             (TreeGroupingMode == ProjectTreeGroupingMode.FolderStructure ? 0 : 1) +
-            (TreeGroupingMode != ProjectTreeGroupingMode.FolderStructure && !KeepFolderStructure ? 1 : 0) +
+            (TreeGroupingMode != ProjectTreeGroupingMode.FolderStructure && !ShowFoldersInTree ? 1 : 0) +
+            (TreeGroupingMode != ProjectTreeGroupingMode.FolderStructure && !ShowProjectsInTree ? 1 : 0) +
             (TreeSortMode == ProjectTreeSortMode.CreatedNewest ? 0 : 1) +
             (UoWService.Folder.ShowArchived ? 1 : 0);
 
@@ -127,6 +131,14 @@ namespace ProjectManagement.Client.Pages.Folder
                 var storedCollapsed = await JS.InvokeAsync<string?>("localStorage.getItem", SideBarCollapsedKey);
                 if (storedCollapsed == "true")
                     SideBarVisible = false;
+
+                var storedShowFolders = await JS.InvokeAsync<string?>("localStorage.getItem", ShowFoldersStorageKey);
+                if (storedShowFolders != null)
+                    ShowFoldersInTree = storedShowFolders != "false";
+
+                var storedShowProjects = await JS.InvokeAsync<string?>("localStorage.getItem", ShowProjectsStorageKey);
+                if (storedShowProjects != null)
+                    ShowProjectsInTree = storedShowProjects != "false";
 
                 await InvokeAsync(StateHasChanged);
             }
@@ -247,6 +259,7 @@ namespace ProjectManagement.Client.Pages.Folder
 
         private async Task OnTreeGroupingModeChanged(ChangeEventArgs e)
         {
+            var prevMode = TreeGroupingMode;
             TreeGroupingMode = e.Value?.ToString() switch
             {
                 ProjectTreeGroupingMode.Year => ProjectTreeGroupingMode.Year,
@@ -262,12 +275,26 @@ namespace ProjectManagement.Client.Pages.Folder
                 await SaveTreeSortModeAsync();
             }
 
+            if (TreeGroupingMode == ProjectTreeGroupingMode.Status &&
+                prevMode != ProjectTreeGroupingMode.Status)
+            {
+                TreeSortMode = ProjectTreeSortMode.StatusOrder;
+                await SaveTreeSortModeAsync();
+            }
+
             await EnsureProjectsLoadedForGroupingAsync();
         }
 
-        private void OnKeepFolderStructureChanged(ChangeEventArgs e)
+        private void OnShowFoldersChanged(ChangeEventArgs e)
         {
-            KeepFolderStructure = e.Value is bool value && value;
+            ShowFoldersInTree = e.Value is bool v && v;
+            _ = SaveTreeStructurePrefsAsync();
+        }
+
+        private void OnShowProjectsChanged(ChangeEventArgs e)
+        {
+            ShowProjectsInTree = e.Value is bool v && v;
+            _ = SaveTreeStructurePrefsAsync();
         }
 
         private async Task OnTreeSortModeChanged(ChangeEventArgs e)
@@ -284,8 +311,10 @@ namespace ProjectManagement.Client.Pages.Folder
             _isReorderMode = false;
             TreeGroupingMode = ProjectTreeGroupingMode.FolderStructure;
             TreeSortMode = ProjectTreeSortMode.CreatedNewest;
-            KeepFolderStructure = true;
+            ShowFoldersInTree = true;
+            ShowProjectsInTree = true;
             await SaveTreeSortModeAsync();
+            await SaveTreeStructurePrefsAsync();
 
             if (reloadNeeded)
             {
@@ -342,6 +371,19 @@ namespace ProjectManagement.Client.Pages.Folder
             catch (Exception ex)
             {
                 await ClientLog.ErrorAsync("Saving project tree sort mode failed", ex: ex);
+            }
+        }
+
+        private async Task SaveTreeStructurePrefsAsync()
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("localStorage.setItem", ShowFoldersStorageKey, ShowFoldersInTree.ToString().ToLower());
+                await JS.InvokeVoidAsync("localStorage.setItem", ShowProjectsStorageKey, ShowProjectsInTree.ToString().ToLower());
+            }
+            catch (Exception ex)
+            {
+                await ClientLog.ErrorAsync("Saving tree structure preferences failed", ex: ex);
             }
         }
 
@@ -421,6 +463,7 @@ namespace ProjectManagement.Client.Pages.Folder
                 ProjectTreeSortMode.ModifiedNewest => ProjectTreeSortMode.ModifiedNewest,
                 ProjectTreeSortMode.LastOpenedNewest => ProjectTreeSortMode.LastOpenedNewest,
                 ProjectTreeSortMode.Status => ProjectTreeSortMode.Status,
+                ProjectTreeSortMode.StatusOrder => ProjectTreeSortMode.StatusOrder,
                 ProjectTreeSortMode.Manual => ProjectTreeSortMode.Manual,
                 _ => ProjectTreeSortMode.CreatedNewest
             };

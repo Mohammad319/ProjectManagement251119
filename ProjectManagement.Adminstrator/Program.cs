@@ -11,6 +11,8 @@ using ProjectManagement.Adminstrator.Factory;
 using ProjectManagement.Adminstrator.Middleware;
 using ProjectManagement.Adminstrator.DependencyInjection;
 using Serilog;
+using Serilog.Events;
+using Serilog.Sinks.MSSqlServer;
 using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -42,7 +44,7 @@ var connectionString =
     ?? throw new InvalidOperationException("Connection string 'AuthPermissionsConnection' (or fallback 'AuthPermissionsConnection') not found.");
 
 builder.Services.AddCustomAuthentication(connectionString);
-builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
+builder.Services.AddDbContextFactory<AuthPermissionDbContext>(options =>
     options.UseSqlServer(connectionString, sqlOptions =>
     {
         sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
@@ -62,22 +64,26 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
     options.ApplyCurrentCultureToResponseHeaders = true;
 });
 
-try
-{
-    Log.Logger = new LoggerConfiguration()
-        .ReadFrom.Configuration(builder.Configuration)
-        .CreateLogger();
-}
-catch (Exception ex)
-{
-    Log.Logger = new LoggerConfiguration()
-        .MinimumLevel.Information()
-        .WriteTo.Console()
-        .CreateLogger();
+var adminLogConfig = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration);
 
-    Log.Warning(ex, "Failed to initialize configured Serilog sinks. Falling back to console logging only.");
+var adminDbConnStr = builder.Configuration.GetConnectionString("AuthPermissionsConnection");
+if (!string.IsNullOrEmpty(adminDbConnStr))
+{
+    var colOpts = new ColumnOptions();
+    colOpts.AdditionalColumns =
+    [
+        new SqlColumn { ColumnName = "TenantID", PropertyName = "TenantID", DataType = System.Data.SqlDbType.Int, AllowNull = true },
+        new SqlColumn { ColumnName = "UserId",   PropertyName = "UserId",   DataType = System.Data.SqlDbType.NVarChar, DataLength = 450 }
+    ];
+    adminLogConfig = adminLogConfig.WriteTo.MSSqlServer(
+        connectionString: adminDbConnStr,
+        sinkOptions: new MSSqlServerSinkOptions { TableName = "Logs", SchemaName = "dbo", AutoCreateSqlTable = true },
+        restrictedToMinimumLevel: LogEventLevel.Error,
+        columnOptions: colOpts);
 }
 
+Log.Logger = adminLogConfig.CreateLogger();
 builder.Host.UseSerilog();
 
 var app = builder.Build();

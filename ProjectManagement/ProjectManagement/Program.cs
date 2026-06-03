@@ -5,15 +5,34 @@ using ProjectManagement.Configuration;
 using ProjectManagement.Extensions;
 using ProjectManagement.SignalR;
 using Serilog;
+using Serilog.Events;
+using Serilog.Sinks.MSSqlServer;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
 // Logging
-Log.Logger = new LoggerConfiguration()
-    .ReadFrom.Configuration(builder.Configuration)
-    .CreateLogger();
+var logConfig = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration);
+
+var dbConnStr = builder.Configuration.GetConnectionString("AuthPermissionsConnection");
+if (!string.IsNullOrEmpty(dbConnStr))
+{
+    var colOpts = new ColumnOptions();
+    colOpts.AdditionalColumns =
+    [
+        new SqlColumn { ColumnName = "TenantID", PropertyName = "TenantID", DataType = System.Data.SqlDbType.Int, AllowNull = true },
+        new SqlColumn { ColumnName = "UserId",   PropertyName = "UserId",   DataType = System.Data.SqlDbType.NVarChar, DataLength = 450 }
+    ];
+    logConfig = logConfig.WriteTo.MSSqlServer(
+        connectionString: dbConnStr,
+        sinkOptions: new MSSqlServerSinkOptions { TableName = "Logs", SchemaName = "dbo", AutoCreateSqlTable = true },
+        restrictedToMinimumLevel: LogEventLevel.Error,
+        columnOptions: colOpts);
+}
+
+Log.Logger = logConfig.CreateLogger();
 builder.Host.UseSerilog();
 
 // Read connection strings
@@ -64,7 +83,7 @@ app.MapGet("/health/ready", async (IServiceProvider services, CancellationToken 
         try
         {
             using var scope = services.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var db = scope.ServiceProvider.GetRequiredService<AuthPermissionDbContext>();
             var canConnect = await db.Database.CanConnectAsync(ct);
 
             if (!canConnect)

@@ -7,7 +7,7 @@ using ProjectManagement.Shared.Models.Account;
 namespace AuthPermissions.Services.Implement;
 
 public class AuthRepository(
-    ApplicationDbContext appContext,
+    AuthPermissionDbContext appContext,
     UserManager<ApplicationUser> userManager,
     RoleManager<IdentityRole> roleManager) : IAuthRepository
 {

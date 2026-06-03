@@ -85,8 +85,8 @@ public sealed class EfModelConfigurationTests
     [Fact]
     public void Auth_model_guards_catalog_tables()
     {
-        using var db = new ApplicationDbContext(
-            new DbContextOptionsBuilder<ApplicationDbContext>()
+        using var db = new AuthPermissionDbContext(
+            new DbContextOptionsBuilder<AuthPermissionDbContext>()
                 .UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=AuthModelOnly;Trusted_Connection=True;TrustServerCertificate=True")
                 .Options);
 

@@ -44,8 +44,7 @@ internal sealed class ResourceTypeConfiguration : IEntityTypeConfiguration<Resou
             .HasDatabaseName("IX_ResourceTypes_Tenant_Name");
 
         builder.HasIndex(x => new { x.TenantId, x.Kind })
-            .IsUnique()
-            .HasDatabaseName("UX_ResourceTypes_Tenant_Kind");
+            .HasDatabaseName("IX_ResourceTypes_Tenant_Kind");
 
         builder.ToTable(t =>
         {

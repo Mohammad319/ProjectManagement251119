@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AuthPermissions.Context
 {
-    public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+    public class AuthPermissionDbContext(DbContextOptions<AuthPermissionDbContext> options)
         : IdentityDbContext<ApplicationUser>(options)
     {
         protected override Version SchemaVersion => IdentitySchemaVersions.Version3;

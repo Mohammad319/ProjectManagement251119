@@ -264,7 +264,7 @@
 else
 {
     RenderFragment<CalculationGroupNode> groupContent = group => @<div class="ml-3 space-y-1 pl-2">
-            @if (KeepFolderStructure)
+            @if (ShowFoldersInTree && ShowProjectsInTree)
             {
                 @foreach (var folderGroup in GetFolderCalculationGroups(group.Calculations))
                 {
@@ -407,6 +407,87 @@ else
                                         }
                                     </div>
                                 }
+                            }
+                        </div>
+                    }
+                }
+            }
+            else if (ShowFoldersInTree)
+            {
+                @* Case 2: Folder > Calcs (no project level) *@
+                @foreach (var folderGroup2 in GetFolderCalculationGroups(group.Calculations))
+                {
+                    var f2 = folderGroup2.Folder;
+                    var f2Key = GetGroupedFolderKey(f2);
+                    var f2Selected = Folder.State.FolderSelected?.Id == f2.Id;
+                    var f2Archived = !f2.IsVisible;
+                    var f2Classes = new List<string> { "group grid grid-cols-[1rem_1.5rem_1fr] items-center gap-1.5 px-1.5 py-1 rounded-md cursor-pointer transition-all duration-150", "bg-white dark:bg-slate-900/70", "hover:bg-slate-100/80 dark:hover:bg-slate-800/70", "active:scale-95" };
+                    if (f2Archived) f2Classes.Add("border border-slate-200 bg-slate-100/80 text-slate-500 grayscale dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-400");
+                    if (f2Selected) f2Classes.Add("border-l-2 border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 shadow-sm ring-1 ring-emerald-200 dark:ring-emerald-800/60");
+
+                    <div @key="@($"{group.Key}-f2-{f2.Id}")" @oncontextmenu:preventDefault @oncontextmenu="() => Context(f2)" @onclick="async () => await SeFolder(f2)" role="button" tabindex="0" class="@string.Join(" ", f2Classes)">
+                        <button @onclick:stopPropagation="true" @onclick="() => ToggleGroup(f2Key)" class="flex h-4 w-4 shrink-0 items-center justify-center rounded text-slate-400 transition-colors duration-150 group-hover:bg-slate-100 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:bg-slate-800/60 dark:group-hover:text-slate-300" title="@ResourceLoc.folder">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="@GetGroupToggleClass(f2Key)" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                        </button>
+                        <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md @(f2Archived ? "bg-slate-200 text-slate-500 ring-1 ring-slate-300 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-700" : f2Selected ? "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:ring-emerald-800" : "bg-slate-100 text-slate-500 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-700")" title="@ResourceLoc.folder">
+                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z"/></svg>
+                        </span>
+                        <span title="@GetFolderTitle(f2)" class="truncate text-[13px] font-semibold leading-5 @(f2Archived ? "text-slate-500 dark:text-slate-400" : "text-slate-800 group-hover:text-slate-900 dark:text-slate-100 dark:group-hover:text-slate-100") @(f2Selected ? "text-emerald-800 dark:text-emerald-100" : "")">@f2.Name</span>
+                    </div>
+
+                    @if (IsGroupExpanded(f2Key))
+                    {
+                        <div class="ml-4 space-y-1 pl-2">
+                            @foreach (var entry in GetSortedGroupedCalculations(group.Calculations.Where(e => e.Folder.Id == f2.Id)))
+                            {
+                                var cal = entry.Calculation;
+                                var calcSelected = Calc?.Id == cal.Id;
+                                var calcClasses = new List<string> { "group grid grid-cols-[1.5rem_minmax(0,1fr)] items-center gap-1.5 px-1.5 py-1 rounded-md cursor-pointer transition-all duration-150", "bg-slate-50/80 dark:bg-slate-900/60", "hover:bg-slate-100/80 dark:hover:bg-slate-800/70", "active:scale-95" };
+                                if (calcSelected) calcClasses.Add(GetCalculationSelectedClass(cal));
+                                <div @key="@($"{group.Key}-f2-{f2.Id}-{cal.Id}")" @onclick="async () => await NewCalculations(entry.Folder, entry.Project, cal)" class="@string.Join(" ", calcClasses)">
+                                    <span class="flex h-5 w-5 shrink-0 items-center justify-center" title="@($"{CalcResource.calculation}{(string.IsNullOrWhiteSpace(cal.Status) ? string.Empty : $": {cal.Status}")}")"><span class="@GetCalculationIndicatorClass(cal)" aria-hidden="true"></span></span>
+                                    <span title="@cal.Name" class="truncate text-[12px] font-medium leading-5 @GetCalculationTextClass(cal, calcSelected)">@cal.Name</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                }
+            }
+            else if (ShowProjectsInTree)
+            {
+                @* Case 3: Project > Calcs (no folder level) *@
+                @foreach (var pg3 in GetProjectCalculationGroupsFlat(group.Calculations))
+                {
+                    var p3 = pg3.Project;
+                    var p3Key = GetGroupedProjectKey(p3);
+                    var p3Selected = Folder.State.ProjectSelected?.Id == p3.Id;
+                    var p3Archived = !p3.IsVisible;
+                    var p3Classes = new List<string> { "group grid grid-cols-[1rem_1.5rem_1fr] items-center gap-1.5 px-1.5 py-1 rounded-md cursor-pointer transition-all duration-150", "bg-slate-50 dark:bg-slate-900/70", "hover:bg-slate-100/80 dark:hover:bg-slate-800/70", "active:scale-95" };
+                    if (p3Archived) p3Classes.Add("border border-slate-200 bg-slate-100/80 text-slate-500 grayscale dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-400");
+                    if (p3Selected) p3Classes.Add("border-l-2 border-sky-500 bg-sky-50/80 shadow-sm ring-1 ring-sky-200/70 dark:bg-sky-950/25 dark:ring-sky-900/60");
+
+                    <div @key="@($"{group.Key}-p3-{p3.Id}")" @onclick="async () => await SetProject(pg3.Folder, p3)" role="button" tabindex="0" class="@string.Join(" ", p3Classes)">
+                        <button @onclick:stopPropagation="true" @onclick="() => ToggleGroup(p3Key)" class="flex h-4 w-4 shrink-0 items-center justify-center rounded text-slate-400 transition-colors duration-150 group-hover:bg-sky-100 group-hover:text-sky-700 dark:text-slate-500 dark:group-hover:bg-sky-950/60 dark:group-hover:text-sky-300" title="@CalcResource.project">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="@GetGroupToggleClass(p3Key)" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                        </button>
+                        <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md @(p3Archived ? "bg-slate-200 text-slate-500 ring-1 ring-slate-300 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-700" : "bg-sky-100 text-sky-700 ring-1 ring-sky-200 dark:bg-sky-950/50 dark:text-sky-300 dark:ring-sky-800")" title="@CalcResource.project">
+                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4.5 5.5h15v13h-15z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 9h8M8 13h3M14 13h2M8 16h8" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6.5 3.5v4M17.5 16.5v4" /></svg>
+                        </span>
+                        <span title="@GetProjectTitle(p3)" class="truncate text-[13px] font-medium leading-5 @(p3Archived ? "text-slate-500 dark:text-slate-400" : "text-slate-700 group-hover:text-sky-800 dark:text-slate-200 dark:group-hover:text-sky-200") @(p3Selected ? "text-sky-900 dark:text-sky-100 font-semibold" : "")">@p3.Name</span>
+                    </div>
+
+                    @if (IsGroupExpanded(p3Key))
+                    {
+                        <div class="ml-4 space-y-1 pl-2">
+                            @foreach (var cal in pg3.Calculations)
+                            {
+                                var calcSelected = Calc?.Id == cal.Id;
+                                var calcClasses = new List<string> { "group grid grid-cols-[1.5rem_minmax(0,1fr)] items-center gap-1.5 px-1.5 py-1 rounded-md cursor-pointer transition-all duration-150", "bg-slate-50/80 dark:bg-slate-900/60", "hover:bg-slate-100/80 dark:hover:bg-slate-800/70", "active:scale-95" };
+                                if (calcSelected) calcClasses.Add(GetCalculationSelectedClass(cal));
+                                <div @key="@($"{group.Key}-p3-{p3.Id}-{cal.Id}")" @onclick="async () => await NewCalculations(pg3.Folder, p3, cal)" class="@string.Join(" ", calcClasses)">
+                                    <span class="flex h-5 w-5 shrink-0 items-center justify-center" title="@($"{CalcResource.calculation}{(string.IsNullOrWhiteSpace(cal.Status) ? string.Empty : $": {cal.Status}")}")"><span class="@GetCalculationIndicatorClass(cal)" aria-hidden="true"></span></span>
+                                    <span title="@cal.Name" class="truncate text-[12px] font-medium leading-5 @GetCalculationTextClass(cal, calcSelected)">@cal.Name</span>
+                                </div>
                             }
                         </div>
                     }

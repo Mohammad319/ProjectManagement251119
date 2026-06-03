@@ -28,7 +28,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
     public class UsersService(
         UserManager<ApplicationUser> _userManager,
         IServiceScopeFactory _scopeFactory,
-        IDbContextFactory<ApplicationDbContext> ContextFactory,
+        IDbContextFactory<AuthPermissionDbContext> ContextFactory,
         AuthenticationStateProvider _authStateProvider,
         IAccountNotificationEmailSender _accountNotificationEmailSender,
         ILogger<UsersService> _logger) : IUsersService
@@ -257,13 +257,14 @@ namespace ProjectManagement.Adminstrator.Services.Users
             }
 
             var existingResourceTypes = await dataAccess.ResourceTypes.ToListAsync();
-            foreach (var (type, order) in TenantSeedCatalog.ResourceTypes())
+            foreach (var (type, name, order) in TenantSeedCatalog.ResourceTypes())
             {
                 var resourceTypeDto = new PostResourceTypeDTO
                 {
-                    Name = type.ToString(),
+                    Name = name,
                     IsVisible = true,
                     Type = type,
+                    Order = order,
                 };
 
                 var resourceType = existingResourceTypes.FirstOrDefault(x => x.Kind == type);

@@ -7,7 +7,7 @@ namespace ProjectManagement.Adminstrator.Factory
         public static IServiceCollection AddCustomAuthentication(this IServiceCollection services, string connectionString)
         {
             services.AddIdentity<ApplicationUser, IdentityRole>()
-                .AddEntityFrameworkStores<ApplicationDbContext>()
+                .AddEntityFrameworkStores<AuthPermissionDbContext>()
                 .AddDefaultTokenProviders();
 
             services.Configure<IdentityOptions>(options =>

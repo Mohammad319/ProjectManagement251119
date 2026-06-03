@@ -25,7 +25,7 @@ internal static class AuthPermissionsMigrationBootstrapper
     ];
 
     public static async Task BaselineExistingSchemaAsync(
-        ApplicationDbContext dbContext,
+        AuthPermissionDbContext dbContext,
         ILogger logger,
         CancellationToken cancellationToken = default)
     {
@@ -77,7 +77,7 @@ internal static class AuthPermissionsMigrationBootstrapper
     }
 
     private static async Task<AuthSchemaState> InspectInitialSchemaAsync(
-        ApplicationDbContext dbContext,
+        AuthPermissionDbContext dbContext,
         CancellationToken cancellationToken)
     {
         var connection = dbContext.Database.GetDbConnection();
@@ -134,7 +134,7 @@ internal static class AuthPermissionsMigrationBootstrapper
     }
 
     private static async Task EnsureMigrationHistoryBaselineAsync(
-        ApplicationDbContext dbContext,
+        AuthPermissionDbContext dbContext,
         string migrationId,
         CancellationToken cancellationToken)
     {

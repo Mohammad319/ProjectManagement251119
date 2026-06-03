@@ -210,7 +210,7 @@ public sealed class TenantMlEvaluationExample
 }
 
 public sealed class TenantMlTrainingService(
-    IDbContextFactory<ApplicationDbContext> authDbFactory,
+    IDbContextFactory<AuthPermissionDbContext> authDbFactory,
     IDbContextFactory<TaskResourceBlueprintsContext> blueprintDbFactory)
     : ITenantMlTrainingService
 {
@@ -1518,7 +1518,7 @@ public sealed class TenantMlTrainingService(
     }
 
     private static async Task SaveRunAsync(
-        IDbContextFactory<ApplicationDbContext> authDbFactory,
+        IDbContextFactory<AuthPermissionDbContext> authDbFactory,
         int tenantId,
         DateTime startedAtUtc,
         TenantMlTrainingResult result,

@@ -1,6 +1,6 @@
 @using AuthPermissions.Entity
 @using Microsoft.EntityFrameworkCore
-@inject IDbContextFactory<ApplicationDbContext> ContextFactory
+@inject IDbContextFactory<AuthPermissionDbContext> ContextFactory
 
 <div class="space-y-3">
     <EditForm Model="@Put" OnValidSubmit="HandleSubmitAsync" id="tenantForm" class="space-y-3">

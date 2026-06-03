@@ -32,8 +32,7 @@
                     <HeaderTemplate>
                         <th class="w-36 p-1 text-left text-sm font-semibold text-slate-700 dark:text-slate-200"></th>
                         <th class="p-1 text-left text-sm font-semibold text-slate-700 dark:text-slate-200">@CalcLoc[nameof(CalcResource.name)]</th>
-                        <th class="p-1 text-left text-sm font-semibold text-slate-700 dark:text-slate-200">@CalcLoc[nameof(CalcResource.cost)]</th>
-                        <th class="p-1 text-left text-sm font-semibold text-slate-700 dark:text-slate-200">@CalcLoc[nameof(CalcResource.baseCost)]</th>
+                        <th class="p-1 text-left text-sm font-semibold text-slate-700 dark:text-slate-200">@CalcLoc[nameof(CalcResource.sort)]</th>
                     </HeaderTemplate>
                     <ChildContent>
                         <MhdTableColumn>
@@ -47,8 +46,7 @@
                             </Template>
                         </MhdTableColumn>
                         <MhdTableColumn Title="@CalcLoc[nameof(CalcResource.name)]" ValueSelector="u => u.Name" Sortable="true" />
-                        <MhdTableColumn Title="@CalcLoc[nameof(CalcResource.cost)]" ValueSelector="u => u.Cost" />
-                        <MhdTableColumn Title="@CalcLoc[nameof(CalcResource.baseCost)]" ValueSelector="u => u.BaseCost" />
+                        <MhdTableColumn Title="@CalcLoc[nameof(CalcResource.sort)]" ValueSelector="u => u.Order" Sortable="true" />
                     </ChildContent>
                 </MhdTable>
             </div>

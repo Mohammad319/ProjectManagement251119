@@ -7,7 +7,7 @@
 @using ProjectManagement.Shared.DTO.Tenant.Logs
 @attribute [Authorize(Roles = PMRolesConst.APP.AdminManger)]
 @inherits AppComponentBase
-@inject ApplicationDbContext context
+@inject AuthPermissionDbContext context
 @inject IUsersService TenantRepo
 
 <div class="space-y-3 text-slate-900 dark:text-slate-100">

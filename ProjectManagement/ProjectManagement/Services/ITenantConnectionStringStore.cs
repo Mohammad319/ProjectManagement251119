@@ -24,7 +24,7 @@ namespace ProjectManagement.Services
         public async Task ReloadAsync(CancellationToken ct = default)
         {
             using var scope = scopeFactory.CreateScope();
-            var catalogDb = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var catalogDb = scope.ServiceProvider.GetRequiredService<AuthPermissionDbContext>();
 
             var rows = await catalogDb.Tenants
                 .AsNoTracking()
@@ -46,7 +46,7 @@ namespace ProjectManagement.Services
         public async Task ReloadTenantAsync(int tenantId, CancellationToken ct = default)
         {
             using var scope = scopeFactory.CreateScope();
-            var catalogDb = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var catalogDb = scope.ServiceProvider.GetRequiredService<AuthPermissionDbContext>();
 
             var row = await catalogDb.Tenants
                 .AsNoTracking()
