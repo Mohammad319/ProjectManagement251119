@@ -254,6 +254,7 @@ namespace ProjectManagement.Shared.DTO.Project
 
         public int? OrganisationId { get; set; }
         public int? ProcurementMethodsId { get; set; }
+        public int? ProcurementProcedureId { get; set; }
         public int? CompensationId { get; set; }
         public int? ContractId { get; set; }
         public int? TypeId { get; set; }

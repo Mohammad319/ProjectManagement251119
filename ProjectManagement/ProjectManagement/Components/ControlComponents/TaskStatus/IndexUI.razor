@@ -8,21 +8,21 @@
 else
 {
     <div class="space-y-2">
-        <div class="pm-toolbar">
+        <div class="pm-toolbar sticky top-0 z-10 -mx-2 bg-white px-2 pb-2 pt-1 dark:bg-gray-950">
             <div class="flex items-center gap-2">
                 <button @onclick="CreateNewAsync"
                         class="pm-btn pm-btn-success"
-                        title="@AppLoc[LocalizerConst.New, CalcResource.procurementMethods]"
-                        aria-label="@AppLoc[LocalizerConst.New, CalcResource.procurementMethods]">
+                        title="+ Lägg till kalkylpoststatus"
+                        aria-label="+ Lägg till kalkylpoststatus">
                     <span class="flex items-center gap-1.5">
                         @Icons.Plus2
-                        <span>@AppLoc[LocalizerConst.New, CalcResource.procurementMethods]</span>
+                        <span>+ Lägg till kalkylpoststatus</span>
                     </span>
                 </button>
                 <button @onclick="ToggleVisibleAsync"
                         class="pm-icon-btn"
-                        title="@AppLoc[nameof(ResourceApp.isVisible)]"
-                        aria-label="@AppLoc[nameof(ResourceApp.isVisible)]">
+                        title="@(IsVisible ? CalcLoc[nameof(CalcResource.showHiddenStatuses)] : CalcLoc[nameof(CalcResource.hideHiddenStatuses)])"
+                        aria-label="@(IsVisible ? CalcLoc[nameof(CalcResource.showHiddenStatuses)] : CalcLoc[nameof(CalcResource.hideHiddenStatuses)])">
                     @((MarkupString)Icons.GetVisibleIcon(IsVisible))
                 </button>
             </div>

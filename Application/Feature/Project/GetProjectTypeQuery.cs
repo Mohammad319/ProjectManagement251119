@@ -15,7 +15,7 @@ namespace Application.Feature.Project.Type.Queries
         public int Statuses;
         public int ProjectStatuses;
         public int OrgId;
-
+        public int Procedures;
     }
     public sealed class GetProjectCalcConfigQueryHandler(IProjectService service)
        : IRequestHandler<GetProjectCalcConfigQuery, GetProjectCalcConfigDTO>
@@ -30,6 +30,7 @@ namespace Application.Feature.Project.Type.Queries
                 request.Statuses,
                 request.ProjectStatuses,
                 request.OrgId,
+                request.Procedures,
                 ct);
     }
 

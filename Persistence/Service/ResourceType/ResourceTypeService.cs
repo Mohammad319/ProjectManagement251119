@@ -41,8 +41,15 @@ namespace Persistence.Service.ResourceType
             if (entity == null) return false;
 
             entity.Update(dto);
-            if (dto.Order >= 0)
-                entity.UpdateOrder(dto.Order);
+            entity.SetIsDefault(dto.IsDefault);
+
+            if (dto.IsDefault)
+            {
+                var others = await context.ResourceTypes.Where(x => x.Id != id).ToListAsync(ct);
+                foreach (var other in others)
+                    other.SetIsDefault(false);
+            }
+
             await context.SaveChangesAsync(ct);
             await lookupCache.InvalidateAsync<ResourceTypeEntity>(ct);
             return true;
@@ -107,8 +114,17 @@ namespace Persistence.Service.ResourceType
             if (entity == null) return false;
 
             entity.Update(dto);
-            if (dto.Order >= 0)
-                entity.UpdateOrder(dto.Order);
+            entity.SetIsDefault(dto.IsDefault);
+
+            if (dto.IsDefault)
+            {
+                var others = await context.ResourceSorts
+                    .Where(x => x.Id != id && x.ResourceTypeId == entity.ResourceTypeId)
+                    .ToListAsync(ct);
+                foreach (var other in others)
+                    other.SetIsDefault(false);
+            }
+
             await context.SaveChangesAsync(ct);
             return true;
         }
@@ -205,6 +221,52 @@ namespace Persistence.Service.ResourceType
                 .ToListAsync(ct);
 
             return result;
+        }
+
+        public async Task<bool> MoveTypeAsync(int id, bool moveUp, CancellationToken ct = default)
+        {
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+            var all = await context.ResourceTypes.OrderBy(x => x.SortOrder).ThenBy(x => x.Id).ToListAsync(ct);
+            var item = all.FirstOrDefault(x => x.Id == id);
+            if (item is null) return false;
+
+            var sameGroup = all.Where(x => x.IsVisible == item.IsVisible).ToList();
+            var idx = sameGroup.FindIndex(x => x.Id == id);
+            var swapIdx = moveUp ? idx - 1 : idx + 1;
+            if (swapIdx < 0 || swapIdx >= sameGroup.Count) return false;
+
+            (sameGroup[idx], sameGroup[swapIdx]) = (sameGroup[swapIdx], sameGroup[idx]);
+
+            for (var i = 0; i < sameGroup.Count; i++)
+                sameGroup[i].UpdateOrder(i * 100);
+
+            await context.SaveChangesAsync(ct);
+            await lookupCache.InvalidateAsync<ResourceTypeEntity>(ct);
+            return true;
+        }
+
+        public async Task<bool> MoveSortAsync(int id, bool moveUp, CancellationToken ct = default)
+        {
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+            var item = await context.ResourceSorts.FirstOrDefaultAsync(x => x.Id == id, ct);
+            if (item is null) return false;
+
+            var all = await context.ResourceSorts
+                .Where(x => x.ResourceTypeId == item.ResourceTypeId)
+                .OrderBy(x => x.SortOrder).ThenBy(x => x.Id)
+                .ToListAsync(ct);
+
+            var idx = all.FindIndex(x => x.Id == id);
+            var swapIdx = moveUp ? idx - 1 : idx + 1;
+            if (swapIdx < 0 || swapIdx >= all.Count) return false;
+
+            (all[idx], all[swapIdx]) = (all[swapIdx], all[idx]);
+
+            for (var i = 0; i < all.Count; i++)
+                all[i].UpdateOrder(i * 100);
+
+            await context.SaveChangesAsync(ct);
+            return true;
         }
 
         private static async Task<bool> ValidateAccountReferenceAsync(Persistence.Context.ShardingSingleDbContext context, int? accountId, CancellationToken ct)

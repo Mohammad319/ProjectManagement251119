@@ -245,6 +245,7 @@ namespace Persistence.Service.Project
             int statuses,
             int projectStatuses,
             int orgId,
+            int procedures = 0,
             CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
@@ -258,10 +259,41 @@ namespace Persistence.Service.Project
 
             var result = new GetProjectCalcConfigDTO
             {
-                Methods = await OrderAndSelect(context.ProcurementMethod).ToListAsync(ct),
-                Contracts = await OrderAndSelect(context.Contracts).ToListAsync(ct),
-                Compensations = await OrderAndSelect(context.Compensations).ToListAsync(ct),
-                Types = await OrderAndSelect(context.CalcProjectType).ToListAsync(ct),
+                Methods = await context.ProcurementMethod
+                    .AsNoTracking()
+                    .Where(x => x.IsVisible || x.Id == methods)
+                    .OrderBy(x => x.SortOrder)
+                    .ThenBy(x => x.Name)
+                    .Select(x => new ListOrderDTO { Id = x.Id, Name = x.Name, IsDefault = x.IsDefault })
+                    .ToListAsync(ct),
+                Contracts = await context.Contracts
+                    .AsNoTracking()
+                    .Where(x => x.IsVisible || x.Id == contracts)
+                    .OrderBy(x => x.SortOrder)
+                    .ThenBy(x => x.Name)
+                    .Select(x => new ListOrderDTO { Id = x.Id, Name = x.Name, IsDefault = x.IsDefault })
+                    .ToListAsync(ct),
+                Compensations = await context.Compensations
+                    .AsNoTracking()
+                    .Where(x => x.IsVisible || x.Id == compensations)
+                    .OrderBy(x => x.SortOrder)
+                    .ThenBy(x => x.Name)
+                    .Select(x => new ListOrderDTO { Id = x.Id, Name = x.Name, IsDefault = x.IsDefault })
+                    .ToListAsync(ct),
+                Types = await context.CalcProjectType
+                    .AsNoTracking()
+                    .Where(x => x.IsVisible || x.Id == types)
+                    .OrderBy(x => x.SortOrder)
+                    .ThenBy(x => x.Name)
+                    .Select(x => new ListOrderDTO { Id = x.Id, Name = x.Name, IsDefault = x.IsDefault })
+                    .ToListAsync(ct),
+                Procedures = await context.ProcurementProcedure
+                    .AsNoTracking()
+                    .Where(x => x.IsVisible || x.Id == procedures)
+                    .OrderBy(x => x.SortOrder)
+                    .ThenBy(x => x.Name)
+                    .Select(x => new ListOrderDTO { Id = x.Id, Name = x.Name, IsDefault = x.IsDefault })
+                    .ToListAsync(ct),
                 ProjectStatuses = await context.ProjectStatus
                     .AsNoTracking()
                     .Where(x => x.IsVisible || x.Id == projectStatuses)
@@ -273,7 +305,8 @@ namespace Persistence.Service.Project
                         Name = x.Name,
                         CountsAsSubmittedBid = x.CountsAsSubmittedBid,
                         CountsAsWonBid = x.CountsAsWonBid,
-                        CountsAsLostBid = x.CountsAsLostBid
+                        CountsAsLostBid = x.CountsAsLostBid,
+                        IsDefault = x.IsDefault
                     })
                     .ToListAsync(ct),
                 Statuses = await context.CalculationStatus
@@ -290,7 +323,8 @@ namespace Persistence.Service.Project
                         AllowsProductionCalculation = x.AllowsProductionCalculation,
                         CountsAsSubmittedBid = x.CountsAsSubmittedBid,
                         CountsAsWonBid = x.CountsAsWonBid,
-                        CountsAsLostBid = x.CountsAsLostBid
+                        CountsAsLostBid = x.CountsAsLostBid,
+                        IsDefault = x.IsDefault
                     })
                     .ToListAsync(ct),
                 Organisation = await context.Organisation

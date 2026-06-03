@@ -1058,7 +1058,7 @@
             );
 
         if (Calculation.Id == 0 && !CalculationUpdate.StatusId.HasValue)
-            CalculationUpdate.StatusId = Config.Statuses.FirstOrDefault(status => status.Name == "Utkast")?.Id;
+            CalculationUpdate.StatusId = Config.Statuses.FirstOrDefault(status => status.IsDefault)?.Id;
 
         ResetEditContext();
     }

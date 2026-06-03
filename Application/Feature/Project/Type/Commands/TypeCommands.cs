@@ -37,4 +37,15 @@ namespace Application.Feature.Project.Type.Commands
         public Task<bool> Handle(DeleteTypeCommand request, CancellationToken ct)
             => service.DeleteAsync(request.Id, ct);
     }
+
+    // MOVE
+    public sealed record MoveTypeCommand(int Id, bool MoveUp) : IRequest<bool>;
+
+    public sealed class MoveTypeCommandHandler(
+        ILookupStatusCommandService<TypeEntity> service)
+        : IRequestHandler<MoveTypeCommand, bool>
+    {
+        public Task<bool> Handle(MoveTypeCommand request, CancellationToken ct)
+            => service.MoveAsync(request.Id, request.MoveUp, ct);
+    }
 }

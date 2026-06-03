@@ -12,6 +12,7 @@ public partial class ResourceSortUI
 {
     [Parameter] public EventCallback Callback { get; set; }
     [Parameter] public int ResourceTypeId { get; set; }
+    [Parameter] public string TypeName { get; set; } = string.Empty;
 
     private List<ResourceSortModel> ResourceSorts = [];
     private bool IsLoading;
@@ -48,18 +49,25 @@ public partial class ResourceSortUI
         return Task.CompletedTask;
     }
 
-    private void Remove(ResourceSortModel resourceType)
+    private async Task MoveItemAsync(ResourceSortModel item, bool moveUp)
     {
-        MHD.DeleteMessage(resourceType.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(resourceType)));
+        var result = await Dispatcher.Send(new MoveResourceSortCommand(item.Id, moveUp));
+        if (result)
+            await GetSortResourcesAsync();
     }
 
-    private async Task ConfirmRemoveAsync(ResourceSortModel resourceType)
+    private void Remove(ResourceSortModel resourceSort)
+    {
+        MHD.DeleteMessage(resourceSort.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(resourceSort)));
+    }
+
+    private async Task ConfirmRemoveAsync(ResourceSortModel resourceSort)
     {
         bool result;
 
         try
         {
-            result = await Dispatcher.Send(new DeleteResourceSortCommand(resourceType.Id));
+            result = await Dispatcher.Send(new DeleteResourceSortCommand(resourceSort.Id));
         }
         catch
         {
@@ -68,7 +76,7 @@ public partial class ResourceSortUI
 
         if (result)
         {
-            ResourceSorts.Remove(resourceType);
+            ResourceSorts.Remove(resourceSort);
             await InvokeAsync(StateHasChanged);
         }
 
@@ -80,7 +88,7 @@ public partial class ResourceSortUI
         model.ResourceTypeId = ResourceTypeId;
 
         MHD.Modal.ShowComponent<ResourceSortFormUI>(
-            model.Id == 0 ? AppLoc[LocalizerConst.New, CalcResource.resourceType] : AppLoc[LocalizerConst.Update, model.Name],
+            model.Id == 0 ? "Ny resurssort" : AppLoc[LocalizerConst.Update, model.Name] + " – Resurssort",
             new Dictionary<string, object>
             {
                 [nameof(ResourceSortFormUI.ResourceSort)] = model,

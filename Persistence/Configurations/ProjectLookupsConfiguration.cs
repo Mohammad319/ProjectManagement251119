@@ -124,6 +124,28 @@ internal sealed class CompensationLookupConfiguration : IEntityTypeConfiguration
     }
 }
 
+internal sealed class ProcurementProcedureLookupConfiguration : IEntityTypeConfiguration<ProcurementProcedureEntity>
+{
+    public void Configure(EntityTypeBuilder<ProcurementProcedureEntity> builder)
+    {
+        builder.ToTable("ProcurementProcedures");
+
+        builder.HasIndex(x => new { x.TenantId, x.IsVisible, x.SortOrder })
+            .HasDatabaseName("IX_ProcurementProcedures_Tenant_Visible_Order");
+
+        builder.HasIndex(x => new { x.TenantId, x.Name })
+            .IsUnique()
+            .HasDatabaseName("IX_ProcurementProcedures_Tenant_Name");
+
+        builder.ToTable(t =>
+        {
+            t.HasCheckConstraint("CK_ProcurementProcedures_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+            t.HasCheckConstraint("CK_ProcurementProcedures_Color_Hex", LookupChecks.HexColorCheck);
+            t.HasCheckConstraint("CK_ProcurementProcedures_SortOrder_NonNegative", LookupChecks.NonNegativeSortOrderCheck);
+        });
+    }
+}
+
 internal sealed class ProcurementMethodLookupConfiguration : IEntityTypeConfiguration<ProcurementMethodEntity>
 {
     public void Configure(EntityTypeBuilder<ProcurementMethodEntity> builder)

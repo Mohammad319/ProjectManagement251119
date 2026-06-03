@@ -78,6 +78,7 @@ namespace ProjectManagement.Shared.DTO.ResourceType
 
         public int Order { get; set; }
         public bool IsVisible { get; set; } = true;
+        public bool IsDefault { get; set; }
 
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public decimal Cost

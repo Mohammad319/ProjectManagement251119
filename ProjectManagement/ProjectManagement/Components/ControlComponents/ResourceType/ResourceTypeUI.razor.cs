@@ -15,8 +15,8 @@ public partial class ResourceTypeUI
     private List<ResourceTypeModel>? Items;
     private ResourceTypeModel? Sort;
 
-    private IEnumerable<ResourceTypeModel> VisibleItems =>
-        (Items ?? []).Where(x => x.IsVisible == IsVisible).OrderByDescending(x => x.Order);
+    private List<ResourceTypeModel> VisibleItems =>
+        (Items ?? []).Where(x => x.IsVisible == IsVisible).OrderBy(x => x.Order).ToList();
 
     protected override async Task OnInitializedAsync()
     {
@@ -39,7 +39,7 @@ public partial class ResourceTypeUI
 
     private void UpdateForm(ResourceTypeModel model) =>
         MHD.Modal.ShowComponent<ResourceTypeFormUI>(
-            model.Id == 0 ? AppLoc[LocalizerConst.New, CalcResource.resourceType] : AppLoc[LocalizerConst.Update, model.Name],
+            model.Id == 0 ? "Ny resurstyp" : AppLoc[LocalizerConst.Update, model.Name],
             new Dictionary<string, object>
             {
                 [nameof(ResourceTypeFormUI.ResourceType)] = model,
@@ -48,10 +48,17 @@ public partial class ResourceTypeUI
             DialogSize.ExtraLarge,
             DialogButtonsHelper.CreateSaveCancelButtons(ResourceTypeFormUI.DialogFormId));
 
-    private async Task ReverseElements()
+    private Task ToggleVisibleAsync()
     {
         IsVisible = !IsVisible;
-        await LoadItemsAsync();
+        return InvokeAsync(StateHasChanged);
+    }
+
+    private async Task MoveItemAsync(ResourceTypeModel item, bool moveUp)
+    {
+        var result = await Dispatcher.Send(new MoveResourceTypeCommand(item.Id, moveUp));
+        if (result)
+            await LoadItemsAsync();
     }
 
     private void Remove(ResourceTypeModel resourceType)

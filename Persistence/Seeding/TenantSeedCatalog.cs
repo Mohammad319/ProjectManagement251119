@@ -19,7 +19,8 @@ public readonly record struct CalcStatusSeed(
     bool AllowsProductionCalculation = false,
     bool CountsAsSubmittedBid = false,
     bool CountsAsWonBid = false,
-    bool CountsAsLostBid = false);
+    bool CountsAsLostBid = false,
+    bool IsDefault = false);
 
 public readonly record struct AccountSeed(string Code, string Name, string GroupName, bool IsVisible = true);
 
@@ -57,33 +58,45 @@ public static class TenantSeedCatalog
 
     public static readonly LookupSeed[] Compensations =
     [
-        new("unit price contract", "#8b5cf6", 100),
-        new("time and Materials contract", "#8b5cf6", 200),
-        new("lump-sum contract", "#8b5cf6", 300),
-        new("integrated project delivery contract", "#8b5c60", 400),
-        new("incentive construction contract", "#805cf6", 500),
-        new("guaranteed maximum price contract", "#8b5cf6", 600),
-        new("design and build contract", "#8b5cf6", 700),
-        new("cost-plus construction contract", "#00ff00", 800),
+        new("Fast pris",            "#3b82f6", 100),
+        new("À-pris / mängd",       "#0ea5e9", 200),
+        new("Löpande räkning",      "#8b5cf6", 300),
+        new("Målkostnad",           "#16a34a", 400),
+        new("Incitamentsavtal",     "#ca8a04", 500),
+        new("Garanterat maxpris",   "#0369a1", 600),
+        new("Självkostnad",         "#64748b", 700),
+        new("Tid och material",     "#94a3b8", 800),
+        new("Annat",                "#9ca3af", 900),
     ];
 
     public static readonly LookupSeed[] Contracts =
     [
-        new("Traditional procurement", "#0ea5e9", 100),
-        new("Design & Build Contract", "#00a590", 200),
+        new("Totalentreprenad",         "#0ea5e9", 100),
+        new("Utförandeentreprenad",     "#0284c7", 200),
+        new("Generalentreprenad",       "#0369a1", 300),
+        new("Delad entreprenad",        "#7c3aed", 400),
+        new("Samverkansentreprenad",    "#16a34a", 500),
+        new("Underentreprenad",         "#ca8a04", 600),
+        new("Underhållsavtal",          "#64748b", 700),
+        new("Serviceavtal",             "#94a3b8", 800),
+        new("Annat",                    "#9ca3af", 900),
     ];
 
     public static readonly LookupSeed[] ProcurementMethods =
     [
-        new("Limited Procedure", "#00ff00", 100),
-        new("Selective Tending", "#00ff00", 200),
-        new("Open Tendering", "#00ff00", 300),
+        new("Offentlig upphandling",             "#3b82f6", 100),
+        new("Privat upphandling",                "#0ea5e9", 200),
+        new("Ramavtal",                          "#8b5cf6", 300),
+        new("Avrop",                             "#16a34a", 400),
+        new("Förnyad konkurrensutsättning",      "#ca8a04", 500),
+        new("Direkttilldelning",                 "#dc2626", 600),
+        new("Anbudsförfrågan",                   "#64748b", 700),
+        new("Annat",                             "#9ca3af", 800),
     ];
 
     public static readonly CalcStatusSeed[] CalculationStatuses =
     [
-        new("Utkast",                 "#64748B", 50),
-        new("Förfrågan",              "#6B7280", 100),
+        new("Förfrågan",              "#6B7280", 100, IsDefault: true),
         new("Planerad",               "#93C5FD", 200),
         new("Pågående",               "#1D4ED8", 300),
         new("Behöver granskas",       "#5EEAD4", 400),
@@ -98,7 +111,7 @@ public static class TenantSeedCatalog
 
     public static readonly CalcStatusSeed[] ProjectStatuses =
     [
-        new("Förfrågan",                "#6B7280", 100),
+        new("Förfrågan",                "#6B7280", 100, IsDefault: true),
         new("Pågående",                 "#1D4ED8", 200),
         new("Inlämnat / väntar beslut", "#EAB308", 300, CountsAsSubmittedBid: true),
         new("Vunnet",                   "#166534", 400, CountsAsSubmittedBid: true, CountsAsWonBid: true),
@@ -108,9 +121,36 @@ public static class TenantSeedCatalog
         new("Avbrutet",                 "#7C2D12", 800),
     ];
 
+    public static readonly LookupSeed[] ProcurementProcedures =
+    [
+        new("Öppet förfarande",                  "#3b82f6", 100),
+        new("Selektivt förfarande",              "#0ea5e9", 200),
+        new("Förhandlat förfarande",             "#8b5cf6", 300),
+        new("Konkurrenspräglad dialog",          "#16a34a", 400),
+        new("Direktupphandling",                 "#ca8a04", 500),
+        new("Direkttilldelning",                 "#dc2626", 600),
+        new("Förenklat förfarande",              "#64748b", 700),
+        new("Annat",                             "#9ca3af", 800),
+    ];
+
     public static readonly LookupSeed[] ProjectTypes =
     [
-        new("General", "#3b82f6", 10),
+        new("General",                  "#3b82f6", 100, IsDefault: true),
+        new("Väg",                      "#78716c", 200),
+        new("Bro",                      "#a78bfa", 300),
+        new("VA",                       "#06b6d4", 400),
+        new("Markarbete",               "#84cc16", 500),
+        new("Utemiljö / anläggning",    "#22c55e", 600),
+        new("Husbyggnad",               "#f97316", 700),
+        new("Renovering",               "#eab308", 800),
+        new("Nybyggnation",             "#3b82f6", 900),
+        new("Ombyggnad",                "#8b5cf6", 1000),
+        new("Tillbyggnad",              "#0ea5e9", 1100),
+        new("Drift och underhåll",      "#64748b", 1200),
+        new("Underhållsprojekt",        "#94a3b8", 1300),
+        new("Serviceprojekt",           "#f59e0b", 1400),
+        new("Internt projekt",          "#6366f1", 1500),
+        new("Annat",                    "#9ca3af", 1600),
     ];
 
     public static IEnumerable<(ResourceTypesEnum Kind, string Name, int SortOrder)> ResourceTypes()

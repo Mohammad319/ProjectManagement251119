@@ -12,7 +12,7 @@ namespace ProjectManagement.Client.Shared.Repositories.Project
         Task<List<ListProjectMVVM>> GetByFolderIdAsync(Guid folderId, bool includeArchived = false);
         Task<List<ListProjectMVVM>> GetOtherDepartmentAsync(Guid folderId, bool includeArchived = false);
         Task<List<SearchProjectsMVVM>> FilterAsync(ProjectFilter filter);
-        Task<GetProjectCalcConfigDTO> GetConfig(int? m, int? con, int? com, int? t, int? st);
+        Task<GetProjectCalcConfigDTO> GetConfig(int? m, int? con, int? com, int? t, int? st, int? proc = null);
         Task<ProjectDetailsDTO> DetailsAsync(Guid projectId);
         Task<PostProjectDTO> GetToPostAsync(Guid projectId);
         Task<bool> ReOrderAsync(Guid Id, int newOrder);

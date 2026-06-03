@@ -2204,6 +2204,9 @@ namespace Persistence.Migrations
                     b.Property<int?>("CreatedBy")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsVisible")
                         .HasColumnType("bit");
 
@@ -2273,6 +2276,9 @@ namespace Persistence.Migrations
 
                     b.Property<int?>("CreatedBy")
                         .HasColumnType("int");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsVisible")
                         .HasColumnType("bit");
@@ -2344,6 +2350,9 @@ namespace Persistence.Migrations
                     b.Property<int?>("CreatedBy")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsVisible")
                         .HasColumnType("bit");
 
@@ -2392,6 +2401,77 @@ namespace Persistence.Migrations
                             t.HasCheckConstraint("CK_ProcurementMethods_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
 
                             t.HasCheckConstraint("CK_ProcurementMethods_SortOrder_NonNegative", "[SortOrder] >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("Domain.Entities.Project.ProcurementProcedureEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("nvarchar(7)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsVisible")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("UpdatedBy");
+
+                    b.HasIndex("TenantId", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ProcurementProcedures_Tenant_Name");
+
+                    b.HasIndex("TenantId", "IsVisible", "SortOrder")
+                        .HasDatabaseName("IX_ProcurementProcedures_Tenant_Visible_Order");
+
+                    b.ToTable("ProcurementProcedures", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_ProcurementProcedures_Color_Hex", "[Color] LIKE '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'");
+
+                            t.HasCheckConstraint("CK_ProcurementProcedures_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+
+                            t.HasCheckConstraint("CK_ProcurementProcedures_SortOrder_NonNegative", "[SortOrder] >= 0");
                         });
                 });
 
@@ -2455,6 +2535,9 @@ namespace Persistence.Migrations
                     b.Property<int?>("ProcurementMethodId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("ProcurementProcedureId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("ProjectStatusId")
                         .HasColumnType("int");
 
@@ -2503,6 +2586,8 @@ namespace Persistence.Migrations
                     b.HasIndex("OrganisationId");
 
                     b.HasIndex("ProcurementMethodId");
+
+                    b.HasIndex("ProcurementProcedureId");
 
                     b.HasIndex("ProjectStatusId");
 
@@ -2561,6 +2646,9 @@ namespace Persistence.Migrations
 
                     b.Property<int?>("CreatedBy")
                         .HasColumnType("int");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsVisible")
                         .HasColumnType("bit");
@@ -2651,6 +2739,9 @@ namespace Persistence.Migrations
                     b.Property<bool>("IsApprovalStatus")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsVisible")
                         .HasColumnType("bit");
 
@@ -2728,6 +2819,9 @@ namespace Persistence.Migrations
                     b.Property<int?>("CreatedBy")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsVisible")
                         .HasColumnType("bit");
 
@@ -2795,6 +2889,9 @@ namespace Persistence.Migrations
 
                     b.Property<int?>("CreatedBy")
                         .HasColumnType("int");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsVisible")
                         .HasColumnType("bit");
@@ -2874,6 +2971,9 @@ namespace Persistence.Migrations
 
                     b.Property<int?>("CreatedBy")
                         .HasColumnType("int");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsVisible")
                         .HasColumnType("bit");
@@ -3785,6 +3885,23 @@ namespace Persistence.Migrations
                     b.Navigation("UpdatedByUser");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Project.ProcurementProcedureEntity", b =>
+                {
+                    b.HasOne("Domain.Entities.Users.UserEntity", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Entities.Users.UserEntity", "UpdatedByUser")
+                        .WithMany()
+                        .HasForeignKey("UpdatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("UpdatedByUser");
+                });
+
             modelBuilder.Entity("Domain.Entities.Project.ProjectEntity", b =>
                 {
                     b.HasOne("Domain.Entities.Project.CompensationEntity", "Compensation")
@@ -3819,6 +3936,10 @@ namespace Persistence.Migrations
                         .WithMany("Projects")
                         .HasForeignKey("ProcurementMethodId");
 
+                    b.HasOne("Domain.Entities.Project.ProcurementProcedureEntity", "ProcurementProcedure")
+                        .WithMany("Projects")
+                        .HasForeignKey("ProcurementProcedureId");
+
                     b.HasOne("Domain.Entities.Project.ProjectStatusEntity", "ProjectStatus")
                         .WithMany("Projects")
                         .HasForeignKey("ProjectStatusId");
@@ -3845,6 +3966,8 @@ namespace Persistence.Migrations
                     b.Navigation("Organisation");
 
                     b.Navigation("ProcurementMethod");
+
+                    b.Navigation("ProcurementProcedure");
 
                     b.Navigation("ProjectStatus");
 
@@ -4133,6 +4256,11 @@ namespace Persistence.Migrations
                 {
                     b.Navigation("Calculations");
 
+                    b.Navigation("Projects");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Project.ProcurementProcedureEntity", b =>
+                {
                     b.Navigation("Projects");
                 });
 

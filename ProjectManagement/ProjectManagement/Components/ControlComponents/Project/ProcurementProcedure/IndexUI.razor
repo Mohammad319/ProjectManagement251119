@@ -1,0 +1,94 @@
+@using Domain.Entities.Project
+@inherits AppComponentBase
+
+@if (IsLoading)
+{
+    <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
+}
+else
+{
+    <div class="space-y-2">
+        <div class="pm-toolbar sticky top-0 z-10 -mx-2 bg-white px-2 pb-2 pt-1 dark:bg-gray-950">
+            <div class="flex items-center gap-2">
+                <button @onclick="CreateNewAsync"
+                        class="pm-btn pm-btn-success"
+                        title="+ Lägg till upphandlingsförfarande"
+                        aria-label="+ Lägg till upphandlingsförfarande">
+                    <span class="flex items-center gap-1.5">
+                        @Icons.Plus2
+                        <span>+ Lägg till upphandlingsförfarande</span>
+                    </span>
+                </button>
+                <button @onclick="ToggleVisibleAsync"
+                        class="pm-icon-btn"
+                        title="@(IsVisible ? CalcLoc[nameof(CalcResource.showHiddenStatuses)] : CalcLoc[nameof(CalcResource.hideHiddenStatuses)])"
+                        aria-label="@(IsVisible ? CalcLoc[nameof(CalcResource.showHiddenStatuses)] : CalcLoc[nameof(CalcResource.hideHiddenStatuses)])">
+                    @((MarkupString)Icons.GetVisibleIcon(IsVisible))
+                </button>
+            </div>
+            @if (VisibleItems.Count > 0)
+            {
+                <span class="pm-subtitle">@VisibleItems.Count</span>
+            }
+        </div>
+
+        @{ var items = VisibleItems; }
+        @if (items.Count > 0)
+        {
+            <div class="space-y-1">
+                @for (var i = 0; i < items.Count; i++)
+                {
+                    var item = items[i];
+                    var isFirst = i == 0;
+                    var isLast = i == items.Count - 1;
+
+                    <div class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900">
+                        <div class="flex flex-col">
+                            <button @onclick="() => MoveItemAsync(item, true)"
+                                    class="inline-flex h-5 w-5 items-center justify-center rounded text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-slate-700 dark:hover:text-slate-200"
+                                    disabled="@isFirst"
+                                    title="@AppLoc[nameof(ResourceApp.moveUp)]">
+                                @((MarkupString)Icons.ChevronUp)
+                            </button>
+                            <button @onclick="() => MoveItemAsync(item, false)"
+                                    class="inline-flex h-5 w-5 items-center justify-center rounded text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-slate-700 dark:hover:text-slate-200"
+                                    disabled="@isLast"
+                                    title="@AppLoc[nameof(ResourceApp.moveDown)]">
+                                @((MarkupString)Icons.ChevronDown)
+                            </button>
+                        </div>
+
+                        <div class="flex min-w-0 flex-1 items-center gap-2">
+                            <span style="background-color:@item.Color"
+                                  class="inline-block h-3.5 w-3.5 shrink-0 rounded-full border border-slate-200 dark:border-slate-700"></span>
+                            <span class="truncate text-sm font-medium text-slate-800 dark:text-slate-100">@item.Name</span>
+                            @if (item.IsDefault)
+                            {
+                                <span class="shrink-0 rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">Standard</span>
+                            }
+                        </div>
+
+                        <div class="flex shrink-0 items-center gap-1.5">
+                            <button @onclick="() => UpdateForm(item)"
+                                    class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-amber-300 bg-amber-50 text-amber-600 transition hover:bg-amber-100 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-300 dark:hover:bg-amber-900/50"
+                                    title="@AppLoc[nameof(ResourceApp.update)]">
+                                @Icons.Edit
+                            </button>
+                            <button @onclick="() => Remove(item)"
+                                    class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-red-300 bg-red-50 text-red-600 transition hover:bg-red-100 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50"
+                                    title="@AppLoc[nameof(ResourceApp.delete)]">
+                                @((MarkupString)Icons.DeleteSVG)
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="pm-empty">
+                @(IsVisible ? AppLoc[nameof(ResourceApp.ThereAreNoItemsToDisplay)] : CalcLoc[nameof(CalcResource.noHiddenStatusesToShow)])
+            </div>
+        }
+    </div>
+}

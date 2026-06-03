@@ -27,6 +27,14 @@
                            @bind-Value="@StatusUpdate.IsVisible" />
             <span class="pm-label">@AppLoc[nameof(ResourceApp.isVisible)]</span>
         </label>
+
+        <label for="projectStatusDefault"
+               class="flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 dark:border-slate-700 dark:bg-slate-800/50">
+            <InputCheckbox id="projectStatusDefault"
+                           class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900"
+                           @bind-Value="@StatusUpdate.IsDefault" />
+            <span class="pm-label">Standard</span>
+        </label>
     </div>
 
     <div class="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/50">

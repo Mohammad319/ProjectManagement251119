@@ -10,10 +10,10 @@ public partial class IndexUI
 {
     private bool IsVisible = true;
     private bool IsLoading;
-    private List<TypeEntity>? Status;
+    private List<TypeEntity>? Types;
 
-    private IEnumerable<TypeEntity> VisibleItems =>
-        (Status ?? []).Where(x => x.IsVisible == IsVisible).OrderByDescending(x => x.SortOrder);
+    private List<TypeEntity> VisibleItems =>
+        (Types ?? []).Where(x => x.IsVisible == IsVisible).OrderBy(x => x.SortOrder).ToList();
 
     protected override async Task OnInitializedAsync()
     {
@@ -27,7 +27,7 @@ public partial class IndexUI
 
         try
         {
-            Status = await Dispatcher.Send(new GetTypeQuery());
+            Types = await Dispatcher.Send(new GetTypeQuery());
         }
         finally
         {
@@ -50,23 +50,30 @@ public partial class IndexUI
 
     private void UpdateForm(TypeEntity model) =>
         MHD.Modal.ShowComponent<TypeFormUI>(
-            model.Id == 0 ? AppLoc[LocalizerConst.New, CalcResource.type] : AppLoc[LocalizerConst.Update, model.Name],
+            model.Id == 0 ? "Ny projekttyp" : AppLoc[LocalizerConst.Update, model.Name],
             new Dictionary<string, object>
             {
                 [nameof(TypeFormUI.Status)] = model,
                 [nameof(TypeFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdateAsync)
             });
 
-    private void Remove(TypeEntity status) =>
-        MHD.DeleteMessage(status.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(status)));
-
-    private async Task ConfirmRemoveAsync(TypeEntity st)
+    private async Task MoveItemAsync(TypeEntity item, bool moveUp)
     {
-        var result = await Dispatcher.Send(new DeleteTypeCommand(st.Id));
+        var result = await Dispatcher.Send(new MoveTypeCommand(item.Id, moveUp));
+        if (result)
+            await LoadTypesAsync();
+    }
+
+    private void Remove(TypeEntity item) =>
+        MHD.DeleteMessage(item.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(item)));
+
+    private async Task ConfirmRemoveAsync(TypeEntity item)
+    {
+        var result = await Dispatcher.Send(new DeleteTypeCommand(item.Id));
 
         if (result)
         {
-            Status?.Remove(st);
+            Types?.Remove(item);
             await InvokeAsync(StateHasChanged);
         }
 

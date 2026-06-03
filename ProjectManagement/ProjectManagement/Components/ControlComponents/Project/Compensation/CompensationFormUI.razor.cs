@@ -1,60 +1,59 @@
-﻿using Application.Feature.Project.ProcurementMethods.Commands;
+using Application.Feature.Project.ProcurementMethods.Commands;
 using Domain.Entities.Project;
 using Microsoft.AspNetCore.Components;
 using ProjectManagement.Shared.DTO.Calculation;
 
-namespace ProjectManagement.Components.ControlComponents.Project.Compensation
+namespace ProjectManagement.Components.ControlComponents.Project.Compensation;
+
+public partial class CompensationFormUI
 {
-    public partial class CompensationFormUI
+    [Parameter] public CompensationEntity Compensation { get; set; } = new();
+    [Parameter] public EventCallback<bool> Callback { get; set; }
+
+    private PostTaskStatusDTO CompensationUpdate { get; set; } = new();
+    private bool IsLoading;
+    private int? LastCompensationId;
+    private CompensationEntity? LastCompensationReference;
+
+    protected override void OnParametersSet()
     {
-        [Parameter] public CompensationEntity Compensation { get; set; } = new();
-        [Parameter] public EventCallback<bool> Callback { get; set; }
+        var currentId = Compensation?.Id;
+        var sameReference = ReferenceEquals(LastCompensationReference, Compensation);
+        if (sameReference && LastCompensationId == currentId)
+            return;
 
-        private PostTaskStatusDTO CompensationUpdate { get; set; } = new();
-        private bool IsLoading;
-        private int? LastCompensationId;
-        private CompensationEntity? LastCompensationReference;
+        CompensationUpdate = new PostTaskStatusDTO();
+        PropertyCopier.CopyPropertiesTo(Compensation, CompensationUpdate);
 
-        protected override void OnParametersSet()
+        if (string.IsNullOrWhiteSpace(CompensationUpdate.Color))
+            CompensationUpdate.Color = "#3b82f6";
+
+        LastCompensationId = currentId;
+        LastCompensationReference = Compensation;
+    }
+
+    private void CloseModal() => MHD.Modal.Close();
+
+    private async Task HandleSubmitAsync()
+    {
+        if (IsLoading) return;
+
+        IsLoading = true;
+        await InvokeAsync(StateHasChanged);
+
+        try
         {
-            var currentId = Compensation?.Id;
-            var sameReference = ReferenceEquals(LastCompensationReference, Compensation);
-            if (sameReference && LastCompensationId == currentId)
-                return;
+            bool result = Compensation.Id == 0
+                ? await Dispatcher.Send(new CreateCompensationCommand(CompensationUpdate)) > 0
+                : await Dispatcher.Send(new UpdateCompensationCommand(Compensation.Id, CompensationUpdate));
 
-            CompensationUpdate = new PostTaskStatusDTO();
-            PropertyCopier.CopyPropertiesTo(Compensation, CompensationUpdate);
-
-            if (string.IsNullOrWhiteSpace(CompensationUpdate.Color))
-                CompensationUpdate.Color = "#00ff00";
-
-            LastCompensationId = currentId;
-            LastCompensationReference = Compensation;
+            MHD.Notifications(Compensation.Id == 0 ? ToastType.Add : ToastType.Update, result);
+            await Callback.InvokeAsync(result);
         }
-
-        private async Task HandleSubmitAsync()
+        finally
         {
-            if (IsLoading) return;
-
-            IsLoading = true;
-            try
-            {
-                bool result = Compensation.Id == 0
-                    ? await MicroBus.Send(new CreateCompensationCommand(CompensationUpdate)) > 0
-                    : await MicroBus.Send(new UpdateCompensationCommand(Compensation.Id, CompensationUpdate));
-
-                MHD.Notifications(Compensation.Id == 0 ? ToastType.Add : ToastType.Update, result);
-
-                if (result && Callback.HasDelegate)
-                    await Callback.InvokeAsync(true);
-            }
-            finally
-            {
-                IsLoading = false;
-                await InvokeAsync(StateHasChanged);
-            }
+            IsLoading = false;
+            await InvokeAsync(StateHasChanged);
         }
-
-        private void Close() => MHD.Modal.Close();
     }
 }

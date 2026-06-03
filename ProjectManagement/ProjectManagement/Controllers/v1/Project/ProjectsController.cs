@@ -14,10 +14,10 @@ namespace ProjectManagement.Server.Controllers.v1
     public class ProjectsController : BaseApiController
     {
         [Authorize(Roles = Tenant.Users)]
-        [HttpGet("config/{m}/{con}/{com}/{t}/{st}")]
-        public async Task<IActionResult> Config(int m, int con, int com, int t, int st)
+        [HttpGet("config/{m}/{con}/{com}/{t}/{st}/{proc?}")]
+        public async Task<IActionResult> Config(int m, int con, int com, int t, int st, int proc = 0)
         {
-            return Ok(await MicroBus.Send(new GetProjectCalcConfigQuery() { Methods = m, Contracts = con, Compensations = com, Types = t, ProjectStatuses = st, TypeObj = 0 }));
+            return Ok(await MicroBus.Send(new GetProjectCalcConfigQuery() { Methods = m, Contracts = con, Compensations = com, Types = t, ProjectStatuses = st, Procedures = proc, TypeObj = 0 }));
         }
         [Authorize(Roles = Tenant.Users)]
         [HttpGet(URLConst.Project.GetByFolderDepartmentId + "/{folderId}")]

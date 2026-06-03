@@ -6,6 +6,8 @@ namespace Domain.Entities.Project
 {
     public sealed class ProcurementMethodEntity : ColoredListEntity
     {
+        public bool IsDefault { get; private set; }
+
         [JsonIgnore]
         public ICollection<CalculationEntity> Calculations { get; private set; } = [];
 
@@ -16,5 +18,7 @@ namespace Domain.Entities.Project
 
         public ProcurementMethodEntity(string name, string color, int sortOrder, bool isVisible = true)
             : base(name, color, sortOrder, isVisible) { }
+
+        public void SetIsDefault(bool isDefault) => IsDefault = isDefault;
     }
 }

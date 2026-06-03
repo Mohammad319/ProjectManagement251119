@@ -17,6 +17,7 @@ namespace Domain.Entities.ResourceType
 
         public int SortOrder { get; private set; }
         public bool IsVisible { get; private set; } = true;
+        public bool IsDefault { get; private set; }
         public ResourceTypesEnum Kind { get; private set; }
 
         public int? AccountId { get; private set; }
@@ -71,6 +72,8 @@ namespace Domain.Entities.ResourceType
         }
 
         public void UpdateOrder(int sortOrder) => SetSortOrder(sortOrder);
+
+        public void SetIsDefault(bool isDefault) => IsDefault = isDefault;
 
         private void SetSortOrder(int sortOrder)
         {

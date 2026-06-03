@@ -12,10 +12,12 @@ namespace Application.Feature.ResourceType
         Task<int> CreateTypeAsync(PostResourceTypeDTO dto, CancellationToken ct = default);
         Task<bool> UpdateTypeAsync(int id, PostResourceTypeDTO dto, CancellationToken ct = default);
         Task<bool> DeleteTypeAsync(int id, CancellationToken ct = default);
+        Task<bool> MoveTypeAsync(int id, bool moveUp, CancellationToken ct = default);
 
         Task<int> CreateSortAsync(int resourceTypeId, PostResourceSortDTO dto, CancellationToken ct = default);
         Task<bool> UpdateSortAsync(int id, PostResourceSortDTO dto, CancellationToken ct = default);
         Task<bool> DeleteSortAsync(int id, CancellationToken ct = default);
+        Task<bool> MoveSortAsync(int id, bool moveUp, CancellationToken ct = default);
 
         // Queries
         Task<List<ResourceTypeModel>> GetTypesAsync(bool isVisible, CancellationToken ct = default);

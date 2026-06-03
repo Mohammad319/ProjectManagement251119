@@ -26,6 +26,7 @@ namespace Application.Feature.Project.Project
      int statuses,
      int projectStatuses,
      int orgId,
+     int procedures = 0,
      CancellationToken ct = default);
     
         Task<ProjectDetailsDTO?> GetDetailsAsync(Guid id, int userId, int? departmentId, CancellationToken ct);

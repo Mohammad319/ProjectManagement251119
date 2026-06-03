@@ -77,7 +77,14 @@ namespace Persistence.Service.CalculationItems.Project
                     SortOrder = x.SortOrder,
                     IsVisible = x.IsVisible,
                     Code = x is IControlStatusEntity control ? control.Code : string.Empty,
-                    IsDefault = x is IControlStatusEntity controlDefault && controlDefault.IsDefault,
+                    IsDefault = (x is IControlStatusEntity controlDefault && controlDefault.IsDefault)
+                              || (x is ProjectStatusEntity psDefault && psDefault.IsDefault)
+                              || (x is StatusEntity seDefault && seDefault.IsDefault)
+                              || (x is TypeEntity teDefault && teDefault.IsDefault)
+                              || (x is ContractEntity ceDefault && ceDefault.IsDefault)
+                              || (x is CompensationEntity compDefault && compDefault.IsDefault)
+                              || (x is ProcurementMethodEntity pmDefault && pmDefault.IsDefault)
+                              || (x is ProcurementProcedureEntity ppDefault && ppDefault.IsDefault),
                     IsSystemDefault = x is IControlStatusEntity controlSystem && controlSystem.IsSystemDefault
                 })
                 .ToList();
@@ -124,7 +131,14 @@ namespace Persistence.Service.CalculationItems.Project
                     SortOrder = x.SortOrder,
                     Color = x.Color,
                     Code = x is IControlStatusEntity control ? control.Code : string.Empty,
-                    IsDefault = x is IControlStatusEntity controlDefault && controlDefault.IsDefault,
+                    IsDefault = (x is IControlStatusEntity controlDefault && controlDefault.IsDefault)
+                              || (x is ProjectStatusEntity ps && ps.IsDefault)
+                              || (x is StatusEntity se && se.IsDefault)
+                              || (x is TypeEntity te && te.IsDefault)
+                              || (x is ContractEntity ce && ce.IsDefault)
+                              || (x is CompensationEntity comp && comp.IsDefault)
+                              || (x is ProcurementMethodEntity pm && pm.IsDefault)
+                              || (x is ProcurementProcedureEntity pp && pp.IsDefault),
                     IsSystemDefault = x is IControlStatusEntity controlSystem && controlSystem.IsSystemDefault
                 })
                 .ToList();
@@ -199,26 +213,138 @@ namespace Persistence.Service.CalculationItems.Project
             PostTaskStatusDTO dto,
             CancellationToken ct)
         {
-            if (entity is not IControlStatusEntity controlStatus)
-                return;
-
-            var code = controlStatus.IsSystemDefault && !string.IsNullOrWhiteSpace(controlStatus.Code)
-                ? controlStatus.Code
-                : dto.Code;
-
-            controlStatus.SetControlStatusSettings(code, dto.IsDefault, dto.IsSystemDefault || controlStatus.IsSystemDefault);
-
-            if (!controlStatus.IsDefault)
-                return;
-
-            var set = context.Set<TS>();
-            var statuses = await set.ToListAsync(ct);
-            foreach (var other in statuses)
+            if (entity is IControlStatusEntity controlStatus)
             {
-                if (other.Id == entity.Id || other is not IControlStatusEntity otherControl)
-                    continue;
+                var code = controlStatus.IsSystemDefault && !string.IsNullOrWhiteSpace(controlStatus.Code)
+                    ? controlStatus.Code
+                    : dto.Code;
 
-                otherControl.SetControlStatusSettings(otherControl.Code, isDefault: false, otherControl.IsSystemDefault);
+                controlStatus.SetControlStatusSettings(code, dto.IsDefault, dto.IsSystemDefault || controlStatus.IsSystemDefault);
+
+                if (!controlStatus.IsDefault)
+                    return;
+
+                var set = context.Set<TS>();
+                var statuses = await set.ToListAsync(ct);
+                foreach (var other in statuses)
+                {
+                    if (other.Id == entity.Id || other is not IControlStatusEntity otherControl)
+                        continue;
+
+                    otherControl.SetControlStatusSettings(otherControl.Code, isDefault: false, otherControl.IsSystemDefault);
+                }
+            }
+            else if (entity is ProjectStatusEntity projectStatus)
+            {
+                projectStatus.SetIsDefault(dto.IsDefault);
+
+                if (!dto.IsDefault)
+                    return;
+
+                var statuses = await context.Set<TS>().ToListAsync(ct);
+                foreach (var other in statuses)
+                {
+                    if (other.Id == entity.Id || other is not ProjectStatusEntity otherPs)
+                        continue;
+
+                    otherPs.SetIsDefault(false);
+                }
+            }
+            else if (entity is StatusEntity calcStatus)
+            {
+                calcStatus.SetIsDefault(dto.IsDefault);
+
+                if (!dto.IsDefault)
+                    return;
+
+                var statuses = await context.Set<TS>().ToListAsync(ct);
+                foreach (var other in statuses)
+                {
+                    if (other.Id == entity.Id || other is not StatusEntity otherCs)
+                        continue;
+
+                    otherCs.SetIsDefault(false);
+                }
+            }
+            else if (entity is TypeEntity typeEntity)
+            {
+                typeEntity.SetIsDefault(dto.IsDefault);
+
+                if (!dto.IsDefault)
+                    return;
+
+                var types = await context.Set<TS>().ToListAsync(ct);
+                foreach (var other in types)
+                {
+                    if (other.Id == entity.Id || other is not TypeEntity otherType)
+                        continue;
+
+                    otherType.SetIsDefault(false);
+                }
+            }
+            else if (entity is ContractEntity contractEntity)
+            {
+                contractEntity.SetIsDefault(dto.IsDefault);
+
+                if (!dto.IsDefault)
+                    return;
+
+                var contracts = await context.Set<TS>().ToListAsync(ct);
+                foreach (var other in contracts)
+                {
+                    if (other.Id == entity.Id || other is not ContractEntity otherContract)
+                        continue;
+
+                    otherContract.SetIsDefault(false);
+                }
+            }
+            else if (entity is CompensationEntity compensationEntity)
+            {
+                compensationEntity.SetIsDefault(dto.IsDefault);
+
+                if (!dto.IsDefault)
+                    return;
+
+                var compensations = await context.Set<TS>().ToListAsync(ct);
+                foreach (var other in compensations)
+                {
+                    if (other.Id == entity.Id || other is not CompensationEntity otherComp)
+                        continue;
+
+                    otherComp.SetIsDefault(false);
+                }
+            }
+            else if (entity is ProcurementMethodEntity procurementEntity)
+            {
+                procurementEntity.SetIsDefault(dto.IsDefault);
+
+                if (!dto.IsDefault)
+                    return;
+
+                var procurements = await context.Set<TS>().ToListAsync(ct);
+                foreach (var other in procurements)
+                {
+                    if (other.Id == entity.Id || other is not ProcurementMethodEntity otherPm)
+                        continue;
+
+                    otherPm.SetIsDefault(false);
+                }
+            }
+            else if (entity is ProcurementProcedureEntity procedureEntity)
+            {
+                procedureEntity.SetIsDefault(dto.IsDefault);
+
+                if (!dto.IsDefault)
+                    return;
+
+                var procedures = await context.Set<TS>().ToListAsync(ct);
+                foreach (var other in procedures)
+                {
+                    if (other.Id == entity.Id || other is not ProcurementProcedureEntity otherProc)
+                        continue;
+
+                    otherProc.SetIsDefault(false);
+                }
             }
         }
 

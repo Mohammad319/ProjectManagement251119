@@ -37,4 +37,15 @@ namespace Application.Feature.Project.Contract.Commands
         public Task<bool> Handle(DeleteContractCommand request, CancellationToken ct)
             => service.DeleteAsync(request.Id, ct);
     }
+
+    // MOVE
+    public sealed record MoveContractCommand(int Id, bool MoveUp) : IRequest<bool>;
+
+    public sealed class MoveContractCommandHandler(
+        ILookupStatusCommandService<ContractEntity> service)
+        : IRequestHandler<MoveContractCommand, bool>
+    {
+        public Task<bool> Handle(MoveContractCommand request, CancellationToken ct)
+            => service.MoveAsync(request.Id, request.MoveUp, ct);
+    }
 }

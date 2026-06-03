@@ -60,6 +60,10 @@ namespace Domain.Entities.Project
         [JsonIgnore]
         public ProcurementMethodEntity? ProcurementMethod { get; private set; }
 
+        public int? ProcurementProcedureId { get; private set; }
+        [JsonIgnore]
+        public ProcurementProcedureEntity? ProcurementProcedure { get; private set; }
+
         public int? CompensationId { get; private set; }
         [JsonIgnore]
         public CompensationEntity? Compensation { get; private set; }
@@ -109,6 +113,7 @@ namespace Domain.Entities.Project
             ProjectStatusId = dto.StatusId;
             OrganisationId = dto.OrganisationId;
             ProcurementMethodId = dto.ProcurementMethodsId;
+            ProcurementProcedureId = dto.ProcurementProcedureId;
             CompensationId = dto.CompensationId;
             ContractId = dto.ContractId;
 

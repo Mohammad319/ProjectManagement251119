@@ -1,79 +1,90 @@
-﻿using Application.Feature.Project.Contract.Commands;
+using Application.Feature.Project.Contract.Commands;
 using Application.Feature.Project.Contract.Queries;
 using Domain.Entities.Project;
 using Microsoft.AspNetCore.Components;
-using ProjectManagement.Client.Shared.Model.Project;
 using ProjectManagement.Client.Shared.ResourceFiles.Calculation;
 
-namespace ProjectManagement.Components.ControlComponents.Project.Contract
+namespace ProjectManagement.Components.ControlComponents.Project.Contract;
+
+public partial class IndexUI
 {
-    public partial class IndexUI
+    private bool IsVisible = true;
+    private bool IsLoading;
+    private List<ContractEntity>? Contracts;
+
+    private List<ContractEntity> VisibleItems =>
+        (Contracts ?? []).Where(x => x.IsVisible == IsVisible).OrderBy(x => x.SortOrder).ToList();
+
+    protected override async Task OnInitializedAsync()
     {
-        private bool IsVisible = true;
-        private bool IsLoading = true;
-        private List<ContractEntity> ContractList = [];
+        await LoadAsync();
+    }
 
-        private List<ContractEntity> FilteredContractList =>
-            ContractList
-                .Where(x => x.IsVisible == IsVisible)
-                .OrderByDescending(x => x.SortOrder)
-                .ToList();
+    private async Task LoadAsync()
+    {
+        IsLoading = true;
+        await InvokeAsync(StateHasChanged);
 
-        private void CreateForm() => UpdateForm(new ContractEntity());
-
-        private void ToggleVisibleFilter() => IsVisible = !IsVisible;
-
-        private void UpdateForm(ContractEntity model) =>
-            MHD.Modal.ShowComponent<ContractFormUI>(
-                model.Id == 0
-                    ? AppLoc[LocalizerConst.New, CalcResource.projectContract]
-                    : AppLoc[LocalizerConst.Update, model.Name],
-                new Dictionary<string, object>
-                {
-                    [nameof(ContractFormUI.Contract)] = model,
-                    [nameof(ContractFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate)
-                });
-
-        private void Remove(ContractEntity model) =>
-            MHD.DeleteMessage(model.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(model)));
-
-        private async Task ConfirmRemoveAsync(ContractEntity model)
+        try
         {
-            bool result = await MicroBus.Send(new DeleteContractCommand(model.Id));
-            if (result)
-            {
-                ContractList.RemoveAll(x => x.Id == model.Id);
-                await InvokeAsync(StateHasChanged);
-            }
-
-            MHD.Notifications(ToastType.Delete, result);
+            Contracts = await Dispatcher.Send(new GetContractQuery());
         }
-
-        private async Task BtnUpdate(bool isSuccess)
+        finally
         {
-            if (!isSuccess)
-                return;
-
-            MHD.Modal.Close();
-            await LoadAsync();
-        }
-
-        protected override Task OnInitializedAsync() => LoadAsync();
-
-        private async Task LoadAsync()
-        {
-            IsLoading = true;
+            IsLoading = false;
             await InvokeAsync(StateHasChanged);
-
-            try
-            {
-                ContractList = await MicroBus.Send(new GetContractQuery()) ?? [];
-            }
-            finally
-            {
-                IsLoading = false;
-                await InvokeAsync(StateHasChanged);
-            }
         }
+    }
+
+    private Task CreateNewAsync()
+    {
+        UpdateForm(new ContractEntity());
+        return Task.CompletedTask;
+    }
+
+    private Task ToggleVisibleAsync()
+    {
+        IsVisible = !IsVisible;
+        return InvokeAsync(StateHasChanged);
+    }
+
+    private void UpdateForm(ContractEntity model) =>
+        MHD.Modal.ShowComponent<ContractFormUI>(
+            model.Id == 0 ? "Ny entreprenadform" : AppLoc[LocalizerConst.Update, model.Name],
+            new Dictionary<string, object>
+            {
+                [nameof(ContractFormUI.Contract)] = model,
+                [nameof(ContractFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdateAsync)
+            });
+
+    private async Task MoveItemAsync(ContractEntity item, bool moveUp)
+    {
+        var result = await Dispatcher.Send(new MoveContractCommand(item.Id, moveUp));
+        if (result)
+            await LoadAsync();
+    }
+
+    private void Remove(ContractEntity item) =>
+        MHD.DeleteMessage(item.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(item)));
+
+    private async Task ConfirmRemoveAsync(ContractEntity item)
+    {
+        var result = await Dispatcher.Send(new DeleteContractCommand(item.Id));
+
+        if (result)
+        {
+            Contracts?.Remove(item);
+            await InvokeAsync(StateHasChanged);
+        }
+
+        MHD.Notifications(ToastType.Delete, result);
+    }
+
+    private async Task BtnUpdateAsync(bool isSuccess)
+    {
+        MHD.Modal.Close();
+
+        if (isSuccess)
+            await LoadAsync();
     }
 }

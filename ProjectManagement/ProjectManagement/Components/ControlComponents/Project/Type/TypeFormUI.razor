@@ -13,12 +13,27 @@
             <ValidationMessage For="@(() => UpdateObj.Name)" class="text-xs text-rose-600 dark:text-rose-400" />
         </div>
 
+        <div class="flex w-20 flex-col gap-1">
+            <label class="pm-label">@Loc[nameof(ResourceLoc.color)]</label>
+            <InputText type="color"
+                       class="h-9 w-full rounded-lg border border-slate-300 bg-white p-1 shadow-sm dark:border-slate-700 dark:bg-slate-950"
+                       @bind-Value="UpdateObj.Color" />
+        </div>
+
         <label for="projectTypeVisible"
                class="flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 dark:border-slate-700 dark:bg-slate-800/50">
             <InputCheckbox id="projectTypeVisible"
                            class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900"
                            @bind-Value="@UpdateObj.IsVisible" />
             <span class="pm-label">@AppLoc[nameof(ResourceApp.isVisible)]</span>
+        </label>
+
+        <label for="projectTypeDefault"
+               class="flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 dark:border-slate-700 dark:bg-slate-800/50">
+            <InputCheckbox id="projectTypeDefault"
+                           class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900"
+                           @bind-Value="@UpdateObj.IsDefault" />
+            <span class="pm-label">Standard</span>
         </label>
     </div>
 </EditForm>

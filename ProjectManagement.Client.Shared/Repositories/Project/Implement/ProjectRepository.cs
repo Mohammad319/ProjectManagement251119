@@ -25,14 +25,15 @@ namespace ProjectManagement.Client.Shared.Repositories.Project.Implement
                 .Select(x => x.ToListProjectMVVM())
                 .OrderByDescending(x => x.Order)
                 .ToList();
-        public async Task<GetProjectCalcConfigDTO> GetConfig(int? m, int? con, int? com, int? t, int? st)
+        public async Task<GetProjectCalcConfigDTO> GetConfig(int? m, int? con, int? com, int? t, int? st, int? proc = null)
         {
             if (!m.HasValue) m = 0;
             if (!con.HasValue) con = 0;
             if (!com.HasValue) com = 0;
             if (!t.HasValue) t = 0;
             if (!st.HasValue) st = 0;
-            return await _httpRepository.GetAsync<GetProjectCalcConfigDTO>(ProjectsURLBase + $"config/{m}/{con}/{com}/{t}/{st}");
+            if (!proc.HasValue) proc = 0;
+            return await _httpRepository.GetAsync<GetProjectCalcConfigDTO>(ProjectsURLBase + $"config/{m}/{con}/{com}/{t}/{st}/{proc}");
         }
         public async Task<List<SearchProjectsMVVM>> FilterAsync(ProjectFilter model)
         {

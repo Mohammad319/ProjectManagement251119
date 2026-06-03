@@ -87,7 +87,26 @@ namespace ProjectManagement.Client.Pages.Project.ProjectPages
                     ProjectUpdate.ContractId,
                     ProjectUpdate.CompensationId,
                     ProjectUpdate.TypeId,
-                    ProjectUpdate.StatusId);
+                    ProjectUpdate.StatusId,
+                    ProjectUpdate.ProcurementProcedureId);
+
+            if (Project.Id == Guid.Empty && !ProjectUpdate.StatusId.HasValue)
+                ProjectUpdate.StatusId = Config?.ProjectStatuses?.FirstOrDefault(x => x.IsDefault)?.Id;
+
+            if (Project.Id == Guid.Empty && !ProjectUpdate.TypeId.HasValue)
+                ProjectUpdate.TypeId = Config?.Types?.FirstOrDefault(x => x.IsDefault)?.Id;
+
+            if (Project.Id == Guid.Empty && !ProjectUpdate.ContractId.HasValue)
+                ProjectUpdate.ContractId = Config?.Contracts?.FirstOrDefault(x => x.IsDefault)?.Id;
+
+            if (Project.Id == Guid.Empty && !ProjectUpdate.CompensationId.HasValue)
+                ProjectUpdate.CompensationId = Config?.Compensations?.FirstOrDefault(x => x.IsDefault)?.Id;
+
+            if (Project.Id == Guid.Empty && !ProjectUpdate.ProcurementMethodsId.HasValue)
+                ProjectUpdate.ProcurementMethodsId = Config?.Methods?.FirstOrDefault(x => x.IsDefault)?.Id;
+
+            if (Project.Id == Guid.Empty && !ProjectUpdate.ProcurementProcedureId.HasValue)
+                ProjectUpdate.ProcurementProcedureId = Config?.Procedures?.FirstOrDefault(x => x.IsDefault)?.Id;
 
             ResetEditContext();
             IsLoading = false;

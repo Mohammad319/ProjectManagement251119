@@ -38,4 +38,15 @@ namespace Application.Feature.Project.ProcurementMethods.Commands
         public Task<bool> Handle(DeleteCompensationCommand request, CancellationToken ct)
             => service.DeleteAsync(request.Id, ct);
     }
+
+    // MOVE
+    public sealed record MoveCompensationCommand(int Id, bool MoveUp) : IRequest<bool>;
+
+    public sealed class MoveCompensationCommandHandler(
+        ILookupStatusCommandService<CompensationEntity> service)
+        : IRequestHandler<MoveCompensationCommand, bool>
+    {
+        public Task<bool> Handle(MoveCompensationCommand request, CancellationToken ct)
+            => service.MoveAsync(request.Id, request.MoveUp, ct);
+    }
 }

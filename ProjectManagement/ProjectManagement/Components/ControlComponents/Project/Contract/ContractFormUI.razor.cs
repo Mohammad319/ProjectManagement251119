@@ -1,61 +1,59 @@
-﻿using Application.Feature.Project.Contract.Commands;
+using Application.Feature.Project.Contract.Commands;
 using Domain.Entities.Project;
 using Microsoft.AspNetCore.Components;
 using ProjectManagement.Shared.DTO.Calculation;
-using ProjectManagement.Shared.DTO.Project;
 
-namespace ProjectManagement.Components.ControlComponents.Project.Contract
+namespace ProjectManagement.Components.ControlComponents.Project.Contract;
+
+public partial class ContractFormUI
 {
-    public partial class ContractFormUI
+    [Parameter] public ContractEntity Contract { get; set; } = new();
+    [Parameter] public EventCallback<bool> Callback { get; set; }
+
+    private PostTaskStatusDTO UpdateObj { get; set; } = new();
+    private bool IsLoading;
+    private int? LastContractId;
+    private ContractEntity? LastContractReference;
+
+    protected override void OnParametersSet()
     {
-        [Parameter] public ContractEntity Contract { get; set; } = new();
-        [Parameter] public EventCallback<bool> Callback { get; set; }
+        var currentId = Contract?.Id;
+        var sameReference = ReferenceEquals(LastContractReference, Contract);
+        if (sameReference && LastContractId == currentId)
+            return;
 
-        private PostTaskStatusDTO UpdateObj { get; set; } = new();
-        private bool IsLoading;
-        private int? LastContractId;
-        private ContractEntity? LastContractReference;
+        UpdateObj = new PostTaskStatusDTO();
+        PropertyCopier.CopyPropertiesTo(Contract, UpdateObj);
 
-        protected override void OnParametersSet()
+        if (string.IsNullOrWhiteSpace(UpdateObj.Color))
+            UpdateObj.Color = "#0ea5e9";
+
+        LastContractId = currentId;
+        LastContractReference = Contract;
+    }
+
+    private void CloseModal() => MHD.Modal.Close();
+
+    private async Task HandleSubmitAsync()
+    {
+        if (IsLoading) return;
+
+        IsLoading = true;
+        await InvokeAsync(StateHasChanged);
+
+        try
         {
-            var currentId = Contract?.Id;
-            var sameReference = ReferenceEquals(LastContractReference, Contract);
-            if (sameReference && LastContractId == currentId)
-                return;
+            bool result = Contract.Id == 0
+                ? await Dispatcher.Send(new CreateContractCommand(UpdateObj)) > 0
+                : await Dispatcher.Send(new UpdateContractCommand(Contract.Id, UpdateObj));
 
-            UpdateObj = new PostTaskStatusDTO();
-            PropertyCopier.CopyPropertiesTo(Contract, UpdateObj);
-
-            if (string.IsNullOrWhiteSpace(UpdateObj.Color))
-                UpdateObj.Color = "#00ff00";
-
-            LastContractId = currentId;
-            LastContractReference = Contract;
+            MHD.Notifications(Contract.Id == 0 ? ToastType.Add : ToastType.Update, result);
+            await Callback.InvokeAsync(result);
         }
-
-        private async Task HandleSubmitAsync()
+        finally
         {
-            if (IsLoading) return;
-
-            IsLoading = true;
-            try
-            {
-                bool result = Contract.Id == 0
-                    ? await MicroBus.Send(new CreateContractCommand(UpdateObj)) > 0
-                    : await MicroBus.Send(new UpdateContractCommand(Contract.Id, UpdateObj));
-
-                MHD.Notifications(Contract.Id == 0 ? ToastType.Add : ToastType.Update, result);
-
-                if (result && Callback.HasDelegate)
-                    await Callback.InvokeAsync(true);
-            }
-            finally
-            {
-                IsLoading = false;
-                await InvokeAsync(StateHasChanged);
-            }
+            IsLoading = false;
+            await InvokeAsync(StateHasChanged);
         }
-
-        private void Close() => MHD.Modal.Close();
     }
 }

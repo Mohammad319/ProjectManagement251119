@@ -33,6 +33,7 @@ public partial class ShardingSingleDbContext
     public DbSet<TypeEntity> CalcProjectType { get; set; } = default!;
     public DbSet<TaskStatusEntity> TaskStatus { get; set; } = default!;
     public DbSet<ProcurementMethodEntity> ProcurementMethod { get; set; } = default!;
+    public DbSet<ProcurementProcedureEntity> ProcurementProcedure { get; set; } = default!;
     public DbSet<CompensationEntity> Compensations { get; set; } = default!;
     public DbSet<ContractEntity> Contracts { get; set; } = default!;
     public DbSet<OfferEntity> Offers { get; set; } = default!;

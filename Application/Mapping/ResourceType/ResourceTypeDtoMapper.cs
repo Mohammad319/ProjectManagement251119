@@ -15,6 +15,7 @@ namespace Application.Mapping.ResourceType
                 Name = entity.Name,
                 Type = entity.Kind,
                 IsVisible = entity.IsVisible,
+                IsDefault = entity.IsDefault,
                 Order = entity.SortOrder,
                 AccountId = entity.AccountId,
                 Data = entity.GetMetadataSnapshot()
@@ -30,6 +31,7 @@ namespace Application.Mapping.ResourceType
                 Id = entity.Id,
                 Name = entity.Name,
                 IsVisible = entity.IsVisible,
+                IsDefault = entity.IsDefault,
                 Order = entity.SortOrder,
                 ResourceTypeId = entity.ResourceTypeId,
                 AccountId = entity.AccountId,

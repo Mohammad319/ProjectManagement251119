@@ -73,52 +73,87 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
                     <span>Vy</span>
+                    @if (ViewBadgeCount > 0)
+                    {
+                        <span class="inline-flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-slate-400 px-1 text-[9px] font-bold leading-none text-white dark:bg-slate-500">@ViewBadgeCount</span>
+                    }
                     <svg class="h-2.5 w-2.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                         <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                     </svg>
                 </button>
                 @if (_viewMenuOpen)
                 {
-                    <div class="fixed inset-0 z-30" @onclick="() => _viewMenuOpen = false"></div>
-                    <div class="absolute left-0 top-full z-40 mt-1 w-52 rounded-md border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
-                        <button type="button"
-                                class="@(_showAllVersions ? "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-blue-700 dark:text-blue-300" : "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800") + " disabled:cursor-not-allowed disabled:opacity-40"
-                                disabled="@(!HasAnyMultipleVersions)"
-                                @onclick="async () => { _showAllVersions = !_showAllVersions; ResetPage(); }">
-                            <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
-                            </svg>
-                            <span>@AppLoc["showAllVersions"]</span>
-                            @if (_showAllVersions)
-                            {
-                                <svg class="ml-auto h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
-                            }
-                        </button>
-                        <div class="border-t border-slate-100 px-2 py-1 dark:border-slate-800">
-                            <MhdColumnPicker Text="Kolumner"
-                                             Columns="@CalculationColumnOptions"
-                                             ColumnVisibility="_calculationColumns"
-                                             OnChanged="StateHasChanged" />
+                    <div class="fixed inset-0 z-30" @onclick="() => { _viewMenuOpen = false; _showColumnPanel = false; }"></div>
+                    <div class="absolute left-0 top-full z-40 mt-1 w-56 rounded-md border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+
+                        @* Visa alla versioner *@
+                        <div title="@(!HasAnyMultipleVersionsInCurrentView ? "Inga kalkyler med flera versioner i aktuell vy." : null)">
+                            <button type="button"
+                                    class="@(_showAllVersions ? "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-blue-700 dark:text-blue-300" : "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800") + " disabled:cursor-not-allowed disabled:opacity-40"
+                                    disabled="@(!HasAnyMultipleVersionsInCurrentView)"
+                                    @onclick="async () => { _showAllVersions = !_showAllVersions; ResetPage(); }">
+                                <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                                </svg>
+                                <span class="flex-1 text-left">@AppLoc["showAllVersions"]</span>
+                                @if (_showAllVersions)
+                                {
+                                    <svg class="ml-auto h-3 w-3 shrink-0 text-blue-600 dark:text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
+                                }
+                            </button>
                         </div>
+
+                        @* Visa arkiverade (admin only) *@
                         <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
                             @if (!Folder.State.OtherDepartment)
                             {
-                                <div class="border-t border-slate-100 pt-1 dark:border-slate-800">
-                                    <button type="button"
-                                            class="@(!IaVisible ? "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-amber-700 dark:text-amber-300" : "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800")"
-                                            @onclick="async () => { _viewMenuOpen = false; await RefreshCalculationsAsync(); }">
-                                        <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                                        </svg>
-                                        <span>@(IaVisible ? AppLoc["showArchived"] : AppLoc["hideArchived"])</span>
-                                        @if (!IaVisible)
-                                        {
-                                            <span class="ml-auto inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-amber-500 text-[9px] font-bold text-white">!</span>
-                                        }
-                                    </button>
-                                </div>
+                                <button type="button"
+                                        class="@(_showArchived ? "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-blue-700 dark:text-blue-300" : "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800")"
+                                        @onclick="async () => { _viewMenuOpen = false; await RefreshCalculationsAsync(); }">
+                                    <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                                    </svg>
+                                    <span class="flex-1 text-left">@AppLoc["showArchived"]</span>
+                                    @if (_showArchived)
+                                    {
+                                        <svg class="ml-auto h-3 w-3 shrink-0 text-blue-600 dark:text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
+                                    }
+                                </button>
                             }
                         </AuthorizeView>
+
+                        @* Separator *@
+                        <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
+
+                        @* Välj kolumner *@
+                        <button type="button"
+                                class="flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                                @onclick="() => _showColumnPanel = !_showColumnPanel">
+                            <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                            </svg>
+                            <span class="flex-1 text-left">Välj kolumner</span>
+                            <svg class="h-2.5 w-2.5 shrink-0 text-slate-400 transition-transform @(_showColumnPanel ? "rotate-180" : "")" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        @if (_showColumnPanel)
+                        {
+                            <div class="max-h-52 overflow-y-auto px-1 pb-1">
+                                @foreach (var col in CalculationColumnOptions)
+                                {
+                                    var colKey = col.Key;
+                                    <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800">
+                                        <input type="checkbox"
+                                               class="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800"
+                                               checked="@IsCalculationColumnVisible(colKey)"
+                                               @onchange="e => { _calculationColumns[colKey] = e.Value is bool b && b; StateHasChanged(); }" />
+                                        <span>@col.Label</span>
+                                    </label>
+                                }
+                            </div>
+                        }
+
                     </div>
                 }
             </div>
@@ -752,7 +787,8 @@
     public void Dispose() => _dotNetRef?.Dispose();
 
     private ListCalculationMVVM? calcDraging;
-    private bool IaVisible { get; set; } = true;
+    private bool _showArchived;
+    private bool _showColumnPanel;
     private ListCalculationMVVM? _productionDialogCalculation;
     private bool _isCreatingProductionCalculation;
     private string _productionDialogMessage = string.Empty;
@@ -1186,10 +1222,16 @@
             Folder.State.ProjectSelected?.Calculations,
             calculation);
 
-    private bool HasAnyMultipleVersions =>
-        (Folder.State.ProjectSelected?.Calculations ?? [])
-            .GroupBy(CalculationVersionSelector.GetFamilyKey)
-            .Any(g => g.Count() > 1);
+    private bool HasAnyMultipleVersionsInCurrentView
+    {
+        get
+        {
+            var allCalcs = Folder.State.ProjectSelected?.Calculations ?? [];
+            return FilteredCalculations.Any(c => CalculationVersionSelector.HasMultipleVersions(allCalcs, c));
+        }
+    }
+
+    private int ViewBadgeCount => (_showAllVersions ? 1 : 0) + (_showArchived ? 1 : 0);
 
     private bool ShowVersionColumn =>
         _showAllVersions || FilteredCalculations.Any(c => HasMultipleVersions(c));
@@ -1376,7 +1418,7 @@
             list.Add(new() { IconHtml = Icons.Folder, Label = AppLoc["moveCalculation"], OnClickAsync = () => { OpenMoveCopyDialog(item, MoveCopyOperation.Move); return Task.CompletedTask; } });
             list.Add(new() { IconHtml = Icons.Copy, Label = AppLoc["copyCalculation"], OnClickAsync = () => { OpenMoveCopyDialog(item, MoveCopyOperation.Copy); return Task.CompletedTask; } });
 
-            if (IaVisible)
+            if (item.IsVisible)
                 list.Add(new() { IconHtml = Icons.Archive, Label = AppLoc["archiveCalculation"], OnClickAsync = async () => await ArchiveOrRestoreCalculationAsync(item, archive: true) });
             else
                 list.Add(new() { IconHtml = Icons.Restore, Label = AppLoc["restoreFromArchive"], OnClickAsync = async () => await ArchiveOrRestoreCalculationAsync(item, archive: false) });
@@ -1601,7 +1643,7 @@
 
     private async Task RefreshCalculationsAsync()
     {
-        IaVisible = !IaVisible;
+        _showArchived = !_showArchived;
         _currentPage = 1;
         await ReloadCalculationsAsync();
     }
@@ -1612,7 +1654,16 @@
         if (project is null)
             return;
 
-        project.Calculations = await Repo.Calculation.GetAsync(project.Id, IaVisible);
+        if (_showArchived)
+        {
+            var active = await Repo.Calculation.GetAsync(project.Id, true);
+            var archived = await Repo.Calculation.GetAsync(project.Id, false);
+            project.Calculations = active.Concat(archived).OrderByDescending(x => x.Order).ToList();
+        }
+        else
+        {
+            project.Calculations = await Repo.Calculation.GetAsync(project.Id, true);
+        }
         project.CalculationCount = CalculationVersionSelector.CountCurrentVersions(project.Calculations);
         UoWService.Folder.State.Notify();
 

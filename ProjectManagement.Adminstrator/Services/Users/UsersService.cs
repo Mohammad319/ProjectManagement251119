@@ -278,16 +278,31 @@ namespace ProjectManagement.Adminstrator.Services.Users
                 resourceType.UpdateOrder(order);
             }
 
-            if (!await dataAccess.Compensations.AnyAsync())
+            var existingCompensations = await dataAccess.Compensations.ToListAsync();
+            foreach (var defaultComp in TenantSeedCatalog.Compensations)
             {
-                foreach (var compensation in TenantSeedCatalog.Compensations)
+                var compensation = existingCompensations.FirstOrDefault(x =>
+                    string.Equals(x.Name, defaultComp.Name, StringComparison.OrdinalIgnoreCase));
+
+                if (compensation is null)
                 {
-                    dataAccess.Compensations.Add(new CompensationEntity(
-                        compensation.Name,
-                        compensation.Color,
-                        compensation.SortOrder,
-                        compensation.IsVisible));
+                    var newComp = new CompensationEntity(
+                        defaultComp.Name,
+                        defaultComp.Color,
+                        defaultComp.SortOrder,
+                        defaultComp.IsVisible);
+                    newComp.SetIsDefault(defaultComp.IsDefault);
+                    dataAccess.Compensations.Add(newComp);
+                    continue;
                 }
+
+                compensation.Update(
+                    defaultComp.Name,
+                    defaultComp.Color,
+                    defaultComp.SortOrder,
+                    defaultComp.IsVisible);
+                if (defaultComp.IsDefault && !existingCompensations.Any(x => x.IsDefault))
+                    compensation.SetIsDefault(true);
             }
 
             var existingContracts = await dataAccess.Contracts.ToListAsync();
@@ -298,11 +313,13 @@ namespace ProjectManagement.Adminstrator.Services.Users
 
                 if (contract is null)
                 {
-                    dataAccess.Contracts.Add(new ContractEntity(
+                    var newContract = new ContractEntity(
                         defaultContract.Name,
                         defaultContract.Color,
                         defaultContract.SortOrder,
-                        defaultContract.IsVisible));
+                        defaultContract.IsVisible);
+                    newContract.SetIsDefault(defaultContract.IsDefault);
+                    dataAccess.Contracts.Add(newContract);
                     continue;
                 }
 
@@ -311,6 +328,35 @@ namespace ProjectManagement.Adminstrator.Services.Users
                     defaultContract.Color,
                     defaultContract.SortOrder,
                     defaultContract.IsVisible);
+                if (defaultContract.IsDefault && !existingContracts.Any(x => x.IsDefault))
+                    contract.SetIsDefault(true);
+            }
+
+            var existingProcurementProcedures = await dataAccess.ProcurementProcedure.ToListAsync();
+            foreach (var defaultProc in TenantSeedCatalog.ProcurementProcedures)
+            {
+                var procedure = existingProcurementProcedures.FirstOrDefault(x =>
+                    string.Equals(x.Name, defaultProc.Name, StringComparison.OrdinalIgnoreCase));
+
+                if (procedure is null)
+                {
+                    var newProc = new ProcurementProcedureEntity(
+                        defaultProc.Name,
+                        defaultProc.Color,
+                        defaultProc.SortOrder,
+                        defaultProc.IsVisible);
+                    newProc.SetIsDefault(defaultProc.IsDefault);
+                    dataAccess.ProcurementProcedure.Add(newProc);
+                    continue;
+                }
+
+                procedure.Update(
+                    defaultProc.Name,
+                    defaultProc.Color,
+                    defaultProc.SortOrder,
+                    defaultProc.IsVisible);
+                if (defaultProc.IsDefault && !existingProcurementProcedures.Any(x => x.IsDefault))
+                    procedure.SetIsDefault(true);
             }
 
             var existingProcurementMethods = await dataAccess.ProcurementMethod.ToListAsync();
@@ -327,6 +373,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
                         defaultProcurementMethod.Color,
                         defaultProcurementMethod.SortOrder,
                         defaultProcurementMethod.IsVisible);
+                    newProcurementMethod.SetIsDefault(defaultProcurementMethod.IsDefault);
                     dataAccess.ProcurementMethod.Add(newProcurementMethod);
                     continue;
                 }
@@ -336,6 +383,8 @@ namespace ProjectManagement.Adminstrator.Services.Users
                     defaultProcurementMethod.Color,
                     defaultProcurementMethod.SortOrder,
                     defaultProcurementMethod.IsVisible);
+                if (defaultProcurementMethod.IsDefault && !existingProcurementMethods.Any(x => x.IsDefault))
+                    procurementMethod.SetIsDefault(true);
             }
 
             var existingCalcStatuses = await dataAccess.CalculationStatus.ToListAsync();
@@ -360,6 +409,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
                         defaultStatus.CountsAsSubmittedBid,
                         defaultStatus.CountsAsWonBid,
                         defaultStatus.CountsAsLostBid);
+                    newStatus.SetIsDefault(defaultStatus.IsDefault);
                     dataAccess.CalculationStatus.Add(newStatus);
                     continue;
                 }
@@ -377,6 +427,8 @@ namespace ProjectManagement.Adminstrator.Services.Users
                     defaultStatus.CountsAsSubmittedBid,
                     defaultStatus.CountsAsWonBid,
                     defaultStatus.CountsAsLostBid);
+                if (defaultStatus.IsDefault && !existingCalcStatuses.Any(x => x.IsDefault))
+                    calcStatus.SetIsDefault(true);
             }
 
             var existingProjectStatuses = await dataAccess.ProjectStatus.ToListAsync();
@@ -397,6 +449,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
                         defaultStatus.CountsAsSubmittedBid,
                         defaultStatus.CountsAsWonBid,
                         defaultStatus.CountsAsLostBid);
+                    newStatus.SetIsDefault(defaultStatus.IsDefault);
                     dataAccess.ProjectStatus.Add(newStatus);
                     continue;
                 }
@@ -410,20 +463,36 @@ namespace ProjectManagement.Adminstrator.Services.Users
                     defaultStatus.CountsAsSubmittedBid,
                     defaultStatus.CountsAsWonBid,
                     defaultStatus.CountsAsLostBid);
+                if (defaultStatus.IsDefault && !existingProjectStatuses.Any(x => x.IsDefault))
+                    projectStatus.SetIsDefault(true);
             }
 
-            if (!await dataAccess.CalcProjectType.AnyAsync())
+            var existingProjectTypes = await dataAccess.CalcProjectType.ToListAsync();
+            foreach (var defaultType in TenantSeedCatalog.ProjectTypes)
             {
-                foreach (var defaultType in TenantSeedCatalog.ProjectTypes)
+                var projectType = existingProjectTypes.FirstOrDefault(x =>
+                    string.Equals(x.Name, defaultType.Name, StringComparison.OrdinalIgnoreCase));
+
+                if (projectType is null)
                 {
-                    var type = new TypeEntity();
-                    type.Update(
+                    var newType = new TypeEntity();
+                    newType.Update(
                         defaultType.Name,
                         defaultType.Color,
                         defaultType.SortOrder,
                         defaultType.IsVisible);
-                    dataAccess.CalcProjectType.Add(type);
+                    newType.SetIsDefault(defaultType.IsDefault);
+                    dataAccess.CalcProjectType.Add(newType);
+                    continue;
                 }
+
+                projectType.Update(
+                    defaultType.Name,
+                    defaultType.Color,
+                    defaultType.SortOrder,
+                    defaultType.IsVisible);
+                if (defaultType.IsDefault && !existingProjectTypes.Any(x => x.IsDefault))
+                    projectType.SetIsDefault(true);
             }
 
             if (dataAccess.ChangeTracker.HasChanges())

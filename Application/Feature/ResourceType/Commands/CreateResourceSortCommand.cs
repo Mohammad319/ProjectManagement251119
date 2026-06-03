@@ -13,6 +13,8 @@ namespace Application.Feature.Calculation.ResourceType.Commands
     public sealed record CreateResourceSortCommand(int ResourceTypeId, PostResourceSortDTO Dto) : IRequest<int>;
     public sealed record UpdateResourceSortCommand(int Id, PostResourceSortDTO Dto) : IRequest<bool>;
     public sealed record DeleteResourceSortCommand(int Id) : IRequest<bool>;
+    public sealed record MoveResourceTypeCommand(int Id, bool MoveUp) : IRequest<bool>;
+    public sealed record MoveResourceSortCommand(int Id, bool MoveUp) : IRequest<bool>;
 
     // ---------------------------
     // Handlers (Thin)
@@ -58,5 +60,19 @@ namespace Application.Feature.Calculation.ResourceType.Commands
     {
         public Task<bool> Handle(DeleteResourceSortCommand request, CancellationToken ct)
             => service.DeleteSortAsync(request.Id, ct);
+    }
+
+    public sealed class MoveResourceTypeCommandHandler(IResourceTypeService service)
+        : IRequestHandler<MoveResourceTypeCommand, bool>
+    {
+        public Task<bool> Handle(MoveResourceTypeCommand request, CancellationToken ct)
+            => service.MoveTypeAsync(request.Id, request.MoveUp, ct);
+    }
+
+    public sealed class MoveResourceSortCommandHandler(IResourceTypeService service)
+        : IRequestHandler<MoveResourceSortCommand, bool>
+    {
+        public Task<bool> Handle(MoveResourceSortCommand request, CancellationToken ct)
+            => service.MoveSortAsync(request.Id, request.MoveUp, ct);
     }
 }

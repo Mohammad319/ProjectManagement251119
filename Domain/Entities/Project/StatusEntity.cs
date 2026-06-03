@@ -12,6 +12,7 @@ namespace Domain.Entities.Project
         public bool CountsAsSubmittedBid { get; private set; }
         public bool CountsAsWonBid { get; private set; }
         public bool CountsAsLostBid { get; private set; }
+        public bool IsDefault { get; private set; }
 
         [JsonIgnore]
         public ICollection<CalculationEntity> Calculations { get; private set; } = [];
@@ -40,5 +41,7 @@ namespace Domain.Entities.Project
             CountsAsWonBid = countsAsWonBid;
             CountsAsLostBid = !countsAsWonBid && countsAsLostBid;
         }
+
+        public void SetIsDefault(bool isDefault) => IsDefault = isDefault;
     }
 }

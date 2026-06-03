@@ -16,6 +16,7 @@ namespace ProjectManagement.Shared.DTO.General
         public bool CountsAsSubmittedBid { get; set; }
         public bool CountsAsWonBid { get; set; }
         public bool CountsAsLostBid { get; set; }
+        public bool IsDefault { get; set; }
     }
 
     public class ListDTO<T>
@@ -46,10 +47,11 @@ namespace ProjectManagement.Shared.DTO.General
     }
     public class GetProjectCalcConfigDTO
     {
-        public List<ListDTO> Methods { get; set; } = [];
-        public List<ListDTO> Contracts { get; set; } = [];
-        public List<ListDTO> Compensations { get; set; } = [];
-        public List<ListDTO> Types { get; set; } = [];
+        public List<ListOrderDTO> Methods { get; set; } = [];
+        public List<ListOrderDTO> Contracts { get; set; } = [];
+        public List<ListOrderDTO> Compensations { get; set; } = [];
+        public List<ListOrderDTO> Types { get; set; } = [];
+        public List<ListOrderDTO> Procedures { get; set; } = [];
         public List<StatusListDTO> Statuses { get; set; } = [];
         public List<StatusListDTO> ProjectStatuses { get; set; } = [];
         public List<ListDTO> Organisation { get; set; } = [];

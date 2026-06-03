@@ -22,6 +22,7 @@ namespace Domain.Entities.ResourceType
         public string Name { get; private set; } = string.Empty;
 
         public bool IsVisible { get; private set; } = true;
+        public bool IsDefault { get; private set; }
         public int SortOrder { get; private set; }
 
         public int ResourceTypeId { get; private set; }
@@ -71,6 +72,8 @@ namespace Domain.Entities.ResourceType
         }
 
         public void UpdateOrder(int sortOrder) => SetSortOrder(sortOrder);
+
+        public void SetIsDefault(bool isDefault) => IsDefault = isDefault;
 
         private void SetResourceType(int resourceTypeId)
         {
