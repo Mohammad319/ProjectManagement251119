@@ -37,9 +37,13 @@
                     <option value="1">Är lika med</option>
                     <option value="2">Är inte lika med</option>
                     <option value="3">Är tomt</option>
+                    <option value="4">Börjar med</option>
+                    <option value="5">Slutar med</option>
+                    <option value="6">Liknar</option>
+                    <option value="7">Är inte tomt</option>
                 </select>
             </div>
-            @if (FilterState.TextOp != TextFilterOp.IsEmpty)
+            @if (FilterState.TextOp != TextFilterOp.IsEmpty && FilterState.TextOp != TextFilterOp.IsNotEmpty)
             {
                 <input type="text" class="@InputCss" placeholder="Sök..."
                        value="@FilterState.TextValue"
@@ -57,9 +61,10 @@
                     <option value="2">Efter</option>
                     <option value="3">Mellan</option>
                     <option value="4">Är tomt</option>
+                    <option value="5">Är inte tomt</option>
                 </select>
             </div>
-            @if (FilterState.DateOp != DateFilterOp.IsEmpty)
+            @if (FilterState.DateOp != DateFilterOp.IsEmpty && FilterState.DateOp != DateFilterOp.IsNotEmpty)
             {
                 <input type="date" class="@InputCss"
                        value="@(FilterState.DateFrom?.ToString("yyyy-MM-dd") ?? string.Empty)"
@@ -80,13 +85,15 @@
                         value="@((int)FilterState.NumberOp)"
                         @onchange="e => { FilterState.NumberOp = (NumberFilterOp)int.Parse(e.Value!.ToString()!); _ = Notify(); }">
                     <option value="0">Är lika med</option>
+                    <option value="5">Är inte lika med</option>
                     <option value="1">Större än</option>
                     <option value="2">Mindre än</option>
                     <option value="3">Mellan</option>
                     <option value="4">Är tomt</option>
+                    <option value="6">Är inte tomt</option>
                 </select>
             </div>
-            @if (FilterState.NumberOp != NumberFilterOp.IsEmpty)
+            @if (FilterState.NumberOp != NumberFilterOp.IsEmpty && FilterState.NumberOp != NumberFilterOp.IsNotEmpty)
             {
                 <input type="number" class="@InputCss" placeholder="Värde"
                        value="@FilterState.NumberFrom"

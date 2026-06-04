@@ -14,6 +14,7 @@
 
 @inherits AppComponentBase
 @inject IJSRuntime JS
+@inject ProjectManagement.Client.Services.Calculation.CalculationListViewPreference ViewPreference
 @implements IDisposable
 
 <div class="flex h-full min-h-0 flex-col gap-1 overflow-hidden px-1 pb-1">
@@ -41,23 +42,47 @@
 
         <div class="flex flex-wrap items-center gap-1">
             @* Filtrera *@
-            <button type="button"
-                    class="@(_showFilters || HasActiveFilters ? "inline-flex h-7 items-center gap-1 rounded border border-blue-300 bg-blue-50 px-2 text-[11px] font-medium text-blue-700 transition dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300" : "inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800")"
-                    @onclick="() => _showFilters = !_showFilters">
-                <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
-                </svg>
-                <span>Filtrera</span>
-                @if (HasActiveFilters)
+            <div class="relative">
+                <button type="button"
+                        class="@(HasActiveFilters ? "inline-flex h-7 items-center gap-1 rounded border border-blue-300 bg-blue-50 px-2 text-[11px] font-medium text-blue-700 transition dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300" : "inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800")"
+                        @onclick="() => _filterMenuOpen = !_filterMenuOpen">
+                    <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
+                    </svg>
+                    <span>Filtrera</span>
+                    @if (ActiveFilterCount > 0)
+                    {
+                        <span class="inline-flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-blue-600 px-1 text-[9px] font-bold leading-none text-white dark:bg-blue-500">@ActiveFilterCount</span>
+                    }
+                    <svg class="h-2.5 w-2.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+                @if (_filterMenuOpen)
                 {
-                    <span class="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-blue-600 text-[9px] font-bold text-white">!</span>
+                    <div class="fixed inset-0 z-30" @onclick="() => _filterMenuOpen = false"></div>
+                    <div class="absolute left-0 top-full z-40 mt-1 w-48 rounded-md border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+                        @if (HasActiveFilters)
+                        {
+                            <button type="button"
+                                    class="flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                                    @onclick="() => { ClearFilters(); _filterMenuOpen = false; }">
+                                <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                <span>Rensa alla filter</span>
+                            </button>
+                        }
+                        else
+                        {
+                            <span class="block px-3 py-2 text-[11px] text-slate-400 dark:text-slate-500">Inga aktiva filter</span>
+                        }
+                    </div>
                 }
-            </button>
+            </div>
 
             @* Vy dropdown *@
             <div class="relative">
                 <button type="button"
-                        class="inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                        class="@(ViewBadgeCount > 0 ? "inline-flex h-7 items-center gap-1 rounded border border-blue-300 bg-blue-50 px-2 text-[11px] font-medium text-blue-700 transition dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300" : "inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800")"
                         @onclick="() => _viewMenuOpen = !_viewMenuOpen">
                     <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -66,7 +91,7 @@
                     <span>Vy</span>
                     @if (ViewBadgeCount > 0)
                     {
-                        <span class="inline-flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-slate-400 px-1 text-[9px] font-bold leading-none text-white dark:bg-slate-500">@ViewBadgeCount</span>
+                        <span class="inline-flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-blue-600 px-1 text-[9px] font-bold leading-none text-white dark:bg-blue-500">@ViewBadgeCount</span>
                     }
                     <svg class="h-2.5 w-2.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                         <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -98,18 +123,21 @@
                         <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
                             @if (!Folder.State.OtherDepartment)
                             {
-                                <button type="button"
-                                        class="@(_showArchived ? "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-blue-700 dark:text-blue-300" : "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800")"
-                                        @onclick="async () => { _viewMenuOpen = false; await RefreshCalculationsAsync(); }">
-                                    <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                                    </svg>
-                                    <span class="flex-1 text-left">@AppLoc["showArchived"]</span>
-                                    @if (_showArchived)
-                                    {
-                                        <svg class="ml-auto h-3 w-3 shrink-0 text-blue-600 dark:text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
-                                    }
-                                </button>
+                                <div title="@(!_hasArchivedCalcs ? "Inga arkiverade kalkyler i aktuell vy." : null)">
+                                    <button type="button"
+                                            class="@(_showArchived ? "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-blue-700 dark:text-blue-300" : "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800") + " disabled:cursor-not-allowed disabled:opacity-40"
+                                            disabled="@(!_hasArchivedCalcs)"
+                                            @onclick="async () => { _viewMenuOpen = false; await RefreshCalculationsAsync(); }">
+                                        <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                                        </svg>
+                                        <span class="flex-1 text-left">@AppLoc["showArchived"]</span>
+                                        @if (_showArchived)
+                                        {
+                                            <svg class="ml-auto h-3 w-3 shrink-0 text-blue-600 dark:text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
+                                        }
+                                    </button>
+                                </div>
                             }
                         </AuthorizeView>
 
@@ -138,7 +166,7 @@
                                         <input type="checkbox"
                                                class="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800"
                                                checked="@IsCalculationColumnVisible(colKey)"
-                                               @onchange="e => { _calculationColumns[colKey] = e.Value is bool b && b; StateHasChanged(); }" />
+                                               @onchange="async e => { _calculationColumns[colKey] = e.Value is bool b && b; await ViewPreference.SaveColumnsAsync(_calculationColumns); }" />
                                         <span>@col.Label</span>
                                     </label>
                                 }
@@ -178,100 +206,6 @@
         </div>
     </div>
 
-    @* ── Filter panel ────────────────────────────────────── *@
-    @if (_showFilters)
-    {
-        <div class="mx-1 mb-2 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/60">
-            <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-
-                <div class="flex flex-col gap-1">
-                    <label class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">@AppLoc["status"]</label>
-                    <input type="text" placeholder="@AppLoc["filterStatusPlaceholder"]"
-                           class="h-8 rounded border border-slate-300 bg-white px-2 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                           @bind="_filterStatus" @bind:event="oninput" @bind:after="ResetPage" />
-                </div>
-
-                <div class="flex flex-col gap-1">
-                    <label class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">@AppLoc["calculationType"]</label>
-                    <select class="h-8 rounded border border-slate-300 bg-white px-2 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                            @bind="_filterCalcType" @bind:after="ResetPage">
-                        <option value="">@AppLoc["allItems"]</option>
-                        <option value="Tender">@AppLoc["tenderCalculation"]</option>
-                        <option value="Contract">@AppLoc["contractCalculation"]</option>
-                        <option value="Production">@AppLoc["productionCalculation"]</option>
-                    </select>
-                </div>
-
-                <div class="flex flex-col gap-1">
-                    <label class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Kalkylroll</label>
-                    <select class="h-8 rounded border border-slate-300 bg-white px-2 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                            @bind="_filterCalculationRole" @bind:after="ResetPage">
-                        <option value="">@AppLoc["allItems"]</option>
-                        @foreach (var role in CalculationRoles)
-                        {
-                            <option value="@role">@GetCalculationRoleLabel(role)</option>
-                        }
-                    </select>
-                </div>
-
-                <div class="flex flex-col gap-1">
-                    <label class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">@AppLoc["calculationResponsible"]</label>
-                    <input type="text" placeholder="@AppLoc["filterResponsiblePlaceholder"]"
-                           class="h-8 rounded border border-slate-300 bg-white px-2 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                           @bind="_filterResponsible" @bind:event="oninput" @bind:after="ResetPage" />
-                </div>
-
-                <div class="flex flex-col gap-1">
-                    <label class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">@AppLoc["reviewer"]</label>
-                    <input type="text" placeholder="@AppLoc["filterReviewerPlaceholder"]"
-                           class="h-8 rounded border border-slate-300 bg-white px-2 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                           @bind="_filterInspector" @bind:event="oninput" @bind:after="ResetPage" />
-                </div>
-
-                <div class="flex flex-col gap-1">
-                    <label class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">@AppLoc["deadlineFrom"]</label>
-                    <input type="date"
-                           class="h-8 rounded border border-slate-300 bg-white px-2 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                           @bind="_filterDeadlineFrom" @bind:after="ResetPage" />
-                </div>
-
-                <div class="flex flex-col gap-1">
-                    <label class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">@AppLoc["deadlineTo"]</label>
-                    <input type="date"
-                           class="h-8 rounded border border-slate-300 bg-white px-2 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                           @bind="_filterDeadlineTo" @bind:after="ResetPage" />
-                </div>
-
-                <div class="flex flex-col gap-1">
-                    <label class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">@AppLoc["locked"]</label>
-                    <select class="h-8 rounded border border-slate-300 bg-white px-2 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                            @bind="_filterLocked" @bind:after="ResetPage">
-                        <option value="">@AppLoc["allItems"]</option>
-                        <option value="true">@AppLoc["locked"]</option>
-                        <option value="false">@AppLoc["unlocked"]</option>
-                    </select>
-                </div>
-
-                <div class="flex flex-col gap-1">
-                    <label class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">@AppLoc["hasMultipleVersions"]</label>
-                    <select class="h-8 rounded border border-slate-300 bg-white px-2 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                            @bind="_filterMultipleVersions" @bind:after="ResetPage">
-                        <option value="">@AppLoc["allItems"]</option>
-                        <option value="true">@AppLoc["yes"]</option>
-                        <option value="false">@AppLoc["no"]</option>
-                    </select>
-                </div>
-            </div>
-            <div class="mt-2 flex justify-end">
-                <button type="button"
-                        class="rounded px-2 py-1 text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-                        @onclick="ClearFilters">
-                    @AppLoc["clearFilters"]
-                </button>
-            </div>
-        </div>
-    }
-
     </div>@* ── End sticky header ─────────────────────────── *@
 
     @* ── Calculation table ──��───────────────────────────── *@
@@ -302,13 +236,13 @@
                         @if (IsCalculationColumnVisible("project"))
                         {
                             <th id="hproject" class="@SortableHeaderClass("project")" style="min-width:80px;" @onclick='() => SortBy("project")'>
-                                <span class="inline-flex items-center gap-1">@AppLoc["project"] @((MarkupString)SortIndicatorHtml("project"))</span>
+                                <span class="inline-flex items-center gap-1">@AppLoc["project"] @((MarkupString)SortIndicatorHtml("project")) <TableColumnFilter FilterState='CF("project")' OnChanged="OnColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("folder"))
                         {
                             <th id="hfolder" class="@SortableHeaderClass("folder")" style="min-width:80px;" @onclick='() => SortBy("folder")'>
-                                <span class="inline-flex items-center gap-1">@AppLoc["folder"] @((MarkupString)SortIndicatorHtml("folder"))</span>
+                                <span class="inline-flex items-center gap-1">@AppLoc["folder"] @((MarkupString)SortIndicatorHtml("folder")) <TableColumnFilter FilterState='CF("folder")' OnChanged="OnColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("calculationType"))
@@ -676,6 +610,45 @@
     {
         _dotNetRef ??= DotNetObjectReference.Create(this);
         await JS.InvokeVoidAsync("initializeResizableColumns", _dotNetRef);
+
+        var projId = Folder.State.ProjectSelected?.Id.ToString();
+        if (_prevProjectId != projId)
+        {
+            _prevProjectId = projId;
+            bool changed = false;
+
+            if (_showAllVersions && !HasAnyMultipleVersionsInCurrentView)
+            {
+                _showAllVersions = false;
+                changed = true;
+            }
+
+            if (Folder.State.ProjectSelected is not null && !Folder.State.OtherDepartment)
+            {
+                var archived = await Repo.Calculation.GetAsync(Folder.State.ProjectSelected.Id, false);
+                var hasAny = archived.Any();
+                if (_hasArchivedCalcs != hasAny)
+                {
+                    _hasArchivedCalcs = hasAny;
+                    if (!_hasArchivedCalcs && _showArchived)
+                    {
+                        _showArchived = false;
+                        await ReloadCalculationsAsync();
+                    }
+                    changed = true;
+                }
+            }
+            else
+            {
+                if (_hasArchivedCalcs)
+                {
+                    _hasArchivedCalcs = false;
+                    changed = true;
+                }
+            }
+
+            if (changed) StateHasChanged();
+        }
     }
 
     [JSInvokable]
@@ -691,6 +664,8 @@
     private string _productionDialogMessage = string.Empty;
     private bool _showAllVersions;
     private bool _viewMenuOpen;
+    private bool _hasArchivedCalcs = true;
+    private string? _prevProjectId;
 
     private string _sortColumn = "";
     private bool _sortAscending = true;
@@ -716,21 +691,14 @@
     private void PreviousPage() { if (_currentPage > 1) _currentPage--; }
     private void NextPage() { if (_currentPage < TotalPages) _currentPage++; }
 
-    private bool _showFilters;
-    private string _filterStatus = string.Empty;
-    private string _filterCalcType = string.Empty;
-    private string _filterCalculationRole = string.Empty;
-    private string _filterResponsible = string.Empty;
-    private string _filterInspector = string.Empty;
-    private DateTime? _filterDeadlineFrom;
-    private DateTime? _filterDeadlineTo;
-    private string _filterLocked = string.Empty;
-    private string _filterMultipleVersions = string.Empty;
+    private bool _filterMenuOpen;
 
     private readonly Dictionary<string, ColumnFilterState> _calcColFilters = new()
     {
         ["code"]            = new() { Type = ColumnFilterType.Text },
         ["name"]            = new() { Type = ColumnFilterType.Text },
+        ["project"]         = new() { Type = ColumnFilterType.Text },
+        ["folder"]          = new() { Type = ColumnFilterType.Text },
         ["calculationType"] = new() { Type = ColumnFilterType.Dropdown },
         ["calculationRole"] = new() { Type = ColumnFilterType.Dropdown },
         ["status"]          = new() { Type = ColumnFilterType.Text },
@@ -749,7 +717,7 @@
         ["privacy"]         = new() { Type = ColumnFilterType.Boolean },
     };
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         _calcColFilters["calculationType"].AvailableValues =
         [
@@ -760,34 +728,22 @@
         _calcColFilters["calculationRole"].AvailableValues = CalculationRoles
             .Select(GetCalculationRoleLabel)
             .ToList();
+
+        var saved = await ViewPreference.LoadColumnsAsync();
+        if (saved is not null)
+            foreach (var (k, v) in saved)
+                if (_calculationColumns.ContainsKey(k))
+                    _calculationColumns[k] = v;
     }
 
     private void OnColumnFilterChanged() => ResetPage();
     private ColumnFilterState CF(string key) => _calcColFilters[key];
 
-    private bool HasActiveFilters =>
-        !string.IsNullOrWhiteSpace(_filterStatus) ||
-        !string.IsNullOrWhiteSpace(_filterCalcType) ||
-        !string.IsNullOrWhiteSpace(_filterCalculationRole) ||
-        !string.IsNullOrWhiteSpace(_filterResponsible) ||
-        !string.IsNullOrWhiteSpace(_filterInspector) ||
-        _filterDeadlineFrom.HasValue ||
-        _filterDeadlineTo.HasValue ||
-        !string.IsNullOrWhiteSpace(_filterLocked) ||
-        !string.IsNullOrWhiteSpace(_filterMultipleVersions) ||
-        _calcColFilters.Values.Any(f => f.IsActive);
+    private bool HasActiveFilters => _calcColFilters.Values.Any(f => f.IsActive);
+    private int ActiveFilterCount => _calcColFilters.Values.Count(f => f.IsActive);
 
     private void ClearFilters()
     {
-        _filterStatus = string.Empty;
-        _filterCalcType = string.Empty;
-        _filterCalculationRole = string.Empty;
-        _filterResponsible = string.Empty;
-        _filterInspector = string.Empty;
-        _filterDeadlineFrom = null;
-        _filterDeadlineTo = null;
-        _filterLocked = string.Empty;
-        _filterMultipleVersions = string.Empty;
         foreach (var f in _calcColFilters.Values) f.Clear();
         _currentPage = 1;
     }
@@ -879,56 +835,15 @@
                 _ => list
             };
 
-            if (!string.IsNullOrWhiteSpace(_filterStatus))
-                list = list.Where(c => c.Status.Contains(_filterStatus, StringComparison.OrdinalIgnoreCase));
-
-            if (!string.IsNullOrWhiteSpace(_filterCalcType))
-            {
-                if (_filterCalcType == "Production")
-                    list = list.Where(c => c.CalculationType == CalculationVersionType.Production);
-                else if (_filterCalcType == "Contract")
-                    list = list.Where(c => c.CalculationType == CalculationVersionType.Contract);
-                else if (_filterCalcType == "Tender")
-                    list = list.Where(c => c.CalculationType == CalculationVersionType.Tender);
-            }
-
-            if (Enum.TryParse<CalculationRole>(_filterCalculationRole, out var calculationRole))
-                list = list.Where(c => c.CalculationRole == calculationRole);
-
-            if (!string.IsNullOrWhiteSpace(_filterResponsible))
-                list = list.Where(c => c.Responsible.Contains(_filterResponsible, StringComparison.OrdinalIgnoreCase));
-
-            if (!string.IsNullOrWhiteSpace(_filterInspector))
-                list = list.Where(c => c.Inspector.Contains(_filterInspector, StringComparison.OrdinalIgnoreCase));
-
-            if (_filterDeadlineFrom.HasValue)
-                list = list.Where(c => c.TenderDeadline.Date >= _filterDeadlineFrom.Value.Date);
-
-            if (_filterDeadlineTo.HasValue)
-                list = list.Where(c => c.TenderDeadline.Date <= _filterDeadlineTo.Value.Date);
-
-            if (!string.IsNullOrWhiteSpace(_filterLocked))
-            {
-                bool locked = _filterLocked == "true";
-                list = list.Where(c => c.IsLocked == locked);
-            }
-
-            if (!string.IsNullOrWhiteSpace(_filterMultipleVersions))
-            {
-                bool multi = _filterMultipleVersions == "true";
-                var allCalcs = Folder.State.ProjectSelected?.Calculations ?? [];
-                list = list.Where(c =>
-                {
-                    bool hasMulti = CalculationVersionSelector.HasMultipleVersions(allCalcs, c);
-                    return hasMulti == multi;
-                });
-            }
-
             // ── Per-column filters ──────────────────────────────────
             if (_calcColFilters["code"].IsActive)
                 list = list.Where(c => _calcColFilters["code"].MatchesText(c.Code));
             if (_calcColFilters["name"].IsActive)
                 list = list.Where(c => _calcColFilters["name"].MatchesText(c.Name));
+            if (_calcColFilters["project"].IsActive)
+                list = list.Where(c => _calcColFilters["project"].MatchesText(c.ProjectName));
+            if (_calcColFilters["folder"].IsActive)
+                list = list.Where(c => _calcColFilters["folder"].MatchesText(c.FolderName));
             if (_calcColFilters["calculationType"].IsActive)
                 list = list.Where(c => _calcColFilters["calculationType"].MatchesDropdown(GetCalculationTypeLabel(c.CalculationType)));
             if (_calcColFilters["calculationRole"].IsActive)
@@ -1125,7 +1040,9 @@
         }
     }
 
-    private int ViewBadgeCount => (_showAllVersions ? 1 : 0) + (_showArchived ? 1 : 0);
+    private int ViewBadgeCount =>
+        (_showAllVersions && HasAnyMultipleVersionsInCurrentView ? 1 : 0) +
+        (_showArchived ? 1 : 0);
 
     private bool ShowVersionColumn =>
         _showAllVersions || FilteredCalculations.Any(c => HasMultipleVersions(c));
@@ -1326,11 +1243,11 @@
                 [nameof(CentralReportsDialog.FolderScope)] = Folder.State.FolderSelected!,
                 [nameof(CentralReportsDialog.ProjectScope)] = Folder.State.ProjectSelected,
                 [nameof(CentralReportsDialog.InitialView)] = CentralReportsDialog.ReportView.Income,
-                [nameof(CentralReportsDialog.InitialStatus)] = _filterStatus,
-                [nameof(CentralReportsDialog.InitialCalculationType)] = _filterCalcType,
-                [nameof(CentralReportsDialog.InitialCalculationRole)] = _filterCalculationRole,
-                [nameof(CentralReportsDialog.InitialResponsible)] = _filterResponsible,
-                [nameof(CentralReportsDialog.InitialInspector)] = _filterInspector
+                [nameof(CentralReportsDialog.InitialStatus)] = _calcColFilters["status"].TextValue,
+                [nameof(CentralReportsDialog.InitialCalculationType)] = string.Empty,
+                [nameof(CentralReportsDialog.InitialCalculationRole)] = string.Empty,
+                [nameof(CentralReportsDialog.InitialResponsible)] = _calcColFilters["responsible"].TextValue,
+                [nameof(CentralReportsDialog.InitialInspector)] = _calcColFilters["inspector"].TextValue
             },
             BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
     }
