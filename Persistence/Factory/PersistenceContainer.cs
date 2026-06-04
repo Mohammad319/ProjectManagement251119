@@ -14,6 +14,7 @@ using Application.Feature.PriceImport;
 using Application.Feature.TfIdf;
 using Application.Feature.Project.Folder;
 using Application.Feature.Project.Project;
+using Application.Feature.Project.ProjectBid;
 using Application.Feature.ResourceType;
 using Application.Interfaces.Email;
 using Application.Services.CalculationItems.Opportunity;
@@ -80,6 +81,7 @@ namespace Persistence.Factory
             services.AddScoped<IOrganisationService, OrganisationService>();
             services.AddScoped<IOrganisationTypeService, OrganisationTypeService>();
             services.AddScoped<IProjectService, ProjectService>();
+            services.AddScoped<IProjectBidService, ProjectBidService>();
             services.AddScoped<IAccountGroupService, AccountGroupService>();
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<IResourceTypeService, ResourceTypeService>();

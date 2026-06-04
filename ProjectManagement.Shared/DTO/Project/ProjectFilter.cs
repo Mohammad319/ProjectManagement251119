@@ -16,7 +16,7 @@ namespace ProjectManagement.Shared.DTO.Project
         public DateTime? StartDate2 { get; set; }
         public DateTime? EndDate1 { get; set; }
         public DateTime? EndDate2 { get; set; }
-        public bool IsVisible { get; set; } = true;
+        public bool? IsVisible { get; set; } = true;
         public Guid? StatusId { get; set; }
         public Guid? FolderId { get; set; }
         public int? CustomerId { get; set; }

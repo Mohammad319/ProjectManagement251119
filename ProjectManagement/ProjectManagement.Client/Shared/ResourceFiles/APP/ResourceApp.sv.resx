@@ -706,6 +706,8 @@
   <data name="owner" xml:space="preserve"><value>Ansvarig</value></data>
   <data name="selectFolderFirst" xml:space="preserve"><value>Välj en mapp först</value></data>
   <data name="selectProjectFirst" xml:space="preserve"><value>Välj ett projekt först</value></data>
+  <data name="editFolder" xml:space="preserve"><value>Ändra mapp</value></data>
+  <data name="editProject" xml:space="preserve"><value>Ändra projekt</value></data>
   <data name="moveFolder" xml:space="preserve"><value>Flytta mapp</value></data>
   <data name="copyFolder" xml:space="preserve"><value>Kopiera mapp</value></data>
   <data name="moveProject" xml:space="preserve"><value>Flytta projekt</value></data>
@@ -885,4 +887,10 @@
   <data name="createContractCalculationTitle" xml:space="preserve"><value>Skapa kontraktskalkyl?</value></data>
   <data name="createContractCalculationDescription" xml:space="preserve"><value>Den låsta anbudskalkylen sparas som historik. En kopia skapas som kontraktskalkyl och öppnas för fortsatt arbete.</value></data>
   <data name="contractCalculationCreateFailed" xml:space="preserve"><value>Kontraktskalkylen kunde inte skapas.</value></data>
+  <data name="notSelectedNeuter" xml:space="preserve"><value>Ej valt</value></data>
+  <data name="notSelectedCommon" xml:space="preserve"><value>Ej vald</value></data>
+  <data name="selectTargetFolderBeforeCopy" xml:space="preserve"><value>Välj en målmapp innan du kopierar projektet.</value></data>
+  <data name="selectTargetFolderBeforeMove" xml:space="preserve"><value>Välj en målmapp innan du flyttar projektet.</value></data>
+  <data name="selectTargetProjectBeforeCopy" xml:space="preserve"><value>Välj ett målprojekt innan du kopierar kalkylen.</value></data>
+  <data name="selectTargetProjectBeforeMove" xml:space="preserve"><value>Välj ett målprojekt innan du flyttar kalkylen.</value></data>
 </root>

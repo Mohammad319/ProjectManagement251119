@@ -706,6 +706,8 @@
   <data name="owner" xml:space="preserve"><value>Owner</value></data>
   <data name="selectFolderFirst" xml:space="preserve"><value>Select a folder first</value></data>
   <data name="selectProjectFirst" xml:space="preserve"><value>Select a project first</value></data>
+  <data name="editFolder" xml:space="preserve"><value>Edit folder</value></data>
+  <data name="editProject" xml:space="preserve"><value>Edit project</value></data>
   <data name="moveFolder" xml:space="preserve"><value>Move folder</value></data>
   <data name="copyFolder" xml:space="preserve"><value>Copy folder</value></data>
   <data name="moveProject" xml:space="preserve"><value>Move project</value></data>
@@ -885,4 +887,10 @@
   <data name="createContractCalculationTitle" xml:space="preserve"><value>Create contract calculation?</value></data>
   <data name="createContractCalculationDescription" xml:space="preserve"><value>The locked tender calculation will be saved as history. A copy is created as a contract calculation and opened for continued work.</value></data>
   <data name="contractCalculationCreateFailed" xml:space="preserve"><value>The contract calculation could not be created.</value></data>
+  <data name="notSelectedNeuter" xml:space="preserve"><value>Not selected</value></data>
+  <data name="notSelectedCommon" xml:space="preserve"><value>Not selected</value></data>
+  <data name="selectTargetFolderBeforeCopy" xml:space="preserve"><value>Select a target folder before copying the project.</value></data>
+  <data name="selectTargetFolderBeforeMove" xml:space="preserve"><value>Select a target folder before moving the project.</value></data>
+  <data name="selectTargetProjectBeforeCopy" xml:space="preserve"><value>Select a target project before copying the calculation.</value></data>
+  <data name="selectTargetProjectBeforeMove" xml:space="preserve"><value>Select a target project before moving the calculation.</value></data>
 </root>

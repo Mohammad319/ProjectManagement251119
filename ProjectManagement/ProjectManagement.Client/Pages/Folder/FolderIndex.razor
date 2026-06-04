@@ -59,6 +59,31 @@
                             <span aria-hidden="true">@((MarkupString)Icons.Search)</span>
                         </button>
 
+                        @* Expand / Collapse tree levels *@
+                        <button type="button"
+                                class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                                @onclick="CycleExpandAsync"
+                                title="@TreeExpandButtonTooltip"
+                                aria-label="@TreeExpandButtonTooltip"
+                                disabled="@(!SelectedDepartmentId.HasValue || _isReorderMode)">
+                            @if (TreeExpandIsExpanding)
+                            {
+                                @* Expand icon: two down-chevrons *@
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 3l-7 7-7-7"/>
+                                </svg>
+                            }
+                            else
+                            {
+                                @* Collapse icon: two up-chevrons *@
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 21l7-7 7 7"/>
+                                </svg>
+                            }
+                        </button>
+
                         @* Filter & Sorting *@
                         <div title="Filter och sortering">
                             <MhdDropdownPanel @ref="_filterPanel"
@@ -72,7 +97,7 @@
 
                                     @* Panel header with close button *@
                                     <div class="flex items-center justify-between pb-1 border-b border-slate-200 dark:border-slate-700">
-                                        <span class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Filter och sortering</span>
+                                        <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Filter och sortering</span>
                                         <button type="button"
                                                 class="flex h-5 w-5 items-center justify-center rounded text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-300"
                                                 title="Stäng"
@@ -85,7 +110,7 @@
 
                                     @* Group by *@
                                     <div>
-                                        <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                                        <label class="mb-1 block text-[11px] font-semibold text-slate-500 dark:text-slate-400"
                                                title="@AppLoc["groupByTooltip"]">
                                             @AppLoc["groupBy"]
                                         </label>
@@ -104,7 +129,7 @@
                                     @if (TreeGroupingMode != ProjectTreeGroupingMode.FolderStructure)
                                     {
                                         <div>
-                                            <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                                            <label class="mb-1 block text-[11px] font-semibold text-slate-500 dark:text-slate-400">
                                                 Struktur i trädet
                                             </label>
                                             <div class="space-y-0.5">
@@ -130,7 +155,7 @@
 
                                     @* Sort *@
                                     <div>
-                                        <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                                        <label class="mb-1 block text-[11px] font-semibold text-slate-500 dark:text-slate-400"
                                                title="@AppLoc["sortTooltip"]">
                                             @AppLoc["sort"]
                                         </label>
@@ -291,7 +316,7 @@
                 {
                     <div class="flex h-full min-h-[60vh] items-center justify-center p-6">
                         <div class="max-w-xl rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center dark:border-slate-700 dark:bg-slate-950/60">
-                            <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">@AppLoc["workspace"]</div>
+                            <div class="text-xs font-semibold text-slate-500 dark:text-slate-400">@AppLoc["workspace"]</div>
                             <h3 class="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-100">@AppLoc["selectFolderOrProject"]</h3>
                             <p class="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
                                 @AppLoc["folderSelectionHint"]
@@ -346,7 +371,7 @@ else
             {
                 <div class="flex h-full min-h-[60vh] items-center justify-center p-6">
                     <div class="max-w-xl rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center dark:border-slate-700 dark:bg-slate-950/60">
-                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">@AppLoc["workspace"]</div>
+                        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400">@AppLoc["workspace"]</div>
                         <h3 class="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-100">@AppLoc["selectFolderOrProject"]</h3>
                         <p class="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
                             @AppLoc["folderSelectionHint"]

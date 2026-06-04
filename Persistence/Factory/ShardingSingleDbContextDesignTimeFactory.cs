@@ -10,7 +10,7 @@ namespace Persistence.Factory
             var conn = FirstNonEmpty(
                            Environment.GetEnvironmentVariable("PM_TEMPLATE_CONN"),
                            Environment.GetEnvironmentVariable("TENANT_TEMPLATE_CONN"))
-                       ?? @"Data Source=.\SQLEXPRESS;Initial Catalog=PM_Tenant_DB2;Integrated Security=True;Connect Timeout=30;Encrypt=False;Trust Server Certificate=True;Application Intent=ReadWrite;MultipleActiveResultSets=True";
+                       ?? @"Data Source=.\SQLEXPRESS;Initial Catalog=PM_Tenant_DB1;Integrated Security=True;Connect Timeout=30;Encrypt=False;Trust Server Certificate=True;Application Intent=ReadWrite;MultipleActiveResultSets=True";
 
             var tenantId = 1;
             var tenantRaw = FirstNonEmpty(

@@ -28,6 +28,7 @@ namespace ProjectManagement.Client.Shared.Repositories
         IOfferRepository Offer { get; }
         IOrganisationRepository Org { get; }
         IProjectRepository Project { get; }
+        IProjectBidRepository ProjectBid { get; }
     }
 
     public class UnitOfWorkRepository(
@@ -46,7 +47,8 @@ namespace ProjectManagement.Client.Shared.Repositories
         IDepartmentsRepository departmentsrepository,
         IOfferRepository offerrepository,
         IOrganisationRepository organisationrepository,
-        IProjectRepository projectrepository
+        IProjectRepository projectrepository,
+        IProjectBidRepository projectbidrepository
         ) : IUnitOfWorkRepository
     {
         public IItemCalcCategoryRepository ItemCalcCategory { get; } = itemcalccategoryrepository;
@@ -65,6 +67,7 @@ namespace ProjectManagement.Client.Shared.Repositories
         public IOfferRepository Offer { get; } = offerrepository;
         public IOrganisationRepository Org { get; } = organisationrepository;
         public IProjectRepository Project { get; } = projectrepository;
+        public IProjectBidRepository ProjectBid { get; } = projectbidrepository;
     }
 
 }

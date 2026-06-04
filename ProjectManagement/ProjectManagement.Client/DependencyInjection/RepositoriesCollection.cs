@@ -40,6 +40,7 @@ namespace ProjectManagement.Client.DependencyInjection
             services.AddScoped<IOpportunityRepository, OpportunityRepository>();
             services.AddScoped<IShareCalcRepository, ShareCalcRepository>();
             services.AddScoped<ITenderRepository, TenderRepository>();
+            services.AddScoped<IProjectBidRepository, ProjectBidRepository>();
             services.AddScoped<IItemCalcCategoryRepository, ItemCalcCategoryRepository>();
             services.AddScoped<IUnitOfWorkRepository, UnitOfWorkRepository>();
             services.AddScoped<ITasksUserComputationServiceWasm, TasksUserComputationServiceWasm>();

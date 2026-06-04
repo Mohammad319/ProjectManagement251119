@@ -752,6 +752,7 @@
         if (user.Identity?.IsAuthenticated == true && isInAnyRole)
         {
             list.Add(new() { IconHtml = Icons.Edit, Label = ResourceApp.edit, OnClickAsync = () => { UpdateForm(item); return Task.CompletedTask; } });
+            list.Add(new() { IconHtml = Icons.Tender, Label = ResourceLoc.tender, OnClickAsync = () => { OpenProjectBidsDialog(item); return Task.CompletedTask; } });
             list.Add(new() { IconHtml = Icons.Folder, Label = AppLoc["moveProject"], OnClickAsync = () => { OpenMoveCopyDialog(item, MoveCopyOperation.Move); return Task.CompletedTask; } });
             list.Add(new() { IconHtml = Icons.Copy, Label = AppLoc["copyProject"], OnClickAsync = () => { OpenMoveCopyDialog(item, MoveCopyOperation.Copy); return Task.CompletedTask; } });
 
@@ -792,6 +793,16 @@
             {
                 [nameof(ProjectDetailsUI.ProjectId)] = model.Id,
             }, BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
+
+    void OpenProjectBidsDialog(ListProjectMVVM project) =>
+        Modal.ShowComponent<ProjectBidsDialog>(
+            ResourceLoc.tender,
+            new Dictionary<string, object>
+            {
+                [nameof(ProjectBidsDialog.ProjectId)] = project.Id,
+                [nameof(ProjectBidsDialog.ProjectName)] = project.Name
+            },
+            BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
 
     void OpenMoveCopyDialog(ListProjectMVVM project, string operation) =>
         Modal.ShowComponent<MoveCopyDialog>(

@@ -1414,7 +1414,6 @@
                 list.Add(new() { IconHtml = Icons.Edit, Label = ResourceApp.edit, OnClickAsync = () => { UpdateForm(item); return Task.CompletedTask; } });
             list.Add(new() { IconHtml = Icons.Copy, Label = "Versioner...", OnClickAsync = () => { OpenVersionsDialog(item); return Task.CompletedTask; } });
             list.Add(new() { IconHtml = Icons.PermissionShield, Label = ResourceApp.share, OnClickAsync = () => { ShareForm(item); return Task.CompletedTask; } });
-            list.Add(new() { IconHtml = Icons.Tender, Label = ResourceLoc.tender, OnClickAsync = () => { TenderPage(item); return Task.CompletedTask; } });
             list.Add(new() { IconHtml = Icons.Folder, Label = AppLoc["moveCalculation"], OnClickAsync = () => { OpenMoveCopyDialog(item, MoveCopyOperation.Move); return Task.CompletedTask; } });
             list.Add(new() { IconHtml = Icons.Copy, Label = AppLoc["copyCalculation"], OnClickAsync = () => { OpenMoveCopyDialog(item, MoveCopyOperation.Copy); return Task.CompletedTask; } });
 

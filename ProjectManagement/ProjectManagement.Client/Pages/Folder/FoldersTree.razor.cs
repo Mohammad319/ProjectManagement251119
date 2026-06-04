@@ -950,6 +950,39 @@ namespace ProjectManagement.Client.Pages.Folder
             await InvokeAsync(StateHasChanged);
         }
 
+        public async Task ExpandFoldersOnlyAsync()
+        {
+            if (GroupingMode == ProjectTreeGroupingMode.FolderStructure)
+            {
+                foreach (var folder in UoWService.Folder.State.FoldersList)
+                {
+                    if (!folder.ProjectsLoaded)
+                        await Folder.SetProjectsToFolder(folder);
+
+                    if (folder.Projects?.Count > 0)
+                        folder.ShowProjects = true;
+                }
+            }
+            else
+            {
+                _collapsedGroupKeys.Clear();
+            }
+
+            await InvokeAsync(StateHasChanged);
+        }
+
+        public void CollapseProjectsOnly()
+        {
+            if (GroupingMode == ProjectTreeGroupingMode.FolderStructure)
+            {
+                foreach (var folder in UoWService.Folder.State.FoldersList)
+                    foreach (var project in folder.Projects ?? [])
+                        project.ShowCalculations = false;
+            }
+
+            StateHasChanged();
+        }
+
         public void CollapseAll()
         {
             if (GroupingMode == ProjectTreeGroupingMode.FolderStructure)
@@ -1087,7 +1120,9 @@ namespace ProjectManagement.Client.Pages.Folder
 
             if (!Folder.State.OtherDepartment && user.Identity?.IsAuthenticated == true && isInAnyRole)
             {
-                list.Add(new() { IconHtml = Icons.Edit, Label = ResourceApp.edit, OnClickAsync = () => { UpdateForm(item); return Task.CompletedTask; } });
+                list.Add(new() { IconHtml = Icons.Plus, Label = AppLoc[LocalizerConst.New, CalcResource.project], OnClickAsync = () => { CreateProjectFromFolderTree(item); return Task.CompletedTask; } });
+                list.Add(new() { IsSeparator = true });
+                list.Add(new() { IconHtml = Icons.Edit, Label = AppLoc["editFolder"], OnClickAsync = () => { UpdateForm(item); return Task.CompletedTask; } });
                 list.Add(new() { IconHtml = Icons.Folder, Label = AppLoc["moveFolder"], OnClickAsync = () => { OpenMoveCopyDialog(MoveCopyItemKind.Folder, MoveCopyOperation.Move, item); return Task.CompletedTask; } });
                 list.Add(new() { IconHtml = Icons.Copy, Label = AppLoc["copyFolder"], OnClickAsync = () => { OpenMoveCopyDialog(MoveCopyItemKind.Folder, MoveCopyOperation.Copy, item); return Task.CompletedTask; } });
 
@@ -1113,7 +1148,10 @@ namespace ProjectManagement.Client.Pages.Folder
 
             if (!Folder.State.OtherDepartment && user.Identity?.IsAuthenticated == true && isInAnyRole)
             {
-                list.Add(new() { IconHtml = Icons.Edit, Label = ResourceApp.edit, OnClickAsync = () => { EditProjectFromTree(folder, project); return Task.CompletedTask; } });
+                list.Add(new() { IconHtml = Icons.Plus, Label = AppLoc[LocalizerConst.New, CalcResource.calculation], OnClickAsync = async () => await CreateCalcFromProjectTreeAsync(folder, project) });
+                list.Add(new() { IsSeparator = true });
+                list.Add(new() { IconHtml = Icons.Edit, Label = AppLoc["editProject"], OnClickAsync = () => { EditProjectFromTree(folder, project); return Task.CompletedTask; } });
+                list.Add(new() { IconHtml = Icons.Tender, Label = ResourceLoc.tender, OnClickAsync = () => { OpenProjectBidsFromTree(project); return Task.CompletedTask; } });
                 list.Add(new() { IconHtml = Icons.Folder, Label = AppLoc["moveProject"], OnClickAsync = () => { OpenMoveCopyProjectDialog(folder, project, MoveCopyOperation.Move); return Task.CompletedTask; } });
                 list.Add(new() { IconHtml = Icons.Copy, Label = AppLoc["copyProject"], OnClickAsync = () => { OpenMoveCopyProjectDialog(folder, project, MoveCopyOperation.Copy); return Task.CompletedTask; } });
 
@@ -1231,6 +1269,46 @@ namespace ProjectManagement.Client.Pages.Folder
             }));
         }
 
+        private void CreateProjectFromFolderTree(FolderMVVM folder)
+        {
+            Modal.ShowComponent<ProjectForm>(
+                AppLoc[LocalizerConst.New, CalcResource.project],
+                new Dictionary<string, object>
+                {
+                    [nameof(ProjectForm.Project)] = new ListProjectMVVM(),
+                    [nameof(ProjectForm.FolderId)] = folder.Id,
+                    [nameof(ProjectForm.Callback)] = EventCallback.Factory.Create<Tuple<bool, ListProjectMVVM>>(this,
+                        async t => await OnProjectEditedFromTreeAsync(folder, t))
+                },
+                BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge,
+                DialogButtonsHelper.CreateSaveCancelButtons(ProjectForm.DialogFormId));
+        }
+
+        private async Task CreateCalcFromProjectTreeAsync(FolderMVVM folder, ListProjectMVVM project)
+        {
+            await SetProject(folder, project);
+
+            Modal.ShowComponent<CalculationFormUI>(
+                AppLoc[LocalizerConst.New, CalcResource.calculation],
+                new Dictionary<string, object>
+                {
+                    [nameof(CalculationFormUI.Calculation)] = new ListCalculationMVVM(),
+                    [nameof(CalculationFormUI.Callback)] = EventCallback.Factory.Create<ListCalculationMVVM?>(this,
+                        async updated =>
+                        {
+                            if (updated != null)
+                            {
+                                project.CalculationsLoaded = false;
+                                await Folder.SetCalcsToProject(project);
+                                UoWService.Folder.State.Notify();
+                            }
+                            Modal.Close();
+                        })
+                },
+                BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge,
+                DialogButtonsHelper.CreateSaveCancelButtons(CalculationFormUI.DialogFormId));
+        }
+
         private void EditProjectFromTree(FolderMVVM folder, ListProjectMVVM project)
         {
             Modal.ShowComponent<ProjectForm>(
@@ -1279,6 +1357,16 @@ namespace ProjectManagement.Client.Pages.Folder
                 BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge,
                 DialogButtonsHelper.CreateSaveCancelButtons(CalculationFormUI.DialogFormId));
         }
+
+        private void OpenProjectBidsFromTree(ListProjectMVVM project) =>
+            Modal.ShowComponent<ProjectBidsDialog>(
+                ResourceLoc.tender,
+                new Dictionary<string, object>
+                {
+                    [nameof(ProjectBidsDialog.ProjectId)] = project.Id,
+                    [nameof(ProjectBidsDialog.ProjectName)] = project.Name
+                },
+                BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
 
         private void OpenMoveCopyProjectDialog(FolderMVVM folder, ListProjectMVVM project, string operation) =>
             Modal.ShowComponent<MoveCopyDialog>(

@@ -265,6 +265,13 @@ public partial class ShardingSingleDbContext(DbContextOptions<ShardingSingleDbCo
             return Expression.AndAlso(NotDeleted(calc), NotDeleted(project));
         }
 
+        // ProjectBid -> Project (soft-deletable)
+        if (clrType == typeof(ProjectBidEntity))
+        {
+            var project = Expression.Property(parameter, nameof(ProjectBidEntity.Project));
+            return NotDeleted(project);
+        }
+
         // Offer -> Resource -> Task -> Calculation -> Project
         if (clrType == typeof(OfferEntity))
         {

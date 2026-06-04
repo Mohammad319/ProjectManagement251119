@@ -77,6 +77,9 @@ namespace Domain.Entities.Project
         [JsonIgnore]
         public ICollection<CalculationEntity> Calculations { get; private set; } = [];
 
+        [JsonIgnore]
+        public ICollection<ProjectBidEntity> Bids { get; private set; } = [];
+
         private ProjectEntity() { }
 
         public static ProjectEntity Create(

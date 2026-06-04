@@ -520,6 +520,8 @@
   <data name="matchContains" xml:space="preserve"><value>Contains</value></data>
   <data name="matchEquals" xml:space="preserve"><value>Is equal to</value></data>
   <data name="matchNotEquals" xml:space="preserve"><value>Is not equal to</value></data>
+  <data name="matchSimilar" xml:space="preserve"><value>Similar to</value></data>
+  <data name="similarResults" xml:space="preserve"><value>Similar results</value></data>
   <data name="matchStartsWith" xml:space="preserve"><value>Starts with</value></data>
   <data name="matchEndsWith" xml:space="preserve"><value>Ends with</value></data>
   <data name="includeArchived" xml:space="preserve"><value>Include archived</value></data>

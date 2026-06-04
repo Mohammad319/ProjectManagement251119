@@ -18,7 +18,7 @@ namespace ProjectManagement.Client.Pages.Folder
     public partial class FolderIndex : IDisposable
     {
         bool SideBarVisible { get; set; } = true;
-        private bool _treeExpanded;
+        private int _cycleStep; // 0=folders collapsed, 1=folders open, 2=all open, 3=folders open+projects closed
         bool CanChooseAllDepartments { get; set; }
         int? CurrentUserDepartmentId { get; set; }
         int? SelectedDepartmentId { get; set; }
@@ -222,7 +222,7 @@ namespace ProjectManagement.Client.Pages.Folder
         {
             var openNodes = preserveOpenNodes ? SnapshotOpenNodes() : null;
 
-            _treeExpanded = false;
+            _cycleStep = 0;
             Folder.State.SetSelectedDepartment(SelectedDepartmentId);
             Folder.State.ClearSelection();
             Folder.State.ClearFolders();
@@ -341,26 +341,43 @@ namespace ProjectManagement.Client.Pages.Folder
             await InvokeAsync(StateHasChanged);
         }
 
-        private async Task ToggleExpandCollapseAsync()
+        private async Task CycleExpandAsync()
         {
-            if (_treeExpanded)
-                CollapseAll();
-            else
-                await ExpandAllAsync();
+            if (_foldersTree is null) return;
+
+            switch (_cycleStep)
+            {
+                case 0: // → expand folders
+                    await _foldersTree.ExpandFoldersOnlyAsync();
+                    _cycleStep = 1;
+                    break;
+                case 1: // → expand projects
+                    await _foldersTree.ExpandAllAsync();
+                    _cycleStep = 2;
+                    break;
+                case 2: // → collapse projects
+                    _foldersTree.CollapseProjectsOnly();
+                    _cycleStep = 3;
+                    break;
+                case 3: // → collapse folders
+                    _foldersTree.CollapseAll();
+                    _cycleStep = 0;
+                    break;
+            }
+
+            await InvokeAsync(StateHasChanged);
         }
 
-        private async Task ExpandAllAsync()
+        private string TreeExpandButtonTooltip => _cycleStep switch
         {
-            if (_foldersTree != null)
-                await _foldersTree.ExpandAllAsync();
-            _treeExpanded = true;
-        }
+            0 => "Expandera mappar",
+            1 => "Expandera projekt",
+            2 => "Fäll ihop projekt",
+            3 => "Fäll ihop mappar",
+            _ => "Expandera mappar"
+        };
 
-        private void CollapseAll()
-        {
-            _foldersTree?.CollapseAll();
-            _treeExpanded = false;
-        }
+        private bool TreeExpandIsExpanding => _cycleStep <= 1;
 
         private async Task SaveTreeSortModeAsync()
         {

@@ -15,6 +15,7 @@ public partial class ShardingSingleDbContext
     #region DbSets
 
     public DbSet<TenderEntity> Tenders { get; set; } = default!;
+    public DbSet<ProjectBidEntity> ProjectBids { get; set; } = default!;
     public DbSet<ProjectEntity> Projects { get; set; } = default!;
     public DbSet<FolderEntity> Folders { get; set; } = default!;
     public DbSet<StatusEntity> CalculationStatus { get; set; } = default!;

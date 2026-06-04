@@ -23,6 +23,7 @@
         public static string Application => ApiV1 + "Application/";
         public static string Section => ApiV1 + "section/";
         public static string Tender => ApiV1 + "tender/";
+        public static string ProjectBids => ApiV1 + "projectbids/";
         public static string ShareCalc => ApiV1 + "shareCalc/";
         public static string Resource => ApiV1 + "Resources/";
         public static string Task => ApiV1 + "Tasks/";

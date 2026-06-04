@@ -2,35 +2,209 @@
 @attribute [Authorize(Roles = PMRolesConst.APP.AdminManger)]
 @inherits AppComponentBase
 @inject IConfiguration Configuration
+@inject NavigationManager NavManager
 
-<div class="flex h-[calc(100vh-120px)] flex-col gap-2 text-slate-900 dark:text-slate-100">
+<div class="flex h-[calc(100vh-120px)] flex-col gap-3 text-slate-900 dark:text-slate-100">
 
-    <div class="flex items-center justify-between">
+    @* ── Header ──────────────────────────────────────────── *@
+    <div class="flex flex-wrap items-center justify-between gap-2">
         <div>
             <h2 class="text-base font-semibold text-slate-900 dark:text-slate-100">Seq – Log Analysis</h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400">Logs from both <strong>ProjectManagement.Server</strong> and <strong>ProjectManagement.Admin</strong></p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">
+                Logs from <strong>ProjectManagement.Server</strong> and <strong>ProjectManagement.Admin</strong>
+            </p>
         </div>
-        <a href="@_seqUrl" target="_blank" rel="noopener noreferrer"
-           class="inline-flex items-center gap-1.5 rounded-xl border border-sky-600 bg-sky-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-sky-700 dark:border-sky-500 dark:bg-sky-500 dark:hover:bg-sky-400">
-            Open in new tab ↗
-        </a>
+        @if (!string.IsNullOrWhiteSpace(_seqUrl) && !_hasBlockingIssue)
+        {
+            <a href="@_seqUrl" target="_blank" rel="noopener noreferrer"
+               class="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">
+                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+                Öppna i ny flik ↗
+            </a>
+        }
     </div>
 
-    <div class="flex-1 overflow-hidden rounded-2xl border border-slate-200 shadow-sm dark:border-slate-800">
-        <iframe src="@_seqUrl"
-                class="h-full w-full border-0"
-                title="Seq Log Viewer"
-                sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox">
-        </iframe>
-    </div>
+    @* ── Not configured ───────────────────────────────────── *@
+    @if (string.IsNullOrWhiteSpace(_seqUrl))
+    {
+        <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 dark:border-amber-800/50 dark:bg-amber-950/30">
+            <p class="text-sm font-semibold text-amber-800 dark:text-amber-300">SeqUrl är inte konfigurerad</p>
+            <p class="mt-1 text-xs text-amber-700 dark:text-amber-400">
+                Lägg till i <code class="rounded bg-amber-100 px-1 dark:bg-amber-900/40">appsettings.json</code>
+                eller som miljövariabel på servern:
+            </p>
+            <pre class="mt-2 rounded bg-amber-100 px-3 py-2 text-[11px] text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">"SeqUrl": "https://admin.ata-cost.com/seq"</pre>
+            <p class="mt-2 text-xs text-amber-700 dark:text-amber-400">
+                Se nginx-konfigurationen nedan för att sätta upp proxy.
+            </p>
+        </div>
+    }
+
+    @* ── localhost warning ────────────────────────────────── *@
+    @if (_isLocalhostUrl)
+    {
+        <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-800/50 dark:bg-amber-950/30">
+            <div class="flex items-start gap-2.5">
+                <svg class="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                </svg>
+                <div>
+                    <p class="text-sm font-semibold text-amber-800 dark:text-amber-300">
+                        SeqUrl pekar på localhost — fungerar inte i produktion
+                    </p>
+                    <p class="mt-1 text-xs text-amber-700 dark:text-amber-400">
+                        Nuvarande: <code class="rounded bg-amber-100 px-1 dark:bg-amber-900/40">@_seqUrl</code>
+                    </p>
+                    <p class="mt-1 text-xs text-amber-700 dark:text-amber-400">
+                        <code>localhost</code> tolkas av webbläsaren (din dator), inte av servern.
+                        Ändra till:
+                    </p>
+                    <pre class="mt-1.5 rounded bg-amber-100 px-2 py-1 text-[11px] text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">"SeqUrl": "https://admin.ata-cost.com/seq"</pre>
+                </div>
+            </div>
+        </div>
+    }
+
+    @* ── Mixed content warning ────────────────────────────── *@
+    @if (_isMixedContent)
+    {
+        <div class="rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 dark:border-orange-800/50 dark:bg-orange-950/30">
+            <div class="flex items-start gap-2.5">
+                <svg class="mt-0.5 h-4 w-4 shrink-0 text-orange-600 dark:text-orange-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                <div>
+                    <p class="text-sm font-semibold text-orange-800 dark:text-orange-300">Mixed Content — HTTP inuti en HTTPS-sida</p>
+                    <p class="mt-1 text-xs text-orange-700 dark:text-orange-400">
+                        Nuvarande: <code class="rounded bg-orange-100 px-1 dark:bg-orange-900/40">@_seqUrl</code>
+                    </p>
+                    <p class="mt-1 text-xs text-orange-700 dark:text-orange-400">
+                        Webbläsaren blockerar HTTP-innehåll i en HTTPS-sida automatiskt.
+                        Ändra till HTTPS via reverse proxy:
+                    </p>
+                    <pre class="mt-1.5 rounded bg-orange-100 px-2 py-1 text-[11px] text-orange-800 dark:bg-orange-900/40 dark:text-orange-200">"SeqUrl": "https://admin.ata-cost.com/seq"</pre>
+                </div>
+            </div>
+        </div>
+    }
+
+    @* ── Iframe (same-origin) ─────────────────────────────── *@
+    @if (_canShowIframe)
+    {
+        <div class="flex-1 overflow-hidden rounded-2xl border border-slate-200 shadow-sm dark:border-slate-800">
+            <iframe src="@_seqUrl"
+                    class="h-full w-full border-0"
+                    title="Seq Log Viewer"
+                    sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads">
+            </iframe>
+        </div>
+    }
+
+    @* ── Open-in-tab fallback (cross-origin / blocked) ──── *@
+    @if (_hasBlockingIssue && !string.IsNullOrWhiteSpace(_seqUrl))
+    {
+        <div class="flex flex-col items-center justify-center gap-4 rounded-2xl border border-slate-200 bg-white py-10 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+            <svg class="h-10 w-10 text-slate-300 dark:text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <div class="text-center">
+                <p class="font-medium text-slate-700 dark:text-slate-300">Seq kan inte bäddas in</p>
+                <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Åtgärda varningarna ovan, eller öppna Seq direkt.</p>
+            </div>
+            <a href="@_seqUrl" target="_blank" rel="noopener noreferrer"
+               class="inline-flex items-center gap-2 rounded-xl border border-sky-600 bg-sky-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-sky-700 dark:border-sky-500 dark:bg-sky-500 dark:hover:bg-sky-400">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+                Öppna Seq ↗
+            </a>
+        </div>
+    }
+
+    @* ── Setup guide ──────────────────────────────────────── *@
+    @if (_hasBlockingIssue || string.IsNullOrWhiteSpace(_seqUrl))
+    {
+        <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs dark:border-slate-700 dark:bg-slate-900/60">
+            <p class="font-semibold text-slate-700 dark:text-slate-300">
+                Nginx-konfiguration — exponera Seq via admin.ata-cost.com/seq
+            </p>
+            <p class="mt-1 text-slate-500 dark:text-slate-400">
+                Lägg till detta block i nginx-konfigurationen för <code class="rounded bg-slate-200 px-1 dark:bg-slate-800">admin.ata-cost.com</code>
+                (inom <code class="rounded bg-slate-200 px-1 dark:bg-slate-800">server { ... }</code>):
+            </p>
+            <pre class="mt-2 overflow-x-auto rounded bg-slate-200 px-3 py-2 text-[11px] leading-relaxed text-slate-800 dark:bg-slate-800 dark:text-slate-200">location /seq/ {
+    proxy_pass         http://127.0.0.1:5341/;
+    proxy_http_version 1.1;
+    proxy_set_header   Host              $host;
+    proxy_set_header   X-Real-IP         $remote_addr;
+    proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header   X-Forwarded-Proto $scheme;
+
+    # Ta bort Seqs X-Frame-Options så att iframe fungerar
+    proxy_hide_header  X-Frame-Options;
+}</pre>
+            <p class="mt-2 text-slate-500 dark:text-slate-400">
+                Sätt sedan i <code class="rounded bg-slate-200 px-1 dark:bg-slate-800">appsettings.json</code> på servern:
+            </p>
+            <pre class="mt-1 rounded bg-slate-200 px-3 py-2 text-[11px] text-slate-800 dark:bg-slate-800 dark:text-slate-200">"SeqUrl": "https://admin.ata-cost.com/seq"</pre>
+            <p class="mt-2 text-[11px] text-slate-400 dark:text-slate-500">
+                Glöm inte <code class="rounded bg-slate-200 px-1 dark:bg-slate-800">nginx -s reload</code> efter konfigurationsändringen.
+            </p>
+        </div>
+    }
 
 </div>
 
 @code {
-    private string _seqUrl = "http://localhost:5341";
+    private string _seqUrl = string.Empty;
+    private bool _isLocalhostUrl;
+    private bool _isMixedContent;
+    private bool _isSameOrigin;
+
+    private bool _hasBlockingIssue => _isLocalhostUrl || _isMixedContent || !_isSameOrigin;
+    private bool _canShowIframe => !string.IsNullOrWhiteSpace(_seqUrl) && _isSameOrigin && !_isLocalhostUrl && !_isMixedContent;
 
     protected override void OnInitialized()
     {
-        _seqUrl = Configuration["SeqUrl"] ?? "http://localhost:5341";
+        _seqUrl = (Configuration["SeqUrl"] ?? string.Empty).Trim().TrimEnd('/');
+        _isLocalhostUrl = IsLocalhostUrl(_seqUrl);
+        _isMixedContent = IsMixedContent(_seqUrl);
+        _isSameOrigin = IsSameOrigin(_seqUrl, NavManager.BaseUri);
+    }
+
+    private static bool IsLocalhostUrl(string url)
+    {
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+            return false;
+
+        return uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase)
+            || uri.Host == "127.0.0.1"
+            || uri.Host == "::1";
+    }
+
+    private static bool IsMixedContent(string url)
+    {
+        if (IsLocalhostUrl(url))
+            return false;
+
+        return url.StartsWith("http://", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsSameOrigin(string seqUrl, string baseUri)
+    {
+        if (string.IsNullOrWhiteSpace(seqUrl))
+            return false;
+
+        if (!Uri.TryCreate(seqUrl, UriKind.Absolute, out var seq))
+            return false;
+
+        if (!Uri.TryCreate(baseUri, UriKind.Absolute, out var app))
+            return false;
+
+        return string.Equals(seq.Host, app.Host, StringComparison.OrdinalIgnoreCase)
+            && seq.Scheme == app.Scheme
+            && seq.Port == app.Port;
     }
 }

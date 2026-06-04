@@ -434,7 +434,7 @@ namespace Persistence.Service.Project
 
             IQueryable<ProjectEntity> query = context.Projects
                 .AsNoTracking()
-                .Where(x => x.IsVisible == filter.IsVisible)
+                .Where(x => filter.IsVisible == null || x.IsVisible == filter.IsVisible.Value)
                 .Where(x => departmentId == null || x.Folder.DepartmentId == departmentId || x.CreatedBy == userId);
 
             if (filter.FolderId.HasValue && filter.FolderId.Value != Guid.Empty)

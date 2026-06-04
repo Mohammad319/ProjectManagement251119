@@ -53,9 +53,9 @@
                     class="h-8 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20">
                 <option value="%var%">@CalcLoc[nameof(CalcResource.matchContains)]</option>
                 <option value="==">@CalcLoc[nameof(CalcResource.matchEquals)]</option>
-                <option value="!=">@CalcLoc[nameof(CalcResource.matchNotEquals)]</option>
                 <option value="var%">@CalcLoc[nameof(CalcResource.matchStartsWith)]</option>
                 <option value="%var">@CalcLoc[nameof(CalcResource.matchEndsWith)]</option>
+                <option value="~">@CalcLoc[nameof(CalcResource.matchSimilar)]</option>
             </select>
         </div>
 
@@ -138,10 +138,58 @@
             }
             else if (!FolderResults.Any() && !ProjectResults.Any() && !CalcResults.Any())
             {
-                <div class="px-4 py-10 text-center">
+                <div class="px-4 py-8 text-center">
                     <p class="text-sm font-medium text-slate-700 dark:text-slate-200">@CalcLoc[nameof(CalcResource.noResultsFound)]</p>
                     <p class="mt-1 text-xs text-slate-400 dark:text-slate-500">@CalcLoc[nameof(CalcResource.checkSpellingOrFilter)]</p>
                 </div>
+
+                @* Fuzzy fallback: show similar results if not already in fuzzy mode *@
+                @if (!string.IsNullOrWhiteSpace(SearchText) && MatchOperator != "~" &&
+                     (FuzzyFolderResults.Any() || FuzzyCalcResults.Any()))
+                {
+                    <div class="border-t border-slate-200 dark:border-slate-700">
+                        <div class="bg-amber-50/80 px-4 py-2 dark:bg-amber-950/30">
+                            <span class="text-xs font-semibold text-amber-700 dark:text-amber-400">
+                                @CalcLoc[nameof(CalcResource.similarResults)]
+                            </span>
+                        </div>
+                        <div class="divide-y divide-slate-100 dark:divide-slate-800">
+                            @foreach (var folder in FuzzyFolderResults.Take(5))
+                            {
+                                <button type="button"
+                                        @onclick="async () => await FolderSelected(folder.Item)"
+                                        class="flex w-full items-center gap-3 px-4 py-2 text-left transition hover:bg-slate-50 dark:hover:bg-slate-800/60">
+                                    <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
+                                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                            <path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z"/>
+                                        </svg>
+                                    </span>
+                                    <div class="min-w-0 flex-1">
+                                        <div class="truncate text-xs font-medium text-slate-700 dark:text-slate-200">@folder.Item.Name</div>
+                                        <span class="text-[10px] text-slate-400">Mapp</span>
+                                    </div>
+                                </button>
+                            }
+                            @foreach (var entry in FuzzyCalcResults.Take(5))
+                            {
+                                <button type="button"
+                                        @onclick="async () => await CalcSelected(entry.Item.Calc, entry.Item.Project, entry.Item.Folder)"
+                                        class="flex w-full items-center gap-3 px-4 py-2 text-left transition hover:bg-slate-50 dark:hover:bg-slate-800/60">
+                                    <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                                        <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                            <rect x="4" y="3" width="16" height="18" rx="2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 8h8M8 12h5M8 16h3"/>
+                                        </svg>
+                                    </span>
+                                    <div class="min-w-0 flex-1">
+                                        <div class="truncate text-xs font-medium text-slate-700 dark:text-slate-200">@entry.Item.Calc.Name</div>
+                                        <span class="text-[10px] text-slate-400">Kalkyl · @entry.Item.Project.Name · @entry.Item.Folder.Name</span>
+                                    </div>
+                                </button>
+                            }
+                        </div>
+                    </div>
+                }
             }
             else
             {
@@ -152,7 +200,7 @@
                     {
                         <div>
                             <div class="bg-slate-50/80 px-4 py-1.5 dark:bg-slate-800/50">
-                                <span class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                                <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">
                                     @CalcLoc[nameof(CalcResource.foldersLabel)]
                                 </span>
                             </div>
@@ -183,7 +231,7 @@
                     {
                         <div>
                             <div class="bg-slate-50/80 px-4 py-1.5 dark:bg-slate-800/50">
-                                <span class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                                <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">
                                     @CalcLoc[nameof(CalcResource.projectsLabel)]
                                 </span>
                             </div>
@@ -201,18 +249,26 @@
                                     </span>
                                     <div class="min-w-0 flex-1">
                                         <div class="truncate text-sm font-medium text-slate-800 dark:text-slate-100">@project.Name</div>
-                                        <div class="flex items-center gap-2 text-[11px] text-slate-400 dark:text-slate-500">
+                                        <div class="flex flex-wrap items-center gap-1.5 text-[11px] text-slate-400 dark:text-slate-500">
+                                            <span class="font-medium text-slate-500 dark:text-slate-400">Projekt</span>
                                             @if (!string.IsNullOrWhiteSpace(project.Code))
                                             {
-                                                <span>@project.Code</span>
+                                                <span>· @project.Code</span>
+                                            }
+                                            @{
+                                                var projectFolder = GetFolderForProject(project);
+                                            }
+                                            @if (projectFolder != null)
+                                            {
+                                                <span>· @projectFolder.Name</span>
                                             }
                                             @if (project.TenderDeadline != default)
                                             {
-                                                <span>@CalcLoc[nameof(CalcResource.tenderDeadline)]: @project.TenderDeadline.ToString("yyyy-MM-dd")</span>
+                                                <span>· @CalcLoc[nameof(CalcResource.tenderDeadline)]: @project.TenderDeadline.ToString("yyyy-MM-dd")</span>
                                             }
                                             @if (!project.IsVisible)
                                             {
-                                                <span>@AppLoc["archived"]</span>
+                                                <span class="text-amber-500">· @AppLoc["archived"]</span>
                                             }
                                         </div>
                                     </div>
@@ -226,7 +282,7 @@
                     {
                         <div>
                             <div class="bg-slate-50/80 px-4 py-1.5 dark:bg-slate-800/50">
-                                <span class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                                <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">
                                     @CalcLoc[nameof(CalcResource.calculationsLabel)]
                                 </span>
                             </div>
@@ -243,10 +299,11 @@
                                     </span>
                                     <div class="min-w-0 flex-1">
                                         <div class="truncate text-sm font-medium text-slate-800 dark:text-slate-100">@calc.Name</div>
-                                        <div class="flex items-center gap-2 text-[11px] text-slate-400 dark:text-slate-500">
+                                        <div class="flex flex-wrap items-center gap-1.5 text-[11px] text-slate-400 dark:text-slate-500">
+                                            <span class="font-medium text-slate-500 dark:text-slate-400">Kalkyl</span>
                                             @if (!string.IsNullOrWhiteSpace(calc.Code))
                                             {
-                                                <span>@calc.Code</span>
+                                                <span>· @calc.Code</span>
                                             }
                                             @if (!string.IsNullOrWhiteSpace(calc.Status))
                                             {
@@ -256,7 +313,7 @@
                                                     @calc.Status
                                                 </span>
                                             }
-                                            <span>@folder.Name / @project.Name</span>
+                                            <span>· @project.Name · @folder.Name</span>
                                         </div>
                                     </div>
                                 </button>
@@ -285,6 +342,9 @@
     private List<SearchProjectsMVVM> ProjectResults = [];
     private List<(ListCalculationMVVM Calc, ListProjectMVVM Project, FolderMVVM Folder)> CalcResults = [];
 
+    private List<(int Score, FolderMVVM Item)> FuzzyFolderResults = [];
+    private List<(int Score, (ListCalculationMVVM Calc, ListProjectMVVM Project, FolderMVVM Folder) Item)> FuzzyCalcResults = [];
+
     [Parameter] public EventCallback CallBack { get; set; }
 
     private enum SearchTypeFilter { All, Folders, Projects, Calculations }
@@ -300,6 +360,10 @@
 
     private static string GetCalculationStatusColor(ListCalculationMVVM calculation)
         => string.IsNullOrWhiteSpace(calculation.StatusColor) ? "#0ea5e9" : calculation.StatusColor;
+
+    private FolderMVVM? GetFolderForProject(SearchProjectsMVVM project)
+        => (UoWService?.Folder?.State?.FoldersList ?? [])
+            .FirstOrDefault(f => f.Id == project.FolderId);
 
     private async Task OnKeyUp(KeyboardEventArgs e)
     {
@@ -322,6 +386,8 @@
             FolderResults = [];
             ProjectResults = [];
             CalcResults = [];
+            FuzzyFolderResults = [];
+            FuzzyCalcResults = [];
 
             var folders = UoWService?.Folder?.State?.FoldersList ?? [];
 
@@ -336,6 +402,16 @@
             // Calculation search (client-side from loaded data)
             if (TypeFilter is SearchTypeFilter.All or SearchTypeFilter.Calculations)
                 CalcResults = SearchCalculations(folders);
+
+            // Fuzzy fallback when no results and not already in fuzzy mode
+            if (MatchOperator != "~" && !string.IsNullOrWhiteSpace(SearchText) &&
+                !FolderResults.Any() && !ProjectResults.Any() && !CalcResults.Any())
+            {
+                if (TypeFilter is SearchTypeFilter.All or SearchTypeFilter.Folders)
+                    FuzzyFolderResults = FuzzySearchFolders(folders);
+                if (TypeFilter is SearchTypeFilter.All or SearchTypeFilter.Calculations)
+                    FuzzyCalcResults = FuzzySearchCalculations(folders);
+            }
         }
         finally
         {
@@ -356,11 +432,14 @@
     {
         try
         {
+            // Map fuzzy operator to contains for server-side (server doesn't support fuzzy)
+            var serverOperator = MatchOperator == "~" ? "%var%" : MatchOperator;
+
             var filter = new ProjectFilter
             {
                 Name = SearchText ?? string.Empty,
-                NameOperator = MatchOperator,
-                IsVisible = !IncludeArchived,
+                NameOperator = serverOperator,
+                IsVisible = IncludeArchived ? null : true,
             };
 
             if (TenderDeadlineDate.HasValue)
@@ -382,12 +461,17 @@
 
         foreach (var folder in folders)
         {
+            if (!IncludeArchived && !folder.IsVisible) continue;
+
             foreach (var project in folder.Projects)
             {
+                if (!IncludeArchived && !project.IsVisible) continue;
                 if (!project.CalculationsLoaded) continue;
 
                 foreach (var calc in project.Calculations)
                 {
+                    if (!IncludeArchived && !calc.IsVisible) continue;
+
                     bool matchesText = string.IsNullOrWhiteSpace(SearchText)
                         || MatchesText(calc.Name, SearchText)
                         || MatchesText(calc.Code, SearchText);
@@ -404,19 +488,106 @@
         return results;
     }
 
+    private List<(int Score, FolderMVVM)> FuzzySearchFolders(IEnumerable<FolderMVVM> folders)
+    {
+        if (string.IsNullOrWhiteSpace(SearchText)) return [];
+
+        return folders
+            .Where(f => IncludeArchived || f.IsVisible)
+            .Select(f => (Score: FuzzyScore(f.Name, SearchText), Item: f))
+            .Where(x => x.Score > 0)
+            .OrderByDescending(x => x.Score)
+            .Take(10)
+            .ToList();
+    }
+
+    private List<(int Score, (ListCalculationMVVM Calc, ListProjectMVVM Project, FolderMVVM Folder))> FuzzySearchCalculations(IEnumerable<FolderMVVM> folders)
+    {
+        if (string.IsNullOrWhiteSpace(SearchText)) return [];
+
+        var results = new List<(int Score, (ListCalculationMVVM, ListProjectMVVM, FolderMVVM))>();
+
+        foreach (var folder in folders)
+        {
+            if (!IncludeArchived && !folder.IsVisible) continue;
+            foreach (var project in folder.Projects)
+            {
+                if (!IncludeArchived && !project.IsVisible) continue;
+                if (!project.CalculationsLoaded) continue;
+                foreach (var calc in project.Calculations)
+                {
+                    if (!IncludeArchived && !calc.IsVisible) continue;
+                    var score = Math.Max(FuzzyScore(calc.Name, SearchText), FuzzyScore(calc.Code, SearchText));
+                    if (score > 0)
+                        results.Add((score, (calc, project, folder)));
+                }
+            }
+        }
+
+        return results.OrderByDescending(x => x.Score).Take(10).ToList();
+    }
+
+    // ── Matching logic ────────────────────────────────────────────────
+
     private bool MatchesText(string? value, string search)
     {
         if (string.IsNullOrWhiteSpace(value)) return false;
 
+        var v = Normalize(value);
+        var s = Normalize(search);
+
         return MatchOperator switch
         {
-            "==" => string.Equals(value, search, StringComparison.OrdinalIgnoreCase),
-            "!=" => !string.Equals(value, search, StringComparison.OrdinalIgnoreCase),
-            "var%" => value.StartsWith(search, StringComparison.OrdinalIgnoreCase),
-            "%var" => value.EndsWith(search, StringComparison.OrdinalIgnoreCase),
-            _ => value.Contains(search, StringComparison.OrdinalIgnoreCase),
+            "==" => v == s,
+            "var%" => v.StartsWith(s),
+            "%var" => v.EndsWith(s),
+            "~" => FuzzyScore(v, s) > 0,
+            _ => v.Contains(s), // %var% = contains (default)
         };
     }
+
+    private static string Normalize(string? value)
+        => (value ?? string.Empty).Trim().ToLowerInvariant();
+
+    // Scoring: 100=exact, 90=starts-with, 80=contains, 1-70=fuzzy (Levenshtein)
+    private static int FuzzyScore(string? source, string? pattern)
+    {
+        var s = Normalize(source);
+        var p = Normalize(pattern);
+
+        if (string.IsNullOrEmpty(s) || string.IsNullOrEmpty(p)) return 0;
+        if (s == p) return 100;
+        if (s.StartsWith(p)) return 90;
+        if (s.Contains(p)) return 80;
+
+        // Levenshtein-based similarity
+        var distance = LevenshteinDistance(s, p);
+        var maxLen = Math.Max(s.Length, p.Length);
+        if (maxLen == 0) return 0;
+
+        var similarity = 1.0 - (double)distance / maxLen;
+        return similarity >= 0.55 ? (int)(similarity * 70) : 0;
+    }
+
+    private static int LevenshteinDistance(string s, string t)
+    {
+        if (s.Length == 0) return t.Length;
+        if (t.Length == 0) return s.Length;
+
+        var d = new int[s.Length + 1, t.Length + 1];
+        for (var i = 0; i <= s.Length; i++) d[i, 0] = i;
+        for (var j = 0; j <= t.Length; j++) d[0, j] = j;
+
+        for (var i = 1; i <= s.Length; i++)
+            for (var j = 1; j <= t.Length; j++)
+                d[i, j] = Math.Min(
+                    Math.Min(d[i - 1, j] + 1, d[i, j - 1] + 1),
+                    d[i - 1, j - 1] + (s[i - 1] == t[j - 1] ? 0 : 1));
+
+        return d[s.Length, t.Length];
+    }
+
+    // ── Navigation ────────────────────────────────────────────────────
 
     private async Task FolderSelected(FolderMVVM folder)
     {

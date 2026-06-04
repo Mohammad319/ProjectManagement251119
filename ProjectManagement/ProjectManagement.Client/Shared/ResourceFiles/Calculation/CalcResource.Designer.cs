@@ -992,6 +992,8 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.Calculation {
         public static string matchContains                   => ResourceManager.GetString("matchContains", resourceCulture)!;
         public static string matchEquals                     => ResourceManager.GetString("matchEquals", resourceCulture)!;
         public static string matchNotEquals                  => ResourceManager.GetString("matchNotEquals", resourceCulture)!;
+        public static string matchSimilar                    => ResourceManager.GetString("matchSimilar", resourceCulture)!;
+        public static string similarResults                  => ResourceManager.GetString("similarResults", resourceCulture)!;
         public static string matchStartsWith                 => ResourceManager.GetString("matchStartsWith", resourceCulture)!;
         public static string matchEndsWith                   => ResourceManager.GetString("matchEndsWith", resourceCulture)!;
         public static string includeArchived                 => ResourceManager.GetString("includeArchived", resourceCulture)!;
