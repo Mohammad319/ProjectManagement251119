@@ -4,6 +4,7 @@
 @using Microsoft.JSInterop
 @using ProjectManagement.Components.ControlComponents
 @using ProjectManagement.Components.ControlComponents.Project
+@using ProjectManagement.Client.Pages.Project.ProjectPages
 @using ProjectManagement.Shared
 @implements IDisposable
 @inject MhdServices MHD
@@ -44,22 +45,20 @@
 
                 <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
                     <li class="text-right md:text-left md:flex-none">
-                        <button class="btn nav-link" @onclick='@(() => OpenDialog("org"))' title="@PMWebResource.AdminSettings" aria-label="@PMWebResource.AdminSettings">
+                        <button class="btn nav-link" @onclick="OpenOrgDialog" title="@PMWebResource.AdminSettings" aria-label="@PMWebResource.AdminSettings">
                             @((MarkupString)Icons.Company)
                         </button>
                     </li>
                 </AuthorizeView>
 
                 <li class="text-right md:text-left md:flex-none">
-                    <NavLink href="price-import"
-                             class="inline-flex h-8 items-center rounded-lg px-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-700"
-                             @onclick="() => isNavOpen = false">
-                        Prisimport
-                    </NavLink>
-                </li> 
+                    <button class="btn nav-link" @onclick="PriceList" title="Prisimport" aria-label="Prisimport">
+                        <span aria-hidden="true">@((MarkupString)Icons.ImportFromCloud)</span>
+                    </button>
+                </li>
 
                 <li class="text-right md:text-left md:flex-none">
-                    <button class="btn nav-link" @onclick='@(() => OpenDialog("control"))' title="@PMWebResource.Settings" aria-label="@PMWebResource.Settings">
+                    <button class="btn nav-link" @onclick="OpenControlDialog" title="@PMWebResource.Settings" aria-label="@PMWebResource.Settings">
                         <span aria-hidden="true">@((MarkupString)Icons.Settings)</span>
                     </button>
                 </li>
@@ -81,6 +80,10 @@
                 </li>
 
                 <li class="text-right md:text-left md:flex-none">
+                    <CentralReportsMenu />
+                </li>
+
+                <li class="text-right md:text-left md:flex-none">
                     <form action="/Account/Logout" method="post" class="inline">
                         <AntiforgeryToken />
                         <input type="hidden" name="ReturnUrl" value="@currentUrl" />
@@ -94,46 +97,8 @@
     </div>
 </nav>
 
-@if (!string.IsNullOrEmpty(Page))
-{
-    <div aria-hidden="true">
-        <div class="fixed inset-0 bg-black/50 backdrop-blur-[2px]" @onclick="CloseDialog"></div>
-        <div class="fixed inset-0 flex items-center justify-center pointer-events-none" style="z-index:50;">
-            <div class="pointer-events-auto w-[90vw] h-[90vh] rounded-2xl bg-white text-slate-900 shadow-2xl ring-1 ring-black/5 dark:bg-slate-800 dark:text-slate-100 dark:ring-white/10 box-border flex flex-col overflow-hidden">
-                <div class="p-2 flex items-start justify-between gap-4 border-b border-slate-200 dark:border-slate-700">
-                    <div>
-                        <h2 class="text-xl font-semibold">@GetDialogTitle()</h2>
-                        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">@PMWebResource.SettingsDescription</p>
-                    </div>
-                    <button type="button"
-                            class="rounded-lg px-2.5 py-1.5 text-sm ring-1 ring-slate-300/60 hover:bg-slate-100 dark:ring-slate-700/60 dark:hover:bg-slate-700/50"
-                            @onclick="CloseDialog"
-                            aria-label="@PMWebResource.Close"
-                            title="@PMWebResource.Close">
-                        &times;
-                    </button>
-                </div>
-                <div class="flex-1 p-1 overflow-auto">
-                    @if (Page == "control")
-                    {
-                        <Control />
-                    }
-                    else if (Page == "identity")
-                    {
-                        <PersonalSettings />
-                    }
-                    else if (Page == "org")
-                    {
-                        <Control ActiveKey="organisation" />
-                    }
-                </div>
-            </div>
-        </div>
-    </div>
-}
 
 @code {
-    private string Page = string.Empty;
     private string? currentUrl;
     private bool IsDark;
     private bool isNavOpen;
@@ -175,24 +140,32 @@
         await InvokeAsync(StateHasChanged);
     }
 
-    private void OpenDialog(string ty)
+    private void OpenControlDialog()
     {
-        Page = ty;
         isNavOpen = false;
+        MHD.Modal.ShowComponent<Components.ControlComponents.Control>(
+            PMWebResource.Settings, null, DialogSize.FullScreen);
+    }
+
+    private void OpenOrgDialog()
+    {
+        isNavOpen = false;
+        MHD.Modal.ShowComponent<Components.ControlComponents.Control>(
+            PMWebResource.AdminSettings,
+            new Dictionary<string, object> { ["ActiveKey"] = "organisation" },
+            DialogSize.FullScreen);
     }
 
     private void PersonalSettingFun() => _navigationManager.NavigateTo("Account/Manage", true);
-    private void OpenSupport() { isNavOpen = false; _navigationManager.NavigateTo("/support", forceLoad: true); }
+    private void OpenSupport()
+    {
+        isNavOpen = false;
+        MHD.Modal.ShowComponent<Components.Support.SupportUI>(
+            PMWebResource.SupportNavTitle, null, DialogSize.Large);
+    }
 
     private void ToggleNavMenu() => isNavOpen = !isNavOpen;
 
-    private void CloseDialog() => Page = string.Empty;
-
-    private string GetDialogTitle() => Page switch
-    {
-        "org" => PMWebResource.AdminSettings,
-        _ => PMWebResource.Settings
-    };
     void PriceList()
     {
         MHD.Modal.ShowComponent<Components.ControlComponents.PriceImport.PriceImportJobsPage>(

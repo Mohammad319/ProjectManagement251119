@@ -1,0 +1,162 @@
+@using ProjectManagement.Client.Shared.MVVM.Calculation
+@inherits AppComponentBase
+
+<div>
+    <p class="mb-3 text-sm text-slate-500 dark:text-slate-400">@Calculation.Name</p>
+
+    <div class="overflow-x-auto">
+        <table class="min-w-full text-xs">
+            <thead>
+                <tr class="border-b border-slate-200 dark:border-slate-700">
+                    <th class="pb-2 pr-4 text-left text-[11px] font-semibold text-slate-500 dark:text-slate-400">@AppLoc["version"]</th>
+                    <th class="pb-2 pr-4 text-left text-[11px] font-semibold text-slate-500 dark:text-slate-400">@AppLoc["code"]</th>
+                    <th class="pb-2 pr-4 text-left text-[11px] font-semibold text-slate-500 dark:text-slate-400">@AppLoc["calculationName"]</th>
+                    <th class="pb-2 pr-4 text-left text-[11px] font-semibold text-slate-500 dark:text-slate-400">@AppLoc["tenderDeadline"]</th>
+                    <th class="pb-2"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                @foreach (var version in GetVersions())
+                {
+                    <tr>
+                        <td class="py-2 pr-4">
+                            <div class="flex items-center gap-1.5">
+                                <span class="font-mono font-semibold text-slate-800 dark:text-slate-100">@FormatVersion(version.VersionNumber)</span>
+                                @if (version.IsCurrentVersion)
+                                {
+                                    <span class="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">@AppLoc["current"]</span>
+                                }
+                            </div>
+                        </td>
+                        <td class="py-2 pr-4 font-mono text-slate-500 dark:text-slate-400">@FormatText(version.Code)</td>
+                        <td class="py-2 pr-4 text-slate-700 dark:text-slate-200">@version.Name</td>
+                        <td class="py-2 pr-4 text-slate-500 dark:text-slate-400">
+                            @if (version.TenderDeadline != default)
+                            {
+                                <span title="@version.TenderDeadline.ToString("yyyy-MM-dd HH:mm:ss")">
+                                    @version.TenderDeadline.ToString("yyyy-MM-dd")
+                                </span>
+                            }
+                            else
+                            {
+                                <span>-</span>
+                            }
+                        </td>
+                        <td class="py-2 text-right">
+                            <div class="flex flex-wrap justify-end gap-1.5">
+                                <button type="button"
+                                        class="rounded-md border border-slate-300 px-2 py-1 font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                                        @onclick="async () => await OpenVersionAsync(version)">
+                                    @AppLoc["open"]
+                                </button>
+                                @if (!version.IsCurrentVersion)
+                                {
+                                    <button type="button"
+                                            class="rounded-md border border-violet-300 px-2 py-1 font-medium text-violet-700 transition hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-violet-800 dark:text-violet-300 dark:hover:bg-violet-950/40"
+                                            disabled="@_isCreatingVersion"
+                                            @onclick="async () => await RestoreAsNewVersionAsync(version)">
+                                        @AppLoc["restoreAsNewVersion"]
+                                    </button>
+                                }
+                                @if (CanArchiveVersion(version))
+                                {
+                                    <button type="button"
+                                            class="rounded-md border border-amber-300 px-2 py-1 font-medium text-amber-700 transition hover:bg-amber-50 dark:border-amber-800 dark:text-amber-300 dark:hover:bg-amber-950/40"
+                                            @onclick="async () => await ArchiveVersionAsync(version)">
+                                        @AppLoc["archiveVersion"]
+                                    </button>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(_message))
+    {
+        <div class="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
+            @_message
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public ListCalculationMVVM Calculation { get; set; } = default!;
+    [Parameter] public EventCallback OnReloadRequired { get; set; }
+
+    private bool _isCreatingVersion;
+    private string _message = string.Empty;
+
+    private IEnumerable<ListCalculationMVVM> GetVersions() =>
+        CalculationVersionSelector.GetVersions(
+            Folder.State.ProjectSelected?.Calculations,
+            Calculation);
+
+    private bool CanArchiveVersion(ListCalculationMVVM version) =>
+        !version.IsCurrentVersion &&
+        !version.IsLocked &&
+        version.IsVisible &&
+        !(Folder.State.ProjectSelected?.Calculations ?? [])
+            .Any(c => c.SourceCalculationId == version.Id);
+
+    private static string FormatVersion(int v) => $"V.{v:D2}";
+    private static string FormatText(string? v) => string.IsNullOrWhiteSpace(v) ? "-" : v;
+
+    private async Task OpenVersionAsync(ListCalculationMVVM version)
+    {
+        Modal.Close();
+        await CalcService.SetCalc(version.Id);
+    }
+
+    private async Task CreateNewVersionAsync(ListCalculationMVVM calculation)
+    {
+        if (_isCreatingVersion || calculation.Id <= 0)
+            return;
+
+        _isCreatingVersion = true;
+        _message = string.Empty;
+
+        try
+        {
+            var newId = await Repo.Calculation.CreateVersionAsync(calculation.Id);
+            if (newId <= 0)
+            {
+                _message = "Ny version kunde inte skapas.";
+                return;
+            }
+
+            await OnReloadRequired.InvokeAsync();
+            StateHasChanged();
+            await CalcService.SetCalc(newId);
+            MHD.Notifications(ToastType.Add, true);
+        }
+        catch (Exception ex)
+        {
+            _message = "Ett fel uppstod när en ny version skulle skapas.";
+            await ClientLog.ErrorAsync("Create calculation version failed", ex: ex);
+        }
+        finally
+        {
+            _isCreatingVersion = false;
+        }
+    }
+
+    private Task RestoreAsNewVersionAsync(ListCalculationMVVM version) =>
+        CreateNewVersionAsync(version);
+
+    private async Task ArchiveVersionAsync(ListCalculationMVVM version)
+    {
+        var dto = await Repo.Calculation.GetPostAsync(version.Id);
+        if (dto is null) return;
+        dto.IsVisible = false;
+        bool ok = await Repo.Calculation.UpdateAsync(dto, version.Id);
+        if (ok)
+        {
+            await OnReloadRequired.InvokeAsync();
+            StateHasChanged();
+        }
+        MHD.Notifications(ToastType.Update, ok);
+    }
+}

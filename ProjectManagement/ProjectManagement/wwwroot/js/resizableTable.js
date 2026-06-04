@@ -29,7 +29,6 @@ const createResizableTable = (table) => {
 
         const resizer = document.createElement('div');
         resizer.classList.add('resizer');
-        resizer.style.height = `${table.offsetHeight}px`;
         col.appendChild(resizer);
         createResizableColumn(col, resizer);
     });
@@ -38,19 +37,33 @@ const createResizableTable = (table) => {
 const createResizableColumn = function (col, resizer) {
     let x = 0;
     let w = 0;
+    let tableW = 0;
+    let minW = 0;
     let elementID;
 
     const mouseDownHandler = function (e) {
         elementID = col.id.replace('h', '');
         x = e.clientX;
         w = parseInt(window.getComputedStyle(col).width, 10);
+        tableW = Math.ceil(col.closest('table')?.getBoundingClientRect().width || 0);
+        minW = getColumnMinWidth(col);
         document.addEventListener('mousemove', mouseMoveHandler);
         document.addEventListener('mouseup', mouseUpHandler, { once: true });
         resizer.classList.add('resizing');
     };
 
     const mouseMoveHandler = function (e) {
-        col.style.width = `${w + e.clientX - x}px`;
+        const table = col.closest('table');
+        const newWidth = Math.max(minW, w + e.clientX - x);
+        applyColumnWidth(col, newWidth);
+
+        if (table) {
+            const newTableWidth = Math.max(table.parentElement?.clientWidth || 0, tableW + newWidth - w);
+            table.style.width = `${newTableWidth}px`;
+            table.style.minWidth = '100%';
+        }
+
+        queueFrozenSync(table);
     };
 
     const mouseUpHandler = () => {
@@ -63,6 +76,28 @@ const createResizableColumn = function (col, resizer) {
 
     resizer.addEventListener('mousedown', mouseDownHandler);
 };
+
+function getColumnMinWidth(col) {
+    const minWidth = parseFloat(window.getComputedStyle(col).minWidth);
+    if (Number.isFinite(minWidth) && minWidth > 0) return minWidth;
+    return 48;
+}
+
+function applyColumnWidth(header, width) {
+    const table = header.closest('table');
+    if (!table) return;
+
+    const columnIndex = Array.from(header.parentElement.children).indexOf(header);
+    if (columnIndex < 0) return;
+
+    table.querySelectorAll('tr').forEach(row => {
+        const cell = row.children[columnIndex];
+        if (!cell) return;
+
+        cell.style.width = `${width}px`;
+        cell.style.minWidth = `${width}px`;
+    });
+}
 
 // ─── width helper ─────────────────────────────────────────────────────────────
 

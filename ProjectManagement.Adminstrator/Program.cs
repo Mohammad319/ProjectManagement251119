@@ -10,6 +10,7 @@ using ProjectManagement.Adminstrator.Components.Account;
 using ProjectManagement.Adminstrator.Factory;
 using ProjectManagement.Adminstrator.Middleware;
 using ProjectManagement.Adminstrator.DependencyInjection;
+using ProjectManagement.Shared.Constant;
 using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.MSSqlServer;
@@ -54,6 +55,11 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddServerSideBlazor()
     .AddCircuitOptions(options => options.DetailedErrors = true);
+builder.Services.AddHttpClient("SeqProxy")
+    .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+    {
+        AllowAutoRedirect = false
+    });
 
 builder.Services.Configure<RequestLocalizationOptions>(options =>
 {
@@ -149,6 +155,7 @@ app.UseSerilogRequestLogging(opts =>
 });
 
 app.MapStaticAssets();
+app.MapSeqReverseProxy(PMRolesConst.APP.AdminManger);
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 

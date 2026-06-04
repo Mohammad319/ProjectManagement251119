@@ -19,7 +19,7 @@
 <div class="ml-1">
 
     @* ── Header toolbar ─────────────────────────────────── *@
-    <div class="flex w-full flex-wrap items-center justify-between gap-2 p-1">
+    <div class="sticky top-0 z-20 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 flex w-full flex-wrap items-center justify-between gap-2 px-1 py-1">
         <div class="min-w-0">
             <div class="truncate text-sm font-semibold text-gray-700 dark:text-gray-300">
                 @AppLoc["projectsInFolderFormat", Folder.State.FolderSelected?.Name ?? "-"]
@@ -86,7 +86,7 @@
     {
         <div class="mr-1 overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
             <table class="min-w-full table-auto text-left text-xs">
-                <thead class="sticky top-0 z-10 bg-slate-50 text-[11px] font-semibold text-slate-500 dark:bg-slate-900 dark:text-slate-400">
+                <thead class="sticky top-11 z-10 bg-slate-50 text-[11px] font-semibold text-slate-500 dark:bg-slate-900 dark:text-slate-400">
                     <tr>
                         @if (IsProjectColumnVisible("code"))
                         {
@@ -568,8 +568,8 @@
                     ? projects.OrderBy(x => x.Inspector)
                     : projects.OrderByDescending(x => x.Inspector),
                 _ => projects
-                    .OrderBy(x => x.Name, StringComparer.CurrentCultureIgnoreCase)
-                    .ThenByDescending(x => x.Order)
+                    .OrderByDescending(x => x.Order)
+                    .ThenBy(x => x.Name, StringComparer.CurrentCultureIgnoreCase)
             };
         }
     }

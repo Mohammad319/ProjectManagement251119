@@ -2,7 +2,6 @@
 @implements IDisposable
 @using Microsoft.AspNetCore.Components.Routing
 @using ProjectManagement.Services
-@using ProjectManagement.Client.Pages.Project.ProjectPages
 @inject NavigationManager Nav
 @inject IJSRuntime JS
 @inject AppErrorDialog ErrorDialog
@@ -15,9 +14,6 @@
                     <div class="flex items-start bg-white shadow-md dark:bg-gray-800">
                         <div class="min-w-0 flex-1">
                             <NavMenu @rendermode="InteractiveServer"></NavMenu>
-                        </div>
-                        <div class="shrink-0 p-0.5">
-                            <CentralReportsMenu @rendermode="new InteractiveWebAssemblyRenderMode(prerender: false)" />
                         </div>
                     </div>
                 </Authorized>

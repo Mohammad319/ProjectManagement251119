@@ -11,7 +11,7 @@
     height: 100%;
     cursor: col-resize;
     user-select: none;
-    z-index: 1;
+    z-index: 5;
 }
 
 .resizer:hover,
