@@ -535,6 +535,7 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public string Inspector { get; set; } = string.Empty;
         public string ProjectName { get; set; } = string.Empty;
         public string FolderName { get; set; } = string.Empty;
+        public string AddressText { get; set; } = string.Empty;
         public int Priority { get; set; }
         public decimal TimeMonth { get; set; }
     }

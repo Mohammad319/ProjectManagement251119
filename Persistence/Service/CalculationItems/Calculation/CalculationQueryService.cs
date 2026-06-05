@@ -107,6 +107,7 @@ namespace Persistence.Service.CalculationItems.Calculation
                     Inspector = x.Metadata.Inspector,
                     ProjectName = x.Project != null ? x.Project.Name : string.Empty,
                     FolderName = x.Project != null && x.Project.Folder != null ? x.Project.Folder.Name : string.Empty,
+                    AddressText = x.Metadata.Address.Count > 0 ? x.Metadata.Address[0].Street : string.Empty,
                     Priority = x.Metadata.Priority,
                     TimeMonth = x.Metadata.TimeMonth
                 })
@@ -212,6 +213,7 @@ namespace Persistence.Service.CalculationItems.Calculation
                     Inspector = x.Metadata.Inspector,
                     ProjectName = x.Project != null ? x.Project.Name : string.Empty,
                     FolderName = x.Project != null && x.Project.Folder != null ? x.Project.Folder.Name : string.Empty,
+                    AddressText = x.Metadata.Address.Count > 0 ? x.Metadata.Address[0].Street : string.Empty,
                     Priority = x.Metadata.Priority,
                     TimeMonth = x.Metadata.TimeMonth
                 };

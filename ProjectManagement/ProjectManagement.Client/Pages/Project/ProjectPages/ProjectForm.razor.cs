@@ -138,6 +138,13 @@ namespace ProjectManagement.Client.Pages.Project.ProjectPages
             resultInfo.Item2.CountsAsWonBid = selectedStatus?.CountsAsWonBid ?? false;
             resultInfo.Item2.CountsAsLostBid = selectedStatus?.CountsAsLostBid ?? false;
             resultInfo.Item2.Responsible = ProjectUpdate.Responsibles.FirstOrDefault(x => !string.IsNullOrWhiteSpace(x)) ?? string.Empty;
+            resultInfo.Item2.Organisation = Config?.Organisation?.FirstOrDefault(x => x.Id == ProjectUpdate.OrganisationId)?.Name ?? string.Empty;
+            resultInfo.Item2.ProcurementMethods = Config?.Methods?.FirstOrDefault(x => x.Id == ProjectUpdate.ProcurementMethodsId)?.Name ?? string.Empty;
+            resultInfo.Item2.Contract = Config?.Contracts?.FirstOrDefault(x => x.Id == ProjectUpdate.ContractId)?.Name ?? string.Empty;
+            resultInfo.Item2.Compensation = Config?.Compensations?.FirstOrDefault(x => x.Id == ProjectUpdate.CompensationId)?.Name ?? string.Empty;
+            resultInfo.Item2.Type = Config?.Types?.FirstOrDefault(x => x.Id == ProjectUpdate.TypeId)?.Name ?? string.Empty;
+            resultInfo.Item2.ProcurementProcedure = Config?.Procedures?.FirstOrDefault(x => x.Id == ProjectUpdate.ProcurementProcedureId)?.Name ?? string.Empty;
+            resultInfo.Item2.AddressText = FormatAddress(ProjectUpdate.Address.FirstOrDefault());
 
             bool result;
 
@@ -257,6 +264,24 @@ namespace ProjectManagement.Client.Pages.Project.ProjectPages
         {
             if (!string.IsNullOrWhiteSpace(value))
                 options.Add(value.Trim());
+        }
+
+        private static string FormatAddress(AddressDTO? address)
+        {
+            if (address is null)
+                return string.Empty;
+
+            var parts = new[]
+            {
+                address.Street,
+                address.Nr,
+                address.ZIPCode,
+                address.City,
+                address.Region,
+                address.Country
+            };
+
+            return string.Join(", ", parts.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim()));
         }
 
     }

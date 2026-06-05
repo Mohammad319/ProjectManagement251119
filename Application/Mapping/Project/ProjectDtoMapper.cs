@@ -20,6 +20,7 @@ namespace Application.Mapping.Project
                 FolderId = entity.FolderId,
                 OrganisationId = entity.OrganisationId,
                 ProcurementMethodsId = entity.ProcurementMethodId,
+                ProcurementProcedureId = entity.ProcurementProcedureId,
                 CompensationId = entity.CompensationId,
                 ContractId = entity.ContractId,
                 TypeId = entity.ProjectTypeId,
@@ -97,8 +98,35 @@ namespace Application.Mapping.Project
                 CustomerReference = metadata.CustomerReference,
                 Contract = entity.Contract?.Name ?? string.Empty,
                 Type = entity.ProjectType?.Name ?? string.Empty,
-                Inspector = metadata.Inspector
+                Inspector = metadata.Inspector,
+                Designer = metadata.Designer,
+                Supervisor = metadata.Supervisor,
+                AddressText = FormatAddress(metadata.Address.FirstOrDefault()),
+                ProcurementMethods = entity.ProcurementMethod?.Name ?? string.Empty,
+                Compensation = entity.Compensation?.Name ?? string.Empty,
+                ProcurementProcedure = entity.ProcurementProcedure?.Name ?? string.Empty,
+                ClientsManager = metadata.ClientsManager,
+                PublicationDate = metadata.PublicationDate,
+                DecisionDate = metadata.DecisionDate
             };
+        }
+
+        private static string FormatAddress(ProjectManagement.Shared.DTO.App.AddressDTO? address)
+        {
+            if (address is null)
+                return string.Empty;
+
+            var parts = new[]
+            {
+                address.Street,
+                address.Nr,
+                address.ZIPCode,
+                address.City,
+                address.Region,
+                address.Country
+            };
+
+            return string.Join(", ", parts.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim()));
         }
     }
 }

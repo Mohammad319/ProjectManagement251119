@@ -227,7 +227,13 @@
                                 <span class="inline-flex items-center gap-1">@AppLoc["calculationName"] @((MarkupString)SortIndicatorHtml("name")) <TableColumnFilter FilterState='CF("name")' OnChanged="OnColumnFilterChanged" /></span>
                             </th>
                         }
-                        @if (ShowVersionColumn)
+                        @if (IsCalculationColumnVisible("active"))
+                        {
+                            <th id="hactive" class="@SortableHeaderClass("active")" style="min-width:70px;" @onclick='() => SortBy("active")'>
+                                <span class="inline-flex items-center gap-1">Aktiv? @((MarkupString)SortIndicatorHtml("active"))</span>
+                            </th>
+                        }
+                        @if (IsCalculationColumnVisible("version"))
                         {
                             <th id="hversion" class="@SortableHeaderClass("version")" style="min-width:80px;" @onclick='() => SortBy("version")'>
                                 <span class="inline-flex items-center gap-1">@AppLoc["version"] @((MarkupString)SortIndicatorHtml("version"))</span>
@@ -254,7 +260,7 @@
                         @if (IsCalculationColumnVisible("status"))
                         {
                             <th id="hstatus" class="@SortableHeaderClass("status")" style="min-width:80px;" @onclick='() => SortBy("status")'>
-                                <span class="inline-flex items-center gap-1">@CalcResource.status @((MarkupString)SortIndicatorHtml("status")) <TableColumnFilter FilterState='CF("status")' OnChanged="OnColumnFilterChanged" /></span>
+                                <span class="inline-flex items-center gap-1">Kalkylstatus @((MarkupString)SortIndicatorHtml("status")) <TableColumnFilter FilterState='CF("status")' OnChanged="OnColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("calculationRole"))
@@ -277,8 +283,8 @@
                         }
                         @if (IsCalculationColumnVisible("qa"))
                         {
-                            <th id="hqa" class="@SortableHeaderClass("qa")" style="min-width:120px;" title="@AppLoc["qaDeadlineTooltip"]" @onclick='() => SortBy("qa")'>
-                                <span class="inline-flex items-center gap-1">@AppLoc["qaDeadlineColumn"] @((MarkupString)SortIndicatorHtml("qa")) <TableColumnFilter FilterState='CF("qa")' OnChanged="OnColumnFilterChanged" /></span>
+                            <th id="hqa" class="@SortableHeaderClass("qa")" style="min-width:120px;" title="Sista dag för frågor och svar" @onclick='() => SortBy("qa")'>
+                                <span class="inline-flex items-center gap-1">Frågor/svar @((MarkupString)SortIndicatorHtml("qa")) <TableColumnFilter FilterState='CF("qa")' OnChanged="OnColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("deadline"))
@@ -289,8 +295,14 @@
                         }
                         @if (IsCalculationColumnVisible("priority"))
                         {
-                            <th id="hpriority" class="@SortableHeaderClass("priority")" style="min-width:80px;" @onclick='() => SortBy("priority")'>
-                                <span class="inline-flex items-center gap-1">@AppLoc["probability"] @((MarkupString)SortIndicatorHtml("priority")) <TableColumnFilter FilterState='CF("priority")' OnChanged="OnColumnFilterChanged" /></span>
+                            <th id="hpriority" class="@SortableHeaderClass("priority")" style="min-width:80px;" title="Sannolikhet att vinna" @onclick='() => SortBy("priority")'>
+                                <span class="inline-flex items-center gap-1">Vinstchans @((MarkupString)SortIndicatorHtml("priority")) <TableColumnFilter FilterState='CF("priority")' OnChanged="OnColumnFilterChanged" /></span>
+                            </th>
+                        }
+                        @if (IsCalculationColumnVisible("address"))
+                        {
+                            <th id="haddress" class="@SortableHeaderClass("address")" style="min-width:140px;" @onclick='() => SortBy("address")'>
+                                <span class="inline-flex items-center gap-1">Adress @((MarkupString)SortIndicatorHtml("address"))</span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("createdAt"))
@@ -331,14 +343,14 @@
                         }
                         @if (IsCalculationColumnVisible("archived"))
                         {
-                            <th id="harchived" class="whitespace-nowrap px-3 py-2 relative" style="min-width:60px;">
-                                <span class="inline-flex items-center gap-1">@AppLoc["archived"] <TableColumnFilter FilterState='CF("archived")' OnChanged="OnColumnFilterChanged" /></span>
+                            <th id="harchived" class="@SortableHeaderClass("archived")" style="min-width:60px;" @onclick='() => SortBy("archived")'>
+                                <span class="inline-flex items-center gap-1">@AppLoc["archived"] @((MarkupString)SortIndicatorHtml("archived")) <TableColumnFilter FilterState='CF("archived")' OnChanged="OnColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("privacy"))
                         {
-                            <th id="hprivacy" class="whitespace-nowrap px-3 py-2 relative" style="min-width:60px;">
-                                <span class="inline-flex items-center gap-1">@ResourceApp._private <TableColumnFilter FilterState='CF("privacy")' OnChanged="OnColumnFilterChanged" /></span>
+                            <th id="hprivacy" class="@SortableHeaderClass("privacy")" style="min-width:60px;" @onclick='() => SortBy("privacy")'>
+                                <span class="inline-flex items-center gap-1">@ResourceApp._private @((MarkupString)SortIndicatorHtml("privacy")) <TableColumnFilter FilterState='CF("privacy")' OnChanged="OnColumnFilterChanged" /></span>
                             </th>
                         }
                     </tr>
@@ -373,7 +385,11 @@
                                     <span class="truncate font-semibold text-slate-800 dark:text-slate-100" title="@calu.Name">@calu.Name</span>
                                 </td>
                             }
-                            @if (ShowVersionColumn)
+                            @if (IsCalculationColumnVisible("active"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatYesNo(calu.IsVisible)</td>
+                            }
+                            @if (IsCalculationColumnVisible("version"))
                             {
                                 <td class="whitespace-nowrap px-3 py-2">
                                     <div class="flex items-center gap-1.5">
@@ -452,6 +468,10 @@
                             {
                                 <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@calu.Priority %</td>
                             }
+                            @if (IsCalculationColumnVisible("address"))
+                            {
+                                <td class="px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(calu.AddressText)</td>
+                            }
                             @if (IsCalculationColumnVisible("createdAt"))
                             {
                                 <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(calu.CreatedAt)</td>
@@ -478,19 +498,11 @@
                             }
                             @if (IsCalculationColumnVisible("archived"))
                             {
-                                <td class="whitespace-nowrap px-3 py-2">
-                                    <span class="inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold @(!calu.IsVisible ? "bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300" : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300")">
-                                        @(!calu.IsVisible ? AppLoc["archived"].Value : "-")
-                                    </span>
-                                </td>
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatYesNo(!calu.IsVisible)</td>
                             }
                             @if (IsCalculationColumnVisible("privacy"))
                             {
-                                <td class="whitespace-nowrap px-3 py-2">
-                                    <span class="inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold @(calu.IsPrivate ? "bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300" : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300")">
-                                        @(calu.IsPrivate ? ResourceApp._private : "-")
-                                    </span>
-                                </td>
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatYesNo(calu.IsPrivate)</td>
                             }
                         </tr>
                     }
@@ -772,44 +784,46 @@
 
     private readonly Dictionary<string, bool> _calculationColumns = new()
     {
+        ["active"] = false,
         ["code"] = true,
         ["name"] = true,
+        ["version"] = true,
         ["project"] = false,
         ["folder"] = false,
         ["calculationType"] = true,
         ["calculationRole"] = false,
         ["status"] = true,
         ["responsible"] = true,
-        ["inspector"] = false,
+        ["inspector"] = true,
         ["qa"] = false,
         ["deadline"] = true,
         ["priority"] = false,
-        ["createdAt"] = true,
-        ["updatedAt"] = true,
+        ["address"] = false,
         ["start"] = false,
-        ["end"] = true,
+        ["end"] = false,
         ["timeMonth"] = false,
         ["tax"] = false,
-        ["archived"] = false,
-        ["privacy"] = false
+        ["archived"] = true,
+        ["privacy"] = true
     };
 
     private List<MhdColumnPickerItem> CalculationColumnOptions => new()
     {
+        new("active", "Aktiv?"),
         new("code", CalcResource.code),
         new("name", AppLoc["calculationName"].Value),
+        new("version", AppLoc["version"].Value),
         new("project", AppLoc["project"].Value),
         new("folder", AppLoc["folder"].Value),
         new("calculationType", AppLoc["calculationType"].Value),
         new("calculationRole", AppLoc["calculationRole"].Value),
-        new("status", CalcResource.status),
+        new("status", "Kalkylstatus"),
         new("responsible", AppLoc["calculationResponsible"].Value),
         new("inspector", AppLoc["reviewer"].Value),
-        new("qa", AppLoc["qaDeadlineColumn"].Value),
+        new("qa", "Frågor/svar"),
         new("deadline", CalcResource.tenderDeadline),
-        new("priority", AppLoc["probability"].Value),
-        new("createdAt", AppLoc["createdDate"].Value),
-        new("updatedAt", AppLoc["lastModified"].Value),
+        new("priority", "Vinstchans"),
+        new("address", "Adress"),
         new("start", CalcResource.startDate),
         new("end", CalcResource.endDate),
         new("timeMonth", AppLoc["projectDurationMonths"].Value),
@@ -894,6 +908,9 @@
                 "name" => _sortAscending
                     ? list.OrderBy(x => x.Name)
                     : list.OrderByDescending(x => x.Name),
+                "active" => _sortAscending
+                    ? list.OrderBy(x => x.IsVisible)
+                    : list.OrderByDescending(x => x.IsVisible),
                 "calculationType" => _sortAscending
                     ? list.OrderBy(x => (int)x.CalculationType).ThenBy(x => x.IsLocked)
                     : list.OrderByDescending(x => (int)x.CalculationType).ThenByDescending(x => x.IsLocked),
@@ -918,6 +935,9 @@
                 "priority" => _sortAscending
                     ? list.OrderBy(x => x.Priority)
                     : list.OrderByDescending(x => x.Priority),
+                "address" => _sortAscending
+                    ? list.OrderBy(x => x.AddressText)
+                    : list.OrderByDescending(x => x.AddressText),
                 "timeMonth" => _sortAscending
                     ? list.OrderBy(x => x.TimeMonth)
                     : list.OrderByDescending(x => x.TimeMonth),
@@ -945,6 +965,12 @@
                 "version" => _sortAscending
                     ? list.OrderBy(x => x.VersionNumber)
                     : list.OrderByDescending(x => x.VersionNumber),
+                "archived" => _sortAscending
+                    ? list.OrderBy(x => !x.IsVisible)
+                    : list.OrderByDescending(x => !x.IsVisible),
+                "privacy" => _sortAscending
+                    ? list.OrderBy(x => x.IsPrivate)
+                    : list.OrderByDescending(x => x.IsPrivate),
                 _ => list
             };
         }
@@ -987,6 +1013,9 @@
 
     private static string FormatDate(DateTime value) =>
         value == default ? "-" : value.ToString(ConstValues.DateFormat);
+
+    private static string FormatYesNo(bool value) =>
+        value ? "Ja" : "Nej";
 
     private string GetCalculationTypeLabel(CalculationVersionType type) => type switch
     {
@@ -1259,11 +1288,6 @@
     private async Task ExportCalculationListAsync(bool pdfMode, bool printOnly)
     {
         var columns = CalculationColumnOptions.Where(column => IsCalculationColumnVisible(column.Key)).ToList();
-        if (ShowVersionColumn)
-        {
-            int nameIdx = columns.FindIndex(c => c.Key == "name");
-            columns.Insert(nameIdx >= 0 ? nameIdx + 1 : columns.Count, new MhdColumnPickerItem("version", AppLoc["version"].Value));
-        }
         var rows = SortedCalculations.Select(calculation => columns.Select(column => GetCalculationExportValue(calculation, column.Key)));
         var title = AppLoc["calculationListTitleFormat", Folder.State.ProjectSelected?.Name ?? "-"].Value;
 
@@ -1275,6 +1299,7 @@
 
     private object? GetCalculationExportValue(ListCalculationMVVM calculation, string key) => key switch
     {
+        "active" => FormatYesNo(calculation.IsVisible),
         "code" => calculation.Code,
         "name" => calculation.Name,
         "calculationType" => GetCalculationTypeLabel(calculation.CalculationType),
@@ -1285,6 +1310,7 @@
         "project" => calculation.ProjectName,
         "folder" => calculation.FolderName,
         "priority" => $"{calculation.Priority} %",
+        "address" => calculation.AddressText,
         "timeMonth" => calculation.TimeMonth,
         "tax" => $"{calculation.Tax} %",
         "start" => FormatDate(calculation.StartDate),
@@ -1294,8 +1320,8 @@
         "createdAt" => FormatDate(calculation.CreatedAt),
         "updatedAt" => calculation.UpdatedAt.HasValue ? FormatDate(calculation.UpdatedAt.Value) : "-",
         "version" => FormatVersion(calculation.VersionNumber),
-        "archived" => calculation.IsVisible ? AppLoc["no"].Value : AppLoc["yes"].Value,
-        "privacy" => calculation.IsPrivate ? AppLoc["yes"].Value : AppLoc["no"].Value,
+        "archived" => FormatYesNo(!calculation.IsVisible),
+        "privacy" => FormatYesNo(calculation.IsPrivate),
         _ => string.Empty
     };
 

@@ -291,7 +291,7 @@
                             <th>@AppLoc["folder"]</th><th>@AppLoc["project"]</th><th>@AppLoc["calculation"]</th>
                             <th>Källa</th><th>Kalkylstatus</th><th>@AppLoc["year"]</th><th>Deltyp</th>
                             @if (_showQuarters) { <th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th> }
-                            <th>Intäkt</th><th>Sannolikhet</th><th>Prognos</th>
+                            <th>Intäkt</th><th title="Sannolikhet att vinna">Vinst %</th><th>Prognos</th>
                         </tr>
                     </thead>
                     <tbody class="@TableBodyClass">
@@ -385,7 +385,7 @@
     private enum CalcReportColumn
     {
         Folder, Project, Calculation, Version, CalcType, CalcStatus, CalcRole,
-        Responsible, Inspector, TenderDeadline, CreatedAt, UpdatedAt, Archived
+        Responsible, Inspector, TenderQA, TenderDeadline, Priority, CreatedAt, UpdatedAt, Archived
     }
 
     private enum ProjReportColumn
@@ -978,7 +978,9 @@
         CalcReportColumn.CalcRole => "Kalkylroll",
         CalcReportColumn.Responsible => "Kalkylansvarig",
         CalcReportColumn.Inspector => "Granskare",
+        CalcReportColumn.TenderQA => "Frågor/svar",
         CalcReportColumn.TenderDeadline => "Anbudsdeadline",
+        CalcReportColumn.Priority => "Vinst %",
         CalcReportColumn.CreatedAt => "Skapad datum",
         CalcReportColumn.UpdatedAt => "Senast ändrad",
         CalcReportColumn.Archived => "Arkiverad",
@@ -996,11 +998,20 @@
         CalcReportColumn.CalcRole => GetCalculationRoleLabel(e.Calculation.CalculationRole),
         CalcReportColumn.Responsible => e.Calculation.Responsible ?? "",
         CalcReportColumn.Inspector => e.Calculation.Inspector ?? "",
+        CalcReportColumn.TenderQA => FormatDate(e.Calculation.TenderQA),
         CalcReportColumn.TenderDeadline => FormatDate(e.Calculation.TenderDeadline),
+        CalcReportColumn.Priority => $"{e.Calculation.Priority} %",
         CalcReportColumn.CreatedAt => e.Calculation.CreatedAt == default ? "" : e.Calculation.CreatedAt.ToString("yyyy-MM-dd"),
         CalcReportColumn.UpdatedAt => e.Calculation.UpdatedAt?.ToString("yyyy-MM-dd") ?? "",
         CalcReportColumn.Archived => e.Calculation.IsVisible ? "" : L("archived"),
         _ => ""
+    };
+
+    private static string GetCalcColumnTitle(CalcReportColumn col) => col switch
+    {
+        CalcReportColumn.TenderQA => "Sista dag för frågor och svar",
+        CalcReportColumn.Priority => "Sannolikhet att vinna",
+        _ => string.Empty
     };
 
     private string GetProjColumnLabel(ProjReportColumn col) => col switch
@@ -1013,15 +1024,22 @@
         ProjReportColumn.StartDate => "Startdatum",
         ProjReportColumn.EndDate => "Slutdatum",
         ProjReportColumn.TenderDeadline => "Anbudsdeadline",
-        ProjReportColumn.TenderQA => "Sista dag för frågor och svar",
+        ProjReportColumn.TenderQA => "Frågor/svar",
         ProjReportColumn.Responsible => "Kalkylansvarig",
         ProjReportColumn.Inspector => "Granskare",
         ProjReportColumn.ProjectType => "Projekttyp",
         ProjReportColumn.Contract => "Entreprenadform",
-        ProjReportColumn.Organisation => "Organisation",
+        ProjReportColumn.Organisation => "Beställare",
         ProjReportColumn.ProcurementName => "Upphandlingsform",
         ProjReportColumn.Archived => "Arkiverad",
         _ => col.ToString()
+    };
+
+    private static string GetProjColumnTitle(ProjReportColumn col) => col switch
+    {
+        ProjReportColumn.ProjStatus => "Projektstatus beskriver projektets övergripande läge och resultat, t.ex. förfrågan, inlämnat, vunnet eller förlorat.",
+        ProjReportColumn.TenderQA => "Sista dag för frågor och svar",
+        _ => string.Empty
     };
 
     private string GetProjCellValue(ProjectEntry e, ProjReportColumn col) => col switch
@@ -1052,7 +1070,7 @@
         var cols = CalcAllColumns.Where(c => _visibleCalcColumns.Contains(c)).ToList();
         return @<div class="@TableContainerClass">
             <table class="@TableClass">
-                <thead class="@TableHeadClass"><tr>@foreach (var c in cols) { <th>@GetCalcColumnLabel(c)</th> }</tr></thead>
+                <thead class="@TableHeadClass"><tr>@foreach (var c in cols) { <th title="@GetCalcColumnTitle(c)">@GetCalcColumnLabel(c)</th> }</tr></thead>
                 <tbody class="@TableBodyClass">
                     @{ var ci = 0; }
                     @foreach (var e in entries)
@@ -1071,7 +1089,7 @@
         var cols = ProjAllColumns.Where(c => _visibleProjColumns.Contains(c)).ToList();
         return @<div class="@TableContainerClass">
             <table class="@TableClass">
-                <thead class="@TableHeadClass"><tr>@foreach (var c in cols) { <th>@GetProjColumnLabel(c)</th> }</tr></thead>
+                <thead class="@TableHeadClass"><tr>@foreach (var c in cols) { <th title="@GetProjColumnTitle(c)">@GetProjColumnLabel(c)</th> }</tr></thead>
                 <tbody class="@TableBodyClass">
                     @{ var pi = 0; }
                     @foreach (var e in entries)
@@ -1150,8 +1168,8 @@
     private ExportModel BuildIncomeExport()
     {
         string[] cols = _showQuarters
-            ? [L("folder"), L("project"), L("calculation"), "Källa", "Kalkylstatus", L("year"), "Deltyp", "Q1", "Q2", "Q3", "Q4", "Intäkt", "Sannolikhet", "Prognos"]
-            : [L("folder"), L("project"), L("calculation"), "Källa", "Kalkylstatus", L("year"), "Deltyp", "Intäkt", "Sannolikhet", "Prognos"];
+            ? [L("folder"), L("project"), L("calculation"), "Källa", "Kalkylstatus", L("year"), "Deltyp", "Q1", "Q2", "Q3", "Q4", "Intäkt", "Vinst %", "Prognos"]
+            : [L("folder"), L("project"), L("calculation"), "Källa", "Kalkylstatus", L("year"), "Deltyp", "Intäkt", "Vinst %", "Prognos"];
         return new(L("incomeOverview"), cols, BuildIncomeExportRows());
     }
 

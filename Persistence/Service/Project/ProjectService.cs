@@ -380,6 +380,9 @@ namespace Persistence.Service.Project
             var projects = await context.Projects.AsNoTracking()
                 .Include(x => x.Organisation)
                 .Include(x => x.Contract)
+                .Include(x => x.Compensation)
+                .Include(x => x.ProcurementMethod)
+                .Include(x => x.ProcurementProcedure)
                 .Include(x => x.ProjectType)
                 .Include(x => x.ProjectStatus)
                 .Where(x => x.FolderId == folderId && (includeArchived || x.IsVisible) &&
@@ -406,6 +409,9 @@ namespace Persistence.Service.Project
             var projects = await context.Projects.AsNoTracking()
                 .Include(x => x.Organisation)
                 .Include(x => x.Contract)
+                .Include(x => x.Compensation)
+                .Include(x => x.ProcurementMethod)
+                .Include(x => x.ProcurementProcedure)
                 .Include(x => x.ProjectType)
                 .Include(x => x.ProjectStatus)
                 .Where(x => x.FolderId == folderId && (includeArchived || x.IsVisible) &&

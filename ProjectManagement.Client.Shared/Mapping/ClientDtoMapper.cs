@@ -64,6 +64,7 @@ namespace ProjectManagement.Client.Shared.Mapping
                 Inspector = dto.Inspector ?? string.Empty,
                 ProjectName = dto.ProjectName ?? string.Empty,
                 FolderName = dto.FolderName ?? string.Empty,
+                AddressText = dto.AddressText ?? string.Empty,
                 Priority = dto.Priority,
                 TimeMonth = dto.TimeMonth,
             };
@@ -346,6 +347,15 @@ namespace ProjectManagement.Client.Shared.Mapping
                 Contract = dto.Contract ?? string.Empty,
                 Type = dto.Type ?? string.Empty,
                 Inspector = dto.Inspector ?? string.Empty,
+                Designer = dto.Designer ?? string.Empty,
+                Supervisor = dto.Supervisor ?? string.Empty,
+                AddressText = dto.AddressText ?? string.Empty,
+                ProcurementMethods = dto.ProcurementMethods ?? string.Empty,
+                Compensation = dto.Compensation ?? string.Empty,
+                ProcurementProcedure = dto.ProcurementProcedure ?? string.Empty,
+                ClientsManager = dto.ClientsManager ?? string.Empty,
+                PublicationDate = dto.PublicationDate,
+                DecisionDate = dto.DecisionDate,
                 Calculations = [],
             };
         }

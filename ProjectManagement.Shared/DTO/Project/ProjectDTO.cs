@@ -309,5 +309,14 @@ namespace ProjectManagement.Shared.DTO.Project
         public string Contract { get; set; } = string.Empty;
         public string Type { get; set; } = string.Empty;
         public string Inspector { get; set; } = string.Empty;
+        public string Designer { get; set; } = string.Empty;
+        public string Supervisor { get; set; } = string.Empty;
+        public string AddressText { get; set; } = string.Empty;
+        public string ProcurementMethods { get; set; } = string.Empty;
+        public string Compensation { get; set; } = string.Empty;
+        public string ProcurementProcedure { get; set; } = string.Empty;
+        public string ClientsManager { get; set; } = string.Empty;
+        public DateTime? PublicationDate { get; set; }
+        public DateTime? DecisionDate { get; set; }
     }
 }

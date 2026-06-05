@@ -192,10 +192,16 @@
                                 <span class="inline-flex items-center gap-1">@AppLoc["projectName"] @((MarkupString)SortIndicatorHtml("name")) <TableColumnFilter FilterState='PF("name")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
+                        @if (IsProjectColumnVisible("active"))
+                        {
+                            <th id="hactive" class="@SortableHeaderClass("active")" style="min-width:70px;" @onclick='() => SortBy("active")'>
+                                <span class="inline-flex items-center gap-1">Aktiv? @((MarkupString)SortIndicatorHtml("active"))</span>
+                            </th>
+                        }
                         @if (IsProjectColumnVisible("status"))
                         {
-                            <th id="hstatus" class="@SortableHeaderClass("status")" style="min-width:80px;" @onclick='() => SortBy("status")'>
-                                <span class="inline-flex items-center gap-1">@CalcResource.status @((MarkupString)SortIndicatorHtml("status")) <TableColumnFilter FilterState='PF("status")' OnChanged="OnProjectColumnFilterChanged" /></span>
+                            <th id="hstatus" class="@SortableHeaderClass("status")" style="min-width:80px;" title="Projektstatus beskriver projektets övergripande läge och resultat, t.ex. förfrågan, inlämnat, vunnet eller förlorat." @onclick='() => SortBy("status")'>
+                                <span class="inline-flex items-center gap-1">Projektstatus @((MarkupString)SortIndicatorHtml("status")) <TableColumnFilter FilterState='PF("status")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("responsible"))
@@ -224,8 +230,8 @@
                         }
                         @if (IsProjectColumnVisible("qa"))
                         {
-                            <th id="hqa" class="@SortableHeaderClass("qa")" style="min-width:80px;" @onclick='() => SortBy("qa")'>
-                                <span class="inline-flex items-center gap-1">@CalcResource.tenderQA @((MarkupString)SortIndicatorHtml("qa")) <TableColumnFilter FilterState='PF("qa")' OnChanged="OnProjectColumnFilterChanged" /></span>
+                            <th id="hqa" class="@SortableHeaderClass("qa")" style="min-width:80px;" title="Sista dag för frågor och svar" @onclick='() => SortBy("qa")'>
+                                <span class="inline-flex items-center gap-1">Frågor/svar @((MarkupString)SortIndicatorHtml("qa")) <TableColumnFilter FilterState='PF("qa")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("calculations"))
@@ -243,7 +249,7 @@
                         @if (IsProjectColumnVisible("organisation"))
                         {
                             <th id="horganisation" class="@SortableHeaderClass("organisation")" style="min-width:80px;" @onclick='() => SortBy("organisation")'>
-                                <span class="inline-flex items-center gap-1">@ResourceApp.organisation @((MarkupString)SortIndicatorHtml("organisation")) <TableColumnFilter FilterState='PF("organisation")' OnChanged="OnProjectColumnFilterChanged" /></span>
+                                <span class="inline-flex items-center gap-1">Beställare @((MarkupString)SortIndicatorHtml("organisation")) <TableColumnFilter FilterState='PF("organisation")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("procurementName"))
@@ -282,6 +288,66 @@
                                 <span class="inline-flex items-center gap-1">@CalcResource.inspector @((MarkupString)SortIndicatorHtml("inspector")) <TableColumnFilter FilterState='PF("inspector")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
+                        @if (IsProjectColumnVisible("designer"))
+                        {
+                            <th id="hdesigner" class="@SortableHeaderClass("designer")" style="min-width:110px;" @onclick='() => SortBy("designer")'>
+                                <span class="inline-flex items-center gap-1">Projektörer @((MarkupString)SortIndicatorHtml("designer"))</span>
+                            </th>
+                        }
+                        @if (IsProjectColumnVisible("supervisor"))
+                        {
+                            <th id="hsupervisor" class="@SortableHeaderClass("supervisor")" style="min-width:180px;" @onclick='() => SortBy("supervisor")'>
+                                <span class="inline-flex items-center gap-1">Kundens kontaktperson under upphandlingstiden @((MarkupString)SortIndicatorHtml("supervisor"))</span>
+                            </th>
+                        }
+                        @if (IsProjectColumnVisible("address"))
+                        {
+                            <th id="haddress" class="@SortableHeaderClass("address")" style="min-width:140px;" @onclick='() => SortBy("address")'>
+                                <span class="inline-flex items-center gap-1">Adress @((MarkupString)SortIndicatorHtml("address"))</span>
+                            </th>
+                        }
+                        @if (IsProjectColumnVisible("procurementMethods"))
+                        {
+                            <th id="hprocurementMethods" class="@SortableHeaderClass("procurementMethods")" style="min-width:110px;" @onclick='() => SortBy("procurementMethods")'>
+                                <span class="inline-flex items-center gap-1">@CalcResource.procurementMethods @((MarkupString)SortIndicatorHtml("procurementMethods"))</span>
+                            </th>
+                        }
+                        @if (IsProjectColumnVisible("compensation"))
+                        {
+                            <th id="hcompensation" class="@SortableHeaderClass("compensation")" style="min-width:110px;" @onclick='() => SortBy("compensation")'>
+                                <span class="inline-flex items-center gap-1">@CalcResource.projectCompensation @((MarkupString)SortIndicatorHtml("compensation"))</span>
+                            </th>
+                        }
+                        @if (IsProjectColumnVisible("procurementProcedure"))
+                        {
+                            <th id="hprocurementProcedure" class="@SortableHeaderClass("procurementProcedure")" style="min-width:130px;" @onclick='() => SortBy("procurementProcedure")'>
+                                <span class="inline-flex items-center gap-1">Upphandlingsförfarande @((MarkupString)SortIndicatorHtml("procurementProcedure"))</span>
+                            </th>
+                        }
+                        @if (IsProjectColumnVisible("clientsManager"))
+                        {
+                            <th id="hclientsManager" class="@SortableHeaderClass("clientsManager")" style="min-width:120px;" @onclick='() => SortBy("clientsManager")'>
+                                <span class="inline-flex items-center gap-1">@ResourceLoc.clientsProjectmanager @((MarkupString)SortIndicatorHtml("clientsManager"))</span>
+                            </th>
+                        }
+                        @if (IsProjectColumnVisible("publicationDate"))
+                        {
+                            <th id="hpublicationDate" class="@SortableHeaderClass("publicationDate")" style="min-width:90px;" @onclick='() => SortBy("publicationDate")'>
+                                <span class="inline-flex items-center gap-1">@CalcResource.publicationDate @((MarkupString)SortIndicatorHtml("publicationDate"))</span>
+                            </th>
+                        }
+                        @if (IsProjectColumnVisible("decisionDate"))
+                        {
+                            <th id="hdecisionDate" class="@SortableHeaderClass("decisionDate")" style="min-width:90px;" @onclick='() => SortBy("decisionDate")'>
+                                <span class="inline-flex items-center gap-1">@CalcResource.decisionDate @((MarkupString)SortIndicatorHtml("decisionDate"))</span>
+                            </th>
+                        }
+                        @if (IsProjectColumnVisible("archived"))
+                        {
+                            <th id="harchived" class="@SortableHeaderClass("archived")" style="min-width:80px;" @onclick='() => SortBy("archived")'>
+                                <span class="inline-flex items-center gap-1">@AppLoc["archived"] @((MarkupString)SortIndicatorHtml("archived"))</span>
+                            </th>
+                        }
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -317,6 +383,10 @@
                                 <td class="sticky left-28 z-[2] max-w-80 border-r border-slate-200 bg-white px-3 py-2 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:hover:bg-slate-900 @(isProjectSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
                                     <span class="block truncate font-semibold text-slate-800 dark:text-slate-100" title="@project.Name">@project.Name</span>
                                 </td>
+                            }
+                            @if (IsProjectColumnVisible("active"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatYesNo(project.IsVisible)</td>
                             }
                             @if (IsProjectColumnVisible("status"))
                             {
@@ -387,6 +457,46 @@
                             @if (IsProjectColumnVisible("inspector"))
                             {
                                 <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Inspector)</td>
+                            }
+                            @if (IsProjectColumnVisible("designer"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Designer)</td>
+                            }
+                            @if (IsProjectColumnVisible("supervisor"))
+                            {
+                                <td class="px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Supervisor)</td>
+                            }
+                            @if (IsProjectColumnVisible("address"))
+                            {
+                                <td class="px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.AddressText)</td>
+                            }
+                            @if (IsProjectColumnVisible("procurementMethods"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.ProcurementMethods)</td>
+                            }
+                            @if (IsProjectColumnVisible("compensation"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Compensation)</td>
+                            }
+                            @if (IsProjectColumnVisible("procurementProcedure"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.ProcurementProcedure)</td>
+                            }
+                            @if (IsProjectColumnVisible("clientsManager"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.ClientsManager)</td>
+                            }
+                            @if (IsProjectColumnVisible("publicationDate"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.PublicationDate)</td>
+                            }
+                            @if (IsProjectColumnVisible("decisionDate"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.DecisionDate)</td>
+                            }
+                            @if (IsProjectColumnVisible("archived"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatYesNo(!project.IsVisible)</td>
                             }
                         </tr>
                     }
@@ -553,6 +663,7 @@
             {
                 "code"             => _sortAscending ? projects.OrderBy(x => x.Code)               : projects.OrderByDescending(x => x.Code),
                 "name"             => _sortAscending ? projects.OrderBy(x => x.Name)               : projects.OrderByDescending(x => x.Name),
+                "active"           => _sortAscending ? projects.OrderBy(x => x.IsVisible)          : projects.OrderByDescending(x => x.IsVisible),
                 "status"           => _sortAscending ? projects.OrderBy(x => x.Status)             : projects.OrderByDescending(x => x.Status),
                 "responsible"      => _sortAscending ? projects.OrderBy(x => x.Responsible)        : projects.OrderByDescending(x => x.Responsible),
                 "start"            => _sortAscending ? projects.OrderBy(x => x.StartDate)          : projects.OrderByDescending(x => x.StartDate),
@@ -568,6 +679,16 @@
                 "contract"         => _sortAscending ? projects.OrderBy(x => x.Contract)           : projects.OrderByDescending(x => x.Contract),
                 "projectType"      => _sortAscending ? projects.OrderBy(x => x.Type)               : projects.OrderByDescending(x => x.Type),
                 "inspector"        => _sortAscending ? projects.OrderBy(x => x.Inspector)          : projects.OrderByDescending(x => x.Inspector),
+                "designer"         => _sortAscending ? projects.OrderBy(x => x.Designer)           : projects.OrderByDescending(x => x.Designer),
+                "supervisor"       => _sortAscending ? projects.OrderBy(x => x.Supervisor)         : projects.OrderByDescending(x => x.Supervisor),
+                "address"          => _sortAscending ? projects.OrderBy(x => x.AddressText)        : projects.OrderByDescending(x => x.AddressText),
+                "procurementMethods" => _sortAscending ? projects.OrderBy(x => x.ProcurementMethods) : projects.OrderByDescending(x => x.ProcurementMethods),
+                "compensation"     => _sortAscending ? projects.OrderBy(x => x.Compensation)       : projects.OrderByDescending(x => x.Compensation),
+                "procurementProcedure" => _sortAscending ? projects.OrderBy(x => x.ProcurementProcedure) : projects.OrderByDescending(x => x.ProcurementProcedure),
+                "clientsManager"   => _sortAscending ? projects.OrderBy(x => x.ClientsManager)     : projects.OrderByDescending(x => x.ClientsManager),
+                "publicationDate"  => _sortAscending ? projects.OrderBy(x => x.PublicationDate)    : projects.OrderByDescending(x => x.PublicationDate),
+                "decisionDate"     => _sortAscending ? projects.OrderBy(x => x.DecisionDate)       : projects.OrderByDescending(x => x.DecisionDate),
+                "archived"         => _sortAscending ? projects.OrderBy(x => !x.IsVisible)         : projects.OrderByDescending(x => !x.IsVisible),
                 _                  => projects.OrderByDescending(x => x.Order).ThenBy(x => x.Name, StringComparer.CurrentCultureIgnoreCase)
             };
         }
@@ -630,44 +751,64 @@
 
     private readonly Dictionary<string, bool> _projectColumns = new()
     {
+        ["active"]            = true,
         ["code"]              = true,
         ["name"]              = true,
-        ["status"]            = false,
-        ["responsible"]       = false,
+        ["status"]            = true,
+        ["responsible"]       = true,
         ["start"]             = true,
         ["end"]               = true,
         ["deadline"]          = true,
         ["qa"]                = false,
-        ["calculations"]      = true,
         ["byggherre"]         = false,
         ["organisation"]      = false,
         ["procurementName"]   = false,
         ["procurementNumber"] = false,
         ["customerReference"] = false,
         ["contract"]          = false,
-        ["projectType"]       = false,
-        ["inspector"]         = false
+        ["projectType"]       = true,
+        ["inspector"]         = true,
+        ["designer"]          = false,
+        ["supervisor"]        = false,
+        ["address"]           = false,
+        ["procurementMethods"] = false,
+        ["compensation"]      = false,
+        ["procurementProcedure"] = false,
+        ["clientsManager"]    = false,
+        ["publicationDate"]   = false,
+        ["decisionDate"]      = false,
+        ["archived"]          = true
     };
 
     private List<MhdColumnPickerItem> ProjectColumnOptions => new()
     {
+        new("active",            "Aktiv?"),
         new("code",              CalcResource.code),
         new("name",              AppLoc["projectName"].Value),
-        new("status",            CalcResource.status),
+        new("status",            "Projektstatus"),
         new("responsible",       AppLoc["calculationResponsible"].Value),
         new("start",             CalcResource.startDate),
         new("end",               CalcResource.endDate),
         new("deadline",          CalcResource.tenderDeadline),
-        new("qa",                CalcResource.tenderQA),
-        new("calculations",      AppLoc["calculationCount"].Value),
+        new("qa",                "Frågor/svar"),
         new("byggherre",         CalcResource.developer),
-        new("organisation",      ResourceApp.organisation),
+        new("organisation",      "Beställare"),
         new("procurementName",   AppLoc["procurementName"].Value),
         new("procurementNumber", AppLoc["procurementNumber"].Value),
         new("customerReference", AppLoc["customerReference"].Value),
         new("contract",          CalcResource.projectContract),
         new("projectType",       CalcResource.projectType),
-        new("inspector",         CalcResource.inspector)
+        new("inspector",         CalcResource.inspector),
+        new("designer",          "Projektörer"),
+        new("supervisor",        "Kundens kontaktperson under upphandlingstiden"),
+        new("address",           "Adress"),
+        new("procurementMethods", CalcResource.procurementMethods),
+        new("compensation",      CalcResource.projectCompensation),
+        new("procurementProcedure", "Upphandlingsförfarande"),
+        new("clientsManager",    ResourceLoc.clientsProjectmanager),
+        new("publicationDate",   CalcResource.publicationDate),
+        new("decisionDate",      CalcResource.decisionDate),
+        new("archived",          AppLoc["archived"].Value)
     };
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -709,6 +850,12 @@
 
     private static string FormatDate(DateTime value) =>
         value == default ? "-" : value.ToString(ConstValues.DateFormat);
+
+    private static string FormatDate(DateTime? value) =>
+        value.HasValue ? FormatDate(value.Value) : "-";
+
+    private static string FormatYesNo(bool value) =>
+        value ? "Ja" : "Nej";
 
     private static string FormatCalculationCount(ListProjectMVVM project) =>
         GetCalculationCount(project).ToString();
@@ -856,6 +1003,7 @@
 
     private object? GetProjectExportValue(ListProjectMVVM project, string key) => key switch
     {
+        "active"            => FormatYesNo(project.IsVisible),
         "code"              => project.Code,
         "name"              => project.Name,
         "status"            => GetProjectStatusText(project),
@@ -873,6 +1021,16 @@
         "contract"          => project.Contract,
         "projectType"       => project.Type,
         "inspector"         => project.Inspector,
+        "designer"          => project.Designer,
+        "supervisor"        => project.Supervisor,
+        "address"           => project.AddressText,
+        "procurementMethods" => project.ProcurementMethods,
+        "compensation"      => project.Compensation,
+        "procurementProcedure" => project.ProcurementProcedure,
+        "clientsManager"    => project.ClientsManager,
+        "publicationDate"   => FormatDate(project.PublicationDate),
+        "decisionDate"      => FormatDate(project.DecisionDate),
+        "archived"          => FormatYesNo(!project.IsVisible),
         _                   => string.Empty
     };
 

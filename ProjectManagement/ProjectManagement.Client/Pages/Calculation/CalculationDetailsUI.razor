@@ -613,7 +613,7 @@
             new(CalcResource.startDate, FormatDate(details.StartDate)),
             new(CalcResource.endDate, FormatDate(details.EndDate)),
             new(CalcResource.tenderDeadline, FormatDate(details.TenderDeadline)),
-            new(CalcResource.tenderQA, FormatDate(details.TenderQA))
+            new("Frågor/svar senast", FormatDate(details.TenderQA))
         ];
     }
 
@@ -622,7 +622,7 @@
         new(CalcResource.startDate, FormatDate(details.StartDate)),
         new(CalcResource.endDate, FormatDate(details.EndDate)),
         new(CalcResource.tenderDeadline, FormatDate(details.TenderDeadline)),
-        new(CalcResource.tenderQA, FormatDate(details.TenderQA)),
+        new("Frågor/svar senast", FormatDate(details.TenderQA)),
         new(CalcResource.publicationDate, FormatDate(details.PublicationDate)),
         new(CalcResource.decisionDate, FormatDate(details.DecisionDate))
     ];

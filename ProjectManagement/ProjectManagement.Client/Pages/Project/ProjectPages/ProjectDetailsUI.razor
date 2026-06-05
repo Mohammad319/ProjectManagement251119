@@ -59,7 +59,7 @@
                             @if (HasText(ProjectDetails.Organisation))
                             {
                                 <span class="rounded-full bg-white/10 px-3 py-1">
-                                    @ResourceApp.organisation:
+                                    Beställare:
                                     <span class="font-semibold text-white">@ProjectDetails.Organisation</span>
                                 </span>
                             }
@@ -84,7 +84,7 @@
                         @if (HasText(ProjectDetails.Status))
                         {
                             <span class="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-slate-100">
-                                @CalcResource.status: @ProjectDetails.Status
+                                Projektstatus: @ProjectDetails.Status
                             </span>
                         }
 
@@ -318,11 +318,11 @@
 
         AddIfHasText(items, CalcResource.code, details.Code);
         AddIfHasText(items, CalcResource.projectType, details.Type);
-        AddIfHasText(items, ResourceApp.organisation, details.Organisation);
+        AddIfHasText(items, "Beställare", details.Organisation);
         AddIfHasText(items, CalcResource.projectContract, details.Contract);
         AddIfHasText(items, CalcResource.projectCompensation, details.Compensation);
         AddIfHasText(items, CalcResource.procurementMethods, details.ProcurementMethods);
-        AddIfHasText(items, CalcResource.status, details.Status);
+        AddIfHasText(items, "Projektstatus", details.Status);
         items.Add(new(CalcResource.procurement, details.Procurement.ToString()));
         items.Add(new(ResourceApp.created, FormatDateTime(details.Created)));
 
@@ -337,7 +337,7 @@
         new(CalcResource.startDate, FormatDate(details.StartDate)),
         new(CalcResource.endDate, FormatDate(details.EndDate)),
         new(CalcResource.tenderDeadline, FormatDate(details.TenderDeadline)),
-        new(CalcResource.tenderQA, FormatDate(details.TenderQA))
+        new("Frågor/svar senast", FormatDate(details.TenderQA))
     ];
 
     private List<DisplayField> BuildTeamItems(ProjectDetailsDTO details)
