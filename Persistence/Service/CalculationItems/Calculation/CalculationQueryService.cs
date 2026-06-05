@@ -24,15 +24,19 @@ namespace Persistence.Service.CalculationItems.Calculation
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            var calculations = await context.Calculations
+            var calculationEntities = await context.Calculations
                 .AsNoTracking()
+                .Include(x => x.Status)
+                .Include(x => x.Project)
+                    .ThenInclude(x => x.Folder)
                 .Where(x => !x.IsDeleted &&
                     x.ProjectId == projectId &&
                     (!departmentId.HasValue || x.Project.Folder.DepartmentId == departmentId.Value || x.CreatedBy == userId) &&
                     (!x.IsPrivate || x.CreatedBy == userId))
                 .OrderBy(x => x.SortOrder)
-                .Select(ListCalculationProjection)
                 .ToListAsync(ct);
+
+            var calculations = calculationEntities.Select(ToListCalculationDto).ToList();
 
             var matchingFamilies = CalculationVersionSelector
                 .SelectCurrentVersions(calculations)
@@ -54,8 +58,11 @@ namespace Persistence.Service.CalculationItems.Calculation
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            return await context.Calculations
+            var calculationEntities = await context.Calculations
                 .AsNoTracking()
+                .Include(x => x.Status)
+                .Include(x => x.Project)
+                    .ThenInclude(x => x.Folder)
                 .Where(x => !x.IsDeleted && x.ProjectId == projectId)
                 .Where(x =>
                     departmentId == null ||
@@ -66,52 +73,9 @@ namespace Persistence.Service.CalculationItems.Calculation
                     x.CreatedBy == userId ||
                     x.SharesCalc.Any(s => s.CreatedBy == userId || (departmentId != null && s.DepartmentId == departmentId.Value)))
                 .OrderBy(x => x.SortOrder)
-                .Select(x => new ListCalculationDTO
-                {
-                    Id = x.Id,
-                    Name = x.Name,
-                    Code = x.Code,
-                    Order = x.SortOrder,
-                    IsPrivate = x.IsPrivate,
-                    TenderDeadline = x.TenderDeadline,
-                    TenderQA = x.TenderQA,
-                    StartDate = x.StartDate,
-                    EndDate = x.EndDate,
-                    Status = x.Status != null ? x.Status.Name : string.Empty,
-                    StatusId = x.StatusId,
-                    StatusSortOrder = x.Status != null ? x.Status.SortOrder : null,
-                    StatusColor = x.Status != null ? x.Status.Color : string.Empty,
-                    CalculationType = x.CalculationType,
-                    BidRole = x.BidRole,
-                    CalculationRole = x.CalculationRole,
-                    CustomCalculationRoleName = x.CustomCalculationRoleName,
-                    IsLocked = x.IsLocked,
-                    LockedAtUtc = x.LockedAtUtc,
-                    LockedByUserId = x.LockedByUserId,
-                    ApprovedByUserId = x.ApprovedByUserId,
-                    ApprovedByName = x.ApprovedByName,
-                    ApprovedAtUtc = x.ApprovedAtUtc,
-                    SourceCalculationId = x.SourceCalculationId,
-                    VersionGroupId = x.VersionGroupId,
-                    VersionNumber = x.VersionNumber,
-                    CreatedFromCalculationId = x.CreatedFromCalculationId,
-                    IsCurrentVersion = x.IsCurrentVersion,
-                    StatusAllowsProductionCalculation = x.Status != null && x.Status.AllowsProductionCalculation,
-                    CountsAsSubmittedBid = x.Status != null && x.Status.CountsAsSubmittedBid,
-                    CountsAsWonBid = x.Status != null && x.Status.CountsAsWonBid,
-                    CountsAsLostBid = x.Status != null && x.Status.CountsAsLostBid,
-                    CreatedAt = x.CreatedAt,
-                    UpdatedAt = x.UpdatedAt,
-                    Tax = x.Tax,
-                    IsVisible = x.IsVisible,
-                    Inspector = x.Metadata.Inspector,
-                    ProjectName = x.Project != null ? x.Project.Name : string.Empty,
-                    FolderName = x.Project != null && x.Project.Folder != null ? x.Project.Folder.Name : string.Empty,
-                    AddressText = x.Metadata.Address.Count > 0 ? x.Metadata.Address[0].Street : string.Empty,
-                    Priority = x.Metadata.Priority,
-                    TimeMonth = x.Metadata.TimeMonth
-                })
                 .ToListAsync(ct);
+
+            return calculationEntities.Select(ToListCalculationDto).ToList();
         }
 
         public async Task<CalculationDetailsDTO?> GetDetailsAsync(
@@ -170,52 +134,68 @@ namespace Persistence.Service.CalculationItems.Calculation
             return priceList?.HourlyPrice ?? [];
         }
 
-        private static readonly System.Linq.Expressions.Expression<Func<CalculationEntity, ListCalculationDTO>>
-            ListCalculationProjection =
-                x => new ListCalculationDTO
-                {
-                    Id = x.Id,
-                    Name = x.Name,
-                    Code = x.Code,
-                    Order = x.SortOrder,
-                    TenderDeadline = x.TenderDeadline,
-                    TenderQA = x.TenderQA,
-                    IsPrivate = x.IsPrivate,
-                    EndDate = x.EndDate,
-                    StartDate = x.StartDate,
-                    Status = x.Status != null ? x.Status.Name : string.Empty,
-                    StatusId = x.StatusId,
-                    StatusSortOrder = x.Status != null ? x.Status.SortOrder : null,
-                    StatusColor = x.Status != null ? x.Status.Color : string.Empty,
-                    CalculationType = x.CalculationType,
-                    BidRole = x.BidRole,
-                    CalculationRole = x.CalculationRole,
-                    CustomCalculationRoleName = x.CustomCalculationRoleName,
-                    IsLocked = x.IsLocked,
-                    LockedAtUtc = x.LockedAtUtc,
-                    LockedByUserId = x.LockedByUserId,
-                    ApprovedByUserId = x.ApprovedByUserId,
-                    ApprovedByName = x.ApprovedByName,
-                    ApprovedAtUtc = x.ApprovedAtUtc,
-                    SourceCalculationId = x.SourceCalculationId,
-                    VersionGroupId = x.VersionGroupId,
-                    VersionNumber = x.VersionNumber,
-                    CreatedFromCalculationId = x.CreatedFromCalculationId,
-                    IsCurrentVersion = x.IsCurrentVersion,
-                    StatusAllowsProductionCalculation = x.Status != null && x.Status.AllowsProductionCalculation,
-                    CountsAsSubmittedBid = x.Status != null && x.Status.CountsAsSubmittedBid,
-                    CountsAsWonBid = x.Status != null && x.Status.CountsAsWonBid,
-                    CountsAsLostBid = x.Status != null && x.Status.CountsAsLostBid,
-                    CreatedAt = x.CreatedAt,
-                    UpdatedAt = x.UpdatedAt,
-                    Tax = x.Tax,
-                    IsVisible = x.IsVisible,
-                    Inspector = x.Metadata.Inspector,
-                    ProjectName = x.Project != null ? x.Project.Name : string.Empty,
-                    FolderName = x.Project != null && x.Project.Folder != null ? x.Project.Folder.Name : string.Empty,
-                    AddressText = x.Metadata.Address.Count > 0 ? x.Metadata.Address[0].Street : string.Empty,
-                    Priority = x.Metadata.Priority,
-                    TimeMonth = x.Metadata.TimeMonth
-                };
+        private static ListCalculationDTO ToListCalculationDto(CalculationEntity x) => new()
+        {
+            Id = x.Id,
+            Name = x.Name,
+            Code = x.Code,
+            Order = x.SortOrder,
+            TenderDeadline = x.TenderDeadline,
+            TenderQA = x.TenderQA,
+            IsPrivate = x.IsPrivate,
+            EndDate = x.EndDate,
+            StartDate = x.StartDate,
+            Status = x.Status?.Name ?? string.Empty,
+            StatusId = x.StatusId,
+            StatusSortOrder = x.Status?.SortOrder,
+            StatusColor = x.Status?.Color ?? string.Empty,
+            CalculationType = x.CalculationType,
+            BidRole = x.BidRole,
+            CalculationRole = x.CalculationRole,
+            CustomCalculationRoleName = x.CustomCalculationRoleName,
+            IsLocked = x.IsLocked,
+            LockedAtUtc = x.LockedAtUtc,
+            LockedByUserId = x.LockedByUserId,
+            ApprovedByUserId = x.ApprovedByUserId,
+            ApprovedByName = x.ApprovedByName,
+            ApprovedAtUtc = x.ApprovedAtUtc,
+            SourceCalculationId = x.SourceCalculationId,
+            VersionGroupId = x.VersionGroupId,
+            VersionNumber = x.VersionNumber,
+            CreatedFromCalculationId = x.CreatedFromCalculationId,
+            IsCurrentVersion = x.IsCurrentVersion,
+            StatusAllowsProductionCalculation = x.Status?.AllowsProductionCalculation ?? false,
+            CountsAsSubmittedBid = x.Status?.CountsAsSubmittedBid ?? false,
+            CountsAsWonBid = x.Status?.CountsAsWonBid ?? false,
+            CountsAsLostBid = x.Status?.CountsAsLostBid ?? false,
+            CreatedAt = x.CreatedAt,
+            UpdatedAt = x.UpdatedAt,
+            Tax = x.Tax,
+            IsVisible = x.IsVisible,
+            Inspector = x.Metadata.Inspector,
+            ProjectName = x.Project?.Name ?? string.Empty,
+            FolderName = x.Project?.Folder?.Name ?? string.Empty,
+            AddressText = FormatAddress(x.Metadata.Address.FirstOrDefault()),
+            Priority = x.Metadata.Priority,
+            TimeMonth = x.Metadata.TimeMonth
+        };
+
+        private static string FormatAddress(ProjectManagement.Shared.DTO.App.AddressDTO? address)
+        {
+            if (address is null)
+                return string.Empty;
+
+            var parts = new[]
+            {
+                address.Street,
+                address.Nr,
+                address.ZIPCode,
+                address.City,
+                address.Region,
+                address.Country
+            };
+
+            return string.Join(", ", parts.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim()));
+        }
     }
 }
