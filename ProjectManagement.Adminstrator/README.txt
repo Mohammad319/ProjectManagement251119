@@ -1,6 +1,7 @@
 
 publish in  C:\Publish\ProjectManagement
 dotnet publish -c Release -o C:\Publish\ProjectManagement
+dotnet publish -c Release /p:DebugType=None /p:DebugSymbols=false
 -------------------
 87.106.12.82
 Administrator

@@ -797,6 +797,8 @@
   <data name="hitRate" xml:space="preserve"><value>Hit rate / accuracy</value></data>
   <data name="calculationListReport" xml:space="preserve"><value>Calculation list</value></data>
   <data name="projectListReport" xml:space="preserve"><value>Project list</value></data>
+  <data name="columnSelection" xml:space="preserve"><value>Column selection</value></data>
+  <data name="visibleColumns" xml:space="preserve"><value>Visible columns</value></data>
   <data name="exportPrint" xml:space="preserve"><value>Export / print</value></data>
   <data name="folder" xml:space="preserve"><value>Folder</value></data>
   <data name="project" xml:space="preserve"><value>Project</value></data>

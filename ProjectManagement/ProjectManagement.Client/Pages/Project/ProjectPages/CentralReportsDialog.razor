@@ -522,31 +522,37 @@
         async (c, v) => await ToggleCalcColumn(c, v),
         () => { _visibleCalcColumns = new(CalcAllColumns); _ = SaveCalcColumnsAsync(); },
         () => { _visibleCalcColumns = new(CalcDefaultColumns); _ = SaveCalcColumnsAsync(); },
-        _showColumnPanelCalc, v => { _showColumnPanelCalc = v; StateHasChanged(); });
+        _showColumnPanelCalc, v => { _showColumnPanelCalc = v; StateHasChanged(); },
+        openUp: true);
 
     private RenderFragment ProjColumnPanel() => ColumnPanelImpl(
         ProjAllColumns, _visibleProjColumns, GetProjColumnLabel,
         async (c, v) => await ToggleProjColumn(c, v),
         () => { _visibleProjColumns = new(ProjAllColumns); _ = SaveProjColumnsAsync(); },
         () => { _visibleProjColumns = new(ProjDefaultColumns); _ = SaveProjColumnsAsync(); },
-        _showColumnPanelProj, v => { _showColumnPanelProj = v; StateHasChanged(); });
+        _showColumnPanelProj, v => { _showColumnPanelProj = v; StateHasChanged(); },
+        openUp: true);
 
     private RenderFragment ColumnPanelImpl<T>(T[] allCols, HashSet<T> visible, Func<T, string> getLabel,
         Func<T, bool, Task> toggle, Action selectAll, Action selectDefault,
-        bool panelVisible, Action<bool> setPanelVisible)
+        bool panelVisible, Action<bool> setPanelVisible, bool openUp = false)
         where T : struct, Enum
     {
+        var panelClass = openUp
+            ? "absolute bottom-full right-0 z-50 mb-1 w-64 overflow-auto rounded-md border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900"
+            : "absolute right-0 z-50 mt-0.5 w-64 overflow-auto rounded-md border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900";
+
         return @<div class="relative">
             <button type="button"
                     class="@(visible.Count < allCols.Length ? "inline-flex h-8 items-center rounded-lg bg-sky-50 border border-sky-300 px-2.5 text-xs font-semibold text-sky-700 transition hover:bg-sky-100 dark:bg-sky-950/30 dark:border-sky-700 dark:text-sky-300" : ActionButtonClass)"
                     @onclick="() => setPanelVisible(!panelVisible)">
-                Kolumnval @(visible.Count < allCols.Length ? $"({visible.Count}/{allCols.Length})" : "")
+                @AppLoc["columnSelection"] @(visible.Count < allCols.Length ? $"({visible.Count}/{allCols.Length})" : "")
             </button>
             @if (panelVisible)
             {
                 <div class="fixed inset-0 z-40" @onclick="() => setPanelVisible(false)"></div>
-                <div class="absolute right-0 z-50 mt-0.5 w-64 overflow-auto rounded-md border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900" style="max-height:22rem">
-                    <p class="mb-1.5 text-[10px] font-semibold text-slate-400">Synliga kolumner</p>
+                <div class="@panelClass" style="max-height:min(22rem, calc(100vh - 8rem))">
+                    <p class="mb-1.5 text-[10px] font-semibold text-slate-400">@AppLoc["visibleColumns"]</p>
                     @foreach (var col in allCols) { var cc = col;
                         <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-xs text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800">
                             <input type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300" checked="@visible.Contains(cc)" @onchange="e => toggle(cc, (bool)(e.Value ?? false))" />
@@ -554,8 +560,8 @@
                         </label>
                     }
                     <div class="mt-1.5 flex gap-1 border-t border-slate-100 pt-1.5 dark:border-slate-800">
-                        <button type="button" class="flex-1 rounded bg-slate-50 px-2 py-1 text-[10px] font-medium text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700" @onclick="() => selectAll()">Alla</button>
-                        <button type="button" class="flex-1 rounded bg-slate-50 px-2 py-1 text-[10px] font-medium text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700" @onclick="() => selectDefault()">Standard</button>
+                        <button type="button" class="flex-1 rounded bg-slate-50 px-2 py-1 text-[10px] font-medium text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700" @onclick="() => selectAll()">@AppLoc["allItems"]</button>
+                        <button type="button" class="flex-1 rounded bg-slate-50 px-2 py-1 text-[10px] font-medium text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700" @onclick="() => selectDefault()">@AppLoc["defaultValue"]</button>
                     </div>
                 </div>
             }

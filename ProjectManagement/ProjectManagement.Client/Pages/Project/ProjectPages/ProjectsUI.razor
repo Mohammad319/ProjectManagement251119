@@ -10,246 +10,278 @@
 @using System.Net.Http
 @using BlazorMHD.UI.Core.Data
 @using BlazorMHD.UI.Core.DesignSystem
-@using BlazorMHD.UI.Components.Data.ColumnPicker
 @inherits AppComponentBase
 @implements IDisposable
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IJSRuntime JS
 
-<div class="ml-1">
+<div class="flex h-full min-h-0 flex-col gap-1 overflow-hidden px-1 pb-1">
 
-    @* ── Header toolbar ─────────────────────────────────── *@
-    <div class="sticky top-0 z-20 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 flex w-full flex-wrap items-center justify-between gap-2 px-1 py-1">
+    @* ── Sticky header ─────────────────────────────────── *@
+    <div class="sticky top-0 z-30 shrink-0 -mx-1 border-b border-slate-200 bg-white px-1 pb-1 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+    <div class="flex w-full flex-wrap items-center justify-between gap-1.5 px-1 pt-1 pb-0.5">
         <div class="min-w-0">
-            <div class="truncate text-sm font-semibold text-gray-700 dark:text-gray-300">
-                @AppLoc["projectsInFolderFormat", Folder.State.FolderSelected?.Name ?? "-"]
-            </div>
-            <div class="text-xs text-slate-500 dark:text-slate-400">
-                @SortedProjects.Count() @CalcResource.project
-                @if (HasActiveProjectFilters)
-                {
-                    <button type="button"
-                            class="ml-2 inline-flex items-center gap-0.5 rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-semibold text-blue-600 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-950/60"
-                            @onclick="ClearProjectFilters"
-                            title="Rensa alla kolumnfilter">
-                        <svg class="h-2.5 w-2.5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L13 10.414V15a1 1 0 01-.553.894l-4 2A1 1 0 017 19v-8.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd"/></svg>
-                        Rensa filter
-                    </button>
-                }
+            <div class="flex flex-col text-gray-700 dark:text-gray-300">
+                <span class="truncate text-sm font-semibold">
+                    @AppLoc["projectsInFolderFormat", Folder.State.FolderSelected?.Name ?? "-"]
+                </span>
+                <span class="truncate text-xs text-slate-500 dark:text-slate-400">
+                    @SortedProjects.Count() @CalcResource.project
+                </span>
             </div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2">
+        <div class="flex flex-wrap items-center gap-1">
 
-            @if (!Folder.State.OtherDepartment)
-            {
+            @* Filtrera *@
+            <div class="relative">
                 <button type="button"
-                        class="inline-flex h-9 items-center gap-1.5 rounded-lg border px-3 text-sm font-semibold transition @(UoWService.Folder.ShowArchived ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-800/60 dark:bg-amber-950/30 dark:text-amber-300 dark:hover:bg-amber-950/50" : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800")"
-                        title="@AppLoc["showArchived"]"
-                        @onclick="HandleToggleArchived">
-                    <span>@AppLoc["showArchived"]</span>
+                        class="@(HasActiveProjectFilters ? "inline-flex h-7 items-center gap-1 rounded border border-blue-300 bg-blue-50 px-2 text-[11px] font-medium text-blue-700 transition dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300" : "inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800")"
+                        @onclick="() => _filterMenuOpen = !_filterMenuOpen">
+                    <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
+                    </svg>
+                    <span>@AppLoc["filter"]</span>
+                    @if (ActiveProjectFilterCount > 0)
+                    {
+                        <span class="inline-flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-blue-600 px-1 text-[9px] font-bold leading-none text-white dark:bg-blue-500">@ActiveProjectFilterCount</span>
+                    }
+                    <svg class="h-2.5 w-2.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
                 </button>
-            }
+                @if (_filterMenuOpen)
+                {
+                    <div class="fixed inset-0 z-30" @onclick="() => _filterMenuOpen = false"></div>
+                    <div class="absolute left-0 top-full z-40 mt-1 w-48 rounded-md border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+                        @if (HasActiveProjectFilters)
+                        {
+                            <button type="button"
+                                    class="flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                                    @onclick="() => { ClearProjectFilters(); _filterMenuOpen = false; }">
+                                <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                <span>@AppLoc["clearAllFilters"]</span>
+                            </button>
+                        }
+                        else
+                        {
+                            <span class="block px-3 py-2 text-[11px] text-slate-400 dark:text-slate-500">@AppLoc["noActiveFilters"]</span>
+                        }
+                    </div>
+                }
+            </div>
 
-            <MhdColumnPicker Text="@AppLoc["columns"]"
-                             Columns="@ProjectColumnOptions"
-                             ColumnVisibility="_projectColumns"
-                             OnChanged="StateHasChanged" />
+            @* Vy dropdown *@
+            <div class="relative">
+                <button type="button"
+                        class="@(ViewBadgeCount > 0 ? "inline-flex h-7 items-center gap-1 rounded border border-blue-300 bg-blue-50 px-2 text-[11px] font-medium text-blue-700 transition dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300" : "inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800")"
+                        @onclick="() => _viewMenuOpen = !_viewMenuOpen">
+                    <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    <span>@AppLoc["view"]</span>
+                    @if (ViewBadgeCount > 0)
+                    {
+                        <span class="inline-flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-blue-600 px-1 text-[9px] font-bold leading-none text-white dark:bg-blue-500">@ViewBadgeCount</span>
+                    }
+                    <svg class="h-2.5 w-2.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+                @if (_viewMenuOpen)
+                {
+                    <div class="fixed inset-0 z-30" @onclick="() => { _viewMenuOpen = false; _showColumnPanel = false; }"></div>
+                    <div class="absolute left-0 top-full z-40 mt-1 w-56 rounded-md border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
 
-            <button type="button" class="@ToolbarButtonClass" @onclick="ExportProjectListAsync">@AppLoc["exportExcel"]</button>
-            <button type="button" class="@ToolbarButtonClass" @onclick="ExportProjectPdfAsync">@AppLoc["exportPdf"]</button>
-            <button type="button" class="@ToolbarButtonClass" @onclick="PrintProjectListAsync">@AppLoc["print"]</button>
+                        @if (!Folder.State.OtherDepartment)
+                        {
+                            <button type="button"
+                                    class="@(UoWService.Folder.ShowArchived ? "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-blue-700 dark:text-blue-300" : "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800")"
+                                    @onclick="async () => { _viewMenuOpen = false; await HandleToggleArchived(); }">
+                                <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                                </svg>
+                                <span class="flex-1 text-left">@AppLoc["showArchived"]</span>
+                                @if (UoWService.Folder.ShowArchived)
+                                {
+                                    <svg class="ml-auto h-3 w-3 shrink-0 text-blue-600 dark:text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
+                                }
+                            </button>
+                            <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
+                        }
 
+                        <button type="button"
+                                class="flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                                @onclick="() => _showColumnPanel = !_showColumnPanel">
+                            <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                            </svg>
+                            <span class="flex-1 text-left">@AppLoc["selectColumns"]</span>
+                            <svg class="h-2.5 w-2.5 shrink-0 text-slate-400 transition-transform @(_showColumnPanel ? "rotate-180" : "")" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        @if (_showColumnPanel)
+                        {
+                            <div class="max-h-52 overflow-y-auto px-1 pb-1">
+                                @foreach (var col in ProjectColumnOptions)
+                                {
+                                    var colKey = col.Key;
+                                    <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800">
+                                        <input type="checkbox"
+                                               class="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800"
+                                               checked="@IsProjectColumnVisible(colKey)"
+                                               @onchange="e => _projectColumns[colKey] = e.Value is bool b && b" />
+                                        <span>@col.Label</span>
+                                    </label>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            @* Rapporter *@
             <button type="button"
-                    class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-sky-300 bg-sky-50 px-3 text-sm font-semibold text-sky-700 transition hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-300 dark:hover:bg-sky-950/50"
+                    class="inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
                     disabled="@(Folder.State.FolderSelected is null)"
-                    title="@AppLoc["reports"]"
                     @onclick="OpenReports">
+                <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
                 <span>@AppLoc["reports"]</span>
             </button>
 
+            <button type="button" class="inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800" @onclick="ExportProjectListAsync">@AppLoc["exportExcel"]</button>
+            <button type="button" class="inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800" @onclick="ExportProjectPdfAsync">@AppLoc["exportPdf"]</button>
+            <button type="button" class="inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800" @onclick="PrintProjectListAsync">@AppLoc["print"]</button>
+
+            <div class="h-4 w-px bg-slate-200 dark:bg-slate-700"></div>
+
             <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
                 <button type="button"
-                        class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-50 px-3 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-950/50"
+                        class="inline-flex h-7 shrink-0 items-center gap-1 rounded border border-emerald-400 bg-emerald-500 px-2 text-[11px] font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-40 dark:border-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700"
                         disabled="@(Folder.State.OtherDepartment || Folder.State.FolderSelected is null)"
                         title="@AppLoc["newProject"]"
                         @onclick="() => UpdateForm(new ListProjectMVVM())">
-                    <span aria-hidden="true">@((MarkupString)Icons.Plus)</span>
+                    <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
                     <span>@AppLoc["newProject"]</span>
                 </button>
             </AuthorizeView>
         </div>
     </div>
+    </div>@* ── End sticky header ─────────────────────────── *@
 
     @* ── Project table ───────────────────────────────────── *@
     @if (SortedProjects.Any())
     {
-        <div class="mr-1 overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
-            <table class="min-w-full table-auto text-left text-xs">
-                <thead class="sticky top-11 z-10 bg-slate-50 text-[11px] font-semibold text-slate-500 dark:bg-slate-900 dark:text-slate-400">
+        <div class="divNetCalc flex-1 min-h-0 overflow-auto rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
+            <table id="resizeMe" class="w-max min-w-full table-auto text-left text-xs">
+                <thead class="sticky top-0 z-20 bg-slate-50 text-[11px] font-semibold text-slate-500 dark:bg-slate-900 dark:text-slate-400">
                     <tr>
                         @if (IsProjectColumnVisible("code"))
                         {
-                            <th class="@SortableHeaderClass("code") sticky left-0 z-[1] w-28 bg-slate-50 dark:bg-slate-900" @onclick='() => SortBy("code")'>
-                                <span class="inline-flex items-center gap-1">
-                                    @CalcResource.code
-                                    @((MarkupString)SortIndicatorHtml("code"))
-                                    <TableColumnFilter FilterState='PF("code")' OnChanged="OnProjectColumnFilterChanged" />
-                                </span>
+                            <th id="hcode" data-pm-frozen="true" class="@SortableHeaderClass("code") sticky left-0 z-[11] w-28 bg-slate-50 dark:bg-slate-900" style="min-width:70px;" @onclick='() => SortBy("code")'>
+                                <span class="inline-flex items-center gap-1">@CalcResource.code @((MarkupString)SortIndicatorHtml("code")) <TableColumnFilter FilterState='PF("code")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("name"))
                         {
-                            <th class="@SortableHeaderClass("name") sticky left-28 z-[1] min-w-52 bg-slate-50 dark:bg-slate-900" @onclick='() => SortBy("name")'>
-                                <span class="inline-flex items-center gap-1">
-                                    @AppLoc["projectName"]
-                                    @((MarkupString)SortIndicatorHtml("name"))
-                                    <TableColumnFilter FilterState='PF("name")' OnChanged="OnProjectColumnFilterChanged" />
-                                </span>
+                            <th id="hname" data-pm-frozen="true" class="@SortableHeaderClass("name") sticky left-28 z-[11] min-w-52 border-r border-slate-300 bg-slate-50 dark:border-slate-600 dark:bg-slate-900" style="min-width:160px;" @onclick='() => SortBy("name")'>
+                                <span class="inline-flex items-center gap-1">@AppLoc["projectName"] @((MarkupString)SortIndicatorHtml("name")) <TableColumnFilter FilterState='PF("name")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("status"))
                         {
-                            <th class="@SortableHeaderClass("status")" @onclick='() => SortBy("status")'>
-                                <span class="inline-flex items-center gap-1">
-                                    @CalcResource.status
-                                    @((MarkupString)SortIndicatorHtml("status"))
-                                    <TableColumnFilter FilterState='PF("status")' OnChanged="OnProjectColumnFilterChanged" />
-                                </span>
+                            <th id="hstatus" class="@SortableHeaderClass("status")" style="min-width:80px;" @onclick='() => SortBy("status")'>
+                                <span class="inline-flex items-center gap-1">@CalcResource.status @((MarkupString)SortIndicatorHtml("status")) <TableColumnFilter FilterState='PF("status")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("responsible"))
                         {
-                            <th class="@SortableHeaderClass("responsible")" @onclick='() => SortBy("responsible")'>
-                                <span class="inline-flex items-center gap-1">
-                                    @AppLoc["calculationResponsible"]
-                                    @((MarkupString)SortIndicatorHtml("responsible"))
-                                    <TableColumnFilter FilterState='PF("responsible")' OnChanged="OnProjectColumnFilterChanged" />
-                                </span>
+                            <th id="hresponsible" class="@SortableHeaderClass("responsible")" style="min-width:80px;" @onclick='() => SortBy("responsible")'>
+                                <span class="inline-flex items-center gap-1">@AppLoc["calculationResponsible"] @((MarkupString)SortIndicatorHtml("responsible")) <TableColumnFilter FilterState='PF("responsible")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("start"))
                         {
-                            <th class="@SortableHeaderClass("start")" @onclick='() => SortBy("start")'>
-                                <span class="inline-flex items-center gap-1">
-                                    @CalcResource.startDate
-                                    @((MarkupString)SortIndicatorHtml("start"))
-                                    <TableColumnFilter FilterState='PF("start")' OnChanged="OnProjectColumnFilterChanged" />
-                                </span>
+                            <th id="hstart" class="@SortableHeaderClass("start")" style="min-width:80px;" @onclick='() => SortBy("start")'>
+                                <span class="inline-flex items-center gap-1">@CalcResource.startDate @((MarkupString)SortIndicatorHtml("start")) <TableColumnFilter FilterState='PF("start")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("end"))
                         {
-                            <th class="@SortableHeaderClass("end")" @onclick='() => SortBy("end")'>
-                                <span class="inline-flex items-center gap-1">
-                                    @CalcResource.endDate
-                                    @((MarkupString)SortIndicatorHtml("end"))
-                                    <TableColumnFilter FilterState='PF("end")' OnChanged="OnProjectColumnFilterChanged" />
-                                </span>
+                            <th id="hend" class="@SortableHeaderClass("end")" style="min-width:80px;" @onclick='() => SortBy("end")'>
+                                <span class="inline-flex items-center gap-1">@CalcResource.endDate @((MarkupString)SortIndicatorHtml("end")) <TableColumnFilter FilterState='PF("end")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("deadline"))
                         {
-                            <th class="@SortableHeaderClass("deadline")" @onclick='() => SortBy("deadline")'>
-                                <span class="inline-flex items-center gap-1">
-                                    @CalcResource.tenderDeadline
-                                    @((MarkupString)SortIndicatorHtml("deadline"))
-                                    <TableColumnFilter FilterState='PF("deadline")' OnChanged="OnProjectColumnFilterChanged" />
-                                </span>
+                            <th id="hdeadline" class="@SortableHeaderClass("deadline")" style="min-width:80px;" @onclick='() => SortBy("deadline")'>
+                                <span class="inline-flex items-center gap-1">@CalcResource.tenderDeadline @((MarkupString)SortIndicatorHtml("deadline")) <TableColumnFilter FilterState='PF("deadline")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("qa"))
                         {
-                            <th class="@SortableHeaderClass("qa")" @onclick='() => SortBy("qa")'>
-                                <span class="inline-flex items-center gap-1">
-                                    @CalcResource.tenderQA
-                                    @((MarkupString)SortIndicatorHtml("qa"))
-                                    <TableColumnFilter FilterState='PF("qa")' OnChanged="OnProjectColumnFilterChanged" />
-                                </span>
+                            <th id="hqa" class="@SortableHeaderClass("qa")" style="min-width:80px;" @onclick='() => SortBy("qa")'>
+                                <span class="inline-flex items-center gap-1">@CalcResource.tenderQA @((MarkupString)SortIndicatorHtml("qa")) <TableColumnFilter FilterState='PF("qa")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("calculations"))
                         {
-                            <th class="@SortableHeaderClass("calculations") text-right" @onclick='() => SortBy("calculations")'>
-                                <span class="inline-flex items-center justify-end gap-1">
-                                    @AppLoc["calculationCount"]
-                                    @((MarkupString)SortIndicatorHtml("calculations"))
-                                </span>
+                            <th id="hcalculations" class="@SortableHeaderClass("calculations") text-right" style="min-width:60px;" @onclick='() => SortBy("calculations")'>
+                                <span class="inline-flex items-center justify-end gap-1">@AppLoc["calculationCount"] @((MarkupString)SortIndicatorHtml("calculations"))</span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("byggherre"))
                         {
-                            <th class="@SortableHeaderClass("byggherre")" @onclick='() => SortBy("byggherre")'>
-                                <span class="inline-flex items-center gap-1">
-                                    @CalcResource.developer
-                                    @((MarkupString)SortIndicatorHtml("byggherre"))
-                                    <TableColumnFilter FilterState='PF("byggherre")' OnChanged="OnProjectColumnFilterChanged" />
-                                </span>
+                            <th id="hbyggherre" class="@SortableHeaderClass("byggherre")" style="min-width:80px;" @onclick='() => SortBy("byggherre")'>
+                                <span class="inline-flex items-center gap-1">@CalcResource.developer @((MarkupString)SortIndicatorHtml("byggherre")) <TableColumnFilter FilterState='PF("byggherre")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("organisation"))
                         {
-                            <th class="@SortableHeaderClass("organisation")" @onclick='() => SortBy("organisation")'>
-                                <span class="inline-flex items-center gap-1">
-                                    @ResourceApp.organisation
-                                    @((MarkupString)SortIndicatorHtml("organisation"))
-                                    <TableColumnFilter FilterState='PF("organisation")' OnChanged="OnProjectColumnFilterChanged" />
-                                </span>
+                            <th id="horganisation" class="@SortableHeaderClass("organisation")" style="min-width:80px;" @onclick='() => SortBy("organisation")'>
+                                <span class="inline-flex items-center gap-1">@ResourceApp.organisation @((MarkupString)SortIndicatorHtml("organisation")) <TableColumnFilter FilterState='PF("organisation")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("procurementName"))
                         {
-                            <th class="@SortableHeaderClass("procurementName")" @onclick='() => SortBy("procurementName")'>
-                                <span class="inline-flex items-center gap-1">
-                                    @AppLoc["procurementName"]
-                                    @((MarkupString)SortIndicatorHtml("procurementName"))
-                                </span>
+                            <th id="hprocurementName" class="@SortableHeaderClass("procurementName")" style="min-width:120px;" @onclick='() => SortBy("procurementName")'>
+                                <span class="inline-flex items-center gap-1">@AppLoc["procurementName"] @((MarkupString)SortIndicatorHtml("procurementName"))</span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("procurementNumber"))
                         {
-                            <th class="@SortableHeaderClass("procurementNumber")" @onclick='() => SortBy("procurementNumber")'>
-                                <span class="inline-flex items-center gap-1">
-                                    @AppLoc["procurementNumber"]
-                                    @((MarkupString)SortIndicatorHtml("procurementNumber"))
-                                </span>
+                            <th id="hprocurementNumber" class="@SortableHeaderClass("procurementNumber")" style="min-width:120px;" @onclick='() => SortBy("procurementNumber")'>
+                                <span class="inline-flex items-center gap-1">@AppLoc["procurementNumber"] @((MarkupString)SortIndicatorHtml("procurementNumber"))</span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("customerReference"))
                         {
-                            <th class="@SortableHeaderClass("customerReference")" @onclick='() => SortBy("customerReference")'>
-                                <span class="inline-flex items-center gap-1">
-                                    @AppLoc["customerReference"]
-                                    @((MarkupString)SortIndicatorHtml("customerReference"))
-                                </span>
+                            <th id="hcustomerReference" class="@SortableHeaderClass("customerReference")" style="min-width:120px;" @onclick='() => SortBy("customerReference")'>
+                                <span class="inline-flex items-center gap-1">@AppLoc["customerReference"] @((MarkupString)SortIndicatorHtml("customerReference"))</span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("contract"))
                         {
-                            <th class="@SortableHeaderClass("contract")" @onclick='() => SortBy("contract")'>
-                                <span class="inline-flex items-center gap-1">
-                                    @CalcResource.projectContract
-                                    @((MarkupString)SortIndicatorHtml("contract"))
-                                </span>
+                            <th id="hcontract" class="@SortableHeaderClass("contract")" style="min-width:80px;" @onclick='() => SortBy("contract")'>
+                                <span class="inline-flex items-center gap-1">@CalcResource.projectContract @((MarkupString)SortIndicatorHtml("contract"))</span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("projectType"))
                         {
-                            <th class="@SortableHeaderClass("projectType")" @onclick='() => SortBy("projectType")'>
-                                <span class="inline-flex items-center gap-1">
-                                    @CalcResource.projectType
-                                    @((MarkupString)SortIndicatorHtml("projectType"))
-                                </span>
+                            <th id="hprojectType" class="@SortableHeaderClass("projectType")" style="min-width:80px;" @onclick='() => SortBy("projectType")'>
+                                <span class="inline-flex items-center gap-1">@CalcResource.projectType @((MarkupString)SortIndicatorHtml("projectType"))</span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("inspector"))
                         {
-                            <th class="@SortableHeaderClass("inspector")" @onclick='() => SortBy("inspector")'>
-                                <span class="inline-flex items-center gap-1">
-                                    @CalcResource.inspector
-                                    @((MarkupString)SortIndicatorHtml("inspector"))
-                                    <TableColumnFilter FilterState='PF("inspector")' OnChanged="OnProjectColumnFilterChanged" />
-                                </span>
+                            <th id="hinspector" class="@SortableHeaderClass("inspector")" style="min-width:80px;" @onclick='() => SortBy("inspector")'>
+                                <span class="inline-flex items-center gap-1">@CalcResource.inspector @((MarkupString)SortIndicatorHtml("inspector")) <TableColumnFilter FilterState='PF("inspector")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
                     </tr>
@@ -275,26 +307,23 @@
                             draggable="true">
                             @if (IsProjectColumnVisible("code"))
                             {
-                                <td class="sticky left-0 z-[1] w-28 bg-white whitespace-nowrap px-3 py-2 font-mono text-[11px] text-slate-500 dark:bg-slate-950 dark:text-slate-400">
+                                <td class="sticky left-0 z-[2] w-28 whitespace-nowrap bg-white px-3 py-2 font-mono text-[11px] text-slate-500 hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-400 dark:hover:bg-slate-900 @(isProjectSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
                                     <span class="inline-flex items-center gap-1.5">
-                                        <span class="h-2.5 w-2.5 rounded-full border border-slate-300 dark:border-slate-700"
-                                              style="background-color:@project.Color"></span>
+                                        <span class="h-2.5 w-2.5 shrink-0 rounded-full border border-slate-300 dark:border-slate-700" style="background-color:@project.Color"></span>
                                         @(string.IsNullOrWhiteSpace(project.Code) ? "-" : project.Code)
                                     </span>
                                 </td>
                             }
                             @if (IsProjectColumnVisible("name"))
                             {
-                                <td class="sticky left-28 z-[1] max-w-80 bg-white px-3 py-2 dark:bg-slate-950">
+                                <td class="sticky left-28 z-[2] max-w-80 border-r border-slate-200 bg-white px-3 py-2 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:hover:bg-slate-900 @(isProjectSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
                                     <span class="block truncate font-semibold text-slate-800 dark:text-slate-100" title="@project.Name">@project.Name</span>
                                 </td>
                             }
                             @if (IsProjectColumnVisible("status"))
                             {
                                 <td class="whitespace-nowrap px-3 py-2">
-                                    <span class="@GetProjectStatusClass(project)">
-                                        @GetProjectStatusText(project)
-                                    </span>
+                                    <span class="@GetProjectStatusClass(project)">@GetProjectStatusText(project)</span>
                                 </td>
                             }
                             @if (IsProjectColumnVisible("responsible"))
@@ -366,9 +395,9 @@
                 </tbody>
             </table>
         </div>
-        @* ── Pagination bar ─────────────────────────────── *@
-        <div class="sticky bottom-0 z-10 mr-1 mt-1 grid grid-cols-3 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs shadow-sm dark:border-slate-800 dark:bg-slate-950">
-            @* Left: page size *@
+
+        @* ── Pagination bar ──────────────────────────────── *@
+        <div class="shrink-0 grid grid-cols-3 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs shadow-sm dark:border-slate-800 dark:bg-slate-950">
             <div class="flex items-center gap-1.5">
                 <select class="h-6 rounded border border-slate-300 bg-white px-1 text-[11px] text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                         value="@_pageSize"
@@ -379,10 +408,9 @@
                     <option value="100">100</option>
                     <option value="0">@AppLoc["allItems"]</option>
                 </select>
-                <span class="text-[11px] text-slate-500 dark:text-slate-400">/ sida</span>
+                <span class="text-[11px] text-slate-500 dark:text-slate-400">@AppLoc["perPage"]</span>
             </div>
 
-            @* Center: range info *@
             <div class="text-center text-[11px] text-slate-500 dark:text-slate-400">
                 @if (_pageSize == 0 || TotalProjectCount == 0)
                 {
@@ -394,21 +422,20 @@
                 }
             </div>
 
-            @* Right: navigation *@
             <div class="flex items-center justify-end gap-1">
-                <button type="button" disabled="@(_currentPage <= 1)" class="@ProjPaginationBtnCls" @onclick="() => _currentPage = 1" title="Första">
+                <button type="button" disabled="@(_currentPage <= 1)" class="@ProjPaginationBtnCls" @onclick="FirstPage" title="@AppLoc["first"]">
                     <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7M18 19l-7-7 7-7" /></svg>
                 </button>
-                <button type="button" disabled="@(_currentPage <= 1)" class="@ProjPaginationBtnCls" @onclick="() => _currentPage--" title="Föregående">
+                <button type="button" disabled="@(_currentPage <= 1)" class="@ProjPaginationBtnCls" @onclick="PreviousPage" title="@AppLoc["previous"]">
                     <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
                 </button>
                 <span class="min-w-[2.5rem] text-center text-[11px] text-slate-500 dark:text-slate-400">
                     @if (TotalProjectPages > 1) { @($"{_currentPage}/{TotalProjectPages}") }
                 </span>
-                <button type="button" disabled="@(_currentPage >= TotalProjectPages)" class="@ProjPaginationBtnCls" @onclick="() => _currentPage++" title="Nästa">
+                <button type="button" disabled="@(_currentPage >= TotalProjectPages)" class="@ProjPaginationBtnCls" @onclick="NextPage" title="@AppLoc["next"]">
                     <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                 </button>
-                <button type="button" disabled="@(_currentPage >= TotalProjectPages)" class="@ProjPaginationBtnCls" @onclick="() => _currentPage = TotalProjectPages" title="Sista">
+                <button type="button" disabled="@(_currentPage >= TotalProjectPages)" class="@ProjPaginationBtnCls" @onclick="LastPage" title="@AppLoc["last"]">
                     <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M6 5l7 7-7 7" /></svg>
                 </button>
             </div>
@@ -419,9 +446,7 @@
         <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center dark:border-slate-700 dark:bg-slate-950/60">
             <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">@CalcResource.project</div>
             <h3 class="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-100">@AppLoc["projectsEmptyState"]</h3>
-            <p class="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
-                @AppLoc["projectsEmptyStateHint"]
-            </p>
+            <p class="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">@AppLoc["projectsEmptyStateHint"]</p>
             @if (!Folder.State.OtherDepartment && Folder.State.FolderSelected is not null)
             {
                 <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
@@ -441,16 +466,28 @@
 
     [Parameter] public EventCallback OnToggleArchived { get; set; }
 
+    private DotNetObjectReference<ProjectsUI>? _dotNetRef;
     Guid UpdateProject = Guid.Empty;
     private ListProjectMVVM? draggingProject;
+
+    private bool _filterMenuOpen;
+    private bool _viewMenuOpen;
+    private bool _showColumnPanel;
 
     private string _sortColumn = "";
     private bool _sortAscending = true;
 
     private int _pageSize = 25;
     private int _currentPage = 1;
-    private const string ToolbarButtonClass = "inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800";
     private const string ProjPaginationBtnCls = "inline-flex h-6 w-6 items-center justify-center rounded border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-35 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800";
+
+    private int ActiveProjectFilterCount => _projColFilters.Values.Count(f => f.IsActive);
+    private int ViewBadgeCount => UoWService.Folder.ShowArchived ? 1 : 0;
+
+    private void FirstPage() => _currentPage = 1;
+    private void LastPage() => _currentPage = TotalProjectPages;
+    private void PreviousPage() { if (_currentPage > 1) _currentPage--; }
+    private void NextPage() { if (_currentPage < TotalProjectPages) _currentPage++; }
 
     private readonly Dictionary<string, ColumnFilterState> _projColFilters = new()
     {
@@ -516,60 +553,24 @@
             var projects = FilteredProjects;
             return _sortColumn switch
             {
-                "code" => _sortAscending
-                    ? projects.OrderBy(x => x.Code)
-                    : projects.OrderByDescending(x => x.Code),
-                "name" => _sortAscending
-                    ? projects.OrderBy(x => x.Name)
-                    : projects.OrderByDescending(x => x.Name),
-                "status" => _sortAscending
-                    ? projects.OrderBy(x => x.Status)
-                    : projects.OrderByDescending(x => x.Status),
-                "responsible" => _sortAscending
-                    ? projects.OrderBy(x => x.Responsible)
-                    : projects.OrderByDescending(x => x.Responsible),
-                "start" => _sortAscending
-                    ? projects.OrderBy(x => x.StartDate)
-                    : projects.OrderByDescending(x => x.StartDate),
-                "end" => _sortAscending
-                    ? projects.OrderBy(x => x.EndDate)
-                    : projects.OrderByDescending(x => x.EndDate),
-                "deadline" => _sortAscending
-                    ? projects.OrderBy(x => x.TenderDeadline)
-                    : projects.OrderByDescending(x => x.TenderDeadline),
-                "qa" => _sortAscending
-                    ? projects.OrderBy(x => x.TenderQA)
-                    : projects.OrderByDescending(x => x.TenderQA),
-                "calculations" => _sortAscending
-                    ? projects.OrderBy(GetCalculationCount)
-                    : projects.OrderByDescending(GetCalculationCount),
-                "byggherre" => _sortAscending
-                    ? projects.OrderBy(x => x.Developer)
-                    : projects.OrderByDescending(x => x.Developer),
-                "organisation" => _sortAscending
-                    ? projects.OrderBy(x => x.Organisation)
-                    : projects.OrderByDescending(x => x.Organisation),
-                "procurementName" => _sortAscending
-                    ? projects.OrderBy(x => x.ProcurementName)
-                    : projects.OrderByDescending(x => x.ProcurementName),
-                "procurementNumber" => _sortAscending
-                    ? projects.OrderBy(x => x.ProcurementNumber)
-                    : projects.OrderByDescending(x => x.ProcurementNumber),
-                "customerReference" => _sortAscending
-                    ? projects.OrderBy(x => x.CustomerReference)
-                    : projects.OrderByDescending(x => x.CustomerReference),
-                "contract" => _sortAscending
-                    ? projects.OrderBy(x => x.Contract)
-                    : projects.OrderByDescending(x => x.Contract),
-                "projectType" => _sortAscending
-                    ? projects.OrderBy(x => x.Type)
-                    : projects.OrderByDescending(x => x.Type),
-                "inspector" => _sortAscending
-                    ? projects.OrderBy(x => x.Inspector)
-                    : projects.OrderByDescending(x => x.Inspector),
-                _ => projects
-                    .OrderByDescending(x => x.Order)
-                    .ThenBy(x => x.Name, StringComparer.CurrentCultureIgnoreCase)
+                "code"             => _sortAscending ? projects.OrderBy(x => x.Code)               : projects.OrderByDescending(x => x.Code),
+                "name"             => _sortAscending ? projects.OrderBy(x => x.Name)               : projects.OrderByDescending(x => x.Name),
+                "status"           => _sortAscending ? projects.OrderBy(x => x.Status)             : projects.OrderByDescending(x => x.Status),
+                "responsible"      => _sortAscending ? projects.OrderBy(x => x.Responsible)        : projects.OrderByDescending(x => x.Responsible),
+                "start"            => _sortAscending ? projects.OrderBy(x => x.StartDate)          : projects.OrderByDescending(x => x.StartDate),
+                "end"              => _sortAscending ? projects.OrderBy(x => x.EndDate)            : projects.OrderByDescending(x => x.EndDate),
+                "deadline"         => _sortAscending ? projects.OrderBy(x => x.TenderDeadline)     : projects.OrderByDescending(x => x.TenderDeadline),
+                "qa"               => _sortAscending ? projects.OrderBy(x => x.TenderQA)           : projects.OrderByDescending(x => x.TenderQA),
+                "calculations"     => _sortAscending ? projects.OrderBy(GetCalculationCount)        : projects.OrderByDescending(GetCalculationCount),
+                "byggherre"        => _sortAscending ? projects.OrderBy(x => x.Developer)          : projects.OrderByDescending(x => x.Developer),
+                "organisation"     => _sortAscending ? projects.OrderBy(x => x.Organisation)       : projects.OrderByDescending(x => x.Organisation),
+                "procurementName"  => _sortAscending ? projects.OrderBy(x => x.ProcurementName)    : projects.OrderByDescending(x => x.ProcurementName),
+                "procurementNumber"=> _sortAscending ? projects.OrderBy(x => x.ProcurementNumber)  : projects.OrderByDescending(x => x.ProcurementNumber),
+                "customerReference"=> _sortAscending ? projects.OrderBy(x => x.CustomerReference)  : projects.OrderByDescending(x => x.CustomerReference),
+                "contract"         => _sortAscending ? projects.OrderBy(x => x.Contract)           : projects.OrderByDescending(x => x.Contract),
+                "projectType"      => _sortAscending ? projects.OrderBy(x => x.Type)               : projects.OrderByDescending(x => x.Type),
+                "inspector"        => _sortAscending ? projects.OrderBy(x => x.Inspector)          : projects.OrderByDescending(x => x.Inspector),
+                _                  => projects.OrderByDescending(x => x.Order).ThenBy(x => x.Name, StringComparer.CurrentCultureIgnoreCase)
             };
         }
     }
@@ -616,9 +617,7 @@
     {
         var active = _sortColumn == column;
         return "cursor-pointer select-none whitespace-nowrap px-3 py-2 transition " +
-               (active
-                   ? "text-slate-800 dark:text-slate-200"
-                   : "hover:text-slate-700 dark:hover:text-slate-200");
+               (active ? "text-slate-800 dark:text-slate-200" : "hover:text-slate-700 dark:hover:text-slate-200");
     }
 
     private string SortIndicatorHtml(string column)
@@ -633,45 +632,54 @@
 
     private readonly Dictionary<string, bool> _projectColumns = new()
     {
-        ["code"] = true,
-        ["name"] = true,
-        ["status"] = false,
-        ["responsible"] = false,
-        ["start"] = true,
-        ["end"] = true,
-        ["deadline"] = true,
-        ["qa"] = false,
-        ["calculations"] = true,
-        ["byggherre"] = false,
-        ["organisation"] = false,
-        ["procurementName"] = false,
+        ["code"]              = true,
+        ["name"]              = true,
+        ["status"]            = false,
+        ["responsible"]       = false,
+        ["start"]             = true,
+        ["end"]               = true,
+        ["deadline"]          = true,
+        ["qa"]                = false,
+        ["calculations"]      = true,
+        ["byggherre"]         = false,
+        ["organisation"]      = false,
+        ["procurementName"]   = false,
         ["procurementNumber"] = false,
         ["customerReference"] = false,
-        ["contract"] = false,
-        ["projectType"] = false,
-        ["inspector"] = false
+        ["contract"]          = false,
+        ["projectType"]       = false,
+        ["inspector"]         = false
     };
 
     private List<MhdColumnPickerItem> ProjectColumnOptions => new()
     {
-        new("code", CalcResource.code),
-        new("name", AppLoc["projectName"].Value),
-        new("status", CalcResource.status),
-        new("responsible", AppLoc["calculationResponsible"].Value),
-        new("start", CalcResource.startDate),
-        new("end", CalcResource.endDate),
-        new("deadline", CalcResource.tenderDeadline),
-        new("qa", CalcResource.tenderQA),
-        new("calculations", AppLoc["calculationCount"].Value),
-        new("byggherre", CalcResource.developer),
-        new("organisation", ResourceApp.organisation),
-        new("procurementName", AppLoc["procurementName"].Value),
+        new("code",              CalcResource.code),
+        new("name",              AppLoc["projectName"].Value),
+        new("status",            CalcResource.status),
+        new("responsible",       AppLoc["calculationResponsible"].Value),
+        new("start",             CalcResource.startDate),
+        new("end",               CalcResource.endDate),
+        new("deadline",          CalcResource.tenderDeadline),
+        new("qa",                CalcResource.tenderQA),
+        new("calculations",      AppLoc["calculationCount"].Value),
+        new("byggherre",         CalcResource.developer),
+        new("organisation",      ResourceApp.organisation),
+        new("procurementName",   AppLoc["procurementName"].Value),
         new("procurementNumber", AppLoc["procurementNumber"].Value),
         new("customerReference", AppLoc["customerReference"].Value),
-        new("contract", CalcResource.projectContract),
-        new("projectType", CalcResource.projectType),
-        new("inspector", CalcResource.inspector)
+        new("contract",          CalcResource.projectContract),
+        new("projectType",       CalcResource.projectType),
+        new("inspector",         CalcResource.inspector)
     };
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        _dotNetRef ??= DotNetObjectReference.Create(this);
+        await JS.InvokeVoidAsync("initializeResizableColumns", _dotNetRef);
+    }
+
+    [JSInvokable]
+    public void SaveTemplateBlazor(string data) { }
 
     protected override void OnInitialized()
     {
@@ -681,6 +689,7 @@
     public void Dispose()
     {
         CalcService.PageChanged -= ToastChanged;
+        _dotNetRef?.Dispose();
     }
 
     private void ToastChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);
@@ -711,7 +720,6 @@
     {
         if (!project.IsVisible)
             return AppLoc["archived"].Value;
-
         return string.IsNullOrWhiteSpace(project.Status) ? AppLoc["active"].Value : project.Status;
     }
 
@@ -727,16 +735,9 @@
             "cursor-pointer transition-colors",
             "hover:bg-slate-50 dark:hover:bg-slate-900/80"
         };
-
-        if (selected)
-            classes.Add("bg-sky-50 dark:bg-sky-950/30");
-
-        if (project.IsDragOver)
-            classes.Add("ring-2 ring-blue-400");
-
-        if (archived)
-            classes.Add("text-slate-500 opacity-75 grayscale dark:text-slate-400");
-
+        if (selected)  classes.Add("bg-sky-50 dark:bg-sky-950/30");
+        if (project.IsDragOver) classes.Add("ring-2 ring-blue-400");
+        if (archived)  classes.Add("text-slate-500 opacity-75 grayscale dark:text-slate-400");
         return string.Join(" ", classes);
     }
 
@@ -786,20 +787,12 @@
         MHD.Notifications(ToastType.Update, ok);
     }
 
-    void ProjectDetailsDialog(ListProjectMVVM model) =>
-        Modal.ShowComponent<ProjectDetailsUI>(
-            model.Name,
-            new Dictionary<string, object>
-            {
-                [nameof(ProjectDetailsUI.ProjectId)] = model.Id,
-            }, BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
-
     void OpenProjectBidsDialog(ListProjectMVVM project) =>
         Modal.ShowComponent<ProjectBidsDialog>(
             ResourceLoc.tender,
             new Dictionary<string, object>
             {
-                [nameof(ProjectBidsDialog.ProjectId)] = project.Id,
+                [nameof(ProjectBidsDialog.ProjectId)]   = project.Id,
                 [nameof(ProjectBidsDialog.ProjectName)] = project.Name
             },
             BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
@@ -809,11 +802,11 @@
             operation == MoveCopyOperation.Copy ? AppLoc["copyProject"] : AppLoc["moveProject"],
             new Dictionary<string, object>
             {
-                [nameof(MoveCopyDialog.ItemKind)] = MoveCopyItemKind.Project,
-                [nameof(MoveCopyDialog.Operation)] = operation,
-                [nameof(MoveCopyDialog.SourceFolder)] = Folder.State.FolderSelected!,
+                [nameof(MoveCopyDialog.ItemKind)]    = MoveCopyItemKind.Project,
+                [nameof(MoveCopyDialog.Operation)]   = operation,
+                [nameof(MoveCopyDialog.SourceFolder)]  = Folder.State.FolderSelected!,
                 [nameof(MoveCopyDialog.SourceProject)] = project,
-                [nameof(MoveCopyDialog.OnCompleted)] = EventCallback.Factory.Create(this, ReloadAfterMoveCopyAsync)
+                [nameof(MoveCopyDialog.OnCompleted)]   = EventCallback.Factory.Create(this, ReloadAfterMoveCopyAsync)
             },
             BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
 
@@ -839,8 +832,8 @@
     }
 
     private Task ExportProjectListAsync() => ExportProjectListAsync(pdfMode: false, printOnly: false);
-    private Task ExportProjectPdfAsync() => ExportProjectListAsync(pdfMode: true, printOnly: true);
-    private Task PrintProjectListAsync() => ExportProjectListAsync(pdfMode: false, printOnly: true);
+    private Task ExportProjectPdfAsync()  => ExportProjectListAsync(pdfMode: true,  printOnly: true);
+    private Task PrintProjectListAsync()  => ExportProjectListAsync(pdfMode: false, printOnly: true);
 
     private async Task ExportProjectListAsync(bool pdfMode, bool printOnly)
     {
@@ -856,24 +849,24 @@
 
     private object? GetProjectExportValue(ListProjectMVVM project, string key) => key switch
     {
-        "code" => project.Code,
-        "name" => project.Name,
-        "status" => GetProjectStatusText(project),
-        "responsible" => project.Responsible,
-        "start" => FormatDate(project.StartDate),
-        "end" => FormatDate(project.EndDate),
-        "deadline" => FormatDate(project.TenderDeadline),
-        "qa" => FormatDate(project.TenderQA),
-        "calculations" => GetCalculationCount(project),
-        "byggherre" => project.Developer,
-        "organisation" => project.Organisation,
-        "procurementName" => project.ProcurementName,
+        "code"              => project.Code,
+        "name"              => project.Name,
+        "status"            => GetProjectStatusText(project),
+        "responsible"       => project.Responsible,
+        "start"             => FormatDate(project.StartDate),
+        "end"               => FormatDate(project.EndDate),
+        "deadline"          => FormatDate(project.TenderDeadline),
+        "qa"                => FormatDate(project.TenderQA),
+        "calculations"      => GetCalculationCount(project),
+        "byggherre"         => project.Developer,
+        "organisation"      => project.Organisation,
+        "procurementName"   => project.ProcurementName,
         "procurementNumber" => project.ProcurementNumber,
         "customerReference" => project.CustomerReference,
-        "contract" => project.Contract,
-        "projectType" => project.Type,
-        "inspector" => project.Inspector,
-        _ => string.Empty
+        "contract"          => project.Contract,
+        "projectType"       => project.Type,
+        "inspector"         => project.Inspector,
+        _                   => string.Empty
     };
 
     void UpdateForm(ListProjectMVVM model)
@@ -883,9 +876,9 @@
             model.Id == Guid.Empty ? AppLoc[LocalizerConst.New, CalcResource.project] : AppLoc[LocalizerConst.Update, model.Name],
             new Dictionary<string, object>
             {
-                [nameof(ProjectForm.Project)] = model,
-                [nameof(ProjectForm.FolderId)] = Folder.State.FolderSelected!.Id,
-                [nameof(ProjectForm.Callback)] = EventCallback.Factory.Create<Tuple<bool, ListProjectMVVM>>(this, AddProjectAsync)
+                [nameof(ProjectForm.Project)]   = model,
+                [nameof(ProjectForm.FolderId)]  = Folder.State.FolderSelected!.Id,
+                [nameof(ProjectForm.Callback)]  = EventCallback.Factory.Create<Tuple<bool, ListProjectMVVM>>(this, AddProjectAsync)
             },
             BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge,
             DialogButtonsHelper.CreateSaveCancelButtons(ProjectForm.DialogFormId));
@@ -910,7 +903,6 @@
                         .OrderByDescending(x => x.Order)
                         .ToList();
         }
-
         Modal.Close();
     }
 
@@ -928,9 +920,7 @@
         if (UpdateProject == Guid.Empty)
         {
             if (project.Id != Guid.Empty && shouldKeepInList)
-            {
                 Folder.State.FolderSelected!.Projects.Insert(0, project);
-            }
         }
         else
         {
@@ -938,9 +928,7 @@
             if (existing != null)
             {
                 if (!shouldKeepInList)
-                {
                     Folder.State.FolderSelected.Projects.Remove(existing);
-                }
                 else
                 {
                     PropertyCopier.CopyPropertiesTo(project, existing);
@@ -965,9 +953,7 @@
     {
         bool result = await Repo.Project.DeleteAsync(project.Id);
         if (result)
-        {
             Folder.State.FolderSelected!.Projects.Remove(project);
-        }
         MHD.Notifications(ToastType.Delete, result);
         UoWService.Folder.State.Notify();
     }

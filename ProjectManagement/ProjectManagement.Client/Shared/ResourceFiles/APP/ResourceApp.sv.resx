@@ -797,6 +797,8 @@
   <data name="hitRate" xml:space="preserve"><value>Hit rate / träffsäkerhet</value></data>
   <data name="calculationListReport" xml:space="preserve"><value>Kalkyllista</value></data>
   <data name="projectListReport" xml:space="preserve"><value>Projektlista</value></data>
+  <data name="columnSelection" xml:space="preserve"><value>Kolumnval</value></data>
+  <data name="visibleColumns" xml:space="preserve"><value>Synliga kolumner</value></data>
   <data name="exportPrint" xml:space="preserve"><value>Export / utskrift</value></data>
   <data name="folder" xml:space="preserve"><value>Mapp</value></data>
   <data name="project" xml:space="preserve"><value>Projekt</value></data>
