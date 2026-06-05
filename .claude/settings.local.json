@@ -60,7 +60,8 @@
       "Bash(Format-Table FullName)",
       "Bash(ls -la \"ProjectManagement\\\\ProjectManagement\\\\Components\\\\ControlComponents\\\\Project\\\\ProjectStatus\")",
       "Bash(find . -type d -name ProjectStatus)",
-      "Bash(not exist *)"
+      "Bash(not exist *)",
+      "Bash(Select-Object Name)"
     ]
   }
 }

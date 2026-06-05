@@ -49,7 +49,7 @@
                     <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
                     </svg>
-                    <span>Filtrera</span>
+                    <span>@AppLoc["filter"]</span>
                     @if (ActiveFilterCount > 0)
                     {
                         <span class="inline-flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-blue-600 px-1 text-[9px] font-bold leading-none text-white dark:bg-blue-500">@ActiveFilterCount</span>
@@ -68,12 +68,12 @@
                                     class="flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
                                     @onclick="() => { ClearFilters(); _filterMenuOpen = false; }">
                                 <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                                <span>Rensa alla filter</span>
+                                <span>@AppLoc["clearAllFilters"]</span>
                             </button>
                         }
                         else
                         {
-                            <span class="block px-3 py-2 text-[11px] text-slate-400 dark:text-slate-500">Inga aktiva filter</span>
+                            <span class="block px-3 py-2 text-[11px] text-slate-400 dark:text-slate-500">@AppLoc["noActiveFilters"]</span>
                         }
                     </div>
                 }
@@ -88,7 +88,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
-                    <span>Vy</span>
+                    <span>@AppLoc["view"]</span>
                     @if (ViewBadgeCount > 0)
                     {
                         <span class="inline-flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-blue-600 px-1 text-[9px] font-bold leading-none text-white dark:bg-blue-500">@ViewBadgeCount</span>
@@ -103,7 +103,7 @@
                     <div class="absolute left-0 top-full z-40 mt-1 w-56 rounded-md border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
 
                         @* Visa alla versioner *@
-                        <div title="@(!HasAnyMultipleVersionsInCurrentView ? "Inga kalkyler med flera versioner i aktuell vy." : null)">
+                        <div title="@(!HasAnyMultipleVersionsInCurrentView ? AppLoc["noCalcsMultiVersions"].Value : null)">
                             <button type="button"
                                     class="@(_showAllVersions ? "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-blue-700 dark:text-blue-300" : "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800") + " disabled:cursor-not-allowed disabled:opacity-40"
                                     disabled="@(!HasAnyMultipleVersionsInCurrentView)"
@@ -123,7 +123,7 @@
                         <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
                             @if (!Folder.State.OtherDepartment)
                             {
-                                <div title="@(!_hasArchivedCalcs ? "Inga arkiverade kalkyler i aktuell vy." : null)">
+                                <div title="@(!_hasArchivedCalcs ? AppLoc["noArchivedCalcsInView"].Value : null)">
                                     <button type="button"
                                             class="@(_showArchived ? "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-blue-700 dark:text-blue-300" : "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800") + " disabled:cursor-not-allowed disabled:opacity-40"
                                             disabled="@(!_hasArchivedCalcs)"
@@ -151,7 +151,7 @@
                             <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
                             </svg>
-                            <span class="flex-1 text-left">Välj kolumner</span>
+                            <span class="flex-1 text-left">@AppLoc["selectColumns"]</span>
                             <svg class="h-2.5 w-2.5 shrink-0 text-slate-400 transition-transform @(_showColumnPanel ? "rotate-180" : "")" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                             </svg>
@@ -185,7 +185,7 @@
                 <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                <span>Rapporter</span>
+                <span>@AppLoc["reports"]</span>
             </button>
 
             <div class="h-4 w-px bg-slate-200 dark:bg-slate-700"></div>
@@ -200,7 +200,7 @@
                     <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                     </svg>
-                    <span>Ny kalkyl</span>
+                    <span>@AppLoc["newCalculation"]</span>
                 </button>
             </AuthorizeView>
         </div>
@@ -260,7 +260,7 @@
                         @if (IsCalculationColumnVisible("calculationRole"))
                         {
                             <th id="hcalculationRole" class="@SortableHeaderClass("calculationRole")" style="min-width:150px;" @onclick='() => SortBy("calculationRole")'>
-                                <span class="inline-flex items-center gap-1">Kalkylroll @((MarkupString)SortIndicatorHtml("calculationRole")) <TableColumnFilter FilterState='CF("calculationRole")' OnChanged="OnColumnFilterChanged" /></span>
+                                <span class="inline-flex items-center gap-1">@AppLoc["calculationRole"] @((MarkupString)SortIndicatorHtml("calculationRole")) <TableColumnFilter FilterState='CF("calculationRole")' OnChanged="OnColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("responsible"))
@@ -277,8 +277,8 @@
                         }
                         @if (IsCalculationColumnVisible("qa"))
                         {
-                            <th id="hqa" class="@SortableHeaderClass("qa")" style="min-width:120px;" title="Sista dag för frågor och svar" @onclick='() => SortBy("qa")'>
-                                <span class="inline-flex items-center gap-1">Sista dag frågor/svar @((MarkupString)SortIndicatorHtml("qa")) <TableColumnFilter FilterState='CF("qa")' OnChanged="OnColumnFilterChanged" /></span>
+                            <th id="hqa" class="@SortableHeaderClass("qa")" style="min-width:120px;" title="@AppLoc["qaDeadlineTooltip"]" @onclick='() => SortBy("qa")'>
+                                <span class="inline-flex items-center gap-1">@AppLoc["qaDeadlineColumn"] @((MarkupString)SortIndicatorHtml("qa")) <TableColumnFilter FilterState='CF("qa")' OnChanged="OnColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("deadline"))
@@ -510,7 +510,7 @@
                     <option value="100">100</option>
                     <option value="0">@AppLoc["allItems"]</option>
                 </select>
-                <span class="text-[11px] text-slate-500 dark:text-slate-400">/ sida</span>
+                <span class="text-[11px] text-slate-500 dark:text-slate-400">@AppLoc["perPage"]</span>
             </div>
 
             @* Center: range info *@
@@ -527,19 +527,19 @@
 
             @* Right: navigation *@
             <div class="flex items-center justify-end gap-1">
-                <button type="button" disabled="@(_currentPage <= 1)" class="@PaginationBtnCls" @onclick="FirstPage" title="Första">
+                <button type="button" disabled="@(_currentPage <= 1)" class="@PaginationBtnCls" @onclick="FirstPage" title="@AppLoc["first"]">
                     <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7M18 19l-7-7 7-7" /></svg>
                 </button>
-                <button type="button" disabled="@(_currentPage <= 1)" class="@PaginationBtnCls" @onclick="PreviousPage" title="Föregående">
+                <button type="button" disabled="@(_currentPage <= 1)" class="@PaginationBtnCls" @onclick="PreviousPage" title="@AppLoc["previous"]">
                     <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
                 </button>
                 <span class="min-w-[2.5rem] text-center text-[11px] text-slate-500 dark:text-slate-400">
                     @if (TotalPages > 1) { @($"{_currentPage}/{TotalPages}") }
                 </span>
-                <button type="button" disabled="@(_currentPage >= TotalPages)" class="@PaginationBtnCls" @onclick="NextPage" title="Nästa">
+                <button type="button" disabled="@(_currentPage >= TotalPages)" class="@PaginationBtnCls" @onclick="NextPage" title="@AppLoc["next"]">
                     <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                 </button>
-                <button type="button" disabled="@(_currentPage >= TotalPages)" class="@PaginationBtnCls" @onclick="LastPage" title="Sista">
+                <button type="button" disabled="@(_currentPage >= TotalPages)" class="@PaginationBtnCls" @onclick="LastPage" title="@AppLoc["last"]">
                     <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M6 5l7 7-7 7" /></svg>
                 </button>
             </div>
@@ -801,11 +801,11 @@
         new("project", AppLoc["project"].Value),
         new("folder", AppLoc["folder"].Value),
         new("calculationType", AppLoc["calculationType"].Value),
-        new("calculationRole", "Kalkylroll"),
+        new("calculationRole", AppLoc["calculationRole"].Value),
         new("status", CalcResource.status),
         new("responsible", AppLoc["calculationResponsible"].Value),
         new("inspector", AppLoc["reviewer"].Value),
-        new("qa", "Sista dag frågor/svar"),
+        new("qa", AppLoc["qaDeadlineColumn"].Value),
         new("deadline", CalcResource.tenderDeadline),
         new("priority", AppLoc["probability"].Value),
         new("createdAt", AppLoc["createdDate"].Value),
@@ -1005,18 +1005,18 @@
         CalculationRole.Custom
     ];
 
-    private static string GetCalculationRoleLabel(CalculationRole role) => role switch
+    private string GetCalculationRoleLabel(CalculationRole role) => role switch
     {
-        CalculationRole.MainBid => "Huvudkalkyl / Huvudanbud",
-        CalculationRole.SubObject => "Delobjekt",
-        CalculationRole.Option => "Option",
-        CalculationRole.ChangeOrder => "ÄTA",
-        CalculationRole.InternalObject => "Internt objekt",
-        CalculationRole.Custom => "Egen roll",
-        _ => "Huvudkalkyl / Huvudanbud"
+        CalculationRole.MainBid => AppLoc["calcRoleMainBid"].Value,
+        CalculationRole.SubObject => AppLoc["calcRoleSubObject"].Value,
+        CalculationRole.Option => AppLoc["calcRoleOption"].Value,
+        CalculationRole.ChangeOrder => AppLoc["calcRoleChangeOrder"].Value,
+        CalculationRole.InternalObject => AppLoc["calcRoleInternalObject"].Value,
+        CalculationRole.Custom => AppLoc["calcRoleCustom"].Value,
+        _ => AppLoc["calcRoleMainBid"].Value
     };
 
-    private static string GetCalculationRoleDisplay(ListCalculationMVVM calculation) =>
+    private string GetCalculationRoleDisplay(ListCalculationMVVM calculation) =>
         calculation.CalculationRole == CalculationRole.Custom && !string.IsNullOrWhiteSpace(calculation.CustomCalculationRoleName)
             ? $"{GetCalculationRoleLabel(calculation.CalculationRole)}: {calculation.CustomCalculationRoleName}"
             : GetCalculationRoleLabel(calculation.CalculationRole);
@@ -1120,7 +1120,7 @@
         }
         catch (Exception ex)
         {
-            _productionDialogMessage = "Ett fel uppstod när produktionskalkylen skulle skapas.";
+            _productionDialogMessage = AppLoc["productionCalculationCreateError"].Value;
             await ClientLog.ErrorAsync("Create production calculation failed", ex: ex);
         }
         finally

@@ -1,5 +1,9 @@
 window.nelCalcDotNetRef = null;
 
+// Persists column widths across Blazor re-renders (Blazor resets inline styles on every render)
+const _pmSavedWidths = {};
+let _pmSavedTableWidth = 0;
+
 window.initializeResizableColumns = function (dotNetRef) {
     window.nelCalcDotNetRef = dotNetRef;
 
@@ -7,6 +11,7 @@ window.initializeResizableColumns = function (dotNetRef) {
     if (!table) return;
 
     createResizableTable(table);
+    restoreColumnWidths(table);
     observeFrozenColumns(table);
     queueFrozenSync(table);
     preventSelectAll(table);
@@ -22,6 +27,12 @@ const createResizableTable = (table) => {
     cols.forEach(col => {
         if (col.querySelector(':scope > .resizer'))
             return;
+
+        // Store the original CSS min-width once, before any resize changes it
+        if (!col.dataset.pmOrigMinWidth) {
+            const mw = parseFloat(window.getComputedStyle(col).minWidth);
+            col.dataset.pmOrigMinWidth = (Number.isFinite(mw) && mw > 0) ? mw : 48;
+        }
 
         // Ensure th is a positioning context for the absolute-positioned resizer
         const pos = window.getComputedStyle(col).position;
@@ -42,6 +53,8 @@ const createResizableColumn = function (col, resizer) {
     let elementID;
 
     const mouseDownHandler = function (e) {
+        e.stopPropagation();
+        e.preventDefault();
         elementID = col.id.replace('h', '');
         x = e.clientX;
         w = parseInt(window.getComputedStyle(col).width, 10);
@@ -68,19 +81,38 @@ const createResizableColumn = function (col, resizer) {
 
     const mouseUpHandler = () => {
         resizer.classList.remove('resizing');
+        const tbl = col.closest('table');
         const newWidth = parseInt(window.getComputedStyle(col).width, 10);
+        _pmSavedWidths[elementID] = newWidth;
+        if (tbl) _pmSavedTableWidth = parseInt(tbl.style.width, 10) || 0;
         SaveTemplateJs(`${elementID}||${newWidth}`);
-        queueFrozenSync(col.closest('table'));
+        queueFrozenSync(tbl);
         document.removeEventListener('mousemove', mouseMoveHandler);
     };
 
     resizer.addEventListener('mousedown', mouseDownHandler);
+    resizer.addEventListener('click', e => e.stopPropagation());
 };
 
 function getColumnMinWidth(col) {
+    if (col.dataset.pmOrigMinWidth) return parseFloat(col.dataset.pmOrigMinWidth);
     const minWidth = parseFloat(window.getComputedStyle(col).minWidth);
     if (Number.isFinite(minWidth) && minWidth > 0) return minWidth;
     return 48;
+}
+
+function restoreColumnWidths(table) {
+    if (!table) return;
+    Array.from(table.querySelectorAll('thead th')).forEach(th => {
+        const id = (th.id || '').replace(/^h/, '');
+        if (id && _pmSavedWidths[id] > 0) {
+            applyColumnWidth(th, _pmSavedWidths[id]);
+        }
+    });
+    if (_pmSavedTableWidth > 0) {
+        table.style.width = `${_pmSavedTableWidth}px`;
+        table.style.minWidth = '100%';
+    }
 }
 
 function applyColumnWidth(header, width) {

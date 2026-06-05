@@ -893,4 +893,51 @@
   <data name="selectTargetFolderBeforeMove" xml:space="preserve"><value>Select a target folder before moving the project.</value></data>
   <data name="selectTargetProjectBeforeCopy" xml:space="preserve"><value>Select a target project before copying the calculation.</value></data>
   <data name="selectTargetProjectBeforeMove" xml:space="preserve"><value>Select a target project before moving the calculation.</value></data>
+  <data name="view" xml:space="preserve"><value>View</value></data>
+  <data name="clearAllFilters" xml:space="preserve"><value>Clear all filters</value></data>
+  <data name="noActiveFilters" xml:space="preserve"><value>No active filters</value></data>
+  <data name="noCalcsMultiVersions" xml:space="preserve"><value>No calculations with multiple versions in current view.</value></data>
+  <data name="noArchivedCalcsInView" xml:space="preserve"><value>No archived calculations in current view.</value></data>
+  <data name="selectColumns" xml:space="preserve"><value>Select columns</value></data>
+  <data name="calculationRole" xml:space="preserve"><value>Calculation role</value></data>
+  <data name="qaDeadlineTooltip" xml:space="preserve"><value>Last day for questions and answers</value></data>
+  <data name="qaDeadlineColumn" xml:space="preserve"><value>Last day Q&amp;A</value></data>
+  <data name="first" xml:space="preserve"><value>First</value></data>
+  <data name="last" xml:space="preserve"><value>Last</value></data>
+  <data name="calcRoleMainBid" xml:space="preserve"><value>Main bid / Main tender</value></data>
+  <data name="calcRoleSubObject" xml:space="preserve"><value>Sub-object</value></data>
+  <data name="calcRoleOption" xml:space="preserve"><value>Option</value></data>
+  <data name="calcRoleChangeOrder" xml:space="preserve"><value>Change order</value></data>
+  <data name="calcRoleInternalObject" xml:space="preserve"><value>Internal object</value></data>
+  <data name="calcRoleCustom" xml:space="preserve"><value>Custom role</value></data>
+  <data name="productionCalculationCreateError" xml:space="preserve"><value>An error occurred while creating the production calculation.</value></data>
+  <data name="lockedSuffix" xml:space="preserve"><value>– Locked</value></data>
+  <data name="calculationStatus" xml:space="preserve"><value>Calculation status</value></data>
+  <data name="customRoleDescription" xml:space="preserve"><value>Custom role, description</value></data>
+  <data name="customRolePlaceholder" xml:space="preserve"><value>Environmental, Risk, Control calc...</value></data>
+  <data name="currentVersionLabel" xml:space="preserve"><value>– Current version</value></data>
+  <data name="olderVersionLabel" xml:space="preserve"><value>– Older version</value></data>
+  <data name="vatPercentLabel" xml:space="preserve"><value>VAT (%)</value></data>
+  <data name="probabilityToWin" xml:space="preserve"><value>Probability to win</value></data>
+  <data name="addressPlaceholder" xml:space="preserve"><value>Street address, zip code, city</value></data>
+  <data name="geoLocation" xml:space="preserve"><value>Geographic location / map</value></data>
+  <data name="geoLocationPlaceholder" xml:space="preserve"><value>Coordinates, link or description</value></data>
+  <data name="note" xml:space="preserve"><value>Note</value></data>
+  <data name="noNotesYet" xml:space="preserve"><value>No notes yet.</value></data>
+  <data name="notePlaceholder" xml:space="preserve"><value>Note...</value></data>
+  <data name="deleteNote" xml:space="preserve"><value>Delete note</value></data>
+  <data name="qaDeadlinePassed" xml:space="preserve"><value>Last day for Q&amp;A has passed.</value></data>
+  <data name="tenderDeadlinePassed" xml:space="preserve"><value>Tender deadline has passed.</value></data>
+  <data name="startDatePassed" xml:space="preserve"><value>Start date has passed.</value></data>
+  <data name="endBeforeStartError" xml:space="preserve"><value>End date cannot be before start date.</value></data>
+  <data name="calculatedAutomatically" xml:space="preserve"><value>(calculated automatically)</value></data>
+  <data name="endDateFromStartMonths" xml:space="preserve"><value>End date is calculated from start + months.</value></data>
+  <data name="startDateFromEndMonths" xml:space="preserve"><value>Start date is calculated from end − months.</value></data>
+  <data name="calcInfoTab" xml:space="preserve"><value>Calculation information</value></data>
+  <data name="revenues" xml:space="preserve"><value>Revenue</value></data>
+  <data name="newVersionLabel" xml:space="preserve"><value>+ New version</value></data>
+  <data name="approvalLockFailed" xml:space="preserve"><value>The calculation could not be approved and locked.</value></data>
+  <data name="versionCreateFailed" xml:space="preserve"><value>New version could not be created.</value></data>
+  <data name="versionCreateError" xml:space="preserve"><value>An error occurred while creating a new version.</value></data>
+  <data name="versionArchiveFailed" xml:space="preserve"><value>The version could not be archived.</value></data>
 </root>

@@ -893,4 +893,51 @@
   <data name="selectTargetFolderBeforeMove" xml:space="preserve"><value>Välj en målmapp innan du flyttar projektet.</value></data>
   <data name="selectTargetProjectBeforeCopy" xml:space="preserve"><value>Välj ett målprojekt innan du kopierar kalkylen.</value></data>
   <data name="selectTargetProjectBeforeMove" xml:space="preserve"><value>Välj ett målprojekt innan du flyttar kalkylen.</value></data>
+  <data name="view" xml:space="preserve"><value>Vy</value></data>
+  <data name="clearAllFilters" xml:space="preserve"><value>Rensa alla filter</value></data>
+  <data name="noActiveFilters" xml:space="preserve"><value>Inga aktiva filter</value></data>
+  <data name="noCalcsMultiVersions" xml:space="preserve"><value>Inga kalkyler med flera versioner i aktuell vy.</value></data>
+  <data name="noArchivedCalcsInView" xml:space="preserve"><value>Inga arkiverade kalkyler i aktuell vy.</value></data>
+  <data name="selectColumns" xml:space="preserve"><value>Välj kolumner</value></data>
+  <data name="calculationRole" xml:space="preserve"><value>Kalkylroll</value></data>
+  <data name="qaDeadlineTooltip" xml:space="preserve"><value>Sista dag för frågor och svar</value></data>
+  <data name="qaDeadlineColumn" xml:space="preserve"><value>Sista dag frågor/svar</value></data>
+  <data name="first" xml:space="preserve"><value>Första</value></data>
+  <data name="last" xml:space="preserve"><value>Sista</value></data>
+  <data name="calcRoleMainBid" xml:space="preserve"><value>Huvudkalkyl / Huvudanbud</value></data>
+  <data name="calcRoleSubObject" xml:space="preserve"><value>Delobjekt</value></data>
+  <data name="calcRoleOption" xml:space="preserve"><value>Option</value></data>
+  <data name="calcRoleChangeOrder" xml:space="preserve"><value>ÄTA</value></data>
+  <data name="calcRoleInternalObject" xml:space="preserve"><value>Internt objekt</value></data>
+  <data name="calcRoleCustom" xml:space="preserve"><value>Egen roll</value></data>
+  <data name="productionCalculationCreateError" xml:space="preserve"><value>Ett fel uppstod när produktionskalkylen skulle skapas.</value></data>
+  <data name="lockedSuffix" xml:space="preserve"><value>– Låst</value></data>
+  <data name="calculationStatus" xml:space="preserve"><value>Kalkylstatus</value></data>
+  <data name="customRoleDescription" xml:space="preserve"><value>Egen roll, beskrivning</value></data>
+  <data name="customRolePlaceholder" xml:space="preserve"><value>Miljökalkyl, Riskkalkyl, Kontrollkalkyl...</value></data>
+  <data name="currentVersionLabel" xml:space="preserve"><value>– Aktuell version</value></data>
+  <data name="olderVersionLabel" xml:space="preserve"><value>– Äldre version</value></data>
+  <data name="vatPercentLabel" xml:space="preserve"><value>Moms (%)</value></data>
+  <data name="probabilityToWin" xml:space="preserve"><value>Sannolikhet att vinna</value></data>
+  <data name="addressPlaceholder" xml:space="preserve"><value>Gatuadress, postnummer, stad</value></data>
+  <data name="geoLocation" xml:space="preserve"><value>Geografisk plats / karta</value></data>
+  <data name="geoLocationPlaceholder" xml:space="preserve"><value>Koordinater, länk eller beskrivning</value></data>
+  <data name="note" xml:space="preserve"><value>Anteckning</value></data>
+  <data name="noNotesYet" xml:space="preserve"><value>Inga anteckningar ännu.</value></data>
+  <data name="notePlaceholder" xml:space="preserve"><value>Anteckning...</value></data>
+  <data name="deleteNote" xml:space="preserve"><value>Ta bort anteckning</value></data>
+  <data name="qaDeadlinePassed" xml:space="preserve"><value>Sista dag för frågor/svar är passerad.</value></data>
+  <data name="tenderDeadlinePassed" xml:space="preserve"><value>Anbudsdeadline är passerad.</value></data>
+  <data name="startDatePassed" xml:space="preserve"><value>Igångsättningstid är passerad.</value></data>
+  <data name="endBeforeStartError" xml:space="preserve"><value>Färdigställandetid får inte vara före Igångsättningstid.</value></data>
+  <data name="calculatedAutomatically" xml:space="preserve"><value>(beräknad automatiskt)</value></data>
+  <data name="endDateFromStartMonths" xml:space="preserve"><value>Färdigställandetid beräknas från start + månader.</value></data>
+  <data name="startDateFromEndMonths" xml:space="preserve"><value>Igångsättningstid beräknas från slut - månader.</value></data>
+  <data name="calcInfoTab" xml:space="preserve"><value>Kalkylinformation</value></data>
+  <data name="revenues" xml:space="preserve"><value>Intäkter</value></data>
+  <data name="newVersionLabel" xml:space="preserve"><value>+ Ny version</value></data>
+  <data name="approvalLockFailed" xml:space="preserve"><value>Kalkylen kunde inte godkännas och låsas.</value></data>
+  <data name="versionCreateFailed" xml:space="preserve"><value>Ny version kunde inte skapas.</value></data>
+  <data name="versionCreateError" xml:space="preserve"><value>Ett fel uppstod när en ny version skulle skapas.</value></data>
+  <data name="versionArchiveFailed" xml:space="preserve"><value>Versionen kunde inte arkiveras.</value></data>
 </root>
