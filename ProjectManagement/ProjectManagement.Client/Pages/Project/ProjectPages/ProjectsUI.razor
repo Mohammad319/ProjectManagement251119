@@ -14,6 +14,7 @@
 @implements IDisposable
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IJSRuntime JS
+@inject ProjectManagement.Client.Services.Folder.ProjectListViewPreference ViewPreference
 
 <div class="flex h-full min-h-0 flex-col gap-1 overflow-hidden px-1 pb-1">
 
@@ -132,7 +133,7 @@
                                         <input type="checkbox"
                                                class="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800"
                                                checked="@IsProjectColumnVisible(colKey)"
-                                               @onchange="e => _projectColumns[colKey] = e.Value is bool b && b" />
+                                               @onchange="async e => { _projectColumns[colKey] = e.Value is bool b && b; await ViewPreference.SaveColumnsAsync(_projectColumns); }" />
                                         <span>@col.Label</span>
                                     </label>
                                 }
@@ -153,9 +154,6 @@
                 <span>@AppLoc["reports"]</span>
             </button>
 
-            <button type="button" class="inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800" @onclick="ExportProjectListAsync">@AppLoc["exportExcel"]</button>
-            <button type="button" class="inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800" @onclick="ExportProjectPdfAsync">@AppLoc["exportPdf"]</button>
-            <button type="button" class="inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800" @onclick="PrintProjectListAsync">@AppLoc["print"]</button>
 
             <div class="h-4 w-px bg-slate-200 dark:bg-slate-700"></div>
 
@@ -680,6 +678,15 @@
 
     [JSInvokable]
     public void SaveTemplateBlazor(string data) { }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var saved = await ViewPreference.LoadColumnsAsync();
+        if (saved is not null)
+            foreach (var (k, v) in saved)
+                if (_projectColumns.ContainsKey(k))
+                    _projectColumns[k] = v;
+    }
 
     protected override void OnInitialized()
     {

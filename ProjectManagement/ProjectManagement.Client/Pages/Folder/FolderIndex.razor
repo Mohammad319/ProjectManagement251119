@@ -67,21 +67,34 @@
                                 title="@TreeExpandButtonTooltip"
                                 aria-label="@TreeExpandButtonTooltip"
                                 disabled="@(!SelectedDepartmentId.HasValue || _isReorderMode)">
-                            @if (TreeExpandIsExpanding)
+                            @switch (_cycleStep)
                             {
-                                @* Expand icon: two down-chevrons *@
-                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 3l-7 7-7-7"/>
-                                </svg>
-                            }
-                            else
-                            {
-                                @* Collapse icon: two up-chevrons *@
-                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 21l7-7 7 7"/>
-                                </svg>
+                                case 0:
+                                    @* Step 0 → expand folders: single chevron down *@
+                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                                    </svg>
+                                    break;
+                                case 1:
+                                    @* Step 1 → expand projects: double chevron down *@
+                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 3l-7 7-7-7"/>
+                                    </svg>
+                                    break;
+                                case 2:
+                                    @* Step 2 → collapse projects: double chevron up *@
+                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 21l7-7 7 7"/>
+                                    </svg>
+                                    break;
+                                default:
+                                    @* Step 3 → collapse folders: single chevron up *@
+                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/>
+                                    </svg>
+                                    break;
                             }
                         </button>
 
@@ -300,7 +313,7 @@
                 }
                 else if (Folder.State.FolderSelected != null)
                 {
-                    <div>
+                    <div class="h-full min-h-0 overflow-hidden">
                         <ProjectsUI @key="Folder.State.FolderSelected.Id"
                                     OnToggleArchived="ToggleArchivedAsync" />
                     </div>

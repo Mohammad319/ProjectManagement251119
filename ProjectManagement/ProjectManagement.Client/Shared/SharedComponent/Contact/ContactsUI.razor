@@ -59,9 +59,13 @@ else if (Contacts != null)
     [Parameter] public List<UnderContactOrganisationBase> Contacts { get; set; } = [];
     UnderContactOrganisationBase? Form;
     int IndexForm = -1;
-    void CallBack(UnderContactOrganisationBase f)
+    void CallBack(UnderContactOrganisationBase? f)
     {
-        if (IndexForm == -1) Contacts.Add(f);
+        if (f is not null && IndexForm == -1)
+        {
+            Contacts.Add(f);
+        }
+
         Form = null;
         StateHasChanged();
     }
