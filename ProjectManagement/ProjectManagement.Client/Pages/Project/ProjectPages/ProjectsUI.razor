@@ -28,11 +28,18 @@
                 <span class="truncate text-sm font-semibold">
                     @if (_contentMode == ContentModeCalculations)
                     {
-                        <span>Kalkyler i @(Folder.State.FolderSelected?.Name ?? "-")</span>
+                        <span>Kalkyler i @(IsDepartmentScope ? DepartmentName : Folder.State.FolderSelected?.Name ?? "-")</span>
                     }
                     else
                     {
-                        @AppLoc["projectsInFolderFormat", Folder.State.FolderSelected?.Name ?? "-"]
+                        @if (IsDepartmentScope)
+                        {
+                            <span>Projekt i @(DepartmentName ?? "-")</span>
+                        }
+                        else
+                        {
+                            @AppLoc["projectsInFolderFormat", Folder.State.FolderSelected?.Name ?? "-"]
+                        }
                     }
                 </span>
                 <span class="truncate text-xs text-slate-500 dark:text-slate-400">
@@ -43,6 +50,10 @@
                     else
                     {
                         <span>@SortedProjects.Count() @CalcResource.project</span>
+                        @if (IsDepartmentScope)
+                        {
+                            <span class="ml-1 text-slate-400">· hela avdelningen</span>
+                        }
                     }
                 </span>
             </div>
@@ -140,6 +151,26 @@
                             }
                         </button>
 
+                        @if (_contentMode == ContentModeCalculations)
+                        {
+                            @* Separator *@
+                            <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
+
+                            @* Visa alla versioner (only in Kalkyler mode) *@
+                            <button type="button"
+                                    class="@(_showAllVersions ? "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-blue-700 dark:text-blue-300" : "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800")"
+                                    @onclick="async () => { _showAllVersions = !_showAllVersions; _folderCalculations = null; await LoadFolderCalculationsAsync(); _viewMenuOpen = false; }">
+                                <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                                </svg>
+                                <span class="flex-1 text-left">@AppLoc["showAllVersions"]</span>
+                                @if (_showAllVersions)
+                                {
+                                    <svg class="ml-auto h-3 w-3 shrink-0 text-blue-600 dark:text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
+                                }
+                            </button>
+                        }
+
                         @if (_contentMode == ContentModeProjects)
                         {
                             @* Separator *@
@@ -196,8 +227,8 @@
                 {
                     <button type="button"
                             class="inline-flex h-7 shrink-0 items-center gap-1 rounded border border-emerald-400 bg-emerald-500 px-2 text-[11px] font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-40 dark:border-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700"
-                            disabled="@(Folder.State.OtherDepartment || Folder.State.FolderSelected is null)"
-                            title="@AppLoc["newProject"]"
+                            disabled="@(IsDepartmentScope || Folder.State.OtherDepartment || Folder.State.FolderSelected is null)"
+                            title="@(IsDepartmentScope ? "Välj en mapp innan du skapar ett projekt" : AppLoc["newProject"].Value)"
                             @onclick="() => UpdateForm(new ListProjectMVVM())">
                         <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -209,8 +240,8 @@
                 {
                     <button type="button"
                             class="inline-flex h-7 shrink-0 items-center gap-1 rounded border border-emerald-400 bg-emerald-500 px-2 text-[11px] font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-40 dark:border-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700"
-                            disabled="@(Folder.State.OtherDepartment || Folder.State.FolderSelected is null)"
-                            title="Välj ett projekt i trädet för att skapa en ny kalkyl"
+                            disabled="true"
+                            title="Välj ett projekt innan du skapar en kalkyl"
                             @onclick="() => { }">
                         <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -686,6 +717,8 @@
 @code {
 
     [Parameter] public EventCallback OnToggleArchived { get; set; }
+    [Parameter] public bool IsDepartmentScope { get; set; }
+    [Parameter] public string? DepartmentName { get; set; }
 
     private DotNetObjectReference<ProjectsUI>? _dotNetRef;
     Guid UpdateProject = Guid.Empty;
@@ -696,6 +729,7 @@
     private string _contentMode = ContentModeProjects;
     private List<(ListProjectMVVM Project, ListCalculationMVVM Calculation)>? _folderCalculations;
     private bool _loadingFolderCalcs;
+    private bool _showAllVersions = false;
 
     private bool _filterMenuOpen;
     private bool _viewMenuOpen;
@@ -748,7 +782,9 @@
     {
         get
         {
-            var projects = Folder.State.FolderSelected?.Projects ?? (IEnumerable<ListProjectMVVM>)[];
+            var projects = IsDepartmentScope
+                ? Folder.State.FoldersList.SelectMany(f => f.Projects ?? (IEnumerable<ListProjectMVVM>)[])
+                : (Folder.State.FolderSelected?.Projects ?? (IEnumerable<ListProjectMVVM>)[]);
             if (_projColFilters["code"].IsActive)
                 projects = projects.Where(p => _projColFilters["code"].MatchesText(p.Code));
             if (_projColFilters["name"].IsActive)
@@ -872,14 +908,20 @@
         StateHasChanged();
 
         var result = new List<(ListProjectMVVM, ListCalculationMVVM)>();
-        var projects = Folder.State.FolderSelected?.Projects ?? [];
+        var projects = IsDepartmentScope
+            ? Folder.State.FoldersList.SelectMany(f => f.Projects ?? []).ToList()
+            : (IList<ListProjectMVVM>)(Folder.State.FolderSelected?.Projects ?? []);
 
         foreach (var project in projects)
         {
             if (!project.CalculationsLoaded)
                 await Folder.SetCalcsToProject(project);
 
-            foreach (var calc in CalculationVersionSelector.SelectCurrentVersions(project.Calculations ?? []))
+            var calcs = _showAllVersions
+                ? (IEnumerable<ListCalculationMVVM>)(project.Calculations ?? [])
+                : CalculationVersionSelector.SelectCurrentVersions(project.Calculations ?? []);
+
+            foreach (var calc in calcs)
                 result.Add((project, calc));
         }
 
@@ -889,8 +931,12 @@
 
     private async Task OpenCalculationFromFolderViewAsync(ListProjectMVVM project, ListCalculationMVVM calc)
     {
-        Folder.State.SetCalculation(null, project, Folder.State.FolderSelected!);
-        await CalcService.SetCalc(calc.Id, project, Folder.State.FolderSelected!);
+        var folder = IsDepartmentScope
+            ? Folder.State.FoldersList.FirstOrDefault(f => f.Projects?.Any(p => p.Id == project.Id) == true)
+            : Folder.State.FolderSelected;
+        if (folder is null) return;
+        Folder.State.SetCalculation(null, project, folder);
+        await CalcService.SetCalc(calc.Id, project, folder);
     }
 
     private string GetFolderCalcTypeLabel(CalculationVersionType type) => type switch

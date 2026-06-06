@@ -464,9 +464,21 @@ namespace ProjectManagement.Client.Pages.Folder
                     .Select(project => (folder, project)));
         }
 
-        private async Task SelectAllProjectsAsync()
+        private async Task SelectWholeDepartmentAsync()
         {
-            _selectedGroupKey = "all-projects";
+            _selectedGroupKey = "hela-avdelningen";
+
+            foreach (var folder in UoWService.Folder.State.FoldersList)
+            {
+                if (!folder.ProjectsLoaded)
+                    await Folder.SetProjectsToFolder(folder);
+
+                foreach (var project in folder.Projects ?? [])
+                {
+                    if (!project.CalculationsLoaded)
+                        await Folder.SetCalcsToProject(project);
+                }
+            }
 
             var allCalcs = GetGroupedCalculations()
                 .SelectMany(gc =>
@@ -478,10 +490,10 @@ namespace ProjectManagement.Client.Pages.Folder
 
             var info = new GroupSelectionInfo
             {
-                Key = "all-projects",
-                Label = "Samtliga projekt",
+                Key = "hela-avdelningen",
+                Label = "Hela avdelningen",
                 GroupType = "AllProjects",
-                Header = "Samtliga projekt",
+                Header = "Hela avdelningen",
                 Calculations = allCalcs
             };
 

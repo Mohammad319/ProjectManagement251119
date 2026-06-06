@@ -24,6 +24,24 @@
     }
 
     @{
+        var isWholeDeptSelectedFs = _selectedGroupKey == "hela-avdelningen";
+    }
+    <div class="group grid grid-cols-[1rem_1.5rem_1fr] items-center gap-1.5 px-1.5 py-1 rounded-md cursor-pointer transition-all duration-150 active:scale-95 @(isWholeDeptSelectedFs ? "border-l-2 border-indigo-500 bg-indigo-50 dark:bg-indigo-950/30 shadow-sm ring-1 ring-indigo-200 dark:ring-indigo-800/60" : "bg-white dark:bg-slate-900/70 hover:bg-slate-100/80 dark:hover:bg-slate-800/70")"
+         @onclick="SelectWholeDepartmentAsync"
+         role="button"
+         tabindex="0">
+        <span class="h-4 w-4 shrink-0"></span>
+        <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md @(isWholeDeptSelectedFs ? "bg-indigo-200 text-indigo-800 ring-1 ring-indigo-300 dark:bg-indigo-900/60 dark:text-indigo-200 dark:ring-indigo-700" : "bg-indigo-100 text-indigo-700 ring-1 ring-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-300 dark:ring-indigo-800")">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M2 3h6v6H2zM10 3h6v6h-6zM2 12h6v6H2zM10 12h6v6h-6z" />
+            </svg>
+        </span>
+        <span class="truncate text-[14px] font-bold @(isWholeDeptSelectedFs ? "text-indigo-900 dark:text-indigo-100" : "text-slate-800 group-hover:text-indigo-700 dark:text-slate-100 dark:group-hover:text-indigo-300")">
+            Hela avdelningen
+        </span>
+    </div>
+
+    @{
         var sortedFolders = GetSortedFolders(UoWService.Folder.State.FoldersList).ToList();
     }
 
@@ -264,12 +282,12 @@
 else if (GroupingMode == ProjectTreeGroupingMode.Projects)
 {
     var allProjectEntries = GetAllProjectsForProjectView().ToList();
-    var isAllProjectsSelected = _selectedGroupKey == "all-projects";
+    var isAllProjectsSelected = _selectedGroupKey == "hela-avdelningen";
 
     <div id="folderTable" class="select-none space-y-1 text-sm" @oncontextmenu:preventDefault="true">
         <div class="rounded-lg border border-slate-200 bg-slate-100/70 px-1.5 py-1 dark:border-slate-800 dark:bg-slate-900/70">
             <div class="grid grid-cols-[1rem_1.5rem_1fr] items-center gap-1.5 px-1 py-1 cursor-pointer rounded-md @(isAllProjectsSelected ? "bg-indigo-100 ring-1 ring-indigo-300 dark:bg-indigo-950/40 dark:ring-indigo-700" : "hover:bg-indigo-50/60 dark:hover:bg-indigo-950/20")"
-                 @onclick="async () => await SelectAllProjectsAsync()">
+                 @onclick="async () => await SelectWholeDepartmentAsync()">
                 <span class="h-4 w-4 shrink-0"></span>
                 <span class="flex h-6 w-6 items-center justify-center rounded-md @(isAllProjectsSelected ? "bg-indigo-200 text-indigo-800 ring-1 ring-indigo-300 dark:bg-indigo-900/60 dark:text-indigo-200 dark:ring-indigo-700" : "bg-indigo-100 text-indigo-700 ring-1 ring-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-300 dark:ring-indigo-800")">
                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
@@ -277,7 +295,7 @@ else if (GroupingMode == ProjectTreeGroupingMode.Projects)
                     </svg>
                 </span>
                 <span class="truncate text-[13px] font-bold @(isAllProjectsSelected ? "text-indigo-900 dark:text-indigo-100" : "text-slate-800 dark:text-slate-100")">
-                    Samtliga projekt
+                    Hela avdelningen
                 </span>
             </div>
 

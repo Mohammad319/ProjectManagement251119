@@ -241,7 +241,7 @@
                             @AppLoc["selectDepartment"]
                         </div>
                     }
-                    else if (UoWService.Folder.State.FoldersList != null && UoWService.Folder.State.FoldersList.Any())
+                    else
                     {
                         <FoldersTree @ref="_foldersTree"
                                      GroupingMode="@TreeGroupingMode"
@@ -249,12 +249,6 @@
                                      IsReorderMode="@_isReorderMode"
                                      OnExitManualOrder="ExitManualOrderAsync"
                                      OnGroupSelected="OnGroupSelectedAsync" />
-                    }
-                    else
-                    {
-                        <div class="rounded-2xl border border-dashed border-slate-300 bg-white px-1 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
-                            @AppLoc["noFoldersAvailable"]
-                        </div>
                     }
                 </div>
             </div>
@@ -277,6 +271,15 @@
                 {
                     <div class="h-full min-h-0 overflow-hidden">
                         <ProjectsUI @key="Folder.State.FolderSelected.Id"
+                                    OnToggleArchived="ToggleArchivedAsync" />
+                    </div>
+                }
+                else if (_selectedGroupInfo != null && _selectedGroupInfo.Key == "hela-avdelningen")
+                {
+                    <div class="h-full min-h-0 overflow-hidden">
+                        <ProjectsUI @key="_selectedGroupInfo.Key"
+                                    IsDepartmentScope="true"
+                                    DepartmentName="@(Folder.State.Departments.FirstOrDefault(d => d.Id == SelectedDepartmentId)?.Name)"
                                     OnToggleArchived="ToggleArchivedAsync" />
                     </div>
                 }
