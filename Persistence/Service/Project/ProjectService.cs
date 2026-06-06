@@ -249,14 +249,6 @@ namespace Persistence.Service.Project
             CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
-
-            static IQueryable<ListDTO> OrderAndSelect<T>(IQueryable<T> query) where T : class, IListOrderDTO
-                => query
-                    .Where(x => x.IsVisible)
-                    .OrderBy(x => x.SortOrder)
-                    .ThenBy(x => x.Name)
-                    .Select(x => new ListDTO { Id = x.Id, Name = x.Name });
-
             var result = new GetProjectCalcConfigDTO
             {
                 Methods = await context.ProcurementMethod

@@ -20,7 +20,8 @@
                         </th>
                         <th class="bg-slate-50 px-2 py-2 w-20 whitespace-nowrap font-semibold text-slate-600 dark:bg-slate-800/80 dark:text-slate-300">@ResourceLoc.year</th>
                         <th class="bg-slate-50 px-2 py-2 min-w-[160px] font-semibold text-slate-600 dark:bg-slate-800/80 dark:text-slate-300">Beskrivning</th>
-                        <th class="bg-slate-50 px-2 py-2 w-40 font-semibold text-slate-600 dark:bg-slate-800/80 dark:text-slate-300">Deltyp</th>
+                        <th class="bg-slate-50 px-2 py-2 w-56 min-w-[14rem] font-semibold text-slate-600 dark:bg-slate-800/80 dark:text-slate-300"
+                            style="width: 14rem; min-width: 14rem;">Deltyp</th>
                         <th class="border-l border-slate-200 bg-sky-50/70 px-2 py-2 min-w-[112px] text-right font-semibold text-slate-600 dark:border-slate-700 dark:bg-sky-900/20 dark:text-slate-300">Q1</th>
                         <th class="bg-sky-50/70 px-2 py-2 min-w-[112px] text-right font-semibold text-slate-600 dark:bg-sky-900/20 dark:text-slate-300">Q2</th>
                         <th class="bg-sky-50/70 px-2 py-2 min-w-[112px] text-right font-semibold text-slate-600 dark:bg-sky-900/20 dark:text-slate-300">Q3</th>
@@ -51,9 +52,9 @@
                                        @onchange="e => income.Description = e.Value?.ToString()"
                                        class="@InputBase w-full min-w-[110px]" />
                             </td>
-                            <td class="px-2 py-1">
+                            <td class="px-2 py-1 min-w-[14rem]" style="width: 14rem; min-width: 14rem;">
                                 <select value="@((int)income.SubType)" @onchange="e => SetSubType(income, e.Value)"
-                                        class="@InputBase w-full">
+                                        class="@InputBase w-full" style="min-width: 12rem;">
                                     <option value="0">Grunddel</option>
                                     <option value="1">Option</option>
                                     <option value="2">ÄTA</option>
