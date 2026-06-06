@@ -19,8 +19,4 @@ namespace ProjectManagement.Shared.Base.Project
         public DateTime TenderQA { get; set; } = DateTime.Now;
         public int Order { get; set; }
     }
-    public enum Procurement
-    {
-        A,B,C
-    }
 }

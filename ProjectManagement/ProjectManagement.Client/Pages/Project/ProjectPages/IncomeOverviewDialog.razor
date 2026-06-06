@@ -229,7 +229,7 @@
                 if (UoWService.Folder.ShowArchived)
                 {
                     project.Calculations.AddRange(
-                        await Repo.Calculation.GetAsync(project.Id, isVisible: false));
+                        await Repo.Calculation.GetAsync(project.Id, isArchived: true));
                 }
             }
 

@@ -622,7 +622,7 @@
         _projects.Where(e =>
             MatchesFolder(e.Folder) &&
             MatchesProject(e.Project) &&
-            MatchesArchive(e.Project.IsVisible) &&
+            MatchesArchive(!e.Project.IsArchived) &&
             MatchesProjectStatus(e.Project) &&
             MatchesProjectResponsible(e.Project) &&
             MatchesProjectInspector(e.Project));
@@ -640,7 +640,7 @@
             .Where(e =>
                 MatchesFolder(e.Folder) &&
                 MatchesProject(e.Project) &&
-                MatchesArchive(e.Project.IsVisible) &&
+                MatchesArchive(!e.Project.IsArchived) &&
                 MatchesHitRateYear(e.Project) &&
                 MatchesHitRateQuarter(e.Project) &&
                 MatchesProjectResponsible(e.Project) &&
@@ -752,7 +752,7 @@
         else
         {
             all = await Repo.Calculation.GetAsync(project.Id);
-            all.AddRange(await Repo.Calculation.GetAsync(project.Id, isVisible: false));
+            all.AddRange(await Repo.Calculation.GetAsync(project.Id, isArchived: true));
             all = all.DistinctBy(c => c.Id).ToList();
         }
 
@@ -850,7 +850,7 @@
     private bool MatchesCalculation(CalculationEntry entry)
     {
         var c = entry.Calculation;
-        if (!MatchesFolder(entry.Folder) || !MatchesProject(entry.Project) || !MatchesArchive(c.IsVisible)) return false;
+        if (!MatchesFolder(entry.Folder) || !MatchesProject(entry.Project) || !MatchesArchive(!c.IsArchived)) return false;
         if (!string.IsNullOrWhiteSpace(_selectedCalculationType) && c.CalculationType.ToString() != _selectedCalculationType) return false;
         if (Enum.TryParse<CalculationRole>(_selectedCalculationRole, out var role) && c.CalculationRole != role) return false;
         if (_selectedStatuses.Count > 0 && !_selectedStatuses.Contains(c.Status ?? string.Empty)) return false;
@@ -1003,7 +1003,7 @@
         CalcReportColumn.Priority => $"{e.Calculation.Priority} %",
         CalcReportColumn.CreatedAt => e.Calculation.CreatedAt == default ? "" : e.Calculation.CreatedAt.ToString("yyyy-MM-dd"),
         CalcReportColumn.UpdatedAt => e.Calculation.UpdatedAt?.ToString("yyyy-MM-dd") ?? "",
-        CalcReportColumn.Archived => e.Calculation.IsVisible ? "" : L("archived"),
+        CalcReportColumn.Archived => !e.Calculation.IsArchived ? "" : L("archived"),
         _ => ""
     };
 
@@ -1059,7 +1059,7 @@
         ProjReportColumn.Contract => e.Project.Contract,
         ProjReportColumn.Organisation => e.Project.Organisation,
         ProjReportColumn.ProcurementName => e.Project.ProcurementName,
-        ProjReportColumn.Archived => e.Project.IsVisible ? "" : L("archived"),
+        ProjReportColumn.Archived => !e.Project.IsArchived ? "" : L("archived"),
         _ => ""
     };
 
@@ -1259,7 +1259,7 @@
         income.Q1 != 0 || income.Q2 != 0 || income.Q3 != 0 || income.Q4 != 0;
 
     private int CurrentCalculationCount(ListProjectMVVM project) =>
-        _calculations.Count(e => e.Project.Id == project.Id && MatchesArchive(e.Calculation.IsVisible));
+        _calculations.Count(e => e.Project.Id == project.Id && MatchesArchive(!e.Calculation.IsArchived));
 
     private static string FormatMoney(decimal v) => v.ToString("N0");
     private static string FormatDate(DateTime v) => v == default ? "-" : v.ToString("yyyy-MM-dd");

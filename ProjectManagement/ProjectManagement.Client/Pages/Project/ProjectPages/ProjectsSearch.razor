@@ -266,7 +266,7 @@
                                             {
                                                 <span>· @CalcLoc[nameof(CalcResource.tenderDeadline)]: @project.TenderDeadline.ToString("yyyy-MM-dd")</span>
                                             }
-                                            @if (!project.IsVisible)
+                                            @if (project.IsArchived)
                                             {
                                                 <span class="text-amber-500">· @AppLoc["archived"]</span>
                                             }
@@ -439,7 +439,7 @@
             {
                 Name = SearchText ?? string.Empty,
                 NameOperator = serverOperator,
-                IsVisible = IncludeArchived ? null : true,
+                IsArchived = IncludeArchived ? null : false,
             };
 
             if (TenderDeadlineDate.HasValue)
@@ -465,12 +465,12 @@
 
             foreach (var project in folder.Projects)
             {
-                if (!IncludeArchived && !project.IsVisible) continue;
+                if (!IncludeArchived && project.IsArchived) continue;
                 if (!project.CalculationsLoaded) continue;
 
                 foreach (var calc in project.Calculations)
                 {
-                    if (!IncludeArchived && !calc.IsVisible) continue;
+                    if (!IncludeArchived && calc.IsArchived) continue;
 
                     bool matchesText = string.IsNullOrWhiteSpace(SearchText)
                         || MatchesText(calc.Name, SearchText)
@@ -512,11 +512,11 @@
             if (!IncludeArchived && !folder.IsVisible) continue;
             foreach (var project in folder.Projects)
             {
-                if (!IncludeArchived && !project.IsVisible) continue;
+                if (!IncludeArchived && project.IsArchived) continue;
                 if (!project.CalculationsLoaded) continue;
                 foreach (var calc in project.Calculations)
                 {
-                    if (!IncludeArchived && !calc.IsVisible) continue;
+                    if (!IncludeArchived && calc.IsArchived) continue;
                     var score = Math.Max(FuzzyScore(calc.Name, SearchText), FuzzyScore(calc.Code, SearchText));
                     if (score > 0)
                         results.Add((score, (calc, project, folder)));

@@ -74,7 +74,7 @@ public sealed class ProjectConfiguration : IEntityTypeConfiguration<ProjectEntit
             .HasFilter("[IsDeleted] = 0 AND [Code] IS NOT NULL AND [Code] <> ''")
             .HasDatabaseName("UX_Projects_Tenant_Code");
 
-        builder.HasIndex(x => new { x.TenantId, x.FolderId, x.IsVisible, x.SortOrder })
+        builder.HasIndex(x => new { x.TenantId, x.FolderId, x.IsArchived, x.SortOrder })
             .HasDatabaseName("IX_Projects_Tenant_Folder_Visible_Order");
 
         builder.HasIndex(x => new { x.TenantId, x.CreatedBy })

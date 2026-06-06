@@ -17,7 +17,7 @@ namespace Persistence.Service.CalculationItems.Calculation
     {
         public async Task<IReadOnlyList<ListCalculationDTO>> GetAllAsync(
             Guid projectId,
-            bool isVisible,
+            bool isArchived,
             int userId,
             int? departmentId,
             CancellationToken ct = default)
@@ -40,7 +40,7 @@ namespace Persistence.Service.CalculationItems.Calculation
 
             var matchingFamilies = CalculationVersionSelector
                 .SelectCurrentVersions(calculations)
-                .Where(calculation => calculation.IsVisible == isVisible)
+                .Where(calculation => calculation.IsArchived == isArchived)
                 .Select(CalculationVersionSelector.GetFamilyKey)
                 .ToHashSet();
 
@@ -171,7 +171,7 @@ namespace Persistence.Service.CalculationItems.Calculation
             CreatedAt = x.CreatedAt,
             UpdatedAt = x.UpdatedAt,
             Tax = x.Tax,
-            IsVisible = x.IsVisible,
+            IsArchived = x.IsArchived,
             Inspector = x.Metadata.Inspector,
             ProjectName = x.Project?.Name ?? string.Empty,
             FolderName = x.Project?.Folder?.Name ?? string.Empty,

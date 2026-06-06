@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Persistence.Context;
 
@@ -11,9 +12,11 @@ using Persistence.Context;
 namespace Persistence.Migrations
 {
     [DbContext(typeof(ShardingSingleDbContext))]
-    partial class ShardingSingleDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260606124424_RenameIsVisibleToIsArchived")]
+    partial class RenameIsVisibleToIsArchived
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -371,6 +374,9 @@ namespace Persistence.Migrations
                         .HasColumnType("nvarchar(1000)");
 
                     b.Property<int?>("OrganisationId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Procurement")
                         .HasColumnType("int");
 
                     b.Property<int?>("ProcurementMethodsId")

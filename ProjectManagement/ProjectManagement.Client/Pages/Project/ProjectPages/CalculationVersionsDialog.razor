@@ -97,7 +97,7 @@
     private bool CanArchiveVersion(ListCalculationMVVM version) =>
         !version.IsCurrentVersion &&
         !version.IsLocked &&
-        version.IsVisible &&
+        !version.IsArchived &&
         !(Folder.State.ProjectSelected?.Calculations ?? [])
             .Any(c => c.SourceCalculationId == version.Id);
 
@@ -150,7 +150,7 @@
     {
         var dto = await Repo.Calculation.GetPostAsync(version.Id);
         if (dto is null) return;
-        dto.IsVisible = false;
+        dto.IsArchived = true;
         bool ok = await Repo.Calculation.UpdateAsync(dto, version.Id);
         if (ok)
         {

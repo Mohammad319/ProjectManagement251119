@@ -61,7 +61,9 @@
       "Bash(ls -la \"ProjectManagement\\\\ProjectManagement\\\\Components\\\\ControlComponents\\\\Project\\\\ProjectStatus\")",
       "Bash(find . -type d -name ProjectStatus)",
       "Bash(not exist *)",
-      "Bash(Select-Object Name)"
+      "Bash(Select-Object Name)",
+      "Bash(grep -v \"folder\\\\.\\\\|Folder\\\\.\\\\|FolderEntity\\\\|folder\\\\.IsVisible\\\\|ResourceType\\\\|Organisation\\\\.\\\\|CalculationStatus\\\\.\\\\|PostFolderDTO\\\\|folder\\\\.IsVisible\\\\|FolderMVVM\\\\|FolderDTO\\\\|\\\\.bin\\\\\\\\\\\\|\\\\.obj\\\\\\\\\")",
+      "Bash(grep -v \"bin\\\\\\\\\\\\|obj\\\\\\\\\")"
     ]
   }
 }

@@ -72,7 +72,7 @@ namespace Domain.Entities.Project
         [JsonIgnore]
         public ContractEntity? Contract { get; private set; }
 
-        public bool IsVisible { get; private set; } = true;
+        public bool IsArchived { get; private set; } = false;
 
         [JsonIgnore]
         public ICollection<CalculationEntity> Calculations { get; private set; } = [];
@@ -110,7 +110,7 @@ namespace Domain.Entities.Project
             SetDates(dto.StartDate, dto.EndDate);
             TenderDeadline = dto.TenderDeadline;
             TenderQA = dto.TenderQA;
-            IsVisible = dto.IsVisible;
+            IsArchived = dto.IsArchived;
 
             ProjectTypeId = dto.TypeId;
             ProjectStatusId = dto.StatusId;

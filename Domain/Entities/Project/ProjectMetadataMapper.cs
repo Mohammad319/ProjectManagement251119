@@ -19,7 +19,7 @@ namespace Domain.Entities.Project
 
             return new ProjectData
             {
-                Procurement = metadata.Procurement,
+
                 ProjectManager = Normalize(metadata.ProjectManager),
                 Notes = DomainMetadataCloneHelper.CloneStrings(metadata.Notes),
                 ClientsContactPersonTender = Normalize(metadata.ClientsContactPersonTender),

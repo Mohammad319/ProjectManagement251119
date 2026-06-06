@@ -182,20 +182,14 @@
                     <tr>
                         @if (IsProjectColumnVisible("code"))
                         {
-                            <th id="hcode" data-pm-frozen="true" class="@SortableHeaderClass("code") sticky left-0 z-[11] w-28 bg-slate-50 dark:bg-slate-900" style="min-width:70px;" @onclick='() => SortBy("code")'>
+                            <th id="hcode" data-pm-frozen="true" class="@SortableHeaderClass("code") sticky left-0 z-[13] w-28 bg-slate-50 dark:bg-slate-900" style="min-width:70px;" @onclick='() => SortBy("code")'>
                                 <span class="inline-flex items-center gap-1">@CalcResource.code @((MarkupString)SortIndicatorHtml("code")) <TableColumnFilter FilterState='PF("code")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("name"))
                         {
-                            <th id="hname" data-pm-frozen="true" class="@SortableHeaderClass("name") sticky left-28 z-[11] min-w-52 border-r border-slate-300 bg-slate-50 dark:border-slate-600 dark:bg-slate-900" style="min-width:160px;" @onclick='() => SortBy("name")'>
+                            <th id="hname" data-pm-frozen="true" class="@SortableHeaderClass("name") sticky left-28 z-[12] min-w-52 border-r border-slate-300 bg-slate-50 dark:border-slate-600 dark:bg-slate-900" style="min-width:160px;" @onclick='() => SortBy("name")'>
                                 <span class="inline-flex items-center gap-1">@AppLoc["projectName"] @((MarkupString)SortIndicatorHtml("name")) <TableColumnFilter FilterState='PF("name")' OnChanged="OnProjectColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsProjectColumnVisible("active"))
-                        {
-                            <th id="hactive" class="@SortableHeaderClass("active")" style="min-width:70px;" @onclick='() => SortBy("active")'>
-                                <span class="inline-flex items-center gap-1">Aktiv? @((MarkupString)SortIndicatorHtml("active"))</span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("status"))
@@ -353,7 +347,7 @@
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                     @foreach (var project in PagedProjects)
                     {
-                        var isProjectArchived = !project.IsVisible;
+                        var isProjectArchived = project.IsArchived;
                         var isProjectSelected = Folder.State.ProjectSelected?.Id == project.Id;
                         var rowClasses = GetProjectRowClass(project, isProjectSelected, isProjectArchived);
 
@@ -383,10 +377,6 @@
                                 <td class="sticky left-28 z-[2] max-w-80 border-r border-slate-200 bg-white px-3 py-2 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:hover:bg-slate-900 @(isProjectSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
                                     <span class="block truncate font-semibold text-slate-800 dark:text-slate-100" title="@project.Name">@project.Name</span>
                                 </td>
-                            }
-                            @if (IsProjectColumnVisible("active"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatYesNo(project.IsVisible)</td>
                             }
                             @if (IsProjectColumnVisible("status"))
                             {
@@ -496,7 +486,7 @@
                             }
                             @if (IsProjectColumnVisible("archived"))
                             {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatYesNo(!project.IsVisible)</td>
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatYesNo(project.IsArchived)</td>
                             }
                         </tr>
                     }
@@ -663,7 +653,6 @@
             {
                 "code"             => _sortAscending ? projects.OrderBy(x => x.Code)               : projects.OrderByDescending(x => x.Code),
                 "name"             => _sortAscending ? projects.OrderBy(x => x.Name)               : projects.OrderByDescending(x => x.Name),
-                "active"           => _sortAscending ? projects.OrderBy(x => x.IsVisible)          : projects.OrderByDescending(x => x.IsVisible),
                 "status"           => _sortAscending ? projects.OrderBy(x => x.Status)             : projects.OrderByDescending(x => x.Status),
                 "responsible"      => _sortAscending ? projects.OrderBy(x => x.Responsible)        : projects.OrderByDescending(x => x.Responsible),
                 "start"            => _sortAscending ? projects.OrderBy(x => x.StartDate)          : projects.OrderByDescending(x => x.StartDate),
@@ -688,7 +677,7 @@
                 "clientsManager"   => _sortAscending ? projects.OrderBy(x => x.ClientsManager)     : projects.OrderByDescending(x => x.ClientsManager),
                 "publicationDate"  => _sortAscending ? projects.OrderBy(x => x.PublicationDate)    : projects.OrderByDescending(x => x.PublicationDate),
                 "decisionDate"     => _sortAscending ? projects.OrderBy(x => x.DecisionDate)       : projects.OrderByDescending(x => x.DecisionDate),
-                "archived"         => _sortAscending ? projects.OrderBy(x => !x.IsVisible)         : projects.OrderByDescending(x => !x.IsVisible),
+                "archived"         => _sortAscending ? projects.OrderBy(x => x.IsArchived)         : projects.OrderByDescending(x => x.IsArchived),
                 _                  => projects.OrderByDescending(x => x.Order).ThenBy(x => x.Name, StringComparer.CurrentCultureIgnoreCase)
             };
         }
@@ -751,27 +740,26 @@
 
     private readonly Dictionary<string, bool> _projectColumns = new()
     {
-        ["active"]            = true,
         ["code"]              = true,
         ["name"]              = true,
-        ["status"]            = true,
-        ["responsible"]       = true,
-        ["start"]             = true,
-        ["end"]               = true,
-        ["deadline"]          = true,
-        ["qa"]                = false,
-        ["byggherre"]         = false,
-        ["organisation"]      = false,
-        ["procurementName"]   = false,
         ["procurementNumber"] = false,
         ["customerReference"] = false,
-        ["contract"]          = false,
+        ["procurementName"]   = false,
         ["projectType"]       = true,
+        ["qa"]                = false,
+        ["deadline"]          = true,
+        ["status"]            = true,
+        ["responsible"]       = true,
         ["inspector"]         = true,
+        ["start"]             = false,
+        ["end"]               = false,
+        ["byggherre"]         = false,
+        ["organisation"]      = true,
         ["designer"]          = false,
         ["supervisor"]        = false,
         ["address"]           = false,
         ["procurementMethods"] = false,
+        ["contract"]          = false,
         ["compensation"]      = false,
         ["procurementProcedure"] = false,
         ["clientsManager"]    = false,
@@ -782,27 +770,26 @@
 
     private List<MhdColumnPickerItem> ProjectColumnOptions => new()
     {
-        new("active",            "Aktiv?"),
         new("code",              CalcResource.code),
         new("name",              AppLoc["projectName"].Value),
-        new("status",            "Projektstatus"),
-        new("responsible",       AppLoc["calculationResponsible"].Value),
-        new("start",             CalcResource.startDate),
-        new("end",               CalcResource.endDate),
-        new("deadline",          CalcResource.tenderDeadline),
-        new("qa",                "Frågor/svar"),
-        new("byggherre",         CalcResource.developer),
-        new("organisation",      "Beställare"),
-        new("procurementName",   AppLoc["procurementName"].Value),
         new("procurementNumber", AppLoc["procurementNumber"].Value),
         new("customerReference", AppLoc["customerReference"].Value),
-        new("contract",          CalcResource.projectContract),
+        new("procurementName",   AppLoc["procurementName"].Value),
         new("projectType",       CalcResource.projectType),
+        new("qa",                "Frågor/svar"),
+        new("deadline",          CalcResource.tenderDeadline),
+        new("status",            "Projektstatus"),
+        new("responsible",       AppLoc["calculationResponsible"].Value),
         new("inspector",         CalcResource.inspector),
+        new("start",             CalcResource.startDate),
+        new("end",               CalcResource.endDate),
+        new("byggherre",         CalcResource.developer),
+        new("organisation",      "Beställare"),
         new("designer",          "Projektörer"),
         new("supervisor",        "Kundens kontaktperson under upphandlingstiden"),
         new("address",           "Adress"),
         new("procurementMethods", CalcResource.procurementMethods),
+        new("contract",          CalcResource.projectContract),
         new("compensation",      CalcResource.projectCompensation),
         new("procurementProcedure", "Upphandlingsförfarande"),
         new("clientsManager",    ResourceLoc.clientsProjectmanager),
@@ -872,13 +859,13 @@
 
     private string GetProjectStatusText(ListProjectMVVM project)
     {
-        if (!project.IsVisible)
+        if (project.IsArchived)
             return AppLoc["archived"].Value;
         return string.IsNullOrWhiteSpace(project.Status) ? AppLoc["active"].Value : project.Status;
     }
 
     private static string GetProjectStatusClass(ListProjectMVVM project) =>
-        !project.IsVisible
+        project.IsArchived
             ? "inline-flex rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300"
             : "inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300";
 
@@ -911,7 +898,7 @@
             list.Add(new() { IconHtml = Icons.Folder, Label = AppLoc["moveProject"], OnClickAsync = () => { OpenMoveCopyDialog(item, MoveCopyOperation.Move); return Task.CompletedTask; } });
             list.Add(new() { IconHtml = Icons.Copy, Label = AppLoc["copyProject"], OnClickAsync = () => { OpenMoveCopyDialog(item, MoveCopyOperation.Copy); return Task.CompletedTask; } });
 
-            if (item.IsVisible)
+            if (!item.IsArchived)
                 list.Add(new() { IconHtml = Icons.Archive, Label = AppLoc["archiveProject"], OnClickAsync = async () => await ArchiveOrRestoreProjectAsync(item, archive: true) });
             else
                 list.Add(new() { IconHtml = Icons.Restore, Label = AppLoc["restoreFromArchive"], OnClickAsync = async () => await ArchiveOrRestoreProjectAsync(item, archive: false) });
@@ -927,11 +914,11 @@
     {
         var dto = await Repo.Project.GetToPostAsync(project.Id);
         if (dto is null) return;
-        dto.IsVisible = !archive;
+        dto.IsArchived = archive;
         bool ok = await Repo.Project.UpdateAsync(project.Id, dto);
         if (ok)
         {
-            project.IsVisible = !archive;
+            project.IsArchived = archive;
             bool shouldKeepInList = UoWService.Folder.ShowArchived || !archive;
             if (!shouldKeepInList)
                 Folder.State.FolderSelected?.Projects?.Remove(project);
@@ -1003,7 +990,6 @@
 
     private object? GetProjectExportValue(ListProjectMVVM project, string key) => key switch
     {
-        "active"            => FormatYesNo(project.IsVisible),
         "code"              => project.Code,
         "name"              => project.Name,
         "status"            => GetProjectStatusText(project),
@@ -1030,7 +1016,7 @@
         "clientsManager"    => project.ClientsManager,
         "publicationDate"   => FormatDate(project.PublicationDate),
         "decisionDate"      => FormatDate(project.DecisionDate),
-        "archived"          => FormatYesNo(!project.IsVisible),
+        "archived"          => FormatYesNo(project.IsArchived),
         _                   => string.Empty
     };
 

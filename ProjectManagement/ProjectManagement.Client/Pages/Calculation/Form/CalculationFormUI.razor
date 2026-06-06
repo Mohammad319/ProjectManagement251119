@@ -156,10 +156,7 @@
 
                             @* Moms + vinstchans + arkiverad *@
                             <div class="grid grid-cols-3 gap-3 items-end">
-                                <div>
-                                    <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@AppLoc["vatPercentLabel"]</label>
-                                    <InputNumber class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@CalculationUpdate.Tax" />
-                                </div>
+                      
                                 <div>
                                     <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400"
                                            title="Sannolikhet att vinna">
@@ -170,12 +167,16 @@
                                            value="@CalculationUpdate.Priority"
                                            @oninput="@((args) => CalculationUpdate.Priority = Convert.ToInt16(args.Value))" />
                                 </div>
+                                <div>
+                                    <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@AppLoc["vatPercentLabel"]</label>
+                                    <InputNumber class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@CalculationUpdate.Tax" />
+                                </div>
                                 <div class="flex flex-col gap-1.5">
                                     <label class="inline-flex cursor-pointer items-center gap-2 rounded-md border border-slate-200 px-2.5 py-1.5 transition hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
                                         <input type="checkbox"
                                                class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-500"
-                                               checked="@(!CalculationUpdate.IsVisible)"
-                                               @onchange="e => CalculationUpdate.IsVisible = !(bool)(e.Value ?? false)" />
+                                               checked="@(CalculationUpdate.IsArchived)"
+                                               @onchange="e => CalculationUpdate.IsArchived = (bool)(e.Value ?? false)" />
                                         <span class="select-none text-sm text-slate-700 dark:text-slate-300">@AppLoc["archived"]</span>
                                     </label>
                                     @if (Calculation.Id == 0 || CalculationUpdate.IsPrivate)
@@ -681,7 +682,7 @@
     private bool CanArchiveVersion(ListCalculationMVVM version) =>
         !version.IsCurrentVersion &&
         !version.IsLocked &&
-        version.IsVisible &&
+        !version.IsArchived &&
         !(Folder.State.ProjectSelected?.Calculations ?? [])
             .Any(calculation => calculation.SourceCalculationId == version.Id);
 
@@ -956,7 +957,7 @@
             return;
 
         var dto = await Repo.Calculation.GetPostAsync(version.Id);
-        dto.IsVisible = false;
+        dto.IsArchived = true;
 
         if (!await Repo.Calculation.UpdateAsync(dto, version.Id))
         {
@@ -964,7 +965,7 @@
             return;
         }
 
-        version.IsVisible = false;
+        version.IsArchived = true;
         MHD.Notifications(ToastType.Update, true);
     }
 

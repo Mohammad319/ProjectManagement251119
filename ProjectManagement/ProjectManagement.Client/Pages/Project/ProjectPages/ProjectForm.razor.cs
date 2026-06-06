@@ -130,7 +130,7 @@ namespace ProjectManagement.Client.Pages.Project.ProjectPages
             PostProjectDTO entity = new();
             PropertyCopier.CopyPropertiesTo(ProjectUpdate, entity);
 
-            var resultInfo = Tuple.Create(ProjectUpdate.IsVisible, new ListProjectMVVM());
+            var resultInfo = Tuple.Create(!ProjectUpdate.IsArchived, new ListProjectMVVM());
             PropertyCopier.CopyPropertiesTo(ProjectUpdate, resultInfo.Item2);
             resultInfo.Item2.Status = ProjectUpdate.StatusName;
             var selectedStatus = Config?.ProjectStatuses?.FirstOrDefault(x => x.Id == ProjectUpdate.StatusId);

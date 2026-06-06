@@ -82,7 +82,7 @@ public class CalculationVersionSelectorTests
             VersionGroupId = familyId,
             VersionNumber = versionNumber,
             IsCurrentVersion = isCurrent,
-            IsVisible = isVisible,
+            IsArchived = !isVisible,
             CreatedAt = new DateTime(2026, 1, id)
         };
     }

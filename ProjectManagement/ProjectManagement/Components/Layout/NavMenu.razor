@@ -31,11 +31,7 @@
 
         <div class="@($"w-full md:flex md:items-center md:w-auto {(isNavOpen ? "" : "hidden")}")" id="navbarMenu">
             <ul class="mt-0.5 flex w-full flex-col gap-1 md:mt-0 md:w-auto md:flex-row md:flex-wrap md:items-center md:justify-end md:gap-2">
-                <li class="text-right md:text-left md:flex-none">
-                    <button class="btn nav-link" @onclick="ChangeLanguage" title="@PMWebResource.ToggleLanguage" aria-label="@PMWebResource.ToggleLanguage">
-                        @((MarkupString)(IsEnglishCulture ? Icons.EN : Icons.SE))
-                    </button>
-                </li>
+        
                 <li class="text-right md:text-left md:flex-none">
                     <button class="btn nav-link" @onclick="PriceList" title="Prisimport" aria-label="Prisimport">
                         <span aria-hidden="true">@((MarkupString)Icons.ImportFromCloud)</span>
@@ -54,6 +50,11 @@
                 <li class="text-right md:text-left md:flex-none">
                     <button class="btn nav-link" @onclick="OpenControlDialog" title="@PMWebResource.Settings" aria-label="@PMWebResource.Settings">
                         <span aria-hidden="true">@((MarkupString)Icons.Settings)</span>
+                    </button>
+                </li>
+                <li class="text-right md:text-left md:flex-none">
+                    <button class="btn nav-link" @onclick="ChangeLanguage" title="@PMWebResource.ToggleLanguage" aria-label="@PMWebResource.ToggleLanguage">
+                        @((MarkupString)(IsEnglishCulture ? Icons.EN : Icons.SE))
                     </button>
                 </li>
                 <li class="text-right md:text-left md:flex-none">

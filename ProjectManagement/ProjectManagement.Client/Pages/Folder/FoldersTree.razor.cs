@@ -146,9 +146,9 @@ namespace ProjectManagement.Client.Pages.Folder
                     .ThenBy(project => project.Name, StringComparer.CurrentCultureIgnoreCase),
 
                 ProjectTreeSortMode.Status => list
-                    .OrderBy(project => project.IsVisible ? 0 : 99)
+                    .OrderBy(project => project.IsArchived ? 99 : 0)
                     .ThenBy(project => project.StatusSortOrder ?? int.MaxValue)
-                    .ThenBy(project => GetStatusSortRank(project.Status, project.IsVisible))
+                    .ThenBy(project => GetStatusSortRank(project.Status, !project.IsArchived))
                     .ThenBy(project => project.Name, StringComparer.CurrentCultureIgnoreCase),
 
                 _ => list
@@ -704,7 +704,7 @@ namespace ProjectManagement.Client.Pages.Folder
             !folder.IsVisible ? AppLoc["archived"].Value : string.Empty;
 
         private string GetProjectMeta(ListProjectMVVM project) =>
-            !project.IsVisible ? AppLoc["archived"].Value : string.Empty;
+            project.IsArchived ? AppLoc["archived"].Value : string.Empty;
 
         private string GetFolderTitle(FolderMVVM folder)
         {
@@ -719,7 +719,7 @@ namespace ProjectManagement.Client.Pages.Folder
                 ? CalculationVersionSelector.CountCurrentVersions(project.Calculations)
                 : project.CalculationCount;
             var count = $" ({calculationCount})";
-            var archived = !project.IsVisible ? $" – {AppLoc["archived"]}" : string.Empty;
+            var archived = project.IsArchived ? $" – {AppLoc["archived"]}" : string.Empty;
             return $"{project.Name}{count}{archived}";
         }
 
@@ -1155,7 +1155,7 @@ namespace ProjectManagement.Client.Pages.Folder
                 list.Add(new() { IconHtml = Icons.Folder, Label = AppLoc["moveProject"], OnClickAsync = () => { OpenMoveCopyProjectDialog(folder, project, MoveCopyOperation.Move); return Task.CompletedTask; } });
                 list.Add(new() { IconHtml = Icons.Copy, Label = AppLoc["copyProject"], OnClickAsync = () => { OpenMoveCopyProjectDialog(folder, project, MoveCopyOperation.Copy); return Task.CompletedTask; } });
 
-                if (project.IsVisible)
+                if (!project.IsArchived)
                     list.Add(new() { IconHtml = Icons.Archive, Label = AppLoc["archiveProject"], OnClickAsync = async () => await ArchiveOrRestoreProjectAsync(project, archive: true) });
                 else
                     list.Add(new() { IconHtml = Icons.Restore, Label = AppLoc["restoreFromArchive"], OnClickAsync = async () => await ArchiveOrRestoreProjectAsync(project, archive: false) });
@@ -1222,11 +1222,11 @@ namespace ProjectManagement.Client.Pages.Folder
         {
             var dto = await Repo.Project.GetToPostAsync(project.Id);
             if (dto is null) return;
-            dto.IsVisible = !archive;
+            dto.IsArchived = archive;
             bool ok = await Repo.Project.UpdateAsync(project.Id, dto);
             if (ok)
             {
-                project.IsVisible = !archive;
+                project.IsArchived = archive;
                 UoWService.Folder.State.Notify();
             }
             MHD.Notifications(ToastType.Update, ok);
@@ -1236,7 +1236,7 @@ namespace ProjectManagement.Client.Pages.Folder
         {
             var dto = await Repo.Calculation.GetPostAsync(cal.Id);
             if (dto is null) return;
-            dto.IsVisible = false;
+            dto.IsArchived = true;
             bool ok = await Repo.Calculation.UpdateAsync(dto, cal.Id);
             if (ok)
             {

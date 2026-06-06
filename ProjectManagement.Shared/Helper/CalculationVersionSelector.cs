@@ -40,7 +40,7 @@ public static class CalculationVersionSelector
             return list;
 
         var visibleFamilies = SelectCurrentVersions(list)
-            .Where(calculation => calculation.IsVisible)
+            .Where(calculation => !calculation.IsArchived)
             .Select(GetFamilyKey)
             .ToHashSet();
 

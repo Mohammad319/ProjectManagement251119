@@ -163,7 +163,7 @@ namespace ProjectManagement.Client.Services.Folder
                 {
                     all = await calcRepo.GetAsync(project.Id);
                     if (ShowArchived)
-                        all.AddRange(await calcRepo.GetAsync(project.Id, isVisible: false));
+                        all.AddRange(await calcRepo.GetAsync(project.Id, isArchived: true));
                 }
 
                 project.Calculations = all.ToList();

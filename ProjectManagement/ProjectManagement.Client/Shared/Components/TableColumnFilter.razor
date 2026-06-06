@@ -159,7 +159,7 @@
     private void ToggleOpen(MouseEventArgs e)
     {
         if (_open) { _open = false; return; }
-        _popX = e.ClientX - 10;
+        _popX = e.ClientX + 8;
         _popY = e.ClientY + 14;
         _open = true;
     }

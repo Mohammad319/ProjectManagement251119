@@ -20,7 +20,7 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation
         Task<int> CreateVersionAsync(int calcId);
         Task<bool> MoveAsync(Guid ProjectId, int calcId);
         Task<GetProjectCalcConfigDTO> GetConfig(int? m, int? con, int? com, int? t, int? st);
-        Task<List<ListCalculationMVVM>> GetAsync(Guid projectId, bool isVisible = true);
+        Task<List<ListCalculationMVVM>> GetAsync(Guid projectId, bool isArchived = false);
         Task<List<HourlyPriceListGroupDTO>> GetHourlyPriceListAsync(int calcid);
         Task<List<ListCalculationMVVM>> GetShareCalculationsAsync(Guid projectId);
         Task<CalculationDetailsDTO> DetailsAsync(int id);

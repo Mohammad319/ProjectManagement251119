@@ -82,10 +82,10 @@ namespace Persistence.Service.CalculationItems.Calculation
 
             if (!calculation.IsCurrentVersion)
             {
-                if (dto.IsVisible == calculation.IsVisible)
+                if (dto.IsArchived == calculation.IsArchived)
                     return false;
 
-                if (!dto.IsVisible &&
+                if (dto.IsArchived &&
                     await HasDerivedCalculationsAsync(db, calculation.Id, cancellationToken))
                 {
                     return false;
@@ -381,7 +381,7 @@ namespace Persistence.Service.CalculationItems.Calculation
             var copy = CalculationEntity.CreateCopy(original, original.ProjectId, userId);
             var copyDto = original.ToPostDto();
             copyDto.Code = EnsureVersionCode(copyDto.Code, nextVersionNumber, existingCodes);
-            copyDto.IsVisible = true;
+            copyDto.IsArchived = false;
 
             copy.Update(copyDto);
             copy.AssignDepartment(original.DepartmentId);

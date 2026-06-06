@@ -88,8 +88,8 @@
                             </span>
                         }
 
-                        <span class="rounded-full border px-3 py-1 text-xs font-semibold @(ProjectDetails.IsVisible ? "border-emerald-300/40 bg-emerald-400/15 text-emerald-100" : "border-amber-300/40 bg-amber-400/15 text-amber-100")">
-                            @(ProjectDetails.IsVisible ? ResourceApp.visible : ResourceApp._private)
+                        <span class="rounded-full border px-3 py-1 text-xs font-semibold @(!ProjectDetails.IsArchived ? "border-emerald-300/40 bg-emerald-400/15 text-emerald-100" : "border-amber-300/40 bg-amber-400/15 text-amber-100")">
+                            @(!ProjectDetails.IsArchived ? ResourceApp.visible : ResourceApp._private)
                         </span>
                     </div>
                 </div>
@@ -323,7 +323,6 @@
         AddIfHasText(items, CalcResource.projectCompensation, details.Compensation);
         AddIfHasText(items, CalcResource.procurementMethods, details.ProcurementMethods);
         AddIfHasText(items, "Projektstatus", details.Status);
-        items.Add(new(CalcResource.procurement, details.Procurement.ToString()));
         items.Add(new(ResourceApp.created, FormatDateTime(details.Created)));
 
         if (details.LastModified.HasValue)

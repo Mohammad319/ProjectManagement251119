@@ -217,20 +217,14 @@
                     <tr>
                         @if (IsCalculationColumnVisible("code"))
                         {
-                            <th id="hcode" data-pm-frozen="true" class="@SortableHeaderClass("code") sticky left-0 z-[11] w-28 bg-slate-50 dark:bg-slate-900" style="min-width:70px;" @onclick='() => SortBy("code")'>
+                            <th id="hcode" data-pm-frozen="true" class="@SortableHeaderClass("code") sticky left-0 z-[13] w-28 bg-slate-50 dark:bg-slate-900" style="min-width:70px;" @onclick='() => SortBy("code")'>
                                 <span class="inline-flex items-center gap-1">@CalcResource.code @((MarkupString)SortIndicatorHtml("code")) <TableColumnFilter FilterState='CF("code")' OnChanged="OnColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("name"))
                         {
-                            <th id="hname" data-pm-frozen="true" class="@SortableHeaderClass("name") sticky left-28 z-[11] min-w-52 border-r border-slate-300 bg-slate-50 dark:border-slate-600 dark:bg-slate-900" style="min-width:160px;" @onclick='() => SortBy("name")'>
+                            <th id="hname" data-pm-frozen="true" class="@SortableHeaderClass("name") sticky left-28 z-[12] min-w-52 border-r border-slate-300 bg-slate-50 dark:border-slate-600 dark:bg-slate-900" style="min-width:160px;" @onclick='() => SortBy("name")'>
                                 <span class="inline-flex items-center gap-1">@AppLoc["calculationName"] @((MarkupString)SortIndicatorHtml("name")) <TableColumnFilter FilterState='CF("name")' OnChanged="OnColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsCalculationColumnVisible("active"))
-                        {
-                            <th id="hactive" class="@SortableHeaderClass("active")" style="min-width:70px;" @onclick='() => SortBy("active")'>
-                                <span class="inline-flex items-center gap-1">Aktiv? @((MarkupString)SortIndicatorHtml("active"))</span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("version"))
@@ -385,10 +379,6 @@
                                     <span class="truncate font-semibold text-slate-800 dark:text-slate-100" title="@calu.Name">@calu.Name</span>
                                 </td>
                             }
-                            @if (IsCalculationColumnVisible("active"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatYesNo(calu.IsVisible)</td>
-                            }
                             @if (IsCalculationColumnVisible("version"))
                             {
                                 <td class="whitespace-nowrap px-3 py-2">
@@ -498,7 +488,7 @@
                             }
                             @if (IsCalculationColumnVisible("archived"))
                             {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatYesNo(!calu.IsVisible)</td>
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatYesNo(calu.IsArchived)</td>
                             }
                             @if (IsCalculationColumnVisible("privacy"))
                             {
@@ -637,7 +627,7 @@
 
             if (Folder.State.ProjectSelected is not null && !Folder.State.OtherDepartment)
             {
-                var archived = await Repo.Calculation.GetAsync(Folder.State.ProjectSelected.Id, false);
+                var archived = await Repo.Calculation.GetAsync(Folder.State.ProjectSelected.Id, true);
                 var hasAny = archived.Any();
                 if (_hasArchivedCalcs != hasAny)
                 {
@@ -784,19 +774,18 @@
 
     private readonly Dictionary<string, bool> _calculationColumns = new()
     {
-        ["active"] = false,
         ["code"] = true,
         ["name"] = true,
         ["version"] = true,
-        ["project"] = false,
-        ["folder"] = false,
-        ["calculationType"] = true,
-        ["calculationRole"] = false,
         ["status"] = true,
-        ["responsible"] = true,
-        ["inspector"] = true,
         ["qa"] = false,
         ["deadline"] = true,
+        ["project"] = false,
+        ["folder"] = false,
+        ["calculationRole"] = false,
+        ["calculationType"] = true,
+        ["responsible"] = true,
+        ["inspector"] = true,
         ["priority"] = false,
         ["address"] = false,
         ["start"] = false,
@@ -809,19 +798,18 @@
 
     private List<MhdColumnPickerItem> CalculationColumnOptions => new()
     {
-        new("active", "Aktiv?"),
         new("code", CalcResource.code),
         new("name", AppLoc["calculationName"].Value),
         new("version", AppLoc["version"].Value),
-        new("project", AppLoc["project"].Value),
-        new("folder", AppLoc["folder"].Value),
-        new("calculationType", AppLoc["calculationType"].Value),
-        new("calculationRole", AppLoc["calculationRole"].Value),
         new("status", "Kalkylstatus"),
-        new("responsible", AppLoc["calculationResponsible"].Value),
-        new("inspector", AppLoc["reviewer"].Value),
         new("qa", "Frågor/svar"),
         new("deadline", CalcResource.tenderDeadline),
+        new("project", AppLoc["project"].Value),
+        new("folder", AppLoc["folder"].Value),
+        new("calculationRole", AppLoc["calculationRole"].Value),
+        new("calculationType", AppLoc["calculationType"].Value),
+        new("responsible", AppLoc["calculationResponsible"].Value),
+        new("inspector", AppLoc["reviewer"].Value),
         new("priority", "Vinstchans"),
         new("address", "Adress"),
         new("start", CalcResource.startDate),
@@ -887,7 +875,7 @@
             if (_calcColFilters["tax"].IsActive)
                 list = list.Where(c => _calcColFilters["tax"].MatchesNumber((decimal?)c.Tax));
             if (_calcColFilters["archived"].IsActive)
-                list = list.Where(c => _calcColFilters["archived"].MatchesBool(!c.IsVisible));
+                list = list.Where(c => _calcColFilters["archived"].MatchesBool(c.IsArchived));
             if (_calcColFilters["privacy"].IsActive)
                 list = list.Where(c => _calcColFilters["privacy"].MatchesBool(c.IsPrivate));
 
@@ -908,9 +896,6 @@
                 "name" => _sortAscending
                     ? list.OrderBy(x => x.Name)
                     : list.OrderByDescending(x => x.Name),
-                "active" => _sortAscending
-                    ? list.OrderBy(x => x.IsVisible)
-                    : list.OrderByDescending(x => x.IsVisible),
                 "calculationType" => _sortAscending
                     ? list.OrderBy(x => (int)x.CalculationType).ThenBy(x => x.IsLocked)
                     : list.OrderByDescending(x => (int)x.CalculationType).ThenByDescending(x => x.IsLocked),
@@ -966,8 +951,8 @@
                     ? list.OrderBy(x => x.VersionNumber)
                     : list.OrderByDescending(x => x.VersionNumber),
                 "archived" => _sortAscending
-                    ? list.OrderBy(x => !x.IsVisible)
-                    : list.OrderByDescending(x => !x.IsVisible),
+                    ? list.OrderBy(x => x.IsArchived)
+                    : list.OrderByDescending(x => x.IsArchived),
                 "privacy" => _sortAscending
                     ? list.OrderBy(x => x.IsPrivate)
                     : list.OrderByDescending(x => x.IsPrivate),
@@ -1205,7 +1190,7 @@
             list.Add(new() { IconHtml = Icons.Folder, Label = AppLoc["moveCalculation"], OnClickAsync = () => { OpenMoveCopyDialog(item, MoveCopyOperation.Move); return Task.CompletedTask; } });
             list.Add(new() { IconHtml = Icons.Copy, Label = AppLoc["copyCalculation"], OnClickAsync = () => { OpenMoveCopyDialog(item, MoveCopyOperation.Copy); return Task.CompletedTask; } });
 
-            if (item.IsVisible)
+            if (!item.IsArchived)
                 list.Add(new() { IconHtml = Icons.Archive, Label = AppLoc["archiveCalculation"], OnClickAsync = async () => await ArchiveOrRestoreCalculationAsync(item, archive: true) });
             else
                 list.Add(new() { IconHtml = Icons.Restore, Label = AppLoc["restoreFromArchive"], OnClickAsync = async () => await ArchiveOrRestoreCalculationAsync(item, archive: false) });
@@ -1219,7 +1204,7 @@
     {
         var dto = await Repo.Calculation.GetPostAsync(cal.Id);
         if (dto is null) return;
-        dto.IsVisible = !archive;
+        dto.IsArchived = archive;
         bool ok = await Repo.Calculation.UpdateAsync(dto, cal.Id);
         if (ok)
         {
@@ -1299,7 +1284,6 @@
 
     private object? GetCalculationExportValue(ListCalculationMVVM calculation, string key) => key switch
     {
-        "active" => FormatYesNo(calculation.IsVisible),
         "code" => calculation.Code,
         "name" => calculation.Name,
         "calculationType" => GetCalculationTypeLabel(calculation.CalculationType),
@@ -1320,7 +1304,7 @@
         "createdAt" => FormatDate(calculation.CreatedAt),
         "updatedAt" => calculation.UpdatedAt.HasValue ? FormatDate(calculation.UpdatedAt.Value) : "-",
         "version" => FormatVersion(calculation.VersionNumber),
-        "archived" => FormatYesNo(!calculation.IsVisible),
+        "archived" => FormatYesNo(calculation.IsArchived),
         "privacy" => FormatYesNo(calculation.IsPrivate),
         _ => string.Empty
     };
@@ -1440,13 +1424,13 @@
 
         if (_showArchived)
         {
-            var active = await Repo.Calculation.GetAsync(project.Id, true);
-            var archived = await Repo.Calculation.GetAsync(project.Id, false);
+            var active = await Repo.Calculation.GetAsync(project.Id, false);
+            var archived = await Repo.Calculation.GetAsync(project.Id, true);
             project.Calculations = active.Concat(archived).OrderByDescending(x => x.Order).ToList();
         }
         else
         {
-            project.Calculations = await Repo.Calculation.GetAsync(project.Id, true);
+            project.Calculations = await Repo.Calculation.GetAsync(project.Id, false);
         }
         project.CalculationCount = CalculationVersionSelector.CountCurrentVersions(project.Calculations);
         UoWService.Folder.State.Notify();

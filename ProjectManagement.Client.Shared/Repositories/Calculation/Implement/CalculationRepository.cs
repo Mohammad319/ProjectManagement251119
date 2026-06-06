@@ -55,8 +55,8 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
         {
             return await _httpRepository.PutAsync(new { }, CalcURLBase + URLConst.Calculation.Move + $"/{ProjectId}/{calcId}");
         }
-        public async Task<List<ListCalculationMVVM>> GetAsync(Guid guid, bool isVisible = true)
-            => [.. (await _httpRepository.GetAsync<List<ListCalculationDTO>>(CalcURLBase + guid + $"?isVisible={isVisible}"))
+        public async Task<List<ListCalculationMVVM>> GetAsync(Guid guid, bool isArchived = false)
+            => [.. (await _httpRepository.GetAsync<List<ListCalculationDTO>>(CalcURLBase + guid + $"?isArchived={isArchived}"))
                 .Select(x => x.ToListCalculationMVVM())
                 .OrderByDescending(x => x.Order)];
 

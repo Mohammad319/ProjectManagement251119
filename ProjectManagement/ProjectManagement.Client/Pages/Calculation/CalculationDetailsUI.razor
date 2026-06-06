@@ -578,7 +578,6 @@
         AddIfHasText(items, CalcResource.projectCompensation, details.Compensation);
         AddIfHasText(items, CalcResource.procurementMethods, details.ProcurementMethods);
         AddIfHasText(items, CalcResource.status, details.Status);
-        items.Add(new(CalcResource.procurement, details.Procurement.ToString()));
 
         return items;
     }
@@ -594,7 +593,6 @@
         AddIfHasText(items, CalcResource.procurementMethods, details.ProcurementMethods);
         AddIfHasText(items, CalcResource.theClientsContactPersonTender, details.ContactPerson);
         AddIfHasText(items, ResourceLoc.maps, details.Maps);
-        items.Add(new(CalcResource.procurement, details.Procurement.ToString()));
         items.Add(new(CalcResource.tax, FormatPercent((decimal)details.Tax)));
         items.Add(new(CalcResource.timeMonth, FormatNumber(details.TimeMonth)));
         items.Add(new(CalcResource.priority, FormatPercent(details.Priority)));

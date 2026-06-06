@@ -128,7 +128,7 @@
                 @foreach (var project in sortedProjects)
                 {
                     var isProjectSelected = Folder.State.ProjectSelected?.Id == project.Id;
-                    var isProjectArchived = !project.IsVisible;
+                    var isProjectArchived = project.IsArchived;
 
                     var projectClasses = new List<string>
                     {
@@ -327,7 +327,7 @@ else
                                 var project = projectGroup.Project;
                                 var projectKey = GetGroupedProjectKey(project);
                                 var isProjectSelected = Folder.State.ProjectSelected?.Id == project.Id;
-                                var isProjectArchived = !project.IsVisible;
+                                var isProjectArchived = project.IsArchived;
 
                                 var groupedProjectClasses = new List<string>
                                 {
@@ -461,7 +461,7 @@ else
                     var p3 = pg3.Project;
                     var p3Key = GetGroupedProjectKey(p3);
                     var p3Selected = Folder.State.ProjectSelected?.Id == p3.Id;
-                    var p3Archived = !p3.IsVisible;
+                    var p3Archived = p3.IsArchived;
                     var p3Classes = new List<string> { "group grid grid-cols-[1rem_1.5rem_1fr] items-center gap-1.5 px-1.5 py-1 rounded-md cursor-pointer transition-all duration-150", "bg-slate-50 dark:bg-slate-900/70", "hover:bg-slate-100/80 dark:hover:bg-slate-800/70", "active:scale-95" };
                     if (p3Archived) p3Classes.Add("border border-slate-200 bg-slate-100/80 text-slate-500 grayscale dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-400");
                     if (p3Selected) p3Classes.Add("border-l-2 border-sky-500 bg-sky-50/80 shadow-sm ring-1 ring-sky-200/70 dark:bg-sky-950/25 dark:ring-sky-900/60");

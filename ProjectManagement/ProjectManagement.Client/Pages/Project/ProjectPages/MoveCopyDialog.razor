@@ -189,7 +189,7 @@
 
     private bool IsArchived =>
         SourceFolder?.IsVisible == false ||
-        SourceProject?.IsVisible == false;
+        SourceProject?.IsArchived == true;
 
     private bool IsConfirmDisabled => _isBusy || !HasRequiredTargets();
 

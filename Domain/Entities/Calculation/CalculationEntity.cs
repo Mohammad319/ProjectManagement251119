@@ -63,7 +63,7 @@ namespace Domain.Entities.Calculation
         [Range(0, 100)]
         public int Tax { get; private set; } = 25;
 
-        public Procurement Procurement { get; private set; }
+
 
         public DateTime TenderDeadline { get; private set; } = DateTime.UtcNow;
         public DateTime TenderQA { get; private set; } = DateTime.UtcNow;
@@ -85,7 +85,7 @@ namespace Domain.Entities.Calculation
         public DateTime? DecisionDate { get; private set; } = DateTime.UtcNow;
 
         public bool IsPrivate { get; private set; }
-        public bool IsVisible { get; private set; } = true;
+        public bool IsArchived { get; private set; } = false;
         public CalculationVersionType CalculationType { get; private set; } = CalculationVersionType.Tender;
         public BidRole BidRole { get; private set; } = BidRole.MainBid;
         public CalculationRole CalculationRole { get; private set; } = CalculationRole.MainBid;
@@ -184,7 +184,6 @@ namespace Domain.Entities.Calculation
                 CompensationId = original.CompensationId,
                 ContractId = original.ContractId,
                 ProcurementMethodsId = original.ProcurementMethodsId,
-                Procurement = original.Procurement,
                 TemplateId = original.TemplateId,
                 TemplateColumnId = original.TemplateColumnId,
                 Sort = original.Sort,
@@ -197,7 +196,7 @@ namespace Domain.Entities.Calculation
                 CreatedBy = userId,
                 CreatedAt = DateTime.UtcNow,
                 IsPrivate = original.IsPrivate,
-                IsVisible = original.IsVisible,
+                IsArchived = original.IsArchived,
                 TypeId = original.TypeId,
                 CalculationType = original.CalculationType,
                 BidRole = original.BidRole,
@@ -267,8 +266,6 @@ namespace Domain.Entities.Calculation
             Name = NormalizeRequired(dto.Name, nameof(dto.Name), FieldLengths.Name, "Calculation name is required.");
 
             SetTax(dto.Tax);
-            Procurement = dto.Procurement;
-
             SetDates(dto.StartDate, dto.EndDate);
             SetTenderDates(dto.TenderDeadline, dto.TenderQA, dto.PublicationDate, dto.DecisionDate);
             UpdateOrder(dto.Order);
@@ -278,7 +275,7 @@ namespace Domain.Entities.Calculation
             HourlyPrice = CloneHourlyPrice(dto.HourlyPrice);
             Factors = CloneFactors(dto.Factors);
 
-            SetVisibility(dto.IsPrivate, dto.IsVisible);
+            SetVisibility(dto.IsPrivate, dto.IsArchived);
 
             OrganisationId = dto.OrganisationId;
             TypeId = dto.TypeId;
@@ -421,10 +418,10 @@ namespace Domain.Entities.Calculation
             DecisionDate = decisionDate;
         }
 
-        public void SetVisibility(bool isPrivate, bool isVisible)
+        public void SetVisibility(bool isPrivate, bool isArchived)
         {
             IsPrivate = isPrivate;
-            IsVisible = isVisible;
+            IsArchived = isArchived;
         }
 
         public void SetStatus(int? statusId)

@@ -64,9 +64,9 @@ namespace ProjectManagement.Server.Controllers.v1.Project
 
         [Authorize(Roles = Tenant.Users)]
         [HttpGet("{projectId}")]
-        public async Task<IActionResult> Get(Guid projectId, bool isVisible = true)
+        public async Task<IActionResult> Get(Guid projectId, bool isArchived = false)
         {
-            return Ok(await MicroBus.Send(new GetAllCalculationsQuery(projectId, isVisible, GetUserId(), GetDepartmentId())));
+            return Ok(await MicroBus.Send(new GetAllCalculationsQuery(projectId, isArchived, GetUserId(), GetDepartmentId())));
         }
         [Authorize(Roles = Tenant.Users)]
         [HttpGet(URLConst.Calculation.HourlyPriceList + "/{id}")]

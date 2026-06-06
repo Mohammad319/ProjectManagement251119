@@ -385,7 +385,7 @@ namespace Persistence.Service.Project
                 .Include(x => x.ProcurementProcedure)
                 .Include(x => x.ProjectType)
                 .Include(x => x.ProjectStatus)
-                .Where(x => x.FolderId == folderId && (includeArchived || x.IsVisible) &&
+                .Where(x => x.FolderId == folderId && (includeArchived || !x.IsArchived) &&
                        (departmentId == null || x.Folder.DepartmentId == departmentId || x.CreatedBy == userId))
                 .OrderBy(x => x.SortOrder)
                 .ThenBy(x => x.Name)
@@ -414,7 +414,7 @@ namespace Persistence.Service.Project
                 .Include(x => x.ProcurementProcedure)
                 .Include(x => x.ProjectType)
                 .Include(x => x.ProjectStatus)
-                .Where(x => x.FolderId == folderId && (includeArchived || x.IsVisible) &&
+                .Where(x => x.FolderId == folderId && (includeArchived || !x.IsArchived) &&
                     x.Calculations.SelectMany(c => c.SharesCalc)
                         .Any(s => s.CreatedBy == userId || s.DepartmentId == departmentId))
                 .OrderBy(x => x.SortOrder)
@@ -440,7 +440,7 @@ namespace Persistence.Service.Project
 
             IQueryable<ProjectEntity> query = context.Projects
                 .AsNoTracking()
-                .Where(x => filter.IsVisible == null || x.IsVisible == filter.IsVisible.Value)
+                .Where(x => filter.IsArchived == null || x.IsArchived == filter.IsArchived.Value)
                 .Where(x => departmentId == null || x.Folder.DepartmentId == departmentId || x.CreatedBy == userId);
 
             if (filter.FolderId.HasValue && filter.FolderId.Value != Guid.Empty)
@@ -531,7 +531,7 @@ namespace Persistence.Service.Project
                     calculation.VersionGroupId,
                     calculation.VersionNumber,
                     calculation.IsCurrentVersion,
-                    calculation.IsVisible,
+                    calculation.IsArchived,
                     calculation.CreatedAt,
                     calculation.UpdatedAt
                 })
@@ -554,7 +554,7 @@ namespace Persistence.Service.Project
                             .ThenByDescending(calculation => calculation.CreatedAt)
                             .ThenByDescending(calculation => calculation.Id)
                             .First())
-                        .Where(calculation => calculation.IsVisible)
+                        .Where(calculation => !calculation.IsArchived)
                         .Count());
         }
 

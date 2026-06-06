@@ -35,7 +35,7 @@ namespace ProjectManagement.Shared.Base.Calculation
         [Range(0, 100, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
 
         public double Tax { get; set; } = 25;
-        public Procurement Procurement { get; set; }
+
         public BidRole BidRole { get; set; } = BidRole.MainBid;
 
         public DateTime TenderDeadline { get; set; } = DateTime.Now;

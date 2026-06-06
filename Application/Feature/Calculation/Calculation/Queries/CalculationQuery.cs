@@ -9,7 +9,7 @@ namespace Application.Feature.Calculation.Calculation.Queries;
 
 public sealed record GetAllCalculationsQuery(
     Guid ProjectId,
-    bool IsVisible,
+    bool IsArchived,
     int UserId,
     int? DepartmentId
 ) : IRequest<IEnumerable<ListCalculationDTO>>;
@@ -23,7 +23,7 @@ public sealed class GetAllCalculationsQueryHandler(ICalculationQueryService serv
     {
         return await service.GetAllAsync(
             request.ProjectId,
-            request.IsVisible,
+            request.IsArchived,
             request.UserId,
             request.DepartmentId,
             cancellationToken);

@@ -285,7 +285,6 @@ namespace ProjectManagement.Shared.DTO.Calculation
         [Range(0, 100, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public int Tax { get; set; } = 25;
 
-        public Procurement Procurement { get; set; }
         public DateTime TenderDeadline { get; set; } = DateTime.Now;
         public DateTime TenderQA { get; set; } = DateTime.Now;
         public DateTime StartDate { get; set; } = DateTime.Now;
@@ -428,7 +427,7 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public int? OrganisationId { get; set; }
         public int? ProcurementMethodsId { get; set; }
         public int? CompensationId { get; set; }
-        public bool IsVisible { get; set; } = true;
+        public bool IsArchived { get; set; } = false;
     }
 
     public class CalculationDetailsDTO : CalculationDataBase
@@ -531,7 +530,7 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public int Tax { get; set; }
-        public bool IsVisible { get; set; } = true;
+        public bool IsArchived { get; set; } = false;
         public string Inspector { get; set; } = string.Empty;
         public string ProjectName { get; set; } = string.Empty;
         public string FolderName { get; set; } = string.Empty;
