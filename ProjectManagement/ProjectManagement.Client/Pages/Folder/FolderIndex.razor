@@ -122,50 +122,19 @@
                                         </button>
                                     </div>
 
-                                    @* Group by *@
+                                    @* Trädvy *@
                                     <div>
-                                        <label class="mb-1 block text-[11px] font-semibold text-slate-500 dark:text-slate-400"
-                                               title="@AppLoc["groupByTooltip"]">
-                                            @AppLoc["groupBy"]
+                                        <label class="mb-1 block text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                                            Trädvy
                                         </label>
                                         <select class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs font-medium text-slate-800 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-default disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:disabled:bg-slate-900/60 dark:disabled:text-slate-400"
                                                 value="@TreeGroupingMode"
                                                 disabled="@(!SelectedDepartmentId.HasValue || _isReorderMode)"
                                                 @onchange="OnTreeGroupingModeChanged">
-                                            <option value="@ProjectTreeGroupingMode.FolderStructure">@AppLoc["folderStructure"]</option>
-                                            <option value="@ProjectTreeGroupingMode.Year">@AppLoc["year"]</option>
-                                            <option value="@ProjectTreeGroupingMode.YearQuarter">@AppLoc["yearAndQuarter"]</option>
-                                            <option value="@ProjectTreeGroupingMode.Status">Kalkylstatus</option>
+                                            <option value="@ProjectTreeGroupingMode.FolderStructure">Mappstruktur</option>
+                                            <option value="@ProjectTreeGroupingMode.Projects">Projekt</option>
                                         </select>
                                     </div>
-
-                                    @* Struktur i trädet — visas bara vid gruppering *@
-                                    @if (TreeGroupingMode != ProjectTreeGroupingMode.FolderStructure)
-                                    {
-                                        <div>
-                                            <label class="mb-1 block text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                                                Struktur i trädet
-                                            </label>
-                                            <div class="space-y-0.5">
-                                                <label class="flex items-center gap-2 rounded-lg px-1 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">
-                                                    <input type="checkbox"
-                                                           class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-950"
-                                                           checked="@ShowFoldersInTree"
-                                                           disabled="@(!SelectedDepartmentId.HasValue || _isReorderMode)"
-                                                           @onchange="OnShowFoldersChanged" />
-                                                    <span>Visa mappar</span>
-                                                </label>
-                                                <label class="flex items-center gap-2 rounded-lg px-1 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">
-                                                    <input type="checkbox"
-                                                           class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-950"
-                                                           checked="@ShowProjectsInTree"
-                                                           disabled="@(!SelectedDepartmentId.HasValue || _isReorderMode)"
-                                                           @onchange="OnShowProjectsChanged" />
-                                                    <span>Visa projekt</span>
-                                                </label>
-                                            </div>
-                                        </div>
-                                    }
 
                                     @* Sort *@
                                     <div>
@@ -177,21 +146,16 @@
                                                 value="@TreeSortMode"
                                                 disabled="@(!SelectedDepartmentId.HasValue || _isReorderMode)"
                                                 @onchange="OnTreeSortModeChanged">
-                                            <option value="@ProjectTreeSortMode.NameAscending">@AppLoc["nameAscending"]</option>
-                                            <option value="@ProjectTreeSortMode.NameDescending">@AppLoc["nameDescending"]</option>
-                                            <option value="@ProjectTreeSortMode.CreatedNewest">@AppLoc["createdNewestFirst"]</option>
-                                            <option value="@ProjectTreeSortMode.CreatedOldest">@AppLoc["createdOldestFirst"]</option>
-                                            <option value="@ProjectTreeSortMode.ModifiedNewest">@AppLoc["modifiedNewestFirst"]</option>
-                                            <option value="@ProjectTreeSortMode.LastOpenedNewest">@AppLoc["lastOpenedFirst"]</option>
-                                            @if (TreeGroupingMode == ProjectTreeGroupingMode.Status)
-                                            {
-                                                <option value="@ProjectTreeSortMode.StatusOrder">Statusordning</option>
-                                            }
-                                            <option value="@ProjectTreeSortMode.Status" title="@AppLoc["statusSortTooltip"]">Kalkylstatus</option>
                                             @if (TreeGroupingMode == ProjectTreeGroupingMode.FolderStructure)
                                             {
                                                 <option value="@ProjectTreeSortMode.Manual">Manuell ordning</option>
                                             }
+                                            <option value="@ProjectTreeSortMode.NameAscending">Namn A–Ö</option>
+                                            <option value="@ProjectTreeSortMode.NameDescending">Namn Ö–A</option>
+                                            <option value="@ProjectTreeSortMode.CreatedNewest">Skapad nyast först</option>
+                                            <option value="@ProjectTreeSortMode.CreatedOldest">Skapad äldst först</option>
+                                            <option value="@ProjectTreeSortMode.ModifiedNewest">Senast ändrad först</option>
+                                            <option value="@ProjectTreeSortMode.LastOpenedNewest">Senast öppnad först</option>
                                         </select>
 
                                         @* Ändra ordning – visible when Manual sort and FolderStructure *@
@@ -282,8 +246,6 @@
                         <FoldersTree @ref="_foldersTree"
                                      GroupingMode="@TreeGroupingMode"
                                      SortMode="@TreeSortMode"
-                                     ShowFoldersInTree="@ShowFoldersInTree"
-                                     ShowProjectsInTree="@ShowProjectsInTree"
                                      IsReorderMode="@_isReorderMode"
                                      OnExitManualOrder="ExitManualOrderAsync"
                                      OnGroupSelected="OnGroupSelectedAsync" />

@@ -1,9 +1,11 @@
 @namespace ProjectManagement.Client.Shared.Components
 @using ProjectManagement.Client.Shared.Model.Filter
+@inject IJSRuntime JS
 
 @* Compact filter icon that opens a fixed popup. Works inside sticky / overflow:hidden headers. *@
 
 <button type="button"
+        @ref="_buttonRef"
         title="Filtrera"
         class="@ButtonCss"
         @onclick:stopPropagation="true"
@@ -20,11 +22,11 @@
 @if (_open)
 {
     @* Click-away overlay *@
-    <div class="fixed inset-0 z-40" @onclick="ClosePopup" @onclick:stopPropagation="true"></div>
+    <div class="fixed inset-0" style="z-index:2147483646" @onclick="ClosePopup" @onclick:stopPropagation="true"></div>
 
     @* Popup — fixed so it escapes overflow:hidden table cells *@
-    <div class="fixed z-50 w-56 rounded-lg border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-700 dark:bg-slate-900"
-         style="top:@(_popY.ToString("F0"))px;left:min(calc(100vw - 15rem),max(4px,@(_popX.ToString("F0"))px))"
+    <div class="fixed w-56 rounded-lg border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-700 dark:bg-slate-900"
+         style="z-index:2147483647;top:@(_popY.ToString("F0"))px;left:min(calc(100vw - 15rem),max(4px,@(_popX.ToString("F0"))px))"
          @onclick:stopPropagation="true">
 
         @if (FilterState.Type == ColumnFilterType.Text)
@@ -155,12 +157,32 @@
     private bool _open;
     private double _popX;
     private double _popY;
+    private ElementReference _buttonRef;
 
-    private void ToggleOpen(MouseEventArgs e)
+    private async Task ToggleOpen(MouseEventArgs e)
     {
-        if (_open) { _open = false; return; }
-        _popX = e.ClientX + 8;
-        _popY = e.ClientY + 14;
+        if (_open)
+        {
+            _open = false;
+            return;
+        }
+
+        try
+        {
+            var position = await JS.InvokeAsync<FilterPopupPosition>(
+                "tableColumnFilterPosition.calculate",
+                _buttonRef,
+                224,
+                8);
+            _popX = position.X;
+            _popY = position.Y;
+        }
+        catch
+        {
+            _popX = e.ClientX + 8;
+            _popY = e.ClientY + 14;
+        }
+
         _open = true;
     }
 
@@ -182,4 +204,10 @@
 
     private const string SelectCss = "w-full rounded border border-slate-300 bg-white px-2 py-1 text-[11px] text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200";
     private const string InputCss  = "w-full rounded border border-slate-300 bg-white px-2 py-1 text-[11px] text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200";
+
+    private sealed class FilterPopupPosition
+    {
+        public double X { get; set; }
+        public double Y { get; set; }
+    }
 }

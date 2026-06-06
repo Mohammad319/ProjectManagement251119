@@ -45,8 +45,6 @@ namespace ProjectManagement.Client.Pages.Folder
 
         private int ActiveTreeFilterCount =>
             (TreeGroupingMode == ProjectTreeGroupingMode.FolderStructure ? 0 : 1) +
-            (TreeGroupingMode != ProjectTreeGroupingMode.FolderStructure && !ShowFoldersInTree ? 1 : 0) +
-            (TreeGroupingMode != ProjectTreeGroupingMode.FolderStructure && !ShowProjectsInTree ? 1 : 0) +
             (TreeSortMode == ProjectTreeSortMode.CreatedNewest ? 0 : 1) +
             (UoWService.Folder.ShowArchived ? 1 : 0);
 
@@ -259,12 +257,9 @@ namespace ProjectManagement.Client.Pages.Folder
 
         private async Task OnTreeGroupingModeChanged(ChangeEventArgs e)
         {
-            var prevMode = TreeGroupingMode;
             TreeGroupingMode = e.Value?.ToString() switch
             {
-                ProjectTreeGroupingMode.Year => ProjectTreeGroupingMode.Year,
-                ProjectTreeGroupingMode.YearQuarter => ProjectTreeGroupingMode.YearQuarter,
-                ProjectTreeGroupingMode.Status => ProjectTreeGroupingMode.Status,
+                ProjectTreeGroupingMode.Projects => ProjectTreeGroupingMode.Projects,
                 _ => ProjectTreeGroupingMode.FolderStructure
             };
 
@@ -272,13 +267,6 @@ namespace ProjectManagement.Client.Pages.Folder
                 TreeSortMode == ProjectTreeSortMode.Manual)
             {
                 TreeSortMode = ProjectTreeSortMode.CreatedNewest;
-                await SaveTreeSortModeAsync();
-            }
-
-            if (TreeGroupingMode == ProjectTreeGroupingMode.Status &&
-                prevMode != ProjectTreeGroupingMode.Status)
-            {
-                TreeSortMode = ProjectTreeSortMode.StatusOrder;
                 await SaveTreeSortModeAsync();
             }
 
@@ -311,10 +299,7 @@ namespace ProjectManagement.Client.Pages.Folder
             _isReorderMode = false;
             TreeGroupingMode = ProjectTreeGroupingMode.FolderStructure;
             TreeSortMode = ProjectTreeSortMode.CreatedNewest;
-            ShowFoldersInTree = true;
-            ShowProjectsInTree = true;
             await SaveTreeSortModeAsync();
-            await SaveTreeStructurePrefsAsync();
 
             if (reloadNeeded)
             {

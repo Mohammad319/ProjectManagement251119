@@ -102,7 +102,41 @@
                     <div class="fixed inset-0 z-30" @onclick="() => { _viewMenuOpen = false; _showColumnPanel = false; }"></div>
                     <div class="absolute left-0 top-full z-40 mt-1 w-56 rounded-md border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
 
-                        @* Visa alla versioner *@
+                        @* Innehåll *@
+                        <div class="px-3 pt-1.5 pb-0.5">
+                            <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Innehåll</span>
+                        </div>
+                        <button type="button"
+                                class="@(_contentMode == ContentModeCalculations ? "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-blue-700 dark:text-blue-300" : "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800")"
+                                @onclick="() => { _contentMode = ContentModeCalculations; _viewMenuOpen = false; }">
+                            <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 5h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1z" />
+                            </svg>
+                            <span class="flex-1 text-left">Kalkyler</span>
+                            @if (_contentMode == ContentModeCalculations)
+                            {
+                                <svg class="ml-auto h-3 w-3 shrink-0 text-blue-600 dark:text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
+                            }
+                        </button>
+                        <button type="button"
+                                class="@(_contentMode == ContentModeProjects ? "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-blue-700 dark:text-blue-300" : "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800")"
+                                @onclick="() => { _contentMode = ContentModeProjects; _viewMenuOpen = false; }">
+                            <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.5 5.5h15v13h-15z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9h8M8 13h5" />
+                            </svg>
+                            <span class="flex-1 text-left">Projekt</span>
+                            @if (_contentMode == ContentModeProjects)
+                            {
+                                <svg class="ml-auto h-3 w-3 shrink-0 text-blue-600 dark:text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
+                            }
+                        </button>
+
+                        @* Separator *@
+                        <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
+
+                        @* Visa alla versioner (only for Kalkyler mode) *@
+                        @if (_contentMode == ContentModeCalculations)
+                        {
                         <div title="@(!HasAnyMultipleVersionsInCurrentView ? AppLoc["noCalcsMultiVersions"].Value : null)">
                             <button type="button"
                                     class="@(_showAllVersions ? "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-blue-700 dark:text-blue-300" : "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800") + " disabled:cursor-not-allowed disabled:opacity-40"
@@ -118,28 +152,7 @@
                                 }
                             </button>
                         </div>
-
-                        @* Visa arkiverade (admin only) *@
-                        <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
-                            @if (!Folder.State.OtherDepartment)
-                            {
-                                <div title="@(!_hasArchivedCalcs ? AppLoc["noArchivedCalcsInView"].Value : null)">
-                                    <button type="button"
-                                            class="@(_showArchived ? "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-blue-700 dark:text-blue-300" : "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800") + " disabled:cursor-not-allowed disabled:opacity-40"
-                                            disabled="@(!_hasArchivedCalcs)"
-                                            @onclick="async () => { _viewMenuOpen = false; await RefreshCalculationsAsync(); }">
-                                        <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                                        </svg>
-                                        <span class="flex-1 text-left">@AppLoc["showArchived"]</span>
-                                        @if (_showArchived)
-                                        {
-                                            <svg class="ml-auto h-3 w-3 shrink-0 text-blue-600 dark:text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
-                                        }
-                                    </button>
-                                </div>
-                            }
-                        </AuthorizeView>
+                        }
 
                         @* Separator *@
                         <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
@@ -617,39 +630,12 @@
         if (_prevProjectId != projId)
         {
             _prevProjectId = projId;
-            bool changed = false;
 
             if (_showAllVersions && !HasAnyMultipleVersionsInCurrentView)
             {
                 _showAllVersions = false;
-                changed = true;
+                StateHasChanged();
             }
-
-            if (Folder.State.ProjectSelected is not null && !Folder.State.OtherDepartment)
-            {
-                var archived = await Repo.Calculation.GetAsync(Folder.State.ProjectSelected.Id, true);
-                var hasAny = archived.Any();
-                if (_hasArchivedCalcs != hasAny)
-                {
-                    _hasArchivedCalcs = hasAny;
-                    if (!_hasArchivedCalcs && _showArchived)
-                    {
-                        _showArchived = false;
-                        await ReloadCalculationsAsync();
-                    }
-                    changed = true;
-                }
-            }
-            else
-            {
-                if (_hasArchivedCalcs)
-                {
-                    _hasArchivedCalcs = false;
-                    changed = true;
-                }
-            }
-
-            if (changed) StateHasChanged();
         }
     }
 
@@ -658,15 +644,17 @@
 
     public void Dispose() => _dotNetRef?.Dispose();
 
+    private const string ContentModeCalculations = "calculations";
+    private const string ContentModeProjects = "projects";
+    private string _contentMode = ContentModeCalculations;
+
     private ListCalculationMVVM? calcDraging;
-    private bool _showArchived;
     private bool _showColumnPanel;
     private ListCalculationMVVM? _productionDialogCalculation;
     private bool _isCreatingProductionCalculation;
     private string _productionDialogMessage = string.Empty;
     private bool _showAllVersions;
     private bool _viewMenuOpen;
-    private bool _hasArchivedCalcs = true;
     private string? _prevProjectId;
 
     private string _sortColumn = "";
@@ -1056,7 +1044,7 @@
 
     private int ViewBadgeCount =>
         (_showAllVersions && HasAnyMultipleVersionsInCurrentView ? 1 : 0) +
-        (_showArchived ? 1 : 0);
+        (_contentMode == ContentModeProjects ? 1 : 0);
 
     private bool ShowVersionColumn =>
         _showAllVersions || FilteredCalculations.Any(c => HasMultipleVersions(c));
@@ -1409,20 +1397,13 @@
         StateHasChanged();
     }
 
-    private async Task RefreshCalculationsAsync()
-    {
-        _showArchived = !_showArchived;
-        _currentPage = 1;
-        await ReloadCalculationsAsync();
-    }
-
     private async Task ReloadCalculationsAsync(bool closeModal = false)
     {
         var project = Folder.State.ProjectSelected;
         if (project is null)
             return;
 
-        if (_showArchived)
+        if (UoWService.Folder.ShowArchived)
         {
             var active = await Repo.Calculation.GetAsync(project.Id, false);
             var archived = await Repo.Calculation.GetAsync(project.Id, true);

@@ -456,6 +456,39 @@ namespace ProjectManagement.Client.Pages.Folder
             StateHasChanged();
         }
 
+        private IEnumerable<(FolderMVVM Folder, ListProjectMVVM Project)> GetAllProjectsForProjectView()
+        {
+            var folders = UoWService.Folder.State.FoldersList ?? [];
+            return GetSortedFolders(folders)
+                .SelectMany(folder => GetSortedProjects(folder.Projects)
+                    .Select(project => (folder, project)));
+        }
+
+        private async Task SelectAllProjectsAsync()
+        {
+            _selectedGroupKey = "all-projects";
+
+            var allCalcs = GetGroupedCalculations()
+                .SelectMany(gc =>
+                {
+                    var family = CalculationVersionSelector.GetVersions(gc.Project.Calculations, gc.Calculation);
+                    return family.Select(v => new GroupedCalcEntry(gc.Folder, gc.Project, v));
+                })
+                .ToList();
+
+            var info = new GroupSelectionInfo
+            {
+                Key = "all-projects",
+                Label = "Samtliga projekt",
+                GroupType = "AllProjects",
+                Header = "Samtliga projekt",
+                Calculations = allCalcs
+            };
+
+            await OnGroupSelected.InvokeAsync(info);
+            StateHasChanged();
+        }
+
         private IEnumerable<CalculationGroupNode> GetCalculationGroupNodes()
         {
             var entries = GetGroupedCalculations().ToList();
