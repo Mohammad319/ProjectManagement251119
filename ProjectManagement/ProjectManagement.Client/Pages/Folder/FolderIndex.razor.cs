@@ -18,14 +18,12 @@ namespace ProjectManagement.Client.Pages.Folder
     public partial class FolderIndex : IDisposable
     {
         bool SideBarVisible { get; set; } = true;
-        private int _cycleStep; // 0=folders collapsed, 1=folders open, 2=all open, 3=folders open+projects closed
+        private int _cycleStep;
         bool CanChooseAllDepartments { get; set; }
         int? CurrentUserDepartmentId { get; set; }
         int? SelectedDepartmentId { get; set; }
         string TreeGroupingMode { get; set; } = ProjectTreeGroupingMode.FolderStructure;
         string TreeSortMode { get; set; } = ProjectTreeSortMode.CreatedNewest;
-        bool ShowFoldersInTree { get; set; } = true;
-        bool ShowProjectsInTree { get; set; } = true;
 
         private GroupSelectionInfo? _selectedGroupInfo;
         private bool _isReorderMode;
@@ -37,8 +35,6 @@ namespace ProjectManagement.Client.Pages.Folder
 
         private const string TreeSortModeStorageKey = "ProjectTreeSortMode";
         private const string SideBarCollapsedKey = "ProjectTreeSideBarCollapsed";
-        private const string ShowFoldersStorageKey = "ProjectTreeShowFolders";
-        private const string ShowProjectsStorageKey = "ProjectTreeShowProjects";
         private bool _sortPreferenceLoaded;
 
         private bool HasDepartmentAccess => Folder.State.Departments?.Any() == true;
@@ -129,14 +125,6 @@ namespace ProjectManagement.Client.Pages.Folder
                 var storedCollapsed = await JS.InvokeAsync<string?>("localStorage.getItem", SideBarCollapsedKey);
                 if (storedCollapsed == "true")
                     SideBarVisible = false;
-
-                var storedShowFolders = await JS.InvokeAsync<string?>("localStorage.getItem", ShowFoldersStorageKey);
-                if (storedShowFolders != null)
-                    ShowFoldersInTree = storedShowFolders != "false";
-
-                var storedShowProjects = await JS.InvokeAsync<string?>("localStorage.getItem", ShowProjectsStorageKey);
-                if (storedShowProjects != null)
-                    ShowProjectsInTree = storedShowProjects != "false";
 
                 await InvokeAsync(StateHasChanged);
             }
@@ -273,18 +261,6 @@ namespace ProjectManagement.Client.Pages.Folder
             await EnsureProjectsLoadedForGroupingAsync();
         }
 
-        private void OnShowFoldersChanged(ChangeEventArgs e)
-        {
-            ShowFoldersInTree = e.Value is bool v && v;
-            _ = SaveTreeStructurePrefsAsync();
-        }
-
-        private void OnShowProjectsChanged(ChangeEventArgs e)
-        {
-            ShowProjectsInTree = e.Value is bool v && v;
-            _ = SaveTreeStructurePrefsAsync();
-        }
-
         private async Task OnTreeSortModeChanged(ChangeEventArgs e)
         {
             TreeSortMode = NormalizeTreeSortMode(e.Value?.ToString());
@@ -373,19 +349,6 @@ namespace ProjectManagement.Client.Pages.Folder
             catch (Exception ex)
             {
                 await ClientLog.ErrorAsync("Saving project tree sort mode failed", ex: ex);
-            }
-        }
-
-        private async Task SaveTreeStructurePrefsAsync()
-        {
-            try
-            {
-                await JS.InvokeVoidAsync("localStorage.setItem", ShowFoldersStorageKey, ShowFoldersInTree.ToString().ToLower());
-                await JS.InvokeVoidAsync("localStorage.setItem", ShowProjectsStorageKey, ShowProjectsInTree.ToString().ToLower());
-            }
-            catch (Exception ex)
-            {
-                await ClientLog.ErrorAsync("Saving tree structure preferences failed", ex: ex);
             }
         }
 

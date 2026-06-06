@@ -10,6 +10,8 @@
 @using System.Net.Http
 @using BlazorMHD.UI.Core.Data
 @using BlazorMHD.UI.Core.DesignSystem
+@using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Shared.Enums
 @inherits AppComponentBase
 @implements IDisposable
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -24,10 +26,24 @@
         <div class="min-w-0">
             <div class="flex flex-col text-gray-700 dark:text-gray-300">
                 <span class="truncate text-sm font-semibold">
-                    @AppLoc["projectsInFolderFormat", Folder.State.FolderSelected?.Name ?? "-"]
+                    @if (_contentMode == ContentModeCalculations)
+                    {
+                        <span>Kalkyler i @(Folder.State.FolderSelected?.Name ?? "-")</span>
+                    }
+                    else
+                    {
+                        @AppLoc["projectsInFolderFormat", Folder.State.FolderSelected?.Name ?? "-"]
+                    }
                 </span>
                 <span class="truncate text-xs text-slate-500 dark:text-slate-400">
-                    @SortedProjects.Count() @CalcResource.project
+                    @if (_contentMode == ContentModeCalculations)
+                    {
+                        <span>@(_folderCalculations?.Count ?? 0) @CalcResource.calculation</span>
+                    }
+                    else
+                    {
+                        <span>@SortedProjects.Count() @CalcResource.project</span>
+                    }
                 </span>
             </div>
         </div>
@@ -95,33 +111,67 @@
                     <div class="fixed inset-0 z-30" @onclick="() => { _viewMenuOpen = false; _showColumnPanel = false; }"></div>
                     <div class="absolute left-0 top-full z-40 mt-1 w-56 rounded-md border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
 
-
+                        @* Innehåll *@
+                        <div class="px-3 pt-1.5 pb-0.5">
+                            <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Innehåll</span>
+                        </div>
                         <button type="button"
-                                class="flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
-                                @onclick="() => _showColumnPanel = !_showColumnPanel">
+                                class="@(_contentMode == ContentModeProjects ? "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-blue-700 dark:text-blue-300" : "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800")"
+                                @onclick="() => { _contentMode = ContentModeProjects; _viewMenuOpen = false; }">
                             <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4.5 5.5h15v13h-15z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 9h8M8 13h5" />
                             </svg>
-                            <span class="flex-1 text-left">@AppLoc["selectColumns"]</span>
-                            <svg class="h-2.5 w-2.5 shrink-0 text-slate-400 transition-transform @(_showColumnPanel ? "rotate-180" : "")" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                            </svg>
+                            <span class="flex-1 text-left">Projekt</span>
+                            @if (_contentMode == ContentModeProjects)
+                            {
+                                <svg class="ml-auto h-3 w-3 shrink-0 text-blue-600 dark:text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
+                            }
                         </button>
-                        @if (_showColumnPanel)
+                        <button type="button"
+                                class="@(_contentMode == ContentModeCalculations ? "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-blue-700 dark:text-blue-300" : "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800")"
+                                @onclick="async () => await SwitchToCalculationModeAsync()">
+                            <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 5h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1z" />
+                            </svg>
+                            <span class="flex-1 text-left">Kalkyler</span>
+                            @if (_contentMode == ContentModeCalculations)
+                            {
+                                <svg class="ml-auto h-3 w-3 shrink-0 text-blue-600 dark:text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
+                            }
+                        </button>
+
+                        @if (_contentMode == ContentModeProjects)
                         {
-                            <div class="max-h-52 overflow-y-auto px-1 pb-1">
-                                @foreach (var col in ProjectColumnOptions)
-                                {
-                                    var colKey = col.Key;
-                                    <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800">
-                                        <input type="checkbox"
-                                               class="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800"
-                                               checked="@IsProjectColumnVisible(colKey)"
-                                               @onchange="async e => { _projectColumns[colKey] = e.Value is bool b && b; await ViewPreference.SaveColumnsAsync(_projectColumns); }" />
-                                        <span>@col.Label</span>
-                                    </label>
-                                }
-                            </div>
+                            @* Separator *@
+                            <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
+
+                            <button type="button"
+                                    class="flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                                    @onclick="() => _showColumnPanel = !_showColumnPanel">
+                                <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                                </svg>
+                                <span class="flex-1 text-left">@AppLoc["selectColumns"]</span>
+                                <svg class="h-2.5 w-2.5 shrink-0 text-slate-400 transition-transform @(_showColumnPanel ? "rotate-180" : "")" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                            @if (_showColumnPanel)
+                            {
+                                <div class="max-h-52 overflow-y-auto px-1 pb-1">
+                                    @foreach (var col in ProjectColumnOptions)
+                                    {
+                                        var colKey = col.Key;
+                                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800">
+                                            <input type="checkbox"
+                                                   class="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800"
+                                                   checked="@IsProjectColumnVisible(colKey)"
+                                                   @onchange="async e => { _projectColumns[colKey] = e.Value is bool b && b; await ViewPreference.SaveColumnsAsync(_projectColumns); }" />
+                                            <span>@col.Label</span>
+                                        </label>
+                                    }
+                                </div>
+                            }
                         }
                     </div>
                 }
@@ -142,23 +192,92 @@
             <div class="h-4 w-px bg-slate-200 dark:bg-slate-700"></div>
 
             <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
-                <button type="button"
-                        class="inline-flex h-7 shrink-0 items-center gap-1 rounded border border-emerald-400 bg-emerald-500 px-2 text-[11px] font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-40 dark:border-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700"
-                        disabled="@(Folder.State.OtherDepartment || Folder.State.FolderSelected is null)"
-                        title="@AppLoc["newProject"]"
-                        @onclick="() => UpdateForm(new ListProjectMVVM())">
-                    <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
-                    <span>@AppLoc["newProject"]</span>
-                </button>
+                @if (_contentMode == ContentModeProjects)
+                {
+                    <button type="button"
+                            class="inline-flex h-7 shrink-0 items-center gap-1 rounded border border-emerald-400 bg-emerald-500 px-2 text-[11px] font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-40 dark:border-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700"
+                            disabled="@(Folder.State.OtherDepartment || Folder.State.FolderSelected is null)"
+                            title="@AppLoc["newProject"]"
+                            @onclick="() => UpdateForm(new ListProjectMVVM())">
+                        <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        <span>@AppLoc["newProject"]</span>
+                    </button>
+                }
+                else
+                {
+                    <button type="button"
+                            class="inline-flex h-7 shrink-0 items-center gap-1 rounded border border-emerald-400 bg-emerald-500 px-2 text-[11px] font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-40 dark:border-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700"
+                            disabled="@(Folder.State.OtherDepartment || Folder.State.FolderSelected is null)"
+                            title="Välj ett projekt i trädet för att skapa en ny kalkyl"
+                            @onclick="() => { }">
+                        <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        <span>@AppLoc["newCalculation"]</span>
+                    </button>
+                }
             </AuthorizeView>
         </div>
     </div>
     </div>@* ── End sticky header ─────────────────────────── *@
 
-    @* ── Project table ───────────────────────────────────── *@
-    @if (SortedProjects.Any())
+    @* ── Content area ────────────────────────────────────── *@
+    @if (_contentMode == ContentModeCalculations)
+    {
+        @if (_loadingFolderCalcs)
+        {
+            <div class="flex items-center justify-center py-12">
+                <div class="text-sm text-slate-500 dark:text-slate-400">Laddar kalkyler...</div>
+            </div>
+        }
+        else if (_folderCalculations?.Any() == true)
+        {
+            <div class="divNetCalc flex-1 min-h-0 overflow-auto rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
+                <table class="w-max min-w-full table-auto text-left text-xs">
+                    <thead class="sticky top-0 z-20 bg-slate-50 text-[11px] font-semibold text-slate-500 dark:bg-slate-900 dark:text-slate-400">
+                        <tr>
+                            <th class="whitespace-nowrap px-3 py-2">@CalcResource.code</th>
+                            <th class="whitespace-nowrap px-3 py-2 min-w-52">@AppLoc["calculationName"]</th>
+                            <th class="whitespace-nowrap px-3 py-2">@CalcResource.project</th>
+                            <th class="whitespace-nowrap px-3 py-2">Kalkylstatus</th>
+                            <th class="whitespace-nowrap px-3 py-2">@AppLoc["calculationType"]</th>
+                            <th class="whitespace-nowrap px-3 py-2">@AppLoc["calculationResponsible"]</th>
+                            <th class="whitespace-nowrap px-3 py-2">@CalcResource.tenderDeadline</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                        @foreach (var (proj, calc) in _folderCalculations)
+                        {
+                            var isCalcSelected = Folder.State.Calculation?.Id == calc.Id;
+                            <tr class="@(isCalcSelected ? "cursor-pointer bg-violet-50 dark:bg-violet-950/30" : "cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/80") transition-colors"
+                                @onclick="async () => await OpenCalculationFromFolderViewAsync(proj, calc)">
+                                <td class="whitespace-nowrap px-3 py-2 font-mono text-[11px] text-slate-500 dark:text-slate-400">@FormatText(calc.Code)</td>
+                                <td class="whitespace-nowrap px-3 py-2 font-semibold text-slate-800 dark:text-slate-100" title="@calc.Name">@calc.Name</td>
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@proj.Name</td>
+                                <td class="whitespace-nowrap px-3 py-2">
+                                    <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">@(string.IsNullOrWhiteSpace(calc.Status) ? AppLoc["active"].Value : calc.Status)</span>
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@GetFolderCalcTypeLabel(calc.CalculationType)</td>
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(calc.Responsible)</td>
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(calc.TenderDeadline)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center dark:border-slate-700 dark:bg-slate-950/60">
+                <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">@CalcResource.calculation</div>
+                <h3 class="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-100">@AppLoc["calculationsEmptyState"]</h3>
+                <p class="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">@AppLoc["calculationsEmptyStateHint"]</p>
+            </div>
+        }
+    }
+    else if (_contentMode == ContentModeProjects && SortedProjects.Any())
     {
         <div class="divNetCalc flex-1 min-h-0 overflow-auto rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
             <table id="resizeMe" class="w-max min-w-full table-auto text-left text-xs">
@@ -320,6 +439,18 @@
                                 <span class="inline-flex items-center gap-1">@CalcResource.decisionDate @((MarkupString)SortIndicatorHtml("decisionDate"))</span>
                             </th>
                         }
+                        @if (IsProjectColumnVisible("createdAt"))
+                        {
+                            <th id="hcreatedAt" class="@SortableHeaderClass("createdAt")" style="min-width:90px;" @onclick='() => SortBy("createdAt")'>
+                                <span class="inline-flex items-center gap-1">@AppLoc["createdDate"] @((MarkupString)SortIndicatorHtml("createdAt")) <TableColumnFilter FilterState='PF("createdAt")' OnChanged="OnProjectColumnFilterChanged" /></span>
+                            </th>
+                        }
+                        @if (IsProjectColumnVisible("updatedAt"))
+                        {
+                            <th id="hupdatedAt" class="@SortableHeaderClass("updatedAt")" style="min-width:90px;" @onclick='() => SortBy("updatedAt")'>
+                                <span class="inline-flex items-center gap-1">@AppLoc["lastModified"] @((MarkupString)SortIndicatorHtml("updatedAt")) <TableColumnFilter FilterState='PF("updatedAt")' OnChanged="OnProjectColumnFilterChanged" /></span>
+                            </th>
+                        }
                         @if (IsProjectColumnVisible("archived"))
                         {
                             <th id="harchived" class="@SortableHeaderClass("archived")" style="min-width:80px;" @onclick='() => SortBy("archived")'>
@@ -468,6 +599,14 @@
                             {
                                 <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.DecisionDate)</td>
                             }
+                            @if (IsProjectColumnVisible("createdAt"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.CreatedAt)</td>
+                            }
+                            @if (IsProjectColumnVisible("updatedAt"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.UpdatedAt)</td>
+                            }
                             @if (IsProjectColumnVisible("archived"))
                             {
                                 <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatYesNo(project.IsArchived)</td>
@@ -523,7 +662,7 @@
             </div>
         </div>
     }
-    else
+    else if (_contentMode == ContentModeProjects)
     {
         <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center dark:border-slate-700 dark:bg-slate-950/60">
             <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">@CalcResource.project</div>
@@ -552,6 +691,12 @@
     Guid UpdateProject = Guid.Empty;
     private ListProjectMVVM? draggingProject;
 
+    private const string ContentModeProjects = "projects";
+    private const string ContentModeCalculations = "calculations";
+    private string _contentMode = ContentModeProjects;
+    private List<(ListProjectMVVM Project, ListCalculationMVVM Calculation)>? _folderCalculations;
+    private bool _loadingFolderCalcs;
+
     private bool _filterMenuOpen;
     private bool _viewMenuOpen;
     private bool _showColumnPanel;
@@ -564,7 +709,7 @@
     private const string ProjPaginationBtnCls = "inline-flex h-6 w-6 items-center justify-center rounded border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-35 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800";
 
     private int ActiveProjectFilterCount => _projColFilters.Values.Count(f => f.IsActive);
-    private int ViewBadgeCount => 0;
+    private int ViewBadgeCount => _contentMode == ContentModeCalculations ? 1 : 0;
 
     private void FirstPage() => _currentPage = 1;
     private void LastPage() => _currentPage = TotalProjectPages;
@@ -584,6 +729,8 @@
         ["end"]           = new() { Type = ColumnFilterType.Date },
         ["byggherre"]     = new() { Type = ColumnFilterType.Text },
         ["organisation"]  = new() { Type = ColumnFilterType.Text },
+        ["createdAt"]     = new() { Type = ColumnFilterType.Date },
+        ["updatedAt"]     = new() { Type = ColumnFilterType.Date },
     };
 
     private bool HasActiveProjectFilters => _projColFilters.Values.Any(f => f.IsActive);
@@ -624,6 +771,10 @@
                 projects = projects.Where(p => _projColFilters["byggherre"].MatchesText(p.Developer));
             if (_projColFilters["organisation"].IsActive)
                 projects = projects.Where(p => _projColFilters["organisation"].MatchesText(p.Organisation));
+            if (_projColFilters["createdAt"].IsActive)
+                projects = projects.Where(p => _projColFilters["createdAt"].MatchesDate(p.CreatedAt == default ? null : (DateTime?)p.CreatedAt));
+            if (_projColFilters["updatedAt"].IsActive)
+                projects = projects.Where(p => _projColFilters["updatedAt"].MatchesDate(p.UpdatedAt));
             return projects;
         }
     }
@@ -661,6 +812,8 @@
                 "clientsManager"   => _sortAscending ? projects.OrderBy(x => x.ClientsManager)     : projects.OrderByDescending(x => x.ClientsManager),
                 "publicationDate"  => _sortAscending ? projects.OrderBy(x => x.PublicationDate)    : projects.OrderByDescending(x => x.PublicationDate),
                 "decisionDate"     => _sortAscending ? projects.OrderBy(x => x.DecisionDate)       : projects.OrderByDescending(x => x.DecisionDate),
+                "createdAt"        => _sortAscending ? projects.OrderBy(x => x.CreatedAt)          : projects.OrderByDescending(x => x.CreatedAt),
+                "updatedAt"        => _sortAscending ? projects.OrderBy(x => x.UpdatedAt)          : projects.OrderByDescending(x => x.UpdatedAt),
                 "archived"         => _sortAscending ? projects.OrderBy(x => x.IsArchived)         : projects.OrderByDescending(x => x.IsArchived),
                 _                  => projects.OrderByDescending(x => x.Order).ThenBy(x => x.Name, StringComparer.CurrentCultureIgnoreCase)
             };
@@ -704,6 +857,48 @@
         _currentPage = 1;
         await OnToggleArchived.InvokeAsync();
     }
+
+    private async Task SwitchToCalculationModeAsync()
+    {
+        _contentMode = ContentModeCalculations;
+        _viewMenuOpen = false;
+        if (_folderCalculations == null && !_loadingFolderCalcs)
+            await LoadFolderCalculationsAsync();
+    }
+
+    private async Task LoadFolderCalculationsAsync()
+    {
+        _loadingFolderCalcs = true;
+        StateHasChanged();
+
+        var result = new List<(ListProjectMVVM, ListCalculationMVVM)>();
+        var projects = Folder.State.FolderSelected?.Projects ?? [];
+
+        foreach (var project in projects)
+        {
+            if (!project.CalculationsLoaded)
+                await Folder.SetCalcsToProject(project);
+
+            foreach (var calc in CalculationVersionSelector.SelectCurrentVersions(project.Calculations ?? []))
+                result.Add((project, calc));
+        }
+
+        _folderCalculations = result;
+        _loadingFolderCalcs = false;
+    }
+
+    private async Task OpenCalculationFromFolderViewAsync(ListProjectMVVM project, ListCalculationMVVM calc)
+    {
+        Folder.State.SetCalculation(null, project, Folder.State.FolderSelected!);
+        await CalcService.SetCalc(calc.Id, project, Folder.State.FolderSelected!);
+    }
+
+    private string GetFolderCalcTypeLabel(CalculationVersionType type) => type switch
+    {
+        CalculationVersionType.Production => AppLoc["productionCalculation"].Value,
+        CalculationVersionType.Contract   => AppLoc["contractCalculation"].Value,
+        _                                 => AppLoc["tenderCalculation"].Value
+    };
 
     private string SortableHeaderClass(string column)
     {
@@ -749,6 +944,8 @@
         ["clientsManager"]    = false,
         ["publicationDate"]   = false,
         ["decisionDate"]      = false,
+        ["createdAt"]         = false,
+        ["updatedAt"]         = false,
         ["archived"]          = true
     };
 
@@ -779,6 +976,8 @@
         new("clientsManager",    ResourceLoc.clientsProjectmanager),
         new("publicationDate",   CalcResource.publicationDate),
         new("decisionDate",      CalcResource.decisionDate),
+        new("createdAt",         AppLoc["createdDate"].Value),
+        new("updatedAt",         AppLoc["lastModified"].Value),
         new("archived",          AppLoc["archived"].Value)
     };
 
@@ -1000,6 +1199,8 @@
         "clientsManager"    => project.ClientsManager,
         "publicationDate"   => FormatDate(project.PublicationDate),
         "decisionDate"      => FormatDate(project.DecisionDate),
+        "createdAt"         => FormatDate(project.CreatedAt),
+        "updatedAt"         => FormatDate(project.UpdatedAt),
         "archived"          => FormatYesNo(project.IsArchived),
         _                   => string.Empty
     };

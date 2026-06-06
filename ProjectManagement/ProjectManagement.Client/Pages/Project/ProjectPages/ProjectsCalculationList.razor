@@ -119,16 +119,13 @@
                             }
                         </button>
                         <button type="button"
-                                class="@(_contentMode == ContentModeProjects ? "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-blue-700 dark:text-blue-300" : "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800")"
-                                @onclick="() => { _contentMode = ContentModeProjects; _viewMenuOpen = false; }">
+                                class="flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-400 dark:text-slate-600 cursor-not-allowed"
+                                disabled
+                                title="Projekt innehåller inte andra projekt. Välj Kalkyler för att visa projektets kalkyler.">
                             <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.5 5.5h15v13h-15z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9h8M8 13h5" />
                             </svg>
                             <span class="flex-1 text-left">Projekt</span>
-                            @if (_contentMode == ContentModeProjects)
-                            {
-                                <svg class="ml-auto h-3 w-3 shrink-0 text-blue-600 dark:text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
-                            }
                         </button>
 
                         @* Separator *@
@@ -780,6 +777,8 @@
         ["end"] = false,
         ["timeMonth"] = false,
         ["tax"] = false,
+        ["createdAt"] = false,
+        ["updatedAt"] = false,
         ["archived"] = true,
         ["privacy"] = true
     };
@@ -804,6 +803,8 @@
         new("end", CalcResource.endDate),
         new("timeMonth", AppLoc["projectDurationMonths"].Value),
         new("tax", AppLoc["vatPercent"].Value),
+        new("createdAt", AppLoc["createdDate"].Value),
+        new("updatedAt", AppLoc["lastModified"].Value),
         new("archived", AppLoc["archived"].Value),
         new("privacy", ResourceApp._private)
     };
@@ -1043,8 +1044,7 @@
     }
 
     private int ViewBadgeCount =>
-        (_showAllVersions && HasAnyMultipleVersionsInCurrentView ? 1 : 0) +
-        (_contentMode == ContentModeProjects ? 1 : 0);
+        (_showAllVersions && HasAnyMultipleVersionsInCurrentView ? 1 : 0);
 
     private bool ShowVersionColumn =>
         _showAllVersions || FilteredCalculations.Any(c => HasMultipleVersions(c));
