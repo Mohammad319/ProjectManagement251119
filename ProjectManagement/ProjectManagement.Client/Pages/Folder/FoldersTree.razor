@@ -26,19 +26,54 @@
     @{
         var isWholeDeptSelectedFs = _selectedGroupKey == "hela-avdelningen";
     }
-    <div class="group grid grid-cols-[1rem_1.5rem_1fr] items-center gap-1.5 px-1.5 py-1 rounded-md cursor-pointer transition-all duration-150 active:scale-95 @(isWholeDeptSelectedFs ? "border-l-2 border-indigo-500 bg-indigo-50 dark:bg-indigo-950/30 shadow-sm ring-1 ring-indigo-200 dark:ring-indigo-800/60" : "bg-white dark:bg-slate-900/70 hover:bg-slate-100/80 dark:hover:bg-slate-800/70")"
-         @onclick="SelectWholeDepartmentAsync"
-         role="button"
-         tabindex="0">
-        <span class="h-4 w-4 shrink-0"></span>
-        <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md @(isWholeDeptSelectedFs ? "bg-indigo-200 text-indigo-800 ring-1 ring-indigo-300 dark:bg-indigo-900/60 dark:text-indigo-200 dark:ring-indigo-700" : "bg-indigo-100 text-indigo-700 ring-1 ring-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-300 dark:ring-indigo-800")">
-            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M2 3h6v6H2zM10 3h6v6h-6zM2 12h6v6H2zM10 12h6v6h-6z" />
-            </svg>
-        </span>
-        <span class="truncate text-[14px] font-bold @(isWholeDeptSelectedFs ? "text-indigo-900 dark:text-indigo-100" : "text-slate-800 group-hover:text-indigo-700 dark:text-slate-100 dark:group-hover:text-indigo-300")">
-            Hela avdelningen
-        </span>
+    <div class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-950/60 flex items-center gap-1 px-0.5 py-0.5 mb-0.5">
+        <div class="group flex flex-1 min-w-0 items-center gap-1.5 px-1.5 py-1 rounded-md cursor-pointer transition-all duration-150 active:scale-95 @(isWholeDeptSelectedFs ? "border-l-2 border-indigo-500 bg-indigo-50 dark:bg-indigo-950/30 shadow-sm ring-1 ring-indigo-200 dark:ring-indigo-800/60" : "bg-white dark:bg-slate-900/70 hover:bg-slate-100/80 dark:hover:bg-slate-800/70")"
+             @onclick="SelectWholeDepartmentAsync"
+             @oncontextmenu:preventDefault
+             @oncontextmenu="ContextHelaAvdelning"
+             role="button"
+             tabindex="0">
+            <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md @(isWholeDeptSelectedFs ? "bg-indigo-200 text-indigo-800 ring-1 ring-indigo-300 dark:bg-indigo-900/60 dark:text-indigo-200 dark:ring-indigo-700" : "bg-indigo-100 text-indigo-700 ring-1 ring-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-300 dark:ring-indigo-800")">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M2 3h6v6H2zM10 3h6v6h-6zM2 12h6v6H2zM10 12h6v6h-6z" />
+                </svg>
+            </span>
+            <span class="truncate text-[14px] font-bold @(isWholeDeptSelectedFs ? "text-indigo-900 dark:text-indigo-100" : "text-slate-800 group-hover:text-indigo-700 dark:text-slate-100 dark:group-hover:text-indigo-300")">
+                Hela avdelningen
+            </span>
+        </div>
+        <button type="button"
+                class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                @onclick="CycleExpandAsync"
+                title="@TreeExpandButtonTooltip"
+                aria-label="@TreeExpandButtonTooltip"
+                disabled="@IsReorderMode">
+            @switch (_cycleStep)
+            {
+                case 0:
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                    break;
+                case 1:
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 3l-7 7-7-7"/>
+                    </svg>
+                    break;
+                case 2:
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 21l7-7 7 7"/>
+                    </svg>
+                    break;
+                default:
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/>
+                    </svg>
+                    break;
+            }
+        </button>
     </div>
 
     @{
@@ -277,6 +312,24 @@
             </div>
         }
     }
+
+    @* Empty state – inga mappar finns i avdelningen *@
+    @if (sortedFolders.Count == 0 && !IsManualOrderMode)
+    {
+        <div class="rounded-xl border border-dashed border-slate-300 bg-white px-4 py-8 text-center dark:border-slate-700 dark:bg-slate-900">
+            <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">Inga mappar hittades</p>
+            <p class="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">Skapa en ny mapp för att börja arbeta.</p>
+            @if (OnCreateNewFolder.HasDelegate)
+            {
+                <button type="button"
+                        class="mt-4 inline-flex h-8 items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 text-xs font-semibold text-emerald-700 shadow-sm transition hover:bg-emerald-100 hover:text-emerald-900 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-950/50"
+                        @onclick="async () => await OnCreateNewFolder.InvokeAsync()">
+                    <span aria-hidden="true">+</span>
+                    <span>Ny mapp</span>
+                </button>
+            }
+        </div>
+    }
 </div>
 }
 else if (GroupingMode == ProjectTreeGroupingMode.Projects)
@@ -285,10 +338,9 @@ else if (GroupingMode == ProjectTreeGroupingMode.Projects)
     var isAllProjectsSelected = _selectedGroupKey == "hela-avdelningen";
 
     <div id="folderTable" class="select-none space-y-1 text-sm" @oncontextmenu:preventDefault="true">
-        <div class="rounded-lg border border-slate-200 bg-slate-100/70 px-1.5 py-1 dark:border-slate-800 dark:bg-slate-900/70">
-            <div class="grid grid-cols-[1rem_1.5rem_1fr] items-center gap-1.5 px-1 py-1 cursor-pointer rounded-md @(isAllProjectsSelected ? "bg-indigo-100 ring-1 ring-indigo-300 dark:bg-indigo-950/40 dark:ring-indigo-700" : "hover:bg-indigo-50/60 dark:hover:bg-indigo-950/20")"
+        <div class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-950/60 flex items-center gap-1 px-0.5 py-0.5 mb-0.5">
+            <div class="group flex flex-1 min-w-0 items-center gap-1.5 px-1 py-1 cursor-pointer rounded-md @(isAllProjectsSelected ? "bg-indigo-100 ring-1 ring-indigo-300 dark:bg-indigo-950/40 dark:ring-indigo-700" : "hover:bg-indigo-50/60 dark:hover:bg-indigo-950/20")"
                  @onclick="async () => await SelectWholeDepartmentAsync()">
-                <span class="h-4 w-4 shrink-0"></span>
                 <span class="flex h-6 w-6 items-center justify-center rounded-md @(isAllProjectsSelected ? "bg-indigo-200 text-indigo-800 ring-1 ring-indigo-300 dark:bg-indigo-900/60 dark:text-indigo-200 dark:ring-indigo-700" : "bg-indigo-100 text-indigo-700 ring-1 ring-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-300 dark:ring-indigo-800")">
                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M2 3h6v6H2zM10 3h6v6h-6zM2 12h6v6H2zM10 12h6v6h-6z" />
@@ -298,8 +350,9 @@ else if (GroupingMode == ProjectTreeGroupingMode.Projects)
                     Hela avdelningen
                 </span>
             </div>
+        </div>
 
-            <div class="ml-3 space-y-1 pl-2 mt-0.5">
+        <div class="ml-1 space-y-1 pl-2">
                 @foreach (var (projFolder, project) in allProjectEntries)
                 {
                     var isProjSelected = Folder.State.ProjectSelected?.Id == project.Id;
@@ -338,7 +391,6 @@ else if (GroupingMode == ProjectTreeGroupingMode.Projects)
                         </span>
                     </div>
                 }
-            </div>
         </div>
     </div>
 }

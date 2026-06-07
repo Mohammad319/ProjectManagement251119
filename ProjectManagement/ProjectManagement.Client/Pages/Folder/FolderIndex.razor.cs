@@ -1,4 +1,4 @@
-﻿using BlazorMHD.UI.Components.Data.DropdownPanel;
+using BlazorMHD.UI.Components.Data.DropdownPanel;
 using BlazorMHD.UI.Core.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -18,31 +18,39 @@ namespace ProjectManagement.Client.Pages.Folder
     public partial class FolderIndex : IDisposable
     {
         bool SideBarVisible { get; set; } = true;
-        private int _cycleStep;
         bool CanChooseAllDepartments { get; set; }
         int? CurrentUserDepartmentId { get; set; }
         int? SelectedDepartmentId { get; set; }
         string TreeGroupingMode { get; set; } = ProjectTreeGroupingMode.FolderStructure;
-        string TreeSortMode { get; set; } = ProjectTreeSortMode.CreatedNewest;
+        string TreeSortMode { get; set; } = ProjectTreeSortMode.Manual;
 
         private GroupSelectionInfo? _selectedGroupInfo;
         private bool _isReorderMode;
 
         private MhdDropdownPanel? _filterPanel;
-        private FoldersTree? _foldersTree;
 
         [Inject] private IJSRuntime JS { get; set; } = default!;
 
         private const string TreeSortModeStorageKey = "ProjectTreeSortMode";
+        private const string TreeGroupingModeStorageKey = "ProjectTree.TreeViewMode";
+        private const string ShowArchivedStorageKey = "ProjectTree.ShowArchived";
         private const string SideBarCollapsedKey = "ProjectTreeSideBarCollapsed";
         private bool _sortPreferenceLoaded;
 
         private bool HasDepartmentAccess => Folder.State.Departments?.Any() == true;
 
-        private int ActiveTreeFilterCount =>
-            (TreeGroupingMode == ProjectTreeGroupingMode.FolderStructure ? 0 : 1) +
-            (TreeSortMode == ProjectTreeSortMode.CreatedNewest ? 0 : 1) +
-            (UoWService.Folder.ShowArchived ? 1 : 0);
+        private int ActiveTreeFilterCount
+        {
+            get
+            {
+                var defaultSort = TreeGroupingMode == ProjectTreeGroupingMode.FolderStructure
+                    ? ProjectTreeSortMode.Manual
+                    : ProjectTreeSortMode.ModifiedNewest;
+                return (TreeGroupingMode == ProjectTreeGroupingMode.FolderStructure ? 0 : 1) +
+                       (TreeSortMode == defaultSort ? 0 : 1) +
+                       (UoWService.Folder.ShowArchived ? 1 : 0);
+            }
+        }
 
         private string SelectedDepartmentValue =>
             SelectedDepartmentId?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
@@ -50,29 +58,18 @@ namespace ProjectManagement.Client.Pages.Folder
         private sealed record OpenTreeSnapshot(HashSet<Guid> FolderIds, HashSet<Guid> ProjectIds);
 
         void ModalSeachForm() =>
-        //Modal.AddModal<ProjectsSearch>(
-        //    "",
-        //    new Dictionary<string, object>
-        //    {
-        //        [nameof(ProjectsSearch.CallBack)] = EventCallback.Factory.Create(this, Modal.ClearModal)
-        //    });
-        Modal.Show(new DialogModel
-        {
-            Title = CalcLoc["searchFoldersProjectsCalcs"],
-            Content = builder =>
+            Modal.Show(new DialogModel
             {
-                builder.OpenComponent(0, typeof(ProjectsSearch));
-                builder.AddAttribute(1, "CallBack",
-                    EventCallback.Factory.Create(this, () =>
-                    {
-                        // هنا ما كان Modal.ClearModal
-                        // في النظام الجديد: نغلق الـ Dialog
-                        Modal.Close();
-                    }));
-                builder.CloseComponent();
-            },
-            Buttons = [], Size = DialogSize.ExtraLarge, IsDraggable = true, CloseOnOverlayClick = true
-        });
+                Title = CalcLoc["searchFoldersProjectsCalcs"],
+                Content = builder =>
+                {
+                    builder.OpenComponent(0, typeof(ProjectsSearch));
+                    builder.AddAttribute(1, "CallBack",
+                        EventCallback.Factory.Create(this, () => Modal.Close()));
+                    builder.CloseComponent();
+                },
+                Buttons = [], Size = DialogSize.ExtraLarge, IsDraggable = true, CloseOnOverlayClick = true
+            });
 
         void ModalForm(FolderModel model) =>
             Modal.ShowComponent<FolderFormUI>(
@@ -119,12 +116,34 @@ namespace ProjectManagement.Client.Pages.Folder
 
             try
             {
-                var storedSortMode = await JS.InvokeAsync<string?>("localStorage.getItem", TreeSortModeStorageKey);
-                TreeSortMode = NormalizeTreeSortMode(storedSortMode);
-
                 var storedCollapsed = await JS.InvokeAsync<string?>("localStorage.getItem", SideBarCollapsedKey);
                 if (storedCollapsed == "true")
                     SideBarVisible = false;
+
+                var storedGroupingMode = await JS.InvokeAsync<string?>("localStorage.getItem", TreeGroupingModeStorageKey);
+                if (storedGroupingMode == ProjectTreeGroupingMode.Projects)
+                    TreeGroupingMode = ProjectTreeGroupingMode.Projects;
+
+                var storedSortMode = await JS.InvokeAsync<string?>("localStorage.getItem", TreeSortModeStorageKey);
+                var defaultSort = TreeGroupingMode == ProjectTreeGroupingMode.FolderStructure
+                    ? ProjectTreeSortMode.Manual
+                    : ProjectTreeSortMode.ModifiedNewest;
+                TreeSortMode = NormalizeTreeSortMode(storedSortMode, defaultSort);
+
+                if (TreeGroupingMode == ProjectTreeGroupingMode.Projects && TreeSortMode == ProjectTreeSortMode.Manual)
+                    TreeSortMode = ProjectTreeSortMode.ModifiedNewest;
+
+                var storedShowArchived = await JS.InvokeAsync<string?>("localStorage.getItem", ShowArchivedStorageKey);
+                if (storedShowArchived == "true" && !UoWService.Folder.ShowArchived)
+                {
+                    Folder.ToggleArchivedFilter();
+                    if (SelectedDepartmentId.HasValue)
+                        await LoadSelectedDepartmentAsync(preserveOpenNodes: false);
+                }
+                else if (TreeGroupingMode == ProjectTreeGroupingMode.Projects && SelectedDepartmentId.HasValue)
+                {
+                    await EnsureProjectsLoadedForGroupingAsync();
+                }
 
                 await InvokeAsync(StateHasChanged);
             }
@@ -208,7 +227,6 @@ namespace ProjectManagement.Client.Pages.Folder
         {
             var openNodes = preserveOpenNodes ? SnapshotOpenNodes() : null;
 
-            _cycleStep = 0;
             Folder.State.SetSelectedDepartment(SelectedDepartmentId);
             Folder.State.ClearSelection();
             Folder.State.ClearFolders();
@@ -240,6 +258,11 @@ namespace ProjectManagement.Client.Pages.Folder
         private async Task ToggleArchivedAsync()
         {
             Folder.ToggleArchivedFilter();
+            try
+            {
+                await JS.InvokeVoidAsync("localStorage.setItem", ShowArchivedStorageKey, UoWService.Folder.ShowArchived.ToString().ToLower());
+            }
+            catch { }
             await LoadSelectedDepartmentAsync(preserveOpenNodes: true);
         }
 
@@ -251,10 +274,11 @@ namespace ProjectManagement.Client.Pages.Folder
                 _ => ProjectTreeGroupingMode.FolderStructure
             };
 
-            if (TreeGroupingMode != ProjectTreeGroupingMode.FolderStructure &&
-                TreeSortMode == ProjectTreeSortMode.Manual)
+            await SaveTreeGroupingModeAsync();
+
+            if (TreeGroupingMode == ProjectTreeGroupingMode.Projects && TreeSortMode == ProjectTreeSortMode.Manual)
             {
-                TreeSortMode = ProjectTreeSortMode.CreatedNewest;
+                TreeSortMode = ProjectTreeSortMode.ModifiedNewest;
                 await SaveTreeSortModeAsync();
             }
 
@@ -263,7 +287,10 @@ namespace ProjectManagement.Client.Pages.Folder
 
         private async Task OnTreeSortModeChanged(ChangeEventArgs e)
         {
-            TreeSortMode = NormalizeTreeSortMode(e.Value?.ToString());
+            var defaultSort = TreeGroupingMode == ProjectTreeGroupingMode.FolderStructure
+                ? ProjectTreeSortMode.Manual
+                : ProjectTreeSortMode.ModifiedNewest;
+            TreeSortMode = NormalizeTreeSortMode(e.Value?.ToString(), defaultSort);
             _isReorderMode = false;
             await SaveTreeSortModeAsync();
         }
@@ -274,12 +301,14 @@ namespace ProjectManagement.Client.Pages.Folder
 
             _isReorderMode = false;
             TreeGroupingMode = ProjectTreeGroupingMode.FolderStructure;
-            TreeSortMode = ProjectTreeSortMode.CreatedNewest;
+            TreeSortMode = ProjectTreeSortMode.Manual;
+            await SaveTreeGroupingModeAsync();
             await SaveTreeSortModeAsync();
 
             if (reloadNeeded)
             {
                 Folder.ToggleArchivedFilter();
+                try { await JS.InvokeVoidAsync("localStorage.setItem", ShowArchivedStorageKey, "false"); } catch { }
                 await LoadSelectedDepartmentAsync(preserveOpenNodes: true);
             }
         }
@@ -302,43 +331,17 @@ namespace ProjectManagement.Client.Pages.Folder
             await InvokeAsync(StateHasChanged);
         }
 
-        private async Task CycleExpandAsync()
+        private async Task SaveTreeGroupingModeAsync()
         {
-            if (_foldersTree is null) return;
-
-            switch (_cycleStep)
+            try
             {
-                case 0: // → expand folders
-                    await _foldersTree.ExpandFoldersOnlyAsync();
-                    _cycleStep = 1;
-                    break;
-                case 1: // → expand projects
-                    await _foldersTree.ExpandAllAsync();
-                    _cycleStep = 2;
-                    break;
-                case 2: // → collapse projects
-                    _foldersTree.CollapseProjectsOnly();
-                    _cycleStep = 3;
-                    break;
-                case 3: // → collapse folders
-                    _foldersTree.CollapseAll();
-                    _cycleStep = 0;
-                    break;
+                await JS.InvokeVoidAsync("localStorage.setItem", TreeGroupingModeStorageKey, TreeGroupingMode);
             }
-
-            await InvokeAsync(StateHasChanged);
+            catch (Exception ex)
+            {
+                await ClientLog.ErrorAsync("Saving project tree grouping mode failed", ex: ex);
+            }
         }
-
-        private string TreeExpandButtonTooltip => _cycleStep switch
-        {
-            0 => "Expandera mappar",
-            1 => "Expandera projekt",
-            2 => "Fäll ihop projekt",
-            3 => "Fäll ihop mappar",
-            _ => "Expandera mappar"
-        };
-
-        private bool TreeExpandIsExpanding => _cycleStep <= 1;
 
         private async Task SaveTreeSortModeAsync()
         {
@@ -418,7 +421,7 @@ namespace ProjectManagement.Client.Pages.Folder
                 ? departmentId
                 : null;
 
-        private static string NormalizeTreeSortMode(string? sortMode) =>
+        private static string NormalizeTreeSortMode(string? sortMode, string defaultMode = ProjectTreeSortMode.Manual) =>
             sortMode switch
             {
                 ProjectTreeSortMode.NameAscending => ProjectTreeSortMode.NameAscending,
@@ -430,7 +433,7 @@ namespace ProjectManagement.Client.Pages.Folder
                 ProjectTreeSortMode.Status => ProjectTreeSortMode.Status,
                 ProjectTreeSortMode.StatusOrder => ProjectTreeSortMode.StatusOrder,
                 ProjectTreeSortMode.Manual => ProjectTreeSortMode.Manual,
-                _ => ProjectTreeSortMode.CreatedNewest
+                _ => defaultMode
             };
     }
 }

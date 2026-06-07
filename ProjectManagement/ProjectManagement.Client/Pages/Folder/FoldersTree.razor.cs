@@ -42,6 +42,58 @@ namespace ProjectManagement.Client.Pages.Folder
         [Parameter] public EventCallback OnExitManualOrder { get; set; }
         [Parameter] public EventCallback<GroupSelectionInfo?> OnGroupSelected { get; set; }
         [Parameter] public bool IsReorderMode { get; set; }
+        [Parameter] public EventCallback OnCreateNewFolder { get; set; }
+
+        private int _cycleStep;
+
+        private string TreeExpandButtonTooltip => _cycleStep switch
+        {
+            0 => "Expandera mappar",
+            1 => "Expandera projekt",
+            2 => "Fäll ihop projekt",
+            3 => "Fäll ihop mappar",
+            _ => "Expandera mappar"
+        };
+
+        private async Task CycleExpandAsync()
+        {
+            switch (_cycleStep)
+            {
+                case 0:
+                    await ExpandFoldersOnlyAsync();
+                    _cycleStep = 1;
+                    break;
+                case 1:
+                    await ExpandAllAsync();
+                    _cycleStep = 2;
+                    break;
+                case 2:
+                    CollapseProjectsOnly();
+                    _cycleStep = 3;
+                    break;
+                case 3:
+                    CollapseAll();
+                    _cycleStep = 0;
+                    break;
+            }
+            await InvokeAsync(StateHasChanged);
+        }
+
+        private async Task ContextHelaAvdelning()
+        {
+            var list = new List<MenuItem>();
+
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            bool isInAnyRole = PMRolesConst.Tenant.AdminManger.Split(',').Any(r => user.IsInRole(r));
+
+            if (!Folder.State.OtherDepartment && user.Identity?.IsAuthenticated == true && isInAnyRole && OnCreateNewFolder.HasDelegate)
+            {
+                list.Add(new() { IconHtml = Icons.Folder, Label = AppLoc[LocalizerConst.New, ResourceLoc.folder], OnClickAsync = async () => await OnCreateNewFolder.InvokeAsync() });
+            }
+
+            await ContextService.ShowMenuAsync(list);
+        }
 
         private string? _selectedGroupKey;
         private bool _previousIsReorderMode;
