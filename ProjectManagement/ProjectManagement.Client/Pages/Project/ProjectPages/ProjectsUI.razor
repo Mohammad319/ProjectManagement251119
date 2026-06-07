@@ -19,6 +19,16 @@
 @inject ProjectManagement.Client.Services.Folder.ProjectListViewPreference ViewPreference
 
 <div class="flex h-full min-h-0 flex-col gap-1 overflow-hidden px-1 pb-1">
+    @if (_contentMode == ContentModeCalculations)
+    {
+        <ProjectsCalculationList @key="@($"folder-calculations-{IsDepartmentScope}-{Folder.State.FolderSelected?.Id}-{Folder.State.SelectedDepartmentId}")"
+                                 FolderScopeMode="true"
+                                 IsDepartmentScope="@IsDepartmentScope"
+                                 DepartmentName="@DepartmentName"
+                                 OnShowProjectsRequested="SwitchToProjectMode" />
+    }
+    else
+    {
 
     @* ── Sticky header ─────────────────────────────────── *@
     <div class="sticky top-0 z-[80] shrink-0 -mx-1 border-b border-slate-200 bg-white px-1 pb-1 shadow-sm dark:border-slate-800 dark:bg-slate-950">
@@ -45,7 +55,7 @@
                 <span class="truncate text-xs text-slate-500 dark:text-slate-400">
                     @if (_contentMode == ContentModeCalculations)
                     {
-                        <span>@(_folderCalculations?.Count ?? 0) @CalcResource.calculation</span>
+                        <span>0 @CalcResource.calculation</span>
                     }
                     else
                     {
@@ -159,7 +169,7 @@
                             @* Visa alla versioner (only in Kalkyler mode) *@
                             <button type="button"
                                     class="@(_showAllVersions ? "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-blue-700 dark:text-blue-300" : "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800")"
-                                    @onclick="async () => { _showAllVersions = !_showAllVersions; _folderCalculations = null; await LoadFolderCalculationsAsync(); _viewMenuOpen = false; }">
+                                    @onclick="() => { _showAllVersions = !_showAllVersions; _viewMenuOpen = false; }">
                                 <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
                                 </svg>
@@ -255,60 +265,7 @@
     </div>@* ── End sticky header ─────────────────────────── *@
 
     @* ── Content area ────────────────────────────────────── *@
-    @if (_contentMode == ContentModeCalculations)
-    {
-        @if (_loadingFolderCalcs)
-        {
-            <div class="flex items-center justify-center py-12">
-                <div class="text-sm text-slate-500 dark:text-slate-400">Laddar kalkyler...</div>
-            </div>
-        }
-        else if (_folderCalculations?.Any() == true)
-        {
-            <div class="divNetCalc flex-1 min-h-0 overflow-auto rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
-                <table class="w-max min-w-full table-auto text-left text-xs">
-                    <thead class="sticky top-0 z-20 bg-slate-50 text-[11px] font-semibold text-slate-500 dark:bg-slate-900 dark:text-slate-400">
-                        <tr>
-                            <th class="whitespace-nowrap px-3 py-2">@CalcResource.code</th>
-                            <th class="whitespace-nowrap px-3 py-2 min-w-52">@AppLoc["calculationName"]</th>
-                            <th class="whitespace-nowrap px-3 py-2">@CalcResource.project</th>
-                            <th class="whitespace-nowrap px-3 py-2">Kalkylstatus</th>
-                            <th class="whitespace-nowrap px-3 py-2">@AppLoc["calculationType"]</th>
-                            <th class="whitespace-nowrap px-3 py-2">@AppLoc["calculationResponsible"]</th>
-                            <th class="whitespace-nowrap px-3 py-2">@CalcResource.tenderDeadline</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                        @foreach (var (proj, calc) in _folderCalculations)
-                        {
-                            var isCalcSelected = Folder.State.Calculation?.Id == calc.Id;
-                            <tr class="@(isCalcSelected ? "cursor-pointer bg-violet-50 dark:bg-violet-950/30" : "cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/80") transition-colors"
-                                @onclick="async () => await OpenCalculationFromFolderViewAsync(proj, calc)">
-                                <td class="whitespace-nowrap px-3 py-2 font-mono text-[11px] text-slate-500 dark:text-slate-400">@FormatText(calc.Code)</td>
-                                <td class="whitespace-nowrap px-3 py-2 font-semibold text-slate-800 dark:text-slate-100" title="@calc.Name">@calc.Name</td>
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@proj.Name</td>
-                                <td class="whitespace-nowrap px-3 py-2">
-                                    <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">@(string.IsNullOrWhiteSpace(calc.Status) ? AppLoc["active"].Value : calc.Status)</span>
-                                </td>
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@GetFolderCalcTypeLabel(calc.CalculationType)</td>
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(calc.Responsible)</td>
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(calc.TenderDeadline)</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        }
-        else
-        {
-            <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center dark:border-slate-700 dark:bg-slate-950/60">
-                <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">@CalcResource.calculation</div>
-                <h3 class="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-100">@AppLoc["calculationsEmptyState"]</h3>
-                <p class="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">@AppLoc["calculationsEmptyStateHint"]</p>
-            </div>
-        }
-    }
-    else if (_contentMode == ContentModeProjects && SortedProjects.Any())
+    @if (SortedProjects.Any())
     {
         <div class="divNetCalc flex-1 min-h-0 overflow-auto rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
             <table id="resizeMe" class="w-max min-w-full table-auto text-left text-xs">
@@ -712,6 +669,7 @@
             }
         </div>
     }
+    }
 </div>
 
 @code {
@@ -727,8 +685,6 @@
     private const string ContentModeProjects = "projects";
     private const string ContentModeCalculations = "calculations";
     private string _contentMode = ContentModeProjects;
-    private List<(ListProjectMVVM Project, ListCalculationMVVM Calculation)>? _folderCalculations;
-    private bool _loadingFolderCalcs;
     private bool _showAllVersions = false;
 
     private bool _filterMenuOpen;
@@ -898,53 +854,15 @@
     {
         _contentMode = ContentModeCalculations;
         _viewMenuOpen = false;
-        if (_folderCalculations == null && !_loadingFolderCalcs)
-            await LoadFolderCalculationsAsync();
+        await Task.CompletedTask;
     }
 
-    private async Task LoadFolderCalculationsAsync()
+    private Task SwitchToProjectMode()
     {
-        _loadingFolderCalcs = true;
-        StateHasChanged();
-
-        var result = new List<(ListProjectMVVM, ListCalculationMVVM)>();
-        var projects = IsDepartmentScope
-            ? Folder.State.FoldersList.SelectMany(f => f.Projects ?? []).ToList()
-            : (IList<ListProjectMVVM>)(Folder.State.FolderSelected?.Projects ?? []);
-
-        foreach (var project in projects)
-        {
-            if (!project.CalculationsLoaded)
-                await Folder.SetCalcsToProject(project);
-
-            var calcs = _showAllVersions
-                ? (IEnumerable<ListCalculationMVVM>)(project.Calculations ?? [])
-                : CalculationVersionSelector.SelectCurrentVersions(project.Calculations ?? []);
-
-            foreach (var calc in calcs)
-                result.Add((project, calc));
-        }
-
-        _folderCalculations = result;
-        _loadingFolderCalcs = false;
+        _contentMode = ContentModeProjects;
+        _viewMenuOpen = false;
+        return Task.CompletedTask;
     }
-
-    private async Task OpenCalculationFromFolderViewAsync(ListProjectMVVM project, ListCalculationMVVM calc)
-    {
-        var folder = IsDepartmentScope
-            ? Folder.State.FoldersList.FirstOrDefault(f => f.Projects?.Any(p => p.Id == project.Id) == true)
-            : Folder.State.FolderSelected;
-        if (folder is null) return;
-        Folder.State.SetCalculation(null, project, folder);
-        await CalcService.SetCalc(calc.Id, project, folder);
-    }
-
-    private string GetFolderCalcTypeLabel(CalculationVersionType type) => type switch
-    {
-        CalculationVersionType.Production => AppLoc["productionCalculation"].Value,
-        CalculationVersionType.Contract   => AppLoc["contractCalculation"].Value,
-        _                                 => AppLoc["tenderCalculation"].Value
-    };
 
     private string SortableHeaderClass(string column)
     {

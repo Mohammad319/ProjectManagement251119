@@ -4,7 +4,9 @@
 @using Calculation.Share
 @using Calculation.Tender
 @using ProjectManagement.Client.Helper
+@using ProjectManagement.Client.Shared.Model.Project
 @using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Client.Shared.MVVM.Folder
 @using Microsoft.AspNetCore.Authorization
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @attribute [Authorize]
@@ -27,15 +29,37 @@
         <div class="min-w-0">
             <div class="flex flex-col text-gray-700 dark:text-gray-300">
                 <span class="truncate text-sm font-semibold">
-                    @AppLoc["calculationsInProjectFormat", Folder.State.ProjectSelected?.Name ?? "-"]
+                    @if (FolderScopeMode)
+                    {
+                        <span>Kalkyler i @(IsDepartmentScope ? DepartmentName : Folder.State.FolderSelected?.Name ?? "-")</span>
+                    }
+                    else
+                    {
+                        @AppLoc["calculationsInProjectFormat", Folder.State.ProjectSelected?.Name ?? "-"]
+                    }
                 </span>
                 <span class="truncate text-xs text-slate-500 dark:text-slate-400">
-                    @AppLoc["folderNameFormat", Folder.State.FolderSelected?.Name ?? "-"]
-                    @if (!string.IsNullOrWhiteSpace(Folder.State.ProjectSelected?.Code))
+                    @if (FolderScopeMode)
                     {
-                        <span> · @AppLoc["projectCodeFormat", Folder.State.ProjectSelected?.Code ?? "-"]</span>
+                        @if (IsDepartmentScope)
+                        {
+                            <span class="text-slate-400">hela avdelningen</span>
+                        }
+                        else
+                        {
+                            @AppLoc["folderNameFormat", Folder.State.FolderSelected?.Name ?? "-"]
+                        }
+                        <span> · @FilteredCalculations.Count() @CalcResource.calculation</span>
                     }
-                    <span> · @FilteredCalculations.Count() @CalcResource.calculation</span>
+                    else
+                    {
+                        @AppLoc["folderNameFormat", Folder.State.FolderSelected?.Name ?? "-"]
+                        @if (!string.IsNullOrWhiteSpace(Folder.State.ProjectSelected?.Code))
+                        {
+                            <span> · @AppLoc["projectCodeFormat", Folder.State.ProjectSelected?.Code ?? "-"]</span>
+                        }
+                        <span> · @FilteredCalculations.Count() @CalcResource.calculation</span>
+                    }
                 </span>
             </div>
         </div>
@@ -119,9 +143,10 @@
                             }
                         </button>
                         <button type="button"
-                                class="flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-400 dark:text-slate-600 cursor-not-allowed"
-                                disabled
-                                title="Projekt innehåller inte andra projekt. Välj Kalkyler för att visa projektets kalkyler.">
+                                class="@(FolderScopeMode ? "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800" : "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-400 dark:text-slate-600 cursor-not-allowed")"
+                                disabled="@(!FolderScopeMode)"
+                                title="@(FolderScopeMode ? null : "Projekt innehåller inte andra projekt. Välj Kalkyler för att visa projektets kalkyler.")"
+                                @onclick="async () => await ShowProjectsAsync()">
                             <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.5 5.5h15v13h-15z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9h8M8 13h5" />
                             </svg>
@@ -190,7 +215,7 @@
             @* Rapporter (direct button) *@
             <button type="button"
                     class="inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-                    disabled="@(Folder.State.ProjectSelected is null)"
+                    disabled="@(!CanOpenReports)"
                     @onclick="OpenReports">
                 <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -204,7 +229,7 @@
                 @* Ny kalkyl *@
                 <button type="button"
                         class="inline-flex h-7 shrink-0 items-center gap-1 rounded border border-emerald-400 bg-emerald-500 px-2 text-[11px] font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-40 dark:border-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700"
-                        disabled="@(Folder.State.OtherDepartment || Folder.State.ProjectSelected is null)"
+                        disabled="@(FolderScopeMode || Folder.State.OtherDepartment || Folder.State.ProjectSelected is null)"
                         title="@AppLoc["newCalculation"]"
                         @onclick="() => UpdateForm(new ListCalculationMVVM())">
                     <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
@@ -219,7 +244,13 @@
     </div>@* ── End sticky header ─────────────────────────── *@
 
     @* ── Calculation table ──��───────────────────────────── *@
-    @if (SortedCalculations.Any())
+    @if (FolderScopeMode && _loadingScopeCalculations)
+    {
+        <div class="flex items-center justify-center py-12">
+            <div class="text-sm text-slate-500 dark:text-slate-400">Laddar kalkyler...</div>
+        </div>
+    }
+    else if (SortedCalculations.Any())
     {
         <div class="divNetCalc flex-1 min-h-0 overflow-auto rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
             <table id="resizeMe" class="w-max min-w-full table-auto text-left text-xs">
@@ -369,14 +400,14 @@
                             class="@rowClasses"
                             @oncontextmenu:preventDefault
                             @oncontextmenu="() => Context(calu)"
-                            @onclick="async () => await NewCalculation(calu.Id)"
+                            @onclick="async () => await OpenCalculationAsync(calu)"
                             @ondrop="async _ => await HandleDrop(calu)"
                             @ondragleave="() => calu.IsDragOver = false"
                             @ondragover:preventDefault="true"
-                            @ondragover="() => calu.IsDragOver = calcDraging is not null"
+                            @ondragover="() => calu.IsDragOver = !FolderScopeMode && calcDraging is not null"
                             @ondragstart="() => calcDraging = calu"
                             @ondragend="() => calcDraging = null"
-                            draggable="true">
+                            draggable="@(!FolderScopeMode)">
                             @if (IsCalculationColumnVisible("code"))
                             {
                                 <td class="sticky left-0 z-[2] w-28 whitespace-nowrap bg-white px-3 py-2 font-mono text-[11px] text-slate-500 group-hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-400 dark:group-hover:bg-slate-900/80 @(isSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
@@ -412,11 +443,11 @@
                             }
                             @if (IsCalculationColumnVisible("project"))
                             {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(calu.ProjectName)</td>
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(GetCalculationProjectName(calu))</td>
                             }
                             @if (IsCalculationColumnVisible("folder"))
                             {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(calu.FolderName)</td>
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(GetCalculationFolderName(calu))</td>
                             }
                             @if (IsCalculationColumnVisible("calculationType"))
                             {
@@ -563,7 +594,7 @@
             <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">@CalcResource.calculation</div>
             <h3 class="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-100">@AppLoc["calculationsEmptyState"]</h3>
             <p class="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">@AppLoc["calculationsEmptyStateHint"]</p>
-            @if (!Folder.State.OtherDepartment && Folder.State.ProjectSelected is not null)
+            @if (!FolderScopeMode && !Folder.State.OtherDepartment && Folder.State.ProjectSelected is not null)
             {
                 <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
                     <button type="button"
@@ -616,6 +647,13 @@
 
 
 @code {
+    [Parameter] public bool FolderScopeMode { get; set; }
+    [Parameter] public bool IsDepartmentScope { get; set; }
+    [Parameter] public string? DepartmentName { get; set; }
+    [Parameter] public EventCallback OnShowProjectsRequested { get; set; }
+
+    private sealed record ScopeCalculationRow(FolderMVVM Folder, ListProjectMVVM Project, ListCalculationMVVM Calculation);
+
     private DotNetObjectReference<ProjectsCalculationList>? _dotNetRef;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -623,10 +661,10 @@
         _dotNetRef ??= DotNetObjectReference.Create(this);
         await JS.InvokeVoidAsync("initializeResizableColumns", _dotNetRef);
 
-        var projId = Folder.State.ProjectSelected?.Id.ToString();
-        if (_prevProjectId != projId)
+        var scopeKey = CurrentViewKey;
+        if (_prevProjectId != scopeKey)
         {
-            _prevProjectId = projId;
+            _prevProjectId = scopeKey;
 
             if (_showAllVersions && !HasAnyMultipleVersionsInCurrentView)
             {
@@ -653,6 +691,10 @@
     private bool _showAllVersions;
     private bool _viewMenuOpen;
     private string? _prevProjectId;
+    private string? _scopeLoadKey;
+    private bool _loadingScopeCalculations;
+    private List<ScopeCalculationRow> _scopeCalculationRows = [];
+    private Dictionary<int, ScopeCalculationRow> _scopeCalculationLookup = [];
 
     private string _sortColumn = "";
     private bool _sortAscending = true;
@@ -721,6 +763,30 @@
             foreach (var (k, v) in saved)
                 if (_calculationColumns.ContainsKey(k))
                     _calculationColumns[k] = v;
+        else if (FolderScopeMode)
+        {
+            _calculationColumns["project"] = true;
+            _calculationColumns["folder"] = IsDepartmentScope;
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!FolderScopeMode)
+        {
+            _scopeLoadKey = null;
+            _loadingScopeCalculations = false;
+            _scopeCalculationRows = [];
+            _scopeCalculationLookup = [];
+            return;
+        }
+
+        var key = BuildScopeLoadKey();
+        if (_scopeLoadKey != key)
+        {
+            _scopeLoadKey = key;
+            await LoadScopeCalculationsAsync(forceReload: false);
+        }
     }
 
     private void OnColumnFilterChanged() => ResetPage();
@@ -732,6 +798,73 @@
     private void ClearFilters()
     {
         foreach (var f in _calcColFilters.Values) f.Clear();
+        _currentPage = 1;
+    }
+
+    private string CurrentViewKey => FolderScopeMode
+        ? BuildScopeLoadKey()
+        : Folder.State.ProjectSelected?.Id.ToString() ?? string.Empty;
+
+    private bool CanOpenReports => FolderScopeMode
+        ? IsDepartmentScope || Folder.State.FolderSelected is not null
+        : Folder.State.ProjectSelected is not null;
+
+    private string BuildScopeLoadKey()
+    {
+        if (!FolderScopeMode)
+            return Folder.State.ProjectSelected?.Id.ToString() ?? string.Empty;
+
+        var folderId = Folder.State.FolderSelected?.Id.ToString() ?? string.Empty;
+        var departmentId = Folder.State.SelectedDepartmentId?.ToString() ?? string.Empty;
+        return $"{IsDepartmentScope}:{folderId}:{departmentId}:{Folder.State.OtherDepartment}:{UoWService.Folder.ShowArchived}";
+    }
+
+    private async Task LoadScopeCalculationsAsync(bool forceReload)
+    {
+        _loadingScopeCalculations = true;
+        StateHasChanged();
+
+        var source = new List<(FolderMVVM Folder, ListProjectMVVM Project)>();
+
+        if (IsDepartmentScope)
+        {
+            foreach (var folder in Folder.State.FoldersList)
+            {
+                if (!folder.ProjectsLoaded)
+                    await Folder.SetProjectsToFolder(folder);
+
+                foreach (var project in folder.Projects ?? [])
+                    source.Add((folder, project));
+            }
+        }
+        else if (Folder.State.FolderSelected is { } selectedFolder)
+        {
+            if (!selectedFolder.ProjectsLoaded)
+                await Folder.SetProjectsToFolder(selectedFolder);
+
+            foreach (var project in selectedFolder.Projects ?? [])
+                source.Add((selectedFolder, project));
+        }
+
+        var rows = new List<ScopeCalculationRow>();
+        foreach (var (folder, project) in source)
+        {
+            if (forceReload)
+                project.CalculationsLoaded = false;
+
+            if (!project.CalculationsLoaded)
+                await Folder.SetCalcsToProject(project);
+
+            var calcs = project.Calculations ?? [];
+            foreach (var calculation in calcs)
+                rows.Add(new ScopeCalculationRow(folder, project, calculation));
+        }
+
+        _scopeCalculationRows = rows;
+        _scopeCalculationLookup = rows
+            .GroupBy(row => row.Calculation.Id)
+            .ToDictionary(group => group.Key, group => group.First());
+        _loadingScopeCalculations = false;
         _currentPage = 1;
     }
 
@@ -813,8 +946,9 @@
     {
         get
         {
-            var list = Folder.State.ProjectSelected?.Calculations
-                       ?? Enumerable.Empty<ListCalculationMVVM>();
+            var list = FolderScopeMode
+                ? _scopeCalculationRows.Select(row => row.Calculation)
+                : Folder.State.ProjectSelected?.Calculations ?? Enumerable.Empty<ListCalculationMVVM>();
 
             if (!_showAllVersions)
                 list = CalculationVersionSelector.SelectCurrentVersions(list);
@@ -832,9 +966,9 @@
             if (_calcColFilters["name"].IsActive)
                 list = list.Where(c => _calcColFilters["name"].MatchesText(c.Name));
             if (_calcColFilters["project"].IsActive)
-                list = list.Where(c => _calcColFilters["project"].MatchesText(c.ProjectName));
+                list = list.Where(c => _calcColFilters["project"].MatchesText(GetCalculationProjectName(c)));
             if (_calcColFilters["folder"].IsActive)
-                list = list.Where(c => _calcColFilters["folder"].MatchesText(c.FolderName));
+                list = list.Where(c => _calcColFilters["folder"].MatchesText(GetCalculationFolderName(c)));
             if (_calcColFilters["calculationType"].IsActive)
                 list = list.Where(c => _calcColFilters["calculationType"].MatchesDropdown(GetCalculationTypeLabel(c.CalculationType)));
             if (_calcColFilters["calculationRole"].IsActive)
@@ -901,11 +1035,11 @@
                     ? list.OrderBy(x => x.Inspector)
                     : list.OrderByDescending(x => x.Inspector),
                 "project" => _sortAscending
-                    ? list.OrderBy(x => x.ProjectName)
-                    : list.OrderByDescending(x => x.ProjectName),
+                    ? list.OrderBy(GetCalculationProjectName)
+                    : list.OrderByDescending(GetCalculationProjectName),
                 "folder" => _sortAscending
-                    ? list.OrderBy(x => x.FolderName)
-                    : list.OrderByDescending(x => x.FolderName),
+                    ? list.OrderBy(GetCalculationFolderName)
+                    : list.OrderByDescending(GetCalculationFolderName),
                 "priority" => _sortAscending
                     ? list.OrderBy(x => x.Priority)
                     : list.OrderByDescending(x => x.Priority),
@@ -982,6 +1116,26 @@
     private bool IsCalculationColumnVisible(string key) =>
         _calculationColumns.TryGetValue(key, out var visible) && visible;
 
+    private ScopeCalculationRow? GetScopeRow(ListCalculationMVVM calculation) =>
+        FolderScopeMode && _scopeCalculationLookup.TryGetValue(calculation.Id, out var row)
+            ? row
+            : null;
+
+    private ListProjectMVVM? GetCalculationProject(ListCalculationMVVM calculation) =>
+        GetScopeRow(calculation)?.Project ?? Folder.State.ProjectSelected;
+
+    private FolderMVVM? GetCalculationFolder(ListCalculationMVVM calculation) =>
+        GetScopeRow(calculation)?.Folder ?? Folder.State.FolderSelected;
+
+    private IEnumerable<ListCalculationMVVM> GetProjectCalculationsFor(ListCalculationMVVM calculation) =>
+        GetCalculationProject(calculation)?.Calculations ?? [];
+
+    private string? GetCalculationProjectName(ListCalculationMVVM calculation) =>
+        GetScopeRow(calculation)?.Project.Name ?? calculation.ProjectName;
+
+    private string? GetCalculationFolderName(ListCalculationMVVM calculation) =>
+        GetScopeRow(calculation)?.Folder.Name ?? calculation.FolderName;
+
     private static string FormatText(string? value) =>
         string.IsNullOrWhiteSpace(value) ? "-" : value;
 
@@ -1031,15 +1185,14 @@
 
     private bool HasMultipleVersions(ListCalculationMVVM calculation) =>
         CalculationVersionSelector.HasMultipleVersions(
-            Folder.State.ProjectSelected?.Calculations,
+            GetProjectCalculationsFor(calculation),
             calculation);
 
     private bool HasAnyMultipleVersionsInCurrentView
     {
         get
         {
-            var allCalcs = Folder.State.ProjectSelected?.Calculations ?? [];
-            return FilteredCalculations.Any(c => CalculationVersionSelector.HasMultipleVersions(allCalcs, c));
+            return FilteredCalculations.Any(c => CalculationVersionSelector.HasMultipleVersions(GetProjectCalculationsFor(c), c));
         }
     }
 
@@ -1215,14 +1368,19 @@
 
     void OpenMoveCopyDialog(ListCalculationMVVM calculation, string operation)
     {
+        var sourceFolder = GetCalculationFolder(calculation);
+        var sourceProject = GetCalculationProject(calculation);
+        if (sourceFolder is null || sourceProject is null)
+            return;
+
         Modal.ShowComponent<MoveCopyDialog>(
             operation == MoveCopyOperation.Copy ? AppLoc["copyCalculation"] : AppLoc["moveCalculation"],
             new Dictionary<string, object>
             {
                 [nameof(MoveCopyDialog.ItemKind)] = MoveCopyItemKind.Calculation,
                 [nameof(MoveCopyDialog.Operation)] = operation,
-                [nameof(MoveCopyDialog.SourceFolder)] = Folder.State.FolderSelected!,
-                [nameof(MoveCopyDialog.SourceProject)] = Folder.State.ProjectSelected!,
+                [nameof(MoveCopyDialog.SourceFolder)] = sourceFolder,
+                [nameof(MoveCopyDialog.SourceProject)] = sourceProject,
                 [nameof(MoveCopyDialog.SourceCalculation)] = calculation,
                 [nameof(MoveCopyDialog.OnCompleted)] = EventCallback.Factory.Create(this, ReloadAfterMoveCopyAsync)
             },
@@ -1236,22 +1394,33 @@
 
     void OpenReports()
     {
-        if (Folder.State.ProjectSelected is null)
+        if (!CanOpenReports)
             return;
+
+        var parameters = new Dictionary<string, object>
+        {
+            [nameof(CentralReportsDialog.InitialView)] = CentralReportsDialog.ReportView.Income,
+            [nameof(CentralReportsDialog.InitialStatus)] = _calcColFilters["status"].TextValue,
+            [nameof(CentralReportsDialog.InitialCalculationType)] = string.Empty,
+            [nameof(CentralReportsDialog.InitialCalculationRole)] = string.Empty,
+            [nameof(CentralReportsDialog.InitialResponsible)] = _calcColFilters["responsible"].TextValue,
+            [nameof(CentralReportsDialog.InitialInspector)] = _calcColFilters["inspector"].TextValue
+        };
+
+        if (FolderScopeMode)
+        {
+            if (!IsDepartmentScope && Folder.State.FolderSelected is not null)
+                parameters[nameof(CentralReportsDialog.FolderScope)] = Folder.State.FolderSelected;
+        }
+        else
+        {
+            parameters[nameof(CentralReportsDialog.FolderScope)] = Folder.State.FolderSelected!;
+            parameters[nameof(CentralReportsDialog.ProjectScope)] = Folder.State.ProjectSelected!;
+        }
 
         Modal.ShowComponent<CentralReportsDialog>(
             AppLoc["reports"].Value,
-            new Dictionary<string, object>
-            {
-                [nameof(CentralReportsDialog.FolderScope)] = Folder.State.FolderSelected!,
-                [nameof(CentralReportsDialog.ProjectScope)] = Folder.State.ProjectSelected,
-                [nameof(CentralReportsDialog.InitialView)] = CentralReportsDialog.ReportView.Income,
-                [nameof(CentralReportsDialog.InitialStatus)] = _calcColFilters["status"].TextValue,
-                [nameof(CentralReportsDialog.InitialCalculationType)] = string.Empty,
-                [nameof(CentralReportsDialog.InitialCalculationRole)] = string.Empty,
-                [nameof(CentralReportsDialog.InitialResponsible)] = _calcColFilters["responsible"].TextValue,
-                [nameof(CentralReportsDialog.InitialInspector)] = _calcColFilters["inspector"].TextValue
-            },
+            parameters,
             BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
     }
 
@@ -1263,7 +1432,9 @@
     {
         var columns = CalculationColumnOptions.Where(column => IsCalculationColumnVisible(column.Key)).ToList();
         var rows = SortedCalculations.Select(calculation => columns.Select(column => GetCalculationExportValue(calculation, column.Key)));
-        var title = AppLoc["calculationListTitleFormat", Folder.State.ProjectSelected?.Name ?? "-"].Value;
+        var title = FolderScopeMode
+            ? $"Kalkyler i {(IsDepartmentScope ? DepartmentName : Folder.State.FolderSelected?.Name ?? "-")}"
+            : AppLoc["calculationListTitleFormat", Folder.State.ProjectSelected?.Name ?? "-"].Value;
 
         if (printOnly)
             await ReportExportInterop.PrintAsync(JS, title, columns.Select(column => column.Label), rows, pdfMode);
@@ -1280,8 +1451,8 @@
         "status" => GetCalculationStatusText(calculation),
         "responsible" => calculation.Responsible,
         "inspector" => calculation.Inspector,
-        "project" => calculation.ProjectName,
-        "folder" => calculation.FolderName,
+        "project" => GetCalculationProjectName(calculation),
+        "folder" => GetCalculationFolderName(calculation),
         "priority" => $"{calculation.Priority} %",
         "address" => calculation.AddressText,
         "timeMonth" => calculation.TimeMonth,
@@ -1321,7 +1492,7 @@
             new Dictionary<string, object>
             {
                 [nameof(CalculationDetailsUI.Id)] = model.Id,
-                [nameof(CalculationDetailsUI.ProjectId)] = Folder.State.ProjectSelected?.Id ?? Guid.Empty
+                [nameof(CalculationDetailsUI.ProjectId)] = GetCalculationProject(model)?.Id ?? Guid.Empty
             }, BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
     }
 
@@ -1336,9 +1507,26 @@
             BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
     }
 
-    async Task NewCalculation(int id)
+    private async Task ShowProjectsAsync()
     {
-        await CalcService.SetCalc(id);
+        _viewMenuOpen = false;
+        if (OnShowProjectsRequested.HasDelegate)
+            await OnShowProjectsRequested.InvokeAsync();
+    }
+
+    private async Task OpenCalculationAsync(ListCalculationMVVM calculation)
+    {
+        var project = GetCalculationProject(calculation);
+        var folder = GetCalculationFolder(calculation);
+
+        if (FolderScopeMode && project is not null && folder is not null)
+        {
+            Folder.State.SetCalculation(null, project, folder);
+            await CalcService.SetCalc(calculation.Id, project, folder);
+            return;
+        }
+
+        await CalcService.SetCalc(calculation.Id);
     }
 
     async Task CalcFormAsync(ListCalculationMVVM? calc)
@@ -1362,7 +1550,7 @@
 
         if (result)
         {
-            Folder.State.ProjectSelected!.Calculations.Remove(calculation);
+            GetCalculationProject(calculation)?.Calculations.Remove(calculation);
             StateHasChanged();
         }
 
@@ -1371,7 +1559,7 @@
 
     private async Task HandleDrop(ListCalculationMVVM calc)
     {
-        if (calcDraging is null || Folder.State.ProjectSelected?.Calculations is null)
+        if (FolderScopeMode || calcDraging is null || Folder.State.ProjectSelected?.Calculations is null)
             return;
 
         calcDraging.IsDragOver = false;
@@ -1400,6 +1588,17 @@
 
     private async Task ReloadCalculationsAsync(bool closeModal = false)
     {
+        if (FolderScopeMode)
+        {
+            await LoadScopeCalculationsAsync(forceReload: true);
+            UoWService.Folder.State.Notify();
+
+            if (closeModal)
+                Modal.Close();
+
+            return;
+        }
+
         var project = Folder.State.ProjectSelected;
         if (project is null)
             return;
