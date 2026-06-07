@@ -239,7 +239,7 @@ function applyFrozenColumn(el, left, isHeader, order) {
     if (isHeader) el.classList.add('pm-frozen-header');
     el.style.position = 'sticky';
     el.style.left     = `${left}px`;
-    el.style.zIndex   = isHeader ? `${40 - order}` : `${20 - order}`;
+    el.style.zIndex   = isHeader ? `${70 - order}` : `${10 - order}`;
 }
 
 /**

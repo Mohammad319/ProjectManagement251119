@@ -223,17 +223,17 @@
     {
         <div class="divNetCalc flex-1 min-h-0 overflow-auto rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
             <table id="resizeMe" class="w-max min-w-full table-auto text-left text-xs">
-                <thead class="sticky top-0 z-20 bg-slate-50 text-[11px] font-semibold text-slate-500 dark:bg-slate-900 dark:text-slate-400">
+                <thead class="sticky top-0 z-50 bg-slate-50 text-[11px] font-semibold text-slate-500 dark:bg-slate-900 dark:text-slate-400">
                     <tr>
                         @if (IsCalculationColumnVisible("code"))
                         {
-                            <th id="hcode" data-pm-frozen="true" class="@SortableHeaderClass("code") sticky left-0 z-[13] w-28 bg-slate-50 dark:bg-slate-900" style="min-width:70px;" @onclick='() => SortBy("code")'>
+                            <th id="hcode" data-pm-frozen="true" class="@SortableHeaderClass("code") sticky left-0 z-[60] w-28 bg-slate-50 dark:bg-slate-900" style="min-width:70px;" @onclick='() => SortBy("code")'>
                                 <span class="inline-flex items-center gap-1">@CalcResource.code @((MarkupString)SortIndicatorHtml("code")) <TableColumnFilter FilterState='CF("code")' OnChanged="OnColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("name"))
                         {
-                            <th id="hname" data-pm-frozen="true" class="@SortableHeaderClass("name") sticky left-28 z-[12] min-w-52 border-r border-slate-300 bg-slate-50 dark:border-slate-600 dark:bg-slate-900" style="min-width:160px;" @onclick='() => SortBy("name")'>
+                            <th id="hname" data-pm-frozen="true" class="@SortableHeaderClass("name") sticky left-28 z-[59] min-w-52 border-r border-slate-300 bg-slate-50 dark:border-slate-600 dark:bg-slate-900" style="min-width:160px;" @onclick='() => SortBy("name")'>
                                 <span class="inline-flex items-center gap-1">@AppLoc["calculationName"] @((MarkupString)SortIndicatorHtml("name")) <TableColumnFilter FilterState='CF("name")' OnChanged="OnColumnFilterChanged" /></span>
                             </th>
                         }
@@ -379,13 +379,13 @@
                             draggable="true">
                             @if (IsCalculationColumnVisible("code"))
                             {
-                                <td class="sticky left-0 z-[2] w-28 whitespace-nowrap bg-white px-3 py-2 font-mono text-[11px] text-slate-500 hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-400 dark:hover:bg-slate-900 @(isSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
+                                <td class="sticky left-0 z-[2] w-28 whitespace-nowrap bg-white px-3 py-2 font-mono text-[11px] text-slate-500 group-hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-400 dark:group-hover:bg-slate-900/80 @(isSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
                                     @FormatText(calu.Code)
                                 </td>
                             }
                             @if (IsCalculationColumnVisible("name"))
                             {
-                                <td class="sticky left-28 z-[2] max-w-80 border-r border-slate-200 bg-white px-3 py-2 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:hover:bg-slate-900 @(isSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
+                                <td class="sticky left-28 z-[2] max-w-80 border-r border-slate-200 bg-white px-3 py-2 group-hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:group-hover:bg-slate-900/80 @(isSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
                                     <span class="truncate font-semibold text-slate-800 dark:text-slate-100" title="@calu.Name">@calu.Name</span>
                                 </td>
                             }
@@ -762,23 +762,23 @@
         ["code"] = true,
         ["name"] = true,
         ["version"] = true,
-        ["status"] = true,
-        ["qa"] = false,
-        ["deadline"] = true,
         ["project"] = false,
         ["folder"] = false,
-        ["calculationRole"] = false,
         ["calculationType"] = true,
+        ["status"] = true,
+        ["calculationRole"] = false,
         ["responsible"] = true,
         ["inspector"] = true,
+        ["qa"] = false,
+        ["deadline"] = true,
         ["priority"] = false,
         ["address"] = false,
+        ["createdAt"] = false,
+        ["updatedAt"] = false,
         ["start"] = false,
         ["end"] = false,
         ["timeMonth"] = false,
         ["tax"] = false,
-        ["createdAt"] = false,
-        ["updatedAt"] = false,
         ["archived"] = true,
         ["privacy"] = true
     };
@@ -788,23 +788,23 @@
         new("code", CalcResource.code),
         new("name", AppLoc["calculationName"].Value),
         new("version", AppLoc["version"].Value),
-        new("status", "Kalkylstatus"),
-        new("qa", "Frågor/svar"),
-        new("deadline", CalcResource.tenderDeadline),
         new("project", AppLoc["project"].Value),
         new("folder", AppLoc["folder"].Value),
-        new("calculationRole", AppLoc["calculationRole"].Value),
         new("calculationType", AppLoc["calculationType"].Value),
+        new("status", "Kalkylstatus"),
+        new("calculationRole", AppLoc["calculationRole"].Value),
         new("responsible", AppLoc["calculationResponsible"].Value),
         new("inspector", AppLoc["reviewer"].Value),
+        new("qa", "Frågor/svar"),
+        new("deadline", CalcResource.tenderDeadline),
         new("priority", "Vinstchans"),
         new("address", "Adress"),
+        new("createdAt", AppLoc["createdDate"].Value),
+        new("updatedAt", AppLoc["lastModified"].Value),
         new("start", CalcResource.startDate),
         new("end", CalcResource.endDate),
         new("timeMonth", AppLoc["projectDurationMonths"].Value),
         new("tax", AppLoc["vatPercent"].Value),
-        new("createdAt", AppLoc["createdDate"].Value),
-        new("updatedAt", AppLoc["lastModified"].Value),
         new("archived", AppLoc["archived"].Value),
         new("privacy", ResourceApp._private)
     };
@@ -1149,6 +1149,7 @@
         var classes = new List<string>
         {
             "cursor-pointer transition-colors",
+            "group",
             "hover:bg-slate-50 dark:hover:bg-slate-900/80"
         };
 
