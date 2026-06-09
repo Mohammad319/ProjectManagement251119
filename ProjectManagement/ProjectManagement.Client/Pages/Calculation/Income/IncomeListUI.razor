@@ -7,110 +7,120 @@
 <div class="text-slate-800 dark:text-slate-100">
     @if (Incomes != null)
     {
-        <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900/40">
-            <table class="min-w-full border-collapse text-xs text-left">
+        <div class="overflow-x-auto rounded-md border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900/40">
+            <table class="w-full table-fixed border-collapse text-[11px] text-left">
+                <colgroup>
+                    <col style="width: 2.25rem;" />
+                    <col style="width: 4.25rem;" />
+                    <col class="w-auto" />
+                    <col style="width: 5rem;" />
+                    <col style="width: 4.2rem;" /> @* Q1 - forced also on th/td *@
+                    <col style="width: 4.2rem;" /> @* Q2 *@
+                    <col style="width: 4.2rem;" /> @* Q3 *@
+                    <col style="width: 4.2rem;" /> @* Q4 *@
+                    <col style="width: 5.5rem;" />
+                </colgroup>
                 <thead>
                     <tr>
-                        <th class="bg-slate-50 px-2 py-2 w-8 dark:bg-slate-800/80">
+                        <th class="bg-slate-50 px-1.5 py-1 dark:bg-slate-800/80">
                             <button type="button" @onclick="AddIncome"
-                                    class="inline-flex items-center rounded border border-emerald-500 px-1.5 py-1 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-500 dark:text-emerald-300 dark:hover:bg-emerald-900/30"
+                                    class="inline-flex items-center rounded border border-emerald-500 px-1 py-0.5 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-500 dark:text-emerald-300 dark:hover:bg-emerald-900/30"
                                     title="Lägg till intäktsrad">
                                 @((MarkupString)Icons.Plus)
                             </button>
                         </th>
-                        <th class="bg-slate-50 px-2 py-2 w-20 whitespace-nowrap font-semibold text-slate-600 dark:bg-slate-800/80 dark:text-slate-300">@ResourceLoc.year</th>
-                        <th class="bg-slate-50 px-2 py-2 min-w-[160px] font-semibold text-slate-600 dark:bg-slate-800/80 dark:text-slate-300">Beskrivning</th>
-                        <th class="bg-slate-50 px-2 py-2 w-56 min-w-[14rem] font-semibold text-slate-600 dark:bg-slate-800/80 dark:text-slate-300"
-                            style="width: 14rem; min-width: 14rem;">Deltyp</th>
-                        <th class="border-l border-slate-200 bg-sky-50/70 px-2 py-2 min-w-[112px] text-right font-semibold text-slate-600 dark:border-slate-700 dark:bg-sky-900/20 dark:text-slate-300">Q1</th>
-                        <th class="bg-sky-50/70 px-2 py-2 min-w-[112px] text-right font-semibold text-slate-600 dark:bg-sky-900/20 dark:text-slate-300">Q2</th>
-                        <th class="bg-sky-50/70 px-2 py-2 min-w-[112px] text-right font-semibold text-slate-600 dark:bg-sky-900/20 dark:text-slate-300">Q3</th>
-                        <th class="bg-sky-50/70 px-2 py-2 min-w-[112px] text-right font-semibold text-slate-600 dark:bg-sky-900/20 dark:text-slate-300">Q4</th>
-                        <th class="border-l border-slate-200 bg-amber-50/70 px-2 py-2 min-w-[160px] text-right font-semibold text-slate-600 dark:border-slate-700 dark:bg-amber-900/20 dark:text-slate-300">Årssumma</th>
+                        <th class="bg-slate-50 px-1.5 py-1 whitespace-nowrap font-semibold text-slate-600 dark:bg-slate-800/80 dark:text-slate-300">@ResourceLoc.year</th>
+                        <th class="bg-slate-50 px-2 py-1 font-semibold text-slate-600 dark:bg-slate-800/80 dark:text-slate-300">Beskrivning</th>
+                        <th class="bg-slate-50 px-1 py-1 font-semibold text-slate-600 dark:bg-slate-800/80 dark:text-slate-300">Deltyp</th>
+                        <th style="width: 4.2rem; min-width: 4.2rem; max-width: 4.2rem;" class="border-l border-slate-200 bg-sky-50/70 px-1 py-1 text-right font-semibold text-slate-600 dark:border-slate-700 dark:bg-sky-900/20 dark:text-slate-300">Q1</th>
+                        <th style="width: 4.2rem; min-width: 4.2rem; max-width: 4.2rem;" class="bg-sky-50/70 px-1 py-1 text-right font-semibold text-slate-600 dark:bg-sky-900/20 dark:text-slate-300">Q2</th>
+                        <th style="width: 4.2rem; min-width: 4.2rem; max-width: 4.2rem;" class="bg-sky-50/70 px-1 py-1 text-right font-semibold text-slate-600 dark:bg-sky-900/20 dark:text-slate-300">Q3</th>
+                        <th style="width: 4.2rem; min-width: 4.2rem; max-width: 4.2rem;" class="bg-sky-50/70 px-1 py-1 text-right font-semibold text-slate-600 dark:bg-sky-900/20 dark:text-slate-300">Q4</th>
+                        <th class="border-l border-slate-200 bg-amber-50/70 px-1 py-1 text-right font-semibold text-slate-600 dark:border-slate-700 dark:bg-amber-900/20 dark:text-slate-300">Årssumma</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                     @foreach (var income in Incomes)
                     {
                         <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40">
-                            <td class="px-2 py-1">
+                            <td class="px-1.5 py-0.5">
                                 <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
                                     <button type="button" @onclick="() => Remove(income)"
-                                            class="inline-flex items-center rounded border border-rose-300 px-1.5 py-1 text-rose-600 hover:bg-rose-50 dark:border-rose-700 dark:text-rose-400 dark:hover:bg-rose-900/20">
+                                            class="inline-flex items-center rounded border border-rose-300 px-1 py-0.5 text-rose-600 hover:bg-rose-50 dark:border-rose-700 dark:text-rose-400 dark:hover:bg-rose-900/20">
                                         @((MarkupString)Icons.DeleteSVG)
                                     </button>
                                 </AuthorizeView>
                             </td>
-                            <td class="px-2 py-1">
+                            <td class="px-1.5 py-0.5">
                                 <input type="number" min="@MinYear" value="@income.Year"
                                        @onchange="e => SetIncomeYear(income, e.Value)"
-                                       class="@InputBase w-16" />
+                                       class="@InputBase w-full min-w-0" />
                             </td>
-                            <td class="px-2 py-1">
+                            <td class="px-2 py-0.5">
                                 <input type="text" placeholder="Beskrivning (valfri)"
                                        value="@income.Description"
                                        @onchange="e => income.Description = e.Value?.ToString()"
-                                       class="@InputBase w-full min-w-[110px]" />
+                                       class="@InputBase w-full min-w-0" />
                             </td>
-                            <td class="px-2 py-1 min-w-[14rem]" style="width: 14rem; min-width: 14rem;">
+                            <td class="px-1 py-0.5">
                                 <select value="@((int)income.SubType)" @onchange="e => SetSubType(income, e.Value)"
-                                        class="@InputBase w-full" style="min-width: 12rem;">
+                                        class="@InputBase w-full min-w-0">
                                     <option value="0">Grunddel</option>
                                     <option value="1">Option</option>
                                     <option value="2">ÄTA</option>
                                 </select>
                             </td>
-                            <td class="border-l border-slate-100 px-1.5 py-1 dark:border-slate-800">
+                            <td style="width: 4.2rem; min-width: 4.2rem; max-width: 4.2rem;" class="border-l border-slate-100 px-1 py-0.5 dark:border-slate-800">
                                 <input type="number" value="@DisplayQ(income, income.Q1)"
                                        @onchange="e => OnQChanged(income, 1, e.Value)"
-                                       class="@InputBase w-full text-right" />
+                                       class="@InputBase w-full min-w-0 text-right" />
                             </td>
-                            <td class="px-1.5 py-1">
+                            <td style="width: 4.2rem; min-width: 4.2rem; max-width: 4.2rem;" class="px-1 py-0.5">
                                 <input type="number" value="@DisplayQ(income, income.Q2)"
                                        @onchange="e => OnQChanged(income, 2, e.Value)"
-                                       class="@InputBase w-full text-right" />
+                                       class="@InputBase w-full min-w-0 text-right" />
                             </td>
-                            <td class="px-1.5 py-1">
+                            <td style="width: 4.2rem; min-width: 4.2rem; max-width: 4.2rem;" class="px-1 py-0.5">
                                 <input type="number" value="@DisplayQ(income, income.Q3)"
                                        @onchange="e => OnQChanged(income, 3, e.Value)"
-                                       class="@InputBase w-full text-right" />
+                                       class="@InputBase w-full min-w-0 text-right" />
                             </td>
-                            <td class="px-1.5 py-1">
+                            <td style="width: 4.2rem; min-width: 4.2rem; max-width: 4.2rem;" class="px-1 py-0.5">
                                 <input type="number" value="@DisplayQ(income, income.Q4)"
                                        @onchange="e => OnQChanged(income, 4, e.Value)"
-                                       class="@InputBase w-full text-right" />
+                                       class="@InputBase w-full min-w-0 text-right" />
                             </td>
-                            <td class="border-l border-slate-100 px-1.5 py-1 dark:border-slate-800">
+                            <td class="border-l border-slate-100 px-1 py-0.5 dark:border-slate-800">
                                 <input type="number" value="@DisplayYearly(income)"
                                        @onchange="e => DistributeYearly(income, e.Value)"
-                                       class="@InputBase @InputSumExtra w-full text-right font-medium" />
+                                       class="@InputBase @InputSumExtra w-full min-w-0 text-right font-medium" />
                             </td>
                         </tr>
                     }
                 </tbody>
                 @if (Incomes.Count >= 2)
                 {
-                    <tfoot class="border-t-2 border-slate-200 text-xs dark:border-slate-600">
+                    <tfoot class="border-t-2 border-slate-200 text-[11px] dark:border-slate-600">
                         @foreach (var grp in SubTypeGroups.Where(g => g.Count >= 2))
                         {
                             <tr class="bg-slate-50 italic text-slate-500 dark:bg-slate-800/50 dark:text-slate-400">
                                 <td></td>
-                                <td colspan="3" class="px-2 py-1 text-right">Summa @SubTypeLabel(grp.SubType)</td>
-                                <td class="border-l border-slate-100 px-1.5 py-1 text-right dark:border-slate-800">@FmtSum(grp.Q1)</td>
-                                <td class="px-1.5 py-1 text-right">@FmtSum(grp.Q2)</td>
-                                <td class="px-1.5 py-1 text-right">@FmtSum(grp.Q3)</td>
-                                <td class="px-1.5 py-1 text-right">@FmtSum(grp.Q4)</td>
-                                <td class="border-l border-slate-100 px-1.5 py-1 text-right font-semibold dark:border-slate-800">@FmtSum(grp.Q1 + grp.Q2 + grp.Q3 + grp.Q4)</td>
+                                <td colspan="3" class="px-1 py-0.5 text-right">Summa @SubTypeLabel(grp.SubType)</td>
+                                <td style="width: 4.2rem; min-width: 4.2rem; max-width: 4.2rem;" class="border-l border-slate-100 px-1 py-0.5 text-right dark:border-slate-800">@FmtSum(grp.Q1)</td>
+                                <td style="width: 4.2rem; min-width: 4.2rem; max-width: 4.2rem;" class="px-1 py-0.5 text-right">@FmtSum(grp.Q2)</td>
+                                <td style="width: 4.2rem; min-width: 4.2rem; max-width: 4.2rem;" class="px-1 py-0.5 text-right">@FmtSum(grp.Q3)</td>
+                                <td style="width: 4.2rem; min-width: 4.2rem; max-width: 4.2rem;" class="px-1 py-0.5 text-right">@FmtSum(grp.Q4)</td>
+                                <td class="border-l border-slate-100 px-1 py-0.5 text-right font-semibold dark:border-slate-800">@FmtSum(grp.Q1 + grp.Q2 + grp.Q3 + grp.Q4)</td>
                             </tr>
                         }
                         <tr class="bg-slate-100 font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
                             <td></td>
-                            <td colspan="3" class="px-2 py-1.5 text-right">Totalt alla år</td>
-                            <td class="border-l border-slate-200 px-1.5 py-1.5 text-right dark:border-slate-600">@FmtSum(Incomes.Sum(i => i.Q1))</td>
-                            <td class="px-1.5 py-1.5 text-right">@FmtSum(Incomes.Sum(i => i.Q2))</td>
-                            <td class="px-1.5 py-1.5 text-right">@FmtSum(Incomes.Sum(i => i.Q3))</td>
-                            <td class="px-1.5 py-1.5 text-right">@FmtSum(Incomes.Sum(i => i.Q4))</td>
-                            <td class="border-l border-slate-200 px-1.5 py-1.5 text-right font-bold dark:border-slate-600">@FmtSum(Incomes.Sum(i => i.Q1 + i.Q2 + i.Q3 + i.Q4))</td>
+                            <td colspan="3" class="px-1 py-1 text-right">Totalt alla år</td>
+                            <td style="width: 4.2rem; min-width: 4.2rem; max-width: 4.2rem;" class="border-l border-slate-200 px-1 py-1 text-right dark:border-slate-600">@FmtSum(Incomes.Sum(i => i.Q1))</td>
+                            <td style="width: 4.2rem; min-width: 4.2rem; max-width: 4.2rem;" class="px-1 py-1 text-right">@FmtSum(Incomes.Sum(i => i.Q2))</td>
+                            <td style="width: 4.2rem; min-width: 4.2rem; max-width: 4.2rem;" class="px-1 py-1 text-right">@FmtSum(Incomes.Sum(i => i.Q3))</td>
+                            <td style="width: 4.2rem; min-width: 4.2rem; max-width: 4.2rem;" class="px-1 py-1 text-right">@FmtSum(Incomes.Sum(i => i.Q4))</td>
+                            <td class="border-l border-slate-200 px-1 py-1 text-right font-bold dark:border-slate-600">@FmtSum(Incomes.Sum(i => i.Q1 + i.Q2 + i.Q3 + i.Q4))</td>
                         </tr>
                     </tfoot>
                 }
@@ -125,7 +135,7 @@
 
     private readonly HashSet<IncomeBase> _newEmptyRows = [];
 
-    private const string InputBase = "rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100";
+    private const string InputBase = "h-6 rounded border border-slate-300 bg-white px-1 py-0.5 text-[11px] leading-tight text-slate-800 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100";
     private const string InputSumExtra = "bg-amber-50/40 dark:bg-amber-900/10";
 
     private sealed record SubTypeGroup(IncomeSubType SubType, int Count, decimal Q1, decimal Q2, decimal Q3, decimal Q4);
