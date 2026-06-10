@@ -10,7 +10,7 @@
 @inherits AppComponentBase
 
 <div class="space-y-3 text-slate-800 dark:text-slate-100">
-    <div class="flex flex-wrap gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1 dark:border-slate-700 dark:bg-slate-900">
+    <div class="sticky top-0 z-20 flex flex-wrap gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1 dark:border-slate-700 dark:bg-slate-900">
         @foreach (var report in ReportTabs)
         {
             <button type="button" class="@TabClass(report.Key)" @onclick="() => _activeView = report.Key">
@@ -29,47 +29,7 @@
         {
         <div class="grid grid-cols-2 gap-2 rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-950 md:grid-cols-4 xl:grid-cols-6">
 
-            @* Avdelning *@
-            <div>
-                <label class="@LabelClass">@AppLoc["department"]</label>
-                <select class="@SelectClass" disabled><option>@CurrentDepartmentName</option></select>
-            </div>
-
-            @* Mapp *@
-            <div>
-                <label class="@LabelClass">@AppLoc["folder"]</label>
-                <select class="@SelectClass" value="@_selectedFolderId" @onchange="OnFolderChanged">
-                    <option value="">@AppLoc["allFolders"]</option>
-                    @foreach (var folder in AvailableFolders)
-                    {
-                        <option value="@folder.Id">@folder.Name</option>
-                    }
-                </select>
-            </div>
-
-            @* Projekt *@
-            <div class="relative">
-                <label class="@LabelClass">@AppLoc["project"]</label>
-                <input type="text" class="@SelectClass" placeholder="@AppLoc["allProjects"]"
-                       value="@_projectSearch" @oninput="OnProjectSearchInput"
-                       @onfocus="() => _showProjectDropdown = true" @onkeydown="OnProjectKeyDown" autocomplete="off" />
-                @if (_showProjectDropdown)
-                {
-                    <div class="fixed inset-0 z-40" @onclick="CloseProjectDropdown"></div>
-                    <div class="absolute z-50 mt-0.5 max-h-52 w-full overflow-auto rounded-md border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900">
-                        <div class="cursor-pointer px-3 py-1.5 text-xs text-slate-500 hover:bg-sky-50 dark:hover:bg-sky-950/30"
-                             @onclick="() => SelectProject(null)">@AppLoc["allProjects"]</div>
-                        @foreach (var entry in ProjectSearchResults)
-                        {
-                            var ec = entry;
-                            <div class="cursor-pointer px-3 py-1.5 text-xs text-slate-800 hover:bg-sky-50 dark:text-slate-200 dark:hover:bg-sky-950/30"
-                                 @onclick="() => SelectProject(ec)">@ProjectDisplayLabel(ec)</div>
-                        }
-                    </div>
-                }
-            </div>
-
-            @* Kalkyltyp – bara Intäktsöversikt och Kalkyllista *@
+                @* Kalkyltyp – bara Intäktsöversikt och Kalkyllista *@
             @if (_activeView is ReportView.Income or ReportView.Calculations)
             {
                 <div>
@@ -255,20 +215,22 @@
         </div>
         } @* end @if (_activeView != HitRate && != Projects && != Calculations) *@
 
-        <div class="flex flex-wrap justify-between gap-2">
-            <p class="text-xs text-slate-500 dark:text-slate-400">
-                @if (_activeView == ReportView.Income) { @AppLoc["reportCurrentVersionRule"] }
-            </p>
-            <div class="flex flex-wrap gap-1.5">
-                <button type="button" class="@ActionButtonClass" @onclick="ExportExcelAsync">@AppLoc["exportExcel"]</button>
-                <button type="button" class="@ActionButtonClass" @onclick="ExportPdfAsync">@AppLoc["exportPdf"]</button>
-                <button type="button" class="@ActionButtonClass" @onclick="PrintAsync">@AppLoc["print"]</button>
-            </div>
-        </div>
-
         @* ═══ INTÄKTSÖVERSIKT ═══ *@
         @if (_activeView == ReportView.Income)
         {
+            <div class="rounded-lg border border-sky-200 bg-sky-50 p-3 text-xs text-sky-800 dark:border-sky-800/50 dark:bg-sky-950/30 dark:text-sky-200">
+                <p class="mb-0.5 font-semibold">Urval</p>
+                <p>@_incomeSelectionLine</p>
+                @if (!string.IsNullOrWhiteSpace(_incomeSelectionFilters))
+                {
+                    <p class="mt-1 text-sky-700 dark:text-sky-300">@_incomeSelectionFilters</p>
+                }
+                <p class="mt-1.5 italic text-slate-500 dark:text-slate-400">Stäng rapporten och ändra listans filter om du vill ändra urvalet.</p>
+            </div>
+            @if (!string.IsNullOrWhiteSpace(AppLoc["reportCurrentVersionRule"].Value))
+            {
+                <p class="text-xs text-slate-500 dark:text-slate-400">@AppLoc["reportCurrentVersionRule"]</p>
+            }
             <div class="flex flex-wrap items-center justify-between gap-2">
                 <div class="grid grid-cols-2 gap-2 md:grid-cols-4">
                     <div class="@TotalCardClass"><span>@AppLoc["revenue"]</span><strong>@FormatMoney(IncludedFilteredIncomeRows.Sum(r => r.Amount))</strong></div>
@@ -283,6 +245,9 @@
                         @(_showQuarters ? "Dölj Q1–Q4" : "Visa Q1–Q4")
                     </button>
                     @IncomeColumnPanel()
+                    <button type="button" class="@ActionButtonClass" @onclick="ExportExcelAsync">@AppLoc["exportExcel"]</button>
+                    <button type="button" class="@ActionButtonClass" @onclick="ExportPdfAsync">@AppLoc["exportPdf"]</button>
+                    <button type="button" class="@ActionButtonClass" @onclick="PrintAsync">@AppLoc["print"]</button>
                 </div>
             </div>
             var _incCols = IncomeVisibleColumns.ToList();
@@ -390,7 +355,12 @@
                 }
                 <div class="flex flex-wrap items-center justify-between gap-2">
                     <span class="text-xs text-slate-400">@_lockedHitRateProjects.Count projekt</span>
-                    @HitRateColumnPanel()
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        @HitRateColumnPanel()
+                        <button type="button" class="@ActionButtonClass" @onclick="ExportExcelAsync">@AppLoc["exportExcel"]</button>
+                        <button type="button" class="@ActionButtonClass" @onclick="ExportPdfAsync">@AppLoc["exportPdf"]</button>
+                        <button type="button" class="@ActionButtonClass" @onclick="PrintAsync">@AppLoc["print"]</button>
+                    </div>
                 </div>
                 @HitRateProjectTable()
             }
@@ -417,7 +387,12 @@
             {
                 <div class="flex flex-wrap items-center justify-between gap-2">
                     <span class="text-xs text-slate-400">@_lockedCalcReportList.Count @AppLoc["rows"].Value.ToLower()</span>
-                    @CalcColumnPanel()
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        @CalcColumnPanel()
+                        <button type="button" class="@ActionButtonClass" @onclick="ExportExcelAsync">@AppLoc["exportExcel"]</button>
+                        <button type="button" class="@ActionButtonClass" @onclick="ExportPdfAsync">@AppLoc["exportPdf"]</button>
+                        <button type="button" class="@ActionButtonClass" @onclick="PrintAsync">@AppLoc["print"]</button>
+                    </div>
                 </div>
                 @CalculationTable(_lockedCalcReportList)
             }
@@ -444,7 +419,12 @@
             {
                 <div class="flex flex-wrap items-center justify-between gap-2">
                     <span class="text-xs text-slate-400">@_lockedProjReportProjects.Count projekt</span>
-                    @ProjColumnPanel()
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        @ProjColumnPanel()
+                        <button type="button" class="@ActionButtonClass" @onclick="ExportExcelAsync">@AppLoc["exportExcel"]</button>
+                        <button type="button" class="@ActionButtonClass" @onclick="ExportPdfAsync">@AppLoc["exportPdf"]</button>
+                        <button type="button" class="@ActionButtonClass" @onclick="PrintAsync">@AppLoc["print"]</button>
+                    </div>
                 </div>
                 @ProjectTable(_lockedProjReportProjects)
             }
@@ -589,6 +569,9 @@
     [Parameter] public string InitialCalculationRole { get; set; } = string.Empty;
     [Parameter] public string InitialResponsible { get; set; } = string.Empty;
     [Parameter] public string InitialInspector { get; set; } = string.Empty;
+    [Parameter] public IReadOnlyList<Guid>? LockedProjectIds { get; set; }
+    [Parameter] public string? SelectionSummaryLine { get; set; }
+    [Parameter] public string? SelectionFilterSummary { get; set; }
 
     // ── Filter state ──────────────────────────────────────────────────
     private bool _isLoading = true;
@@ -627,6 +610,10 @@
     // ── Intäktsöversikt ───────────────────────────────────────────────
     private bool _showColumnPanelIncome;
     private HashSet<IncomeReportColumn> _visibleIncomeColumns = new(IncomeDefaultColumns);
+
+    // ── Intäktsöversikt-urval ─────────────────────────────────────────
+    private string _incomeSelectionLine = "";
+    private string _incomeSelectionFilters = "";
 
     // ── Projektlista-rapport ──────────────────────────────────────────
     private List<ProjectEntry> _lockedProjReportProjects = [];
@@ -852,6 +839,7 @@
         _selectedFolderId = FolderScope?.Id.ToString() ?? string.Empty;
         _selectedProjectId = ProjectScope?.Id.ToString() ?? string.Empty;
         await LoadAsync();
+        BuildIncomeSelectionInfo();
         LockProjReportProjects();
         LockHitRateProjects();
         LockCalcReportList();
@@ -916,7 +904,10 @@
                 ? await Repo.Project.GetOtherDepartmentAsync(folder.Id, includeArchived: true)
                 : await Repo.Project.GetByFolderIdAsync(folder.Id, includeArchived: true);
 
-            foreach (var project in projects.Where(p => ProjectScope is null || p.Id == ProjectScope.Id))
+            foreach (var project in projects.Where(p =>
+                (ProjectScope is null && LockedProjectIds is null) ||
+                p.Id == ProjectScope?.Id ||
+                (LockedProjectIds is not null && LockedProjectIds.Contains(p.Id))))
             {
                 _projects.Add(new ProjectEntry(folder, project));
                 await LoadCalculationsAsync(folder, project);
@@ -1045,6 +1036,26 @@
             ? $"Kalkyllistan baseras på {count} kalkyler ({versionInfo}) från aktuell lista."
             : $"Kalkyllistan baseras på alla kalkyler ({versionInfo}) i {CurrentDepartmentName}.";
         _calcReportSelectionFilters = string.Join(" · ", filters);
+    }
+
+    // ── Income selection info ─────────────────────────────────────────
+
+    private void BuildIncomeSelectionInfo()
+    {
+        if (!string.IsNullOrWhiteSpace(SelectionSummaryLine))
+        {
+            _incomeSelectionLine = SelectionSummaryLine;
+            _incomeSelectionFilters = SelectionFilterSummary ?? string.Empty;
+            return;
+        }
+
+        var count = _projects.Count;
+        if (ProjectScope is not null)
+            _incomeSelectionLine = $"Rapporten baseras på projektet {ProjectScope.Name}.";
+        else if (FolderScope is not null)
+            _incomeSelectionLine = $"Rapporten baseras på {count} projekt i mapp {FolderScope.Name}.";
+        else
+            _incomeSelectionLine = $"Rapporten baseras på {count} projekt i {CurrentDepartmentName}.";
     }
 
     // ── Income logic ──────────────────────────────────────────────────

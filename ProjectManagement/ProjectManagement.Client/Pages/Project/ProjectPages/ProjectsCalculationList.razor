@@ -212,16 +212,38 @@
                 }
             </div>
 
-            @* Rapporter (direct button) *@
-            <button type="button"
-                    class="inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-                    disabled="@(!CanOpenReports)"
-                    @onclick="OpenReports">
-                <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <span>@AppLoc["reports"]</span>
-            </button>
+            @* Rapporter dropdown *@
+            <div class="relative">
+                <button type="button"
+                        class="inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                        disabled="@(!CanOpenReports)"
+                        @onclick="() => _reportMenuOpen = !_reportMenuOpen">
+                    <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span>@AppLoc["reports"]</span>
+                    <svg class="h-2.5 w-2.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+                @if (_reportMenuOpen)
+                {
+                    <div class="fixed inset-0 z-[70]" @onclick="() => _reportMenuOpen = false"></div>
+                    <div class="absolute right-0 top-full z-[90] mt-1 w-52 rounded-md border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+                        @foreach (var item in CalcReportMenuItems)
+                        {
+                            var itemView = item.View;
+                            <button type="button"
+                                    class="@(item.Enabled ? "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800" : "flex w-full cursor-not-allowed items-center gap-2 px-3 py-1.5 text-[11px] text-slate-400 dark:text-slate-600")"
+                                    disabled="@(!item.Enabled)"
+                                    title="@item.Tooltip"
+                                    @onclick="() => { _reportMenuOpen = false; OpenReport(itemView); }">
+                                <span>@item.Label</span>
+                            </button>
+                        }
+                    </div>
+                }
+            </div>
 
             <div class="h-4 w-px bg-slate-200 dark:bg-slate-700"></div>
 
@@ -721,6 +743,17 @@
     private void NextPage() { if (_currentPage < TotalPages) _currentPage++; }
 
     private bool _filterMenuOpen;
+    private bool _reportMenuOpen;
+
+    private sealed record ReportMenuItem(string View, string Label, bool Enabled, string? Tooltip);
+
+    private IReadOnlyList<ReportMenuItem> CalcReportMenuItems =>
+    [
+        new(CentralReportsDialog.ReportView.Income,       AppLoc["incomeOverview"].Value,        true,  null),
+        new(CentralReportsDialog.ReportView.Calculations, AppLoc["calculationListReport"].Value, true,  null),
+        new(CentralReportsDialog.ReportView.HitRate,      AppLoc["hitRate"].Value,               false, "Visa projekt för att använda denna rapport."),
+        new(CentralReportsDialog.ReportView.Projects,     AppLoc["projectListReport"].Value,     false, "Visa projekt för att använda denna rapport."),
+    ];
 
     private readonly Dictionary<string, ColumnFilterState> _calcColFilters = new()
     {
@@ -1392,36 +1425,96 @@
         await ReloadCalculationsAsync();
     }
 
-    void OpenReports()
+    void OpenReport(string view)
     {
         if (!CanOpenReports)
             return;
 
         var parameters = new Dictionary<string, object>
         {
-            [nameof(CentralReportsDialog.InitialView)] = CentralReportsDialog.ReportView.Income,
-            [nameof(CentralReportsDialog.InitialStatus)] = _calcColFilters["status"].TextValue,
-            [nameof(CentralReportsDialog.InitialCalculationType)] = string.Empty,
-            [nameof(CentralReportsDialog.InitialCalculationRole)] = string.Empty,
-            [nameof(CentralReportsDialog.InitialResponsible)] = _calcColFilters["responsible"].TextValue,
-            [nameof(CentralReportsDialog.InitialInspector)] = _calcColFilters["inspector"].TextValue
+            [nameof(CentralReportsDialog.InitialView)] = view,
         };
 
         if (FolderScopeMode)
         {
+            var filteredCalcIds = FilteredCalculations.Select(c => c.Id).ToHashSet();
+            var lockedProjIds = (IReadOnlyList<Guid>)_scopeCalculationRows
+                .Where(row => filteredCalcIds.Contains(row.Calculation.Id))
+                .Select(row => row.Project.Id)
+                .Distinct()
+                .ToList();
+
+            parameters[nameof(CentralReportsDialog.LockedProjectIds)] = lockedProjIds;
+
+            var count = lockedProjIds.Count;
+            string selLine = IsDepartmentScope
+                ? $"Rapporten baseras på {count} projekt (från aktuell kalkyllista). Avdelning: {DepartmentName ?? "–"}."
+                : $"Rapporten baseras på {count} projekt i mapp {Folder.State.FolderSelected?.Name ?? "–"}.";
+            parameters[nameof(CentralReportsDialog.SelectionSummaryLine)] = selLine;
+
+            var filterParts = _calcColFilters
+                .Where(kv => kv.Value.IsActive)
+                .Select(kv => GetCalcFilterLabel(kv.Key, kv.Value))
+                .Where(s => !string.IsNullOrWhiteSpace(s))
+                .ToList();
+            if (filterParts.Count > 0)
+                parameters[nameof(CentralReportsDialog.SelectionFilterSummary)] = string.Join(" · ", filterParts);
+
             if (!IsDepartmentScope && Folder.State.FolderSelected is not null)
                 parameters[nameof(CentralReportsDialog.FolderScope)] = Folder.State.FolderSelected;
         }
         else
         {
-            parameters[nameof(CentralReportsDialog.FolderScope)] = Folder.State.FolderSelected!;
-            parameters[nameof(CentralReportsDialog.ProjectScope)] = Folder.State.ProjectSelected!;
+            parameters[nameof(CentralReportsDialog.FolderScope)]   = Folder.State.FolderSelected!;
+            parameters[nameof(CentralReportsDialog.ProjectScope)]  = Folder.State.ProjectSelected!;
+            parameters[nameof(CentralReportsDialog.SelectionSummaryLine)] =
+                $"Rapporten baseras på projektet {Folder.State.ProjectSelected?.Name ?? "–"}.";
         }
 
         Modal.ShowComponent<CentralReportsDialog>(
             AppLoc["reports"].Value,
             parameters,
             BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
+    }
+
+    private string GetCalcFilterLabel(string key, ColumnFilterState state)
+    {
+        var label = key switch
+        {
+            "code"            => "Kod",
+            "name"            => "Kalkylnamn",
+            "project"         => "Projekt",
+            "folder"          => "Mapp",
+            "calculationType" => "Kalkyltyp",
+            "calculationRole" => "Kalkylroll",
+            "status"          => "Kalkylstatus",
+            "responsible"     => "Ansvarig",
+            "inspector"       => "Granskare",
+            "deadline"        => "Anbudsdeadline",
+            "qa"              => "Frågor/svar",
+            "start"           => "Startdatum",
+            "end"             => "Slutdatum",
+            "createdAt"       => "Skapad",
+            "updatedAt"       => "Senast ändrad",
+            "priority"        => "Vinstchans",
+            "archived"        => "Arkiverad",
+            "privacy"         => "Privat",
+            _                 => key
+        };
+        return state.Type switch
+        {
+            ColumnFilterType.Text when state.TextOp == TextFilterOp.IsEmpty    => $"{label}: tom",
+            ColumnFilterType.Text when state.TextOp == TextFilterOp.IsNotEmpty => $"{label}: ej tom",
+            ColumnFilterType.Text     => $"{label}: {state.TextValue}",
+            ColumnFilterType.Dropdown when state.SelectedValues.Count > 0 =>
+                $"{label}: {string.Join(", ", state.SelectedValues)}",
+            ColumnFilterType.Date when state.DateOp == DateFilterOp.IsEmpty    => $"{label}: tom",
+            ColumnFilterType.Date when state.DateOp == DateFilterOp.IsNotEmpty => $"{label}: ej tom",
+            ColumnFilterType.Date when state.DateOp == DateFilterOp.Between    => $"{label}: {state.DateFrom:yyyy-MM-dd}–{state.DateTo:yyyy-MM-dd}",
+            ColumnFilterType.Date     => $"{label}: {state.DateFrom:yyyy-MM-dd}",
+            ColumnFilterType.Boolean  => $"{label}: {(state.BoolValue == "true" ? "Ja" : "Nej")}",
+            _                         => label
+        };
     }
 
     private Task ExportCalculationListAsync() => ExportCalculationListAsync(pdfMode: false, printOnly: false);
