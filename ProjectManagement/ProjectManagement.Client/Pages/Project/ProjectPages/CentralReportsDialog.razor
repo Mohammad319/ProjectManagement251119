@@ -13,7 +13,11 @@
     <div class="sticky top-0 z-20 flex flex-wrap gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1 dark:border-slate-700 dark:bg-slate-900">
         @foreach (var report in ReportTabs)
         {
-            <button type="button" class="@TabClass(report.Key)" @onclick="() => _activeView = report.Key">
+            var avail = AvailabilityFor(report.Key);
+            <button type="button" class="@TabClass(report.Key, avail.Enabled)"
+                    disabled="@(!avail.Enabled)"
+                    title="@(avail.Enabled ? null : avail.DisabledReason)"
+                    @onclick="() => SetActiveView(report.Key)">
                 @report.Label
             </button>
         }
@@ -442,6 +446,37 @@
         public const string Export = "export";
     }
 
+    // ── Shared report availability (used by dropdowns and dialog tabs) ─
+
+    public enum ReportHost { Projects, Calculations }
+
+    public sealed record ReportAvailability(string View, string LabelKey, bool Enabled, string? DisabledReason);
+
+    public const string ShowProjectsFirstTooltip = "Visa projekt först för att använda denna rapport.";
+    public const string ShowProjectsFirstIncomeTooltip = "Visa projekt först för att använda Intäktsöversikt.";
+    public const string ShowCalculationsFirstTooltip = "Visa kalkyler först för att använda denna rapport.";
+
+    public static IReadOnlyList<ReportAvailability> GetReportAvailability(ReportHost host) => host switch
+    {
+        ReportHost.Calculations =>
+        [
+            new(ReportView.Calculations, "calculationListReport", true, null),
+            new(ReportView.Income, "incomeOverview", false, ShowProjectsFirstIncomeTooltip),
+            new(ReportView.HitRate, "hitRate", false, ShowProjectsFirstTooltip),
+            new(ReportView.Projects, "projectListReport", false, ShowProjectsFirstTooltip)
+        ],
+        _ =>
+        [
+            new(ReportView.Income, "incomeOverview", true, null),
+            new(ReportView.HitRate, "hitRate", true, null),
+            new(ReportView.Projects, "projectListReport", true, null),
+            new(ReportView.Calculations, "calculationListReport", false, ShowCalculationsFirstTooltip)
+        ]
+    };
+
+    public static bool IsReportEnabled(ReportHost host, string view) =>
+        GetReportAvailability(host).FirstOrDefault(a => a.View == view)?.Enabled ?? false;
+
     private enum IncomeTableRowKind { Data, ProjectSum, GrandTotal, SubTypeTotal }
 
     private enum CalcReportColumn
@@ -572,6 +607,21 @@
     [Parameter] public IReadOnlyList<Guid>? LockedProjectIds { get; set; }
     [Parameter] public string? SelectionSummaryLine { get; set; }
     [Parameter] public string? SelectionFilterSummary { get; set; }
+    /// <summary>Which right-panel list opened the dialog. Null = no restriction (all tabs enabled).</summary>
+    [Parameter] public ReportHost? Host { get; set; }
+
+    private IReadOnlyDictionary<string, ReportAvailability> _availability =
+        new Dictionary<string, ReportAvailability>();
+
+    private ReportAvailability AvailabilityFor(string view) =>
+        _availability.TryGetValue(view, out var avail) ? avail : new(view, string.Empty, true, null);
+
+    private bool IsViewEnabled(string view) => AvailabilityFor(view).Enabled;
+
+    private void SetActiveView(string view)
+    {
+        if (IsViewEnabled(view)) _activeView = view;
+    }
 
     // ── Filter state ──────────────────────────────────────────────────
     private bool _isLoading = true;
@@ -829,7 +879,17 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _activeView = InitialView;
+        if (Host is ReportHost host)
+        {
+            var availability = GetReportAvailability(host);
+            _availability = availability.ToDictionary(a => a.View);
+            // Om vald flik inte är tillgänglig: välj första tillgängliga rapportflik.
+            _activeView = IsViewEnabled(InitialView) ? InitialView : availability.First(a => a.Enabled).View;
+        }
+        else
+        {
+            _activeView = InitialView;
+        }
         _selectedYear = string.IsNullOrEmpty(InitialYear) ? DateTime.Now.Year.ToString() : InitialYear;
         _selectedCalculationType = InitialCalculationType;
         _selectedCalculationRole = InitialCalculationRole;
@@ -839,10 +899,10 @@
         _selectedFolderId = FolderScope?.Id.ToString() ?? string.Empty;
         _selectedProjectId = ProjectScope?.Id.ToString() ?? string.Empty;
         await LoadAsync();
-        BuildIncomeSelectionInfo();
-        LockProjReportProjects();
-        LockHitRateProjects();
-        LockCalcReportList();
+        if (IsViewEnabled(ReportView.Income)) BuildIncomeSelectionInfo();
+        if (IsViewEnabled(ReportView.Projects)) LockProjReportProjects();
+        if (IsViewEnabled(ReportView.HitRate)) LockHitRateProjects();
+        if (IsViewEnabled(ReportView.Calculations)) LockCalcReportList();
 
         if (!string.IsNullOrWhiteSpace(_selectedProjectId))
         {
@@ -914,10 +974,14 @@
             }
         }
 
-        foreach (var calc in _calculations)
+        // Intäktsdata behövs bara om Intäktsöversikt-fliken är tillgänglig.
+        if (IsViewEnabled(ReportView.Income))
         {
-            try { _posts[calc.Calculation.Id] = await Repo.Calculation.GetPostAsync(calc.Calculation.Id); }
-            catch (Exception ex) { await ClientLog.ErrorAsync("Loading calculation report data failed", ex: ex); }
+            foreach (var calc in _calculations)
+            {
+                try { _posts[calc.Calculation.Id] = await Repo.Calculation.GetPostAsync(calc.Calculation.Id); }
+                catch (Exception ex) { await ClientLog.ErrorAsync("Loading calculation report data failed", ex: ex); }
+            }
         }
     }
 
@@ -1608,10 +1672,12 @@
 
     // ── Tab styling ───────────────────────────────────────────────────
 
-    private string TabClass(string key) =>
-        key == _activeView
-            ? "rounded-md bg-sky-600 px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm"
-            : "rounded-md px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-white dark:text-slate-300 dark:hover:bg-slate-800";
+    private string TabClass(string key, bool enabled) =>
+        !enabled
+            ? "cursor-not-allowed rounded-md px-2.5 py-1.5 text-xs font-semibold text-slate-400 dark:text-slate-600"
+            : key == _activeView
+                ? "rounded-md bg-sky-600 px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm"
+                : "rounded-md px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-white dark:text-slate-300 dark:hover:bg-slate-800";
 
     // ── Export ────────────────────────────────────────────────────────
 
@@ -1621,25 +1687,28 @@
         var name = _activeView switch
         {
             ReportView.Income => "intaktsoversikt",
-            ReportView.HitRate => "traffsakerhet",
+            ReportView.HitRate => "hit-rate-traffsakerhet",
             ReportView.Calculations => "kalkyllista",
             ReportView.Projects => "projektlista",
             _ => $"rapport-{_activeView}"
         };
-        await ReportExportInterop.ExportExcelAsync(JS, name, export.Title, export.Columns, export.Rows);
+        await ReportExportInterop.ExportExcelAsync(JS, name, ToExportHeader(export), export.Columns, export.Rows);
     }
 
     private async Task ExportPdfAsync()
     {
         var export = BuildExport();
-        await ReportExportInterop.PrintAsync(JS, export.Title, export.Columns, export.Rows, pdfMode: true);
+        await ReportExportInterop.PrintAsync(JS, ToExportHeader(export), export.Columns, export.Rows, pdfMode: true);
     }
 
     private async Task PrintAsync()
     {
         var export = BuildExport();
-        await ReportExportInterop.PrintAsync(JS, export.Title, export.Columns, export.Rows);
+        await ReportExportInterop.PrintAsync(JS, ToExportHeader(export), export.Columns, export.Rows);
     }
+
+    private static ReportExportHeader ToExportHeader(ExportModel export) =>
+        new(export.Title, export.Sections, export.Kpis);
 
     private ExportModel BuildExport() => _activeView switch
     {
@@ -1660,7 +1729,48 @@
             if (c == IncomeReportColumn.Year && _showQuarters)
             { headers.Add("Q1"); headers.Add("Q2"); headers.Add("Q3"); headers.Add("Q4"); }
         }
-        return new(L("incomeOverview"), headers.ToArray(), BuildIncomeExportRowsDynamic(cols));
+
+        var sections = new List<ReportExportSection>
+        {
+            new("Urval:", [_incomeSelectionLine, _incomeSelectionFilters]),
+            new("Rapportfilter:", [BuildIncomeReportFilterLine()])
+        };
+        var included = IncludedFilteredIncomeRows.ToList();
+        var kpis = new List<ReportExportKpi>
+        {
+            new(L("revenue"), FormatMoney(included.Sum(r => r.Amount))),
+            new(L("forecast"), FormatMoney(included.Sum(r => r.Forecast))),
+            new("Projekt", included.Select(r => r.Entry.Project.Id).Distinct().Count().ToString()),
+            new(L("rows"), included.Count.ToString())
+        };
+        return new(L("incomeOverview"), headers.ToArray(), BuildIncomeExportRowsDynamic(cols), sections, kpis);
+    }
+
+    private string BuildIncomeReportFilterLine()
+    {
+        var parts = new List<string>();
+        if (!string.IsNullOrEmpty(_selectedFolderId))
+        {
+            var f = AvailableFolders.FirstOrDefault(x => x.Id.ToString() == _selectedFolderId);
+            if (f is not null) parts.Add($"Mapp: {f.Name}");
+        }
+        if (!string.IsNullOrEmpty(_selectedProjectId) && !string.IsNullOrWhiteSpace(_projectSearch))
+            parts.Add($"Projekt: {_projectSearch}");
+        parts.Add($"År: {(string.IsNullOrWhiteSpace(_selectedYear) ? "Alla" : _selectedYear)}");
+        parts.Add($"Kvartal: {(_selectedQuarter == 0 ? "Alla" : $"Q{_selectedQuarter}")}");
+        parts.Add($"Kalkylstatus: {(_selectedStatuses.Count == 0 ? "Alla" : string.Join(", ", _selectedStatuses))}");
+        parts.Add($"Deltyp: {(int.TryParse(_selectedSubType, out var st) ? SubTypeLabel((IncomeSubType)st) : "Alla")}");
+        parts.Add($"Intäktskälla: {(Enum.TryParse<CalculationVersionType>(_selectedIncomeSource, out var src) ? TypeLabel(src) : L("automatic"))}");
+        if (Enum.TryParse<CalculationVersionType>(_selectedCalculationType, out var ct))
+            parts.Add($"Kalkyltyp: {TypeLabel(ct)}");
+        if (Enum.TryParse<CalculationRole>(_selectedCalculationRole, out var role))
+            parts.Add($"Kalkylroll: {GetCalculationRoleLabel(role)}");
+        var resp = _selectedResponsibles.Where(r => r != MissingPersonValue).ToList();
+        if (resp.Count > 0) parts.Add($"Kalkylansvarig: {string.Join(", ", resp)}");
+        var insp = _selectedInspectors.Where(r => r != MissingPersonValue).ToList();
+        if (insp.Count > 0) parts.Add($"Granskare: {string.Join(", ", insp)}");
+        parts.Add(_selectedArchiveMode switch { "all" => "Arkiverade inkluderade", "archived" => "Enbart arkiverade", _ => "Arkiverade ej inkluderade" });
+        return string.Join(" · ", parts);
     }
 
     private IEnumerable<IEnumerable<object?>> BuildIncomeExportRowsDynamic(List<IncomeReportColumn> cols)
@@ -1697,67 +1807,48 @@
     private ExportModel BuildHitRateExport()
     {
         var dataCols = HitRateAllColumns.Where(c => _visibleHitRateColumns.Contains(c)).ToList();
-        var maxCols = Math.Max(dataCols.Count, 2);
         string[] headers = dataCols.Select(GetHitRateColumnLabel).ToArray();
-        var rows = new List<IEnumerable<object?>>();
-        var empty = Enumerable.Repeat<object?>("", maxCols - 1).ToArray();
-
-        rows.Add(PadRow(new object?[] { "Projekturval:" }, maxCols));
-        rows.Add(PadRow(new object?[] { _hitRateSelectionLine }, maxCols));
-        if (!string.IsNullOrWhiteSpace(_hitRateSelectionFilters))
-            rows.Add(PadRow(new object?[] { _hitRateSelectionFilters }, maxCols));
-        rows.Add(PadRow(Array.Empty<object?>(), maxCols));
-        rows.Add(PadRow(new object?[] { "Inlämnade:", SubmittedCount }, maxCols));
-        rows.Add(PadRow(new object?[] { "Vunna:", WonCount }, maxCols));
-        rows.Add(PadRow(new object?[] { "Förlorade:", LostCount }, maxCols));
-        rows.Add(PadRow(new object?[] { "Ej beslutade:", UndecidedCount }, maxCols));
-        rows.Add(PadRow(new object?[] { "Hit rate / träffsäkerhet:", $"{HitRate:N1} %" }, maxCols));
-        rows.Add(PadRow(Array.Empty<object?>(), maxCols));
-        rows.Add(headers.Cast<object?>().ToArray());
-        foreach (var e in _lockedHitRateProjects)
-            rows.Add(dataCols.Select(c => (object?)GetHitRateCellValue(e, c)).ToArray());
-        return new(L("hitRate"), headers, rows);
-    }
-
-    private static object?[] PadRow(object?[] values, int totalCols)
-    {
-        var result = new object?[totalCols];
-        for (int i = 0; i < Math.Min(values.Length, totalCols); i++) result[i] = values[i];
-        return result;
+        var sections = new List<ReportExportSection>
+        {
+            new("Projekturval:", [_hitRateSelectionLine, _hitRateSelectionFilters])
+        };
+        var kpis = new List<ReportExportKpi>
+        {
+            new("Inlämnade", SubmittedCount.ToString()),
+            new("Vunna", WonCount.ToString()),
+            new("Förlorade", LostCount.ToString()),
+            new("Ej beslutade", UndecidedCount.ToString()),
+            new("Hit rate / träffsäkerhet", WonCount + LostCount == 0 ? "–" : $"{HitRate:N1} %")
+        };
+        var rows = _lockedHitRateProjects
+            .Select(e => dataCols.Select(c => (object?)GetHitRateCellValue(e, c)));
+        return new(L("hitRate"), headers, rows, sections, kpis);
     }
 
     private ExportModel BuildCalcExport()
     {
         var cols = CalcAllColumns.Where(c => _visibleCalcColumns.Contains(c)).ToList();
         var headers = cols.Select(GetCalcColumnLabel).ToArray();
-        var maxCols = Math.Max(cols.Count, 2);
-        var rows = new List<IEnumerable<object?>>();
-        rows.Add(PadRow(new object?[] { "Kalkylurval:" }, maxCols));
-        rows.Add(PadRow(new object?[] { _calcReportSelectionLine }, maxCols));
-        if (!string.IsNullOrWhiteSpace(_calcReportSelectionFilters))
-            rows.Add(PadRow(new object?[] { _calcReportSelectionFilters }, maxCols));
-        rows.Add(PadRow(Array.Empty<object?>(), maxCols));
-        rows.Add(headers.Cast<object?>().ToArray());
-        foreach (var e in _lockedCalcReportList)
-            rows.Add(cols.Select(c => (object?)GetCalcCellValue(e, c)).ToArray());
-        return new(L("calculationListReport"), headers, rows);
+        var sections = new List<ReportExportSection>
+        {
+            new("Kalkylurval:", [_calcReportSelectionLine, _calcReportSelectionFilters])
+        };
+        var rows = _lockedCalcReportList
+            .Select(e => cols.Select(c => (object?)GetCalcCellValue(e, c)));
+        return new(L("calculationListReport"), headers, rows, sections, null);
     }
 
     private ExportModel BuildProjExport()
     {
         var cols = ProjAllColumns.Where(c => _visibleProjColumns.Contains(c)).ToList();
         var headers = cols.Select(GetProjColumnLabel).ToArray();
-        var maxCols = Math.Max(cols.Count, 2);
-        var rows = new List<IEnumerable<object?>>();
-        rows.Add(PadRow(new object?[] { "Projekturval:" }, maxCols));
-        rows.Add(PadRow(new object?[] { _projReportSelectionLine }, maxCols));
-        if (!string.IsNullOrWhiteSpace(_projReportSelectionFilters))
-            rows.Add(PadRow(new object?[] { _projReportSelectionFilters }, maxCols));
-        rows.Add(PadRow(Array.Empty<object?>(), maxCols));
-        rows.Add(headers.Cast<object?>().ToArray());
-        foreach (var e in _lockedProjReportProjects)
-            rows.Add(cols.Select(c => (object?)GetProjCellValue(e, c)).ToArray());
-        return new(L("projectListReport"), headers, rows);
+        var sections = new List<ReportExportSection>
+        {
+            new("Projekturval:", [_projReportSelectionLine, _projReportSelectionFilters])
+        };
+        var rows = _lockedProjReportProjects
+            .Select(e => cols.Select(c => (object?)GetProjCellValue(e, c)));
+        return new(L("projectListReport"), headers, rows, sections, null);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────
@@ -1813,5 +1904,10 @@
     {
         public string ChainKey => $"{Entry.Project.Id}:{Entry.ChainKey}";
     }
-    private sealed record ExportModel(string Title, string[] Columns, IEnumerable<IEnumerable<object?>> Rows);
+    private sealed record ExportModel(
+        string Title,
+        string[] Columns,
+        IEnumerable<IEnumerable<object?>> Rows,
+        IReadOnlyList<ReportExportSection>? Sections = null,
+        IReadOnlyList<ReportExportKpi>? Kpis = null);
 }

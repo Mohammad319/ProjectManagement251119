@@ -63,7 +63,12 @@
       "Bash(not exist *)",
       "Bash(Select-Object Name)",
       "Bash(grep -v \"folder\\\\.\\\\|Folder\\\\.\\\\|FolderEntity\\\\|folder\\\\.IsVisible\\\\|ResourceType\\\\|Organisation\\\\.\\\\|CalculationStatus\\\\.\\\\|PostFolderDTO\\\\|folder\\\\.IsVisible\\\\|FolderMVVM\\\\|FolderDTO\\\\|\\\\.bin\\\\\\\\\\\\|\\\\.obj\\\\\\\\\")",
-      "Bash(grep -v \"bin\\\\\\\\\\\\|obj\\\\\\\\\")"
+      "Bash(grep -v \"bin\\\\\\\\\\\\|obj\\\\\\\\\")",
+      "PowerShell(dotnet build *)",
+      "PowerShell(node --version)",
+      "PowerShell(node tmp-xlsx-test.js)",
+      "PowerShell(Copy-Item *)",
+      "PowerShell(try { [xml]\\(Get-Content -LiteralPath \"tmp-xlsx-out\\\\[Content_Types].xml\" -Raw\\) | Out-Null; \"XML OK: [Content_Types].xml\" } catch { \"XML FAIL: \" + $_.Exception.Message }; \\(Get-Content -LiteralPath \"tmp-xlsx-out\\\\xl\\\\worksheets\\\\sheet1.xml\" -Raw\\) -replace '</row>', \"</row>`n\" | Select-Object -First 16)"
     ]
   }
 }

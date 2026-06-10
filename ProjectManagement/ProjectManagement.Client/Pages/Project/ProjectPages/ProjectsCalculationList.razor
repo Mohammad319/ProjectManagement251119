@@ -236,9 +236,9 @@
                             <button type="button"
                                     class="@(item.Enabled ? "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800" : "flex w-full cursor-not-allowed items-center gap-2 px-3 py-1.5 text-[11px] text-slate-400 dark:text-slate-600")"
                                     disabled="@(!item.Enabled)"
-                                    title="@item.Tooltip"
+                                    title="@item.DisabledReason"
                                     @onclick="() => { _reportMenuOpen = false; OpenReport(itemView); }">
-                                <span>@item.Label</span>
+                                <span>@AppLoc[item.LabelKey]</span>
                             </button>
                         }
                     </div>
@@ -745,15 +745,9 @@
     private bool _filterMenuOpen;
     private bool _reportMenuOpen;
 
-    private sealed record ReportMenuItem(string View, string Label, bool Enabled, string? Tooltip);
-
-    private IReadOnlyList<ReportMenuItem> CalcReportMenuItems =>
-    [
-        new(CentralReportsDialog.ReportView.Income,       AppLoc["incomeOverview"].Value,        true,  null),
-        new(CentralReportsDialog.ReportView.Calculations, AppLoc["calculationListReport"].Value, true,  null),
-        new(CentralReportsDialog.ReportView.HitRate,      AppLoc["hitRate"].Value,               false, "Visa projekt för att använda denna rapport."),
-        new(CentralReportsDialog.ReportView.Projects,     AppLoc["projectListReport"].Value,     false, "Visa projekt för att använda denna rapport."),
-    ];
+    // Samma tillgänglighetslogik som rapportdialogens flikar (Kalkylvy).
+    private static IReadOnlyList<CentralReportsDialog.ReportAvailability> CalcReportMenuItems =>
+        CentralReportsDialog.GetReportAvailability(CentralReportsDialog.ReportHost.Calculations);
 
     private readonly Dictionary<string, ColumnFilterState> _calcColFilters = new()
     {
@@ -1429,10 +1423,13 @@
     {
         if (!CanOpenReports)
             return;
+        if (!CentralReportsDialog.IsReportEnabled(CentralReportsDialog.ReportHost.Calculations, view))
+            return;
 
         var parameters = new Dictionary<string, object>
         {
             [nameof(CentralReportsDialog.InitialView)] = view,
+            [nameof(CentralReportsDialog.Host)] = CentralReportsDialog.ReportHost.Calculations,
         };
 
         if (FolderScopeMode)
