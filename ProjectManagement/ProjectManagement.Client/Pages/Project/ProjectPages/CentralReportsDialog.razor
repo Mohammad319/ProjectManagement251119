@@ -25,6 +25,8 @@
     }
     else
     {
+        @if (_activeView != ReportView.HitRate && _activeView != ReportView.Projects && _activeView != ReportView.Calculations)
+        {
         <div class="grid grid-cols-2 gap-2 rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-950 md:grid-cols-4 xl:grid-cols-6">
 
             @* Avdelning *@
@@ -251,14 +253,11 @@
                 </div>
             }
         </div>
+        } @* end @if (_activeView != HitRate && != Projects && != Calculations) *@
 
         <div class="flex flex-wrap justify-between gap-2">
             <p class="text-xs text-slate-500 dark:text-slate-400">
-                @if (_activeView == ReportView.HitRate)
-                {
-                    <span>Hit rate baseras automatiskt på Projektstatus och räknas en gång per projekt/upphandling. Projektstatus väljs inte som filter här. Kalkylstatus, Kalkyltyp och Intäktskälla påverkar inte huvud-Hit rate.</span>
-                }
-                else { @AppLoc["reportCurrentVersionRule"] }
+                @if (_activeView == ReportView.Income) { @AppLoc["reportCurrentVersionRule"] }
             </p>
             <div class="flex flex-wrap gap-1.5">
                 <button type="button" class="@ActionButtonClass" @onclick="ExportExcelAsync">@AppLoc["exportExcel"]</button>
@@ -277,50 +276,80 @@
                     <div class="@TotalCardClass"><span>Projekt</span><strong>@IncludedFilteredIncomeRows.Select(r => r.Entry.Project.Id).Distinct().Count()</strong></div>
                     <div class="@TotalCardClass"><span>@AppLoc["rows"]</span><strong>@IncludedFilteredIncomeRows.Count()</strong></div>
                 </div>
-                <button type="button"
-                        class="@(_showQuarters ? "inline-flex h-8 items-center rounded-lg bg-sky-600 px-3 text-xs font-semibold text-white shadow-sm transition hover:bg-sky-700" : ActionButtonClass)"
-                        @onclick="() => _showQuarters = !_showQuarters">
-                    @(_showQuarters ? "Dölj Q1–Q4" : "Visa Q1–Q4")
-                </button>
+                <div class="flex flex-wrap items-center gap-1.5">
+                    <button type="button"
+                            class="@(_showQuarters ? "inline-flex h-8 items-center rounded-lg bg-sky-600 px-3 text-xs font-semibold text-white shadow-sm transition hover:bg-sky-700" : ActionButtonClass)"
+                            @onclick="() => _showQuarters = !_showQuarters">
+                        @(_showQuarters ? "Dölj Q1–Q4" : "Visa Q1–Q4")
+                    </button>
+                    @IncomeColumnPanel()
+                </div>
             </div>
+            var _incCols = IncomeVisibleColumns.ToList();
             <div class="@TableContainerClass">
                 <table class="@TableClass">
                     <thead class="@TableHeadClass">
                         <tr>
                             <th class="w-8 text-center">Räkna med</th>
-                            <th>@AppLoc["folder"]</th><th>@AppLoc["project"]</th><th>@AppLoc["calculation"]</th>
-                            <th>Källa</th><th>Kalkylstatus</th><th>@AppLoc["year"]</th><th>Deltyp</th>
-                            @if (_showQuarters) { <th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th> }
-                            <th>Intäkt</th><th title="Sannolikhet att vinna">Vinst %</th><th>Prognos</th>
+                            @for (int hi = 0; hi < _incCols.Count; hi++)
+                            {
+                                var hcol = _incCols[hi];
+                                <th class="@(IsIncomeColumnNumeric(hcol) ? "text-right" : "")" title="@GetIncomeColumnTitle(hcol)">@GetIncomeColumnLabel(hcol)</th>
+                                if (hcol == IncomeReportColumn.Year && _showQuarters)
+                                {
+                                    <th class="text-right">Q1</th><th class="text-right">Q2</th><th class="text-right">Q3</th><th class="text-right">Q4</th>
+                                }
+                            }
                         </tr>
                     </thead>
                     <tbody class="@TableBodyClass">
                         @{ var dri = 0; }
                         @foreach (var row in BuildIncomeTableRows())
                         {
-                            @if (row.Kind == IncomeTableRowKind.Data)
+                            if (row.Kind == IncomeTableRowKind.Data)
                             {
                                 var excl = _excludedRowKeys.Contains(row.RowKey);
                                 <tr class="@(dri++ % 2 == 0 ? "" : "bg-slate-50/70 dark:bg-slate-900/30") @(excl ? "opacity-40" : "")">
                                     <td class="text-center"><input type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300 text-sky-600" checked="@(!excl)" @onchange="() => ToggleRowInclusion(row.RowKey)" /></td>
-                                    <td>@(row.IsFirstForProject ? row.FolderName : "")</td>
-                                    <td>@(row.IsFirstForProject ? row.ProjectName : "")</td>
-                                    <td>@(row.IsFirstForCalc ? row.CalcName : "")</td>
-                                    <td>@(row.IsFirstForCalc ? row.SourceLabel : "")</td>
-                                    <td>@(row.IsFirstForCalc ? row.Status : "")</td>
-                                    <td>@row.Year</td><td>@row.SubTypeText</td>
-                                    @if (_showQuarters) { <td>@FormatMoney(row.Q1)</td><td>@FormatMoney(row.Q2)</td><td>@FormatMoney(row.Q3)</td><td>@FormatMoney(row.Q4)</td> }
-                                    <td>@FormatMoney(row.Amount)</td><td>@row.Probability %</td>
-                                    <td class="font-semibold">@FormatMoney(row.Forecast)</td>
+                                    @for (int di = 0; di < _incCols.Count; di++)
+                                    {
+                                        var dcol = _incCols[di];
+                                        <td class="@GetIncomeTdClass(dcol)">@GetIncomeDataCellValue(row, dcol)</td>
+                                        if (dcol == IncomeReportColumn.Year && _showQuarters)
+                                        {
+                                            <td class="text-right">@FormatMoney(row.Q1)</td><td class="text-right">@FormatMoney(row.Q2)</td><td class="text-right">@FormatMoney(row.Q3)</td><td class="text-right">@FormatMoney(row.Q4)</td>
+                                        }
+                                    }
                                 </tr>
                             }
                             else
                             {
                                 <tr class="@IncomeRowClass(row.Kind)">
                                     <td></td>
-                                    <td colspan="@(_showQuarters ? 7 : 3)">@row.SummaryLabel</td>
-                                    @if (_showQuarters) { <td>@FormatMoney(row.Q1)</td><td>@FormatMoney(row.Q2)</td><td>@FormatMoney(row.Q3)</td><td>@FormatMoney(row.Q4)</td> }
-                                    <td>@FormatMoney(row.Amount)</td><td></td><td>@FormatMoney(row.Forecast)</td>
+                                    @for (int si = 0; si < _incCols.Count; si++)
+                                    {
+                                        var scol = _incCols[si];
+                                        if (si == 0)
+                                        {
+                                            <td>@row.SummaryLabel</td>
+                                        }
+                                        else if (scol == IncomeReportColumn.Amount)
+                                        {
+                                            <td class="text-right">@FormatMoney(row.Amount)</td>
+                                        }
+                                        else if (scol == IncomeReportColumn.Forecast)
+                                        {
+                                            <td class="text-right font-semibold">@FormatMoney(row.Forecast)</td>
+                                        }
+                                        else
+                                        {
+                                            <td></td>
+                                        }
+                                        if (scol == IncomeReportColumn.Year && _showQuarters)
+                                        {
+                                            <td class="text-right">@FormatMoney(row.Q1)</td><td class="text-right">@FormatMoney(row.Q2)</td><td class="text-right">@FormatMoney(row.Q3)</td><td class="text-right">@FormatMoney(row.Q4)</td>
+                                        }
+                                    }
                                 </tr>
                             }
                         }
@@ -332,40 +361,93 @@
         @* ═══ HIT RATE ═══ *@
         else if (_activeView == ReportView.HitRate)
         {
-            <div class="grid grid-cols-2 gap-2 md:grid-cols-5">
-                <div class="@TotalCardClass"><span>Inlämnade</span><strong>@SubmittedCount</strong></div>
-                <div class="@TotalCardClass"><span>Vunna</span><strong>@WonCount</strong></div>
-                <div class="@TotalCardClass"><span>Förlorade</span><strong>@LostCount</strong></div>
-                <div class="@TotalCardClass"><span>Ej beslutade</span><strong>@UndecidedCount</strong></div>
-                <div class="@TotalCardClass"><span>Hit rate / träffsäkerhet</span><strong>@HitRate.ToString("N1") %</strong></div>
+            <div class="rounded-lg border border-sky-200 bg-sky-50 p-3 text-xs text-sky-800 dark:border-sky-800/50 dark:bg-sky-950/30 dark:text-sky-200">
+                <p class="mb-0.5 font-semibold">Projekturval</p>
+                <p>@_hitRateSelectionLine</p>
+                @if (!string.IsNullOrWhiteSpace(_hitRateSelectionFilters))
+                {
+                    <p class="mt-1 text-sky-700 dark:text-sky-300">@_hitRateSelectionFilters</p>
+                }
+                <p class="mt-1.5 italic text-slate-500 dark:text-slate-400">Stäng rapporten och ändra projektlistans filter om du vill ändra urvalet.</p>
             </div>
-            @HitRateProjectTable()
+
+            @if (_lockedHitRateProjects.Count == 0)
+            {
+                <p class="rounded-lg border border-slate-200 bg-white p-4 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-950">Inga projekt matchar aktuellt urval.</p>
+            }
+            else
+            {
+                <div class="grid grid-cols-2 gap-2 md:grid-cols-5">
+                    <div class="@TotalCardClass"><span>Inlämnade</span><strong>@SubmittedCount</strong></div>
+                    <div class="@TotalCardClass"><span>Vunna</span><strong>@WonCount</strong></div>
+                    <div class="@TotalCardClass"><span>Förlorade</span><strong>@LostCount</strong></div>
+                    <div class="@TotalCardClass"><span>Ej beslutade</span><strong>@UndecidedCount</strong></div>
+                    <div class="@TotalCardClass"><span>Hit rate / träffsäkerhet</span><strong>@(WonCount + LostCount == 0 ? "–" : $"{HitRate:N1} %")</strong></div>
+                </div>
+                @if (WonCount + LostCount == 0)
+                {
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Hit rate kan inte beräknas eftersom inga vunna eller förlorade projekt finns i urvalet.</p>
+                }
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <span class="text-xs text-slate-400">@_lockedHitRateProjects.Count projekt</span>
+                    @HitRateColumnPanel()
+                </div>
+                @HitRateProjectTable()
+            }
         }
 
         @* ═══ KALKYLLISTA ═══ *@
         else if (_activeView == ReportView.Calculations)
         {
-            <div class="flex flex-wrap items-center justify-between gap-2">
-                <div class="flex flex-wrap items-center gap-2">
-                    <label class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">
-                        <input type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300 text-sky-600" checked="@_showAllVersions" @onchange="() => _showAllVersions = !_showAllVersions" />
-                        <span>Visa alla versioner</span>
-                    </label>
-                    <span class="text-xs text-slate-400">@FilteredCalculations.Count() @AppLoc["rows"].Value.ToLower()</span>
-                </div>
-                @CalcColumnPanel()
+            <div class="rounded-lg border border-sky-200 bg-sky-50 p-3 text-xs text-sky-800 dark:border-sky-800/50 dark:bg-sky-950/30 dark:text-sky-200">
+                <p class="mb-0.5 font-semibold">Kalkylurval</p>
+                <p>@_calcReportSelectionLine</p>
+                @if (!string.IsNullOrWhiteSpace(_calcReportSelectionFilters))
+                {
+                    <p class="mt-1 text-sky-700 dark:text-sky-300">@_calcReportSelectionFilters</p>
+                }
+                <p class="mt-1.5 italic text-slate-500 dark:text-slate-400">Stäng rapporten och ändra filtren om du vill ändra urvalet.</p>
             </div>
-            @CalculationTable(FilteredCalculations)
+
+            @if (_lockedCalcReportList.Count == 0)
+            {
+                <p class="rounded-lg border border-slate-200 bg-white p-4 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-950">Inga kalkyler matchar aktuellt urval.</p>
+            }
+            else
+            {
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <span class="text-xs text-slate-400">@_lockedCalcReportList.Count @AppLoc["rows"].Value.ToLower()</span>
+                    @CalcColumnPanel()
+                </div>
+                @CalculationTable(_lockedCalcReportList)
+            }
         }
 
         @* ═══ PROJEKTLISTA ═══ *@
         else if (_activeView == ReportView.Projects)
         {
-            <div class="flex flex-wrap items-center justify-between gap-2">
-                <span class="text-xs text-slate-400">@FilteredProjects.Count() projekt</span>
-                @ProjColumnPanel()
+            <div class="rounded-lg border border-sky-200 bg-sky-50 p-3 text-xs text-sky-800 dark:border-sky-800/50 dark:bg-sky-950/30 dark:text-sky-200">
+                <p class="mb-0.5 font-semibold">Projekturval</p>
+                <p>@_projReportSelectionLine</p>
+                @if (!string.IsNullOrWhiteSpace(_projReportSelectionFilters))
+                {
+                    <p class="mt-1 text-sky-700 dark:text-sky-300">@_projReportSelectionFilters</p>
+                }
+                <p class="mt-1.5 italic text-slate-500 dark:text-slate-400">Stäng rapporten och ändra projektlistans filter om du vill ändra urvalet.</p>
             </div>
-            @ProjectTable(FilteredProjects)
+
+            @if (_lockedProjReportProjects.Count == 0)
+            {
+                <p class="rounded-lg border border-slate-200 bg-white p-4 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-950">Inga projekt matchar aktuellt urval.</p>
+            }
+            else
+            {
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <span class="text-xs text-slate-400">@_lockedProjReportProjects.Count projekt</span>
+                    @ProjColumnPanel()
+                </div>
+                @ProjectTable(_lockedProjReportProjects)
+            }
         }
     }
 </div>
@@ -385,7 +467,8 @@
     private enum CalcReportColumn
     {
         Folder, Project, Calculation, Version, CalcType, CalcStatus, CalcRole,
-        Responsible, Inspector, TenderQA, TenderDeadline, Priority, CreatedAt, UpdatedAt, Archived
+        Responsible, Inspector, TenderQA, TenderDeadline, Priority, CreatedAt, UpdatedAt, Archived,
+        Code, Private
     }
 
     private enum ProjReportColumn
@@ -393,7 +476,9 @@
         Folder, Project, Code, ProjStatus, CalcCount,
         StartDate, EndDate, TenderDeadline, TenderQA,
         Responsible, Inspector, ProjectType, Contract,
-        Organisation, ProcurementName, Archived
+        Organisation, ProcurementName, Archived,
+        ProcurementProcedure, Compensation, ProcurementNumber,
+        Developer, PublicationDate, DecisionDate, CreatedAt, UpdatedAt
     }
 
     private static readonly CalcReportColumn[] CalcAllColumns = Enum.GetValues<CalcReportColumn>();
@@ -413,9 +498,44 @@
         ProjReportColumn.TenderDeadline, ProjReportColumn.Responsible, ProjReportColumn.Inspector
     ];
 
+    private enum IncomeReportColumn
+    {
+        Folder, Project, Calculation, Source, CalcStatus, Year, SubType, Amount, Probability, Forecast,
+        ProjectCode, ProjectType, ProjStatus, Organisation, Developer,
+        CalcCode, Version, CalcType, CalcRole, Responsible, Inspector,
+        TenderDeadline, PublicationDate, DecisionDate,
+        Contract, Compensation, ProcurementName, ProcurementProcedure, Archived
+    }
+
+    private static readonly IncomeReportColumn[] IncomeAllColumns = Enum.GetValues<IncomeReportColumn>();
+    private static readonly IncomeReportColumn[] IncomeDefaultColumns =
+    [
+        IncomeReportColumn.Folder, IncomeReportColumn.Project, IncomeReportColumn.Calculation,
+        IncomeReportColumn.Source, IncomeReportColumn.CalcStatus, IncomeReportColumn.Year,
+        IncomeReportColumn.SubType, IncomeReportColumn.Amount, IncomeReportColumn.Probability,
+        IncomeReportColumn.Forecast
+    ];
+
+    private enum HitRateReportColumn
+    {
+        Project, ProjStatus, ProjectType, Folder, Responsible, Inspector, TenderDeadline,
+        Code, Organisation, Developer, Contract, Compensation, ProcurementName, ProcurementProcedure,
+        PublicationDate, DecisionDate, UpdatedAt, CreatedAt, Archived, TenderQA
+    }
+
+    private static readonly HitRateReportColumn[] HitRateAllColumns = Enum.GetValues<HitRateReportColumn>();
+    private static readonly HitRateReportColumn[] HitRateDefaultColumns =
+    [
+        HitRateReportColumn.Project, HitRateReportColumn.ProjStatus, HitRateReportColumn.ProjectType,
+        HitRateReportColumn.Folder, HitRateReportColumn.Responsible, HitRateReportColumn.Inspector,
+        HitRateReportColumn.TenderDeadline
+    ];
+
     private const string MissingPersonValue = "__missing__";
     private const string CalcColumnsStorageKey = "ReportCalcColumnsV2";
     private const string ProjColumnsStorageKey = "ReportProjColumnsV2";
+    private const string IncomeColumnsStorageKey = "RevenueOverviewColumnsV1";
+    private const string HitRateColumnsStorageKey = "HitRateColumnsV1";
 
     private sealed class IncomeTableRow
     {
@@ -438,6 +558,26 @@
         public bool IsFirstForProject { get; init; }
         public bool IsFirstForCalc { get; init; }
         public string SummaryLabel { get; init; } = "";
+        // Optional columns
+        public string ProjectCode { get; init; } = "";
+        public string ProjectType { get; init; } = "";
+        public string ProjStatus { get; init; } = "";
+        public string Organisation { get; init; } = "";
+        public string Developer { get; init; } = "";
+        public string CalcCode { get; init; } = "";
+        public string CalcVersion { get; init; } = "";
+        public string CalcTypeName { get; init; } = "";
+        public string CalcRoleName { get; init; } = "";
+        public string Responsible { get; init; } = "";
+        public string Inspector { get; init; } = "";
+        public string TenderDeadlineText { get; init; } = "";
+        public string PublicationDateText { get; init; } = "";
+        public string DecisionDateText { get; init; } = "";
+        public string Contract { get; init; } = "";
+        public string Compensation { get; init; } = "";
+        public string ProcurementName { get; init; } = "";
+        public string ProcurementProcedure { get; init; } = "";
+        public string ArchivedText { get; init; } = "";
     }
 
     [Parameter] public FolderMVVM? FolderScope { get; set; }
@@ -484,6 +624,28 @@
     private bool _showColumnPanelProj;
     private HashSet<ProjReportColumn> _visibleProjColumns = new(ProjDefaultColumns);
 
+    // ── Intäktsöversikt ───────────────────────────────────────────────
+    private bool _showColumnPanelIncome;
+    private HashSet<IncomeReportColumn> _visibleIncomeColumns = new(IncomeDefaultColumns);
+
+    // ── Projektlista-rapport ──────────────────────────────────────────
+    private List<ProjectEntry> _lockedProjReportProjects = [];
+    private string _projReportSelectionLine = "";
+    private string _projReportSelectionFilters = "";
+
+    // ── Hit rate ──────────────────────────────────────────────────────
+    private bool _showColumnPanelHitRate;
+    private HashSet<HitRateReportColumn> _visibleHitRateColumns = new(HitRateDefaultColumns);
+    private List<ProjectHitRateEntry> _lockedHitRateProjects = [];
+    private string _hitRateSelectionLine = "";
+    private string _hitRateSelectionFilters = "";
+
+    // ── Kalkyllista-rapport ───────────────────────────────────────────
+    private List<CalculationEntry> _lockedCalcReportList = [];
+    private string _calcReportSelectionLine = "";
+    private string _calcReportSelectionFilters = "";
+    private bool _lockedCalcShowAllVersions;
+
     private bool _prefsLoaded;
 
     // ── Data ──────────────────────────────────────────────────────────
@@ -516,6 +678,28 @@
                @onchange="e => { if ((bool)(e.Value ?? false)) add(MissingPersonValue); else remove(MissingPersonValue); }" />
         <span class="italic text-slate-400">Saknas</span>
     </label>;
+
+    private IEnumerable<HitRateReportColumn> HitRateVisibleColumns =>
+        HitRateAllColumns.Where(c => _visibleHitRateColumns.Contains(c));
+
+    private RenderFragment HitRateColumnPanel() => ColumnPanelImpl(
+        HitRateAllColumns, _visibleHitRateColumns, GetHitRateColumnLabel,
+        async (c, v) => await ToggleHitRateColumn(c, v),
+        () => { _visibleHitRateColumns = new(HitRateAllColumns); _ = SaveHitRateColumnsAsync(); },
+        () => { _visibleHitRateColumns = new(HitRateDefaultColumns); _ = SaveHitRateColumnsAsync(); },
+        _showColumnPanelHitRate, v => { _showColumnPanelHitRate = v; StateHasChanged(); },
+        openUp: false);
+
+    private IEnumerable<IncomeReportColumn> IncomeVisibleColumns =>
+        IncomeAllColumns.Where(c => _visibleIncomeColumns.Contains(c));
+
+    private RenderFragment IncomeColumnPanel() => ColumnPanelImpl(
+        IncomeAllColumns, _visibleIncomeColumns, GetIncomeColumnLabel,
+        async (c, v) => await ToggleIncomeColumn(c, v),
+        () => { _visibleIncomeColumns = new(IncomeAllColumns); _ = SaveIncomeColumnsAsync(); },
+        () => { _visibleIncomeColumns = new(IncomeDefaultColumns); _ = SaveIncomeColumnsAsync(); },
+        _showColumnPanelIncome, v => { _showColumnPanelIncome = v; StateHasChanged(); },
+        openUp: false);
 
     private RenderFragment CalcColumnPanel() => ColumnPanelImpl(
         CalcAllColumns, _visibleCalcColumns, GetCalcColumnLabel,
@@ -648,10 +832,10 @@
             .Select(e => new ProjectHitRateEntry(e.Folder, e.Project, BidHitRateClassifier.ClassifyProject(e.Project)))
             .Where(e => e.Result != BidHitRateResult.Excluded);
 
-    private int SubmittedCount => HitRateProjectEntries.Count();
-    private int WonCount => HitRateProjectEntries.Count(e => e.Result == BidHitRateResult.Won);
-    private int LostCount => HitRateProjectEntries.Count(e => e.Result == BidHitRateResult.Lost);
-    private int UndecidedCount => HitRateProjectEntries.Count(e => e.Result == BidHitRateResult.Undecided);
+    private int SubmittedCount => _lockedHitRateProjects.Count;
+    private int WonCount => _lockedHitRateProjects.Count(e => e.Result == BidHitRateResult.Won);
+    private int LostCount => _lockedHitRateProjects.Count(e => e.Result == BidHitRateResult.Lost);
+    private int UndecidedCount => _lockedHitRateProjects.Count(e => e.Result == BidHitRateResult.Undecided);
     private decimal HitRate => WonCount + LostCount == 0 ? 0 : (decimal)WonCount / (WonCount + LostCount) * 100m;
 
     // ── Lifecycle ─────────────────────────────────────────────────────
@@ -668,6 +852,9 @@
         _selectedFolderId = FolderScope?.Id.ToString() ?? string.Empty;
         _selectedProjectId = ProjectScope?.Id.ToString() ?? string.Empty;
         await LoadAsync();
+        LockProjReportProjects();
+        LockHitRateProjects();
+        LockCalcReportList();
 
         if (!string.IsNullOrWhiteSpace(_selectedProjectId))
         {
@@ -685,6 +872,8 @@
         bool stateChanged = false;
         stateChanged |= await LoadColumnPrefsAsync<CalcReportColumn>(CalcColumnsStorageKey, _visibleCalcColumns);
         stateChanged |= await LoadColumnPrefsAsync<ProjReportColumn>(ProjColumnsStorageKey, _visibleProjColumns);
+        stateChanged |= await LoadColumnPrefsAsync<IncomeReportColumn>(IncomeColumnsStorageKey, _visibleIncomeColumns);
+        stateChanged |= await LoadColumnPrefsAsync<HitRateReportColumn>(HitRateColumnsStorageKey, _visibleHitRateColumns);
         if (stateChanged) await InvokeAsync(StateHasChanged);
     }
 
@@ -763,6 +952,101 @@
             _calculations.Add(new CalculationEntry(folder, project, c, GetChainKey(c, lookup)));
     }
 
+    // ── Project report lock ───────────────────────────────────────────
+
+    private void LockProjReportProjects()
+    {
+        _lockedProjReportProjects = FilteredProjects.ToList();
+        var count = _lockedProjReportProjects.Count;
+        var deptName = CurrentDepartmentName;
+        var filters = new List<string>();
+
+        if (!string.IsNullOrEmpty(_selectedFolderId))
+        {
+            var f = AvailableFolders.FirstOrDefault(x => x.Id.ToString() == _selectedFolderId);
+            if (f is not null) filters.Add($"Mapp: {f.Name}");
+        }
+        if (_selectedProjectStatuses.Count > 0) filters.Add($"Projektstatus: {string.Join(", ", _selectedProjectStatuses)}");
+        var nonMissingResp = _selectedResponsibles.Where(r => r != MissingPersonValue).ToList();
+        if (nonMissingResp.Count > 0) filters.Add($"Kalkylansvarig: {string.Join(", ", nonMissingResp)}");
+        var nonMissingInsp = _selectedInspectors.Where(r => r != MissingPersonValue).ToList();
+        if (nonMissingInsp.Count > 0) filters.Add($"Granskare: {string.Join(", ", nonMissingInsp)}");
+        filters.Add(_selectedArchiveMode switch { "all" => "Arkiverade inkluderade", "archived" => "Enbart arkiverade", _ => "Arkiverade ej inkluderade" });
+
+        bool hasFilter = filters.Count > 1 || !string.IsNullOrEmpty(_selectedFolderId) || _selectedProjectStatuses.Count > 0;
+        if (!hasFilter && string.IsNullOrEmpty(_selectedFolderId))
+            _projReportSelectionLine = $"Rapporten baseras på alla projekt i {deptName}.";
+        else if (!hasFilter && !string.IsNullOrEmpty(_selectedFolderId))
+        {
+            var f = AvailableFolders.FirstOrDefault(x => x.Id.ToString() == _selectedFolderId);
+            _projReportSelectionLine = $"Rapporten baseras på alla projekt i {f?.Name ?? deptName}.";
+        }
+        else
+            _projReportSelectionLine = $"Rapporten baseras på {count} projekt från aktuell projektlista.";
+        _projReportSelectionFilters = string.Join(" · ", filters);
+    }
+
+    // ── Hit rate lock ─────────────────────────────────────────────────
+
+    private void LockHitRateProjects()
+    {
+        _lockedHitRateProjects = HitRateProjectEntries.ToList();
+        var count = _lockedHitRateProjects.Count;
+        var filters = new List<string>();
+
+        if (!string.IsNullOrEmpty(_selectedFolderId))
+        {
+            var f = AvailableFolders.FirstOrDefault(x => x.Id.ToString() == _selectedFolderId);
+            if (f is not null) filters.Add($"Mapp: {f.Name}");
+        }
+        if (!string.IsNullOrEmpty(_selectedYear)) filters.Add($"År {_selectedYear}");
+        if (_selectedQuarter > 0) filters.Add($"Q{_selectedQuarter}");
+        if (_selectedStatuses.Count > 0) filters.Add($"Kalkylstatus: {string.Join(", ", _selectedStatuses)}");
+        var nonMissingResp = _selectedResponsibles.Where(r => r != MissingPersonValue).ToList();
+        if (nonMissingResp.Count > 0) filters.Add($"Kalkylansvarig: {string.Join(", ", nonMissingResp)}");
+        var nonMissingInsp = _selectedInspectors.Where(r => r != MissingPersonValue).ToList();
+        if (nonMissingInsp.Count > 0) filters.Add($"Granskare: {string.Join(", ", nonMissingInsp)}");
+        filters.Add(_selectedArchiveMode switch { "all" => "Arkiverade inkluderade", "archived" => "Enbart arkiverade", _ => "Arkiverade ej inkluderade" });
+
+        bool hasFilter = filters.Count > 1 || !string.IsNullOrEmpty(_selectedFolderId) || !string.IsNullOrEmpty(_selectedYear) || _selectedQuarter > 0;
+        _hitRateSelectionLine = hasFilter
+            ? $"Hit rate baseras på {count} projekt från aktuell projektlista."
+            : $"Hit rate baseras på alla projekt i {CurrentDepartmentName}.";
+        _hitRateSelectionFilters = string.Join(" · ", filters);
+    }
+
+    // ── Calc report lock ──────────────────────────────────────────────
+
+    private void LockCalcReportList()
+    {
+        _lockedCalcShowAllVersions = _showAllVersions;
+        _lockedCalcReportList = FilteredCalculations.ToList();
+        var count = _lockedCalcReportList.Count;
+        var filters = new List<string>();
+
+        if (!string.IsNullOrEmpty(_selectedFolderId))
+        {
+            var f = AvailableFolders.FirstOrDefault(x => x.Id.ToString() == _selectedFolderId);
+            if (f is not null) filters.Add($"Mapp: {f.Name}");
+        }
+        if (!string.IsNullOrEmpty(_selectedProjectId)) filters.Add($"Projekt: {_projectSearch}");
+        if (!string.IsNullOrWhiteSpace(_selectedCalculationType)) filters.Add($"Kalkyltyp: {_selectedCalculationType}");
+        if (_selectedStatuses.Count > 0) filters.Add($"Kalkylstatus: {string.Join(", ", _selectedStatuses)}");
+        var nonMissingResp = _selectedResponsibles.Where(r => r != MissingPersonValue).ToList();
+        if (nonMissingResp.Count > 0) filters.Add($"Kalkylansvarig: {string.Join(", ", nonMissingResp)}");
+        var nonMissingInsp = _selectedInspectors.Where(r => r != MissingPersonValue).ToList();
+        if (nonMissingInsp.Count > 0) filters.Add($"Granskare: {string.Join(", ", nonMissingInsp)}");
+        filters.Add(_selectedArchiveMode switch { "all" => "Arkiverade inkluderade", "archived" => "Enbart arkiverade", _ => "Arkiverade ej inkluderade" });
+
+        var versionInfo = _lockedCalcShowAllVersions ? "alla versioner" : "aktuella versioner";
+        bool hasFilter = filters.Count > 1 || !string.IsNullOrEmpty(_selectedFolderId) || !string.IsNullOrEmpty(_selectedProjectId)
+            || !string.IsNullOrWhiteSpace(_selectedCalculationType) || _selectedStatuses.Count > 0;
+        _calcReportSelectionLine = hasFilter
+            ? $"Kalkyllistan baseras på {count} kalkyler ({versionInfo}) från aktuell lista."
+            : $"Kalkyllistan baseras på alla kalkyler ({versionInfo}) i {CurrentDepartmentName}.";
+        _calcReportSelectionFilters = string.Join(" · ", filters);
+    }
+
     // ── Income logic ──────────────────────────────────────────────────
 
     private IEnumerable<IncomeRow> BuildIncomeRows()
@@ -806,7 +1090,26 @@
                         Status = row.Entry.Calculation.Status, Year = row.Year, SubTypeText = SubTypeLabel(row.SubType),
                         Q1 = row.Q1, Q2 = row.Q2, Q3 = row.Q3, Q4 = row.Q4,
                         Amount = row.Amount, Probability = row.Probability, Forecast = row.Forecast,
-                        IsFirstForProject = fp, IsFirstForCalc = fc
+                        IsFirstForProject = fp, IsFirstForCalc = fc,
+                        ProjectCode = fp ? row.Entry.Project.Code : "",
+                        ProjectType = fp ? row.Entry.Project.Type : "",
+                        ProjStatus = fp ? row.Entry.Project.Status : "",
+                        Organisation = fp ? row.Entry.Project.Organisation : "",
+                        Developer = fp ? row.Entry.Project.Developer : "",
+                        CalcCode = fc ? row.Entry.Calculation.Code : "",
+                        CalcVersion = fc ? $"V.{row.Entry.Calculation.VersionNumber:D2}" : "",
+                        CalcTypeName = fc ? TypeLabel(row.Entry.Calculation.CalculationType) : "",
+                        CalcRoleName = fc ? GetCalculationRoleLabel(row.Entry.Calculation.CalculationRole) : "",
+                        Responsible = fc ? row.Entry.Calculation.Responsible ?? "" : "",
+                        Inspector = fc ? row.Entry.Calculation.Inspector ?? "" : "",
+                        TenderDeadlineText = fc ? FormatDate(row.Entry.Calculation.TenderDeadline) : "",
+                        PublicationDateText = fp ? (row.Entry.Project.PublicationDate.HasValue ? row.Entry.Project.PublicationDate.Value.ToString("yyyy-MM-dd") : "") : "",
+                        DecisionDateText = fp ? (row.Entry.Project.DecisionDate.HasValue ? row.Entry.Project.DecisionDate.Value.ToString("yyyy-MM-dd") : "") : "",
+                        Contract = fp ? row.Entry.Project.Contract : "",
+                        Compensation = fp ? row.Entry.Project.Compensation : "",
+                        ProcurementName = fp ? row.Entry.Project.ProcurementName : "",
+                        ProcurementProcedure = fp ? row.Entry.Project.ProcurementProcedure : "",
+                        ArchivedText = !row.Entry.Calculation.IsArchived ? "" : L("archived"),
                     });
                     fp = false; fc = false;
                 }
@@ -935,6 +1238,20 @@
     }
     private async Task SaveProjColumnsAsync() => await SaveColumnsAsync(ProjColumnsStorageKey, _visibleProjColumns);
 
+    private async Task ToggleIncomeColumn(IncomeReportColumn col, bool include)
+    {
+        if (include) _visibleIncomeColumns.Add(col); else _visibleIncomeColumns.Remove(col);
+        await SaveColumnsAsync(IncomeColumnsStorageKey, _visibleIncomeColumns);
+    }
+    private async Task SaveIncomeColumnsAsync() => await SaveColumnsAsync(IncomeColumnsStorageKey, _visibleIncomeColumns);
+
+    private async Task ToggleHitRateColumn(HitRateReportColumn col, bool include)
+    {
+        if (include) _visibleHitRateColumns.Add(col); else _visibleHitRateColumns.Remove(col);
+        await SaveColumnsAsync(HitRateColumnsStorageKey, _visibleHitRateColumns);
+    }
+    private async Task SaveHitRateColumnsAsync() => await SaveColumnsAsync(HitRateColumnsStorageKey, _visibleHitRateColumns);
+
     private void OnProjectSearchInput(ChangeEventArgs e)
     {
         _projectSearch = e.Value?.ToString() ?? string.Empty;
@@ -967,6 +1284,140 @@
 
     // ── Column helpers ────────────────────────────────────────────────
 
+    private string GetHitRateColumnLabel(HitRateReportColumn col) => col switch
+    {
+        HitRateReportColumn.Project => L("project"),
+        HitRateReportColumn.ProjStatus => "Projektstatus",
+        HitRateReportColumn.ProjectType => "Projekttyp",
+        HitRateReportColumn.Folder => "Mapp",
+        HitRateReportColumn.Responsible => "Kalkylansvarig",
+        HitRateReportColumn.Inspector => "Granskare",
+        HitRateReportColumn.TenderDeadline => "Anbudsdeadline",
+        HitRateReportColumn.Code => "Kod",
+        HitRateReportColumn.Organisation => "Beställare",
+        HitRateReportColumn.Developer => "Byggherre",
+        HitRateReportColumn.Contract => "Entreprenadform",
+        HitRateReportColumn.Compensation => "Ersättningsform",
+        HitRateReportColumn.ProcurementName => "Upphandlingsform",
+        HitRateReportColumn.ProcurementProcedure => "Upphandlingsförfarande",
+        HitRateReportColumn.PublicationDate => "Publiceringsdatum",
+        HitRateReportColumn.DecisionDate => "Beslutsdatum",
+        HitRateReportColumn.UpdatedAt => "Senast ändrad",
+        HitRateReportColumn.CreatedAt => "Skapad datum",
+        HitRateReportColumn.Archived => "Arkiverad",
+        HitRateReportColumn.TenderQA => "Frågor/svar",
+        _ => col.ToString()
+    };
+
+    private string GetHitRateCellValue(ProjectHitRateEntry e, HitRateReportColumn col) => col switch
+    {
+        HitRateReportColumn.Project => e.Project.Name,
+        HitRateReportColumn.ProjStatus => e.Project.Status,
+        HitRateReportColumn.ProjectType => e.Project.Type,
+        HitRateReportColumn.Folder => e.Folder.Name,
+        HitRateReportColumn.Responsible => e.Project.Responsible,
+        HitRateReportColumn.Inspector => e.Project.Inspector,
+        HitRateReportColumn.TenderDeadline => FormatDate(e.Project.TenderDeadline),
+        HitRateReportColumn.Code => e.Project.Code,
+        HitRateReportColumn.Organisation => e.Project.Organisation,
+        HitRateReportColumn.Developer => e.Project.Developer,
+        HitRateReportColumn.Contract => e.Project.Contract,
+        HitRateReportColumn.Compensation => e.Project.Compensation,
+        HitRateReportColumn.ProcurementName => e.Project.ProcurementName,
+        HitRateReportColumn.ProcurementProcedure => e.Project.ProcurementProcedure,
+        HitRateReportColumn.PublicationDate => e.Project.PublicationDate.HasValue ? e.Project.PublicationDate.Value.ToString("yyyy-MM-dd") : "",
+        HitRateReportColumn.DecisionDate => e.Project.DecisionDate.HasValue ? e.Project.DecisionDate.Value.ToString("yyyy-MM-dd") : "",
+        HitRateReportColumn.UpdatedAt => e.Project.UpdatedAt?.ToString("yyyy-MM-dd") ?? "",
+        HitRateReportColumn.CreatedAt => e.Project.CreatedAt == default ? "" : e.Project.CreatedAt.ToString("yyyy-MM-dd"),
+        HitRateReportColumn.Archived => !e.Project.IsArchived ? "" : L("archived"),
+        HitRateReportColumn.TenderQA => FormatDate(e.Project.TenderQA),
+        _ => ""
+    };
+
+    private string GetIncomeColumnLabel(IncomeReportColumn col) => col switch
+    {
+        IncomeReportColumn.Folder => L("folder"),
+        IncomeReportColumn.Project => L("project"),
+        IncomeReportColumn.Calculation => L("calculation"),
+        IncomeReportColumn.Source => "Källa",
+        IncomeReportColumn.CalcStatus => "Kalkylstatus",
+        IncomeReportColumn.Year => L("year"),
+        IncomeReportColumn.SubType => "Deltyp",
+        IncomeReportColumn.Amount => "Intäkt",
+        IncomeReportColumn.Probability => "Vinst %",
+        IncomeReportColumn.Forecast => "Prognos",
+        IncomeReportColumn.ProjectCode => "Projektkod",
+        IncomeReportColumn.ProjectType => "Projekttyp",
+        IncomeReportColumn.ProjStatus => "Projektstatus",
+        IncomeReportColumn.Organisation => "Beställare",
+        IncomeReportColumn.Developer => "Byggherre",
+        IncomeReportColumn.CalcCode => "Kalkylkod",
+        IncomeReportColumn.Version => L("version"),
+        IncomeReportColumn.CalcType => L("type"),
+        IncomeReportColumn.CalcRole => "Kalkylroll",
+        IncomeReportColumn.Responsible => "Kalkylansvarig",
+        IncomeReportColumn.Inspector => "Granskare",
+        IncomeReportColumn.TenderDeadline => "Anbudsdeadline",
+        IncomeReportColumn.PublicationDate => "Publiceringsdatum",
+        IncomeReportColumn.DecisionDate => "Beslutsdatum",
+        IncomeReportColumn.Contract => "Entreprenadform",
+        IncomeReportColumn.Compensation => "Ersättningsform",
+        IncomeReportColumn.ProcurementName => "Upphandlingsform",
+        IncomeReportColumn.ProcurementProcedure => "Upphandlingsförfarande",
+        IncomeReportColumn.Archived => "Arkiverad",
+        _ => col.ToString()
+    };
+
+    private static string GetIncomeColumnTitle(IncomeReportColumn col) => col switch
+    {
+        IncomeReportColumn.Probability => "Sannolikhet att vinna",
+        _ => string.Empty
+    };
+
+    private static bool IsIncomeColumnNumeric(IncomeReportColumn col) => col is
+        IncomeReportColumn.Amount or IncomeReportColumn.Probability or IncomeReportColumn.Forecast;
+
+    private static string GetIncomeTdClass(IncomeReportColumn col) => col switch
+    {
+        IncomeReportColumn.Forecast => "text-right font-semibold",
+        IncomeReportColumn.Amount or IncomeReportColumn.Probability => "text-right",
+        _ => ""
+    };
+
+    private string GetIncomeDataCellValue(IncomeTableRow row, IncomeReportColumn col) => col switch
+    {
+        IncomeReportColumn.Folder => row.FolderName,
+        IncomeReportColumn.Project => row.ProjectName,
+        IncomeReportColumn.Calculation => row.CalcName,
+        IncomeReportColumn.Source => row.SourceLabel,
+        IncomeReportColumn.CalcStatus => row.Status,
+        IncomeReportColumn.Year => row.Year.ToString(),
+        IncomeReportColumn.SubType => row.SubTypeText,
+        IncomeReportColumn.Amount => FormatMoney(row.Amount),
+        IncomeReportColumn.Probability => $"{row.Probability} %",
+        IncomeReportColumn.Forecast => FormatMoney(row.Forecast),
+        IncomeReportColumn.ProjectCode => row.ProjectCode,
+        IncomeReportColumn.ProjectType => row.ProjectType,
+        IncomeReportColumn.ProjStatus => row.ProjStatus,
+        IncomeReportColumn.Organisation => row.Organisation,
+        IncomeReportColumn.Developer => row.Developer,
+        IncomeReportColumn.CalcCode => row.CalcCode,
+        IncomeReportColumn.Version => row.CalcVersion,
+        IncomeReportColumn.CalcType => row.CalcTypeName,
+        IncomeReportColumn.CalcRole => row.CalcRoleName,
+        IncomeReportColumn.Responsible => row.Responsible,
+        IncomeReportColumn.Inspector => row.Inspector,
+        IncomeReportColumn.TenderDeadline => row.TenderDeadlineText,
+        IncomeReportColumn.PublicationDate => row.PublicationDateText,
+        IncomeReportColumn.DecisionDate => row.DecisionDateText,
+        IncomeReportColumn.Contract => row.Contract,
+        IncomeReportColumn.Compensation => row.Compensation,
+        IncomeReportColumn.ProcurementName => row.ProcurementName,
+        IncomeReportColumn.ProcurementProcedure => row.ProcurementProcedure,
+        IncomeReportColumn.Archived => row.ArchivedText,
+        _ => ""
+    };
+
     private string GetCalcColumnLabel(CalcReportColumn col) => col switch
     {
         CalcReportColumn.Folder => L("folder"),
@@ -984,6 +1435,8 @@
         CalcReportColumn.CreatedAt => "Skapad datum",
         CalcReportColumn.UpdatedAt => "Senast ändrad",
         CalcReportColumn.Archived => "Arkiverad",
+        CalcReportColumn.Code => "Kalkylkod",
+        CalcReportColumn.Private => "Privat",
         _ => col.ToString()
     };
 
@@ -992,7 +1445,9 @@
         CalcReportColumn.Folder => e.Folder.Name,
         CalcReportColumn.Project => e.Project.Name,
         CalcReportColumn.Calculation => e.Calculation.Name,
-        CalcReportColumn.Version => $"V.{e.Calculation.VersionNumber:D2}",
+        CalcReportColumn.Version => _lockedCalcShowAllVersions && e.Calculation.IsCurrentVersion
+            ? $"V.{e.Calculation.VersionNumber:D2} (Aktuell)"
+            : $"V.{e.Calculation.VersionNumber:D2}",
         CalcReportColumn.CalcType => TypeLabel(e.Calculation.CalculationType),
         CalcReportColumn.CalcStatus => e.Calculation.Status ?? "",
         CalcReportColumn.CalcRole => GetCalculationRoleLabel(e.Calculation.CalculationRole),
@@ -1004,6 +1459,8 @@
         CalcReportColumn.CreatedAt => e.Calculation.CreatedAt == default ? "" : e.Calculation.CreatedAt.ToString("yyyy-MM-dd"),
         CalcReportColumn.UpdatedAt => e.Calculation.UpdatedAt?.ToString("yyyy-MM-dd") ?? "",
         CalcReportColumn.Archived => !e.Calculation.IsArchived ? "" : L("archived"),
+        CalcReportColumn.Code => e.Calculation.Code ?? "",
+        CalcReportColumn.Private => e.Calculation.IsPrivate ? "Privat" : "",
         _ => ""
     };
 
@@ -1032,6 +1489,14 @@
         ProjReportColumn.Organisation => "Beställare",
         ProjReportColumn.ProcurementName => "Upphandlingsform",
         ProjReportColumn.Archived => "Arkiverad",
+        ProjReportColumn.ProcurementProcedure => "Upphandlingsförfarande",
+        ProjReportColumn.Compensation => "Ersättningsform",
+        ProjReportColumn.ProcurementNumber => "Upphandlingsnummer",
+        ProjReportColumn.Developer => "Byggherre",
+        ProjReportColumn.PublicationDate => "Publiceringsdatum",
+        ProjReportColumn.DecisionDate => "Beslutsdatum",
+        ProjReportColumn.CreatedAt => "Skapad datum",
+        ProjReportColumn.UpdatedAt => "Senast ändrad",
         _ => col.ToString()
     };
 
@@ -1060,6 +1525,14 @@
         ProjReportColumn.Organisation => e.Project.Organisation,
         ProjReportColumn.ProcurementName => e.Project.ProcurementName,
         ProjReportColumn.Archived => !e.Project.IsArchived ? "" : L("archived"),
+        ProjReportColumn.ProcurementProcedure => e.Project.ProcurementProcedure,
+        ProjReportColumn.Compensation => e.Project.Compensation,
+        ProjReportColumn.ProcurementNumber => e.Project.ProcurementNumber,
+        ProjReportColumn.Developer => e.Project.Developer,
+        ProjReportColumn.PublicationDate => e.Project.PublicationDate.HasValue ? e.Project.PublicationDate.Value.ToString("yyyy-MM-dd") : "",
+        ProjReportColumn.DecisionDate => e.Project.DecisionDate.HasValue ? e.Project.DecisionDate.Value.ToString("yyyy-MM-dd") : "",
+        ProjReportColumn.CreatedAt => e.Project.CreatedAt == default ? "" : e.Project.CreatedAt.ToString("yyyy-MM-dd"),
+        ProjReportColumn.UpdatedAt => e.Project.UpdatedAt?.ToString("yyyy-MM-dd") ?? "",
         _ => ""
     };
 
@@ -1103,23 +1576,24 @@
         </div>;
     }
 
-    private RenderFragment HitRateProjectTable() => @<div class="@TableContainerClass">
-        <table class="@TableClass">
-            <thead class="@TableHeadClass">
-                <tr><th>Mapp</th><th>Projekt</th><th>Projektstatus</th><th>Anbudsdeadline</th><th>Kalkylansvarig</th><th>Granskare</th></tr>
-            </thead>
-            <tbody class="@TableBodyClass">
-                @{ var hi = 0; }
-                @foreach (var e in HitRateProjectEntries)
-                {
-                    <tr class="@(hi++ % 2 == 0 ? "" : "bg-slate-50/70 dark:bg-slate-900/30")">
-                        <td>@e.Folder.Name</td><td>@e.Project.Name</td><td>@e.Project.Status</td>
-                        <td>@FormatDate(e.Project.TenderDeadline)</td><td>@e.Project.Responsible</td><td>@e.Project.Inspector</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>;
+    private RenderFragment HitRateProjectTable()
+    {
+        var cols = HitRateAllColumns.Where(c => _visibleHitRateColumns.Contains(c)).ToList();
+        return @<div class="@TableContainerClass">
+            <table class="@TableClass">
+                <thead class="@TableHeadClass"><tr>@foreach (var c in cols) { <th>@GetHitRateColumnLabel(c)</th> }</tr></thead>
+                <tbody class="@TableBodyClass">
+                    @{ var hi = 0; }
+                    @foreach (var e in _lockedHitRateProjects)
+                    {
+                        <tr class="@(hi++ % 2 == 0 ? "" : "bg-slate-50/70 dark:bg-slate-900/30")">
+                            @foreach (var c in cols) { <td>@GetHitRateCellValue(e, c)</td> }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>;
+    }
 
     // ── Tab styling ───────────────────────────────────────────────────
 
@@ -1167,56 +1641,112 @@
 
     private ExportModel BuildIncomeExport()
     {
-        string[] cols = _showQuarters
-            ? [L("folder"), L("project"), L("calculation"), "Källa", "Kalkylstatus", L("year"), "Deltyp", "Q1", "Q2", "Q3", "Q4", "Intäkt", "Vinst %", "Prognos"]
-            : [L("folder"), L("project"), L("calculation"), "Källa", "Kalkylstatus", L("year"), "Deltyp", "Intäkt", "Vinst %", "Prognos"];
-        return new(L("incomeOverview"), cols, BuildIncomeExportRows());
+        var cols = IncomeVisibleColumns.ToList();
+        var headers = new List<string>();
+        foreach (var c in cols)
+        {
+            headers.Add(GetIncomeColumnLabel(c));
+            if (c == IncomeReportColumn.Year && _showQuarters)
+            { headers.Add("Q1"); headers.Add("Q2"); headers.Add("Q3"); headers.Add("Q4"); }
+        }
+        return new(L("incomeOverview"), headers.ToArray(), BuildIncomeExportRowsDynamic(cols));
     }
 
-    private IEnumerable<IEnumerable<object?>> BuildIncomeExportRows()
+    private IEnumerable<IEnumerable<object?>> BuildIncomeExportRowsDynamic(List<IncomeReportColumn> cols)
     {
         foreach (var row in BuildIncomeTableRows())
         {
+            var cells = new List<object?>();
             if (row.Kind == IncomeTableRowKind.Data)
-                yield return _showQuarters
-                    ? new object?[] { row.FolderName, row.ProjectName, row.CalcName, row.SourceLabel, row.Status, row.Year, row.SubTypeText, row.Q1, row.Q2, row.Q3, row.Q4, row.Amount, $"{row.Probability} %", row.Forecast }
-                    : new object?[] { row.FolderName, row.ProjectName, row.CalcName, row.SourceLabel, row.Status, row.Year, row.SubTypeText, row.Amount, $"{row.Probability} %", row.Forecast };
+            {
+                foreach (var c in cols)
+                {
+                    cells.Add(GetIncomeDataCellValue(row, c));
+                    if (c == IncomeReportColumn.Year && _showQuarters)
+                    { cells.Add(row.Q1); cells.Add(row.Q2); cells.Add(row.Q3); cells.Add(row.Q4); }
+                }
+            }
             else
-                yield return _showQuarters
-                    ? new object?[] { row.SummaryLabel, "", "", "", "", "", "", row.Q1, row.Q2, row.Q3, row.Q4, row.Amount, "", row.Forecast }
-                    : new object?[] { row.SummaryLabel, "", "", "", "", "", "", row.Amount, "", row.Forecast };
+            {
+                bool first = true;
+                foreach (var c in cols)
+                {
+                    if (first) { cells.Add(row.SummaryLabel); first = false; }
+                    else if (c == IncomeReportColumn.Amount) cells.Add(row.Amount);
+                    else if (c == IncomeReportColumn.Forecast) cells.Add(row.Forecast);
+                    else cells.Add("");
+                    if (c == IncomeReportColumn.Year && _showQuarters)
+                    { cells.Add(row.Q1); cells.Add(row.Q2); cells.Add(row.Q3); cells.Add(row.Q4); }
+                }
+            }
+            yield return cells;
         }
     }
 
     private ExportModel BuildHitRateExport()
     {
-        string[] cols = ["Mapp / KPI", "Projekt / Värde", "Projektstatus", "Anbudsdeadline", "Kalkylansvarig", "Granskare"];
+        var dataCols = HitRateAllColumns.Where(c => _visibleHitRateColumns.Contains(c)).ToList();
+        var maxCols = Math.Max(dataCols.Count, 2);
+        string[] headers = dataCols.Select(GetHitRateColumnLabel).ToArray();
         var rows = new List<IEnumerable<object?>>();
-        rows.Add(new object?[] { "Inlämnade:", SubmittedCount, "", "", "", "" });
-        rows.Add(new object?[] { "Vunna:", WonCount, "", "", "", "" });
-        rows.Add(new object?[] { "Förlorade:", LostCount, "", "", "", "" });
-        rows.Add(new object?[] { "Ej beslutade:", UndecidedCount, "", "", "", "" });
-        rows.Add(new object?[] { "Hit rate / träffsäkerhet:", $"{HitRate:N1} %", "", "", "", "" });
-        rows.Add(new object?[] { "", "", "", "", "", "" });
-        foreach (var e in HitRateProjectEntries)
-            rows.Add(new object?[] { e.Folder.Name, e.Project.Name, e.Project.Status, FormatDate(e.Project.TenderDeadline), e.Project.Responsible, e.Project.Inspector });
-        return new(L("hitRate"), cols, rows);
+        var empty = Enumerable.Repeat<object?>("", maxCols - 1).ToArray();
+
+        rows.Add(PadRow(new object?[] { "Projekturval:" }, maxCols));
+        rows.Add(PadRow(new object?[] { _hitRateSelectionLine }, maxCols));
+        if (!string.IsNullOrWhiteSpace(_hitRateSelectionFilters))
+            rows.Add(PadRow(new object?[] { _hitRateSelectionFilters }, maxCols));
+        rows.Add(PadRow(Array.Empty<object?>(), maxCols));
+        rows.Add(PadRow(new object?[] { "Inlämnade:", SubmittedCount }, maxCols));
+        rows.Add(PadRow(new object?[] { "Vunna:", WonCount }, maxCols));
+        rows.Add(PadRow(new object?[] { "Förlorade:", LostCount }, maxCols));
+        rows.Add(PadRow(new object?[] { "Ej beslutade:", UndecidedCount }, maxCols));
+        rows.Add(PadRow(new object?[] { "Hit rate / träffsäkerhet:", $"{HitRate:N1} %" }, maxCols));
+        rows.Add(PadRow(Array.Empty<object?>(), maxCols));
+        rows.Add(headers.Cast<object?>().ToArray());
+        foreach (var e in _lockedHitRateProjects)
+            rows.Add(dataCols.Select(c => (object?)GetHitRateCellValue(e, c)).ToArray());
+        return new(L("hitRate"), headers, rows);
+    }
+
+    private static object?[] PadRow(object?[] values, int totalCols)
+    {
+        var result = new object?[totalCols];
+        for (int i = 0; i < Math.Min(values.Length, totalCols); i++) result[i] = values[i];
+        return result;
     }
 
     private ExportModel BuildCalcExport()
     {
         var cols = CalcAllColumns.Where(c => _visibleCalcColumns.Contains(c)).ToList();
-        return new(L("calculationListReport"),
-            cols.Select(GetCalcColumnLabel).ToArray(),
-            FilteredCalculations.Select(e => (IEnumerable<object?>)cols.Select(c => (object?)GetCalcCellValue(e, c)).ToArray()));
+        var headers = cols.Select(GetCalcColumnLabel).ToArray();
+        var maxCols = Math.Max(cols.Count, 2);
+        var rows = new List<IEnumerable<object?>>();
+        rows.Add(PadRow(new object?[] { "Kalkylurval:" }, maxCols));
+        rows.Add(PadRow(new object?[] { _calcReportSelectionLine }, maxCols));
+        if (!string.IsNullOrWhiteSpace(_calcReportSelectionFilters))
+            rows.Add(PadRow(new object?[] { _calcReportSelectionFilters }, maxCols));
+        rows.Add(PadRow(Array.Empty<object?>(), maxCols));
+        rows.Add(headers.Cast<object?>().ToArray());
+        foreach (var e in _lockedCalcReportList)
+            rows.Add(cols.Select(c => (object?)GetCalcCellValue(e, c)).ToArray());
+        return new(L("calculationListReport"), headers, rows);
     }
 
     private ExportModel BuildProjExport()
     {
         var cols = ProjAllColumns.Where(c => _visibleProjColumns.Contains(c)).ToList();
-        return new(L("projectListReport"),
-            cols.Select(GetProjColumnLabel).ToArray(),
-            FilteredProjects.Select(e => (IEnumerable<object?>)cols.Select(c => (object?)GetProjCellValue(e, c)).ToArray()));
+        var headers = cols.Select(GetProjColumnLabel).ToArray();
+        var maxCols = Math.Max(cols.Count, 2);
+        var rows = new List<IEnumerable<object?>>();
+        rows.Add(PadRow(new object?[] { "Projekturval:" }, maxCols));
+        rows.Add(PadRow(new object?[] { _projReportSelectionLine }, maxCols));
+        if (!string.IsNullOrWhiteSpace(_projReportSelectionFilters))
+            rows.Add(PadRow(new object?[] { _projReportSelectionFilters }, maxCols));
+        rows.Add(PadRow(Array.Empty<object?>(), maxCols));
+        rows.Add(headers.Cast<object?>().ToArray());
+        foreach (var e in _lockedProjReportProjects)
+            rows.Add(cols.Select(c => (object?)GetProjCellValue(e, c)).ToArray());
+        return new(L("projectListReport"), headers, rows);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────
