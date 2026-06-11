@@ -272,7 +272,7 @@
             <div class="text-sm text-slate-500 dark:text-slate-400">Laddar kalkyler...</div>
         </div>
     }
-    else if (SortedCalculations.Any())
+    else if (BaseCalculations.Any())
     {
         <div class="divNetCalc flex-1 min-h-0 overflow-auto rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
             <table id="resizeMe" class="w-max min-w-full table-auto text-left text-xs">
@@ -293,7 +293,7 @@
                         @if (IsCalculationColumnVisible("version"))
                         {
                             <th id="hversion" class="@SortableHeaderClass("version")" style="min-width:80px;" @onclick='() => SortBy("version")'>
-                                <span class="inline-flex items-center gap-1">@AppLoc["version"] @((MarkupString)SortIndicatorHtml("version"))</span>
+                                <span class="inline-flex items-center gap-1">@AppLoc["version"] @((MarkupString)SortIndicatorHtml("version")) <TableColumnFilter FilterState='CF("version")' OnChanged="OnColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("project"))
@@ -359,7 +359,7 @@
                         @if (IsCalculationColumnVisible("address"))
                         {
                             <th id="haddress" class="@SortableHeaderClass("address")" style="min-width:140px;" @onclick='() => SortBy("address")'>
-                                <span class="inline-flex items-center gap-1">Adress @((MarkupString)SortIndicatorHtml("address"))</span>
+                                <span class="inline-flex items-center gap-1">Adress @((MarkupString)SortIndicatorHtml("address")) <TableColumnFilter FilterState='CF("address")' OnChanged="OnColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("createdAt"))
@@ -413,6 +413,25 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                    @if (TotalFilteredCount == 0)
+                    {
+                        <tr>
+                            <td colspan="@VisibleCalculationColumnCount" class="px-3 py-8 text-center">
+                                <div class="flex flex-col items-center gap-2 text-slate-500 dark:text-slate-400">
+                                    <span class="text-sm">@CalcResource.noResultsFound</span>
+                                    @if (HasActiveFilters)
+                                    {
+                                        <button type="button"
+                                                class="inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                                                @onclick="ClearFilters">
+                                            <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                            <span>@AppLoc["clearAllFilters"]</span>
+                                        </button>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
                     @foreach (var calu in PagedCalculations)
                     {
                         var isSelected = Folder.State.Calculation?.Id == calu.Id;
@@ -753,13 +772,15 @@
     {
         ["code"]            = new() { Type = ColumnFilterType.Text },
         ["name"]            = new() { Type = ColumnFilterType.Text },
+        ["version"]         = new() { Type = ColumnFilterType.Number },
         ["project"]         = new() { Type = ColumnFilterType.Text },
         ["folder"]          = new() { Type = ColumnFilterType.Text },
         ["calculationType"] = new() { Type = ColumnFilterType.Dropdown },
         ["calculationRole"] = new() { Type = ColumnFilterType.Dropdown },
-        ["status"]          = new() { Type = ColumnFilterType.Text },
-        ["responsible"]     = new() { Type = ColumnFilterType.Text },
-        ["inspector"]       = new() { Type = ColumnFilterType.Text },
+        ["status"]          = new() { Type = ColumnFilterType.Dropdown },
+        ["responsible"]     = new() { Type = ColumnFilterType.Dropdown },
+        ["inspector"]       = new() { Type = ColumnFilterType.Dropdown },
+        ["address"]         = new() { Type = ColumnFilterType.Text },
         ["qa"]              = new() { Type = ColumnFilterType.Date },
         ["deadline"]        = new() { Type = ColumnFilterType.Date },
         ["start"]           = new() { Type = ColumnFilterType.Date },
@@ -817,7 +838,38 @@
     }
 
     private void OnColumnFilterChanged() => ResetPage();
-    private ColumnFilterState CF(string key) => _calcColFilters[key];
+
+    private ColumnFilterState CF(string key)
+    {
+        var state = _calcColFilters[key];
+        switch (key)
+        {
+            case "status":
+                state.AvailableValues = GetCalcDropdownValues(GetCalculationStatusText);
+                break;
+            case "responsible":
+                state.AvailableValues = GetCalcDropdownValues(c => c.Responsible);
+                break;
+            case "inspector":
+                state.AvailableValues = GetCalcDropdownValues(c => c.Inspector);
+                break;
+        }
+        return state;
+    }
+
+    private List<string> GetCalcDropdownValues(Func<ListCalculationMVVM, string?> selector) =>
+        BaseCalculations
+            .Select(selector)
+            .Where(v => !string.IsNullOrWhiteSpace(v))
+            .Select(v => v!)
+            .Distinct()
+            .OrderBy(v => v, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+
+    private IEnumerable<ListCalculationMVVM> BaseCalculations =>
+        FolderScopeMode
+            ? _scopeCalculationRows.Select(row => row.Calculation)
+            : Folder.State.ProjectSelected?.Calculations ?? Enumerable.Empty<ListCalculationMVVM>();
 
     private bool HasActiveFilters => _calcColFilters.Values.Any(f => f.IsActive);
     private int ActiveFilterCount => _calcColFilters.Values.Count(f => f.IsActive);
@@ -973,9 +1025,7 @@
     {
         get
         {
-            var list = FolderScopeMode
-                ? _scopeCalculationRows.Select(row => row.Calculation)
-                : Folder.State.ProjectSelected?.Calculations ?? Enumerable.Empty<ListCalculationMVVM>();
+            var list = BaseCalculations;
 
             if (!_showAllVersions)
                 list = CalculationVersionSelector.SelectCurrentVersions(list);
@@ -992,6 +1042,8 @@
                 list = list.Where(c => _calcColFilters["code"].MatchesText(c.Code));
             if (_calcColFilters["name"].IsActive)
                 list = list.Where(c => _calcColFilters["name"].MatchesText(c.Name));
+            if (_calcColFilters["version"].IsActive)
+                list = list.Where(c => _calcColFilters["version"].MatchesNumber(c.VersionNumber));
             if (_calcColFilters["project"].IsActive)
                 list = list.Where(c => _calcColFilters["project"].MatchesText(GetCalculationProjectName(c)));
             if (_calcColFilters["folder"].IsActive)
@@ -1001,11 +1053,13 @@
             if (_calcColFilters["calculationRole"].IsActive)
                 list = list.Where(c => _calcColFilters["calculationRole"].MatchesDropdown(GetCalculationRoleLabel(c.CalculationRole)));
             if (_calcColFilters["status"].IsActive)
-                list = list.Where(c => _calcColFilters["status"].MatchesText(c.Status));
+                list = list.Where(c => _calcColFilters["status"].MatchesDropdown(GetCalculationStatusText(c)));
             if (_calcColFilters["responsible"].IsActive)
-                list = list.Where(c => _calcColFilters["responsible"].MatchesText(c.Responsible));
+                list = list.Where(c => _calcColFilters["responsible"].MatchesDropdown(c.Responsible));
             if (_calcColFilters["inspector"].IsActive)
-                list = list.Where(c => _calcColFilters["inspector"].MatchesText(c.Inspector));
+                list = list.Where(c => _calcColFilters["inspector"].MatchesDropdown(c.Inspector));
+            if (_calcColFilters["address"].IsActive)
+                list = list.Where(c => _calcColFilters["address"].MatchesText(c.AddressText));
             if (_calcColFilters["qa"].IsActive)
                 list = list.Where(c => _calcColFilters["qa"].MatchesDate(c.TenderQA == default ? null : c.TenderQA));
             if (_calcColFilters["deadline"].IsActive)
@@ -1142,6 +1196,9 @@
 
     private bool IsCalculationColumnVisible(string key) =>
         _calculationColumns.TryGetValue(key, out var visible) && visible;
+
+    private int VisibleCalculationColumnCount =>
+        Math.Max(1, _calculationColumns.Count(c => c.Value));
 
     private ScopeCalculationRow? GetScopeRow(ListCalculationMVVM calculation) =>
         FolderScopeMode && _scopeCalculationLookup.TryGetValue(calculation.Id, out var row)
@@ -1480,6 +1537,7 @@
         {
             "code"            => "Kod",
             "name"            => "Kalkylnamn",
+            "version"         => AppLoc["version"].Value,
             "project"         => "Projekt",
             "folder"          => "Mapp",
             "calculationType" => "Kalkyltyp",
@@ -1491,9 +1549,12 @@
             "qa"              => "Frågor/svar",
             "start"           => "Startdatum",
             "end"             => "Slutdatum",
+            "address"         => "Adress",
             "createdAt"       => "Skapad",
             "updatedAt"       => "Senast ändrad",
             "priority"        => "Vinstchans",
+            "timeMonth"       => AppLoc["projectDurationMonths"].Value,
+            "tax"             => AppLoc["vatPercent"].Value,
             "archived"        => "Arkiverad",
             "privacy"         => "Privat",
             _                 => key
@@ -1509,6 +1570,10 @@
             ColumnFilterType.Date when state.DateOp == DateFilterOp.IsNotEmpty => $"{label}: ej tom",
             ColumnFilterType.Date when state.DateOp == DateFilterOp.Between    => $"{label}: {state.DateFrom:yyyy-MM-dd}–{state.DateTo:yyyy-MM-dd}",
             ColumnFilterType.Date     => $"{label}: {state.DateFrom:yyyy-MM-dd}",
+            ColumnFilterType.Number when state.NumberOp == NumberFilterOp.IsEmpty    => $"{label}: tom",
+            ColumnFilterType.Number when state.NumberOp == NumberFilterOp.IsNotEmpty => $"{label}: ej tom",
+            ColumnFilterType.Number when state.NumberOp == NumberFilterOp.Between    => $"{label}: {state.NumberFrom}–{state.NumberTo}",
+            ColumnFilterType.Number   => $"{label}: {state.NumberFrom}",
             ColumnFilterType.Boolean  => $"{label}: {(state.BoolValue == "true" ? "Ja" : "Nej")}",
             _                         => label
         };

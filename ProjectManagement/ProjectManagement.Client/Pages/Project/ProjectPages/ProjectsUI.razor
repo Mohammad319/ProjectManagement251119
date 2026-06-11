@@ -287,7 +287,7 @@
     </div>@* ── End sticky header ─────────────────────────── *@
 
     @* ── Content area ────────────────────────────────────── *@
-    @if (SortedProjects.Any())
+    @if (BaseProjects.Any())
     {
         <div class="divNetCalc flex-1 min-h-0 overflow-auto rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
             <table id="resizeMe" class="w-max min-w-full table-auto text-left text-xs">
@@ -344,7 +344,7 @@
                         @if (IsProjectColumnVisible("calculations"))
                         {
                             <th id="hcalculations" class="@SortableHeaderClass("calculations") text-right" style="min-width:60px;" @onclick='() => SortBy("calculations")'>
-                                <span class="inline-flex items-center justify-end gap-1">@AppLoc["calculationCount"] @((MarkupString)SortIndicatorHtml("calculations"))</span>
+                                <span class="inline-flex items-center justify-end gap-1">@AppLoc["calculationCount"] @((MarkupString)SortIndicatorHtml("calculations")) <TableColumnFilter FilterState='PF("calculations")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("byggherre"))
@@ -362,31 +362,31 @@
                         @if (IsProjectColumnVisible("procurementName"))
                         {
                             <th id="hprocurementName" class="@SortableHeaderClass("procurementName")" style="min-width:120px;" @onclick='() => SortBy("procurementName")'>
-                                <span class="inline-flex items-center gap-1">@AppLoc["procurementName"] @((MarkupString)SortIndicatorHtml("procurementName"))</span>
+                                <span class="inline-flex items-center gap-1">@AppLoc["procurementName"] @((MarkupString)SortIndicatorHtml("procurementName")) <TableColumnFilter FilterState='PF("procurementName")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("procurementNumber"))
                         {
                             <th id="hprocurementNumber" class="@SortableHeaderClass("procurementNumber")" style="min-width:120px;" @onclick='() => SortBy("procurementNumber")'>
-                                <span class="inline-flex items-center gap-1">@AppLoc["procurementNumber"] @((MarkupString)SortIndicatorHtml("procurementNumber"))</span>
+                                <span class="inline-flex items-center gap-1">@AppLoc["procurementNumber"] @((MarkupString)SortIndicatorHtml("procurementNumber")) <TableColumnFilter FilterState='PF("procurementNumber")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("customerReference"))
                         {
                             <th id="hcustomerReference" class="@SortableHeaderClass("customerReference")" style="min-width:120px;" @onclick='() => SortBy("customerReference")'>
-                                <span class="inline-flex items-center gap-1">@AppLoc["customerReference"] @((MarkupString)SortIndicatorHtml("customerReference"))</span>
+                                <span class="inline-flex items-center gap-1">@AppLoc["customerReference"] @((MarkupString)SortIndicatorHtml("customerReference")) <TableColumnFilter FilterState='PF("customerReference")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("contract"))
                         {
                             <th id="hcontract" class="@SortableHeaderClass("contract")" style="min-width:80px;" @onclick='() => SortBy("contract")'>
-                                <span class="inline-flex items-center gap-1">@CalcResource.projectContract @((MarkupString)SortIndicatorHtml("contract"))</span>
+                                <span class="inline-flex items-center gap-1">@CalcResource.projectContract @((MarkupString)SortIndicatorHtml("contract")) <TableColumnFilter FilterState='PF("contract")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("projectType"))
                         {
                             <th id="hprojectType" class="@SortableHeaderClass("projectType")" style="min-width:80px;" @onclick='() => SortBy("projectType")'>
-                                <span class="inline-flex items-center gap-1">@CalcResource.projectType @((MarkupString)SortIndicatorHtml("projectType"))</span>
+                                <span class="inline-flex items-center gap-1">@CalcResource.projectType @((MarkupString)SortIndicatorHtml("projectType")) <TableColumnFilter FilterState='PF("projectType")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("inspector"))
@@ -398,55 +398,55 @@
                         @if (IsProjectColumnVisible("designer"))
                         {
                             <th id="hdesigner" class="@SortableHeaderClass("designer")" style="min-width:110px;" @onclick='() => SortBy("designer")'>
-                                <span class="inline-flex items-center gap-1">Projektörer @((MarkupString)SortIndicatorHtml("designer"))</span>
+                                <span class="inline-flex items-center gap-1">Projektörer @((MarkupString)SortIndicatorHtml("designer")) <TableColumnFilter FilterState='PF("designer")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("supervisor"))
                         {
                             <th id="hsupervisor" class="@SortableHeaderClass("supervisor")" style="min-width:180px;" @onclick='() => SortBy("supervisor")'>
-                                <span class="inline-flex items-center gap-1">Kundens kontaktperson under upphandlingstiden @((MarkupString)SortIndicatorHtml("supervisor"))</span>
+                                <span class="inline-flex items-center gap-1">Kundens kontaktperson under upphandlingstiden @((MarkupString)SortIndicatorHtml("supervisor")) <TableColumnFilter FilterState='PF("supervisor")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("address"))
                         {
                             <th id="haddress" class="@SortableHeaderClass("address")" style="min-width:140px;" @onclick='() => SortBy("address")'>
-                                <span class="inline-flex items-center gap-1">Adress @((MarkupString)SortIndicatorHtml("address"))</span>
+                                <span class="inline-flex items-center gap-1">Adress @((MarkupString)SortIndicatorHtml("address")) <TableColumnFilter FilterState='PF("address")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("procurementMethods"))
                         {
                             <th id="hprocurementMethods" class="@SortableHeaderClass("procurementMethods")" style="min-width:110px;" @onclick='() => SortBy("procurementMethods")'>
-                                <span class="inline-flex items-center gap-1">@CalcResource.procurementMethods @((MarkupString)SortIndicatorHtml("procurementMethods"))</span>
+                                <span class="inline-flex items-center gap-1">@CalcResource.procurementMethods @((MarkupString)SortIndicatorHtml("procurementMethods")) <TableColumnFilter FilterState='PF("procurementMethods")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("compensation"))
                         {
                             <th id="hcompensation" class="@SortableHeaderClass("compensation")" style="min-width:110px;" @onclick='() => SortBy("compensation")'>
-                                <span class="inline-flex items-center gap-1">@CalcResource.projectCompensation @((MarkupString)SortIndicatorHtml("compensation"))</span>
+                                <span class="inline-flex items-center gap-1">@CalcResource.projectCompensation @((MarkupString)SortIndicatorHtml("compensation")) <TableColumnFilter FilterState='PF("compensation")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("procurementProcedure"))
                         {
                             <th id="hprocurementProcedure" class="@SortableHeaderClass("procurementProcedure")" style="min-width:130px;" @onclick='() => SortBy("procurementProcedure")'>
-                                <span class="inline-flex items-center gap-1">Upphandlingsförfarande @((MarkupString)SortIndicatorHtml("procurementProcedure"))</span>
+                                <span class="inline-flex items-center gap-1">Upphandlingsförfarande @((MarkupString)SortIndicatorHtml("procurementProcedure")) <TableColumnFilter FilterState='PF("procurementProcedure")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("clientsManager"))
                         {
                             <th id="hclientsManager" class="@SortableHeaderClass("clientsManager")" style="min-width:120px;" @onclick='() => SortBy("clientsManager")'>
-                                <span class="inline-flex items-center gap-1">@ResourceLoc.clientsProjectmanager @((MarkupString)SortIndicatorHtml("clientsManager"))</span>
+                                <span class="inline-flex items-center gap-1">@ResourceLoc.clientsProjectmanager @((MarkupString)SortIndicatorHtml("clientsManager")) <TableColumnFilter FilterState='PF("clientsManager")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("publicationDate"))
                         {
                             <th id="hpublicationDate" class="@SortableHeaderClass("publicationDate")" style="min-width:90px;" @onclick='() => SortBy("publicationDate")'>
-                                <span class="inline-flex items-center gap-1">@CalcResource.publicationDate @((MarkupString)SortIndicatorHtml("publicationDate"))</span>
+                                <span class="inline-flex items-center gap-1">@CalcResource.publicationDate @((MarkupString)SortIndicatorHtml("publicationDate")) <TableColumnFilter FilterState='PF("publicationDate")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("decisionDate"))
                         {
                             <th id="hdecisionDate" class="@SortableHeaderClass("decisionDate")" style="min-width:90px;" @onclick='() => SortBy("decisionDate")'>
-                                <span class="inline-flex items-center gap-1">@CalcResource.decisionDate @((MarkupString)SortIndicatorHtml("decisionDate"))</span>
+                                <span class="inline-flex items-center gap-1">@CalcResource.decisionDate @((MarkupString)SortIndicatorHtml("decisionDate")) <TableColumnFilter FilterState='PF("decisionDate")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("createdAt"))
@@ -464,12 +464,31 @@
                         @if (IsProjectColumnVisible("archived"))
                         {
                             <th id="harchived" class="@SortableHeaderClass("archived")" style="min-width:80px;" @onclick='() => SortBy("archived")'>
-                                <span class="inline-flex items-center gap-1">@AppLoc["archived"] @((MarkupString)SortIndicatorHtml("archived"))</span>
+                                <span class="inline-flex items-center gap-1">@AppLoc["archived"] @((MarkupString)SortIndicatorHtml("archived")) <TableColumnFilter FilterState='PF("archived")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                    @if (TotalProjectCount == 0)
+                    {
+                        <tr>
+                            <td colspan="@VisibleProjectColumnCount" class="px-3 py-8 text-center">
+                                <div class="flex flex-col items-center gap-2 text-slate-500 dark:text-slate-400">
+                                    <span class="text-sm">@CalcResource.noResultsFound</span>
+                                    @if (HasActiveProjectFilters)
+                                    {
+                                        <button type="button"
+                                                class="inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                                                @onclick="ClearProjectFilters">
+                                            <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                            <span>@AppLoc["clearAllFilters"]</span>
+                                        </button>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
                     @foreach (var project in PagedProjects)
                     {
                         var isProjectArchived = project.IsArchived;
@@ -735,19 +754,35 @@
 
     private readonly Dictionary<string, ColumnFilterState> _projColFilters = new()
     {
-        ["code"]          = new() { Type = ColumnFilterType.Text },
-        ["name"]          = new() { Type = ColumnFilterType.Text },
-        ["status"]        = new() { Type = ColumnFilterType.Text },
-        ["responsible"]   = new() { Type = ColumnFilterType.Text },
-        ["inspector"]     = new() { Type = ColumnFilterType.Text },
-        ["deadline"]      = new() { Type = ColumnFilterType.Date },
-        ["qa"]            = new() { Type = ColumnFilterType.Date },
-        ["start"]         = new() { Type = ColumnFilterType.Date },
-        ["end"]           = new() { Type = ColumnFilterType.Date },
-        ["byggherre"]     = new() { Type = ColumnFilterType.Text },
-        ["organisation"]  = new() { Type = ColumnFilterType.Text },
-        ["createdAt"]     = new() { Type = ColumnFilterType.Date },
-        ["updatedAt"]     = new() { Type = ColumnFilterType.Date },
+        ["code"]                 = new() { Type = ColumnFilterType.Text },
+        ["name"]                 = new() { Type = ColumnFilterType.Text },
+        ["status"]               = new() { Type = ColumnFilterType.Dropdown },
+        ["responsible"]          = new() { Type = ColumnFilterType.Dropdown },
+        ["inspector"]            = new() { Type = ColumnFilterType.Dropdown },
+        ["deadline"]             = new() { Type = ColumnFilterType.Date },
+        ["qa"]                   = new() { Type = ColumnFilterType.Date },
+        ["start"]                = new() { Type = ColumnFilterType.Date },
+        ["end"]                  = new() { Type = ColumnFilterType.Date },
+        ["calculations"]         = new() { Type = ColumnFilterType.Number },
+        ["byggherre"]            = new() { Type = ColumnFilterType.Text },
+        ["organisation"]         = new() { Type = ColumnFilterType.Dropdown },
+        ["procurementName"]      = new() { Type = ColumnFilterType.Text },
+        ["procurementNumber"]    = new() { Type = ColumnFilterType.Text },
+        ["customerReference"]    = new() { Type = ColumnFilterType.Text },
+        ["contract"]             = new() { Type = ColumnFilterType.Dropdown },
+        ["projectType"]          = new() { Type = ColumnFilterType.Dropdown },
+        ["designer"]             = new() { Type = ColumnFilterType.Text },
+        ["supervisor"]           = new() { Type = ColumnFilterType.Text },
+        ["address"]              = new() { Type = ColumnFilterType.Text },
+        ["procurementMethods"]   = new() { Type = ColumnFilterType.Dropdown },
+        ["compensation"]         = new() { Type = ColumnFilterType.Dropdown },
+        ["procurementProcedure"] = new() { Type = ColumnFilterType.Dropdown },
+        ["clientsManager"]       = new() { Type = ColumnFilterType.Text },
+        ["publicationDate"]      = new() { Type = ColumnFilterType.Date },
+        ["decisionDate"]         = new() { Type = ColumnFilterType.Date },
+        ["createdAt"]            = new() { Type = ColumnFilterType.Date },
+        ["updatedAt"]            = new() { Type = ColumnFilterType.Date },
+        ["archived"]             = new() { Type = ColumnFilterType.Boolean },
     };
 
     private bool HasActiveProjectFilters => _projColFilters.Values.Any(f => f.IsActive);
@@ -759,25 +794,59 @@
     }
 
     private void OnProjectColumnFilterChanged() => _currentPage = 1;
-    private ColumnFilterState PF(string key) => _projColFilters[key];
+
+    private ColumnFilterState PF(string key)
+    {
+        var state = _projColFilters[key];
+        if (state.Type == ColumnFilterType.Dropdown)
+            state.AvailableValues = GetProjectDropdownValues(key);
+        return state;
+    }
+
+    private List<string> GetProjectDropdownValues(string key)
+    {
+        Func<ListProjectMVVM, string?> selector = key switch
+        {
+            "status"               => GetProjectStatusText,
+            "responsible"          => p => p.Responsible,
+            "inspector"            => p => p.Inspector,
+            "organisation"         => p => p.Organisation,
+            "contract"             => p => p.Contract,
+            "projectType"          => p => p.Type,
+            "procurementMethods"   => p => p.ProcurementMethods,
+            "compensation"         => p => p.Compensation,
+            "procurementProcedure" => p => p.ProcurementProcedure,
+            _                      => _ => null
+        };
+        return BaseProjects
+            .Select(selector)
+            .Where(v => !string.IsNullOrWhiteSpace(v))
+            .Select(v => v!)
+            .Distinct()
+            .OrderBy(v => v, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+    }
+
+    private IEnumerable<ListProjectMVVM> BaseProjects =>
+        IsDepartmentScope
+            ? Folder.State.FoldersList.SelectMany(f => f.Projects ?? (IEnumerable<ListProjectMVVM>)[])
+            : (Folder.State.FolderSelected?.Projects ?? (IEnumerable<ListProjectMVVM>)[]);
 
     private IEnumerable<ListProjectMVVM> FilteredProjects
     {
         get
         {
-            var projects = IsDepartmentScope
-                ? Folder.State.FoldersList.SelectMany(f => f.Projects ?? (IEnumerable<ListProjectMVVM>)[])
-                : (Folder.State.FolderSelected?.Projects ?? (IEnumerable<ListProjectMVVM>)[]);
+            var projects = BaseProjects;
             if (_projColFilters["code"].IsActive)
                 projects = projects.Where(p => _projColFilters["code"].MatchesText(p.Code));
             if (_projColFilters["name"].IsActive)
                 projects = projects.Where(p => _projColFilters["name"].MatchesText(p.Name));
             if (_projColFilters["status"].IsActive)
-                projects = projects.Where(p => _projColFilters["status"].MatchesText(p.Status));
+                projects = projects.Where(p => _projColFilters["status"].MatchesDropdown(GetProjectStatusText(p)));
             if (_projColFilters["responsible"].IsActive)
-                projects = projects.Where(p => _projColFilters["responsible"].MatchesText(p.Responsible));
+                projects = projects.Where(p => _projColFilters["responsible"].MatchesDropdown(p.Responsible));
             if (_projColFilters["inspector"].IsActive)
-                projects = projects.Where(p => _projColFilters["inspector"].MatchesText(p.Inspector));
+                projects = projects.Where(p => _projColFilters["inspector"].MatchesDropdown(p.Inspector));
             if (_projColFilters["deadline"].IsActive)
                 projects = projects.Where(p => _projColFilters["deadline"].MatchesDate(p.TenderDeadline == default ? null : p.TenderDeadline));
             if (_projColFilters["qa"].IsActive)
@@ -786,14 +855,46 @@
                 projects = projects.Where(p => _projColFilters["start"].MatchesDate(p.StartDate == default ? null : p.StartDate));
             if (_projColFilters["end"].IsActive)
                 projects = projects.Where(p => _projColFilters["end"].MatchesDate(p.EndDate == default ? null : p.EndDate));
+            if (_projColFilters["calculations"].IsActive)
+                projects = projects.Where(p => _projColFilters["calculations"].MatchesNumber(GetCalculationCount(p)));
             if (_projColFilters["byggherre"].IsActive)
                 projects = projects.Where(p => _projColFilters["byggherre"].MatchesText(p.Developer));
             if (_projColFilters["organisation"].IsActive)
-                projects = projects.Where(p => _projColFilters["organisation"].MatchesText(p.Organisation));
+                projects = projects.Where(p => _projColFilters["organisation"].MatchesDropdown(p.Organisation));
+            if (_projColFilters["procurementName"].IsActive)
+                projects = projects.Where(p => _projColFilters["procurementName"].MatchesText(p.ProcurementName));
+            if (_projColFilters["procurementNumber"].IsActive)
+                projects = projects.Where(p => _projColFilters["procurementNumber"].MatchesText(p.ProcurementNumber));
+            if (_projColFilters["customerReference"].IsActive)
+                projects = projects.Where(p => _projColFilters["customerReference"].MatchesText(p.CustomerReference));
+            if (_projColFilters["contract"].IsActive)
+                projects = projects.Where(p => _projColFilters["contract"].MatchesDropdown(p.Contract));
+            if (_projColFilters["projectType"].IsActive)
+                projects = projects.Where(p => _projColFilters["projectType"].MatchesDropdown(p.Type));
+            if (_projColFilters["designer"].IsActive)
+                projects = projects.Where(p => _projColFilters["designer"].MatchesText(p.Designer));
+            if (_projColFilters["supervisor"].IsActive)
+                projects = projects.Where(p => _projColFilters["supervisor"].MatchesText(p.Supervisor));
+            if (_projColFilters["address"].IsActive)
+                projects = projects.Where(p => _projColFilters["address"].MatchesText(p.AddressText));
+            if (_projColFilters["procurementMethods"].IsActive)
+                projects = projects.Where(p => _projColFilters["procurementMethods"].MatchesDropdown(p.ProcurementMethods));
+            if (_projColFilters["compensation"].IsActive)
+                projects = projects.Where(p => _projColFilters["compensation"].MatchesDropdown(p.Compensation));
+            if (_projColFilters["procurementProcedure"].IsActive)
+                projects = projects.Where(p => _projColFilters["procurementProcedure"].MatchesDropdown(p.ProcurementProcedure));
+            if (_projColFilters["clientsManager"].IsActive)
+                projects = projects.Where(p => _projColFilters["clientsManager"].MatchesText(p.ClientsManager));
+            if (_projColFilters["publicationDate"].IsActive)
+                projects = projects.Where(p => _projColFilters["publicationDate"].MatchesDate(p.PublicationDate));
+            if (_projColFilters["decisionDate"].IsActive)
+                projects = projects.Where(p => _projColFilters["decisionDate"].MatchesDate(p.DecisionDate));
             if (_projColFilters["createdAt"].IsActive)
                 projects = projects.Where(p => _projColFilters["createdAt"].MatchesDate(p.CreatedAt == default ? null : (DateTime?)p.CreatedAt));
             if (_projColFilters["updatedAt"].IsActive)
                 projects = projects.Where(p => _projColFilters["updatedAt"].MatchesDate(p.UpdatedAt));
+            if (_projColFilters["archived"].IsActive)
+                projects = projects.Where(p => _projColFilters["archived"].MatchesBool(p.IsArchived));
             return projects;
         }
     }
@@ -1002,6 +1103,9 @@
     private bool IsProjectColumnVisible(string key) =>
         _projectColumns.TryGetValue(key, out var visible) && visible;
 
+    private int VisibleProjectColumnCount =>
+        Math.Max(1, _projectColumns.Count(c => c.Value));
+
     private static string FormatText(string? value) =>
         string.IsNullOrWhiteSpace(value) ? "-" : value;
 
@@ -1173,30 +1277,53 @@
     {
         var label = key switch
         {
-            "code"         => "Kod",
-            "name"         => "Projektnamn",
-            "status"       => "Projektstatus",
-            "responsible"  => "Ansvarig",
-            "inspector"    => "Granskare",
-            "deadline"     => "Anbudsdeadline",
-            "qa"           => "Frågor/svar",
-            "start"        => "Startdatum",
-            "end"          => "Slutdatum",
-            "byggherre"    => "Byggherre",
-            "organisation" => "Beställare",
-            "createdAt"    => "Skapad",
-            "updatedAt"    => "Senast ändrad",
-            _              => key
+            "code"                 => "Kod",
+            "name"                 => "Projektnamn",
+            "status"               => "Projektstatus",
+            "responsible"          => "Ansvarig",
+            "inspector"            => "Granskare",
+            "deadline"             => "Anbudsdeadline",
+            "qa"                   => "Frågor/svar",
+            "start"                => "Startdatum",
+            "end"                  => "Slutdatum",
+            "calculations"         => AppLoc["calculationCount"].Value,
+            "byggherre"            => "Byggherre",
+            "organisation"         => "Beställare",
+            "procurementName"      => AppLoc["procurementName"].Value,
+            "procurementNumber"    => AppLoc["procurementNumber"].Value,
+            "customerReference"    => AppLoc["customerReference"].Value,
+            "contract"             => CalcResource.projectContract,
+            "projectType"          => CalcResource.projectType,
+            "designer"             => "Projektörer",
+            "supervisor"           => "Kundens kontaktperson",
+            "address"              => "Adress",
+            "procurementMethods"   => CalcResource.procurementMethods,
+            "compensation"         => CalcResource.projectCompensation,
+            "procurementProcedure" => "Upphandlingsförfarande",
+            "clientsManager"       => ResourceLoc.clientsProjectmanager,
+            "publicationDate"      => CalcResource.publicationDate,
+            "decisionDate"         => CalcResource.decisionDate,
+            "createdAt"            => "Skapad",
+            "updatedAt"            => "Senast ändrad",
+            "archived"             => AppLoc["archived"].Value,
+            _                      => key
         };
         return state.Type switch
         {
             ColumnFilterType.Text when state.TextOp == TextFilterOp.IsEmpty    => $"{label}: tom",
             ColumnFilterType.Text when state.TextOp == TextFilterOp.IsNotEmpty => $"{label}: ej tom",
             ColumnFilterType.Text    => $"{label}: {state.TextValue}",
+            ColumnFilterType.Dropdown when state.SelectedValues.Count > 0 =>
+                $"{label}: {string.Join(", ", state.SelectedValues)}",
             ColumnFilterType.Date when state.DateOp == DateFilterOp.IsEmpty    => $"{label}: tom",
             ColumnFilterType.Date when state.DateOp == DateFilterOp.IsNotEmpty => $"{label}: ej tom",
             ColumnFilterType.Date when state.DateOp == DateFilterOp.Between    => $"{label}: {state.DateFrom:yyyy-MM-dd}–{state.DateTo:yyyy-MM-dd}",
             ColumnFilterType.Date    => $"{label}: {state.DateFrom:yyyy-MM-dd}",
+            ColumnFilterType.Number when state.NumberOp == NumberFilterOp.IsEmpty    => $"{label}: tom",
+            ColumnFilterType.Number when state.NumberOp == NumberFilterOp.IsNotEmpty => $"{label}: ej tom",
+            ColumnFilterType.Number when state.NumberOp == NumberFilterOp.Between    => $"{label}: {state.NumberFrom}–{state.NumberTo}",
+            ColumnFilterType.Number  => $"{label}: {state.NumberFrom}",
+            ColumnFilterType.Boolean => $"{label}: {(state.BoolValue == "true" ? "Ja" : "Nej")}",
             _                        => label
         };
     }

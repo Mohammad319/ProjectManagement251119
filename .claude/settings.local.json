@@ -68,7 +68,9 @@
       "PowerShell(node --version)",
       "PowerShell(node tmp-xlsx-test.js)",
       "PowerShell(Copy-Item *)",
-      "PowerShell(try { [xml]\\(Get-Content -LiteralPath \"tmp-xlsx-out\\\\[Content_Types].xml\" -Raw\\) | Out-Null; \"XML OK: [Content_Types].xml\" } catch { \"XML FAIL: \" + $_.Exception.Message }; \\(Get-Content -LiteralPath \"tmp-xlsx-out\\\\xl\\\\worksheets\\\\sheet1.xml\" -Raw\\) -replace '</row>', \"</row>`n\" | Select-Object -First 16)"
+      "PowerShell(try { [xml]\\(Get-Content -LiteralPath \"tmp-xlsx-out\\\\[Content_Types].xml\" -Raw\\) | Out-Null; \"XML OK: [Content_Types].xml\" } catch { \"XML FAIL: \" + $_.Exception.Message }; \\(Get-Content -LiteralPath \"tmp-xlsx-out\\\\xl\\\\worksheets\\\\sheet1.xml\" -Raw\\) -replace '</row>', \"</row>`n\" | Select-Object -First 16)",
+      "PowerShell(Select-String -Path \"ProjectManagement\\\\ProjectManagement.Client\\\\Shared\\\\ResourceFiles\\\\APP\\\\ResourceApp.resx\" -Pattern \"NoResults|noResults\" -Context 1,2 | ForEach-Object { $_.Line; $_.Context.PostContext })",
+      "PowerShell(npm run *)"
     ]
   }
 }
