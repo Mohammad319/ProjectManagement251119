@@ -30,7 +30,7 @@ function Invoke-EfMigrationScript {
 Invoke-EfMigrationScript `
     -Project "AuthPermissions\AuthPermissions.csproj" `
     -StartupProject "ProjectManagement\ProjectManagement\ProjectManagement.csproj" `
-    -Context "ApplicationDbContext" `
+    -Context "AuthPermissionDbContext" `
     -OutputFile "AuthPermissions.sql"
 
 Invoke-EfMigrationScript `

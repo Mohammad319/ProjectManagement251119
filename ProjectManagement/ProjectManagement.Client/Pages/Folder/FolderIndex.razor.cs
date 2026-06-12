@@ -26,6 +26,7 @@ namespace ProjectManagement.Client.Pages.Folder
 
         private GroupSelectionInfo? _selectedGroupInfo;
         private bool _isReorderMode;
+        private bool _isTreeLoading;
 
         private MhdDropdownPanel? _filterPanel;
 
@@ -244,15 +245,25 @@ namespace ProjectManagement.Client.Pages.Folder
             bool canManageSelectedDepartment = CanChooseAllDepartments || isOwnDepartment;
             Folder.State.SetOtherDepartment(!canManageSelectedDepartment);
 
-            if (isOwnDepartment)
-                await Folder.LoadPrivateAndGroupFoldersAsync();
-            else
-                await Folder.LoadFoldersByDepartmentAsync(SelectedDepartmentValue);
+            _isTreeLoading = true;
+            await InvokeAsync(StateHasChanged);
+            try
+            {
+                if (isOwnDepartment)
+                    await Folder.LoadPrivateAndGroupFoldersAsync();
+                else
+                    await Folder.LoadFoldersByDepartmentAsync(SelectedDepartmentValue);
 
-            if (openNodes is not null)
-                await RestoreOpenNodesAsync(openNodes);
+                if (openNodes is not null)
+                    await RestoreOpenNodesAsync(openNodes);
 
-            await EnsureProjectsLoadedForGroupingAsync();
+                await EnsureProjectsLoadedForGroupingAsync();
+            }
+            finally
+            {
+                _isTreeLoading = false;
+                await InvokeAsync(StateHasChanged);
+            }
         }
 
         private async Task ToggleArchivedAsync()

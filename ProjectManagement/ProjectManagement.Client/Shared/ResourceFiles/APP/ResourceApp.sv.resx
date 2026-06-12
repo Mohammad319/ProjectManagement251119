@@ -882,7 +882,7 @@
   <data name="filterResponsiblePlaceholder" xml:space="preserve"><value>Filtrera ansvarig...</value></data>
   <data name="filterReviewerPlaceholder" xml:space="preserve"><value>Filtrera granskare...</value></data>
   <data name="createProductionCalculation" xml:space="preserve"><value>Skapa produktionskalkyl</value></data>
-  <data name="createProductionCalculationTitle" xml:space="preserve"><value>Du håller på att skapa en produktionskalkyl.</value></data>
+  <data name="createProductionCalculationTitle" xml:space="preserve"><value>Skapa produktionskalkyl?</value></data>
   <data name="createProductionCalculationDescription" xml:space="preserve"><value>Den låsta anbudskalkylen kommer att sparas som historik. En kopia skapas som produktionskalkyl och öppnas för fortsatt arbete.</value></data>
   <data name="continueQuestion" xml:space="preserve"><value>Vill du fortsätta?</value></data>
   <data name="productionCalculationCreateFailed" xml:space="preserve"><value>Produktionskalkylen kunde inte skapas.</value></data>

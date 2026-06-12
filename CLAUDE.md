@@ -85,7 +85,7 @@ External (outside repo):
 |---|---|---|
 | Main app data | `ShardingSingleDbContext` | `AuthPermissionsConnection` |
 | Resource blueprints | `TaskResourceBlueprintsContext` | `BlueprintsConnection` |
-| Auth/Identity | `ApplicationDbContext` | `AuthPermissionsConnection` |
+| Auth/Identity | `AuthPermissionDbContext` | `AuthPermissionsConnection` |
 
 ### Multi-Tenancy
 `ShardingSingleDbContext` is multi-tenant via a **global query filter** on `TenantId`. The `TenantId` and `CurrentUserId` must be set from middleware/service before any query. All auditable entities (`AuditableEntity<T>`, `AuditableSoftDeletableEntity<T>`) get `TenantId` automatically via the interceptor in `TenantAuditSaveChangesInterceptor`.

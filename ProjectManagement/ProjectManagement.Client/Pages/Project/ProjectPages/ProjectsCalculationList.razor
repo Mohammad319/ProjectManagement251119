@@ -4,9 +4,12 @@
 @using Calculation.Share
 @using Calculation.Tender
 @using ProjectManagement.Client.Helper
+@using ProjectManagement.Client.Services.Folder
 @using ProjectManagement.Client.Shared.Model.Project
 @using ProjectManagement.Client.Shared.MVVM.Calculation
 @using ProjectManagement.Client.Shared.MVVM.Folder
+@using System.Globalization
+@using ProjectManagement.Shared.Policies
 @using Microsoft.AspNetCore.Authorization
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @attribute [Authorize]
@@ -17,6 +20,7 @@
 @inherits AppComponentBase
 @inject IJSRuntime JS
 @inject ProjectManagement.Client.Services.Calculation.CalculationListViewPreference ViewPreference
+@inject ProjectManagement.Client.Services.Folder.ListSavedFilterStorage SavedFilterStorage
 @implements IDisposable
 
 <div class="flex h-full min-h-0 flex-col gap-1 overflow-hidden px-1 pb-1">
@@ -27,41 +31,10 @@
     @* ── Header toolbar ─────────────────────────────────── *@
     <div class="flex w-full flex-wrap items-center justify-between gap-1.5 px-1 pt-1 pb-0.5">
         <div class="min-w-0">
-            <div class="flex flex-col text-gray-700 dark:text-gray-300">
-                <span class="truncate text-sm font-semibold">
-                    @if (FolderScopeMode)
-                    {
-                        <span>Kalkyler i @(IsDepartmentScope ? DepartmentName : Folder.State.FolderSelected?.Name ?? "-")</span>
-                    }
-                    else
-                    {
-                        @AppLoc["calculationsInProjectFormat", Folder.State.ProjectSelected?.Name ?? "-"]
-                    }
-                </span>
-                <span class="truncate text-xs text-slate-500 dark:text-slate-400">
-                    @if (FolderScopeMode)
-                    {
-                        @if (IsDepartmentScope)
-                        {
-                            <span class="text-slate-400">hela avdelningen</span>
-                        }
-                        else
-                        {
-                            @AppLoc["folderNameFormat", Folder.State.FolderSelected?.Name ?? "-"]
-                        }
-                        <span> · @FilteredCalculations.Count() @CalcResource.calculation</span>
-                    }
-                    else
-                    {
-                        @AppLoc["folderNameFormat", Folder.State.FolderSelected?.Name ?? "-"]
-                        @if (!string.IsNullOrWhiteSpace(Folder.State.ProjectSelected?.Code))
-                        {
-                            <span> · @AppLoc["projectCodeFormat", Folder.State.ProjectSelected?.Code ?? "-"]</span>
-                        }
-                        <span> · @FilteredCalculations.Count() @CalcResource.calculation</span>
-                    }
-                </span>
-            </div>
+            @* Kompakt rubrik i en rad: vad · plats · (hela avdelningen / filtrerat urval) · antal *@
+            <span class="block truncate text-sm text-slate-700 dark:text-slate-200" title="@CalculationHeaderText">
+                <span class="font-semibold">Kalkyler i @CalculationListPlaceName</span><span class="text-slate-500 dark:text-slate-400">@CalculationHeaderMeta</span>
+            </span>
         </div>
 
         <div class="flex flex-wrap items-center gap-1">
@@ -84,20 +57,117 @@
                 </button>
                 @if (_filterMenuOpen)
                 {
-                    <div class="fixed inset-0 z-[70]" @onclick="() => _filterMenuOpen = false"></div>
-                    <div class="absolute left-0 top-full z-[90] mt-1 w-48 rounded-md border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+                    <div class="fixed inset-0 z-[70]" @onclick="CloseCalcFilterMenu"></div>
+                    <div class="absolute left-0 top-full z-[90] mt-1 w-72 rounded-md border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+
+                        @* ── Aktiva filter ── *@
+                        <div class="px-3 pt-1.5 pb-0.5">
+                            <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Aktiva filter</span>
+                        </div>
                         @if (HasActiveFilters)
                         {
-                            <button type="button"
-                                    class="flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
-                                    @onclick="() => { ClearFilters(); _filterMenuOpen = false; }">
-                                <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                                <span>@AppLoc["clearAllFilters"]</span>
-                            </button>
+                            <div class="flex max-h-32 flex-wrap gap-1 overflow-y-auto px-3 pb-1.5">
+                                @foreach (var kv in _calcColFilters.Where(kv => kv.Value.IsActive))
+                                {
+                                    var filterKey = kv.Key;
+                                    <span class="inline-flex max-w-full items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                                        <span class="truncate" title="@GetCalcFilterLabel(filterKey, kv.Value)">@GetCalcFilterLabel(filterKey, kv.Value)</span>
+                                        <button type="button"
+                                                class="shrink-0 text-blue-400 hover:text-blue-700 dark:hover:text-blue-200"
+                                                title="@AppLoc["clearAllFilters"]"
+                                                @onclick="() => ClearSingleCalcFilter(filterKey)">
+                                            <svg class="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                                        </button>
+                                    </span>
+                                }
+                            </div>
                         }
                         else
                         {
-                            <span class="block px-3 py-2 text-[11px] text-slate-400 dark:text-slate-500">@AppLoc["noActiveFilters"]</span>
+                            <span class="block px-3 pb-1.5 text-[11px] text-slate-400 dark:text-slate-500">@AppLoc["noActiveFilters"]</span>
+                        }
+
+                        @* ── Åtgärder ── *@
+                        <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
+                        @if (_saveFilterPromptOpen)
+                        {
+                            <div class="px-3 py-1.5">
+                                <label class="mb-1 block text-[10px] font-semibold text-slate-500 dark:text-slate-400">Namn på filter</label>
+                                <input type="text"
+                                       class="w-full rounded border border-slate-300 bg-white px-2 py-1 text-[11px] text-slate-800 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                                       placeholder="T.ex. Kalkyler att granska"
+                                       @bind="_saveFilterName"
+                                       @bind:event="oninput" />
+                                @if (!string.IsNullOrEmpty(_saveFilterError))
+                                {
+                                    <p class="mt-1 text-[10px] text-red-600 dark:text-red-400">@_saveFilterError</p>
+                                }
+                                <div class="mt-1.5 flex items-center gap-1.5">
+                                    <button type="button"
+                                            class="inline-flex h-6 items-center rounded bg-blue-600 px-2 text-[11px] font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                            disabled="@(string.IsNullOrWhiteSpace(_saveFilterName))"
+                                            @onclick="SaveCurrentCalcFilterAsync">
+                                        Spara
+                                    </button>
+                                    <button type="button"
+                                            class="inline-flex h-6 items-center rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                                            @onclick="() => { _saveFilterPromptOpen = false; _saveFilterError = null; }">
+                                        Avbryt
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <button type="button"
+                                    class="flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-800"
+                                    disabled="@(!HasActiveFilters)"
+                                    @onclick="OpenSaveFilterPrompt">
+                                <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
+                                <span>Spara aktuellt filter</span>
+                            </button>
+                        }
+                        <button type="button"
+                                class="flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40 dark:text-red-400 dark:hover:bg-red-950/30"
+                                disabled="@(!HasActiveFilters)"
+                                @onclick="() => { ClearFilters(); CloseCalcFilterMenu(); }">
+                            <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                            <span>Rensa filter</span>
+                        </button>
+
+                        @* ── Sparade filter ── *@
+                        <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
+                        <div class="px-3 pt-0.5 pb-0.5">
+                            <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Sparade filter</span>
+                        </div>
+                        @if (_savedCalcFilters.Count == 0)
+                        {
+                            <span class="block px-3 pb-1.5 text-[11px] text-slate-400 dark:text-slate-500">Inga sparade filter ännu.</span>
+                        }
+                        else
+                        {
+                            <div class="max-h-44 overflow-y-auto pb-1">
+                                @foreach (var saved in _savedCalcFilters)
+                                {
+                                    var savedFilter = saved;
+                                    <div class="flex items-center gap-1 px-3 py-1 hover:bg-slate-50 dark:hover:bg-slate-800">
+                                        <button type="button"
+                                                class="flex min-w-0 flex-1 items-center gap-2 text-left text-[11px] text-slate-700 dark:text-slate-200"
+                                                title="Använd: @savedFilter.Name"
+                                                @onclick="() => ApplyCalcSavedFilterAsync(savedFilter)">
+                                            <svg class="h-3 w-3 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" /></svg>
+                                            <span class="truncate">@savedFilter.Name</span>
+                                            <span class="shrink-0 rounded-full bg-slate-100 px-1.5 text-[9px] font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-400">@savedFilter.Filters.Count</span>
+                                        </button>
+                                        <button type="button"
+                                                class="shrink-0 rounded p-0.5 text-slate-400 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400"
+                                                title="Ta bort: @savedFilter.Name"
+                                                @onclick="() => DeleteCalcSavedFilterAsync(savedFilter)">
+                                            <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                        </button>
+                                    </div>
+                                }
+                            </div>
                         }
                     </div>
                 }
@@ -418,7 +488,7 @@
                         <tr>
                             <td colspan="@VisibleCalculationColumnCount" class="px-3 py-8 text-center">
                                 <div class="flex flex-col items-center gap-2 text-slate-500 dark:text-slate-400">
-                                    <span class="text-sm">@CalcResource.noResultsFound</span>
+                                    <span class="text-sm">@(HasActiveFilters ? "Inga kalkyler matchar valt filter." : CalcResource.noResultsFound)</span>
                                     @if (HasActiveFilters)
                                     {
                                         <button type="button"
@@ -562,7 +632,7 @@
                             }
                             @if (IsCalculationColumnVisible("timeMonth"))
                             {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@calu.TimeMonth</td>
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatMonthsDisplay(calu.TimeMonth)</td>
                             }
                             @if (IsCalculationColumnVisible("tax"))
                             {
@@ -806,6 +876,8 @@
             .Select(GetCalculationRoleLabel)
             .ToList();
 
+        _savedCalcFilters = await SavedFilterStorage.LoadAsync(ListSavedFilterStorage.CalculationListScope);
+
         var saved = await ViewPreference.LoadColumnsAsync();
         if (saved is not null)
             foreach (var (k, v) in saved)
@@ -878,6 +950,119 @@
     {
         foreach (var f in _calcColFilters.Values) f.Clear();
         _currentPage = 1;
+    }
+
+    private void ClearSingleCalcFilter(string key)
+    {
+        _calcColFilters[key].Clear();
+        _currentPage = 1;
+    }
+
+    // ── Rubrik (en rad) ─────────────────────────────────────
+    private string CalculationListPlaceName => FolderScopeMode
+        ? (IsDepartmentScope ? (DepartmentName ?? "-") : (Folder.State.FolderSelected?.Name ?? "-"))
+        : (Folder.State.ProjectSelected?.Name ?? "-");
+
+    private string CalculationHeaderMeta
+    {
+        get
+        {
+            var total = VisibleBaseCalculations.Count();
+            if (HasActiveFilters)
+                return $" · filtrerat urval · {FilteredCalculations.Count()} av {total} {CalcResource.calculation}";
+
+            var wholeDepartment = FolderScopeMode && IsDepartmentScope ? " · hela avdelningen" : string.Empty;
+            return $"{wholeDepartment} · {total} {CalcResource.calculation}";
+        }
+    }
+
+    private string CalculationHeaderText => $"Kalkyler i {CalculationListPlaceName}{CalculationHeaderMeta}";
+
+    // ── Sparade filter (personliga, endast kalkyllistans scope) ──
+    private List<SavedListFilter> _savedCalcFilters = [];
+    private bool _saveFilterPromptOpen;
+    private string _saveFilterName = string.Empty;
+    private string? _saveFilterError;
+
+    private void CloseCalcFilterMenu()
+    {
+        _filterMenuOpen = false;
+        _saveFilterPromptOpen = false;
+        _saveFilterError = null;
+    }
+
+    private void OpenSaveFilterPrompt()
+    {
+        _saveFilterPromptOpen = true;
+        _saveFilterName = string.Empty;
+        _saveFilterError = null;
+    }
+
+    private async Task SaveCurrentCalcFilterAsync()
+    {
+        var name = _saveFilterName.Trim();
+        if (name.Length == 0)
+        {
+            _saveFilterError = "Namn krävs.";
+            return;
+        }
+        if (_savedCalcFilters.Any(f => string.Equals(f.Name, name, StringComparison.CurrentCultureIgnoreCase)))
+        {
+            _saveFilterError = "Ett filter med detta namn finns redan. Välj ett annat namn.";
+            return;
+        }
+
+        var filter = new SavedListFilter
+        {
+            Name = name,
+            CreatedAt = DateTime.UtcNow,
+            SortColumn = string.IsNullOrEmpty(_sortColumn) ? null : _sortColumn,
+            SortAscending = _sortAscending,
+            ShowAllVersions = _showAllVersions,
+            Filters = _calcColFilters
+                .Where(kv => kv.Value.IsActive)
+                .ToDictionary(kv => kv.Key, kv => SavedColumnFilter.FromState(kv.Value))
+        };
+
+        _savedCalcFilters.Add(filter);
+        _savedCalcFilters = _savedCalcFilters
+            .OrderBy(f => f.Name, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+        await SavedFilterStorage.SaveAllAsync(ListSavedFilterStorage.CalculationListScope, _savedCalcFilters);
+
+        _saveFilterPromptOpen = false;
+        _saveFilterName = string.Empty;
+        _saveFilterError = null;
+    }
+
+    private Task ApplyCalcSavedFilterAsync(SavedListFilter saved)
+    {
+        foreach (var f in _calcColFilters.Values) f.Clear();
+
+        foreach (var (key, savedFilter) in saved.Filters)
+        {
+            if (_calcColFilters.TryGetValue(key, out var state) && state.Type == savedFilter.Type)
+                savedFilter.ApplyTo(state);
+        }
+
+        if (!string.IsNullOrEmpty(saved.SortColumn))
+        {
+            _sortColumn = saved.SortColumn;
+            _sortAscending = saved.SortAscending;
+        }
+
+        if (saved.ShowAllVersions.HasValue)
+            _showAllVersions = saved.ShowAllVersions.Value;
+
+        _currentPage = 1;
+        CloseCalcFilterMenu();
+        return Task.CompletedTask;
+    }
+
+    private async Task DeleteCalcSavedFilterAsync(SavedListFilter saved)
+    {
+        _savedCalcFilters.Remove(saved);
+        await SavedFilterStorage.SaveAllAsync(ListSavedFilterStorage.CalculationListScope, _savedCalcFilters);
     }
 
     private string CurrentViewKey => FolderScopeMode
@@ -1021,7 +1206,9 @@
         new("privacy", ResourceApp._private)
     };
 
-    private IEnumerable<ListCalculationMVVM> FilteredCalculations
+    // Base list after version selection and Part scoping, before column filters.
+    // Used both by FilteredCalculations and by the header's "X av Y" count.
+    private IEnumerable<ListCalculationMVVM> VisibleBaseCalculations
     {
         get
         {
@@ -1030,12 +1217,20 @@
             if (!_showAllVersions)
                 list = CalculationVersionSelector.SelectCurrentVersions(list);
 
-            list = Part switch
+            return Part switch
             {
                 2 => list.Where(c => c.EndDate >= DateTime.Today),
                 3 => list.Where(c => c.EndDate < DateTime.Today),
                 _ => list
             };
+        }
+    }
+
+    private IEnumerable<ListCalculationMVVM> FilteredCalculations
+    {
+        get
+        {
+            var list = VisibleBaseCalculations;
 
             // ── Per-column filters ──────────────────────────────────
             if (_calcColFilters["code"].IsActive)
@@ -1229,6 +1424,11 @@
     private static string FormatYesNo(bool value) =>
         value ? "Ja" : "Nej";
 
+    private static readonly CultureInfo SwedishCulture = CultureInfo.GetCultureInfo("sv-SE");
+
+    private static string FormatMonthsDisplay(decimal months) =>
+        $"{Math.Round(months, 1, MidpointRounding.AwayFromZero).ToString("0.#", SwedishCulture)} mån";
+
     private string GetCalculationTypeLabel(CalculationVersionType type) => type switch
     {
         CalculationVersionType.Production => AppLoc["productionCalculation"].Value,
@@ -1313,9 +1513,20 @@
     }
 
     private static bool CanCreateProductionCalculation(ListCalculationMVVM calculation) =>
-        calculation.CalculationType == CalculationVersionType.Tender &&
-        calculation.IsLocked &&
-        calculation.StatusAllowsProductionCalculation;
+        CalculationStatusPolicy.CanCreateProductionCalculation(
+            calculation.CalculationType,
+            calculation.IsLocked,
+            ToPolicyStatus(calculation));
+
+    private static CalculationStatusPolicyStatus ToPolicyStatus(ListCalculationMVVM calculation) =>
+        new(
+            calculation.StatusId ?? 0,
+            IsApprovalStatus: false,
+            LocksCalculation: false,
+            calculation.StatusAllowsProductionCalculation,
+            calculation.CountsAsSubmittedBid,
+            calculation.CountsAsWonBid,
+            calculation.CountsAsLostBid);
 
     private void OpenProductionDialog(ListCalculationMVVM calculation)
     {
@@ -1377,9 +1588,14 @@
     }
 
     private string GetCalculationStatusColor(ListCalculationMVVM calculation)
-        => !string.IsNullOrWhiteSpace(calculation.StatusColor)
-            ? calculation.StatusColor
-            : calculation.EndDate < DateTime.Today ? "#10b981" : "#f59e0b";
+    {
+        // Same shared color source as the folder tree; the date-derived colors only
+        // apply when the calculation has no status at all (the text is derived too).
+        if (!string.IsNullOrWhiteSpace(calculation.StatusColor) || !string.IsNullOrWhiteSpace(calculation.Status))
+            return CalculationStatusColor.Resolve(calculation);
+
+        return calculation.EndDate < DateTime.Today ? "#10b981" : "#f59e0b";
+    }
 
     private static string GetCalculationRowClass(ListCalculationMVVM calculation, bool selected)
     {
@@ -1610,7 +1826,7 @@
         "folder" => GetCalculationFolderName(calculation),
         "priority" => $"{calculation.Priority} %",
         "address" => calculation.AddressText,
-        "timeMonth" => calculation.TimeMonth,
+        "timeMonth" => FormatMonthsDisplay(calculation.TimeMonth),
         "tax" => $"{calculation.Tax} %",
         "start" => FormatDate(calculation.StartDate),
         "end" => FormatDate(calculation.EndDate),

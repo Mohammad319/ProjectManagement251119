@@ -16,6 +16,7 @@ public partial class ShardingSingleDbContext
 
     public DbSet<TenderEntity> Tenders { get; set; } = default!;
     public DbSet<ProjectBidEntity> ProjectBids { get; set; } = default!;
+    public DbSet<ProjectBidPriceColumnEntity> ProjectBidPriceColumns { get; set; } = default!;
     public DbSet<ProjectEntity> Projects { get; set; } = default!;
     public DbSet<FolderEntity> Folders { get; set; } = default!;
     public DbSet<StatusEntity> CalculationStatus { get; set; } = default!;

@@ -116,6 +116,7 @@ namespace ProjectManagement.Client.Pages.Folder
         private bool _manualOrderDirty;
         private readonly Dictionary<string, int> _manualOrderSnapshot = new();
         private readonly HashSet<string> _collapsedGroupKeys = new(StringComparer.Ordinal);
+        private readonly HashSet<string> _loadingNodeKeys = new(StringComparer.Ordinal);
         private Dictionary<string, long> _lastOpenedTicks = new();
 
         private object? CalcDraging { get; set; }
@@ -436,16 +437,47 @@ namespace ProjectManagement.Client.Pages.Folder
 
         private async Task CollapseFolder(FolderMVVM folder)
         {
-            await Folder.SetProjectsToFolder(folder);
-            AddMissingManualOrderSnapshot(folder);
+            // Toggle first so the click responds immediately; load children async with a spinner.
             folder.ShowProjects = !folder.ShowProjects;
+
+            if (folder.ShowProjects && !folder.ProjectsLoaded)
+            {
+                var key = GetFolderKey(folder);
+                _loadingNodeKeys.Add(key);
+                StateHasChanged();
+                try
+                {
+                    await Folder.SetProjectsToFolder(folder);
+                }
+                finally
+                {
+                    _loadingNodeKeys.Remove(key);
+                }
+            }
+
+            AddMissingManualOrderSnapshot(folder);
         }
 
         private async Task CollapseProject(ListProjectMVVM project)
         {
-            await Folder.SetCalcsToProject(project);
-            AddMissingManualOrderSnapshot(project);
             project.ShowCalculations = !project.ShowCalculations;
+
+            if (project.ShowCalculations && !project.CalculationsLoaded)
+            {
+                var key = GetProjectKey(project);
+                _loadingNodeKeys.Add(key);
+                StateHasChanged();
+                try
+                {
+                    await Folder.SetCalcsToProject(project);
+                }
+                finally
+                {
+                    _loadingNodeKeys.Remove(key);
+                }
+            }
+
+            AddMissingManualOrderSnapshot(project);
         }
 
         private async Task SetProject(FolderMVVM folder, ListProjectMVVM project)
@@ -712,6 +744,8 @@ namespace ProjectManagement.Client.Pages.Folder
         private static DateTime? GetCalculationGroupingDate(ListCalculationMVVM calculation) =>
             calculation.StartDate == default ? null : calculation.StartDate;
 
+        private bool IsNodeLoading(string key) => _loadingNodeKeys.Contains(key);
+
         private bool IsGroupExpanded(string key) => !_collapsedGroupKeys.Contains(key);
 
         private void ToggleGroup(string key)
@@ -757,44 +791,44 @@ namespace ProjectManagement.Client.Pages.Folder
             return 50;
         }
 
-        private static string GetCalculationIndicatorClass(ListCalculationMVVM calculation)
-        {
-            const string baseClasses = "block h-2.5 w-2.5 rounded-full shadow-sm ring-1 ring-inset transition-colors";
-            return $"{baseClasses} {GetCalculationStatusColorClass(calculation.Status)}";
-        }
+        // Unified selection style for every node type (Hela avdelningen, folder, project, calculation).
+        // Blue is the navigation/selected color; green is reserved for status meaning.
+        private const string TreeSelectedRowClass =
+            "border-l-2 border-sky-500 bg-sky-50 shadow-sm ring-1 ring-sky-200/70 dark:bg-sky-950/30 dark:ring-sky-800/60";
 
-        private static string GetCalculationIconBgClass(ListCalculationMVVM calculation)
-        {
-            return calculation.Status?.Trim().ToLowerInvariant() switch
-            {
-                "active" or "ongoing" or "pagaende" or "pågående" => "bg-sky-100 text-sky-700 ring-1 ring-sky-200 dark:bg-sky-950/50 dark:text-sky-300 dark:ring-sky-800",
-                "completed" or "done" or "klar" => "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:ring-emerald-800",
-                "needs review" or "review" or "warning" or "varning" => "bg-amber-100 text-amber-700 ring-1 ring-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:ring-amber-800",
-                "cancelled" or "canceled" or "avbruten" => "bg-rose-100 text-rose-700 ring-1 ring-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:ring-rose-800",
-                _ => "bg-slate-100 text-slate-600 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-700"
-            };
-        }
+        private const string TreeRowFocusClass =
+            "outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50";
 
-        private static string GetCalculationStatusColorClass(string? status)
-        {
-            return status?.Trim().ToLowerInvariant() switch
-            {
-                "draft" or "utkast" => "bg-slate-400 ring-slate-500/40 dark:bg-slate-500 dark:ring-slate-300/30",
-                "active" or "ongoing" or "pagaende" or "pågående" => "bg-sky-500 ring-sky-700/30 dark:bg-sky-400 dark:ring-sky-200/30",
-                "completed" or "done" or "klar" => "bg-emerald-500 ring-emerald-700/30 dark:bg-emerald-400 dark:ring-emerald-200/30",
-                "needs review" or "review" or "warning" or "varning" => "bg-amber-500 ring-amber-700/30 dark:bg-amber-400 dark:ring-amber-200/30",
-                "cancelled" or "canceled" or "avbruten" => "bg-rose-500 ring-rose-700/30 dark:bg-rose-400 dark:ring-rose-200/30",
-                "archived" or "arkiverad" => "bg-slate-400 opacity-60 ring-slate-500/40 dark:bg-slate-500 dark:ring-slate-300/30",
-                _ => "bg-slate-400 ring-slate-500/40 dark:bg-slate-500 dark:ring-slate-300/30"
-            };
-        }
+        // Icon chips: neutral when idle, sky when the row is selected.
+        private const string TreeIconIdleClass =
+            "bg-slate-100 text-slate-500 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-700";
+
+        private const string TreeIconSelectedClass =
+            "bg-sky-100 text-sky-700 ring-1 ring-sky-200 dark:bg-sky-950/50 dark:text-sky-300 dark:ring-sky-800";
+
+        private const string TreeIconArchivedClass =
+            "bg-slate-200 text-slate-500 ring-1 ring-slate-300 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-700";
+
+        // Discreet blue tint so projects don't look "actively selected" when idle.
+        private const string TreeProjectIconIdleClass =
+            "bg-slate-100 text-sky-600/80 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-sky-300/70 dark:ring-slate-700";
+
+        private const string CalculationIndicatorBaseClass =
+            "block h-2.5 w-2.5 rounded-full shadow-sm ring-1 ring-inset ring-black/10 transition-colors dark:ring-white/20";
+
+        // Same status color source as the calculation lists in the right panel.
+        private static string GetCalculationStatusColor(ListCalculationMVVM calculation) =>
+            CalculationStatusColor.Resolve(calculation);
+
+        private string GetCalculationStatusTitle(ListCalculationMVVM calculation) =>
+            string.IsNullOrWhiteSpace(calculation.Status) ? AppLoc["draft"].Value : calculation.Status;
 
         private static string GetCalculationSelectedClass(ListCalculationMVVM calculation) =>
-            "border-l-2 border-slate-400/60 bg-slate-100/70 shadow-sm ring-1 ring-slate-300/50 dark:bg-slate-800/50 dark:ring-slate-700/40";
+            TreeSelectedRowClass;
 
         private static string GetCalculationTextClass(ListCalculationMVVM calculation, bool isSelected) =>
             isSelected
-                ? "font-semibold text-slate-900 dark:text-slate-100"
+                ? "font-semibold text-sky-900 dark:text-sky-100"
                 : "text-slate-600 group-hover:text-slate-900 dark:text-slate-300 dark:group-hover:text-slate-100";
 
         private string GetFolderMeta(FolderMVVM folder) =>

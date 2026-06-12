@@ -70,7 +70,12 @@
       "PowerShell(Copy-Item *)",
       "PowerShell(try { [xml]\\(Get-Content -LiteralPath \"tmp-xlsx-out\\\\[Content_Types].xml\" -Raw\\) | Out-Null; \"XML OK: [Content_Types].xml\" } catch { \"XML FAIL: \" + $_.Exception.Message }; \\(Get-Content -LiteralPath \"tmp-xlsx-out\\\\xl\\\\worksheets\\\\sheet1.xml\" -Raw\\) -replace '</row>', \"</row>`n\" | Select-Object -First 16)",
       "PowerShell(Select-String -Path \"ProjectManagement\\\\ProjectManagement.Client\\\\Shared\\\\ResourceFiles\\\\APP\\\\ResourceApp.resx\" -Pattern \"NoResults|noResults\" -Context 1,2 | ForEach-Object { $_.Line; $_.Context.PostContext })",
-      "PowerShell(npm run *)"
+      "PowerShell(npm run *)",
+      "Bash(grep -c \"focus-visible\\\\\\\\\\\\\\\\:ring-sky-500\\\\\\\\\\\\\\\\/50\\\\|text-\\\\\\\\\\\\\\\\[13px\\\\\\\\\\\\\\\\]\" \"/c/Users/Administrator/Desktop/PM/b07/ProjectManagement251119/ProjectManagement/ProjectManagement/wwwroot/css/app.css\")",
+      "PowerShell(dotnet ef migrations *)",
+      "PowerShell(.\\\\tools\\\\operations\\\\New-MigrationScripts.ps1)",
+      "Read(//c/c/Users/Administrator/Desktop/PM/b07/ProjectManagement251119/artifacts/**)",
+      "Read(//c/c/Users/Administrator/Desktop/PM/b07/ProjectManagement251119/artifacts/migrations/**)"
     ]
   }
 }

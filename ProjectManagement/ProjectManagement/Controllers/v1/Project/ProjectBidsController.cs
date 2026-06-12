@@ -28,5 +28,27 @@ namespace ProjectManagement.Server.Controllers.v1.Project
         [HttpDelete("{id}/{projectId}")]
         public async Task<IActionResult> Delete(int id, Guid projectId)
             => Ok(await MicroBus.Send(new DeleteProjectBidCommand(id, projectId, GetDepartmentId())));
+
+        // ─── Price columns (project-specific) ────────────────────────────────
+
+        [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
+        [HttpPost("column/{projectId}")]
+        public async Task<IActionResult> CreateColumn(Guid projectId, ProjectBidPriceColumnPostDTO dto)
+            => Ok(await MicroBus.Send(new CreateProjectBidPriceColumnCommand(projectId, dto, GetDepartmentId())));
+
+        [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
+        [HttpPut("column/{id}/{projectId}")]
+        public async Task<IActionResult> RenameColumn(int id, Guid projectId, ProjectBidPriceColumnPostDTO dto)
+            => Ok(await MicroBus.Send(new RenameProjectBidPriceColumnCommand(id, projectId, dto, GetDepartmentId())));
+
+        [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
+        [HttpDelete("column/{id}/{projectId}")]
+        public async Task<IActionResult> DeleteColumn(int id, Guid projectId)
+            => Ok(await MicroBus.Send(new DeleteProjectBidPriceColumnCommand(id, projectId, GetDepartmentId())));
+
+        [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
+        [HttpPut("column/{id}/{projectId}/move/{direction:int}")]
+        public async Task<IActionResult> MoveColumn(int id, Guid projectId, int direction)
+            => Ok(await MicroBus.Send(new MoveProjectBidPriceColumnCommand(id, projectId, direction, GetDepartmentId())));
     }
 }

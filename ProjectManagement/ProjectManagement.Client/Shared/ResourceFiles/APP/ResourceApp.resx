@@ -882,7 +882,7 @@
   <data name="filterResponsiblePlaceholder" xml:space="preserve"><value>Filter responsible...</value></data>
   <data name="filterReviewerPlaceholder" xml:space="preserve"><value>Filter reviewer...</value></data>
   <data name="createProductionCalculation" xml:space="preserve"><value>Create production calculation</value></data>
-  <data name="createProductionCalculationTitle" xml:space="preserve"><value>You are about to create a production calculation.</value></data>
+  <data name="createProductionCalculationTitle" xml:space="preserve"><value>Create production calculation?</value></data>
   <data name="createProductionCalculationDescription" xml:space="preserve"><value>The locked tender calculation will be saved as history. A copy is created as a production calculation and opened for continued work.</value></data>
   <data name="continueQuestion" xml:space="preserve"><value>Do you want to continue?</value></data>
   <data name="productionCalculationCreateFailed" xml:space="preserve"><value>The production calculation could not be created.</value></data>

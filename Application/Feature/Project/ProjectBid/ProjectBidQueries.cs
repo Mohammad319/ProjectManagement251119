@@ -6,12 +6,12 @@ namespace Application.Feature.Project.ProjectBid
     public sealed record GetProjectBidsQuery(
         Guid ProjectId,
         int? DepartmentId
-    ) : IRequest<List<ProjectBidListDTO>>;
+    ) : IRequest<ProjectBidsViewDTO>;
 
     public sealed class GetProjectBidsQueryHandler(IProjectBidService service)
-        : IRequestHandler<GetProjectBidsQuery, List<ProjectBidListDTO>>
+        : IRequestHandler<GetProjectBidsQuery, ProjectBidsViewDTO>
     {
-        public Task<List<ProjectBidListDTO>> Handle(GetProjectBidsQuery request, CancellationToken cancellationToken)
-            => service.GetByProjectAsync(request.ProjectId, request.DepartmentId, cancellationToken);
+        public Task<ProjectBidsViewDTO> Handle(GetProjectBidsQuery request, CancellationToken cancellationToken)
+            => service.GetViewAsync(request.ProjectId, request.DepartmentId, cancellationToken);
     }
 }

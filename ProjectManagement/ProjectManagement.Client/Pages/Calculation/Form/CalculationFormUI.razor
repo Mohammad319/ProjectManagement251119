@@ -6,6 +6,8 @@
 @using ProjectManagement.Shared.Enums
 @using ProjectManagement.Shared.Constant
 @using System.Security.Claims
+@using System.Globalization
+@using ProjectManagement.Shared.Policies
 @using BlazorMHD.UI.Core.DesignSystem
 @using NavTabItem = BlazorMHD.UI.Core.Navigation.TabItem
 
@@ -49,11 +51,11 @@
                                 <div class="mb-3 grid grid-cols-4 gap-3">
                                     <div class="col-span-1">
                                         <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.code</label>
-                                        <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@CalculationUpdate.Code" />
+                                        <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900" @bind-Value="@CalculationUpdate.Code" disabled="@IsContentLocked" />
                                     </div>
                                     <div class="col-span-3">
                                         <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.name</label>
-                                        <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@CalculationUpdate.Name" />
+                                        <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900" @bind-Value="@CalculationUpdate.Name" disabled="@IsContentLocked" />
                                     </div>
                                 </div>
 
@@ -64,11 +66,11 @@
                                         <select value="@CalculationUpdate.StatusId"
                                                 @onchange="OnStatusChanged"
                                                 class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
-                                                disabled="@CalculationUpdate.IsLocked">
+                                                disabled="@IsStatusSelectDisabled">
                                             <option></option>
                                             @if (Config?.Statuses != null)
                                             {
-                                                foreach (var status in Config.Statuses)
+                                                foreach (var status in AvailableStatuses)
                                                 {
                                                     <option value="@status.Id">@status.Name</option>
                                                 }
@@ -77,8 +79,9 @@
                                     </div>
                                     <div>
                                         <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@AppLoc["calculationRole"]</label>
-                                        <InputSelect class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                                                     @bind-Value="@CalculationUpdate.CalculationRole">
+                                        <InputSelect class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
+                                                     @bind-Value="@CalculationUpdate.CalculationRole"
+                                                     disabled="@IsContentLocked">
                                             @foreach (var role in CalculationRoles)
                                             {
                                                 <option value="@role">@GetCalculationRoleLabel(role)</option>
@@ -106,8 +109,9 @@
                                 {
                                     <div class="mb-3">
                                         <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@AppLoc["customRoleDescription"]</label>
-                                        <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                                        <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
                                                    @bind-Value="@CalculationUpdate.CustomCalculationRoleName"
+                                                   disabled="@IsContentLocked"
                                                    placeholder="@AppLoc["customRolePlaceholder"]" />
                                     </div>
                                 }
@@ -164,8 +168,9 @@
                                             Vinstchans (@CalculationUpdate.Priority %)
                                         </label>
                                         <input type="range" min="0" max="100" step="1"
-                                               class="w-full min-w-0 accent-sky-600"
+                                               class="w-full min-w-0 accent-sky-600 disabled:cursor-not-allowed disabled:opacity-50"
                                                value="@CalculationUpdate.Priority"
+                                               disabled="@IsContentLocked"
                                                @oninput="@((args) => CalculationUpdate.Priority = Convert.ToInt16(args.Value))" />
                                     </div>
 
@@ -173,15 +178,17 @@
                                         <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">
                                             @AppLoc["vatPercentLabel"]
                                         </label>
-                                        <InputNumber class="w-full min-w-0 rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                                                     @bind-Value="@CalculationUpdate.Tax" />
+                                        <InputNumber class="w-full min-w-0 rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
+                                                     @bind-Value="@CalculationUpdate.Tax"
+                                                     disabled="@IsContentLocked" />
                                     </div>
 
                                     <div class="shrink-0 max-[430px]:w-full">
-                                        <label class="inline-flex h-[34px] w-auto cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-md border border-slate-200 px-2 text-sm text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 max-[430px]:w-full">
+                                        <label class="@LockedToggleLabelClass">
                                             <input type="checkbox"
-                                                   class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-500"
+                                                   class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-500"
                                                    checked="@(CalculationUpdate.IsArchived)"
+                                                   disabled="@IsContentLocked"
                                                    @onchange="e => CalculationUpdate.IsArchived = (bool)(e.Value ?? false)" />
                                             <span class="select-none">
                                                 @AppLoc["archived"]
@@ -192,9 +199,10 @@
                                     @if (Calculation.Id == 0 || CalculationUpdate.IsPrivate)
                                     {
                                         <div class="shrink-0 max-[430px]:w-full">
-                                            <label class="inline-flex h-[34px] w-auto cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-md border border-slate-200 px-2 text-sm text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 max-[430px]:w-full">
-                                                <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-500"
-                                                               @bind-Value="@CalculationUpdate.IsPrivate" />
+                                            <label class="@LockedToggleLabelClass">
+                                                <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-500"
+                                                               @bind-Value="@CalculationUpdate.IsPrivate"
+                                                               disabled="@IsContentLocked" />
                                                 <span class="select-none">
                                                     @ResourceApp._private
                                                 </span>
@@ -270,14 +278,16 @@
                                     <div class="flex flex-col gap-3">
                                         <div>
                                             <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@AppLoc["address"]</label>
-                                            <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                                            <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
                                                        placeholder="@AppLoc["addressPlaceholder"]"
+                                                       disabled="@IsContentLocked"
                                                        @bind-Value="@CalcMainAddress.Street" />
                                         </div>
                                         <div>
                                             <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@AppLoc["geoLocation"]</label>
-                                            <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                                            <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
                                                        placeholder="@AppLoc["geoLocationPlaceholder"]"
+                                                       disabled="@IsContentLocked"
                                                        @bind-Value="@CalculationUpdate.Maps" />
                                         </div>
                                     </div>
@@ -299,11 +309,12 @@
                                         {
                                             var noteIdx = _ni;
                                             <div class="relative">
-                                                <textarea class="min-h-20 w-full resize-y rounded-md border border-slate-300 bg-white px-2 py-1.5 pr-7 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                                                <textarea class="min-h-20 w-full resize-y rounded-md border border-slate-300 bg-white px-2 py-1.5 pr-7 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
                                                           placeholder="@AppLoc["notePlaceholder"]"
+                                                          disabled="@IsContentLocked"
                                                           @bind="CalculationUpdate.Notes[noteIdx]">
                                             </textarea>
-                                                @if (CalculationUpdate.Notes.Count > 1)
+                                                @if (CalculationUpdate.Notes.Count > 1 && !IsContentLocked)
                                                 {
                                                     <button type="button"
                                                             title="@AppLoc["deleteNote"]"
@@ -320,6 +331,7 @@
                                 }
                                 <button type="button"
                                         class="mt-2 flex items-center gap-1 rounded-md border border-dashed border-slate-300 px-2.5 py-1.5 text-xs font-medium text-slate-500 transition hover:border-sky-400 hover:text-sky-600 dark:border-slate-600 dark:text-slate-400 dark:hover:border-sky-500 dark:hover:text-sky-400"
+                                        disabled="@IsContentLocked"
                                         @onclick="AddCalcNote">
                                     <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
@@ -340,7 +352,7 @@
                                     <div>
                                         <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400"
                                                title="Sista dag för frågor och svar">Frågor/svar senast</label>
-                                        <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@CalculationUpdate.TenderQA" />
+                                        <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900" @bind-Value="@CalculationUpdate.TenderQA" disabled="@IsContentLocked" />
                                         @if (CalculationUpdate.TenderQA != default && CalculationUpdate.TenderQA < DateTime.Today)
                                         {
                                             <p class="mt-0.5 text-[11px] text-amber-600 dark:text-amber-400">@AppLoc["qaDeadlinePassed"]</p>
@@ -348,7 +360,7 @@
                                     </div>
                                     <div>
                                         <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.tenderDeadline</label>
-                                        <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@CalculationUpdate.TenderDeadline" />
+                                        <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900" @bind-Value="@CalculationUpdate.TenderDeadline" disabled="@IsContentLocked" />
                                         @if (CalculationUpdate.TenderDeadline != default && CalculationUpdate.TenderDeadline < DateTime.Today)
                                         {
                                             <p class="mt-0.5 text-[11px] text-amber-600 dark:text-amber-400">@AppLoc["tenderDeadlinePassed"]</p>
@@ -356,8 +368,9 @@
                                     </div>
                                     <div>
                                         <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.startDate</label>
-                                        <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                                        <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
                                                    @bind-Value="@CalculationUpdate.StartDate"
+                                                   disabled="@IsContentLocked"
                                                    @bind-Value:after="OnStartDateChanged" />
                                         @if (CalculationUpdate.StartDate != default && CalculationUpdate.StartDate < DateTime.Today)
                                         {
@@ -366,8 +379,9 @@
                                     </div>
                                     <div>
                                         <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.endDate</label>
-                                        <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                                        <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
                                                    @bind-Value="@CalculationUpdate.EndDate"
+                                                   disabled="@IsContentLocked"
                                                    @bind-Value:after="OnEndDateChanged" />
                                         @if (CalculationUpdate.EndDate != default && CalculationUpdate.StartDate != default && CalculationUpdate.EndDate < CalculationUpdate.StartDate)
                                         {
@@ -382,9 +396,10 @@
                                                 <span class="ml-1 text-slate-400">@AppLoc["calculatedAutomatically"]</span>
                                             }
                                         </label>
-                                        <InputNumber class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                                                     @bind-Value="@CalculationUpdate.TimeMonth"
-                                                     @bind-Value:after="OnTimeMonthChanged" />
+                                        <input class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
+                                               value="@FormatMonthsInput(CalculationUpdate.TimeMonth)"
+                                               disabled="@IsContentLocked"
+                                               @onchange="OnTimeMonthInputChanged" />
                                         @if (CalculationUpdate.StartDate != default && CalculationUpdate.EndDate == default && CalculationUpdate.TimeMonth > 0)
                                         {
                                             <p class="mt-0.5 text-[11px] text-sky-600 dark:text-sky-400">@AppLoc["endDateFromStartMonths"]</p>
@@ -405,7 +420,16 @@
             else if (Part == 2)
             {
                 <div class="relative z-0 rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                    <ProjectManagement.Client.Pages.Calculation.Income.IncomeListUI Incomes="CalculationUpdate.Income" MinYear="CalculationIncomeStartYear" />
+                    @if (IsContentLocked)
+                    {
+                        <div class="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300">
+                            Kalkylen är låst och intäkter kan inte ändras.
+                        </div>
+                    }
+                    else
+                    {
+                        <ProjectManagement.Client.Pages.Calculation.Income.IncomeListUI Incomes="CalculationUpdate.Income" MinYear="CalculationIncomeStartYear" />
+                    }
                 </div>
             }
         </div>
@@ -430,16 +454,16 @@
 
             <div class="mt-5 flex flex-wrap justify-end gap-2">
                 <button type="button"
-                        class="rounded-lg border border-sky-500 bg-sky-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-sky-500 dark:bg-sky-500 dark:hover:bg-sky-600"
-                        disabled="@_isCreatingContractCalculation"
-                        @onclick="CreateContractCalculationAsync">
-                    @AppLoc["createContractCalculation"]
-                </button>
-                <button type="button"
                         class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
                         disabled="@_isCreatingContractCalculation"
                         @onclick="CancelContractDialog">
                     @AppLoc["cancel"]
+                </button>
+                <button type="button"
+                        class="rounded-lg border border-sky-500 bg-sky-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-sky-500 dark:bg-sky-500 dark:hover:bg-sky-600"
+                        disabled="@_isCreatingContractCalculation"
+                        @onclick="CreateContractCalculationAsync">
+                    @AppLoc["createContractCalculation"]
                 </button>
             </div>
         </div>
@@ -583,16 +607,16 @@
 
             <div class="mt-5 flex flex-wrap justify-end gap-2">
                 <button type="button"
-                        class="rounded-lg border border-emerald-500 bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-600"
-                        disabled="@_isApprovingCalculation"
-                        @onclick="ApproveAndLockAsync">
-                    @CalcResource.approveAndLock
-                </button>
-                <button type="button"
                         class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
                         disabled="@_isApprovingCalculation"
                         @onclick="CancelApprovalDialog">
                     @AppLoc["cancel"]
+                </button>
+                <button type="button"
+                        class="rounded-lg border border-emerald-500 bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-600"
+                        disabled="@_isApprovingCalculation"
+                        @onclick="ApproveAndLockAsync">
+                    @CalcResource.approveAndLock
                 </button>
             </div>
         </div>
@@ -618,6 +642,8 @@
     private string _approvalBlockMessage = string.Empty;
     private string _currentUserDisplayName = string.Empty;
     private bool _isCurrentUserAdmin;
+    private int? _originalStatusId;
+    private int? _statusBeforeApprovalDialog;
 
     [Parameter] public EventCallback<ListCalculationMVVM?> Callback { get; set; }
     [Parameter] public required ListCalculationMVVM Calculation { get; set; }
@@ -625,6 +651,7 @@
     CalculationPostDTO CalculationUpdate = new();
     GetProjectCalcConfigDTO? Config;
     private EditContext? editContext;
+    private static readonly CultureInfo SwedishCulture = CultureInfo.GetCultureInfo("sv-SE");
 
     private int Part { get; set; } = 1;
 
@@ -648,6 +675,13 @@
         CalculationUpdate.StartDate == default
             ? DateTime.Today.Year
             : CalculationUpdate.StartDate.Year;
+
+    private bool IsContentLocked => CalculationUpdate.IsLocked;
+
+    private string LockedToggleLabelClass =>
+        IsContentLocked
+            ? "inline-flex h-[34px] w-auto cursor-not-allowed items-center gap-1.5 whitespace-nowrap rounded-md border border-slate-200 bg-slate-100 px-2 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-500 max-[430px]:w-full"
+            : "inline-flex h-[34px] w-auto cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-md border border-slate-200 px-2 text-sm text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 max-[430px]:w-full";
 
     private string GetCalculationTypeLabel(CalculationVersionType type) => type switch
     {
@@ -681,14 +715,19 @@
         Calculation.Id > 0 &&
         (CalculationUpdate.CalculationType == CalculationVersionType.Tender ||
          CalculationUpdate.CalculationType == CalculationVersionType.Contract) &&
-        CalculationUpdate.IsLocked &&
-        SelectedStatus?.AllowsProductionCalculation == true;
+        !HasAllowedLockedStatusChange &&
+        CalculationStatusPolicy.CanCreateProductionCalculation(
+            CalculationUpdate.CalculationType,
+            CalculationUpdate.IsLocked,
+            ToPolicyStatus(SelectedStatus));
 
     private bool CanCreateContractCalculation =>
         Calculation.Id > 0 &&
-        CalculationUpdate.CalculationType == CalculationVersionType.Tender &&
-        CalculationUpdate.IsLocked &&
-        SelectedStatus?.AllowsProductionCalculation == true;
+        !HasAllowedLockedStatusChange &&
+        CalculationStatusPolicy.CanCreateContractCalculation(
+            CalculationUpdate.CalculationType,
+            CalculationUpdate.IsLocked,
+            ToPolicyStatus(SelectedStatus));
 
     private IEnumerable<ListCalculationMVVM> CalculationVersions =>
         CalculationVersionSelector.GetVersions(
@@ -705,6 +744,44 @@
     private StatusListDTO? SelectedStatus =>
         Config?.Statuses.FirstOrDefault(x => x.Id == CalculationUpdate.StatusId);
 
+    private IEnumerable<StatusListDTO> AvailableStatuses =>
+        Config?.Statuses is null
+            ? []
+            : CalculationUpdate.IsLocked
+                ? Config.Statuses.Where(IsAllowedLockedStatus)
+                : Config.Statuses;
+
+    private bool IsStatusSelectDisabled =>
+        Config?.Statuses is null ||
+        (CalculationUpdate.IsLocked && !AvailableStatuses.Any(status => status.Id != CalculationUpdate.StatusId));
+
+    private bool HasAllowedLockedStatusChange =>
+        CalculationUpdate.IsLocked &&
+        CalculationStatusPolicy.HasAllowedLockedStatusChange(
+            _originalStatusId,
+            CalculationUpdate.StatusId,
+            ToPolicyStatus(SelectedStatus),
+            ToPolicyStatus(Config?.Statuses.FirstOrDefault(status => status.Id == CalculationUpdate.StatusId)));
+
+    private bool IsAllowedLockedStatus(StatusListDTO status)
+    {
+        return CalculationStatusPolicy.IsAllowedLockedStatus(
+            ToPolicyStatus(SelectedStatus),
+            ToPolicyStatus(status)!.Value);
+    }
+
+    private static CalculationStatusPolicyStatus? ToPolicyStatus(StatusListDTO? status) =>
+        status is null
+            ? null
+            : new CalculationStatusPolicyStatus(
+                status.Id,
+                status.IsApprovalStatus,
+                status.LocksCalculation,
+                status.AllowsProductionCalculation,
+                status.CountsAsSubmittedBid,
+                status.CountsAsWonBid,
+                status.CountsAsLostBid);
+
     private void OnStatusChanged(ChangeEventArgs e)
     {
         var oldStatusId = CalculationUpdate.StatusId;
@@ -713,6 +790,14 @@
             : null;
 
         var selectedStatus = Config?.Statuses.FirstOrDefault(x => x.Id == selectedStatusId);
+        if (CalculationUpdate.IsLocked &&
+            selectedStatus is not null &&
+            !IsAllowedLockedStatus(selectedStatus))
+        {
+            CalculationUpdate.StatusId = oldStatusId;
+            return;
+        }
+
         if (selectedStatus is { IsApprovalStatus: true, LocksCalculation: true } &&
             Calculation.Id > 0 &&
             !CalculationUpdate.IsLocked)
@@ -726,6 +811,7 @@
             }
 
             _approvalBlockMessage = string.Empty;
+            _statusBeforeApprovalDialog = oldStatusId;
             _pendingApprovalStatusId = selectedStatusId;
             _approvalDialogMessage = string.Empty;
             _showApprovalDialog = true;
@@ -765,7 +851,9 @@
         if (_isApprovingCalculation)
             return;
 
+        CalculationUpdate.StatusId = _statusBeforeApprovalDialog ?? CalculationUpdate.StatusId;
         _pendingApprovalStatusId = null;
+        _statusBeforeApprovalDialog = null;
         _approvalDialogMessage = string.Empty;
         _showApprovalDialog = false;
     }
@@ -804,6 +892,7 @@
         finally
         {
             _pendingApprovalStatusId = null;
+            _statusBeforeApprovalDialog = null;
             _isApprovingCalculation = false;
         }
     }
@@ -1106,6 +1195,8 @@
         if (Calculation.Id == 0 && !CalculationUpdate.StatusId.HasValue)
             CalculationUpdate.StatusId = Config.Statuses.FirstOrDefault(status => status.IsDefault)?.Id;
 
+        _originalStatusId = CalculationUpdate.StatusId;
+        RecalculateDateFields(DateFieldChanged.EndDate);
         ResetEditContext();
     }
 
@@ -1115,45 +1206,69 @@
             return;
         var totalDays = (CalculationUpdate.EndDate - CalculationUpdate.StartDate).TotalDays;
         if (totalDays < 0) return;
-        CalculationUpdate.TimeMonth = (int)Math.Round(totalDays / 30.4375, MidpointRounding.AwayFromZero);
+        CalculationUpdate.TimeMonth = Math.Round((decimal)totalDays / 30.4375m, 1, MidpointRounding.AwayFromZero);
     }
 
-    private void OnStartDateChanged()
+    private enum DateFieldChanged
     {
-        if (CalculationUpdate.StartDate != default && CalculationUpdate.EndDate != default)
-            ComputeTimeMonth();
-        else if (CalculationUpdate.StartDate != default && CalculationUpdate.EndDate == default && CalculationUpdate.TimeMonth > 0)
+        StartDate,
+        EndDate,
+        TimeMonth
+    }
+
+    private void OnStartDateChanged() => RecalculateDateFields(DateFieldChanged.StartDate);
+
+    private void OnEndDateChanged() => RecalculateDateFields(DateFieldChanged.EndDate);
+
+    private void OnTimeMonthInputChanged(ChangeEventArgs e)
+    {
+        var valueText = e.Value?.ToString()?.Trim();
+        if (string.IsNullOrWhiteSpace(valueText))
+            return;
+
+        if (decimal.TryParse(valueText, NumberStyles.Number, SwedishCulture, out var months) ||
+            decimal.TryParse(valueText.Replace(',', '.'), NumberStyles.Number, CultureInfo.InvariantCulture, out months))
         {
-            var months = (int)CalculationUpdate.TimeMonth;
-            CalculationUpdate.EndDate = CalculationUpdate.StartDate.AddMonths(months);
+            CalculationUpdate.TimeMonth = Math.Round(months, 1, MidpointRounding.AwayFromZero);
+            RecalculateDateFields(DateFieldChanged.TimeMonth);
         }
     }
 
-    private void OnEndDateChanged()
+    private void RecalculateDateFields(DateFieldChanged changed)
     {
-        if (CalculationUpdate.StartDate != default && CalculationUpdate.EndDate != default)
-            ComputeTimeMonth();
-        else if (CalculationUpdate.EndDate != default && CalculationUpdate.StartDate == default && CalculationUpdate.TimeMonth > 0)
+        if (changed is DateFieldChanged.StartDate or DateFieldChanged.EndDate)
         {
-            var months = (int)CalculationUpdate.TimeMonth;
-            CalculationUpdate.StartDate = CalculationUpdate.EndDate.AddMonths(-months);
-        }
-    }
+            if (CalculationUpdate.StartDate != default && CalculationUpdate.EndDate != default)
+                ComputeTimeMonth();
+            else if (CalculationUpdate.StartDate != default && CalculationUpdate.TimeMonth > 0)
+                CalculationUpdate.EndDate = AddDecimalMonths(CalculationUpdate.StartDate, CalculationUpdate.TimeMonth);
+            else if (CalculationUpdate.EndDate != default && CalculationUpdate.TimeMonth > 0)
+                CalculationUpdate.StartDate = AddDecimalMonths(CalculationUpdate.EndDate, -CalculationUpdate.TimeMonth);
 
-    private void OnTimeMonthChanged()
-    {
+            return;
+        }
+
         if (CalculationUpdate.TimeMonth <= 0) return;
-        if (CalculationUpdate.StartDate != default && CalculationUpdate.EndDate == default)
-        {
-            var months = (int)CalculationUpdate.TimeMonth;
-            CalculationUpdate.EndDate = CalculationUpdate.StartDate.AddMonths(months);
-        }
-        else if (CalculationUpdate.EndDate != default && CalculationUpdate.StartDate == default)
-        {
-            var months = (int)CalculationUpdate.TimeMonth;
-            CalculationUpdate.StartDate = CalculationUpdate.EndDate.AddMonths(-months);
-        }
+
+        if (CalculationUpdate.StartDate != default)
+            CalculationUpdate.EndDate = AddDecimalMonths(CalculationUpdate.StartDate, CalculationUpdate.TimeMonth);
+        else if (CalculationUpdate.EndDate != default)
+            CalculationUpdate.StartDate = AddDecimalMonths(CalculationUpdate.EndDate, -CalculationUpdate.TimeMonth);
     }
+
+    private static DateTime AddDecimalMonths(DateTime date, decimal months)
+    {
+        var wholeMonths = decimal.Truncate(months);
+        var fraction = months - wholeMonths;
+        return date.AddMonths((int)wholeMonths).AddDays((double)(fraction * 30.4375m));
+    }
+
+    private static string FormatMonthsInput(decimal months) =>
+        Math.Round(months, 1, MidpointRounding.AwayFromZero)
+            .ToString("0.#", SwedishCulture);
+
+    private static string FormatMonthsDisplay(decimal months) =>
+        $"{FormatMonthsInput(months)} mån";
 
     private void ResetEditContext()
     {
@@ -1166,10 +1281,9 @@
         if (btnSubmitDisabled)
             return;
 
-        if (CalculationUpdate.IsLocked)
+        if (CalculationUpdate.IsLocked && !HasAllowedLockedStatusChange)
         {
             MHD.Notifications(ToastType.Update, false);
-            await Callback.InvokeAsync(null);
             return;
         }
 
@@ -1184,6 +1298,7 @@
                 {
                     MHD.Notifications(ToastType.Update, true);
                     PropertyCopier.CopyPropertiesTo(CalculationUpdate, Calculation);
+                    _originalStatusId = CalculationUpdate.StatusId;
                 }
 
                 await Callback.InvokeAsync(Calculation);

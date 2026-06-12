@@ -7,8 +7,8 @@ namespace ProjectManagement.Client.Shared.Repositories.Project.Implement
     {
         private static string Base => PMAPIConst.ProjectBids;
 
-        public Task<List<ProjectBidListDTO>> GetAllAsync(Guid projectId)
-            => httpRepository.GetAsync<List<ProjectBidListDTO>>(Base + projectId);
+        public Task<ProjectBidsViewDTO> GetViewAsync(Guid projectId)
+            => httpRepository.GetAsync<ProjectBidsViewDTO>(Base + projectId);
 
         public Task<int> CreateAsync(Guid projectId, ProjectBidPostDTO dto)
             => httpRepository.PostAsync<int, ProjectBidPostDTO>(dto, Base + projectId);
@@ -18,5 +18,17 @@ namespace ProjectManagement.Client.Shared.Repositories.Project.Implement
 
         public Task<bool> DeleteAsync(int id, Guid projectId)
             => httpRepository.DeleteAsync<bool>(Base + $"{id}/{projectId}");
+
+        public Task<int> CreateColumnAsync(Guid projectId, ProjectBidPriceColumnPostDTO dto)
+            => httpRepository.PostAsync<int, ProjectBidPriceColumnPostDTO>(dto, Base + $"column/{projectId}");
+
+        public Task<bool> RenameColumnAsync(int id, Guid projectId, ProjectBidPriceColumnPostDTO dto)
+            => httpRepository.PutAsync(dto, Base + $"column/{id}/{projectId}");
+
+        public Task<bool> DeleteColumnAsync(int id, Guid projectId)
+            => httpRepository.DeleteAsync<bool>(Base + $"column/{id}/{projectId}");
+
+        public Task<bool> MoveColumnAsync(int id, Guid projectId, int direction)
+            => httpRepository.PutAsync(new { }, Base + $"column/{id}/{projectId}/move/{direction}");
     }
 }

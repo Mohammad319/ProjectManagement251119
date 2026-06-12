@@ -244,21 +244,8 @@
         _                                 => "inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200"
     };
 
-    private static string GetStatusDotColor(ListCalculationMVVM calculation)
-    {
-        if (!string.IsNullOrWhiteSpace(calculation.StatusColor))
-            return calculation.StatusColor;
-
-        return calculation.Status?.Trim().ToLowerInvariant() switch
-        {
-            "active" or "ongoing" or "pagaende" or "pågående" => "#0ea5e9",
-            "completed" or "done" or "klar" => "#10b981",
-            "needs review" or "review" or "warning" or "varning" => "#f59e0b",
-            "cancelled" or "canceled" or "avbruten" => "#f43f5e",
-            _ when !string.IsNullOrWhiteSpace(calculation.Status) => "#0ea5e9",
-            _ => "#94a3b8"
-        };
-    }
+    private static string GetStatusDotColor(ListCalculationMVVM calculation) =>
+        CalculationStatusColor.Resolve(calculation);
 
     private async Task OpenCalculationAsync(GroupedCalcEntry entry)
     {

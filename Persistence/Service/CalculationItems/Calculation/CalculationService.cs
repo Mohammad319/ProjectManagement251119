@@ -2,6 +2,7 @@ using Application.Feature.Calculation.Calculation;
 using Application.Interfaces;
 using Application.Mapping.Calculation;
 using Domain.Entities.Calculation;
+using Domain.Entities.Project;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Context;
 using Persistence.Factory;
@@ -9,6 +10,7 @@ using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Calculation.Template;
 using ProjectManagement.Shared.Enums;
+using ProjectManagement.Shared.Policies;
 
 namespace Persistence.Service.CalculationItems.Calculation
 {
@@ -76,9 +78,15 @@ namespace Persistence.Service.CalculationItems.Calculation
         {
             await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
 
-            var calculation = await GetUnlockedCalculationAsync(db, id, departmentId, cancellationToken);
+            var calculation = await db.Calculations
+                .Include(c => c.Status)
+                .FirstOrDefaultAsync(x => x.Id == id &&
+                    (!departmentId.HasValue || x.DepartmentId == departmentId.Value), cancellationToken);
             if (calculation is null)
                 return false;
+
+            if (calculation.IsLocked)
+                return await TryUpdateLockedCalculationStatusAsync(db, calculation, dto.StatusId, userId, cancellationToken);
 
             if (!calculation.IsCurrentVersion)
             {
@@ -235,7 +243,10 @@ namespace Persistence.Service.CalculationItems.Calculation
                 !original.IsLocked ||
                 (original.CalculationType != CalculationVersionType.Tender &&
                  original.CalculationType != CalculationVersionType.Contract) ||
-                original.Status is not { AllowsProductionCalculation: true })
+                !CalculationStatusPolicy.CanCreateProductionCalculation(
+                    original.CalculationType,
+                    original.IsLocked,
+                    ToPolicyStatus(original.Status)))
             {
                 return 0;
             }
@@ -300,7 +311,10 @@ namespace Persistence.Service.CalculationItems.Calculation
                 !original.IsCurrentVersion ||
                 !original.IsLocked ||
                 original.CalculationType != CalculationVersionType.Tender ||
-                original.Status is not { AllowsProductionCalculation: true })
+                !CalculationStatusPolicy.CanCreateContractCalculation(
+                    original.CalculationType,
+                    original.IsLocked,
+                    ToPolicyStatus(original.Status)))
             {
                 return 0;
             }
@@ -633,6 +647,46 @@ namespace Persistence.Service.CalculationItems.Calculation
                     (!departmentId.HasValue || x.DepartmentId == departmentId.Value), cancellationToken);
         }
 
+        private async Task<bool> TryUpdateLockedCalculationStatusAsync(
+            ShardingSingleDbContext db,
+            CalculationEntity calculation,
+            int? requestedStatusId,
+            int userId,
+            CancellationToken cancellationToken)
+        {
+            if (!calculation.IsCurrentVersion ||
+                !requestedStatusId.HasValue ||
+                requestedStatusId == calculation.StatusId)
+            {
+                return false;
+            }
+
+            var requestedStatus = await db.CalculationStatus
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == requestedStatusId.Value, cancellationToken);
+
+            if (requestedStatus is null ||
+                !CalculationStatusPolicy.IsAllowedLockedStatus(
+                    ToPolicyStatus(calculation.Status),
+                    ToPolicyStatus(requestedStatus)!.Value))
+            {
+                return false;
+            }
+
+            calculation.SetStatus(requestedStatusId);
+            Touch(calculation, userId);
+            await db.SaveChangesAsync(cancellationToken);
+            await db.Entry(calculation).Reference(c => c.Status).LoadAsync(cancellationToken);
+
+            await notification.SendNotificationAsync(
+                calculation.Id.ToString(),
+                ObjectTypHub.calculation,
+                OperationType.Update,
+                BuildPageDto(calculation));
+
+            return true;
+        }
+
         private static async Task<CalculationEntity?> GetUnlockedCalculationAsync(
             ShardingSingleDbContext db,
             int id,
@@ -732,6 +786,18 @@ namespace Persistence.Service.CalculationItems.Calculation
 
             return true;
         }
+
+        private static CalculationStatusPolicyStatus? ToPolicyStatus(StatusEntity? status) =>
+            status is null
+                ? null
+                : new CalculationStatusPolicyStatus(
+                    status.Id,
+                    status.IsApprovalStatus,
+                    status.LocksCalculation,
+                    status.AllowsProductionCalculation,
+                    status.CountsAsSubmittedBid,
+                    status.CountsAsWonBid,
+                    status.CountsAsLostBid);
 
         private static Task<int?> GetDefaultCalculationStatusIdAsync(
             ShardingSingleDbContext db,

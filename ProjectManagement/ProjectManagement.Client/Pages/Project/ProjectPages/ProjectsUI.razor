@@ -17,6 +17,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IJSRuntime JS
 @inject ProjectManagement.Client.Services.Folder.ProjectListViewPreference ViewPreference
+@inject ProjectManagement.Client.Services.Folder.ListSavedFilterStorage SavedFilterStorage
 
 <div class="flex h-full min-h-0 flex-col gap-1 overflow-hidden px-1 pb-1">
     @if (_contentMode == ContentModeCalculations)
@@ -34,39 +35,10 @@
     <div class="sticky top-0 z-[80] shrink-0 -mx-1 border-b border-slate-200 bg-white px-1 pb-1 shadow-sm dark:border-slate-800 dark:bg-slate-950">
     <div class="flex w-full flex-wrap items-center justify-between gap-1.5 px-1 pt-1 pb-0.5">
         <div class="min-w-0">
-            <div class="flex flex-col text-gray-700 dark:text-gray-300">
-                <span class="truncate text-sm font-semibold">
-                    @if (_contentMode == ContentModeCalculations)
-                    {
-                        <span>Kalkyler i @(IsDepartmentScope ? DepartmentName : Folder.State.FolderSelected?.Name ?? "-")</span>
-                    }
-                    else
-                    {
-                        @if (IsDepartmentScope)
-                        {
-                            <span>Projekt i @(DepartmentName ?? "-")</span>
-                        }
-                        else
-                        {
-                            @AppLoc["projectsInFolderFormat", Folder.State.FolderSelected?.Name ?? "-"]
-                        }
-                    }
-                </span>
-                <span class="truncate text-xs text-slate-500 dark:text-slate-400">
-                    @if (_contentMode == ContentModeCalculations)
-                    {
-                        <span>0 @CalcResource.calculation</span>
-                    }
-                    else
-                    {
-                        <span>@SortedProjects.Count() @CalcResource.project</span>
-                        @if (IsDepartmentScope)
-                        {
-                            <span class="ml-1 text-slate-400">· hela avdelningen</span>
-                        }
-                    }
-                </span>
-            </div>
+            @* Kompakt rubrik i en rad: vad · plats · (hela avdelningen / filtrerat urval) · antal *@
+            <span class="block truncate text-sm text-slate-700 dark:text-slate-200" title="@ProjectHeaderText">
+                <span class="font-semibold">Projekt i @ProjectListPlaceName</span><span class="text-slate-500 dark:text-slate-400">@ProjectHeaderMeta</span>
+            </span>
         </div>
 
         <div class="flex flex-wrap items-center gap-1">
@@ -90,20 +62,117 @@
                 </button>
                 @if (_filterMenuOpen)
                 {
-                    <div class="fixed inset-0 z-[70]" @onclick="() => _filterMenuOpen = false"></div>
-                    <div class="absolute left-0 top-full z-[90] mt-1 w-48 rounded-md border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+                    <div class="fixed inset-0 z-[70]" @onclick="CloseProjectFilterMenu"></div>
+                    <div class="absolute left-0 top-full z-[90] mt-1 w-72 rounded-md border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+
+                        @* ── Aktiva filter ── *@
+                        <div class="px-3 pt-1.5 pb-0.5">
+                            <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Aktiva filter</span>
+                        </div>
                         @if (HasActiveProjectFilters)
                         {
-                            <button type="button"
-                                    class="flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
-                                    @onclick="() => { ClearProjectFilters(); _filterMenuOpen = false; }">
-                                <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                                <span>@AppLoc["clearAllFilters"]</span>
-                            </button>
+                            <div class="flex max-h-32 flex-wrap gap-1 overflow-y-auto px-3 pb-1.5">
+                                @foreach (var kv in _projColFilters.Where(kv => kv.Value.IsActive))
+                                {
+                                    var filterKey = kv.Key;
+                                    <span class="inline-flex max-w-full items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                                        <span class="truncate" title="@GetProjectFilterLabel(filterKey, kv.Value)">@GetProjectFilterLabel(filterKey, kv.Value)</span>
+                                        <button type="button"
+                                                class="shrink-0 text-blue-400 hover:text-blue-700 dark:hover:text-blue-200"
+                                                title="@AppLoc["clearAllFilters"]"
+                                                @onclick="() => ClearSingleProjectFilter(filterKey)">
+                                            <svg class="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                                        </button>
+                                    </span>
+                                }
+                            </div>
                         }
                         else
                         {
-                            <span class="block px-3 py-2 text-[11px] text-slate-400 dark:text-slate-500">@AppLoc["noActiveFilters"]</span>
+                            <span class="block px-3 pb-1.5 text-[11px] text-slate-400 dark:text-slate-500">@AppLoc["noActiveFilters"]</span>
+                        }
+
+                        @* ── Åtgärder ── *@
+                        <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
+                        @if (_saveFilterPromptOpen)
+                        {
+                            <div class="px-3 py-1.5">
+                                <label class="mb-1 block text-[10px] font-semibold text-slate-500 dark:text-slate-400">Namn på filter</label>
+                                <input type="text"
+                                       class="w-full rounded border border-slate-300 bg-white px-2 py-1 text-[11px] text-slate-800 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                                       placeholder="T.ex. Mina aktiva projekt"
+                                       @bind="_saveFilterName"
+                                       @bind:event="oninput" />
+                                @if (!string.IsNullOrEmpty(_saveFilterError))
+                                {
+                                    <p class="mt-1 text-[10px] text-red-600 dark:text-red-400">@_saveFilterError</p>
+                                }
+                                <div class="mt-1.5 flex items-center gap-1.5">
+                                    <button type="button"
+                                            class="inline-flex h-6 items-center rounded bg-blue-600 px-2 text-[11px] font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                            disabled="@(string.IsNullOrWhiteSpace(_saveFilterName))"
+                                            @onclick="SaveCurrentProjectFilterAsync">
+                                        Spara
+                                    </button>
+                                    <button type="button"
+                                            class="inline-flex h-6 items-center rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                                            @onclick="() => { _saveFilterPromptOpen = false; _saveFilterError = null; }">
+                                        Avbryt
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <button type="button"
+                                    class="flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-800"
+                                    disabled="@(!HasActiveProjectFilters)"
+                                    @onclick="OpenSaveFilterPrompt">
+                                <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
+                                <span>Spara aktuellt filter</span>
+                            </button>
+                        }
+                        <button type="button"
+                                class="flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40 dark:text-red-400 dark:hover:bg-red-950/30"
+                                disabled="@(!HasActiveProjectFilters)"
+                                @onclick="() => { ClearProjectFilters(); CloseProjectFilterMenu(); }">
+                            <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                            <span>Rensa filter</span>
+                        </button>
+
+                        @* ── Sparade filter ── *@
+                        <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
+                        <div class="px-3 pt-0.5 pb-0.5">
+                            <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Sparade filter</span>
+                        </div>
+                        @if (_savedProjectFilters.Count == 0)
+                        {
+                            <span class="block px-3 pb-1.5 text-[11px] text-slate-400 dark:text-slate-500">Inga sparade filter ännu.</span>
+                        }
+                        else
+                        {
+                            <div class="max-h-44 overflow-y-auto pb-1">
+                                @foreach (var saved in _savedProjectFilters)
+                                {
+                                    var savedFilter = saved;
+                                    <div class="flex items-center gap-1 px-3 py-1 hover:bg-slate-50 dark:hover:bg-slate-800">
+                                        <button type="button"
+                                                class="flex min-w-0 flex-1 items-center gap-2 text-left text-[11px] text-slate-700 dark:text-slate-200"
+                                                title="Använd: @savedFilter.Name"
+                                                @onclick="() => ApplyProjectSavedFilterAsync(savedFilter)">
+                                            <svg class="h-3 w-3 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" /></svg>
+                                            <span class="truncate">@savedFilter.Name</span>
+                                            <span class="shrink-0 rounded-full bg-slate-100 px-1.5 text-[9px] font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-400">@savedFilter.Filters.Count</span>
+                                        </button>
+                                        <button type="button"
+                                                class="shrink-0 rounded p-0.5 text-slate-400 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400"
+                                                title="Ta bort: @savedFilter.Name"
+                                                @onclick="() => DeleteProjectSavedFilterAsync(savedFilter)">
+                                            <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                        </button>
+                                    </div>
+                                }
+                            </div>
                         }
                     </div>
                 }
@@ -475,7 +544,7 @@
                         <tr>
                             <td colspan="@VisibleProjectColumnCount" class="px-3 py-8 text-center">
                                 <div class="flex flex-col items-center gap-2 text-slate-500 dark:text-slate-400">
-                                    <span class="text-sm">@CalcResource.noResultsFound</span>
+                                    <span class="text-sm">@(HasActiveProjectFilters ? "Inga projekt matchar valt filter." : CalcResource.noResultsFound)</span>
                                     @if (HasActiveProjectFilters)
                                     {
                                         <button type="button"
@@ -793,7 +862,115 @@
         _currentPage = 1;
     }
 
+    private void ClearSingleProjectFilter(string key)
+    {
+        _projColFilters[key].Clear();
+        _currentPage = 1;
+    }
+
     private void OnProjectColumnFilterChanged() => _currentPage = 1;
+
+    // ── Rubrik (en rad) ─────────────────────────────────────
+    private string ProjectListPlaceName =>
+        IsDepartmentScope ? (DepartmentName ?? "-") : (Folder.State.FolderSelected?.Name ?? "-");
+
+    private string ProjectHeaderMeta
+    {
+        get
+        {
+            var total = BaseProjects.Count();
+            if (HasActiveProjectFilters)
+                return $" · filtrerat urval · {FilteredProjects.Count()} av {total} {CalcResource.project}";
+
+            var wholeDepartment = IsDepartmentScope ? " · hela avdelningen" : string.Empty;
+            return $"{wholeDepartment} · {total} {CalcResource.project}";
+        }
+    }
+
+    private string ProjectHeaderText => $"Projekt i {ProjectListPlaceName}{ProjectHeaderMeta}";
+
+    // ── Sparade filter (personliga, endast projektlistans scope) ──
+    private List<SavedListFilter> _savedProjectFilters = [];
+    private bool _saveFilterPromptOpen;
+    private string _saveFilterName = string.Empty;
+    private string? _saveFilterError;
+
+    private void CloseProjectFilterMenu()
+    {
+        _filterMenuOpen = false;
+        _saveFilterPromptOpen = false;
+        _saveFilterError = null;
+    }
+
+    private void OpenSaveFilterPrompt()
+    {
+        _saveFilterPromptOpen = true;
+        _saveFilterName = string.Empty;
+        _saveFilterError = null;
+    }
+
+    private async Task SaveCurrentProjectFilterAsync()
+    {
+        var name = _saveFilterName.Trim();
+        if (name.Length == 0)
+        {
+            _saveFilterError = "Namn krävs.";
+            return;
+        }
+        if (_savedProjectFilters.Any(f => string.Equals(f.Name, name, StringComparison.CurrentCultureIgnoreCase)))
+        {
+            _saveFilterError = "Ett filter med detta namn finns redan. Välj ett annat namn.";
+            return;
+        }
+
+        var filter = new SavedListFilter
+        {
+            Name = name,
+            CreatedAt = DateTime.UtcNow,
+            SortColumn = string.IsNullOrEmpty(_sortColumn) ? null : _sortColumn,
+            SortAscending = _sortAscending,
+            Filters = _projColFilters
+                .Where(kv => kv.Value.IsActive)
+                .ToDictionary(kv => kv.Key, kv => SavedColumnFilter.FromState(kv.Value))
+        };
+
+        _savedProjectFilters.Add(filter);
+        _savedProjectFilters = _savedProjectFilters
+            .OrderBy(f => f.Name, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+        await SavedFilterStorage.SaveAllAsync(ListSavedFilterStorage.ProjectListScope, _savedProjectFilters);
+
+        _saveFilterPromptOpen = false;
+        _saveFilterName = string.Empty;
+        _saveFilterError = null;
+    }
+
+    private Task ApplyProjectSavedFilterAsync(SavedListFilter saved)
+    {
+        foreach (var f in _projColFilters.Values) f.Clear();
+
+        foreach (var (key, savedFilter) in saved.Filters)
+        {
+            if (_projColFilters.TryGetValue(key, out var state) && state.Type == savedFilter.Type)
+                savedFilter.ApplyTo(state);
+        }
+
+        if (!string.IsNullOrEmpty(saved.SortColumn))
+        {
+            _sortColumn = saved.SortColumn;
+            _sortAscending = saved.SortAscending;
+        }
+
+        _currentPage = 1;
+        CloseProjectFilterMenu();
+        return Task.CompletedTask;
+    }
+
+    private async Task DeleteProjectSavedFilterAsync(SavedListFilter saved)
+    {
+        _savedProjectFilters.Remove(saved);
+        await SavedFilterStorage.SaveAllAsync(ListSavedFilterStorage.ProjectListScope, _savedProjectFilters);
+    }
 
     private ColumnFilterState PF(string key)
     {
@@ -1085,6 +1262,8 @@
             foreach (var (k, v) in saved)
                 if (_projectColumns.ContainsKey(k))
                     _projectColumns[k] = v;
+
+        _savedProjectFilters = await SavedFilterStorage.LoadAsync(ListSavedFilterStorage.ProjectListScope);
     }
 
     protected override void OnInitialized()
