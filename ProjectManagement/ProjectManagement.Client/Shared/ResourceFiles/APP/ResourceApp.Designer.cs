@@ -106,11 +106,272 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An unexpected error has occurred. Please try again later..
+        ///   Looks up a localized string similar to Action.
+        /// </summary>
+        public static string action {
+            get {
+                return ResourceManager.GetString("action", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Actions.
+        /// </summary>
+        public static string actions {
+            get {
+                return ResourceManager.GetString("actions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Active.
+        /// </summary>
+        public static string active {
+            get {
+                return ResourceManager.GetString("active", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Actual quantity.
+        /// </summary>
+        public static string actuallyQuantity {
+            get {
+                return ResourceManager.GetString("actuallyQuantity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Additional work.
+        /// </summary>
+        public static string additionalWork {
+            get {
+                return ResourceManager.GetString("additionalWork", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Address.
+        /// </summary>
+        public static string address {
+            get {
+                return ResourceManager.GetString("address", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Addresses.
+        /// </summary>
+        public static string addresses {
+            get {
+                return ResourceManager.GetString("addresses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Address number.
+        /// </summary>
+        public static string addressNumber {
+            get {
+                return ResourceManager.GetString("addressNumber", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Street address, zip code, city.
+        /// </summary>
+        public static string addressPlaceholder {
+            get {
+                return ResourceManager.GetString("addressPlaceholder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All.
+        /// </summary>
+        public static string all {
+            get {
+                return ResourceManager.GetString("all", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All calculation types.
+        /// </summary>
+        public static string allCalculationTypes {
+            get {
+                return ResourceManager.GetString("allCalculationTypes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All folders.
+        /// </summary>
+        public static string allFolders {
+            get {
+                return ResourceManager.GetString("allFolders", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All.
+        /// </summary>
+        public static string allItems {
+            get {
+                return ResourceManager.GetString("allItems", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All projects.
+        /// </summary>
+        public static string allProjects {
+            get {
+                return ResourceManager.GetString("allProjects", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All quarters.
+        /// </summary>
+        public static string allQuarters {
+            get {
+                return ResourceManager.GetString("allQuarters", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All statuses.
+        /// </summary>
+        public static string allStatuses {
+            get {
+                return ResourceManager.GetString("allStatuses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All years.
+        /// </summary>
+        public static string allYears {
+            get {
+                return ResourceManager.GetString("allYears", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Annual total.
+        /// </summary>
+        public static string annualTotal {
+            get {
+                return ResourceManager.GetString("annualTotal", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An unexpected error occurred. Please try again later..
         /// </summary>
         public static string AnUnexpectedErrorHasOccurred {
             get {
                 return ResourceManager.GetString("AnUnexpectedErrorHasOccurred", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Appearance.
+        /// </summary>
+        public static string appearance {
+            get {
+                return ResourceManager.GetString("appearance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The calculation could not be approved and locked..
+        /// </summary>
+        public static string approvalLockFailed {
+            get {
+                return ResourceManager.GetString("approvalLockFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Archive calculation.
+        /// </summary>
+        public static string archiveCalculation {
+            get {
+                return ResourceManager.GetString("archiveCalculation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Archived.
+        /// </summary>
+        public static string archived {
+            get {
+                return ResourceManager.GetString("archived", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Archived.
+        /// </summary>
+        public static string archivedItems {
+            get {
+                return ResourceManager.GetString("archivedItems", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Archived only.
+        /// </summary>
+        public static string archivedOnly {
+            get {
+                return ResourceManager.GetString("archivedOnly", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Archive folder.
+        /// </summary>
+        public static string archiveFolder {
+            get {
+                return ResourceManager.GetString("archiveFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The folder contains active projects. Are you sure you want to archive the folder?.
+        /// </summary>
+        public static string archiveFolderConfirm {
+            get {
+                return ResourceManager.GetString("archiveFolderConfirm", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Archive folder.
+        /// </summary>
+        public static string archiveFolderTitle {
+            get {
+                return ResourceManager.GetString("archiveFolderTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Archive project.
+        /// </summary>
+        public static string archiveProject {
+            get {
+                return ResourceManager.GetString("archiveProject", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Archive version.
+        /// </summary>
+        public static string archiveVersion {
+            get {
+                return ResourceManager.GetString("archiveVersion", resourceCulture);
             }
         }
         
@@ -142,11 +403,380 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Automatic.
+        /// </summary>
+        public static string automatic {
+            get {
+                return ResourceManager.GetString("automatic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Back.
+        /// </summary>
+        public static string back {
+            get {
+                return ResourceManager.GetString("back", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Base cost (AVG).
+        /// </summary>
+        public static string baseCostAverage {
+            get {
+                return ResourceManager.GetString("baseCostAverage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Basic data.
+        /// </summary>
+        public static string basicData {
+            get {
+                return ResourceManager.GetString("basicData", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Bid role.
+        /// </summary>
+        public static string bidRole {
+            get {
+                return ResourceManager.GetString("bidRole", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Apply.
         /// </summary>
         public static string Button_Apply {
             get {
                 return ResourceManager.GetString("Button_Apply", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculation information.
+        /// </summary>
+        public static string calcInfoTab {
+            get {
+                return ResourceManager.GetString("calcInfoTab", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Change order.
+        /// </summary>
+        public static string calcRoleChangeOrder {
+            get {
+                return ResourceManager.GetString("calcRoleChangeOrder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Custom role.
+        /// </summary>
+        public static string calcRoleCustom {
+            get {
+                return ResourceManager.GetString("calcRoleCustom", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Internal object.
+        /// </summary>
+        public static string calcRoleInternalObject {
+            get {
+                return ResourceManager.GetString("calcRoleInternalObject", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Main tender.
+        /// </summary>
+        public static string calcRoleMainBid {
+            get {
+                return ResourceManager.GetString("calcRoleMainBid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Option.
+        /// </summary>
+        public static string calcRoleOption {
+            get {
+                return ResourceManager.GetString("calcRoleOption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sub-object.
+        /// </summary>
+        public static string calcRoleSubObject {
+            get {
+                return ResourceManager.GetString("calcRoleSubObject", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculate by.
+        /// </summary>
+        public static string calculateBy {
+            get {
+                return ResourceManager.GetString("calculateBy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (calculated automatically).
+        /// </summary>
+        public static string calculatedAutomatically {
+            get {
+                return ResourceManager.GetString("calculatedAutomatically", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculation.
+        /// </summary>
+        public static string calculation {
+            get {
+                return ResourceManager.GetString("calculation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculation addresses.
+        /// </summary>
+        public static string calculationAddresses {
+            get {
+                return ResourceManager.GetString("calculationAddresses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculation chains.
+        /// </summary>
+        public static string calculationChains {
+            get {
+                return ResourceManager.GetString("calculationChains", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculation chart.
+        /// </summary>
+        public static string calculationChart {
+            get {
+                return ResourceManager.GetString("calculationChart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculation contacts.
+        /// </summary>
+        public static string calculationContacts {
+            get {
+                return ResourceManager.GetString("calculationContacts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculations.
+        /// </summary>
+        public static string calculationCount {
+            get {
+                return ResourceManager.GetString("calculationCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculation details are not available..
+        /// </summary>
+        public static string calculationDetailsUnavailable {
+            get {
+                return ResourceManager.GetString("calculationDetailsUnavailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculation list.
+        /// </summary>
+        public static string calculationListReport {
+            get {
+                return ResourceManager.GetString("calculationListReport", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculation list - {0}.
+        /// </summary>
+        public static string calculationListTitleFormat {
+            get {
+                return ResourceManager.GetString("calculationListTitleFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculation name.
+        /// </summary>
+        public static string calculationName {
+            get {
+                return ResourceManager.GetString("calculationName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculation notes.
+        /// </summary>
+        public static string calculationNotes {
+            get {
+                return ResourceManager.GetString("calculationNotes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculation responsible.
+        /// </summary>
+        public static string calculationResponsible {
+            get {
+                return ResourceManager.GetString("calculationResponsible", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculation role.
+        /// </summary>
+        public static string calculationRole {
+            get {
+                return ResourceManager.GetString("calculationRole", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No calculations found.
+        /// </summary>
+        public static string calculationsEmptyState {
+            get {
+                return ResourceManager.GetString("calculationsEmptyState", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Create a new calculation to start working..
+        /// </summary>
+        public static string calculationsEmptyStateHint {
+            get {
+                return ResourceManager.GetString("calculationsEmptyStateHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculations in {0}.
+        /// </summary>
+        public static string calculationsInProjectFormat {
+            get {
+                return ResourceManager.GetString("calculationsInProjectFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculations {0} · {1}.
+        /// </summary>
+        public static string calculationsQuarterFormat {
+            get {
+                return ResourceManager.GetString("calculationsQuarterFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculation status.
+        /// </summary>
+        public static string calculationStatus {
+            get {
+                return ResourceManager.GetString("calculationStatus", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculations with status: {0}.
+        /// </summary>
+        public static string calculationsWithStatusFormat {
+            get {
+                return ResourceManager.GetString("calculationsWithStatusFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculations year {0}.
+        /// </summary>
+        public static string calculationsYearFormat {
+            get {
+                return ResourceManager.GetString("calculationsYearFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No tasks yet.
+        /// </summary>
+        public static string calculationTableEmptyState {
+            get {
+                return ResourceManager.GetString("calculationTableEmptyState", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add a task or pull items from storage to start building this calculation..
+        /// </summary>
+        public static string calculationTableEmptyStateHint {
+            get {
+                return ResourceManager.GetString("calculationTableEmptyStateHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Clear the current filter or adjust the display options to show more tasks and resources..
+        /// </summary>
+        public static string calculationTableNoResultsHint {
+            get {
+                return ResourceManager.GetString("calculationTableNoResultsHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No rows are currently visible.
+        /// </summary>
+        public static string calculationTableNoVisibleRows {
+            get {
+                return ResourceManager.GetString("calculationTableNoVisibleRows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Adjust the display options to bring tasks and resources back into view..
+        /// </summary>
+        public static string calculationTableNoVisibleRowsHint {
+            get {
+                return ResourceManager.GetString("calculationTableNoVisibleRowsHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculation timeline.
+        /// </summary>
+        public static string calculationTimeline {
+            get {
+                return ResourceManager.GetString("calculationTimeline", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculation type.
+        /// </summary>
+        public static string calculationType {
+            get {
+                return ResourceManager.GetString("calculationType", resourceCulture);
             }
         }
         
@@ -160,6 +790,15 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cancel.
+        /// </summary>
+        public static string cancelOrder {
+            get {
+                return ResourceManager.GetString("cancelOrder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The value of {0} must be between 0 and 999..
         /// </summary>
         public static string CapWasteValid__0_ {
@@ -169,11 +808,137 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The operation completed successfully!.
+        ///   Looks up a localized string similar to Chart.
+        /// </summary>
+        public static string chart {
+            get {
+                return ResourceManager.GetString("chart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Clear all filters.
+        /// </summary>
+        public static string clearAllFilters {
+            get {
+                return ResourceManager.GetString("clearAllFilters", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Clear filter.
+        /// </summary>
+        public static string clearFilters {
+            get {
+                return ResourceManager.GetString("clearFilters", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Close.
+        /// </summary>
+        public static string close {
+            get {
+                return ResourceManager.GetString("close", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Code.
+        /// </summary>
+        public static string code {
+            get {
+                return ResourceManager.GetString("code", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Code....
+        /// </summary>
+        public static string codePlaceholder {
+            get {
+                return ResourceManager.GetString("codePlaceholder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Collapse all.
+        /// </summary>
+        public static string collapseAll {
+            get {
+                return ResourceManager.GetString("collapseAll", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Columns.
+        /// </summary>
+        public static string columns {
+            get {
+                return ResourceManager.GetString("columns", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Column selection.
+        /// </summary>
+        public static string columnSelection {
+            get {
+                return ResourceManager.GetString("columnSelection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Column template.
+        /// </summary>
+        public static string columnTemplate {
+            get {
+                return ResourceManager.GetString("columnTemplate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Operation completed successfully..
         /// </summary>
         public static string completedSuccessfully {
             get {
                 return ResourceManager.GetString("completedSuccessfully", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Confirm.
+        /// </summary>
+        public static string confirm {
+            get {
+                return ResourceManager.GetString("confirm", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do you want to continue?.
+        /// </summary>
+        public static string continueQuestion {
+            get {
+                return ResourceManager.GetString("continueQuestion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Contract calculation.
+        /// </summary>
+        public static string contractCalculation {
+            get {
+                return ResourceManager.GetString("contractCalculation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The contract calculation could not be created..
+        /// </summary>
+        public static string contractCalculationCreateFailed {
+            get {
+                return ResourceManager.GetString("contractCalculationCreateFailed", resourceCulture);
             }
         }
         
@@ -187,11 +952,272 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Copy.
+        /// </summary>
+        public static string copyAction {
+            get {
+                return ResourceManager.GetString("copyAction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Copy calculation.
+        /// </summary>
+        public static string copyCalculation {
+            get {
+                return ResourceManager.GetString("copyCalculation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Copy calculation with income values.
+        /// </summary>
+        public static string copyCalculationWithIncome {
+            get {
+                return ResourceManager.GetString("copyCalculationWithIncome", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Copy folder.
+        /// </summary>
+        public static string copyFolder {
+            get {
+                return ResourceManager.GetString("copyFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Copy folder with projects and calculations.
+        /// </summary>
+        public static string copyFolderWithProjectsCalculations {
+            get {
+                return ResourceManager.GetString("copyFolderWithProjectsCalculations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Copy project.
+        /// </summary>
+        public static string copyProject {
+            get {
+                return ResourceManager.GetString("copyProject", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Copy project with all calculations.
+        /// </summary>
+        public static string copyProjectWithCalculations {
+            get {
+                return ResourceManager.GetString("copyProjectWithCalculations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Counts as lost bid.
+        /// </summary>
+        public static string countsAsLostBid {
+            get {
+                return ResourceManager.GetString("countsAsLostBid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Counts as submitted bid.
+        /// </summary>
+        public static string countsAsSubmittedBid {
+            get {
+                return ResourceManager.GetString("countsAsSubmittedBid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Counts as won bid.
+        /// </summary>
+        public static string countsAsWonBid {
+            get {
+                return ResourceManager.GetString("countsAsWonBid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The locked tender calculation will be saved as history. A copy is created as a contract calculation and opened for continued work..
+        /// </summary>
+        public static string createContractCalculationDescription {
+            get {
+                return ResourceManager.GetString("createContractCalculationDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Create contract calculation?.
+        /// </summary>
+        public static string createContractCalculationTitle {
+            get {
+                return ResourceManager.GetString("createContractCalculationTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Created.
         /// </summary>
         public static string created {
             get {
                 return ResourceManager.GetString("created", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Created date.
+        /// </summary>
+        public static string createdDate {
+            get {
+                return ResourceManager.GetString("createdDate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Created newest first.
+        /// </summary>
+        public static string createdNewestFirst {
+            get {
+                return ResourceManager.GetString("createdNewestFirst", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Created oldest first.
+        /// </summary>
+        public static string createdOldestFirst {
+            get {
+                return ResourceManager.GetString("createdOldestFirst", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Create new version.
+        /// </summary>
+        public static string createNewVersion {
+            get {
+                return ResourceManager.GetString("createNewVersion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Create production calculation.
+        /// </summary>
+        public static string createProductionCalculation {
+            get {
+                return ResourceManager.GetString("createProductionCalculation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The locked tender calculation will be saved as history. A copy is created as a production calculation and opened for continued work..
+        /// </summary>
+        public static string createProductionCalculationDescription {
+            get {
+                return ResourceManager.GetString("createProductionCalculationDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Create production calculation?.
+        /// </summary>
+        public static string createProductionCalculationTitle {
+            get {
+                return ResourceManager.GetString("createProductionCalculationTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Current.
+        /// </summary>
+        public static string current {
+            get {
+                return ResourceManager.GetString("current", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Current department.
+        /// </summary>
+        public static string currentDepartment {
+            get {
+                return ResourceManager.GetString("currentDepartment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Current location: department.
+        /// </summary>
+        public static string currentLocationDepartment {
+            get {
+                return ResourceManager.GetString("currentLocationDepartment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Current location: {0}.
+        /// </summary>
+        public static string currentLocationFormat {
+            get {
+                return ResourceManager.GetString("currentLocationFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Current location: {0} / {1}.
+        /// </summary>
+        public static string currentLocationPathFormat {
+            get {
+                return ResourceManager.GetString("currentLocationPathFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to – Current version.
+        /// </summary>
+        public static string currentVersionLabel {
+            get {
+                return ResourceManager.GetString("currentVersionLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Customer information.
+        /// </summary>
+        public static string customerInformation {
+            get {
+                return ResourceManager.GetString("customerInformation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Customer reference.
+        /// </summary>
+        public static string customerReference {
+            get {
+                return ResourceManager.GetString("customerReference", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Custom role, description.
+        /// </summary>
+        public static string customRoleDescription {
+            get {
+                return ResourceManager.GetString("customRoleDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Environmental, Risk, Control calc....
+        /// </summary>
+        public static string customRolePlaceholder {
+            get {
+                return ResourceManager.GetString("customRolePlaceholder", resourceCulture);
             }
         }
         
@@ -214,6 +1240,24 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Deadline from.
+        /// </summary>
+        public static string deadlineFrom {
+            get {
+                return ResourceManager.GetString("deadlineFrom", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Deadline to.
+        /// </summary>
+        public static string deadlineTo {
+            get {
+                return ResourceManager.GetString("deadlineTo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Default Value.
         /// </summary>
         public static string defaultValue {
@@ -232,7 +1276,7 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Do you want to Delete this?.
+        ///   Looks up a localized string similar to Are you sure you want to delete this item?.
         /// </summary>
         public static string deleteConfirmMsg {
             get {
@@ -241,11 +1285,47 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Do you want to Delete {0}?.
+        ///   Looks up a localized string similar to Are you sure you want to delete &quot;{0}&quot;?.
         /// </summary>
         public static string deleteConfirmMsg__0_ {
             get {
                 return ResourceManager.GetString("deleteConfirmMsg {0}", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delete filter preset.
+        /// </summary>
+        public static string deleteFilterPreset {
+            get {
+                return ResourceManager.GetString("deleteFilterPreset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delete &quot;{0}&quot;?.
+        /// </summary>
+        public static string deleteFilterPresetConfirm {
+            get {
+                return ResourceManager.GetString("deleteFilterPresetConfirm", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delete note.
+        /// </summary>
+        public static string deleteNote {
+            get {
+                return ResourceManager.GetString("deleteNote", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delete preset.
+        /// </summary>
+        public static string deletePreset {
+            get {
+                return ResourceManager.GetString("deletePreset", resourceCulture);
             }
         }
         
@@ -255,6 +1335,15 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         public static string department {
             get {
                 return ResourceManager.GetString("department", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Department: {0}.
+        /// </summary>
+        public static string departmentTargetFormat {
+            get {
+                return ResourceManager.GetString("departmentTargetFormat", resourceCulture);
             }
         }
         
@@ -277,11 +1366,38 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Display order.
+        /// </summary>
+        public static string displayOrder {
+            get {
+                return ResourceManager.GetString("displayOrder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Do you want to save the list in database?.
         /// </summary>
         public static string DoYouWanTtoSaveTheListInDatabase {
             get {
                 return ResourceManager.GetString("DoYouWanTtoSaveTheListInDatabase", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Draft.
+        /// </summary>
+        public static string draft {
+            get {
+                return ResourceManager.GetString("draft", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Drag and reorder.
+        /// </summary>
+        public static string dragAndReorder {
+            get {
+                return ResourceManager.GetString("dragAndReorder", resourceCulture);
             }
         }
         
@@ -313,6 +1429,51 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Edit folder.
+        /// </summary>
+        public static string editFolder {
+            get {
+                return ResourceManager.GetString("editFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edit project.
+        /// </summary>
+        public static string editProject {
+            get {
+                return ResourceManager.GetString("editProject", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to End date cannot be before start date..
+        /// </summary>
+        public static string endBeforeStartError {
+            get {
+                return ResourceManager.GetString("endBeforeStartError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to End date.
+        /// </summary>
+        public static string endDate {
+            get {
+                return ResourceManager.GetString("endDate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to End date is calculated from start + months..
+        /// </summary>
+        public static string endDateFromStartMonths {
+            get {
+                return ResourceManager.GetString("endDateFromStartMonths", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Environmental systems.
         /// </summary>
         public static string environmentalSystems {
@@ -331,6 +1492,60 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Exit manual order.
+        /// </summary>
+        public static string exitManualOrder {
+            get {
+                return ResourceManager.GetString("exitManualOrder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expand all.
+        /// </summary>
+        public static string expandAll {
+            get {
+                return ResourceManager.GetString("expandAll", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Export Excel.
+        /// </summary>
+        public static string exportExcel {
+            get {
+                return ResourceManager.GetString("exportExcel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Export PDF.
+        /// </summary>
+        public static string exportPdf {
+            get {
+                return ResourceManager.GetString("exportPdf", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Export / print.
+        /// </summary>
+        public static string exportPrint {
+            get {
+                return ResourceManager.GetString("exportPrint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File.
+        /// </summary>
+        public static string file {
+            get {
+                return ResourceManager.GetString("file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Filter.
         /// </summary>
         public static string filter {
@@ -340,7 +1555,178 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The item has been Updated.
+        ///   Looks up a localized string similar to Filter &amp; sorting.
+        /// </summary>
+        public static string filterAndSorting {
+            get {
+                return ResourceManager.GetString("filterAndSorting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Filter preset.
+        /// </summary>
+        public static string filterPreset {
+            get {
+                return ResourceManager.GetString("filterPreset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Filter responsible....
+        /// </summary>
+        public static string filterResponsiblePlaceholder {
+            get {
+                return ResourceManager.GetString("filterResponsiblePlaceholder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Filter reviewer....
+        /// </summary>
+        public static string filterReviewerPlaceholder {
+            get {
+                return ResourceManager.GetString("filterReviewerPlaceholder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Filter status....
+        /// </summary>
+        public static string filterStatusPlaceholder {
+            get {
+                return ResourceManager.GetString("filterStatusPlaceholder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finished.
+        /// </summary>
+        public static string finished {
+            get {
+                return ResourceManager.GetString("finished", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to First.
+        /// </summary>
+        public static string first {
+            get {
+                return ResourceManager.GetString("first", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Folder.
+        /// </summary>
+        public static string folder {
+            get {
+                return ResourceManager.GetString("folder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Folder: {0}.
+        /// </summary>
+        public static string folderNameFormat {
+            get {
+                return ResourceManager.GetString("folderNameFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The right side shows project lists, calculations, and details based on the current folder selection..
+        /// </summary>
+        public static string folderSelectionHint {
+            get {
+                return ResourceManager.GetString("folderSelectionHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Folder structure.
+        /// </summary>
+        public static string folderStructure {
+            get {
+                return ResourceManager.GetString("folderStructure", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Department: {0} / Folder: {1}.
+        /// </summary>
+        public static string folderTargetFormat {
+            get {
+                return ResourceManager.GetString("folderTargetFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Forecast.
+        /// </summary>
+        public static string forecast {
+            get {
+                return ResourceManager.GetString("forecast", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Freeze column.
+        /// </summary>
+        public static string freezeColumn {
+            get {
+                return ResourceManager.GetString("freezeColumn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to From calculations.
+        /// </summary>
+        public static string fromCalculations {
+            get {
+                return ResourceManager.GetString("fromCalculations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Geographic location / map.
+        /// </summary>
+        public static string geoLocation {
+            get {
+                return ResourceManager.GetString("geoLocation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Coordinates, link or description.
+        /// </summary>
+        public static string geoLocationPlaceholder {
+            get {
+                return ResourceManager.GetString("geoLocationPlaceholder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Group by.
+        /// </summary>
+        public static string groupBy {
+            get {
+                return ResourceManager.GetString("groupBy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Group items by a shared property such as year or status..
+        /// </summary>
+        public static string groupByTooltip {
+            get {
+                return ResourceManager.GetString("groupByTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Item updated successfully..
         /// </summary>
         public static string HasBeedUpdated {
             get {
@@ -349,7 +1735,7 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The item has been added.
+        ///   Looks up a localized string similar to Item added successfully..
         /// </summary>
         public static string HasBeenAdded {
             get {
@@ -376,7 +1762,7 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The item has been removed.
+        ///   Looks up a localized string similar to Item deleted successfully..
         /// </summary>
         public static string HasBeenRemoved {
             get {
@@ -390,6 +1776,15 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         public static string hasBeenUpdatedSuccessfully__0_ {
             get {
                 return ResourceManager.GetString("hasBeenUpdatedSuccessfully {0}", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Has multiple versions.
+        /// </summary>
+        public static string hasMultipleVersions {
+            get {
+                return ResourceManager.GetString("hasMultipleVersions", resourceCulture);
             }
         }
         
@@ -412,11 +1807,101 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} hidden columns.
+        /// </summary>
+        public static string hiddenColumnsCount {
+            get {
+                return ResourceManager.GetString("hiddenColumnsCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Hidden items.
         /// </summary>
         public static string hiddenItems {
             get {
                 return ResourceManager.GetString("hiddenItems", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hide archived.
+        /// </summary>
+        public static string hideArchived {
+            get {
+                return ResourceManager.GetString("hideArchived", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hide column.
+        /// </summary>
+        public static string hideColumn {
+            get {
+                return ResourceManager.GetString("hideColumn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hide details.
+        /// </summary>
+        public static string hideDetails {
+            get {
+                return ResourceManager.GetString("hideDetails", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hide project structure.
+        /// </summary>
+        public static string hidePanelTree {
+            get {
+                return ResourceManager.GetString("hidePanelTree", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hide sidebar.
+        /// </summary>
+        public static string hideSidebar {
+            get {
+                return ResourceManager.GetString("hideSidebar", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hit rate / accuracy.
+        /// </summary>
+        public static string hitRate {
+            get {
+                return ResourceManager.GetString("hitRate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hit rate classification.
+        /// </summary>
+        public static string hitRateClassification {
+            get {
+                return ResourceManager.GetString("hitRateClassification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Main hit rate is calculated once per project/procurement from current calculations with bid role Main bid. Options, additional work and internal objects are excluded..
+        /// </summary>
+        public static string hitRateClassificationNotice {
+            get {
+                return ResourceManager.GetString("hitRateClassificationNotice", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to These settings are used in reports such as Hit rate / accuracy. The report also considers the calculation&apos;s Bid role..
+        /// </summary>
+        public static string hitRateStatusSettingsHelp {
+            get {
+                return ResourceManager.GetString("hitRateStatusSettingsHelp", resourceCulture);
             }
         }
         
@@ -448,6 +1933,69 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Import from other calculation.
+        /// </summary>
+        public static string ImportFromOtherCalc {
+            get {
+                return ResourceManager.GetString("ImportFromOtherCalc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Include.
+        /// </summary>
+        public static string includeInTotal {
+            get {
+                return ResourceManager.GetString("includeInTotal", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Revenue overview.
+        /// </summary>
+        public static string incomeOverview {
+            get {
+                return ResourceManager.GetString("incomeOverview", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Income source.
+        /// </summary>
+        public static string incomeSource {
+            get {
+                return ResourceManager.GetString("incomeSource", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Income total: {0}.
+        /// </summary>
+        public static string incomeTotal {
+            get {
+                return ResourceManager.GetString("incomeTotal", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Income year.
+        /// </summary>
+        public static string incomeYear {
+            get {
+                return ResourceManager.GetString("incomeYear", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Internal object.
+        /// </summary>
+        public static string internalObject {
+            get {
+                return ResourceManager.GetString("internalObject", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Is Visible?.
         /// </summary>
         public static string isVisible {
@@ -457,11 +2005,38 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The item is currently in use and cannot be deleted..
+        ///   Looks up a localized string similar to This item is currently in use and cannot be deleted..
         /// </summary>
         public static string ItemIsCurrentlyInUseCannotBeDeleted_ {
             get {
                 return ResourceManager.GetString("ItemIsCurrentlyInUseCannotBeDeleted.", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} item(s).
+        /// </summary>
+        public static string itemsCount {
+            get {
+                return ResourceManager.GetString("itemsCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Keep the calculation&apos;s own values.
+        /// </summary>
+        public static string keepCalculationValues {
+            get {
+                return ResourceManager.GetString("keepCalculationValues", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Keep folder structure.
+        /// </summary>
+        public static string keepFolderStructure {
+            get {
+                return ResourceManager.GetString("keepFolderStructure", resourceCulture);
             }
         }
         
@@ -471,6 +2046,33 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         public static string language {
             get {
                 return ResourceManager.GetString("language", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Last.
+        /// </summary>
+        public static string last {
+            get {
+                return ResourceManager.GetString("last", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Last modified.
+        /// </summary>
+        public static string lastModified {
+            get {
+                return ResourceManager.GetString("lastModified", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Last opened first.
+        /// </summary>
+        public static string lastOpenedFirst {
+            get {
+                return ResourceManager.GetString("lastOpenedFirst", resourceCulture);
             }
         }
         
@@ -493,6 +2095,69 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Loading....
+        /// </summary>
+        public static string loading {
+            get {
+                return ResourceManager.GetString("loading", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Locked.
+        /// </summary>
+        public static string locked {
+            get {
+                return ResourceManager.GetString("locked", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to – Locked.
+        /// </summary>
+        public static string lockedSuffix {
+            get {
+                return ResourceManager.GetString("lockedSuffix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Lost.
+        /// </summary>
+        public static string lost {
+            get {
+                return ResourceManager.GetString("lost", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Main bid.
+        /// </summary>
+        public static string mainBid {
+            get {
+                return ResourceManager.GetString("mainBid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Manual order.
+        /// </summary>
+        public static string manualOrder {
+            get {
+                return ResourceManager.GetString("manualOrder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Switch to manual order to drag or move items up and down manually..
+        /// </summary>
+        public static string manualOrderTooltip {
+            get {
+                return ResourceManager.GetString("manualOrderTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Max Value.
         /// </summary>
         public static string maxValue {
@@ -511,11 +2176,137 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Last modified first.
+        /// </summary>
+        public static string modifiedNewestFirst {
+            get {
+                return ResourceManager.GetString("modifiedNewestFirst", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Move.
+        /// </summary>
+        public static string move {
+            get {
+                return ResourceManager.GetString("move", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Move calculation.
+        /// </summary>
+        public static string moveCalculation {
+            get {
+                return ResourceManager.GetString("moveCalculation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Move down.
+        /// </summary>
+        public static string moveDown {
+            get {
+                return ResourceManager.GetString("moveDown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Move folder.
+        /// </summary>
+        public static string moveFolder {
+            get {
+                return ResourceManager.GetString("moveFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Move project.
+        /// </summary>
+        public static string moveProject {
+            get {
+                return ResourceManager.GetString("moveProject", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Move to bottom.
+        /// </summary>
+        public static string moveToBottom {
+            get {
+                return ResourceManager.GetString("moveToBottom", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Move to top.
+        /// </summary>
+        public static string moveToTop {
+            get {
+                return ResourceManager.GetString("moveToTop", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Move up.
+        /// </summary>
+        public static string moveUp {
+            get {
+                return ResourceManager.GetString("moveUp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Municipality / city.
+        /// </summary>
+        public static string municipalityCity {
+            get {
+                return ResourceManager.GetString("municipalityCity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name A-Z.
+        /// </summary>
+        public static string nameAscending {
+            get {
+                return ResourceManager.GetString("nameAscending", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name Z-A.
+        /// </summary>
+        public static string nameDescending {
+            get {
+                return ResourceManager.GetString("nameDescending", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to New {0}.
         /// </summary>
         public static string new__0_ {
             get {
                 return ResourceManager.GetString("new {0}", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to New calculation.
+        /// </summary>
+        public static string newCalculation {
+            get {
+                return ResourceManager.GetString("newCalculation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Folder.
+        /// </summary>
+        public static string newFolder {
+            get {
+                return ResourceManager.GetString("newFolder", resourceCulture);
             }
         }
         
@@ -529,6 +2320,33 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to New project.
+        /// </summary>
+        public static string newProject {
+            get {
+                return ResourceManager.GetString("newProject", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to + New version.
+        /// </summary>
+        public static string newVersionLabel {
+            get {
+                return ResourceManager.GetString("newVersionLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Next.
+        /// </summary>
+        public static string next {
+            get {
+                return ResourceManager.GetString("next", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No.
         /// </summary>
         public static string no {
@@ -538,11 +2356,263 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No active filters.
+        /// </summary>
+        public static string noActiveFilters {
+            get {
+                return ResourceManager.GetString("noActiveFilters", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No archived calculations in current view..
+        /// </summary>
+        public static string noArchivedCalcsInView {
+            get {
+                return ResourceManager.GetString("noArchivedCalcsInView", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No calculations with multiple versions in current view..
+        /// </summary>
+        public static string noCalcsMultiVersions {
+            get {
+                return ResourceManager.GetString("noCalcsMultiVersions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No departments available..
+        /// </summary>
+        public static string noDepartmentsAvailable {
+            get {
+                return ResourceManager.GetString("noDepartmentsAvailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An admin in your company can add you to a department..
+        /// </summary>
+        public static string noDepartmentsHint {
+            get {
+                return ResourceManager.GetString("noDepartmentsHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No departments.
+        /// </summary>
+        public static string noDepartmentsTitle {
+            get {
+                return ResourceManager.GetString("noDepartmentsTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No folders available..
+        /// </summary>
+        public static string noFoldersAvailable {
+            get {
+                return ResourceManager.GetString("noFoldersAvailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No income matches the selected filters..
+        /// </summary>
+        public static string noIncomeMatchesFilters {
+            get {
+                return ResourceManager.GetString("noIncomeMatchesFilters", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No notes yet..
+        /// </summary>
+        public static string noNotesYet {
+            get {
+                return ResourceManager.GetString("noNotesYet", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No preset selected.
+        /// </summary>
+        public static string noPresetSelected {
+            get {
+                return ResourceManager.GetString("noPresetSelected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No projects found..
+        /// </summary>
+        public static string noProjectsFound {
+            get {
+                return ResourceManager.GetString("noProjectsFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No saved presets yet..
+        /// </summary>
+        public static string noSavedPresetsYet {
+            get {
+                return ResourceManager.GetString("noSavedPresetsYet", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not archived.
+        /// </summary>
+        public static string notArchived {
+            get {
+                return ResourceManager.GetString("notArchived", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Note.
+        /// </summary>
+        public static string note {
+            get {
+                return ResourceManager.GetString("note", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Note....
+        /// </summary>
+        public static string notePlaceholder {
+            get {
+                return ResourceManager.GetString("notePlaceholder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Notes / description.
+        /// </summary>
+        public static string notesAndDescription {
+            get {
+                return ResourceManager.GetString("notesAndDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No data found.
         /// </summary>
         public static string notFoundData {
             get {
                 return ResourceManager.GetString("notFoundData", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not selected.
+        /// </summary>
+        public static string notSelectedCommon {
+            get {
+                return ResourceManager.GetString("notSelectedCommon", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not selected.
+        /// </summary>
+        public static string notSelectedNeuter {
+            get {
+                return ResourceManager.GetString("notSelectedNeuter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Number format.
+        /// </summary>
+        public static string numberFormat {
+            get {
+                return ResourceManager.GetString("numberFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to OK.
+        /// </summary>
+        public static string ok {
+            get {
+                return ResourceManager.GetString("ok", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to – Older version.
+        /// </summary>
+        public static string olderVersionLabel {
+            get {
+                return ResourceManager.GetString("olderVersionLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Only code text.
+        /// </summary>
+        public static string onlyCodeText {
+            get {
+                return ResourceManager.GetString("onlyCodeText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open.
+        /// </summary>
+        public static string open {
+            get {
+                return ResourceManager.GetString("open", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open calculation.
+        /// </summary>
+        public static string openCalculation {
+            get {
+                return ResourceManager.GetString("openCalculation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open sidebar.
+        /// </summary>
+        public static string openSidebar {
+            get {
+                return ResourceManager.GetString("openSidebar", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The operation could not be completed. Check the target location and permissions..
+        /// </summary>
+        public static string operationCouldNotComplete {
+            get {
+                return ResourceManager.GetString("operationCouldNotComplete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The operation failed. Check the target location and permissions..
+        /// </summary>
+        public static string operationFailed {
+            get {
+                return ResourceManager.GetString("operationFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Option.
+        /// </summary>
+        public static string option {
+            get {
+                return ResourceManager.GetString("option", resourceCulture);
             }
         }
         
@@ -565,11 +2635,29 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Owner.
+        /// </summary>
+        public static string owner {
+            get {
+                return ResourceManager.GetString("owner", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Parameter.
         /// </summary>
         public static string parameter {
             get {
                 return ResourceManager.GetString("parameter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Parameters.
+        /// </summary>
+        public static string parameters {
+            get {
+                return ResourceManager.GetString("parameters", resourceCulture);
             }
         }
         
@@ -583,11 +2671,371 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to People and ownership.
+        /// </summary>
+        public static string peopleAndOwnership {
+            get {
+                return ResourceManager.GetString("peopleAndOwnership", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to per page.
+        /// </summary>
+        public static string perPage {
+            get {
+                return ResourceManager.GetString("perPage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Preset name.
+        /// </summary>
+        public static string presetName {
+            get {
+                return ResourceManager.GetString("presetName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Previous.
+        /// </summary>
+        public static string previous {
+            get {
+                return ResourceManager.GetString("previous", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Print.
         /// </summary>
         public static string print {
             get {
                 return ResourceManager.GetString("print", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Probability.
+        /// </summary>
+        public static string probability {
+            get {
+                return ResourceManager.GetString("probability", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Probability to win.
+        /// </summary>
+        public static string probabilityToWin {
+            get {
+                return ResourceManager.GetString("probabilityToWin", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Procurement and references.
+        /// </summary>
+        public static string procurementAndReferences {
+            get {
+                return ResourceManager.GetString("procurementAndReferences", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Procurement link.
+        /// </summary>
+        public static string procurementLink {
+            get {
+                return ResourceManager.GetString("procurementLink", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Procurement name.
+        /// </summary>
+        public static string procurementName {
+            get {
+                return ResourceManager.GetString("procurementName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Procurement number.
+        /// </summary>
+        public static string procurementNumber {
+            get {
+                return ResourceManager.GetString("procurementNumber", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Production calculation.
+        /// </summary>
+        public static string productionCalculation {
+            get {
+                return ResourceManager.GetString("productionCalculation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occurred while creating the production calculation..
+        /// </summary>
+        public static string productionCalculationCreateError {
+            get {
+                return ResourceManager.GetString("productionCalculationCreateError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The production calculation could not be created..
+        /// </summary>
+        public static string productionCalculationCreateFailed {
+            get {
+                return ResourceManager.GetString("productionCalculationCreateFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Program.
+        /// </summary>
+        public static string program {
+            get {
+                return ResourceManager.GetString("program", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project.
+        /// </summary>
+        public static string project {
+            get {
+                return ResourceManager.GetString("project", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project addresses.
+        /// </summary>
+        public static string projectAddresses {
+            get {
+                return ResourceManager.GetString("projectAddresses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project code: {0}.
+        /// </summary>
+        public static string projectCodeFormat {
+            get {
+                return ResourceManager.GetString("projectCodeFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project contacts.
+        /// </summary>
+        public static string projectContacts {
+            get {
+                return ResourceManager.GetString("projectContacts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project details are not available..
+        /// </summary>
+        public static string projectDetailsUnavailable {
+            get {
+                return ResourceManager.GetString("projectDetailsUnavailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project duration (months).
+        /// </summary>
+        public static string projectDurationMonths {
+            get {
+                return ResourceManager.GetString("projectDurationMonths", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project list.
+        /// </summary>
+        public static string projectListReport {
+            get {
+                return ResourceManager.GetString("projectListReport", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project list - {0}.
+        /// </summary>
+        public static string projectListTitleFormat {
+            get {
+                return ResourceManager.GetString("projectListTitleFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project location.
+        /// </summary>
+        public static string projectLocation {
+            get {
+                return ResourceManager.GetString("projectLocation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project manager.
+        /// </summary>
+        public static string projectManager {
+            get {
+                return ResourceManager.GetString("projectManager", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project name.
+        /// </summary>
+        public static string projectName {
+            get {
+                return ResourceManager.GetString("projectName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project: {0}.
+        /// </summary>
+        public static string projectNameFormat {
+            get {
+                return ResourceManager.GetString("projectNameFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project name....
+        /// </summary>
+        public static string projectNamePlaceholder {
+            get {
+                return ResourceManager.GetString("projectNamePlaceholder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project notes.
+        /// </summary>
+        public static string projectNotes {
+            get {
+                return ResourceManager.GetString("projectNotes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project / procurement.
+        /// </summary>
+        public static string projectProcurement {
+            get {
+                return ResourceManager.GetString("projectProcurement", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project responsible.
+        /// </summary>
+        public static string projectResponsible {
+            get {
+                return ResourceManager.GetString("projectResponsible", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project schedule.
+        /// </summary>
+        public static string projectSchedule {
+            get {
+                return ResourceManager.GetString("projectSchedule", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} project(s).
+        /// </summary>
+        public static string projectsCount {
+            get {
+                return ResourceManager.GetString("projectsCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No projects yet.
+        /// </summary>
+        public static string projectsEmptyState {
+            get {
+                return ResourceManager.GetString("projectsEmptyState", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Create a project in this folder to start working with calculations and offers..
+        /// </summary>
+        public static string projectsEmptyStateHint {
+            get {
+                return ResourceManager.GetString("projectsEmptyStateHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Projects in {0}.
+        /// </summary>
+        public static string projectsInFolderFormat {
+            get {
+                return ResourceManager.GetString("projectsInFolderFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Department: {0} / Folder: {1} / Project: {2}.
+        /// </summary>
+        public static string projectTargetFormat {
+            get {
+                return ResourceManager.GetString("projectTargetFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project timeline.
+        /// </summary>
+        public static string projectTimeline {
+            get {
+                return ResourceManager.GetString("projectTimeline", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Last day Q&amp;A.
+        /// </summary>
+        public static string qaDeadlineColumn {
+            get {
+                return ResourceManager.GetString("qaDeadlineColumn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Last day for Q&amp;A has passed..
+        /// </summary>
+        public static string qaDeadlinePassed {
+            get {
+                return ResourceManager.GetString("qaDeadlinePassed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Last day for questions and answers.
+        /// </summary>
+        public static string qaDeadlineTooltip {
+            get {
+                return ResourceManager.GetString("qaDeadlineTooltip", resourceCulture);
             }
         }
         
@@ -601,11 +3049,74 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Quarter.
+        /// </summary>
+        public static string quarter {
+            get {
+                return ResourceManager.GetString("quarter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Q1.
+        /// </summary>
+        public static string quarter1 {
+            get {
+                return ResourceManager.GetString("quarter1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Q2.
+        /// </summary>
+        public static string quarter2 {
+            get {
+                return ResourceManager.GetString("quarter2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Q3.
+        /// </summary>
+        public static string quarter3 {
+            get {
+                return ResourceManager.GetString("quarter3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Q4.
+        /// </summary>
+        public static string quarter4 {
+            get {
+                return ResourceManager.GetString("quarter4", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Quarter {0}.
+        /// </summary>
+        public static string quarterLabel {
+            get {
+                return ResourceManager.GetString("quarterLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to There are some errors.
         /// </summary>
         public static string rangeErrors {
             get {
                 return ResourceManager.GetString("rangeErrors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ready.
+        /// </summary>
+        public static string ready {
+            get {
+                return ResourceManager.GetString("ready", resourceCulture);
             }
         }
         
@@ -619,6 +3130,42 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The current version is used per calculation family. Revenue is counted once per calculation chain..
+        /// </summary>
+        public static string reportCurrentVersionRule {
+            get {
+                return ResourceManager.GetString("reportCurrentVersionRule", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select a report and use the buttons above. Export and print follow the current filters..
+        /// </summary>
+        public static string reportExportHint {
+            get {
+                return ResourceManager.GetString("reportExportHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reporting.
+        /// </summary>
+        public static string reporting {
+            get {
+                return ResourceManager.GetString("reporting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reports.
+        /// </summary>
+        public static string reports {
+            get {
+                return ResourceManager.GetString("reports", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Required.
         /// </summary>
         public static string required {
@@ -628,11 +3175,209 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Reset.
+        /// </summary>
+        public static string reset {
+            get {
+                return ResourceManager.GetString("reset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Resource.
+        /// </summary>
+        public static string resource {
+            get {
+                return ResourceManager.GetString("resource", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Resource ascending.
+        /// </summary>
+        public static string resourceAscending {
+            get {
+                return ResourceManager.GetString("resourceAscending", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Resource descending.
+        /// </summary>
+        public static string resourceDescending {
+            get {
+                return ResourceManager.GetString("resourceDescending", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Resource sort.
+        /// </summary>
+        public static string resourceSort {
+            get {
+                return ResourceManager.GetString("resourceSort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Responsibility.
+        /// </summary>
+        public static string responsibility {
+            get {
+                return ResourceManager.GetString("responsibility", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Responsible.
+        /// </summary>
+        public static string responsible {
+            get {
+                return ResourceManager.GetString("responsible", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Restore as new version.
+        /// </summary>
+        public static string restoreAsNewVersion {
+            get {
+                return ResourceManager.GetString("restoreAsNewVersion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Restore from archive.
+        /// </summary>
+        public static string restoreFromArchive {
+            get {
+                return ResourceManager.GetString("restoreFromArchive", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Revenue.
+        /// </summary>
+        public static string revenue {
+            get {
+                return ResourceManager.GetString("revenue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The revenue overview reads existing income from calculation Income tabs. Manual project income is not available in the current list data and is therefore not included in this step..
+        /// </summary>
+        public static string revenueOverviewIntro {
+            get {
+                return ResourceManager.GetString("revenueOverviewIntro", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Revenue.
+        /// </summary>
+        public static string revenues {
+            get {
+                return ResourceManager.GetString("revenues", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reviewer.
+        /// </summary>
+        public static string reviewer {
+            get {
+                return ResourceManager.GetString("reviewer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Round.
+        /// </summary>
+        public static string round {
+            get {
+                return ResourceManager.GetString("round", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Rows.
+        /// </summary>
+        public static string rows {
+            get {
+                return ResourceManager.GetString("rows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Save.
         /// </summary>
         public static string save {
             get {
                 return ResourceManager.GetString("save", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Saved presets.
+        /// </summary>
+        public static string savedPresets {
+            get {
+                return ResourceManager.GetString("savedPresets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Saved templates.
+        /// </summary>
+        public static string savedTemplates {
+            get {
+                return ResourceManager.GetString("savedTemplates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Save order.
+        /// </summary>
+        public static string saveOrder {
+            get {
+                return ResourceManager.GetString("saveOrder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search.
+        /// </summary>
+        public static string search {
+            get {
+                return ResourceManager.GetString("search", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search....
+        /// </summary>
+        public static string searchPlaceholder {
+            get {
+                return ResourceManager.GetString("searchPlaceholder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search projects.
+        /// </summary>
+        public static string searchProjects {
+            get {
+                return ResourceManager.GetString("searchProjects", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search results.
+        /// </summary>
+        public static string searchResults {
+            get {
+                return ResourceManager.GetString("searchResults", resourceCulture);
             }
         }
         
@@ -655,11 +3400,146 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Select columns.
+        /// </summary>
+        public static string selectColumns {
+            get {
+                return ResourceManager.GetString("selectColumns", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select department.
+        /// </summary>
+        public static string selectDepartment {
+            get {
+                return ResourceManager.GetString("selectDepartment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Selected.
+        /// </summary>
+        public static string selected {
+            get {
+                return ResourceManager.GetString("selected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Selected items.
+        /// </summary>
+        public static string selectedItems {
+            get {
+                return ResourceManager.GetString("selectedItems", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Selected target.
+        /// </summary>
+        public static string selectedTarget {
+            get {
+                return ResourceManager.GetString("selectedTarget", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select folder.
+        /// </summary>
+        public static string selectFolder {
+            get {
+                return ResourceManager.GetString("selectFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select a folder first.
+        /// </summary>
+        public static string selectFolderFirst {
+            get {
+                return ResourceManager.GetString("selectFolderFirst", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select a folder or project.
+        /// </summary>
+        public static string selectFolderOrProject {
+            get {
+                return ResourceManager.GetString("selectFolderOrProject", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select project.
+        /// </summary>
+        public static string selectProject {
+            get {
+                return ResourceManager.GetString("selectProject", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select a project first.
+        /// </summary>
+        public static string selectProjectFirst {
+            get {
+                return ResourceManager.GetString("selectProjectFirst", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select a target folder before copying the project..
+        /// </summary>
+        public static string selectTargetFolderBeforeCopy {
+            get {
+                return ResourceManager.GetString("selectTargetFolderBeforeCopy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select a target folder before moving the project..
+        /// </summary>
+        public static string selectTargetFolderBeforeMove {
+            get {
+                return ResourceManager.GetString("selectTargetFolderBeforeMove", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select a target project before copying the calculation..
+        /// </summary>
+        public static string selectTargetProjectBeforeCopy {
+            get {
+                return ResourceManager.GetString("selectTargetProjectBeforeCopy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select a target project before moving the calculation..
+        /// </summary>
+        public static string selectTargetProjectBeforeMove {
+            get {
+                return ResourceManager.GetString("selectTargetProjectBeforeMove", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Set as Default.
         /// </summary>
         public static string setAsDefault {
             get {
                 return ResourceManager.GetString("setAsDefault", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Settings.
+        /// </summary>
+        public static string settings {
+            get {
+                return ResourceManager.GetString("settings", resourceCulture);
             }
         }
         
@@ -673,6 +3553,159 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Sheet no..
+        /// </summary>
+        public static string sheetNr {
+            get {
+                return ResourceManager.GetString("sheetNr", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show.
+        /// </summary>
+        public static string show {
+            get {
+                return ResourceManager.GetString("show", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show all versions.
+        /// </summary>
+        public static string showAllVersions {
+            get {
+                return ResourceManager.GetString("showAllVersions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show archived.
+        /// </summary>
+        public static string showArchived {
+            get {
+                return ResourceManager.GetString("showArchived", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show calculations.
+        /// </summary>
+        public static string showCalculations {
+            get {
+                return ResourceManager.GetString("showCalculations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show column.
+        /// </summary>
+        public static string showColumn {
+            get {
+                return ResourceManager.GetString("showColumn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show details.
+        /// </summary>
+        public static string showDetails {
+            get {
+                return ResourceManager.GetString("showDetails", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Showing all {0}.
+        /// </summary>
+        public static string showingAllFormat {
+            get {
+                return ResourceManager.GetString("showingAllFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Showing {0}-{1} of {2}.
+        /// </summary>
+        public static string showingRangeFormat {
+            get {
+                return ResourceManager.GetString("showingRangeFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show project structure.
+        /// </summary>
+        public static string showPanelTree {
+            get {
+                return ResourceManager.GetString("showPanelTree", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show versions.
+        /// </summary>
+        public static string showVersions {
+            get {
+                return ResourceManager.GetString("showVersions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sort.
+        /// </summary>
+        public static string sort {
+            get {
+                return ResourceManager.GetString("sort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Choose the order in which folders, projects and calculations are listed..
+        /// </summary>
+        public static string sortTooltip {
+            get {
+                return ResourceManager.GetString("sortTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Source.
+        /// </summary>
+        public static string source {
+            get {
+                return ResourceManager.GetString("source", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Start date.
+        /// </summary>
+        public static string startDate {
+            get {
+                return ResourceManager.GetString("startDate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Start date is calculated from end − months..
+        /// </summary>
+        public static string startDateFromEndMonths {
+            get {
+                return ResourceManager.GetString("startDateFromEndMonths", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Start date has passed..
+        /// </summary>
+        public static string startDatePassed {
+            get {
+                return ResourceManager.GetString("startDatePassed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Start from row.
         /// </summary>
         public static string StartFromRow {
@@ -682,11 +3715,137 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Status.
+        /// </summary>
+        public static string status {
+            get {
+                return ResourceManager.GetString("status", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sorts according to the company&apos;s status order..
+        /// </summary>
+        public static string statusSortTooltip {
+            get {
+                return ResourceManager.GetString("statusSortTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Submitted.
+        /// </summary>
+        public static string submitted {
+            get {
+                return ResourceManager.GetString("submitted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Supervisor.
         /// </summary>
         public static string supervisor {
             get {
                 return ResourceManager.GetString("supervisor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Table colors and border style.
+        /// </summary>
+        public static string tableColorsAndBorderStyle {
+            get {
+                return ResourceManager.GetString("tableColorsAndBorderStyle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Target department.
+        /// </summary>
+        public static string targetDepartment {
+            get {
+                return ResourceManager.GetString("targetDepartment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Target folder.
+        /// </summary>
+        public static string targetFolder {
+            get {
+                return ResourceManager.GetString("targetFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Target project.
+        /// </summary>
+        public static string targetProject {
+            get {
+                return ResourceManager.GetString("targetProject", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Task actions.
+        /// </summary>
+        public static string taskActions {
+            get {
+                return ResourceManager.GetString("taskActions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Configure template details, formatting, and sheet layout..
+        /// </summary>
+        public static string templateDetailsDescription {
+            get {
+                return ResourceManager.GetString("templateDetailsDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Template settings.
+        /// </summary>
+        public static string templateSettings {
+            get {
+                return ResourceManager.GetString("templateSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Basic template information and formatting..
+        /// </summary>
+        public static string templateSettingsDescription {
+            get {
+                return ResourceManager.GetString("templateSettingsDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Tender calculation.
+        /// </summary>
+        public static string tenderCalculation {
+            get {
+                return ResourceManager.GetString("tenderCalculation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Tender deadline.
+        /// </summary>
+        public static string tenderDeadline {
+            get {
+                return ResourceManager.GetString("tenderDeadline", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Tender deadline has passed..
+        /// </summary>
+        public static string tenderDeadlinePassed {
+            get {
+                return ResourceManager.GetString("tenderDeadlinePassed", resourceCulture);
             }
         }
         
@@ -718,11 +3877,47 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Times.
+        /// </summary>
+        public static string times {
+            get {
+                return ResourceManager.GetString("times", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Total.
+        /// </summary>
+        public static string total {
+            get {
+                return ResourceManager.GetString("total", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Type.
+        /// </summary>
+        public static string type {
+            get {
+                return ResourceManager.GetString("type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Type of Compensation.
         /// </summary>
         public static string typeOfCompensation {
             get {
                 return ResourceManager.GetString("typeOfCompensation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Undecided.
+        /// </summary>
+        public static string undecided {
+            get {
+                return ResourceManager.GetString("undecided", resourceCulture);
             }
         }
         
@@ -736,11 +3931,29 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unknown date.
+        /// </summary>
+        public static string unknownDate {
+            get {
+                return ResourceManager.GetString("unknownDate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unkown.
         /// </summary>
         public static string unkown {
             get {
                 return ResourceManager.GetString("unkown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unlocked.
+        /// </summary>
+        public static string unlocked {
+            get {
+                return ResourceManager.GetString("unlocked", resourceCulture);
             }
         }
         
@@ -772,11 +3985,110 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to VAT %.
+        /// </summary>
+        public static string vatPercent {
+            get {
+                return ResourceManager.GetString("vatPercent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to VAT (%).
+        /// </summary>
+        public static string vatPercentLabel {
+            get {
+                return ResourceManager.GetString("vatPercentLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Version.
+        /// </summary>
+        public static string version {
+            get {
+                return ResourceManager.GetString("version", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The version could not be archived..
+        /// </summary>
+        public static string versionArchiveFailed {
+            get {
+                return ResourceManager.GetString("versionArchiveFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occurred while creating a new version..
+        /// </summary>
+        public static string versionCreateError {
+            get {
+                return ResourceManager.GetString("versionCreateError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to New version could not be created..
+        /// </summary>
+        public static string versionCreateFailed {
+            get {
+                return ResourceManager.GetString("versionCreateFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Versions.
+        /// </summary>
+        public static string versions {
+            get {
+                return ResourceManager.GetString("versions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to View.
+        /// </summary>
+        public static string view {
+            get {
+                return ResourceManager.GetString("view", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Visibility filter.
+        /// </summary>
+        public static string visibilityFilter {
+            get {
+                return ResourceManager.GetString("visibilityFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Visible.
         /// </summary>
         public static string visible {
             get {
                 return ResourceManager.GetString("visible", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Visible columns.
+        /// </summary>
+        public static string visibleColumns {
+            get {
+                return ResourceManager.GetString("visibleColumns", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} visible columns.
+        /// </summary>
+        public static string visibleColumnsCount {
+            get {
+                return ResourceManager.GetString("visibleColumnsCount", resourceCulture);
             }
         }
         
@@ -790,6 +4102,60 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Width.
+        /// </summary>
+        public static string width {
+            get {
+                return ResourceManager.GetString("width", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Won.
+        /// </summary>
+        public static string won {
+            get {
+                return ResourceManager.GetString("won", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Worked quantity.
+        /// </summary>
+        public static string workedQuantity {
+            get {
+                return ResourceManager.GetString("workedQuantity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Workspace.
+        /// </summary>
+        public static string workspace {
+            get {
+                return ResourceManager.GetString("workspace", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Year.
+        /// </summary>
+        public static string year {
+            get {
+                return ResourceManager.GetString("year", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Year and quarter.
+        /// </summary>
+        public static string yearAndQuarter {
+            get {
+                return ResourceManager.GetString("yearAndQuarter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Yes.
         /// </summary>
         public static string yes {
@@ -797,9 +4163,14 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
                 return ResourceManager.GetString("yes", resourceCulture);
             }
         }
-
-        public static string moveUp           => ResourceManager.GetString("moveUp", resourceCulture)!;
-        public static string moveDown         => ResourceManager.GetString("moveDown", resourceCulture)!;
-        public static string showAllVersions  => ResourceManager.GetString("showAllVersions", resourceCulture)!;
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ZIP code.
+        /// </summary>
+        public static string zipCode {
+            get {
+                return ResourceManager.GetString("zipCode", resourceCulture);
+            }
+        }
     }
 }

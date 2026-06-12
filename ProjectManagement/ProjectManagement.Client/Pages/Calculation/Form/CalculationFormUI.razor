@@ -63,7 +63,8 @@
                                 <div class="mb-3 grid grid-cols-3 gap-3">
                                     <div>
                                         <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@AppLoc["calculationStatus"]</label>
-                                        <select value="@CalculationUpdate.StatusId"
+                                        <select @key="_statusSelectKey"
+                                                value="@CalculationUpdate.StatusId"
                                                 @onchange="OnStatusChanged"
                                                 class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
                                                 disabled="@IsStatusSelectDisabled">
@@ -222,15 +223,27 @@
                                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                         <div>
                                             <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@AppLoc["calculationResponsible"]</label>
-                                            <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
-                                                       @bind-Value="@CalculationUpdate.Responsibles[0]"
-                                                       disabled="@CalculationUpdate.IsLocked" />
+                                            <InputSelect class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
+                                                         @bind-Value="CalculationResponsible"
+                                                         disabled="@CalculationUpdate.IsLocked">
+                                                <option value="">Välj ansvarig</option>
+                                                @foreach (var user in ResponsibilityUserOptions)
+                                                {
+                                                    <option value="@user">@user</option>
+                                                }
+                                            </InputSelect>
                                         </div>
                                         <div>
                                             <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@AppLoc["reviewer"]</label>
-                                            <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
-                                                       @bind-Value="@CalculationUpdate.Inspector"
-                                                       disabled="@CalculationUpdate.IsLocked" />
+                                            <InputSelect class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
+                                                         @bind-Value="CalculationUpdate.Inspector"
+                                                         disabled="@CalculationUpdate.IsLocked">
+                                                <option value="">Ingen granskare</option>
+                                                @foreach (var user in ResponsibilityUserOptions)
+                                                {
+                                                    <option value="@user">@user</option>
+                                                }
+                                            </InputSelect>
                                         </div>
                                         @if (CalculationUpdate.IsLocked)
                                         {
@@ -644,6 +657,7 @@
     private bool _isCurrentUserAdmin;
     private int? _originalStatusId;
     private int? _statusBeforeApprovalDialog;
+    private int _statusSelectKey;
 
     [Parameter] public EventCallback<ListCalculationMVVM?> Callback { get; set; }
     [Parameter] public required ListCalculationMVVM Calculation { get; set; }
@@ -652,6 +666,7 @@
     GetProjectCalcConfigDTO? Config;
     private EditContext? editContext;
     private static readonly CultureInfo SwedishCulture = CultureInfo.GetCultureInfo("sv-SE");
+    private List<ListDTO> ResponsibilityUsers { get; set; } = [];
 
     private int Part { get; set; } = 1;
 
@@ -677,6 +692,36 @@
             : CalculationUpdate.StartDate.Year;
 
     private bool IsContentLocked => CalculationUpdate.IsLocked;
+
+    private string CalculationResponsible
+    {
+        get
+        {
+            EnsureResponsibleSlot();
+            return CalculationUpdate.Responsibles[0];
+        }
+        set
+        {
+            EnsureResponsibleSlot();
+            CalculationUpdate.Responsibles[0] = value ?? string.Empty;
+        }
+    }
+
+    private IEnumerable<string> ResponsibilityUserOptions
+    {
+        get
+        {
+            var options = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var user in ResponsibilityUsers)
+                AddOption(options, user.Name);
+
+            AddOption(options, CalculationResponsible);
+            AddOption(options, CalculationUpdate.Inspector);
+
+            return options.OrderBy(x => x);
+        }
+    }
 
     private string LockedToggleLabelClass =>
         IsContentLocked
@@ -794,7 +839,7 @@
             selectedStatus is not null &&
             !IsAllowedLockedStatus(selectedStatus))
         {
-            CalculationUpdate.StatusId = oldStatusId;
+            ResetStatusSelection(oldStatusId);
             return;
         }
 
@@ -806,7 +851,7 @@
             if (blockReason is not null)
             {
                 _approvalBlockMessage = blockReason;
-                CalculationUpdate.StatusId = oldStatusId;
+                ResetStatusSelection(oldStatusId);
                 return;
             }
 
@@ -815,12 +860,18 @@
             _pendingApprovalStatusId = selectedStatusId;
             _approvalDialogMessage = string.Empty;
             _showApprovalDialog = true;
-            CalculationUpdate.StatusId = oldStatusId;
+            ResetStatusSelection(oldStatusId);
             return;
         }
 
         _approvalBlockMessage = string.Empty;
         CalculationUpdate.StatusId = selectedStatusId;
+    }
+
+    private void ResetStatusSelection(int? statusId)
+    {
+        CalculationUpdate.StatusId = statusId;
+        _statusSelectKey++;
     }
 
     private string? GetApprovalBlockReason()
@@ -851,7 +902,7 @@
         if (_isApprovingCalculation)
             return;
 
-        CalculationUpdate.StatusId = _statusBeforeApprovalDialog ?? CalculationUpdate.StatusId;
+        ResetStatusSelection(_statusBeforeApprovalDialog ?? CalculationUpdate.StatusId);
         _pendingApprovalStatusId = null;
         _statusBeforeApprovalDialog = null;
         _approvalDialogMessage = string.Empty;
@@ -1085,17 +1136,54 @@
 
     private async Task EnsureResponsibilityDefaultsAsync()
     {
+        EnsureResponsibleSlot();
+
+        if (Calculation.Id == 0 && string.IsNullOrWhiteSpace(CalculationResponsible))
+        {
+            var projectResponsible = Folder.State.ProjectSelected?.Responsible;
+            CalculationResponsible = !string.IsNullOrWhiteSpace(projectResponsible)
+                ? projectResponsible
+                : await GetCurrentUserDisplayNameAsync();
+        }
+    }
+
+    private void EnsureResponsibleSlot()
+    {
         CalculationUpdate.Responsibles ??= [];
 
         while (CalculationUpdate.Responsibles.Count == 0)
             CalculationUpdate.Responsibles.Add(string.Empty);
+    }
 
-        if (Calculation.Id == 0 && string.IsNullOrWhiteSpace(CalculationUpdate.Responsibles[0]))
+    private async Task LoadResponsibilityUsersAsync()
+    {
+        try
         {
-            var projectResponsible = Folder.State.ProjectSelected?.Responsible;
-            CalculationUpdate.Responsibles[0] = !string.IsNullOrWhiteSpace(projectResponsible)
-                ? projectResponsible
-                : await GetCurrentUserDisplayNameAsync();
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (!PMRolesConst.Tenant.AdminManger.Split(',').Any(user.IsInRole))
+                return;
+
+            var departments = Folder.State.Departments?.Any() == true
+                ? Folder.State.Departments
+                : await Repo.Departments.GetDepartmentsAsListAsync() ?? [];
+
+            var usersByName = new Dictionary<string, ListDTO>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var department in departments)
+            {
+                var users = await Repo.Departments.GetUsersAsListAsync(department.Id) ?? [];
+
+                foreach (var departmentUser in users.Where(x => !string.IsNullOrWhiteSpace(x.Name)))
+                    usersByName.TryAdd(departmentUser.Name.Trim(), departmentUser);
+            }
+
+            ResponsibilityUsers = [.. usersByName.Values.OrderBy(x => x.Name)];
+        }
+        catch
+        {
+            await ClientLog.WarnAsync("Loading calculation responsibility users failed");
         }
     }
 
@@ -1172,6 +1260,7 @@
         CalculationUpdate.Income ??= [];
         CalculationUpdate.Address ??= [];
         await EnsureResponsibilityDefaultsAsync();
+        await LoadResponsibilityUsersAsync();
 
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var authUser = authState.User;
@@ -1289,6 +1378,7 @@
 
         btnSubmitDisabled = true;
         var shouldClose = true;
+        NormalizeResponsibilityFields();
 
         try
         {
@@ -1336,5 +1426,18 @@
         }
 
         await Callback.InvokeAsync(null);
+    }
+
+    private void NormalizeResponsibilityFields()
+    {
+        EnsureResponsibleSlot();
+        CalculationResponsible = CalculationResponsible.Trim();
+        CalculationUpdate.Inspector = CalculationUpdate.Inspector?.Trim() ?? string.Empty;
+    }
+
+    private static void AddOption(HashSet<string> options, string? value)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+            options.Add(value.Trim());
     }
 }
