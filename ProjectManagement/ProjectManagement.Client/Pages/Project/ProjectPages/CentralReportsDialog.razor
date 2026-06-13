@@ -337,6 +337,7 @@
                 {
                     <p class="mt-1 text-sky-700 dark:text-sky-300">@_hitRateSelectionFilters</p>
                 }
+                <p class="mt-1.5 font-medium text-sky-800 dark:text-sky-200">@HitRateBasisLine</p>
                 <p class="mt-1.5 italic text-slate-500 dark:text-slate-400">Stäng rapporten och ändra projektlistans filter om du vill ändra urvalet.</p>
             </div>
 
@@ -346,25 +347,18 @@
             }
             else
             {
-                <div class="grid grid-cols-2 gap-2 md:grid-cols-5">
-                    <div class="@TotalCardClass"><span>Inlämnade</span><strong>@SubmittedCount</strong></div>
+                <div class="grid grid-cols-3 gap-2">
                     <div class="@TotalCardClass"><span>Vunna</span><strong>@WonCount</strong></div>
                     <div class="@TotalCardClass"><span>Förlorade</span><strong>@LostCount</strong></div>
-                    <div class="@TotalCardClass"><span>Ej beslutade</span><strong>@UndecidedCount</strong></div>
-                    <div class="@TotalCardClass"><span>Hit rate / träffsäkerhet</span><strong>@(WonCount + LostCount == 0 ? "–" : $"{HitRate:N1} %")</strong></div>
+                    <div class="@TotalCardClass"><span>Hit rate / träffsäkerhet</span><strong>@HitRateDisplay</strong></div>
                 </div>
-                @if (WonCount + LostCount == 0)
+                @if (DecidedCount == 0)
                 {
                     <p class="text-xs text-slate-500 dark:text-slate-400">Hit rate kan inte beräknas eftersom inga vunna eller förlorade projekt finns i urvalet.</p>
                 }
                 <div class="flex flex-wrap items-center justify-between gap-2">
-                    <span class="text-xs text-slate-400">@HitRateTableProjects.Count() @(_hitRateShowUndecided ? "projekt" : "vunna/förlorade") · @_lockedHitRateProjects.Count inlämnade</span>
+                    <span class="text-xs text-slate-400">@DecidedCount vunna/förlorade</span>
                     <div class="flex flex-wrap items-center gap-1.5">
-                        <button type="button"
-                                class="@(_hitRateShowUndecided ? "inline-flex h-8 items-center rounded-lg bg-sky-600 px-3 text-xs font-semibold text-white shadow-sm transition hover:bg-sky-700" : ActionButtonClass)"
-                                @onclick="() => _hitRateShowUndecided = !_hitRateShowUndecided">
-                            Visa även ej beslutade
-                        </button>
                         @HitRateColumnPanel()
                         <button type="button" class="@ActionButtonClass" @onclick="ExportExcelAsync">@AppLoc["exportExcel"]</button>
                         <button type="button" class="@ActionButtonClass" @onclick="ExportPdfAsync">@AppLoc["exportPdf"]</button>
@@ -687,9 +681,6 @@
     private string _hitRateSelectionLine = "";
     private string _hitRateSelectionFilters = "";
     // The detailed Hit rate list shows only projects with a known outcome (Won/Lost) by default.
-    // Toggle to also include submitted-but-undecided projects.
-    private bool _hitRateShowUndecided;
-
     // ── Kalkyllista-rapport ───────────────────────────────────────────
     private List<CalculationEntry> _lockedCalcReportList = [];
     private string _calcReportSelectionLine = "";
@@ -882,17 +873,24 @@
             .Select(e => new ProjectHitRateEntry(e.Folder, e.Project, BidHitRateClassifier.ClassifyProject(e.Project)))
             .Where(e => e.Result != BidHitRateResult.Excluded);
 
-    // Default Hit rate list: only known outcomes (Won/Lost). The toggle adds undecided ones.
+    // Hit rate focuses on decided projects only: the table and the percentage are
+    // based solely on won/lost projects. Submitted-but-undecided projects are part
+    // of the selection but never affect the hit rate.
     private IEnumerable<ProjectHitRateEntry> HitRateTableProjects =>
-        _hitRateShowUndecided
-            ? _lockedHitRateProjects
-            : _lockedHitRateProjects.Where(e => e.Result is BidHitRateResult.Won or BidHitRateResult.Lost);
+        _lockedHitRateProjects.Where(e => e.Result is BidHitRateResult.Won or BidHitRateResult.Lost);
 
-    private int SubmittedCount => _lockedHitRateProjects.Count;
     private int WonCount => _lockedHitRateProjects.Count(e => e.Result == BidHitRateResult.Won);
     private int LostCount => _lockedHitRateProjects.Count(e => e.Result == BidHitRateResult.Lost);
-    private int UndecidedCount => _lockedHitRateProjects.Count(e => e.Result == BidHitRateResult.Undecided);
-    private decimal HitRate => WonCount + LostCount == 0 ? 0 : (decimal)WonCount / (WonCount + LostCount) * 100m;
+    private int DecidedCount => WonCount + LostCount;
+    private decimal HitRate => DecidedCount == 0 ? 0 : (decimal)WonCount / DecidedCount * 100m;
+
+    // "-" (never a misleading 0 %) when there are no decided projects to compute on.
+    private string HitRateDisplay => DecidedCount == 0 ? "–" : $"{HitRate:N1} %";
+
+    private string HitRateBasisLine =>
+        DecidedCount == 0
+            ? "Hit rate beräknas endast på vunna och förlorade projekt."
+            : $"Hit rate beräknas på {DecidedCount} beslutade projekt (vunna och förlorade).";
 
     // ── Lifecycle ─────────────────────────────────────────────────────
 
@@ -1848,15 +1846,14 @@
         string[] headers = dataCols.Select(GetHitRateColumnLabel).ToArray();
         var sections = new List<ReportExportSection>
         {
-            new("Projekturval:", [_hitRateSelectionLine, _hitRateSelectionFilters])
+            new("Projekturval:", [_hitRateSelectionLine, _hitRateSelectionFilters]),
+            new("Beräkning:", [HitRateBasisLine])
         };
         var kpis = new List<ReportExportKpi>
         {
-            new("Inlämnade", SubmittedCount.ToString()),
             new("Vunna", WonCount.ToString()),
             new("Förlorade", LostCount.ToString()),
-            new("Ej beslutade", UndecidedCount.ToString()),
-            new("Hit rate / träffsäkerhet", WonCount + LostCount == 0 ? "–" : $"{HitRate:N1} %")
+            new("Hit rate / träffsäkerhet", HitRateDisplay)
         };
         var rows = HitRateTableProjects
             .Select(e => dataCols.Select(c => (object?)GetHitRateCellValue(e, c)));

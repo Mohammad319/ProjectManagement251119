@@ -1,4 +1,5 @@
 @using Microsoft.AspNetCore.Components.Forms
+@using ProjectManagement.Client.Shared.SharedComponent
 @using ProjectManagement.Client.Shared.SharedComponent.Contact
 
 @inherits AppComponentBase
@@ -35,29 +36,18 @@ else if (ProjectUpdate is not null)
                         <div>
                             <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400"
                                    title="Projektstatus beskriver projektets övergripande läge och resultat, t.ex. förfrågan, inlämnat, vunnet eller förlorat.">Projektstatus</label>
-                            <InputSelect @bind-Value="ProjectUpdate.StatusId" class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
-                                <option></option>
-                                @if (Config?.ProjectStatuses != null)
-                                {
-                                    foreach (var t in Config.ProjectStatuses)
-                                    {
-                                        <option value="@t.Id">@t.Name</option>
-                                    }
-                                }
-                            </InputSelect>
+                            <MhdFormSelect TValue="int?"
+                                           @bind-Value="ProjectUpdate.StatusId"
+                                           Options="StatusItems"
+                                           ShowColorDot="true"
+                                           Placeholder="@AppLoc["selectPlaceholder"]" />
                         </div>
                         <div>
                             <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.projectType</label>
-                            <InputSelect @bind-Value="ProjectUpdate.TypeId" class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
-                                <option></option>
-                                @if (Config?.Types != null)
-                                {
-                                    foreach (var t in Config.Types)
-                                    {
-                                        <option value="@t.Id">@t.Name</option>
-                                    }
-                                }
-                            </InputSelect>
+                            <MhdFormSelect TValue="int?"
+                                           @bind-Value="ProjectUpdate.TypeId"
+                                           Options="@ToItems(Config?.Types)"
+                                           Placeholder="@AppLoc["selectPlaceholder"]" />
                         </div>
                         <div class="flex items-end">
                             <label class="inline-flex cursor-pointer items-center gap-2 rounded-md border border-slate-200 px-2.5 py-1.5 transition hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
@@ -81,25 +71,17 @@ else if (ProjectUpdate is not null)
                            
                             <div>
                                 <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">Kalkylansvarig</label>
-                                <InputSelect class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                                             @bind-Value="ProjectResponsible">
-                                    <option value="">Välj ansvarig</option>
-                                    @foreach (var user in ResponsibilityUserOptions)
-                                    {
-                                        <option value="@user">@user</option>
-                                    }
-                                </InputSelect>
+                                <MhdFormSelect TValue="string"
+                                               @bind-Value="ProjectResponsible"
+                                               Options="UserItems"
+                                               Placeholder="Välj ansvarig" />
                             </div>
                             <div>
                                 <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">Granskare</label>
-                                <InputSelect class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                                             @bind-Value="ProjectUpdate.Inspector">
-                                    <option value="">Ingen granskare</option>
-                                    @foreach (var user in ResponsibilityUserOptions)
-                                    {
-                                        <option value="@user">@user</option>
-                                    }
-                                </InputSelect>
+                                <MhdFormSelect TValue="string"
+                                               @bind-Value="ProjectUpdate.Inspector"
+                                               Options="UserItems"
+                                               Placeholder="Ingen granskare" />
                             </div>
                         </div>
                     </section>
@@ -148,13 +130,10 @@ else if (ProjectUpdate is not null)
                             {
                                 <div>
                                     <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">Beställare</label>
-                                    <InputSelect @bind-Value="ProjectUpdate.OrganisationId" class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
-                                        <option></option>
-                                        @foreach (var t in Config.Organisation)
-                                        {
-                                            <option value="@t.Id">@t.Name</option>
-                                        }
-                                    </InputSelect>
+                                    <MhdFormSelect TValue="int?"
+                                                   @bind-Value="ProjectUpdate.OrganisationId"
+                                                   Options="@ToItems(Config.Organisation)"
+                                                   Placeholder="@AppLoc["selectPlaceholder"]" />
                                 </div>
                             }
                        
@@ -200,56 +179,32 @@ else if (ProjectUpdate is not null)
                             </div>
                             <div>
                                 <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.procurementMethods</label>
-                                <InputSelect @bind-Value="ProjectUpdate.ProcurementMethodsId" class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
-                                    <option></option>
-                                    @if (Config?.Methods != null)
-                                    {
-                                        foreach (var t in Config.Methods)
-                                        {
-                                            <option value="@t.Id">@t.Name</option>
-                                        }
-                                    }
-                                </InputSelect>
+                                <MhdFormSelect TValue="int?"
+                                               @bind-Value="ProjectUpdate.ProcurementMethodsId"
+                                               Options="@ToItems(Config?.Methods)"
+                                               Placeholder="@AppLoc["selectPlaceholder"]" />
                             </div>
                             <div>
                                 <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.projectCompensation</label>
-                                <InputSelect @bind-Value="ProjectUpdate.CompensationId" class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
-                                    <option></option>
-                                    @if (Config?.Compensations != null)
-                                    {
-                                        foreach (var t in Config.Compensations)
-                                        {
-                                            <option value="@t.Id">@t.Name</option>
-                                        }
-                                    }
-                                </InputSelect>
+                                <MhdFormSelect TValue="int?"
+                                               @bind-Value="ProjectUpdate.CompensationId"
+                                               Options="@ToItems(Config?.Compensations)"
+                                               Placeholder="@AppLoc["selectPlaceholder"]" />
                             </div>
                             <div>
                                 <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.projectContract</label>
-                                <InputSelect @bind-Value="ProjectUpdate.ContractId" class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
-                                    <option></option>
-                                    @if (Config?.Contracts != null)
-                                    {
-                                        foreach (var t in Config.Contracts)
-                                        {
-                                            <option value="@t.Id">@t.Name</option>
-                                        }
-                                    }
-                                </InputSelect>
+                                <MhdFormSelect TValue="int?"
+                                               @bind-Value="ProjectUpdate.ContractId"
+                                               Options="@ToItems(Config?.Contracts)"
+                                               Placeholder="@AppLoc["selectPlaceholder"]" />
                             </div>
 
                             <div>
                                 <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">Upphandlingsförfarande</label>
-                                <InputSelect @bind-Value="ProjectUpdate.ProcurementProcedureId" class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
-                                    <option></option>
-                                    @if (Config?.Procedures != null)
-                                    {
-                                        foreach (var t in Config.Procedures)
-                                        {
-                                            <option value="@t.Id">@t.Name</option>
-                                        }
-                                    }
-                                </InputSelect>
+                                <MhdFormSelect TValue="int?"
+                                               @bind-Value="ProjectUpdate.ProcurementProcedureId"
+                                               Options="@ToItems(Config?.Procedures)"
+                                               Placeholder="@AppLoc["selectPlaceholder"]" />
                             </div>
                           
                             <div>

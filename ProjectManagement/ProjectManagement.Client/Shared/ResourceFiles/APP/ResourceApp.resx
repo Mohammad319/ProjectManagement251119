@@ -366,6 +366,9 @@
   <data name="select" xml:space="preserve">
     <value>Select</value>
   </data>
+  <data name="selectPlaceholder" xml:space="preserve">
+    <value>Select…</value>
+  </data>
   <data name="qualitySystems" xml:space="preserve">
     <value>Quality systems</value>
   </data>
@@ -1010,6 +1013,15 @@
   </data>
   <data name="showAllVersions" xml:space="preserve">
     <value>Show all versions</value>
+  </data>
+  <data name="projectStatus" xml:space="preserve">
+    <value>Project status</value>
+  </data>
+  <data name="showAllProjectsCount" xml:space="preserve">
+    <value>Show all projects ({0})</value>
+  </data>
+  <data name="showAllCalculationsCount" xml:space="preserve">
+    <value>Show all calculations ({0})</value>
   </data>
   <data name="noDepartmentsTitle" xml:space="preserve">
     <value>No departments</value>

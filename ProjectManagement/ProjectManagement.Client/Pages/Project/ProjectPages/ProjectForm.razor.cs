@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Forms;
 using ProjectManagement.Client.Shared.Components;
 using ProjectManagement.Client.Shared.MVVM.Folder;
+using ProjectManagement.Client.Shared.SharedComponent;
 using ProjectManagement.Client.Shared.ResourceFiles.Calculation;
 using ProjectManagement.Client.Shared.ResourceFiles.Identity;
 using ProjectManagement.Shared.Constant;
@@ -59,6 +60,32 @@ namespace ProjectManagement.Client.Pages.Project.ProjectPages
                 return options.OrderBy(x => x);
             }
         }
+
+        // --- Option mappers for the shared MhdFormSelect dropdowns ---------------
+        // Content/order is untouched; this only adapts the existing config lists to
+        // the dropdown's option shape. Project status carries its status color so
+        // the dot matches the project list (shared ProjectStatusColor fallback).
+
+        private List<MhdSelectItem<int?>> StatusItems =>
+            Config?.ProjectStatuses?
+                .Select(s => new MhdSelectItem<int?>
+                {
+                    Value = s.Id,
+                    Label = s.Name,
+                    Color = string.IsNullOrWhiteSpace(s.Color) ? ProjectStatusColor.NeutralFallback : s.Color
+                })
+                .ToList() ?? [];
+
+        private List<MhdSelectItem<string>> UserItems =>
+            ResponsibilityUserOptions
+                .Select(u => new MhdSelectItem<string> { Value = u, Label = u })
+                .ToList();
+
+        private static List<MhdSelectItem<int?>> ToItems(IEnumerable<ListOrderDTO>? source) =>
+            source?.Select(x => new MhdSelectItem<int?> { Value = x.Id, Label = x.Name }).ToList() ?? [];
+
+        private static List<MhdSelectItem<int?>> ToItems(IEnumerable<ListDTO>? source) =>
+            source?.Select(x => new MhdSelectItem<int?> { Value = x.Id, Label = x.Name }).ToList() ?? [];
 
         protected override async Task OnInitializedAsync()
         {

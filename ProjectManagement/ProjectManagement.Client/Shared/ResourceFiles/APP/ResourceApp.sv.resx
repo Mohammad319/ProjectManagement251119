@@ -366,6 +366,9 @@
   <data name="select" xml:space="preserve">
     <value>välja</value>
   </data>
+  <data name="selectPlaceholder" xml:space="preserve">
+    <value>Välj…</value>
+  </data>
   <data name="qualitySystems" xml:space="preserve">
     <value>Kvalitetssystem</value>
   </data>
@@ -1010,6 +1013,15 @@
   </data>
   <data name="showAllVersions" xml:space="preserve">
     <value>Visa alla versioner</value>
+  </data>
+  <data name="projectStatus" xml:space="preserve">
+    <value>Projektstatus</value>
+  </data>
+  <data name="showAllProjectsCount" xml:space="preserve">
+    <value>Visa alla projekt ({0})</value>
+  </data>
+  <data name="showAllCalculationsCount" xml:space="preserve">
+    <value>Visa alla kalkyler ({0})</value>
   </data>
   <data name="noDepartmentsTitle" xml:space="preserve">
     <value>Inga avdelningar</value>

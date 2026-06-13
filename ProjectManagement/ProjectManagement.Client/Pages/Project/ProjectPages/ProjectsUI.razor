@@ -1351,9 +1351,7 @@
     }
 
     private static string GetProjectStatusColor(ListProjectMVVM project)
-        => !string.IsNullOrWhiteSpace(project.Color)
-            ? project.Color
-            : project.IsArchived ? "#94a3b8" : "#10b981";
+        => ProjectStatusColor.Resolve(project);
 
     private static string GetProjectRowClass(ListProjectMVVM project, bool selected, bool archived)
     {

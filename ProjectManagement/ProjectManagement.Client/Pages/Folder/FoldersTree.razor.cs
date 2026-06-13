@@ -831,6 +831,84 @@ namespace ProjectManagement.Client.Pages.Folder
                 ? "font-semibold text-sky-900 dark:text-sky-100"
                 : "text-slate-600 group-hover:text-slate-900 dark:text-slate-300 dark:group-hover:text-slate-100";
 
+        // --- Project status (alternative 3: thin colored left line) ---------------
+
+        // Same status color source as the project list in the right panel.
+        private static string GetProjectStatusColor(ListProjectMVVM project) =>
+            ProjectStatusColor.Resolve(project);
+
+        private string GetProjectStatusText(ListProjectMVVM project) =>
+            project.IsArchived
+                ? AppLoc["archived"].Value
+                : string.IsNullOrWhiteSpace(project.Status) ? AppLoc["active"].Value : project.Status;
+
+        private string GetProjectStatusTitle(ListProjectMVVM project) =>
+            $"{AppLoc["projectStatus"]}: {GetProjectStatusText(project)}";
+
+        // Thin vertical status bar pinned to the left edge of a project row.
+        // Keeps its own status color even when the row is selected/open.
+        // Stays hoverable (no pointer-events-none) so the status tooltip works.
+        private const string ProjectStatusLineClass =
+            "absolute left-0 top-1 bottom-1 w-1 rounded-full ring-1 ring-inset ring-black/5 dark:ring-white/10";
+
+        // Open project: clearly active – faint blue background + marked blue frame.
+        private const string ProjectRowOpenClass =
+            "bg-sky-50/70 ring-1 ring-sky-200 dark:bg-sky-950/25 dark:ring-sky-800/60";
+
+        // Closed project: resting – neutral/white background, no strong frame.
+        private const string ProjectRowClosedClass =
+            "bg-white dark:bg-slate-900/50";
+
+        // --- "Show all" links for many projects / calculations -------------------
+
+        private const int ProjectPreviewLimit = 8;
+        private const int CalculationPreviewLimit = 6;
+
+        private readonly HashSet<Guid> _expandedProjectFolders = new();
+        private readonly HashSet<Guid> _expandedCalcProjects = new();
+
+        private const string ShowMoreLinkClass =
+            "ml-7 mb-0.5 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[12px] font-semibold text-sky-700 transition hover:bg-sky-50 hover:text-sky-900 dark:text-sky-300 dark:hover:bg-sky-950/40 dark:hover:text-sky-100";
+
+        // Projects are limited per folder unless the user expanded "show all"
+        // (and never limited while reordering, where every row must be movable).
+        private bool IsProjectsExpanded(FolderMVVM folder) =>
+            IsManualOrderMode || _expandedProjectFolders.Contains(folder.Id);
+
+        private bool IsCalcsExpanded(ListProjectMVVM project) =>
+            IsManualOrderMode || _expandedCalcProjects.Contains(project.Id);
+
+        private void ShowAllProjects(FolderMVVM folder)
+        {
+            _expandedProjectFolders.Add(folder.Id);
+            StateHasChanged();
+        }
+
+        private void ShowAllCalculations(ListProjectMVVM project)
+        {
+            _expandedCalcProjects.Add(project.Id);
+            StateHasChanged();
+        }
+
+        // Keep a restored/selected project visible even if it sits past the preview limit.
+        private bool IsSelectedProjectHidden(List<ListProjectMVVM> sortedProjects)
+        {
+            var selected = Folder.State.ProjectSelected;
+            if (selected is null || sortedProjects.Count <= ProjectPreviewLimit)
+                return false;
+
+            return sortedProjects.Skip(ProjectPreviewLimit).Any(p => p.Id == selected.Id);
+        }
+
+        // Keep a restored/selected calculation visible even if it sits past the preview limit.
+        private bool IsSelectedCalculationHidden(List<ListCalculationMVVM> sortedCalculations)
+        {
+            if (Calc is null || sortedCalculations.Count <= CalculationPreviewLimit)
+                return false;
+
+            return sortedCalculations.Skip(CalculationPreviewLimit).Any(c => c.Id == Calc.Id);
+        }
+
         private string GetFolderMeta(FolderMVVM folder) =>
             !folder.IsVisible ? AppLoc["archived"].Value : string.Empty;
 

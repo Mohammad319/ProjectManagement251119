@@ -186,22 +186,25 @@
             <div class="ml-4 space-y-1 pl-2">
                 @{
                     var sortedProjects = GetSortedProjects(folder.Projects).ToList();
+                    var projectsExpanded = IsProjectsExpanded(folder) || IsSelectedProjectHidden(sortedProjects);
+                    var visibleProjects = projectsExpanded ? sortedProjects : sortedProjects.Take(ProjectPreviewLimit).ToList();
                 }
 
-                @foreach (var project in sortedProjects)
+                @foreach (var project in visibleProjects)
                 {
                     var isProjectSelected = Folder.State.ProjectSelected?.Id == project.Id;
                     var isProjectArchived = project.IsArchived;
+                    var isProjectOpen = project.ShowCalculations;
 
                     var projectClasses = new List<string>
                     {
-                        "group",
-                        "grid grid-cols-[1rem_1.5rem_1fr] items-center gap-1.5 px-1.5 py-1 rounded-md cursor-pointer",
+                        "group relative",
+                        "grid grid-cols-[1rem_1.5rem_1fr] items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-md cursor-pointer",
                         "transition-all duration-150",
-                        "bg-slate-50 dark:bg-slate-900/70",
                         "hover:bg-slate-100/80 dark:hover:bg-slate-800/70",
                         "active:scale-95",
-                        TreeRowFocusClass
+                        TreeRowFocusClass,
+                        isProjectOpen ? ProjectRowOpenClass : ProjectRowClosedClass
                     };
 
                     if (isProjectArchived)
@@ -225,6 +228,11 @@
                          role="button"
                          tabindex="0"
                          class="@string.Join(" ", projectClasses)">
+
+                        <!-- Project status (alternative 3: thin colored left line) -->
+                        <span class="@ProjectStatusLineClass"
+                              style="background-color:@GetProjectStatusColor(project)"
+                              title="@GetProjectStatusTitle(project)"></span>
 
                         <!-- Expand project -->
                         @if (project.CalculationsLoaded && (project.Calculations?.Count ?? 0) == 0)
@@ -283,12 +291,14 @@
                     <!-- Calculations -->
                     <div class="ml-4 space-y-1 pl-2
                                    overflow-hidden transition-all duration-200 ease-in-out
-                                   @(project.ShowCalculations ? " max-h-[800px] opacity-100" : "max-h-0 opacity-0")">
+                                   @(project.ShowCalculations ? " max-h-[5000px] opacity-100" : "max-h-0 opacity-0")">
                         @{
                             var sortedCalculations = GetSortedCalculations(project.Calculations).ToList();
+                            var calcsExpanded = IsCalcsExpanded(project) || IsSelectedCalculationHidden(sortedCalculations);
+                            var visibleCalculations = calcsExpanded ? sortedCalculations : sortedCalculations.Take(CalculationPreviewLimit).ToList();
                         }
 
-                        @foreach (var cal in sortedCalculations)
+                        @foreach (var cal in visibleCalculations)
                         {
                             var calcSelected = Calc?.Id == cal.Id;
                             var calcClasses = new List<string>
@@ -329,7 +339,29 @@
                                 </span>
                             </div>
                         }
+
+                        @* Visa alla kalkyler – endast när projektet har fler kalkyler än gränsen *@
+                        @if (!calcsExpanded && sortedCalculations.Count > CalculationPreviewLimit)
+                        {
+                            <button type="button"
+                                    class="@ShowMoreLinkClass"
+                                    @onclick:stopPropagation="true"
+                                    @onclick="() => ShowAllCalculations(project)">
+                                @AppLoc["showAllCalculationsCount", sortedCalculations.Count]
+                            </button>
+                        }
                     </div>
+                }
+
+                @* Visa alla projekt – endast när mappen har fler projekt än gränsen *@
+                @if (!projectsExpanded && sortedProjects.Count > ProjectPreviewLimit)
+                {
+                    <button type="button"
+                            class="@ShowMoreLinkClass"
+                            @onclick:stopPropagation="true"
+                            @onclick="() => ShowAllProjects(folder)">
+                        @AppLoc["showAllProjectsCount", sortedProjects.Count]
+                    </button>
                 }
             </div>
         }
