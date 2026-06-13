@@ -295,6 +295,7 @@ namespace Persistence.Service.Project
                     {
                         Id = x.Id,
                         Name = x.Name,
+                        Color = x.Color,
                         CountsAsSubmittedBid = x.CountsAsSubmittedBid,
                         CountsAsWonBid = x.CountsAsWonBid,
                         CountsAsLostBid = x.CountsAsLostBid,
@@ -310,6 +311,7 @@ namespace Persistence.Service.Project
                     {
                         Id = x.Id,
                         Name = x.Name,
+                        Color = x.Color,
                         IsApprovalStatus = x.IsApprovalStatus,
                         LocksCalculation = x.LocksCalculation,
                         AllowsProductionCalculation = x.AllowsProductionCalculation,

@@ -358,8 +358,13 @@
                     <p class="text-xs text-slate-500 dark:text-slate-400">Hit rate kan inte beräknas eftersom inga vunna eller förlorade projekt finns i urvalet.</p>
                 }
                 <div class="flex flex-wrap items-center justify-between gap-2">
-                    <span class="text-xs text-slate-400">@_lockedHitRateProjects.Count projekt</span>
+                    <span class="text-xs text-slate-400">@HitRateTableProjects.Count() @(_hitRateShowUndecided ? "projekt" : "vunna/förlorade") · @_lockedHitRateProjects.Count inlämnade</span>
                     <div class="flex flex-wrap items-center gap-1.5">
+                        <button type="button"
+                                class="@(_hitRateShowUndecided ? "inline-flex h-8 items-center rounded-lg bg-sky-600 px-3 text-xs font-semibold text-white shadow-sm transition hover:bg-sky-700" : ActionButtonClass)"
+                                @onclick="() => _hitRateShowUndecided = !_hitRateShowUndecided">
+                            Visa även ej beslutade
+                        </button>
                         @HitRateColumnPanel()
                         <button type="button" class="@ActionButtonClass" @onclick="ExportExcelAsync">@AppLoc["exportExcel"]</button>
                         <button type="button" class="@ActionButtonClass" @onclick="ExportPdfAsync">@AppLoc["exportPdf"]</button>
@@ -605,6 +610,11 @@
     [Parameter] public string InitialResponsible { get; set; } = string.Empty;
     [Parameter] public string InitialInspector { get; set; } = string.Empty;
     [Parameter] public IReadOnlyList<Guid>? LockedProjectIds { get; set; }
+    /// <summary>Exact calculation ids selected by the calling list (after that list's filters).
+    /// When set, the Kalkyllista report uses precisely these calculations instead of re-filtering.</summary>
+    [Parameter] public IReadOnlyList<int>? LockedCalculationIds { get; set; }
+    /// <summary>Whether the calling calculation list had "Visa alla versioner" enabled.</summary>
+    [Parameter] public bool? LockedShowAllVersions { get; set; }
     [Parameter] public string? SelectionSummaryLine { get; set; }
     [Parameter] public string? SelectionFilterSummary { get; set; }
     /// <summary>Which right-panel list opened the dialog. Null = no restriction (all tabs enabled).</summary>
@@ -676,6 +686,9 @@
     private List<ProjectHitRateEntry> _lockedHitRateProjects = [];
     private string _hitRateSelectionLine = "";
     private string _hitRateSelectionFilters = "";
+    // The detailed Hit rate list shows only projects with a known outcome (Won/Lost) by default.
+    // Toggle to also include submitted-but-undecided projects.
+    private bool _hitRateShowUndecided;
 
     // ── Kalkyllista-rapport ───────────────────────────────────────────
     private List<CalculationEntry> _lockedCalcReportList = [];
@@ -868,6 +881,12 @@
                 MatchesProjectInspector(e.Project))
             .Select(e => new ProjectHitRateEntry(e.Folder, e.Project, BidHitRateClassifier.ClassifyProject(e.Project)))
             .Where(e => e.Result != BidHitRateResult.Excluded);
+
+    // Default Hit rate list: only known outcomes (Won/Lost). The toggle adds undecided ones.
+    private IEnumerable<ProjectHitRateEntry> HitRateTableProjects =>
+        _hitRateShowUndecided
+            ? _lockedHitRateProjects
+            : _lockedHitRateProjects.Where(e => e.Result is BidHitRateResult.Won or BidHitRateResult.Lost);
 
     private int SubmittedCount => _lockedHitRateProjects.Count;
     private int WonCount => _lockedHitRateProjects.Count(e => e.Result == BidHitRateResult.Won);
@@ -1074,6 +1093,25 @@
 
     private void LockCalcReportList()
     {
+        // When the calling list passed an explicit calculation selection, the report must show
+        // exactly those calculations (same filtered urval as the right-panel kalkyllista), not
+        // re-run its own filter. The locked ids already reflect the list's filters + version mode.
+        if (LockedCalculationIds is not null)
+        {
+            _lockedCalcShowAllVersions = LockedShowAllVersions ?? _showAllVersions;
+            var idSet = LockedCalculationIds.ToHashSet();
+            _lockedCalcReportList = _allVersions
+                .Where(e => idSet.Contains(e.Calculation.Id))
+                .GroupBy(e => e.Calculation.Id)
+                .Select(g => g.First())
+                .ToList();
+
+            var versionInfoLocked = _lockedCalcShowAllVersions ? "alla versioner" : "aktuella versioner";
+            _calcReportSelectionLine = $"Kalkyllistan baseras på {_lockedCalcReportList.Count} kalkyler ({versionInfoLocked}) från aktuell lista.";
+            _calcReportSelectionFilters = SelectionFilterSummary ?? string.Empty;
+            return;
+        }
+
         _lockedCalcShowAllVersions = _showAllVersions;
         _lockedCalcReportList = FilteredCalculations.ToList();
         var count = _lockedCalcReportList.Count;
@@ -1659,7 +1697,7 @@
                 <thead class="@TableHeadClass"><tr>@foreach (var c in cols) { <th>@GetHitRateColumnLabel(c)</th> }</tr></thead>
                 <tbody class="@TableBodyClass">
                     @{ var hi = 0; }
-                    @foreach (var e in _lockedHitRateProjects)
+                    @foreach (var e in HitRateTableProjects)
                     {
                         <tr class="@(hi++ % 2 == 0 ? "" : "bg-slate-50/70 dark:bg-slate-900/30")">
                             @foreach (var c in cols) { <td>@GetHitRateCellValue(e, c)</td> }
@@ -1820,7 +1858,7 @@
             new("Ej beslutade", UndecidedCount.ToString()),
             new("Hit rate / träffsäkerhet", WonCount + LostCount == 0 ? "–" : $"{HitRate:N1} %")
         };
-        var rows = _lockedHitRateProjects
+        var rows = HitRateTableProjects
             .Select(e => dataCols.Select(c => (object?)GetHitRateCellValue(e, c)));
         return new(L("hitRate"), headers, rows, sections, kpis);
     }

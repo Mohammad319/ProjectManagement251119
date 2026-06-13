@@ -75,7 +75,8 @@
       "PowerShell(dotnet ef migrations *)",
       "PowerShell(.\\\\tools\\\\operations\\\\New-MigrationScripts.ps1)",
       "Read(//c/c/Users/Administrator/Desktop/PM/b07/ProjectManagement251119/artifacts/**)",
-      "Read(//c/c/Users/Administrator/Desktop/PM/b07/ProjectManagement251119/artifacts/migrations/**)"
+      "Read(//c/c/Users/Administrator/Desktop/PM/b07/ProjectManagement251119/artifacts/migrations/**)",
+      "PowerShell(dotnet test *)"
     ]
   }
 }

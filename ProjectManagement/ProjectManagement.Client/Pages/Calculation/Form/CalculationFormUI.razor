@@ -63,20 +63,40 @@
                                 <div class="mb-3 grid grid-cols-3 gap-3">
                                     <div>
                                         <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@AppLoc["calculationStatus"]</label>
-                                        <select @key="_statusSelectKey"
-                                                value="@CalculationUpdate.StatusId"
-                                                @onchange="OnStatusChanged"
-                                                class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
-                                                disabled="@IsStatusSelectDisabled">
-                                            <option></option>
-                                            @if (Config?.Statuses != null)
+                                        @* Custom dropdown so each status shows its filled status color (a native <option> can't). *@
+                                        <div class="relative">
+                                            <button type="button"
+                                                    @onclick="ToggleStatusDropdown"
+                                                    disabled="@IsStatusSelectDisabled"
+                                                    class="flex w-full items-center gap-2 rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900">
+                                                <span class="h-2.5 w-2.5 shrink-0 rounded-full" style="background-color:@SelectedStatusColor"></span>
+                                                <span class="flex-1 truncate text-left">@(SelectedStatus?.Name ?? "—")</span>
+                                                <svg class="h-3 w-3 shrink-0 text-slate-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                                </svg>
+                                            </button>
+                                            @if (_statusDropdownOpen && Config?.Statuses != null)
                                             {
-                                                foreach (var status in AvailableStatuses)
-                                                {
-                                                    <option value="@status.Id">@status.Name</option>
-                                                }
+                                                <div class="fixed inset-0 z-[70]" @onclick="CloseStatusDropdown"></div>
+                                                <div class="absolute left-0 top-full z-[90] mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+                                                    @foreach (var status in AvailableStatuses)
+                                                    {
+                                                        var statusId = status.Id;
+                                                        var isSelectedStatus = status.Id == CalculationUpdate.StatusId;
+                                                        <button type="button"
+                                                                class="@(isSelectedStatus ? "flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm text-sky-700 dark:text-sky-300" : "flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800")"
+                                                                @onclick="() => SelectStatus(statusId)">
+                                                            <span class="h-2.5 w-2.5 shrink-0 rounded-full" style="background-color:@GetStatusColor(status)"></span>
+                                                            <span class="flex-1 truncate">@status.Name</span>
+                                                            @if (isSelectedStatus)
+                                                            {
+                                                                <svg class="ml-auto h-3.5 w-3.5 shrink-0 text-sky-600 dark:text-sky-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
+                                                            }
+                                                        </button>
+                                                    }
+                                                </div>
                                             }
-                                        </select>
+                                        </div>
                                     </div>
                                     <div>
                                         <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@AppLoc["calculationRole"]</label>
@@ -604,10 +624,24 @@
 
 @if (_showApprovalDialog)
 {
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-6">
-        <div class="w-full max-w-lg rounded-lg border border-slate-200 bg-white p-5 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-6 outline-none"
+         tabindex="-1"
+         @ref="_approvalDialogRef"
+         @onkeydown="OnApprovalDialogKeyDown"
+         @onclick="CancelApprovalDialog">
+        <div class="w-full max-w-lg rounded-lg border border-slate-200 bg-white p-5 shadow-2xl dark:border-slate-700 dark:bg-slate-900"
+             @onclick:stopPropagation="true">
             <div class="space-y-3 text-slate-700 dark:text-slate-200">
-                <h2 class="text-base font-semibold text-slate-900 dark:text-slate-50">@CalcResource.approveAndLockTitle</h2>
+                <div class="flex items-start justify-between gap-3">
+                    <h2 class="text-base font-semibold text-slate-900 dark:text-slate-50">@CalcResource.approveAndLockTitle</h2>
+                    <button type="button"
+                            class="shrink-0 rounded p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                            disabled="@_isApprovingCalculation"
+                            title="@AppLoc["cancel"]"
+                            @onclick="CancelApprovalDialog">
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
                 <p class="text-sm leading-6">@CalcResource.approveAndLockDescription</p>
                 <p class="text-sm font-medium text-slate-900 dark:text-slate-100">@AppLoc["continueQuestion"]</p>
                 @if (!string.IsNullOrWhiteSpace(_approvalDialogMessage))
@@ -657,7 +691,9 @@
     private bool _isCurrentUserAdmin;
     private int? _originalStatusId;
     private int? _statusBeforeApprovalDialog;
-    private int _statusSelectKey;
+    private bool _statusDropdownOpen;
+    private ElementReference _approvalDialogRef;
+    private bool _focusApprovalDialog;
 
     [Parameter] public EventCallback<ListCalculationMVVM?> Callback { get; set; }
     [Parameter] public required ListCalculationMVVM Calculation { get; set; }
@@ -827,23 +863,49 @@
                 status.CountsAsWonBid,
                 status.CountsAsLostBid);
 
-    private void OnStatusChanged(ChangeEventArgs e)
-    {
-        var oldStatusId = CalculationUpdate.StatusId;
-        int? selectedStatusId = int.TryParse(e.Value?.ToString(), out var value) && value > 0
-            ? value
-            : null;
+    // A status that locks the calculation per its configuration. The flag — not a
+    // hardcoded status name — decides whether changing to it triggers the lock dialog.
+    // Covers every locking status (e.g. Godkänd/låst, Skickad/inlämnad, Tilldelad/vunnen).
+    private static bool IsLockingStatus(StatusListDTO status) => status.LocksCalculation;
 
-        var selectedStatus = Config?.Statuses.FirstOrDefault(x => x.Id == selectedStatusId);
-        if (CalculationUpdate.IsLocked &&
-            selectedStatus is not null &&
-            !IsAllowedLockedStatus(selectedStatus))
+    // Status color from the shared status model; neutral gray when none is configured,
+    // so the dropdown always matches the calculation list / folder tree colors.
+    private static string GetStatusColor(StatusListDTO? status) =>
+        status is null || string.IsNullOrWhiteSpace(status.Color)
+            ? CalculationStatusColor.NeutralFallback
+            : status.Color;
+
+    private string SelectedStatusColor => GetStatusColor(SelectedStatus);
+
+    private void ToggleStatusDropdown()
+    {
+        if (IsStatusSelectDisabled)
+            return;
+        _statusDropdownOpen = !_statusDropdownOpen;
+    }
+
+    private void CloseStatusDropdown() => _statusDropdownOpen = false;
+
+    private void SelectStatus(int statusId)
+    {
+        CloseStatusDropdown();
+
+        var oldStatusId = CalculationUpdate.StatusId;
+        if (statusId == oldStatusId)
+            return;
+
+        var selectedStatus = Config?.Statuses.FirstOrDefault(x => x.Id == statusId);
+        if (selectedStatus is null)
+            return; // status is mandatory — never clear it
+
+        if (CalculationUpdate.IsLocked && !IsAllowedLockedStatus(selectedStatus))
         {
             ResetStatusSelection(oldStatusId);
             return;
         }
 
-        if (selectedStatus is { IsApprovalStatus: true, LocksCalculation: true } &&
+        // Any locking status opens the confirm dialog; the status is only applied on confirm.
+        if (IsLockingStatus(selectedStatus) &&
             Calculation.Id > 0 &&
             !CalculationUpdate.IsLocked)
         {
@@ -857,21 +919,23 @@
 
             _approvalBlockMessage = string.Empty;
             _statusBeforeApprovalDialog = oldStatusId;
-            _pendingApprovalStatusId = selectedStatusId;
+            _pendingApprovalStatusId = statusId;
             _approvalDialogMessage = string.Empty;
             _showApprovalDialog = true;
-            ResetStatusSelection(oldStatusId);
+            _focusApprovalDialog = true;
+            ResetStatusSelection(oldStatusId); // keep UI + model on the previous status until confirmed
             return;
         }
 
         _approvalBlockMessage = string.Empty;
-        CalculationUpdate.StatusId = selectedStatusId;
+        CalculationUpdate.StatusId = statusId;
     }
 
     private void ResetStatusSelection(int? statusId)
     {
+        // The custom dropdown reflects CalculationUpdate.StatusId directly, so resetting
+        // the model is enough to keep the field, edit model and saved value in sync.
         CalculationUpdate.StatusId = statusId;
-        _statusSelectKey++;
     }
 
     private string? GetApprovalBlockReason()
@@ -897,6 +961,8 @@
             : string.Format(CalcResource.approvalBlockedResponsibleOnly, responsible);
     }
 
+    // Every way of dismissing the dialog (Cancel button, X, Escape, click outside) lands
+    // here and fully reverts the status change — UI, edit model and the value to be saved.
     private void CancelApprovalDialog()
     {
         if (_isApprovingCalculation)
@@ -907,6 +973,13 @@
         _statusBeforeApprovalDialog = null;
         _approvalDialogMessage = string.Empty;
         _showApprovalDialog = false;
+        _focusApprovalDialog = false;
+    }
+
+    private void OnApprovalDialogKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key is "Escape" or "Esc")
+            CancelApprovalDialog();
     }
 
     private void AddCalcNote()
@@ -1281,12 +1354,27 @@
                 CalculationUpdate.StatusId
             );
 
-        if (Calculation.Id == 0 && !CalculationUpdate.StatusId.HasValue)
-            CalculationUpdate.StatusId = Config.Statuses.FirstOrDefault(status => status.IsDefault)?.Id;
+        // Status is mandatory: a new calculation — or legacy data missing a status —
+        // falls back to the configured default status (or the first available one).
+        if (!CalculationUpdate.StatusId.HasValue)
+            CalculationUpdate.StatusId =
+                (Config.Statuses.FirstOrDefault(status => status.IsDefault)
+                 ?? Config.Statuses.FirstOrDefault())?.Id;
 
         _originalStatusId = CalculationUpdate.StatusId;
         RecalculateDateFields(DateFieldChanged.EndDate);
         ResetEditContext();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Focus the open confirm dialog so Escape reaches it.
+        if (_focusApprovalDialog && _showApprovalDialog)
+        {
+            _focusApprovalDialog = false;
+            try { await _approvalDialogRef.FocusAsync(); }
+            catch { /* element may not be ready; ignore */ }
+        }
     }
 
     private void ComputeTimeMonth()

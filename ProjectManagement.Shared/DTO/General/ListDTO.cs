@@ -10,6 +10,8 @@ namespace ProjectManagement.Shared.DTO.General
 
     public class StatusListDTO : ListDTO
     {
+        /// <summary>Status color from the status model (admin settings/DB); empty means "use the neutral fallback".</summary>
+        public string Color { get; set; } = string.Empty;
         public bool IsApprovalStatus { get; set; }
         public bool LocksCalculation { get; set; }
         public bool AllowsProductionCalculation { get; set; }

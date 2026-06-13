@@ -126,11 +126,19 @@
                         {
                             <button type="button"
                                     class="flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-800"
-                                    disabled="@(!HasActiveProjectFilters)"
+                                    disabled="@(!CanSaveCurrentProjectFilter)"
+                                    title="@(MatchingSavedProjectFilter is not null ? "Detta filter är redan sparat." : null)"
                                     @onclick="OpenSaveFilterPrompt">
                                 <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
                                 <span>Spara aktuellt filter</span>
                             </button>
+                            @if (MatchingSavedProjectFilter is { } matchedProjectFilter)
+                            {
+                                <div class="flex items-start gap-1.5 px-3 pb-1.5 pt-0.5 text-[10px] text-slate-500 dark:text-slate-400">
+                                    <svg class="mt-0.5 h-3 w-3 shrink-0 text-emerald-500 dark:text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    <span>Aktuellt filter matchar sparat filter: <span class="font-semibold text-slate-600 dark:text-slate-300">@matchedProjectFilter.Name</span></span>
+                                </div>
+                            }
                         }
                         <button type="button"
                                 class="flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40 dark:text-red-400 dark:hover:bg-red-950/30"
@@ -909,6 +917,34 @@
         _saveFilterError = null;
     }
 
+    // Snapshot of the current list state as a (still unnamed) saved filter. Shared by
+    // both the save action and the duplicate-detection so they compare identical data.
+    private SavedListFilter BuildCurrentProjectFilter(string name = "") => new()
+    {
+        Name = name,
+        SortColumn = string.IsNullOrEmpty(_sortColumn) ? null : _sortColumn,
+        SortAscending = _sortAscending,
+        Filters = _projColFilters
+            .Where(kv => kv.Value.IsActive)
+            .ToDictionary(kv => kv.Key, kv => SavedColumnFilter.FromState(kv.Value))
+    };
+
+    // The first saved filter whose definition matches the current list state, or null.
+    // Matching is by normalized content (not name), so a manually rebuilt filter is
+    // recognised too. If old data holds several identical filters, the first wins.
+    private SavedListFilter? MatchingSavedProjectFilter
+    {
+        get
+        {
+            if (!HasActiveProjectFilters) return null;
+            var signature = BuildCurrentProjectFilter().ContentSignature();
+            return _savedProjectFilters.FirstOrDefault(f => f.ContentSignature() == signature);
+        }
+    }
+
+    // "Spara aktuellt filter" is only enabled for a non-empty filter that isn't already saved.
+    private bool CanSaveCurrentProjectFilter => HasActiveProjectFilters && MatchingSavedProjectFilter is null;
+
     private async Task SaveCurrentProjectFilterAsync()
     {
         var name = _saveFilterName.Trim();
@@ -923,16 +959,13 @@
             return;
         }
 
-        var filter = new SavedListFilter
+        var filter = BuildCurrentProjectFilter(name);
+        var signature = filter.ContentSignature();
+        if (_savedProjectFilters.Any(f => f.ContentSignature() == signature))
         {
-            Name = name,
-            CreatedAt = DateTime.UtcNow,
-            SortColumn = string.IsNullOrEmpty(_sortColumn) ? null : _sortColumn,
-            SortAscending = _sortAscending,
-            Filters = _projColFilters
-                .Where(kv => kv.Value.IsActive)
-                .ToDictionary(kv => kv.Key, kv => SavedColumnFilter.FromState(kv.Value))
-        };
+            _saveFilterError = "Detta filter är redan sparat.";
+            return;
+        }
 
         _savedProjectFilters.Add(filter);
         _savedProjectFilters = _savedProjectFilters
