@@ -138,7 +138,8 @@ namespace Persistence.Service.Folder
                     Order = (int)x.SortOrder,
                     IsVisible = x.IsVisible,
                     CreatedAt = x.CreatedAt,
-                    UpdatedAt = x.UpdatedAt
+                    UpdatedAt = x.UpdatedAt,
+                    ProjectCount = x.FolderProjects.Count(p => !p.IsArchived)
                 })
                 .ToListAsync(ct);
         }
@@ -160,7 +161,10 @@ namespace Persistence.Service.Folder
                     Order = (int)x.SortOrder,
                     IsVisible = x.IsVisible,
                     CreatedAt = x.CreatedAt,
-                    UpdatedAt = x.UpdatedAt
+                    UpdatedAt = x.UpdatedAt,
+                    // Mirror the project list filter (GetByFolderAsync) so the
+                    // chevron only shows for folders with visible projects.
+                    ProjectCount = x.FolderProjects.Count(p => includeArchived || !p.IsArchived)
                 })
                 .ToListAsync(ct);
         }
@@ -181,7 +185,12 @@ namespace Persistence.Service.Folder
                     Order = x.SortOrder,
                     IsVisible = x.IsVisible,
                     CreatedAt = x.CreatedAt,
-                    UpdatedAt = x.UpdatedAt
+                    UpdatedAt = x.UpdatedAt,
+                    // Mirror the shared-project filter (GetOtherGroupByFolderAsync):
+                    // only count projects that have a calculation shared with this department.
+                    ProjectCount = x.FolderProjects.Count(p =>
+                        (includeArchived || !p.IsArchived) &&
+                        p.Calculations.SelectMany(c => c.SharesCalc).Any(s => s.DepartmentId == departmentId))
                 })
                 .ToListAsync(ct);
         }

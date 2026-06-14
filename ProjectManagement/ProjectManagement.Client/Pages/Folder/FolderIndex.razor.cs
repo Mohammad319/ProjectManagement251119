@@ -413,7 +413,9 @@ namespace ProjectManagement.Client.Pages.Folder
                 if (!snapshot.FolderIds.Contains(folder.Id) && !hasOpenProject)
                     continue;
 
-                folder.ShowProjects = snapshot.FolderIds.Contains(folder.Id) || hasOpenProject;
+                // Never restore an empty folder into an expanded state.
+                folder.ShowProjects = (snapshot.FolderIds.Contains(folder.Id) || hasOpenProject)
+                                      && (folder.Projects?.Count ?? 0) > 0;
 
                 foreach (var project in folder.Projects ?? [])
                 {
@@ -421,8 +423,10 @@ namespace ProjectManagement.Client.Pages.Folder
                         continue;
 
                     await Folder.SetCalcsToProject(project);
-                    project.ShowCalculations = true;
-                    folder.ShowProjects = true;
+                    // Only expand the project if it still has calculations to show.
+                    project.ShowCalculations = (project.Calculations?.Count ?? 0) > 0;
+                    if (project.ShowCalculations)
+                        folder.ShowProjects = true;
                 }
             }
         }

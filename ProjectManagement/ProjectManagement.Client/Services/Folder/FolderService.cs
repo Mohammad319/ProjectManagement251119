@@ -142,7 +142,8 @@ namespace ProjectManagement.Client.Services.Folder
 
             await SetProjectsToFolder(folder);
             folderState.SetCalculation(null, null, folder);
-            folder.ShowProjects = true;
+            // Only expand folders that actually have projects to show.
+            folder.ShowProjects = (folder.Projects?.Count ?? 0) > 0;
         }
 
         public async Task SetCalcsToProject(ListProjectMVVM project)
@@ -181,7 +182,8 @@ namespace ProjectManagement.Client.Services.Folder
 
             await SetCalcsToProject(project);
             folderState.SetCalculation(null, project, State.FolderSelected);
-            project.ShowCalculations = true;
+            // Only expand projects that actually have calculations to show.
+            project.ShowCalculations = (project.Calculations?.Count ?? 0) > 0;
         }
     }
 }

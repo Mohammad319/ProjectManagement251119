@@ -1359,6 +1359,42 @@
   <data name="selectTargetProjectBeforeMove" xml:space="preserve">
     <value>Select a target project before moving the calculation.</value>
   </data>
+  <data name="moveToDepartment" xml:space="preserve">
+    <value>Move to department</value>
+  </data>
+  <data name="moveToFolder" xml:space="preserve">
+    <value>Move to folder</value>
+  </data>
+  <data name="moveToProject" xml:space="preserve">
+    <value>Move to project</value>
+  </data>
+  <data name="currentLocationHeading" xml:space="preserve">
+    <value>Current location</value>
+  </data>
+  <data name="newLocation" xml:space="preserve">
+    <value>New location</value>
+  </data>
+  <data name="copyCreatedIn" xml:space="preserve">
+    <value>The copy is created in:</value>
+  </data>
+  <data name="calculationMovedTo" xml:space="preserve">
+    <value>The calculation is moved to:</value>
+  </data>
+  <data name="projectMovedTo" xml:space="preserve">
+    <value>The project is moved to:</value>
+  </data>
+  <data name="folderMovedTo" xml:space="preserve">
+    <value>The folder is moved to:</value>
+  </data>
+  <data name="calculationAlreadyInPlace" xml:space="preserve">
+    <value>The calculation is already in the selected location.</value>
+  </data>
+  <data name="projectAlreadyInFolder" xml:space="preserve">
+    <value>The project is already in the selected folder.</value>
+  </data>
+  <data name="folderAlreadyInDepartment" xml:space="preserve">
+    <value>The folder is already in the selected department.</value>
+  </data>
   <data name="view" xml:space="preserve">
     <value>View</value>
   </data>

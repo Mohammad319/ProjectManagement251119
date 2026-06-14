@@ -1359,6 +1359,42 @@
   <data name="selectTargetProjectBeforeMove" xml:space="preserve">
     <value>Välj ett målprojekt innan du flyttar kalkylen.</value>
   </data>
+  <data name="moveToDepartment" xml:space="preserve">
+    <value>Flytta till avdelning</value>
+  </data>
+  <data name="moveToFolder" xml:space="preserve">
+    <value>Flytta till mapp</value>
+  </data>
+  <data name="moveToProject" xml:space="preserve">
+    <value>Flytta till projekt</value>
+  </data>
+  <data name="currentLocationHeading" xml:space="preserve">
+    <value>Nuvarande plats</value>
+  </data>
+  <data name="newLocation" xml:space="preserve">
+    <value>Ny plats</value>
+  </data>
+  <data name="copyCreatedIn" xml:space="preserve">
+    <value>Kopian skapas i:</value>
+  </data>
+  <data name="calculationMovedTo" xml:space="preserve">
+    <value>Kalkylen flyttas till:</value>
+  </data>
+  <data name="projectMovedTo" xml:space="preserve">
+    <value>Projektet flyttas till:</value>
+  </data>
+  <data name="folderMovedTo" xml:space="preserve">
+    <value>Mappen flyttas till:</value>
+  </data>
+  <data name="calculationAlreadyInPlace" xml:space="preserve">
+    <value>Kalkylen ligger redan på vald plats.</value>
+  </data>
+  <data name="projectAlreadyInFolder" xml:space="preserve">
+    <value>Projektet ligger redan i vald mapp.</value>
+  </data>
+  <data name="folderAlreadyInDepartment" xml:space="preserve">
+    <value>Mappen ligger redan i vald avdelning.</value>
+  </data>
   <data name="view" xml:space="preserve">
     <value>Vy</value>
   </data>

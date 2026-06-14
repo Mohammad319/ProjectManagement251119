@@ -251,12 +251,25 @@ namespace ProjectManagement.Client.Pages.Folder
             };
         }
 
-        private async Task SeFolder(FolderMVVM folder)
+        // Selects the folder (loads its projects + shows it in the right panel)
+        // without touching its expand/collapse state.
+        private async Task SelectFolder(FolderMVVM folder)
         {
             _selectedGroupKey = null;
-            await Folder.NewFolder(folder);
+            await Folder.SetProjectsToFolder(folder);
+            Folder.State.SetCalculation(null, null, folder);
             await MarkOpenedAsync(GetFolderKey(folder));
             await SaveLastSelection(folder);
+        }
+
+        // Folder-structure row click: select the folder and, for folders that have
+        // children, toggle expand/collapse on the whole row (same result as the
+        // chevron). Empty folders are only selected — never expanded.
+        private async Task SeFolder(FolderMVVM folder)
+        {
+            await SelectFolder(folder);
+
+            folder.ShowProjects = FolderHasChildren(folder) && !folder.ShowProjects;
         }
 
         private async Task SaveLastSelection(FolderMVVM folder, ListProjectMVVM? project = null, ListCalculationMVVM? calculation = null)
@@ -406,7 +419,8 @@ namespace ProjectManagement.Client.Pages.Folder
             }
 
             await Folder.SetCalcsToProject(project);
-            project.ShowCalculations = true;
+            // Only expand a restored project if it has calculations to show.
+            project.ShowCalculations = ProjectHasChildren(project);
             Folder.State.SetCalculation(null, project, folder);
 
             if (!selection.CalculationId.HasValue)
@@ -480,16 +494,27 @@ namespace ProjectManagement.Client.Pages.Folder
             AddMissingManualOrderSnapshot(project);
         }
 
-        private async Task SetProject(FolderMVVM folder, ListProjectMVVM project)
+        // Selects the project (loads its calculations + shows it in the right panel)
+        // without touching its expand/collapse state.
+        private async Task SelectProject(FolderMVVM folder, ListProjectMVVM project)
         {
             _selectedGroupKey = null;
             await Folder.SetCalcsToProject(project);
             AddMissingManualOrderSnapshot(folder);
             AddMissingManualOrderSnapshot(project);
             Folder.State.SetCalculation(null, project, folder);
-            project.ShowCalculations = true;
             await MarkOpenedAsync(GetProjectKey(project));
             await SaveLastSelection(folder, project, null);
+        }
+
+        // Folder-structure row click: select the project and, for projects that have
+        // calculations, toggle expand/collapse on the whole row (same result as the
+        // chevron). Empty projects are only selected — never expanded.
+        private async Task SetProject(FolderMVVM folder, ListProjectMVVM project)
+        {
+            await SelectProject(folder, project);
+
+            project.ShowCalculations = ProjectHasChildren(project) && !project.ShowCalculations;
         }
 
         private async Task NewCalculations(FolderMVVM folder, ListProjectMVVM project, ListCalculationMVVM calculation)
@@ -745,6 +770,19 @@ namespace ProjectManagement.Client.Pages.Folder
             calculation.StartDate == default ? null : calculation.StartDate;
 
         private bool IsNodeLoading(string key) => _loadingNodeKeys.Contains(key);
+
+        // A node only gets an expand chevron / expanded-state when it actually has
+        // children. Before the children are lazily loaded we rely on the count that
+        // came with the list; afterwards we trust the loaded collection.
+        private static bool FolderHasChildren(FolderMVVM folder) =>
+            folder.ProjectsLoaded
+                ? (folder.Projects?.Count ?? 0) > 0
+                : folder.ProjectCount > 0;
+
+        private static bool ProjectHasChildren(ListProjectMVVM project) =>
+            project.CalculationsLoaded
+                ? (project.Calculations?.Count ?? 0) > 0
+                : project.CalculationCount > 0;
 
         private bool IsGroupExpanded(string key) => !_collapsedGroupKeys.Contains(key);
 
@@ -1495,7 +1533,9 @@ namespace ProjectManagement.Client.Pages.Folder
 
         private async Task CreateCalcFromProjectTreeAsync(FolderMVVM folder, ListProjectMVVM project)
         {
-            await SetProject(folder, project);
+            // Select the project (right panel) without toggling its expand state;
+            // expansion is handled once the calculation has actually been created.
+            await SelectProject(folder, project);
 
             Modal.ShowComponent<CalculationFormUI>(
                 AppLoc[LocalizerConst.New, CalcResource.calculation],
@@ -1509,6 +1549,8 @@ namespace ProjectManagement.Client.Pages.Folder
                             {
                                 project.CalculationsLoaded = false;
                                 await Folder.SetCalcsToProject(project);
+                                // The project now has a calculation — expand it so the new row shows.
+                                project.ShowCalculations = ProjectHasChildren(project);
                                 UoWService.Folder.State.Notify();
                             }
                             Modal.Close();

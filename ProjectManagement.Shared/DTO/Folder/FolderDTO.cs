@@ -19,5 +19,12 @@ namespace ProjectManagement.Shared.DTO.Folder
         public bool IsVisible { get; set; } = true;
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
+
+        /// <summary>
+        /// Number of projects in the folder that match the current archived filter.
+        /// Lets the tree decide whether a folder has children (and thus an expand
+        /// chevron) before its projects have been lazily loaded.
+        /// </summary>
+        public int ProjectCount { get; set; }
     }
 }

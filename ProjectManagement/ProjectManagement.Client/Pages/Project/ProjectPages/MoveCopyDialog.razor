@@ -1,5 +1,6 @@
 @using ProjectManagement.Client.Shared.MVVM.Calculation
 @using ProjectManagement.Client.Shared.MVVM.Folder
+@using ProjectManagement.Client.Shared.SharedComponent
 @using ProjectManagement.Shared.DTO.Folder
 @using ProjectManagement.Shared.DTO.Project
 
@@ -7,7 +8,7 @@
 
 <div class="space-y-3 text-slate-800 dark:text-slate-100">
 
-    @* ── Info box ──────────────────────────────────────────── *@
+    @* ── Info box: what we act on + where it currently lives ──── *@
     <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm dark:border-slate-800 dark:bg-slate-950">
         <div class="font-semibold">@GetTitle()</div>
         <div class="mt-1 text-xs text-slate-500 dark:text-slate-400">@GetCurrentLocation()</div>
@@ -27,44 +28,41 @@
         </div>
     }
 
-    @* ── Selectors grid ────────────────────────────────────── *@
+    @* ── Action + place selectors ──────────────────────────── *@
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
 
-        @* Action *@
+        @* Action (Move / Copy) *@
         <div>
             <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@AppLoc["action"]</label>
-            <select class="@SelectClass" @bind="Operation">
-                <option value="@MoveCopyOperation.Move">@AppLoc["move"]</option>
-                <option value="@MoveCopyOperation.Copy">@AppLoc["copyAction"]</option>
-            </select>
+            <MhdFormSelect TValue="string"
+                           Value="Operation"
+                           ValueChanged="OnOperationChanged"
+                           Options="ActionOptions" />
         </div>
 
-        @* Target department *@
+        @* Department *@
         <div>
-            <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@AppLoc["targetDepartment"]</label>
-            <select class="@SelectClass" value="@_targetDepartmentValue" @onchange="OnDepartmentChanged">
-                <option value="">@AppLoc["selectDepartment"]</option>
-                @foreach (var department in Folder.State.Departments)
-                {
-                    <option value="@department.Id">@department.Name</option>
-                }
-            </select>
+            <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@DepartmentLabel</label>
+            <MhdFormSelect TValue="string"
+                           Value="_targetDepartmentValue"
+                           ValueChanged="OnDepartmentChanged"
+                           Options="DepartmentOptions"
+                           Placeholder="@AppLoc["selectDepartment"]" />
         </div>
 
-        @* Target folder (Project + Calculation) *@
+        @* Folder (Project + Calculation) *@
         @if (ItemKind != MoveCopyItemKind.Folder)
         {
             <div>
                 <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                    @AppLoc["targetFolder"] <span class="text-amber-500">*</span>
+                    @FolderLabel <span class="text-amber-500">*</span>
                 </label>
-                <select class="@SelectClass" value="@_targetFolderValue" @onchange="OnFolderChanged" disabled="@(!_targetFolders.Any())">
-                    <option value="">@AppLoc["selectFolder"]</option>
-                    @foreach (var folder in _targetFolders)
-                    {
-                        <option value="@folder.Id">@folder.Name</option>
-                    }
-                </select>
+                <MhdFormSelect TValue="string"
+                               Value="_targetFolderValue"
+                               ValueChanged="OnFolderChanged"
+                               Options="FolderOptions"
+                               Placeholder="@AppLoc["selectFolder"]"
+                               Disabled="@(!_targetFolders.Any())" />
                 @if (_targetFolders.Any() && string.IsNullOrEmpty(_targetFolderValue) && ItemKind == MoveCopyItemKind.Project)
                 {
                     <p class="mt-1 text-[11px] text-amber-600 dark:text-amber-400">
@@ -74,20 +72,19 @@
             </div>
         }
 
-        @* Target project (Calculation only) *@
+        @* Project (Calculation only) *@
         @if (ItemKind == MoveCopyItemKind.Calculation)
         {
             <div>
                 <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                    @AppLoc["targetProject"] <span class="text-amber-500">*</span>
+                    @ProjectLabel <span class="text-amber-500">*</span>
                 </label>
-                <select class="@SelectClass" @bind="_targetProjectValue" disabled="@(!_targetProjects.Any())">
-                    <option value="">@AppLoc["selectProject"]</option>
-                    @foreach (var project in _targetProjects)
-                    {
-                        <option value="@project.Id">@project.Name</option>
-                    }
-                </select>
+                <MhdFormSelect TValue="string"
+                               Value="_targetProjectValue"
+                               ValueChanged="OnProjectChanged"
+                               Options="ProjectOptions"
+                               Placeholder="@AppLoc["selectProject"]"
+                               Disabled="@(!_targetProjects.Any())" />
                 @if (_targetProjects.Any() && string.IsNullOrEmpty(_targetProjectValue))
                 {
                     <p class="mt-1 text-[11px] text-amber-600 dark:text-amber-400">
@@ -99,59 +96,95 @@
     </div>
 
     @* ── Copy-only options ─────────────────────────────────── *@
-    @if (ItemKind == MoveCopyItemKind.Folder && Operation == MoveCopyOperation.Copy)
+    @if (Operation == MoveCopyOperation.Copy)
     {
-        <label class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-2 text-sm dark:border-slate-800 dark:bg-slate-950">
-            <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800" @bind="_includeChildren" />
-            <span>@AppLoc["copyFolderWithProjectsCalculations"]</span>
-        </label>
-    }
-
-    @if (ItemKind == MoveCopyItemKind.Project && Operation == MoveCopyOperation.Copy)
-    {
-        <label class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-2 text-sm dark:border-slate-800 dark:bg-slate-950">
-            <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800" @bind="_includeChildren" />
-            <span>@AppLoc["copyProjectWithCalculations"]</span>
-        </label>
-    }
-
-    @if (ItemKind == MoveCopyItemKind.Calculation && Operation == MoveCopyOperation.Copy)
-    {
-        <label class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-2 text-sm dark:border-slate-800 dark:bg-slate-950">
-            <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800" @bind="_copyIncome" />
-            <span>@AppLoc["copyCalculationWithIncome"]</span>
-        </label>
-    }
-
-    @* ── Target summary ────────────────────────────────────── *@
-    <div class="rounded-lg border border-slate-200 bg-white p-3 text-xs dark:border-slate-800 dark:bg-slate-950">
-        <div class="mb-1.5 font-semibold text-slate-800 dark:text-slate-100">@AppLoc["selectedTarget"]</div>
-        @{
-            var deptDisplay = Folder.State.Departments.FirstOrDefault(x => x.Id.ToString() == _targetDepartmentValue)?.Name;
-            var folderDisplay = _targetFolders.FirstOrDefault(x => x.Id.ToString() == _targetFolderValue)?.Name;
-            var projectDisplay = _targetProjects.FirstOrDefault(x => x.Id.ToString() == _targetProjectValue)?.Name;
+        @if (ItemKind == MoveCopyItemKind.Folder)
+        {
+            <label class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-2 text-sm dark:border-slate-800 dark:bg-slate-950">
+                <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800" @bind="_includeChildren" />
+                <span>@AppLoc["copyFolderWithProjectsCalculations"]</span>
+            </label>
         }
-        <div class="text-slate-600 dark:text-slate-300">
-            <span class="text-slate-400 dark:text-slate-500">@AppLoc["targetDepartment"]:</span>
-            @(deptDisplay ?? AppLoc["notSelectedNeuter"].Value)
+        else if (ItemKind == MoveCopyItemKind.Project)
+        {
+            <label class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-2 text-sm dark:border-slate-800 dark:bg-slate-950">
+                <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800" @bind="_includeChildren" />
+                <span>@AppLoc["copyProjectWithCalculations"]</span>
+            </label>
+        }
+        else if (ItemKind == MoveCopyItemKind.Calculation)
+        {
+            @* Income values only make sense for a copy — never shown for Move. *@
+            <label class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-2 text-sm dark:border-slate-800 dark:bg-slate-950">
+                <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800" @bind="_copyIncome" />
+                <span>@AppLoc["copyCalculationWithIncome"]</span>
+            </label>
+        }
+    }
+
+    @* ── Location summary ──────────────────────────────────── *@
+    @* One place/value row per line: "Label: value" (or a soft "not selected" hint). *@
+    @{
+        RenderFragment LocationRows(string? department, string? folder, string? project, bool highlightMissing) =>
+        @<text>
+            <div class="text-slate-600 dark:text-slate-300">
+                <span class="text-slate-400 dark:text-slate-500">@AppLoc["department"]:</span>
+                @(department ?? AppLoc["notSelectedNeuter"].Value)
+            </div>
+            @if (ItemKind != MoveCopyItemKind.Folder)
+            {
+                <div class="mt-0.5 @(highlightMissing && string.IsNullOrEmpty(folder) ? "text-amber-600 dark:text-amber-400" : "text-slate-600 dark:text-slate-300")">
+                    <span class="text-slate-400 dark:text-slate-500">@AppLoc["folder"]:</span>
+                    @(folder ?? AppLoc["notSelectedCommon"].Value)
+                </div>
+            }
+            @if (ItemKind == MoveCopyItemKind.Calculation)
+            {
+                <div class="mt-0.5 @(highlightMissing && string.IsNullOrEmpty(project) ? "text-amber-600 dark:text-amber-400" : "text-slate-600 dark:text-slate-300")">
+                    <span class="text-slate-400 dark:text-slate-500">@AppLoc["project"]:</span>
+                    @(project ?? AppLoc["notSelectedNeuter"].Value)
+                </div>
+            }
+        </text>;
+
+        var deptDisplay = Folder.State.Departments.FirstOrDefault(x => x.Id.ToString() == _targetDepartmentValue)?.Name;
+        var folderDisplay = _targetFolders.FirstOrDefault(x => x.Id.ToString() == _targetFolderValue)?.Name;
+        var projectDisplay = _targetProjects.FirstOrDefault(x => x.Id.ToString() == _targetProjectValue)?.Name;
+    }
+
+    @if (Operation == MoveCopyOperation.Move)
+    {
+        @* Move shows both where it is now and where it goes, so the change is explicit. *@
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <div class="rounded-lg border border-slate-200 bg-white p-3 text-xs dark:border-slate-800 dark:bg-slate-950">
+                <div class="mb-1.5 font-semibold text-slate-800 dark:text-slate-100">@AppLoc["currentLocationHeading"]</div>
+                @LocationRows(CurrentDepartmentName, SourceFolder?.Name, SourceProject?.Name, highlightMissing: false)
+            </div>
+            <div class="rounded-lg border border-sky-200 bg-sky-50/60 p-3 text-xs dark:border-sky-900/60 dark:bg-sky-950/20">
+                <div class="font-semibold text-slate-800 dark:text-slate-100">@AppLoc["newLocation"]</div>
+                <div class="mb-1.5 text-slate-500 dark:text-slate-400">@MoveLeadLine</div>
+                @LocationRows(deptDisplay, folderDisplay, projectDisplay, highlightMissing: true)
+            </div>
         </div>
-        @if (ItemKind != MoveCopyItemKind.Folder)
-        {
-            <div class="mt-0.5 @(string.IsNullOrEmpty(_targetFolderValue) ? "text-amber-600 dark:text-amber-400" : "text-slate-600 dark:text-slate-300")">
-                <span class="text-slate-400 dark:text-slate-500">@AppLoc["targetFolder"]:</span>
-                @(folderDisplay ?? AppLoc["notSelectedCommon"].Value)
-            </div>
-        }
-        @if (ItemKind == MoveCopyItemKind.Calculation)
-        {
-            <div class="mt-0.5 @(string.IsNullOrEmpty(_targetProjectValue) ? "text-amber-600 dark:text-amber-400" : "text-slate-600 dark:text-slate-300")">
-                <span class="text-slate-400 dark:text-slate-500">@AppLoc["targetProject"]:</span>
-                @(projectDisplay ?? AppLoc["notSelectedNeuter"].Value)
-            </div>
-        }
-    </div>
+    }
+    else
+    {
+        <div class="rounded-lg border border-slate-200 bg-white p-3 text-xs dark:border-slate-800 dark:bg-slate-950">
+            <div class="font-semibold text-slate-800 dark:text-slate-100">@AppLoc["selectedTarget"]</div>
+            <div class="mb-1.5 text-slate-500 dark:text-slate-400">@AppLoc["copyCreatedIn"]</div>
+            @LocationRows(deptDisplay, folderDisplay, projectDisplay, highlightMissing: true)
+        </div>
+    }
 
-    @* ── Action buttons ────────────────────────────────────── *@
+    @* ── "Already in place" guard (Move only) ──────────────── *@
+    @if (IsSameAsCurrent)
+    {
+        <div class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
+            @SamePlaceMessage
+        </div>
+    }
+
+    @* ── Action buttons: Cancel (left) · primary (right) ───── *@
     <div class="flex justify-end gap-2">
         <button type="button"
                 class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
@@ -175,8 +208,6 @@
     [Parameter] public ListCalculationMVVM? SourceCalculation { get; set; }
     [Parameter] public EventCallback OnCompleted { get; set; }
 
-    private const string SelectClass = "w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-800 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:disabled:bg-slate-900/60 dark:disabled:text-slate-400";
-
     private string _targetDepartmentValue = string.Empty;
     private string _targetFolderValue = string.Empty;
     private string _targetProjectValue = string.Empty;
@@ -187,11 +218,69 @@
     private List<FolderMVVM> _targetFolders = [];
     private List<ListProjectMVVM> _targetProjects = [];
 
+    // ── Operation-aware labels ────────────────────────────────
+    private bool IsCopy => Operation == MoveCopyOperation.Copy;
+
+    private string DepartmentLabel => IsCopy ? AppLoc["targetDepartment"] : AppLoc["moveToDepartment"];
+    private string FolderLabel => IsCopy ? AppLoc["targetFolder"] : AppLoc["moveToFolder"];
+    private string ProjectLabel => IsCopy ? AppLoc["targetProject"] : AppLoc["moveToProject"];
+
+    private string MoveLeadLine => ItemKind switch
+    {
+        MoveCopyItemKind.Calculation => AppLoc["calculationMovedTo"],
+        MoveCopyItemKind.Project => AppLoc["projectMovedTo"],
+        _ => AppLoc["folderMovedTo"]
+    };
+
+    // ── Dropdown options (same model the project form uses) ───
+    private IEnumerable<MhdSelectItem<string>> ActionOptions =>
+    [
+        new() { Value = MoveCopyOperation.Move, Label = AppLoc["move"] },
+        new() { Value = MoveCopyOperation.Copy, Label = AppLoc["copyAction"] },
+    ];
+
+    private IEnumerable<MhdSelectItem<string>> DepartmentOptions =>
+        Folder.State.Departments.Select(d => new MhdSelectItem<string> { Value = d.Id.ToString(), Label = d.Name });
+
+    private IEnumerable<MhdSelectItem<string>> FolderOptions =>
+        _targetFolders.Select(f => new MhdSelectItem<string> { Value = f.Id.ToString(), Label = f.Name });
+
+    private IEnumerable<MhdSelectItem<string>> ProjectOptions =>
+        _targetProjects.Select(p => new MhdSelectItem<string> { Value = p.Id.ToString(), Label = p.Name });
+
+    private string? CurrentDepartmentName =>
+        Folder.State.Departments.FirstOrDefault(d => d.Id == Folder.State.SelectedDepartmentId)?.Name;
+
     private bool IsArchived =>
         SourceFolder?.IsVisible == false ||
         SourceProject?.IsArchived == true;
 
-    private bool IsConfirmDisabled => _isBusy || !HasRequiredTargets();
+    // A Move onto the exact same place is a no-op and must be blocked.
+    private bool IsSameAsCurrent
+    {
+        get
+        {
+            if (IsCopy)
+                return false;
+
+            return ItemKind switch
+            {
+                MoveCopyItemKind.Calculation => SourceProject is not null && _targetProjectValue == SourceProject.Id.ToString(),
+                MoveCopyItemKind.Project => SourceFolder is not null && _targetFolderValue == SourceFolder.Id.ToString(),
+                MoveCopyItemKind.Folder => Folder.State.SelectedDepartmentId is { } current && _targetDepartmentValue == current.ToString(),
+                _ => false
+            };
+        }
+    }
+
+    private string SamePlaceMessage => ItemKind switch
+    {
+        MoveCopyItemKind.Calculation => AppLoc["calculationAlreadyInPlace"],
+        MoveCopyItemKind.Project => AppLoc["projectAlreadyInFolder"],
+        _ => AppLoc["folderAlreadyInDepartment"]
+    };
+
+    private bool IsConfirmDisabled => _isBusy || !HasRequiredTargets() || IsSameAsCurrent;
 
     private bool HasRequiredTargets() => ItemKind switch
     {
@@ -203,7 +292,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _targetDepartmentValue = Folder.State.Departments.FirstOrDefault()?.Id.ToString() ?? string.Empty;
+        _targetDepartmentValue = (Folder.State.SelectedDepartmentId
+            ?? Folder.State.Departments.FirstOrDefault()?.Id)?.ToString() ?? string.Empty;
         await LoadTargetFoldersAsync();
 
         if (SourceFolder is not null && ItemKind != MoveCopyItemKind.Folder)
@@ -213,24 +303,31 @@
             _targetProjectValue = SourceProject.Id.ToString();
 
         await LoadTargetProjectsAsync();
-        SetCapabilityMessage();
     }
 
-    private async Task OnDepartmentChanged(ChangeEventArgs e)
+    private void OnOperationChanged(string? value)
     {
-        _targetDepartmentValue = e.Value?.ToString() ?? string.Empty;
+        Operation = string.IsNullOrEmpty(value) ? MoveCopyOperation.Move : value;
+    }
+
+    private async Task OnDepartmentChanged(string? value)
+    {
+        _targetDepartmentValue = value ?? string.Empty;
         _targetFolderValue = string.Empty;
         _targetProjectValue = string.Empty;
         await LoadTargetFoldersAsync();
-        SetCapabilityMessage();
     }
 
-    private async Task OnFolderChanged(ChangeEventArgs e)
+    private async Task OnFolderChanged(string? value)
     {
-        _targetFolderValue = e.Value?.ToString() ?? string.Empty;
+        _targetFolderValue = value ?? string.Empty;
         _targetProjectValue = string.Empty;
         await LoadTargetProjectsAsync();
-        SetCapabilityMessage();
+    }
+
+    private void OnProjectChanged(string? value)
+    {
+        _targetProjectValue = value ?? string.Empty;
     }
 
     private async Task LoadTargetFoldersAsync()
@@ -251,14 +348,9 @@
         _targetProjects = await Repo.Project.GetByFolderIdAsync(folderId, includeArchived: true);
     }
 
-    private void SetCapabilityMessage()
-    {
-        _message = string.Empty;
-    }
-
     private async Task ExecuteAsync()
     {
-        if (_isBusy || !HasRequiredTargets())
+        if (_isBusy || !HasRequiredTargets() || IsSameAsCurrent)
             return;
 
         _isBusy = true;
@@ -274,7 +366,7 @@
                 _ => false
             };
 
-            MHD.Notifications(Operation == MoveCopyOperation.Copy ? ToastType.Add : ToastType.Update, result);
+            MHD.Notifications(IsCopy ? ToastType.Add : ToastType.Update, result);
 
             if (result)
             {
@@ -383,7 +475,7 @@
             _ => OperationLabel
         };
 
-    private string OperationLabel => Operation == MoveCopyOperation.Copy ? AppLoc["copyAction"] : AppLoc["move"];
+    private string OperationLabel => IsCopy ? AppLoc["copyAction"] : AppLoc["move"];
 
     private string GetCurrentLocation()
     {

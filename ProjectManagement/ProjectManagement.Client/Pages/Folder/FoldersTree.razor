@@ -119,8 +119,8 @@
              tabindex="0"
              class="@string.Join(" ", folderClasses)">
 
-            <!-- Expand folder -->
-            @if (folder.ProjectsLoaded && (folder.Projects?.Count ?? 0) == 0)
+            <!-- Expand folder – chevron only when the folder actually has children -->
+            @if (!FolderHasChildren(folder))
             {
                 <span class="h-4 w-4 shrink-0"></span>
             }
@@ -234,8 +234,8 @@
                               style="background-color:@GetProjectStatusColor(project)"
                               title="@GetProjectStatusTitle(project)"></span>
 
-                        <!-- Expand project -->
-                        @if (project.CalculationsLoaded && (project.Calculations?.Count ?? 0) == 0)
+                        <!-- Expand project – chevron only when the project actually has calculations -->
+                        @if (!ProjectHasChildren(project))
                         {
                             <span class="h-4 w-4 shrink-0"></span>
                         }
@@ -429,7 +429,7 @@ else if (GroupingMode == ProjectTreeGroupingMode.Projects)
                     <div @key="project.Id"
                          @oncontextmenu:preventDefault
                          @oncontextmenu="async () => await ContextProject(projFolder, project)"
-                         @onclick="async () => await SetProject(projFolder, project)"
+                         @onclick="async () => await SelectProject(projFolder, project)"
                          role="button"
                          tabindex="0"
                          class="@string.Join(" ", projViewClasses)">
@@ -488,7 +488,7 @@ else
                     <div @key="@($"{group.Key}-{folder.Id}")"
                          @oncontextmenu:preventDefault
                          @oncontextmenu="() => Context(folder)"
-                         @onclick="async () => await SeFolder(folder)"
+                         @onclick="async () => await SelectFolder(folder)"
                          role="button"
                          tabindex="0"
                          class="@string.Join(" ", groupedFolderClasses)">
@@ -542,7 +542,7 @@ else
                                     groupedProjectClasses.Add(TreeSelectedRowClass);
 
                                 <div @key="@($"{group.Key}-{folder.Id}-{project.Id}")"
-                                     @onclick="async () => await SetProject(folder, project)"
+                                     @onclick="async () => await SelectProject(folder, project)"
                                      role="button"
                                      tabindex="0"
                                      class="@string.Join(" ", groupedProjectClasses)">
@@ -623,7 +623,7 @@ else
                     if (f2Archived) f2Classes.Add("border border-slate-200 bg-slate-100/80 text-slate-500 grayscale dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-400");
                     if (f2Selected) f2Classes.Add(TreeSelectedRowClass);
 
-                    <div @key="@($"{group.Key}-f2-{f2.Id}")" @oncontextmenu:preventDefault @oncontextmenu="() => Context(f2)" @onclick="async () => await SeFolder(f2)" role="button" tabindex="0" class="@string.Join(" ", f2Classes)">
+                    <div @key="@($"{group.Key}-f2-{f2.Id}")" @oncontextmenu:preventDefault @oncontextmenu="() => Context(f2)" @onclick="async () => await SelectFolder(f2)" role="button" tabindex="0" class="@string.Join(" ", f2Classes)">
                         <button @onclick:stopPropagation="true" @onclick="() => ToggleGroup(f2Key)" class="flex h-4 w-4 shrink-0 items-center justify-center rounded text-slate-400 transition-colors duration-150 group-hover:bg-slate-100 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:bg-slate-800/60 dark:group-hover:text-slate-300" title="@ResourceLoc.folder">
                             <svg xmlns="http://www.w3.org/2000/svg" class="@GetGroupToggleClass(f2Key)" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                         </button>
@@ -664,7 +664,7 @@ else
                     if (p3Archived) p3Classes.Add("border border-slate-200 bg-slate-100/80 text-slate-500 grayscale dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-400");
                     if (p3Selected) p3Classes.Add(TreeSelectedRowClass);
 
-                    <div @key="@($"{group.Key}-p3-{p3.Id}")" @onclick="async () => await SetProject(pg3.Folder, p3)" role="button" tabindex="0" class="@string.Join(" ", p3Classes)">
+                    <div @key="@($"{group.Key}-p3-{p3.Id}")" @onclick="async () => await SelectProject(pg3.Folder, p3)" role="button" tabindex="0" class="@string.Join(" ", p3Classes)">
                         <button @onclick:stopPropagation="true" @onclick="() => ToggleGroup(p3Key)" class="flex h-4 w-4 shrink-0 items-center justify-center rounded text-slate-400 transition-colors duration-150 group-hover:bg-sky-100 group-hover:text-sky-700 dark:text-slate-500 dark:group-hover:bg-sky-950/60 dark:group-hover:text-sky-300" title="@CalcResource.project">
                             <svg xmlns="http://www.w3.org/2000/svg" class="@GetGroupToggleClass(p3Key)" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                         </button>

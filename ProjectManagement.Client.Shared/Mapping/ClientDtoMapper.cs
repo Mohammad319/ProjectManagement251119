@@ -309,6 +309,7 @@ namespace ProjectManagement.Client.Shared.Mapping
                 IsVisible = dto.IsVisible,
                 CreatedAt = dto.CreatedAt,
                 UpdatedAt = dto.UpdatedAt,
+                ProjectCount = dto.ProjectCount,
                 Projects = [],
             };
         }

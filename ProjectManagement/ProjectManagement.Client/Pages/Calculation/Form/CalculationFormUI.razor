@@ -9,6 +9,7 @@
 @using System.Globalization
 @using ProjectManagement.Shared.Policies
 @using BlazorMHD.UI.Core.DesignSystem
+@using ProjectManagement.Client.Shared.SharedComponent
 @using NavTabItem = BlazorMHD.UI.Core.Navigation.TabItem
 
 @inherits AppComponentBase
@@ -100,14 +101,11 @@
                                     </div>
                                     <div>
                                         <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@AppLoc["calculationRole"]</label>
-                                        <InputSelect class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
-                                                     @bind-Value="@CalculationUpdate.CalculationRole"
-                                                     disabled="@IsContentLocked">
-                                            @foreach (var role in CalculationRoles)
-                                            {
-                                                <option value="@role">@GetCalculationRoleLabel(role)</option>
-                                            }
-                                        </InputSelect>
+                                        <MhdFormSelect TValue="CalculationRole"
+                                                       @bind-Value="CalculationUpdate.CalculationRole"
+                                                       Options="CalculationRoleOptions"
+                                                       Disabled="@IsContentLocked"
+                                                       Title="@AppLoc["calculationRole"]" />
                                     </div>
                                     <div>
                                         <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@AppLoc["calculationType"]</label>
@@ -243,27 +241,21 @@
                                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                         <div>
                                             <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@AppLoc["calculationResponsible"]</label>
-                                            <InputSelect class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
-                                                         @bind-Value="CalculationResponsible"
-                                                         disabled="@CalculationUpdate.IsLocked">
-                                                <option value="">Välj ansvarig</option>
-                                                @foreach (var user in ResponsibilityUserOptions)
-                                                {
-                                                    <option value="@user">@user</option>
-                                                }
-                                            </InputSelect>
+                                            <MhdFormSelect TValue="string"
+                                                           @bind-Value="CalculationResponsible"
+                                                           Options="ResponsibilityUserSelectOptions"
+                                                           Placeholder="Välj ansvarig"
+                                                           Disabled="@CalculationUpdate.IsLocked"
+                                                           Title="@AppLoc["calculationResponsible"]" />
                                         </div>
                                         <div>
                                             <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@AppLoc["reviewer"]</label>
-                                            <InputSelect class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
-                                                         @bind-Value="CalculationUpdate.Inspector"
-                                                         disabled="@CalculationUpdate.IsLocked">
-                                                <option value="">Ingen granskare</option>
-                                                @foreach (var user in ResponsibilityUserOptions)
-                                                {
-                                                    <option value="@user">@user</option>
-                                                }
-                                            </InputSelect>
+                                            <MhdFormSelect TValue="string"
+                                                           @bind-Value="CalculationUpdate.Inspector"
+                                                           Options="ResponsibilityUserSelectOptions"
+                                                           Placeholder="Ingen granskare"
+                                                           Disabled="@CalculationUpdate.IsLocked"
+                                                           Title="@AppLoc["reviewer"]" />
                                         </div>
                                         @if (CalculationUpdate.IsLocked)
                                         {
@@ -791,6 +783,14 @@
         CalculationRole.Custom => AppLoc["calcRoleCustom"].Value,
         _ => AppLoc["calcRoleMainBid"].Value
     };
+
+    // Option models for the shared MhdFormSelect dropdowns (same component the
+    // project form uses), so every form dropdown shares one modern look.
+    private IEnumerable<MhdSelectItem<CalculationRole>> CalculationRoleOptions =>
+        CalculationRoles.Select(role => new MhdSelectItem<CalculationRole> { Value = role, Label = GetCalculationRoleLabel(role) });
+
+    private IEnumerable<MhdSelectItem<string>> ResponsibilityUserSelectOptions =>
+        ResponsibilityUserOptions.Select(user => new MhdSelectItem<string> { Value = user, Label = user });
 
     private bool CanCreateProductionCalculation =>
         Calculation.Id > 0 &&

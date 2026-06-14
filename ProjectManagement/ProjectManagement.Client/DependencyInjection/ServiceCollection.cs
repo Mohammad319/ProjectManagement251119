@@ -17,6 +17,7 @@ namespace ProjectManagement.Client.DependencyInjection
             services.AddScoped<CalculationListViewPreference>();
             services.AddScoped<ProjectListViewPreference>();
             services.AddScoped<ListSavedFilterStorage>();
+            services.AddScoped<ListSavedColumnViewStorage>();
             services.AddScoped<ICalculationTableCoordinator, CalculationTableCoordinator>();
             services.AddScoped<ResourceService>();
             services.AddScoped<TaskService>();
