@@ -23,7 +23,7 @@
     private Task ShowReportsMenu()
     {
         var items = MenuItems
-            .Select(item => new MenuItem
+            .Select(item => new ContextMenuItem
             {
                 Label = item.Label,
                 OnClickAsync = () =>

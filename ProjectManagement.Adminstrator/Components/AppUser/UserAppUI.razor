@@ -1,4 +1,4 @@
-﻿@using ContextMenuMHD
+﻿@using BlazorMHD.UI.Core.Navigation
 @using Microsoft.AspNetCore.Components.Authorization
 @using ProjectManagement.Adminstrator.Services.Users
 @using ProjectManagement.Shared.Models.Account
@@ -106,8 +106,8 @@
 
         await ContextService.ShowMenuAsync(new()
         {
-            new MenuItem { Label = $"✏️ {ResourceApp.update}", OnClickAsync = () => { UpdateUser(item); return Task.CompletedTask; } },
-            new MenuItem { Label = $"🗑️ {ResourceApp.delete}", OnClickAsync = () => { Delete_Click(item); return Task.CompletedTask; } }
+            new ContextMenuItem { Label = $"✏️ {ResourceApp.update}", OnClickAsync = () => { UpdateUser(item); return Task.CompletedTask; } },
+            new ContextMenuItem { Label = $"🗑️ {ResourceApp.delete}", OnClickAsync = () => { Delete_Click(item); return Task.CompletedTask; } }
         });
     }
 

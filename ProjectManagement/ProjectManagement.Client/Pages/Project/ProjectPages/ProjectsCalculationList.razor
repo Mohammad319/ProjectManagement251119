@@ -1955,7 +1955,7 @@
 
     async Task Context(ListCalculationMVVM item)
     {
-        var list = new List<MenuItem>();
+        var list = new List<ContextMenuItem>();
 
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;

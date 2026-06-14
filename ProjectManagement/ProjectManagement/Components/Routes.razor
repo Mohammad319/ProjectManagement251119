@@ -1,7 +1,6 @@
 @using BlazorMHD.UI.Components.Feedback.Dialog
 @using BlazorMHD.UI.Components.Feedback.MessageBox
 @using BlazorMHD.UI.Components.Feedback.Toast
-@using ContextMenuMHD
 @using ProjectManagement.Components.Account.Shared
 @using ProjectManagement.Shared
 
@@ -27,8 +26,7 @@
     </NotFound>
 </Router>
 
-<ContextMenu @rendermode="InteractiveServer" />
-<ContextMenu @rendermode="InteractiveWebAssembly" />
+@* ContextMenu is now hosted inside <BlazorMHD.UI.MHD/> below (both rendermodes) *@
 @* <MhdDialog @rendermode="InteractiveServer" />
 <MhdDialog @rendermode="InteractiveWebAssembly" />
 

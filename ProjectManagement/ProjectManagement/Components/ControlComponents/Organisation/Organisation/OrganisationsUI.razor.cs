@@ -55,7 +55,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
 
         private async Task Context(ShortListOrganisationDTO item)
         {
-            var list = new List<MenuItem>
+            var list = new List<ContextMenuItem>
             {
                 new()
                 {

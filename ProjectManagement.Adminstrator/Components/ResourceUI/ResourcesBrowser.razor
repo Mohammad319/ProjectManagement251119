@@ -1,4 +1,4 @@
-@using ContextMenuMHD
+@using BlazorMHD.UI.Core.Navigation
 @using Microsoft.EntityFrameworkCore
 @using TaskResourceBlueprints.Entities
 @using TaskResourceBlueprints.Entities.Resources
@@ -124,7 +124,7 @@
 
     async Task ContextF(ResourceCategory item)
     {
-        var list = new List<MenuItem>()
+        var list = new List<ContextMenuItem>()
             {
                 new() { Label = $"➕ Resource", OnClickAsync = () => {UpdateForm(new ResourceDefinition(){FolderId = item.Id}); return Task.CompletedTask; } },
                 new() { Label = $"➕ Subfolder", OnClickAsync = () => {AddFolder(item.Id); return Task.CompletedTask; } },

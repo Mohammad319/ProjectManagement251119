@@ -81,7 +81,7 @@ namespace ProjectManagement.Client.Pages.Folder
 
         private async Task ContextHelaAvdelning()
         {
-            var list = new List<MenuItem>();
+            var list = new List<ContextMenuItem>();
 
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             var user = authState.User;
@@ -1359,7 +1359,7 @@ namespace ProjectManagement.Client.Pages.Folder
 
         private async Task Context(FolderMVVM item)
         {
-            List<MenuItem> list = [];
+            List<ContextMenuItem> list = [];
 
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             var user = authState.User;
@@ -1387,7 +1387,7 @@ namespace ProjectManagement.Client.Pages.Folder
 
         private async Task ContextProject(FolderMVVM folder, ListProjectMVVM project)
         {
-            List<MenuItem> list = [];
+            List<ContextMenuItem> list = [];
 
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             var user = authState.User;
@@ -1416,7 +1416,7 @@ namespace ProjectManagement.Client.Pages.Folder
 
         private async Task ContextCalc(FolderMVVM folder, ListProjectMVVM project, ListCalculationMVVM cal)
         {
-            List<MenuItem> list = [];
+            List<ContextMenuItem> list = [];
 
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             var user = authState.User;

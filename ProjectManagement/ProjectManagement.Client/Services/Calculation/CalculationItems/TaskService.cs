@@ -50,7 +50,7 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
 
         public async Task ContextMenu(TaskListMVVM task)
         {
-            List<MenuItem> list = context.BuildTaskContextMenu(task, () => Remove(task), async () => await Duplicate(task));
+            List<ContextMenuItem> list = context.BuildTaskContextMenu(task, () => Remove(task), async () => await Duplicate(task));
             await ContextMenuService.ShowMenuAsync(list);
         }
 

@@ -11,7 +11,7 @@ public static class ProjectWebUiServicesRegistrationExtensions
         services.AddLocalization();
 
         // خدمات UI مطلوبة داخل مشروع السيرفر نفسه
-        services.AddContextMenuMHD();
+        // ContextMenuService يُسجَّل ضمن AddBlazorMhdUI() (مدموج من ContextMenuMHD)
         services.AddScoped<MhdServices>();
 
         // Facades تمنع الـ Components من استهلاك repos الخاصة بالـ Client أو DbContext مباشرًا

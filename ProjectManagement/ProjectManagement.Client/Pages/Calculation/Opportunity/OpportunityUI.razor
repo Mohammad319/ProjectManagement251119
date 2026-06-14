@@ -154,7 +154,7 @@
 
         if (!(user.Identity?.IsAuthenticated == true && isInAnyRole)) return;
 
-        var list = new List<MenuItem>()
+        var list = new List<ContextMenuItem>()
         {
             new() {
                 Label = ResourceApp.edit,

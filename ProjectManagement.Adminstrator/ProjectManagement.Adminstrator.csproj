@@ -53,7 +53,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\..\..\Library\BlazorMHD\BlazorMHD.UI\BlazorMHD.UI.csproj" />
-    <ProjectReference Include="..\..\..\..\..\..\..\Library\ContextMenuMHD\ContextMenuMHD\ContextMenuMHD.csproj" />
     <ProjectReference Include="..\AuthPermissions\AuthPermissions.csproj" />
     <ProjectReference Include="..\TaskResourceBlueprints\TaskResourceBlueprints.csproj" />
     <ProjectReference Include="..\Persistence\Persistence.csproj" />

@@ -1,5 +1,4 @@
-﻿using ContextMenuMHD;
-using ProjectManagement.Adminstrator.Handless;
+﻿using ProjectManagement.Adminstrator.Handless;
 using ProjectManagement.Adminstrator.Services.MHDBlazor;
 using ProjectManagement.Adminstrator.Services.Synonyms;
 using ProjectManagement.Adminstrator.Services.Users;
@@ -24,7 +23,7 @@ namespace ProjectManagement.Adminstrator.DependencyInjection
             services.AddScoped<ITasksUserComputationServiceWasm, TasksUserComputationServiceWasm>();
             services.AddBlazorMhdUI();
             services.AddAuthorizationCore();
-            services.AddSingleton<ContextMenuService>();
+            // ContextMenuService is registered (scoped) by AddBlazorMhdUI() — merged from ContextMenuMHD
             services.AddLocalization();
             services.AddHttpContextAccessor();
             services.AddScoped<LocalizedIdentityEmailSender>();

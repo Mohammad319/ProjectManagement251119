@@ -1,5 +1,5 @@
 using BlazorMHD.UI.Components.Feedback.Dialog;
-﻿using ContextMenuMHD;
+﻿using BlazorMHD.UI.Core.Navigation;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using ProjectManagement.Adminstrator.Constants;
@@ -86,7 +86,7 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
 
         async Task Context(GetTenantsDTO item)
         {
-            var list = new List<MenuItem>
+            var list = new List<ContextMenuItem>
             {
                 new() { Label = $"ℹ️ {ResourceLoc.details}", OnClickAsync = () => { DetailsPage = item; return Task.CompletedTask; } }
             };

@@ -12,9 +12,9 @@ namespace ProjectManagement.Client.Services.Calculation
 {
     public interface IContextMenuBuilderService
     {
-        List<MenuItem> BuildGeneralContextMenu(bool isAdmin = false);
-        List<MenuItem> BuildTaskContextMenu(TaskListMVVM item, Action remove, Action duplicate);
-        List<MenuItem> BuildResourceContextMenu(ResourceListMVVM item, int taskId, Action remove, Action duplicate);
+        List<ContextMenuItem> BuildGeneralContextMenu(bool isAdmin = false);
+        List<ContextMenuItem> BuildTaskContextMenu(TaskListMVVM item, Action remove, Action duplicate);
+        List<ContextMenuItem> BuildResourceContextMenu(ResourceListMVVM item, int taskId, Action remove, Action duplicate);
     }
 
     public class ContextMenuBuilderService(
@@ -23,7 +23,7 @@ namespace ProjectManagement.Client.Services.Calculation
         CalculationInteractionState interactionState,
         ICalculationTableCoordinator tableCoordinator) : IContextMenuBuilderService
     {
-        private MenuItem NewMenuItem(string icon, string label, Func<Task>? onClick) =>
+        private ContextMenuItem NewMenuItem(string icon, string label, Func<Task>? onClick) =>
             new()
             {
                 Label = label,
@@ -31,7 +31,7 @@ namespace ProjectManagement.Client.Services.Calculation
                 OnClickAsync = onClick
             };
 
-        private MenuItem NewMenuItem(string icon, string label, Action onClick) =>
+        private ContextMenuItem NewMenuItem(string icon, string label, Action onClick) =>
             new()
             {
                 Label = label,
@@ -43,12 +43,12 @@ namespace ProjectManagement.Client.Services.Calculation
                 }
             };
 
-        public List<MenuItem> BuildGeneralContextMenu(bool isAdmin = false)
+        public List<ContextMenuItem> BuildGeneralContextMenu(bool isAdmin = false)
         {
-            var list = new List<MenuItem>();
+            var list = new List<ContextMenuItem>();
             var calculation = folderState.Calculation;
 
-            MenuItem newTaskItem = NewMenuItem(
+            ContextMenuItem newTaskItem = NewMenuItem(
                 Icons.NewTask,
                 appLoc[LocalizerConst.New, ResourceLoc.task],
                 () => tableCoordinator.ShowTaskForm(new()));
@@ -105,7 +105,7 @@ namespace ProjectManagement.Client.Services.Calculation
             return list;
         }
 
-        public List<MenuItem> BuildTaskContextMenu(TaskListMVVM item, Action remove, Action duplicate)
+        public List<ContextMenuItem> BuildTaskContextMenu(TaskListMVVM item, Action remove, Action duplicate)
         {
             bool isMultiSelected = interactionState.SelectedItems.Count > 1
                 && interactionState.IsSelected(CalculationItemType.task, item.Id);
@@ -113,7 +113,7 @@ namespace ProjectManagement.Client.Services.Calculation
             if (isMultiSelected)
                 return BuildMultiTaskContextMenu(item, remove);
 
-            var list = new List<MenuItem>();
+            var list = new List<ContextMenuItem>();
 
             if (TaskTypeRules.CanHaveResources(item.Metadata.Type) && (item.Tasks == null || item.Tasks.Count == 0))
             {
@@ -198,7 +198,7 @@ namespace ProjectManagement.Client.Services.Calculation
             return list;
         }
 
-        private List<MenuItem> BuildMultiTaskContextMenu(TaskListMVVM item, Action remove) =>
+        private List<ContextMenuItem> BuildMultiTaskContextMenu(TaskListMVVM item, Action remove) =>
         [
             NewMenuItem(
                 Icons.Delete,
@@ -226,7 +226,7 @@ namespace ProjectManagement.Client.Services.Calculation
             ),
         ];
 
-        public List<MenuItem> BuildResourceContextMenu(
+        public List<ContextMenuItem> BuildResourceContextMenu(
             ResourceListMVVM item,
             int taskId,
             Action remove,

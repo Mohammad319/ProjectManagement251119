@@ -1,5 +1,5 @@
 ﻿using AuthPermissions.Entity;
-using ContextMenuMHD;
+using BlazorMHD.UI.Core.Navigation;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -27,7 +27,7 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
                 return;
             }
 
-            var list = new List<MenuItem>
+            var list = new List<ContextMenuItem>
             {
                 new() { Label = ResourceApp.edit, OnClickAsync = () => { UserRoleDialog(item); return Task.CompletedTask; } },
                 new() { Label = ResourceApp.delete, OnClickAsync = () => { Remove(item); return Task.CompletedTask; } },

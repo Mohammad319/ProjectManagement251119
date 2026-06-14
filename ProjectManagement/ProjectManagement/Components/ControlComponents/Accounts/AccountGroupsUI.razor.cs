@@ -126,7 +126,7 @@ public partial class AccountGroupsUI
     {
         await ContextService.ShowMenuAsync(
         [
-            new MenuItem
+            new ContextMenuItem
             {
                 Label = $"✏️ {AppLoc[nameof(ResourceApp.update)]}",
                 OnClickAsync = () =>
@@ -135,7 +135,7 @@ public partial class AccountGroupsUI
                     return Task.CompletedTask;
                 }
             },
-            new MenuItem
+            new ContextMenuItem
             {
                 Label = $"🗑️ {AppLoc[nameof(ResourceApp.delete)]}",
                 OnClickAsync = () =>

@@ -12,8 +12,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Remove="C:\Users\ataya\.nuget\packages\contextmenumhd\1.4.5\contentFiles\any\net10.0\package-lock.json" />
-    <Content Remove="C:\Users\ataya\.nuget\packages\contextmenumhd\1.4.5\contentFiles\any\net10.0\package.json" />
     <Content Remove="C:\Users\ataya\.nuget\packages\pax.blazorchartjs\0.8.5\contentFiles\any\net8.0\tsconfig.json" />
   </ItemGroup>
 
@@ -33,7 +31,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\..\..\..\Library\BlazorMHD\BlazorMHD.UI\BlazorMHD.UI.csproj" />
-    <ProjectReference Include="..\..\..\..\..\..\..\..\Library\ContextMenuMHD\ContextMenuMHD\ContextMenuMHD.csproj" />
     <ProjectReference Include="..\..\ProjectManagement.Client.Shared\ProjectManagement.Client.Shared.csproj" />
   </ItemGroup>
 

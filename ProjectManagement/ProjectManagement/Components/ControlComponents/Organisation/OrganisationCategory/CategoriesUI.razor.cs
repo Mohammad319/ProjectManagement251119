@@ -53,11 +53,11 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
             if (!await CanManageAsync())
                 return;
 
-            List<MenuItem> list = [];
+            List<ContextMenuItem> list = [];
 
             if (item.ParentCategoryId is null)
             {
-                list.Add(new MenuItem
+                list.Add(new ContextMenuItem
                 {
                     Label = $"➕ {AppLoc[LocalizerConst.New, ResourceLoc.category]}",
                     OnClickAsync = () =>
@@ -68,7 +68,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
                 });
             }
 
-            list.Add(new MenuItem
+            list.Add(new ContextMenuItem
             {
                 Label = $"✏️ {AppLoc[nameof(ResourceApp.update)]}",
                 OnClickAsync = () =>
@@ -78,7 +78,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
                 }
             });
 
-            list.Add(new MenuItem
+            list.Add(new ContextMenuItem
             {
                 Label = $"🗑️ {AppLoc[nameof(ResourceApp.delete)]}",
                 OnClickAsync = () =>
