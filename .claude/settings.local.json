@@ -76,7 +76,11 @@
       "PowerShell(.\\\\tools\\\\operations\\\\New-MigrationScripts.ps1)",
       "Read(//c/c/Users/Administrator/Desktop/PM/b07/ProjectManagement251119/artifacts/**)",
       "Read(//c/c/Users/Administrator/Desktop/PM/b07/ProjectManagement251119/artifacts/migrations/**)",
-      "PowerShell(dotnet test *)"
+      "PowerShell(dotnet test *)",
+      "Bash(rm -rf /tmp/pmpub)",
+      "Bash(dotnet publish *)",
+      "Bash(echo \"Standalone 'MHD' type-name occurrences \\(\\\\\\\\x00MHD\\\\\\\\x00\\):\")",
+      "Bash(awk '{print $5, $NF}')"
     ]
   }
 }

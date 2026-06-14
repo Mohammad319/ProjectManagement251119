@@ -33,7 +33,7 @@
 
     <script src="@Assets["_framework/blazor.web.js"]"></script>
     <script src="@Assets["Components/Account/Shared/PasskeySubmit.razor.js"]" type="module"></script>
-    <script src="@Assets["_content/BlazorMHD.UI/js/BlazorMHDUI.js"]"></script>
+    @* BlazorMHD.UI now loads its JS automatically as an ES module — no script tag needed. *@
     <script src="@Assets["js/password-visibility.js"]"></script>
     <script src="@Assets["js/scroll-observer.js"]"></script>
 

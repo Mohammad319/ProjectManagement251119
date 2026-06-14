@@ -34,6 +34,18 @@
     <ProjectReference Include="..\..\ProjectManagement.Client.Shared\ProjectManagement.Client.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!--
+      BlazorMHD.UI is marked IsTrimmable, and its MHD component (plus dialog/toast/
+      message-box/loading hosts) is rendered as an InteractiveWebAssembly root component
+      from the server's Routes.razor only. The WASM trimmer sees no static reference to
+      those types from the Client assembly and removes them on publish, causing the runtime
+      error "Root component type 'BlazorMHD.UI.MHD' could not be found in the assembly
+      'BlazorMHD.UI'". Root the assembly so the trimmer keeps it.
+    -->
+    <TrimmerRootAssembly Include="BlazorMHD.UI" />
+  </ItemGroup>
+
 
   <ItemGroup>
     <Compile Update="Shared\ResourceFiles\APP\ResourceApp.Designer.cs">

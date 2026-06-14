@@ -54,6 +54,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\..\..\Library\BlazorMHD\BlazorMHD.UI\BlazorMHD.UI.csproj" />
     <ProjectReference Include="..\AuthPermissions\AuthPermissions.csproj" />
+    <ProjectReference Include="..\ProjectManagement\ProjectManagement\ProjectManagement.csproj" />
     <ProjectReference Include="..\TaskResourceBlueprints\TaskResourceBlueprints.csproj" />
     <ProjectReference Include="..\Persistence\Persistence.csproj" />
   </ItemGroup>
@@ -66,15 +67,11 @@
   </ItemGroup>
 
   <Target Name="BuildTailwindCss" BeforeTargets="PrepareForBuild" Condition="Exists('$(MSBuildProjectDirectory)\package.json')">
-    <Exec Command="npm ci"
-          WorkingDirectory="$(MSBuildProjectDirectory)"
-          Condition="'$(Configuration)' == 'Release' Or (!Exists('$(MSBuildProjectDirectory)\node_modules\.bin\tailwindcss.cmd') And !Exists('$(MSBuildProjectDirectory)\node_modules\.bin\tailwindcss'))" />
+    <Exec Command="npm ci" WorkingDirectory="$(MSBuildProjectDirectory)" Condition="'$(Configuration)' == 'Release' Or (!Exists('$(MSBuildProjectDirectory)\node_modules\.bin\tailwindcss.cmd') And !Exists('$(MSBuildProjectDirectory)\node_modules\.bin\tailwindcss'))" />
     <Exec Command="npm run tw:build" WorkingDirectory="$(MSBuildProjectDirectory)" />
   </Target>
 
-  <Target Name="ValidatePublishedCssAssets"
-          AfterTargets="Publish"
-          Condition="'$(Configuration)' == 'Release'">
+  <Target Name="ValidatePublishedCssAssets" AfterTargets="Publish" Condition="'$(Configuration)' == 'Release'">
 
     <PropertyGroup>
       <_EmptyFileSha256>E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855</_EmptyFileSha256>
@@ -92,15 +89,13 @@
       <_RequiredPublishedCssAssets Include="$(PublishDir)wwwroot\css\tailwind.css.gz" />
     </ItemGroup>
 
-    <Error Condition="!Exists('%(_RequiredPublishedCssAssets.Identity)')"
-           Text="Published CSS asset is missing: %(_RequiredPublishedCssAssets.Identity)" />
+    <Error Condition="!Exists('%(_RequiredPublishedCssAssets.Identity)')" Text="Published CSS asset is missing: %(_RequiredPublishedCssAssets.Identity)" />
 
     <GetFileHash Files="@(_RequiredPublishedCssAssets)" Algorithm="SHA256">
       <Output TaskParameter="Items" ItemName="_PublishedCssAssetHashes" />
     </GetFileHash>
 
-    <Error Condition="'%(_PublishedCssAssetHashes.FileHash)' == '$(_EmptyFileSha256)'"
-           Text="Published CSS asset is empty: %(_PublishedCssAssetHashes.Identity)" />
+    <Error Condition="'%(_PublishedCssAssetHashes.FileHash)' == '$(_EmptyFileSha256)'" Text="Published CSS asset is empty: %(_PublishedCssAssetHashes.Identity)" />
 
   </Target>
 
