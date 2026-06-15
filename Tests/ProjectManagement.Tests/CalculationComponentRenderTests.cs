@@ -764,7 +764,7 @@ public class CalculationComponentRenderTests : BunitContext
         ComponentFactories.AddStub<CalculationToolbar>();
         ComponentFactories.AddStub<CalcDataGrid>();
         ComponentFactories.AddStub<GetFromStorage>();
-        ComponentFactories.AddStub<VerticalSplitter>();
+        ComponentFactories.AddStub<MhdVerticalSplitter>();
 
         var calc = CreateEmptyCalculation();
         var interactionState = new CalculationInteractionState();
@@ -788,7 +788,7 @@ public class CalculationComponentRenderTests : BunitContext
         ComponentFactories.AddStub<CalculationToolbar>();
         ComponentFactories.AddStub<CalcDataGrid>();
         ComponentFactories.AddStub<GetFromStorage>();
-        ComponentFactories.AddStub<VerticalSplitter>();
+        ComponentFactories.AddStub<MhdVerticalSplitter>();
 
         var calc = CreateGridCalculation(includeSecondTask: true);
         calc.AllFlatItems = [];
@@ -832,7 +832,7 @@ public class CalculationComponentRenderTests : BunitContext
         ComponentFactories.AddStub<CalculationToolbar>();
         ComponentFactories.AddStub<CalcDataGrid>();
         ComponentFactories.AddStub<GetFromStorage>();
-        ComponentFactories.AddStub<VerticalSplitter>();
+        ComponentFactories.AddStub<MhdVerticalSplitter>();
 
         var calc = CreateGridCalculation(includeSecondTask: true);
         calc.Tasks[1].Metadata.Type = TaskType.CodeName;

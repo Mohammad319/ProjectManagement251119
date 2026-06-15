@@ -54,7 +54,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\..\..\Library\BlazorMHD\BlazorMHD.UI\BlazorMHD.UI.csproj" />
     <ProjectReference Include="..\AuthPermissions\AuthPermissions.csproj" />
-    <ProjectReference Include="..\ProjectManagement\ProjectManagement\ProjectManagement.csproj" />
     <ProjectReference Include="..\TaskResourceBlueprints\TaskResourceBlueprints.csproj" />
     <ProjectReference Include="..\Persistence\Persistence.csproj" />
   </ItemGroup>
@@ -67,7 +66,10 @@
   </ItemGroup>
 
   <Target Name="BuildTailwindCss" BeforeTargets="PrepareForBuild" Condition="Exists('$(MSBuildProjectDirectory)\package.json')">
-    <Exec Command="npm ci" WorkingDirectory="$(MSBuildProjectDirectory)" Condition="'$(Configuration)' == 'Release' Or (!Exists('$(MSBuildProjectDirectory)\node_modules\.bin\tailwindcss.cmd') And !Exists('$(MSBuildProjectDirectory)\node_modules\.bin\tailwindcss'))" />
+    <!-- Use non-destructive 'npm install' (not 'npm ci') and only when the tailwind binary is missing.
+         'npm ci' wipes node_modules first, which fails with EBUSY when Visual Studio / the parcel watcher
+         holds a handle on node_modules\@parcel\watcher, leaving a half-installed tree that breaks tw:build. -->
+    <Exec Command="npm install --no-audit --no-fund" WorkingDirectory="$(MSBuildProjectDirectory)" Condition="!Exists('$(MSBuildProjectDirectory)\node_modules\.bin\tailwindcss.cmd') And !Exists('$(MSBuildProjectDirectory)\node_modules\.bin\tailwindcss')" />
     <Exec Command="npm run tw:build" WorkingDirectory="$(MSBuildProjectDirectory)" />
   </Target>
 

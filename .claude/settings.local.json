@@ -80,7 +80,13 @@
       "Bash(rm -rf /tmp/pmpub)",
       "Bash(dotnet publish *)",
       "Bash(echo \"Standalone 'MHD' type-name occurrences \\(\\\\\\\\x00MHD\\\\\\\\x00\\):\")",
-      "Bash(awk '{print $5, $NF}')"
+      "Bash(awk '{print $5, $NF}')",
+      "Read(//c/Library/**)",
+      "Read(//c/Library/BlazorMHD/**)",
+      "Bash(git commit -m ' *)",
+      "Bash(tasklist)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(echo \"=== EXIT CODE: $? ===\")"
     ]
   }
 }
