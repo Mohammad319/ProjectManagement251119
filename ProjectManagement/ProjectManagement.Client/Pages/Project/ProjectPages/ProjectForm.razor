@@ -185,19 +185,20 @@ else if (ProjectUpdate is not null)
                                                Placeholder="@AppLoc["selectPlaceholder"]" />
                             </div>
                             <div>
-                                <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.projectCompensation</label>
-                                <MhdFormSelect TValue="int?"
-                                               @bind-Value="ProjectUpdate.CompensationId"
-                                               Options="@ToItems(Config?.Compensations)"
-                                               Placeholder="@AppLoc["selectPlaceholder"]" />
-                            </div>
-                            <div>
                                 <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.projectContract</label>
                                 <MhdFormSelect TValue="int?"
                                                @bind-Value="ProjectUpdate.ContractId"
                                                Options="@ToItems(Config?.Contracts)"
                                                Placeholder="@AppLoc["selectPlaceholder"]" />
                             </div>
+                            <div>
+                                <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.projectCompensation</label>
+                                <MhdFormSelect TValue="int?"
+                                               @bind-Value="ProjectUpdate.CompensationId"
+                                               Options="@ToItems(Config?.Compensations)"
+                                               Placeholder="@AppLoc["selectPlaceholder"]" />
+                            </div>
+
 
                             <div>
                                 <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">Upphandlingsförfarande</label>
