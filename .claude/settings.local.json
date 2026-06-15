@@ -109,7 +109,11 @@
       "PowerShell(dotnet list *)",
       "WebFetch(domain:api.nuget.org)",
       "WebFetch(domain:github.com)",
-      "PowerShell(dotnet nuget why *)"
+      "PowerShell(dotnet nuget why *)",
+      "PowerShell(dotnet run *)",
+      "PowerShell($p = Join-Path $env:TEMP \"apphost_run.log\"; Write-Output \"PATH: $p\"; if \\(Test-Path $p\\) { Write-Output \"SIZE: $\\(\\(Get-Item $p\\).Length\\) bytes\"; Get-Content $p -Tail 50 } else { Write-Output \"NOT FOUND YET\" })",
+      "PowerShell($p = Join-Path $env:TEMP \"apphost_run.log\"; Write-Output \"==== ERROR/EXCEPTION SCAN ====\"; $hits = Select-String -Path $p -Pattern \"error|exception|fail|StreamJsonRpc|MessagePack|unhandled\" -AllMatches; if \\($hits\\) { $hits } else { Write-Output \"No error/exception/RPC-failure lines found.\" })",
+      "PowerShell(Get-Content *)"
     ]
   }
 }
