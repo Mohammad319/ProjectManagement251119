@@ -57,6 +57,10 @@
                     {
                         <span class="inline-flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-blue-600 px-1 text-[9px] font-bold leading-none text-white dark:bg-blue-500">@ActiveProjectFilterCount</span>
                     }
+                    @if (HasHiddenActiveFilterColumns)
+                    {
+                        <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500 dark:bg-amber-400" title="Filtret använder dold kolumn"></span>
+                    }
                     <svg class="h-2.5 w-2.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                         <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                     </svg>
@@ -202,6 +206,35 @@
                                 }
                             </div>
                         }
+                    </div>
+                }
+
+                @* ── Flytande notice: filter använder dold kolumn (visas även när menyn är stängd) ── *@
+                @if (ShowHiddenFilterNotice)
+                {
+                    <div class="absolute left-0 top-full z-[80] mt-1.5 w-72">
+                        <div class="absolute -top-1 left-5 h-2 w-2 rotate-45 border-l border-t border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-950/80"></div>
+                        <div class="relative rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-2 shadow-md dark:border-amber-700 dark:bg-amber-950/80">
+                            <div class="flex items-start gap-1.5">
+                                <svg class="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500 dark:text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5.07 19h13.86a2 2 0 001.74-2.99l-6.93-12a2 2 0 00-3.48 0l-6.93 12A2 2 0 005.07 19z" /></svg>
+                                <div class="min-w-0 flex-1">
+                                    <p class="text-[11px] font-semibold leading-snug text-amber-800 dark:text-amber-200">@HiddenFilterColumnTitle</p>
+                                    <p class="mt-0.5 text-[10px] leading-snug text-amber-700/90 dark:text-amber-300/90">@HiddenFilterColumnHelp</p>
+                                </div>
+                                <button type="button"
+                                        class="-mr-0.5 -mt-0.5 shrink-0 rounded p-0.5 text-amber-500 transition hover:bg-amber-100 hover:text-amber-700 dark:text-amber-400 dark:hover:bg-amber-900/40 dark:hover:text-amber-200"
+                                        title="Stäng"
+                                        @onclick="DismissHiddenFilterNotice">
+                                    <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                            </div>
+                            <button type="button"
+                                    class="mt-1.5 inline-flex h-6 items-center gap-1 rounded border border-amber-300 bg-white px-2 text-[10px] font-semibold text-amber-700 transition hover:bg-amber-100 dark:border-amber-700 dark:bg-slate-900 dark:text-amber-300 dark:hover:bg-amber-950/40"
+                                    @onclick="RevealFilterColumnsAsync">
+                                <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                Visa filterkolumner
+                            </button>
+                        </div>
                     </div>
                 }
             </div>
@@ -1011,6 +1044,32 @@
     private string GetProjectColumnLabel(string key) =>
         ProjectColumnOptions.FirstOrDefault(c => c.Key == key)?.Label ?? key;
 
+    // ── Flytande notice om dold filterkolumn ────────────────
+    // Signaturen är mängden dolda filterkolumner. När den ändras (annat filter,
+    // annan kolumnvy) skiljer den sig från den senast stängda och notisen visas
+    // igen automatiskt. X stänger bara notisen — filter och kolumnvy rörs inte.
+    private string? _dismissedHiddenFilterSignature;
+
+    private string HiddenFilterColumnSignature =>
+        string.Join("|", HiddenActiveFilterColumnKeys.OrderBy(k => k, StringComparer.Ordinal));
+
+    private bool ShowHiddenFilterNotice =>
+        HasHiddenActiveFilterColumns && !_filterMenuOpen &&
+        _dismissedHiddenFilterSignature != HiddenFilterColumnSignature;
+
+    private string HiddenFilterColumnTitle =>
+        HiddenActiveFilterColumnKeys.Count() > 1
+            ? $"Dolda filterkolumner: {HiddenActiveFilterColumnsLabel}"
+            : $"Dold filterkolumn: {HiddenActiveFilterColumnsLabel}";
+
+    private string HiddenFilterColumnHelp =>
+        HiddenActiveFilterColumnKeys.Count() > 1
+            ? "Aktuellt filter använder dolda kolumner."
+            : "Aktuellt filter använder en dold kolumn.";
+
+    private void DismissHiddenFilterNotice() =>
+        _dismissedHiddenFilterSignature = HiddenFilterColumnSignature;
+
     // Make the hidden columns used by active filters visible. Only the column layout
     // changes (counts as a manual edit of the current view); the filter is untouched.
     private async Task RevealFilterColumnsAsync()
@@ -1019,6 +1078,9 @@
             if (_projectColumns.ContainsKey(key))
                 _projectColumns[key] = true;
 
+        // Kolumnerna är synliga nu → notisen försvinner. Nollställ stängt-läget så
+        // att en framtida dold kolumn visar notisen igen.
+        _dismissedHiddenFilterSignature = null;
         await ViewPreference.SaveColumnsAsync(_projectColumns);
     }
 
@@ -1139,6 +1201,9 @@
         }
 
         _currentPage = 1;
+        // Ett nyss valt sparat filter ska alltid kunna visa dold-kolumn-notisen,
+        // även om samma kolumner var dolda och notisen tidigare stängdes.
+        _dismissedHiddenFilterSignature = null;
         CloseProjectFilterMenu();
         return Task.CompletedTask;
     }
