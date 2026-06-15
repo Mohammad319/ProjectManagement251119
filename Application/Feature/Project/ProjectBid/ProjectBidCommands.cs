@@ -1,5 +1,6 @@
 using Application.Interfaces;
 using ProjectManagement.Shared.DTO.Project;
+using ProjectManagement.Shared.Enums;
 
 namespace Application.Feature.Project.ProjectBid
 {
@@ -44,6 +45,20 @@ namespace Application.Feature.Project.ProjectBid
     {
         public Task<bool> Handle(DeleteProjectBidCommand request, CancellationToken cancellationToken)
             => service.DeleteAsync(request.Id, request.ProjectId, request.DepartmentId, cancellationToken);
+    }
+
+    // ─── Evaluation model ─────────────────────────────────────────────────────
+    public sealed record SetProjectBidEvaluationModelCommand(
+        Guid ProjectId,
+        BidEvaluationModel Model,
+        int? DepartmentId
+    ) : IRequest<bool>;
+
+    public sealed class SetProjectBidEvaluationModelCommandHandler(IProjectBidService service)
+        : IRequestHandler<SetProjectBidEvaluationModelCommand, bool>
+    {
+        public Task<bool> Handle(SetProjectBidEvaluationModelCommand request, CancellationToken cancellationToken)
+            => service.SetEvaluationModelAsync(request.ProjectId, request.Model, request.DepartmentId, cancellationToken);
     }
 
     // ─── Price columns ────────────────────────────────────────────────────────

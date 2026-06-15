@@ -1,5 +1,6 @@
 using Domain.Entities.Base;
 using ProjectManagement.Shared.Constant;
+using ProjectManagement.Shared.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
@@ -26,28 +27,45 @@ namespace Domain.Entities.Project
         [MaxLength(FieldLengths.Note)]
         public string? Note { get; private set; }
 
+        /// <summary>
+        /// Legacy "Vinnare"-flagga. Behålls för bakåtkompatibilitet och hålls
+        /// synkad med <see cref="IsAwarded"/> (Tilldelad).
+        /// </summary>
         public bool IsWinner { get; private set; }
+
+        /// <summary>Tilldelad. I ramavtal kan flera anbudsgivare vara tilldelade.</summary>
+        public bool IsAwarded { get; private set; }
+
+        /// <summary>Placering för tilldelade anbudsgivare (positivt heltal).</summary>
+        public int? Placement { get; private set; }
+
+        /// <summary>Anbudsstatus: Giltigt eller Förkastat.</summary>
+        public BidStatus Status { get; private set; } = BidStatus.Valid;
+
+        /// <summary>Förkastningsorsak. Fritext, anges när status = Förkastat.</summary>
+        [MaxLength(FieldLengths.Note)]
+        public string? RejectionReason { get; private set; }
 
         public int SortOrder { get; private set; }
 
         private ProjectBidEntity() { }
 
-        public ProjectBidEntity(Guid projectId, string bidderName, decimal? amount, string? note, bool isWinner, int sortOrder)
+        public ProjectBidEntity(Guid projectId, string bidderName, decimal? amount, string? note, bool isAwarded, int sortOrder)
         {
             ProjectId = projectId;
             BidderName = Normalize(bidderName);
             Amount = amount;
             Note = NormalizeOptional(note);
-            IsWinner = isWinner;
+            SetAwarded(isAwarded, isAwarded ? 1 : null);
             SortOrder = sortOrder;
         }
 
-        public void Update(string bidderName, decimal? amount, string? note, bool isWinner)
+        public void Update(string bidderName, decimal? amount, string? note, bool isAwarded, int? placement)
         {
             BidderName = Normalize(bidderName);
             Amount = amount;
             Note = NormalizeOptional(note);
-            IsWinner = isWinner;
+            SetAwarded(isAwarded, placement);
         }
 
         public void SetPrices(string? pricesJson, decimal? amount)
@@ -58,6 +76,31 @@ namespace Domain.Entities.Project
 
         public void SetDeductionPercent(decimal? deductionPercent) =>
             DeductionPercent = deductionPercent;
+
+        /// <summary>
+        /// Sätter status. Förkastade anbud kan inte vara tilldelade – tilldelning
+        /// och placering nollställs i så fall.
+        /// </summary>
+        public void SetStatus(BidStatus status, string? rejectionReason)
+        {
+            Status = status;
+            RejectionReason = status == BidStatus.Rejected ? NormalizeOptional(rejectionReason) : null;
+
+            if (status == BidStatus.Rejected)
+                SetAwarded(false, null);
+        }
+
+        /// <summary>
+        /// Sätter tilldelning och placering. Placering behålls bara när anbudet
+        /// är tilldelat och ett giltigt positivt heltal angetts. IsWinner hålls
+        /// synkad för bakåtkompatibilitet.
+        /// </summary>
+        public void SetAwarded(bool isAwarded, int? placement)
+        {
+            IsAwarded = isAwarded;
+            IsWinner = isAwarded;
+            Placement = isAwarded && placement is > 0 ? placement : null;
+        }
 
         private static string Normalize(string value) =>
             string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();

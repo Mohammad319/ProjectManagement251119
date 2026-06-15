@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Project;
+using ProjectManagement.Shared.Enums;
 
 namespace ProjectManagement.Server.Controllers.v1.Project
 {
@@ -28,6 +29,13 @@ namespace ProjectManagement.Server.Controllers.v1.Project
         [HttpDelete("{id}/{projectId}")]
         public async Task<IActionResult> Delete(int id, Guid projectId)
             => Ok(await MicroBus.Send(new DeleteProjectBidCommand(id, projectId, GetDepartmentId())));
+
+        // ─── Evaluation model (project-level) ────────────────────────────────
+
+        [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
+        [HttpPut("{projectId}/evaluation-model/{model:int}")]
+        public async Task<IActionResult> SetEvaluationModel(Guid projectId, int model)
+            => Ok(await MicroBus.Send(new SetProjectBidEvaluationModelCommand(projectId, (BidEvaluationModel)model, GetDepartmentId())));
 
         // ─── Price columns (project-specific) ────────────────────────────────
 

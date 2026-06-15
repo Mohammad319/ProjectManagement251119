@@ -1,4 +1,6 @@
 @using ProjectManagement.Shared.DTO.Project
+@using ProjectManagement.Shared.Enums
+@using ProjectManagement.Client.Helper
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize]
 @inherits AppComponentBase
@@ -28,65 +30,164 @@
                 }
             </div>
 
-            @* ── Priskolumner ── *@
-            @if (HasColumns)
+            @* ── Anbudsstatus ── *@
+            <div>
+                <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Anbudsstatus</label>
+                <select class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-800 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                        value="@_editItem.Status"
+                        @onchange="OnStatusChanged">
+                    <option value="@BidStatus.Valid">Giltigt</option>
+                    <option value="@BidStatus.Rejected">Förkastat</option>
+                </select>
+            </div>
+
+            @if (_editItem.Status == BidStatus.Rejected)
             {
-                @foreach (var col in _columns)
+                <div>
+                    <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Förkastningsorsak</label>
+                    <input list="rejection-reasons"
+                           type="text"
+                           class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-800 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                           placeholder="Ange orsak..."
+                           @bind="_editItem.RejectionReason" />
+                    <datalist id="rejection-reasons">
+                        <option value="För sent inkommet anbud" />
+                        <option value="Uppfyller inte skallkrav" />
+                        <option value="Formellt fel" />
+                        <option value="Ej kvalificerad" />
+                        <option value="Onormalt lågt pris" />
+                        <option value="Annan orsak" />
+                    </datalist>
+                </div>
+            }
+
+            @if (IsPointsModel)
+            {
+                @* ── Poängbaserad utvärdering ── *@
+                @if (HasPointParts)
                 {
-                    var columnId = col.Id;
+                    @foreach (var col in PointParts)
+                    {
+                        var columnId = col.Id;
+                        <div>
+                            <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@col.Name</label>
+                            <input type="text"
+                                   inputmode="decimal"
+                                   class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-right text-sm text-slate-800 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                                   placeholder="0"
+                                   value="@FormatPoints(GetFormPrice(columnId))"
+                                   @onchange="e => SetFormPrice(columnId, ParseAmount(e.Value?.ToString()))" />
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="sm:col-span-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
+                        Utvärderingsmodellen är <span class="font-semibold">Högsta poäng</span> men det finns inga poängdelar ännu.
+                        Lägg till utvärderingsdelar av typen <span class="font-semibold">Poäng</span> för att kunna sätta poäng.
+                    </div>
+                }
+
+                @* ── Beräknad totalpoäng (read-only) ── *@
+                <div class="sm:col-span-2 flex flex-wrap items-center gap-x-6 gap-y-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs dark:border-slate-700 dark:bg-slate-900/60">
+                    <span class="text-slate-500 dark:text-slate-400">
+                        Totalpoäng:
+                        <span class="ml-1 font-mono font-semibold text-sky-700 dark:text-sky-300">@FormatPoints(FormPointsTotal)</span>
+                    </span>
+                </div>
+            }
+            else
+            {
+                @* ── Prisbaserad utvärdering (lägsta jämförelsesumma) ── *@
+                @if (HasPriceParts)
+                {
+                    @foreach (var col in PriceParts)
+                    {
+                        var columnId = col.Id;
+                        <div>
+                            <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@col.Name</label>
+                            <input type="text"
+                                   inputmode="decimal"
+                                   class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-right text-sm text-slate-800 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                                   placeholder="0"
+                                   value="@FormatAmount(GetFormPrice(columnId))"
+                                   @onchange="e => OnPriceChanged(columnId, ParseAmount(e.Value?.ToString()))" />
+                        </div>
+                    }
+                }
+                else
+                {
                     <div>
-                        <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@col.Name</label>
+                        <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Pris</label>
                         <input type="text"
                                inputmode="decimal"
                                class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-right text-sm text-slate-800 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                                placeholder="0"
-                               value="@FormatAmount(GetFormPrice(columnId))"
-                               @onchange="e => SetFormPrice(columnId, ParseAmount(e.Value?.ToString()))" />
+                               value="@FormatAmount(_editItem.Amount)"
+                               @onchange="e => { _editItem.Amount = ParseAmount(e.Value?.ToString()); OnTotalChanged(); }" />
                     </div>
                 }
-            }
-            else
-            {
+
                 <div>
-                    <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Pris</label>
+                    <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Mervärdeavdrag %</label>
                     <input type="text"
                            inputmode="decimal"
                            class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-right text-sm text-slate-800 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                            placeholder="0"
-                           value="@FormatAmount(_editItem.Amount)"
-                           @onchange="e => _editItem.Amount = ParseAmount(e.Value?.ToString())" />
+                           value="@FormatPercent(_editItem.DeductionPercent)"
+                           @onchange="e => OnDeductionChanged(ParseAmount(e.Value?.ToString()))" />
+                </div>
+
+                <div>
+                    <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Jämförelsesumma</label>
+                    <input type="text"
+                           inputmode="decimal"
+                           class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-right text-sm text-slate-800 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                           placeholder="0"
+                           value="@FormatAmount(_editItem.ComparisonAmount)"
+                           @onchange="e => OnComparisonChanged(ParseAmount(e.Value?.ToString()))" />
+                </div>
+
+                @* ── Beräknade summor (read-only) ── *@
+                <div class="sm:col-span-2 flex flex-wrap items-center gap-x-6 gap-y-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs dark:border-slate-700 dark:bg-slate-900/60">
+                    <span class="text-slate-500 dark:text-slate-400">
+                        Anbudssumma:
+                        <span class="ml-1 font-mono font-semibold text-slate-800 dark:text-slate-100">@FormatSwedishAmount(FormTotal)</span>
+                    </span>
+                    <span class="text-slate-500 dark:text-slate-400">
+                        Jämförelsesumma:
+                        <span class="ml-1 font-mono font-semibold text-sky-700 dark:text-sky-300">@FormatSwedishAmount(_editItem.ComparisonAmount ?? FormTotal)</span>
+                    </span>
                 </div>
             }
 
-            <div>
-                <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Mervärdeavdrag %</label>
-                <input type="text"
-                       inputmode="decimal"
-                       class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-right text-sm text-slate-800 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                       placeholder="0"
-                       value="@FormatPercent(_editItem.DeductionPercent)"
-                       @onchange="e => _editItem.DeductionPercent = ParseAmount(e.Value?.ToString())" />
-            </div>
-
-            @* ── Beräknade summor (read-only) ── *@
-            <div class="sm:col-span-2 flex flex-wrap items-center gap-x-6 gap-y-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs dark:border-slate-700 dark:bg-slate-900/60">
-                <span class="text-slate-500 dark:text-slate-400">
-                    Anbudssumma:
-                    <span class="ml-1 font-mono font-semibold text-slate-800 dark:text-slate-100">@FormatSwedishAmount(FormTotal)</span>
-                </span>
-                <span class="text-slate-500 dark:text-slate-400">
-                    Jämförelsesumma:
-                    <span class="ml-1 font-mono font-semibold text-sky-700 dark:text-sky-300">@FormatSwedishAmount(FormComparison)</span>
-                </span>
-            </div>
-
+            @* ── Tilldelad / Placering ── *@
             <div class="flex items-center gap-2">
                 <input type="checkbox"
-                       id="isWinner"
-                       class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800"
-                       @bind="_editItem.IsWinner" />
-                <label for="isWinner" class="text-sm text-slate-700 dark:text-slate-200">Vinnare</label>
+                       id="isAwarded"
+                       class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800"
+                       checked="@_editItem.IsAwarded"
+                       disabled="@(_editItem.Status == BidStatus.Rejected)"
+                       @onchange="OnAwardedChanged" />
+                <label for="isAwarded" class="text-sm @(_editItem.Status == BidStatus.Rejected ? "text-slate-400 dark:text-slate-600" : "text-slate-700 dark:text-slate-200")">Tilldelad</label>
+                @if (_editItem.Status == BidStatus.Rejected)
+                {
+                    <span class="text-[11px] text-slate-400 dark:text-slate-500">(förkastade anbud kan inte tilldelas)</span>
+                }
             </div>
+
+            @if (_editItem.IsAwarded && _editItem.Status == BidStatus.Valid)
+            {
+                <div>
+                    <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Placering</label>
+                    <input type="number"
+                           min="1"
+                           step="1"
+                           class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-800 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                           placeholder="1"
+                           @bind="_editItem.Placement" />
+                </div>
+            }
         </div>
 
         <div>
@@ -106,7 +207,8 @@
 
         <div class="flex justify-end gap-2">
             <button type="button"
-                    class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                    class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                    disabled="@_isSaving"
                     @onclick="CancelEdit">
                 Avbryt
             </button>
@@ -114,7 +216,7 @@
                     class="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
                     disabled="@_isSaving"
                     @onclick="SaveBidAsync">
-                Spara
+                @(_isSaving ? "Sparar..." : "Spara")
             </button>
         </div>
     </div>
@@ -124,39 +226,61 @@ else
     @* ── List view ───────────────────────────────────────── *@
     <div class="space-y-3">
 
-        @* Toolbar *@
+        @* Utvärderingsmodell + toolbar *@
         <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
-            <div class="flex items-center justify-between">
-                <button type="button"
-                        class="@(_manageColumnsOpen ? "inline-flex h-8 items-center gap-1.5 rounded-lg border border-sky-300 bg-sky-50 px-2.5 text-xs font-semibold text-sky-700 transition dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-300" : "inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-2.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800")"
-                        title="Hantera priskolumner för detta projekt"
-                        @onclick="ToggleManageColumns">
-                    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
-                    </svg>
-                    <span>Priskolumner</span>
-                    @if (HasColumns)
-                    {
-                        <span class="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-sky-600 px-1 text-[10px] font-bold leading-none text-white">@_columns.Count</span>
-                    }
-                </button>
-                <button type="button"
-                        class="inline-flex h-8 items-center gap-1.5 rounded-lg border border-emerald-400 bg-emerald-500 px-2.5 text-xs font-semibold text-white transition hover:bg-emerald-600 dark:border-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700"
-                        @onclick="() => StartCreate()">
-                    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
-                    <span>Lägg till anbudsgivare</span>
-                </button>
+            <div class="space-y-2">
+                @* Utvärderingsmodell *@
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Utvärderingsmodell</span>
+                    <div class="inline-flex overflow-hidden rounded-lg border border-slate-300 dark:border-slate-700">
+                        <button type="button"
+                                class="@(IsPointsModel ? "px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800" : "bg-sky-600 px-2.5 py-1 text-xs font-semibold text-white")"
+                                disabled="@_isModelSaving"
+                                @onclick="() => SetEvaluationModelAsync(BidEvaluationModel.LowestComparison)">
+                            Lägsta jämförelsesumma
+                        </button>
+                        <button type="button"
+                                class="@(IsPointsModel ? "bg-sky-600 px-2.5 py-1 text-xs font-semibold text-white" : "border-l border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800")"
+                                disabled="@_isModelSaving"
+                                @onclick="() => SetEvaluationModelAsync(BidEvaluationModel.HighestPoints)">
+                            Högsta poäng
+                        </button>
+                    </div>
+                </div>
+
+                @* Knappar *@
+                <div class="flex items-center justify-between">
+                    <button type="button"
+                            class="@(_manageColumnsOpen ? "inline-flex h-8 items-center gap-1.5 rounded-lg border border-sky-300 bg-sky-50 px-2.5 text-xs font-semibold text-sky-700 transition dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-300" : "inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-2.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800")"
+                            title="Hantera utvärderingsdelar för detta projekt"
+                            @onclick="ToggleManageColumns">
+                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                        </svg>
+                        <span>Utvärderingsdelar</span>
+                        @if (HasColumns)
+                        {
+                            <span class="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-sky-600 px-1 text-[10px] font-bold leading-none text-white">@_columns.Count</span>
+                        }
+                    </button>
+                    <button type="button"
+                            class="inline-flex h-8 items-center gap-1.5 rounded-lg border border-emerald-400 bg-emerald-500 px-2.5 text-xs font-semibold text-white transition hover:bg-emerald-600 dark:border-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700"
+                            @onclick="() => StartCreate()">
+                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        <span>Lägg till anbudsgivare</span>
+                    </button>
+                </div>
             </div>
         </AuthorizeView>
 
-        @* ── Hantera priskolumner ── *@
+        @* ── Hantera utvärderingsdelar ── *@
         @if (_manageColumnsOpen)
         {
             <div class="rounded-xl border border-sky-200 bg-sky-50/50 p-3 dark:border-sky-900/60 dark:bg-sky-950/20">
                 <div class="mb-2 flex items-center justify-between">
-                    <h4 class="text-xs font-semibold text-slate-700 dark:text-slate-200">Priskolumner för detta projekt</h4>
+                    <h4 class="text-xs font-semibold text-slate-700 dark:text-slate-200">Utvärderingsdelar för detta projekt</h4>
                     <button type="button"
                             class="flex h-5 w-5 items-center justify-center rounded text-slate-400 hover:bg-slate-200/60 hover:text-slate-600 dark:hover:bg-slate-800"
                             title="Stäng"
@@ -168,8 +292,8 @@ else
                 @if (!HasColumns)
                 {
                     <p class="mb-2 text-[11px] text-slate-500 dark:text-slate-400">
-                        Utan egna kolumner används standardkolumnen <span class="font-semibold">Pris</span>.
-                        Lägg till kolumner om anbudssumman består av flera delar, t.ex. Grundanbud, Option 1, Option 2.
+                        Utan egna utvärderingsdelar används standarddelen <span class="font-semibold">Pris</span>.
+                        Lägg till delar om anbudet består av flera delar, t.ex. Grundanbud, Option 1, Miljö eller Referenser.
                     </p>
                 }
 
@@ -185,10 +309,16 @@ else
                                        class="h-7 flex-1 rounded-lg border border-slate-300 bg-white px-2 text-xs text-slate-800 outline-none transition focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                                        value="@GetColumnEditName(column.Id)"
                                        @onchange="e => _columnNameEdits[column.Id] = e.Value?.ToString() ?? string.Empty" />
+                                <select class="h-7 w-24 shrink-0 rounded-lg border border-slate-300 bg-white px-1 text-xs text-slate-800 outline-none transition focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                                        value="@GetColumnEditType(column.Id)"
+                                        @onchange="e => SetColumnEditType(column.Id, e.Value?.ToString())">
+                                    <option value="@BidPartType.Price">Pris</option>
+                                    <option value="@BidPartType.Points">Poäng</option>
+                                </select>
                                 <button type="button"
                                         class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-500 transition hover:text-emerald-600 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
-                                        title="Spara namn"
-                                        disabled="@(_isColumnSaving || !IsColumnNameChanged(column))"
+                                        title="Spara ändring"
+                                        disabled="@(_isColumnSaving || !IsColumnChanged(column))"
                                         @onclick="() => RenameColumnAsync(column)">
                                     <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
                                 </button>
@@ -208,7 +338,7 @@ else
                                 </button>
                                 <button type="button"
                                         class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-500 transition hover:border-red-400 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
-                                        title="Ta bort kolumn"
+                                        title="Ta bort utvärderingsdel"
                                         disabled="@_isColumnSaving"
                                         @onclick="() => DeleteColumnAsync(column)">
                                     <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
@@ -221,9 +351,14 @@ else
                 <div class="flex items-center gap-1.5">
                     <input type="text"
                            class="h-7 flex-1 rounded-lg border border-slate-300 bg-white px-2 text-xs text-slate-800 outline-none transition focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                           placeholder="Ny priskolumn, t.ex. Grundanbud..."
+                           placeholder="Ny utvärderingsdel, t.ex. Grundanbud, Miljö..."
                            @bind="_newColumnName"
                            @bind:event="oninput" />
+                    <select class="h-7 w-24 shrink-0 rounded-lg border border-slate-300 bg-white px-1 text-xs text-slate-800 outline-none transition focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                            @bind="_newColumnType">
+                        <option value="@BidPartType.Price">Pris</option>
+                        <option value="@BidPartType.Points">Poäng</option>
+                    </select>
                     <button type="button"
                             class="inline-flex h-7 items-center gap-1 rounded-lg border border-emerald-300 bg-emerald-50 px-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
                             disabled="@(_isColumnSaving || string.IsNullOrWhiteSpace(_newColumnName))"
@@ -239,29 +374,56 @@ else
             </div>
         }
 
-        @* Table *@
-        @if (_bids.Any())
+        @* ── Laddningsfel ── *@
+        @if (_loadFailed)
+        {
+            <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-6 text-center dark:border-red-900/60 dark:bg-red-950/30">
+                <p class="text-sm font-medium text-red-700 dark:text-red-300">Anbuden kunde inte hämtas.</p>
+                <p class="mt-0.5 text-xs text-red-600/80 dark:text-red-400/80">Kontrollera anslutningen och försök igen.</p>
+                <button type="button"
+                        class="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-red-300 bg-white px-3 py-1.5 text-sm font-semibold text-red-700 transition hover:bg-red-50 dark:border-red-800 dark:bg-slate-900 dark:text-red-300"
+                        @onclick="LoadAsync">
+                    Försök igen
+                </button>
+            </div>
+        }
+        else if (_bids.Any())
         {
             <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
                 <table class="min-w-full text-xs">
                     <thead class="bg-slate-50 dark:bg-slate-800">
                         <tr class="border-b border-slate-200 dark:border-slate-700">
                             <th class="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Anbudsgivare</th>
-                            @if (HasColumns)
+                            <th class="px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Status</th>
+
+                            @if (IsPointsModel)
                             {
-                                @foreach (var col in _columns)
+                                @foreach (var col in PointParts)
                                 {
                                     <th class="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400" title="@col.Name">@col.Name</th>
                                 }
+                                <th class="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Totalpoäng</th>
                             }
                             else
                             {
-                                <th class="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Pris</th>
+                                @if (HasPriceParts)
+                                {
+                                    @foreach (var col in PriceParts)
+                                    {
+                                        <th class="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400" title="@col.Name">@col.Name</th>
+                                    }
+                                }
+                                else
+                                {
+                                    <th class="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Pris</th>
+                                }
+                                <th class="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Anbudssumma</th>
+                                <th class="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400" title="Mervärdeavdrag i procent">Mervärdeavdrag %</th>
+                                <th class="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400" title="Anbudssumma minus mervärdeavdrag">Jämförelsesumma</th>
                             }
-                            <th class="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Anbudssumma</th>
-                            <th class="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400" title="Mervärdeavdrag i procent">Mervärdeavdrag %</th>
-                            <th class="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400" title="Anbudssumma minus mervärdeavdrag">Jämförelsesumma</th>
-                            <th class="px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Vinnare</th>
+
+                            <th class="px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Tilldelad</th>
+                            <th class="px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Placering</th>
                             <th class="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Anteckning</th>
                             <th class="px-3 py-2"></th>
                         </tr>
@@ -269,46 +431,79 @@ else
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                         @foreach (var bid in _bids)
                         {
-                            <tr class="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60">
-                                <td class="px-3 py-2 font-medium text-slate-800 dark:text-slate-100">
+                            var isRejected = bid.Status == BidStatus.Rejected;
+                            var isBest = !isRejected && IsBestBid(bid);
+                            <tr class="@(isRejected ? "bg-slate-50/60 text-slate-400 dark:bg-slate-950/40" : "transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60") @(isBest ? "bg-emerald-50/60 dark:bg-emerald-950/20" : "")">
+                                <td class="px-3 py-2 font-medium @(isRejected ? "text-slate-400 dark:text-slate-500" : "text-slate-800 dark:text-slate-100")">
                                     @bid.BidderName
-                                    @if (bid.IsWinner)
+                                    @if (isBest)
                                     {
-                                        <span class="ml-1.5 inline-flex rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">Vinnare</span>
+                                        <span class="ml-1.5 inline-flex rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">Bäst</span>
                                     }
                                 </td>
-                                @if (HasColumns)
-                                {
-                                    @for (var i = 0; i < _columns.Count; i++)
+                                <td class="px-3 py-2 text-center">
+                                    @if (isRejected)
                                     {
-                                        var value = GetBidColumnValue(bid, _columns[i].Id, i);
+                                        <span class="inline-flex rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-700 dark:bg-red-950/50 dark:text-red-300" title="@bid.RejectionReason">Förkastat</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="inline-flex rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">Giltigt</span>
+                                    }
+                                </td>
+
+                                @if (IsPointsModel)
+                                {
+                                    @foreach (var col in PointParts)
+                                    {
+                                        var value = GetBidPartValue(bid, col.Id);
                                         <td class="px-3 py-2 text-right font-mono text-slate-600 dark:text-slate-300">
-                                            @(value.HasValue ? FormatSwedishAmount(value.Value) : "-")
+                                            @(value.HasValue ? FormatPoints(value.Value) : "-")
                                         </td>
                                     }
+                                    <td class="px-3 py-2 text-right font-mono font-semibold text-sky-700 dark:text-sky-300">
+                                        @(bid.TotalPoints.HasValue ? FormatPoints(bid.TotalPoints.Value) : "-")
+                                    </td>
                                 }
                                 else
                                 {
-                                    <td class="px-3 py-2 text-right font-mono text-slate-600 dark:text-slate-300">
+                                    @if (HasPriceParts)
+                                    {
+                                        @foreach (var col in PriceParts)
+                                        {
+                                            var value = GetBidPartValue(bid, col.Id);
+                                            <td class="px-3 py-2 text-right font-mono text-slate-600 dark:text-slate-300">
+                                                @(value.HasValue ? FormatSwedishAmount(value.Value) : "-")
+                                            </td>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <td class="px-3 py-2 text-right font-mono text-slate-600 dark:text-slate-300">
+                                            @(bid.Amount.HasValue ? FormatSwedishAmount(bid.Amount.Value) : "-")
+                                        </td>
+                                    }
+                                    <td class="px-3 py-2 text-right font-mono font-semibold @(isRejected ? "text-slate-400 dark:text-slate-500" : "text-slate-800 dark:text-slate-100")">
                                         @(bid.Amount.HasValue ? FormatSwedishAmount(bid.Amount.Value) : "-")
                                     </td>
+                                    <td class="px-3 py-2 text-right font-mono text-slate-600 dark:text-slate-300">
+                                        @((bid.DeductionPercent ?? 0) > 0 ? $"{FormatPercent(bid.DeductionPercent)} %" : "-")
+                                    </td>
+                                    <td class="px-3 py-2 text-right font-mono font-semibold @(isRejected ? "text-slate-400 dark:text-slate-500" : "text-sky-700 dark:text-sky-300")">
+                                        @(bid.ComparisonAmount.HasValue ? FormatSwedishAmount(bid.ComparisonAmount.Value) : "-")
+                                    </td>
                                 }
-                                <td class="px-3 py-2 text-right font-mono font-semibold text-slate-800 dark:text-slate-100">
-                                    @(bid.Amount.HasValue ? FormatSwedishAmount(bid.Amount.Value) : "-")
-                                </td>
-                                <td class="px-3 py-2 text-right font-mono text-slate-600 dark:text-slate-300">
-                                    @((bid.DeductionPercent ?? 0) > 0 ? $"{FormatPercent(bid.DeductionPercent)} %" : "-")
-                                </td>
-                                <td class="px-3 py-2 text-right font-mono font-semibold text-sky-700 dark:text-sky-300">
-                                    @(bid.ComparisonAmount.HasValue ? FormatSwedishAmount(bid.ComparisonAmount.Value) : "-")
-                                </td>
+
                                 <td class="px-3 py-2 text-center">
-                                    @if (bid.IsWinner)
+                                    @if (bid.IsAwarded)
                                     {
                                         <svg class="mx-auto h-4 w-4 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
                                         </svg>
                                     }
+                                </td>
+                                <td class="px-3 py-2 text-center font-mono text-slate-600 dark:text-slate-300">
+                                    @(bid.IsAwarded && bid.Placement.HasValue ? bid.Placement.Value.ToString() : "-")
                                 </td>
                                 <td class="max-w-[200px] truncate px-3 py-2 text-slate-500 dark:text-slate-400" title="@bid.Note">
                                     @(string.IsNullOrWhiteSpace(bid.Note) ? "-" : bid.Note)
@@ -342,29 +537,46 @@ else
             </div>
 
             @* Summary *@
-            @if (_bids.Count > 1)
-            {
-                var withAmounts = _bids.Where(b => b.Amount.HasValue).ToList();
-                @if (withAmounts.Any())
+            <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                <span class="font-semibold">@_bids.Count anbudsgivare</span>
+                @if (_rejectedCount > 0)
                 {
-                    var anyDeduction = withAmounts.Any(b => (b.DeductionPercent ?? 0) > 0);
-                    <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
-                        <span class="font-semibold">@_bids.Count anbudsgivare</span>
+                    <span class="ml-2 text-red-600 dark:text-red-400">· @_rejectedCount förkastat</span>
+                }
+                @if (IsPointsModel)
+                {
+                    var scored = _bids.Where(b => b.IsValid && b.TotalPoints.HasValue).ToList();
+                    @if (scored.Any())
+                    {
+                        <span class="ml-3">Högsta totalpoäng: <span class="font-mono font-semibold text-sky-700 dark:text-sky-300">@FormatPoints(scored.Max(b => b.TotalPoints!.Value))</span></span>
+                        <span class="ml-3">Lägsta totalpoäng: <span class="font-mono">@FormatPoints(scored.Min(b => b.TotalPoints!.Value))</span></span>
+                    }
+                }
+                else
+                {
+                    var valid = _bids.Where(b => b.IsValid && b.Amount.HasValue).ToList();
+                    @if (valid.Any())
+                    {
+                        var anyDeduction = valid.Any(b => (b.DeductionPercent ?? 0) > 0);
                         @if (anyDeduction)
                         {
-                            <span class="ml-3">Lägsta jämförelsesumma: <span class="font-mono font-semibold text-sky-700 dark:text-sky-300">@FormatSwedishAmount(withAmounts.Min(b => b.ComparisonAmount!.Value))</span></span>
-                            <span class="ml-3">Högsta jämförelsesumma: <span class="font-mono">@FormatSwedishAmount(withAmounts.Max(b => b.ComparisonAmount!.Value))</span></span>
+                            <span class="ml-3">Lägsta jämförelsesumma: <span class="font-mono font-semibold text-sky-700 dark:text-sky-300">@FormatSwedishAmount(valid.Min(b => b.ComparisonAmount!.Value))</span></span>
+                            <span class="ml-3">Högsta jämförelsesumma: <span class="font-mono">@FormatSwedishAmount(valid.Max(b => b.ComparisonAmount!.Value))</span></span>
                         }
                         else
                         {
-                            <span class="ml-3">Lägsta anbudssumma: <span class="font-mono font-semibold">@FormatSwedishAmount(withAmounts.Min(b => b.Amount!.Value))</span></span>
-                            <span class="ml-3">Högsta anbudssumma: <span class="font-mono">@FormatSwedishAmount(withAmounts.Max(b => b.Amount!.Value))</span></span>
+                            <span class="ml-3">Lägsta anbudssumma: <span class="font-mono font-semibold">@FormatSwedishAmount(valid.Min(b => b.Amount!.Value))</span></span>
+                            <span class="ml-3">Högsta anbudssumma: <span class="font-mono">@FormatSwedishAmount(valid.Max(b => b.Amount!.Value))</span></span>
                         }
-                    </div>
+                    }
                 }
-            }
+            </div>
         }
-        else if (!_isLoading)
+        else if (_isLoading)
+        {
+            <div class="py-6 text-center text-sm text-slate-500 dark:text-slate-400">Laddar...</div>
+        }
+        else
         {
             <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center dark:border-slate-700 dark:bg-slate-950/60">
                 <p class="text-sm text-slate-500 dark:text-slate-400">Inga anbudsgivare registrerade ännu.</p>
@@ -378,11 +590,6 @@ else
             </div>
         }
 
-        @if (_isLoading)
-        {
-            <div class="py-6 text-center text-sm text-slate-500 dark:text-slate-400">Laddar...</div>
-        }
-
     </div>
 }
 
@@ -392,19 +599,30 @@ else
 
     private List<ProjectBidListDTO> _bids = [];
     private List<ProjectBidPriceColumnDTO> _columns = [];
+    private BidEvaluationModel _evaluationModel = BidEvaluationModel.LowestComparison;
     private ProjectBidFormModel? _editItem;
     private bool _isSaving;
     private bool _isLoading;
+    private bool _loadFailed;
     private bool _formTouched;
     private string _formError = string.Empty;
+    private int _rejectedCount;
 
     private bool _manageColumnsOpen;
     private bool _isColumnSaving;
+    private bool _isModelSaving;
     private string _newColumnName = string.Empty;
+    private BidPartType _newColumnType = BidPartType.Price;
     private string _columnError = string.Empty;
     private readonly Dictionary<int, string> _columnNameEdits = new();
+    private readonly Dictionary<int, BidPartType> _columnTypeEdits = new();
 
     private bool HasColumns => _columns.Count > 0;
+    private bool IsPointsModel => _evaluationModel == BidEvaluationModel.HighestPoints;
+    private List<ProjectBidPriceColumnDTO> PriceParts => _columns.Where(c => c.PartType == BidPartType.Price).ToList();
+    private List<ProjectBidPriceColumnDTO> PointParts => _columns.Where(c => c.PartType == BidPartType.Points).ToList();
+    private bool HasPriceParts => _columns.Any(c => c.PartType == BidPartType.Price);
+    private bool HasPointParts => _columns.Any(c => c.PartType == BidPartType.Points);
 
     protected override async Task OnInitializedAsync()
     {
@@ -414,28 +632,87 @@ else
     private async Task LoadAsync()
     {
         _isLoading = true;
+        _loadFailed = false;
+        StateHasChanged();
         try
         {
             var view = await Repo.ProjectBid.GetViewAsync(ProjectId) ?? new ProjectBidsViewDTO();
             _columns = view.PriceColumns;
             _bids = view.Bids;
+            _evaluationModel = view.EvaluationModel;
+            _rejectedCount = _bids.Count(b => b.Status == BidStatus.Rejected);
             _columnNameEdits.Clear();
+            _columnTypeEdits.Clear();
+        }
+        catch (Exception ex)
+        {
+            _loadFailed = true;
+            _bids = [];
+            _columns = [];
+            await ClientLog.ErrorAsync($"Failed to load project bids for project {ProjectId}.", ex: ex);
         }
         finally
         {
             _isLoading = false;
+            StateHasChanged();
         }
     }
 
-    // ── Legacy fallback ─────────────────────────────────────
-    // Bids saved before price columns existed only have a total Amount.
-    // They are shown in the first price column so no data is hidden.
-    private static decimal? GetBidColumnValue(ProjectBidListDTO bid, int columnId, int columnIndex)
+    private async Task SetEvaluationModelAsync(BidEvaluationModel model)
+    {
+        if (model == _evaluationModel || _isModelSaving)
+            return;
+
+        _isModelSaving = true;
+        try
+        {
+            var ok = await Repo.ProjectBid.SetEvaluationModelAsync(ProjectId, model);
+            if (ok)
+            {
+                _evaluationModel = model;
+            }
+            else
+            {
+                MHD.Notifications(ToastType.Update, false);
+            }
+        }
+        catch (Exception ex)
+        {
+            MHD.Notifications(ToastType.Update, false);
+            await ClientLog.ErrorAsync($"Failed to set bid evaluation model for project {ProjectId}.", ex: ex);
+        }
+        finally
+        {
+            _isModelSaving = false;
+        }
+    }
+
+    // ── Best-bid highlight ──────────────────────────────────
+    private bool IsBestBid(ProjectBidListDTO bid)
+    {
+        if (!bid.IsValid)
+            return false;
+
+        if (IsPointsModel)
+        {
+            var scored = _bids.Where(b => b.IsValid && b.TotalPoints.HasValue).ToList();
+            return bid.TotalPoints.HasValue && scored.Count > 0 && bid.TotalPoints.Value == scored.Max(b => b.TotalPoints!.Value);
+        }
+
+        var valid = _bids.Where(b => b.IsValid && b.ComparisonAmount.HasValue).ToList();
+        return bid.ComparisonAmount.HasValue && valid.Count > 0 && bid.ComparisonAmount.Value == valid.Min(b => b.ComparisonAmount!.Value);
+    }
+
+    // ── Per-part value (with legacy fallback) ───────────────
+    // Bids saved before evaluation parts existed only have a total Amount.
+    // They are shown in the first price part so no data is hidden.
+    private decimal? GetBidPartValue(ProjectBidListDTO bid, int columnId)
     {
         if (bid.Prices.TryGetValue(columnId, out var value))
             return value;
 
-        if (bid.Prices.Count == 0 && columnIndex == 0 && bid.Amount.HasValue)
+        if (bid.Prices.Count == 0 && !IsPointsModel && bid.Amount.HasValue &&
+            PriceParts.Count > 0 && PriceParts[0].Id == columnId)
             return bid.Amount;
 
         return null;
@@ -459,16 +736,21 @@ else
             BidderName = bid.BidderName,
             Amount = bid.Amount,
             DeductionPercent = bid.DeductionPercent,
+            ComparisonAmount = bid.ComparisonAmount,
             Note = bid.Note,
-            IsWinner = bid.IsWinner
+            IsAwarded = bid.IsAwarded,
+            Placement = bid.Placement,
+            Status = bid.Status,
+            RejectionReason = bid.RejectionReason,
+            LastEdited = ComparisonField.Deduction
         };
 
         foreach (var (columnId, value) in bid.Prices)
             model.Prices[columnId] = value;
 
-        // Legacy bid in a project that now has columns: prefill the first column.
-        if (HasColumns && model.Prices.Count == 0 && bid.Amount.HasValue)
-            model.Prices[_columns[0].Id] = bid.Amount.Value;
+        // Legacy bid in a project that now has price parts: prefill the first part.
+        if (HasPriceParts && model.Prices.Count == 0 && bid.Amount.HasValue)
+            model.Prices[PriceParts[0].Id] = bid.Amount.Value;
 
         _editItem = model;
         _formTouched = false;
@@ -496,21 +778,130 @@ else
             _editItem.Prices.Remove(columnId);
     }
 
+    private void OnPriceChanged(int columnId, decimal? value)
+    {
+        SetFormPrice(columnId, value);
+        OnTotalChanged();
+    }
+
+    /// <summary>Anbudssumma — summa av prisdelarna (eller legacy-belopp).</summary>
     private decimal FormTotal =>
         _editItem is null
             ? 0
-            : HasColumns
-                ? _editItem.Prices.Values.Sum()
+            : HasPriceParts
+                ? PriceParts.Sum(c => _editItem.Prices.TryGetValue(c.Id, out var v) ? v : 0)
                 : _editItem.Amount ?? 0;
 
-    private decimal FormComparison
+    private decimal FormPriceTotal => FormTotal;
+
+    /// <summary>Totalpoäng — summa av poängdelarna.</summary>
+    private decimal FormPointsTotal =>
+        _editItem is null
+            ? 0
+            : PointParts.Sum(c => _editItem.Prices.TryGetValue(c.Id, out var v) ? v : 0);
+
+    // ── Jämförelsesumma ⇄ Mervärdeavdrag (båda hållen) ──────
+    // Senast ändrat fält styr beräkningen.
+
+    private void OnDeductionChanged(decimal? value)
     {
-        get
+        if (_editItem is null)
+            return;
+
+        _editItem.DeductionPercent = value;
+        _editItem.LastEdited = ComparisonField.Deduction;
+        RecomputeComparisonFromDeduction();
+    }
+
+    private void OnComparisonChanged(decimal? value)
+    {
+        if (_editItem is null)
+            return;
+
+        _editItem.ComparisonAmount = value;
+        _editItem.LastEdited = ComparisonField.Comparison;
+        RecomputeDeductionFromComparison();
+    }
+
+    private void OnTotalChanged()
+    {
+        if (_editItem is null)
+            return;
+
+        // Anbudssumma ändrades → räkna om beroende på senast använda beräkningssätt.
+        if (_editItem.LastEdited == ComparisonField.Comparison)
+            RecomputeDeductionFromComparison();
+        else
+            RecomputeComparisonFromDeduction();
+    }
+
+    private void RecomputeComparisonFromDeduction()
+    {
+        if (_editItem is null)
+            return;
+
+        var total = FormTotal;
+        var deduction = Math.Clamp(_editItem.DeductionPercent ?? 0, 0, 100);
+        _editItem.ComparisonAmount = total - total * deduction / 100m;
+    }
+
+    private void RecomputeDeductionFromComparison()
+    {
+        if (_editItem is null)
+            return;
+
+        var total = FormTotal;
+        var comparison = _editItem.ComparisonAmount ?? 0;
+
+        if (total > 0)
+            _editItem.DeductionPercent = Math.Round((1 - comparison / total) * 100m, 2);
+        else
+            _editItem.DeductionPercent = 0;
+    }
+
+    // ── Status / Tilldelad ──────────────────────────────────
+
+    private void OnStatusChanged(ChangeEventArgs e)
+    {
+        if (_editItem is null)
+            return;
+
+        _editItem.Status = Enum.TryParse<BidStatus>(e.Value?.ToString(), out var status) ? status : BidStatus.Valid;
+
+        if (_editItem.Status == BidStatus.Rejected)
         {
-            var total = FormTotal;
-            var deduction = Math.Clamp(_editItem?.DeductionPercent ?? 0, 0, 100);
-            return total - total * deduction / 100m;
+            // Förkastade anbud kan inte vara tilldelade.
+            _editItem.IsAwarded = false;
+            _editItem.Placement = null;
         }
+        else
+        {
+            _editItem.RejectionReason = null;
+        }
+    }
+
+    private void OnAwardedChanged(ChangeEventArgs e)
+    {
+        if (_editItem is null)
+            return;
+
+        var awarded = e.Value is bool b && b;
+
+        if (awarded && _editItem.Status == BidStatus.Rejected)
+        {
+            // Blockera tilldelning av förkastat anbud.
+            _editItem.IsAwarded = false;
+            _formError = "Förkastade anbud kan inte markeras som tilldelade. Ändra status till Giltigt först.";
+            return;
+        }
+
+        _editItem.IsAwarded = awarded;
+        _formError = string.Empty;
+
+        if (awarded && _editItem.Placement is null or < 1)
+            _editItem.Placement = 1;
+        else if (!awarded)
+            _editItem.Placement = null;
     }
 
     private async Task SaveBidAsync()
@@ -523,16 +914,46 @@ else
         if (string.IsNullOrWhiteSpace(_editItem.BidderName))
             return;
 
-        if (HasColumns && _editItem.Prices.Values.Any(v => v < 0) ||
-            !HasColumns && _editItem.Amount is < 0)
+        // ── Validering ──
+        if (_editItem.Prices.Values.Any(v => v < 0) || _editItem.Amount is < 0)
         {
-            _formError = "Priser får inte vara negativa.";
+            _formError = "Värden får inte vara negativa.";
             return;
         }
 
-        if (_editItem.DeductionPercent is < 0 or > 100)
+        if (_editItem.Status == BidStatus.Rejected && _editItem.IsAwarded)
         {
-            _formError = "Mervärdeavdrag måste vara mellan 0 och 100.";
+            _formError = "Förkastade anbud kan inte vara tilldelade.";
+            return;
+        }
+
+        if (!IsPointsModel)
+        {
+            if (_editItem.DeductionPercent is < 0 or > 100)
+            {
+                _formError = "Mervärdeavdrag måste vara mellan 0 och 100 %.";
+                return;
+            }
+
+            var total = FormTotal;
+            var comparison = _editItem.ComparisonAmount ?? total;
+
+            if (comparison < 0)
+            {
+                _formError = "Jämförelsesumman får inte vara negativ.";
+                return;
+            }
+
+            if (comparison > total && total > 0)
+            {
+                _formError = "Jämförelsesumman får inte vara större än anbudssumman vid ett avdrag.";
+                return;
+            }
+        }
+
+        if (_editItem.IsAwarded && _editItem.Placement is < 1)
+        {
+            _formError = "Placering måste vara ett positivt heltal.";
             return;
         }
 
@@ -541,14 +962,22 @@ else
 
         try
         {
+            var isAwarded = _editItem.IsAwarded && _editItem.Status == BidStatus.Valid;
             var dto = new ProjectBidPostDTO
             {
                 BidderName = _editItem.BidderName.Trim(),
-                Amount = HasColumns ? _editItem.Prices.Values.Sum() : _editItem.Amount,
+                // Skicka det enkla beloppet så länge projektet inte har prisdelar.
+                // Med enbart poängdelar (utan prisdelar) visas fältet "Pris" och får inte tappas.
+                Amount = HasPriceParts ? null : _editItem.Amount,
                 Prices = HasColumns ? new Dictionary<int, decimal>(_editItem.Prices) : null,
                 DeductionPercent = _editItem.DeductionPercent is null or 0 ? null : _editItem.DeductionPercent,
                 Note = string.IsNullOrWhiteSpace(_editItem.Note) ? null : _editItem.Note.Trim(),
-                IsWinner = _editItem.IsWinner
+                IsAwarded = isAwarded,
+                Placement = isAwarded ? (_editItem.Placement is > 0 ? _editItem.Placement : 1) : null,
+                Status = _editItem.Status,
+                RejectionReason = _editItem.Status == BidStatus.Rejected && !string.IsNullOrWhiteSpace(_editItem.RejectionReason)
+                    ? _editItem.RejectionReason.Trim()
+                    : null
             };
 
             bool success;
@@ -570,13 +999,14 @@ else
             }
             else
             {
-                _formError = "Anbudsgivaren kunde inte sparas. Försök igen.";
+                _formError = "Anbudsgivaren kunde inte sparas. Kontrollera uppgifterna och försök igen.";
                 MHD.Notifications(ToastType.Update, false);
             }
         }
-        catch
+        catch (Exception ex)
         {
-            _formError = "Ett oväntat fel uppstod. Försök igen senare.";
+            _formError = "Anbudsgivaren kunde inte sparas just nu. Försök igen om en stund.";
+            await ClientLog.ErrorAsync($"Failed to save project bid for project {ProjectId}.", ex: ex);
         }
         finally
         {
@@ -590,19 +1020,23 @@ else
         {
             var ok = await Repo.ProjectBid.DeleteAsync(bid.Id, ProjectId);
             if (ok)
+            {
                 _bids.Remove(bid);
+                _rejectedCount = _bids.Count(b => b.Status == BidStatus.Rejected);
+            }
             MHD.Notifications(ToastType.Delete, ok);
             StateHasChanged();
         }));
     }
 
-    // ── Price column management ─────────────────────────────
+    // ── Evaluation-part management ──────────────────────────
 
     private void ToggleManageColumns()
     {
         _manageColumnsOpen = !_manageColumnsOpen;
         _columnError = string.Empty;
         _newColumnName = string.Empty;
+        _newColumnType = BidPartType.Price;
     }
 
     private string GetColumnEditName(int columnId) =>
@@ -610,10 +1044,34 @@ else
             ? edited
             : _columns.FirstOrDefault(c => c.Id == columnId)?.Name ?? string.Empty;
 
-    private bool IsColumnNameChanged(ProjectBidPriceColumnDTO column) =>
-        _columnNameEdits.TryGetValue(column.Id, out var edited) &&
-        !string.Equals(edited.Trim(), column.Name, StringComparison.Ordinal) &&
-        !string.IsNullOrWhiteSpace(edited);
+    private BidPartType GetColumnEditType(int columnId) =>
+        _columnTypeEdits.TryGetValue(columnId, out var edited)
+            ? edited
+            : _columns.FirstOrDefault(c => c.Id == columnId)?.PartType ?? BidPartType.Price;
+
+    private void SetColumnEditType(int columnId, string? raw)
+    {
+        if (Enum.TryParse<BidPartType>(raw, out var type))
+            _columnTypeEdits[columnId] = type;
+    }
+
+    private bool IsColumnChanged(ProjectBidPriceColumnDTO column)
+    {
+        var nameChanged =
+            _columnNameEdits.TryGetValue(column.Id, out var editedName) &&
+            !string.Equals(editedName.Trim(), column.Name, StringComparison.Ordinal) &&
+            !string.IsNullOrWhiteSpace(editedName);
+
+        var typeChanged =
+            _columnTypeEdits.TryGetValue(column.Id, out var editedType) &&
+            editedType != column.PartType;
+
+        // A type-only change is allowed as long as the (unchanged) name is valid.
+        if (typeChanged && !_columnNameEdits.ContainsKey(column.Id))
+            return true;
+
+        return nameChanged || typeChanged;
+    }
 
     private async Task CreateColumnAsync()
     {
@@ -625,7 +1083,7 @@ else
         }
         if (_columns.Any(c => string.Equals(c.Name, name, StringComparison.CurrentCultureIgnoreCase)))
         {
-            _columnError = "En priskolumn med detta namn finns redan. Välj ett annat namn.";
+            _columnError = "En utvärderingsdel med detta namn finns redan. Välj ett annat namn.";
             return;
         }
 
@@ -633,16 +1091,23 @@ else
         _columnError = string.Empty;
         try
         {
-            var id = await Repo.ProjectBid.CreateColumnAsync(ProjectId, new ProjectBidPriceColumnPostDTO { Name = name });
+            var id = await Repo.ProjectBid.CreateColumnAsync(ProjectId,
+                new ProjectBidPriceColumnPostDTO { Name = name, PartType = _newColumnType });
             if (id > 0)
             {
                 _newColumnName = string.Empty;
+                _newColumnType = BidPartType.Price;
                 await LoadAsync();
             }
             else
             {
-                _columnError = "Priskolumnen kunde inte skapas. Kontrollera namnet och försök igen.";
+                _columnError = "Utvärderingsdelen kunde inte skapas. Kontrollera namnet och försök igen.";
             }
+        }
+        catch (Exception ex)
+        {
+            _columnError = "Utvärderingsdelen kunde inte skapas just nu. Försök igen om en stund.";
+            await ClientLog.ErrorAsync($"Failed to create bid evaluation part for project {ProjectId}.", ex: ex);
         }
         finally
         {
@@ -652,10 +1117,9 @@ else
 
     private async Task RenameColumnAsync(ProjectBidPriceColumnDTO column)
     {
-        if (!_columnNameEdits.TryGetValue(column.Id, out var edited))
-            return;
+        var name = GetColumnEditName(column.Id).Trim();
+        var type = GetColumnEditType(column.Id);
 
-        var name = edited.Trim();
         if (name.Length == 0)
         {
             _columnError = "Namn krävs.";
@@ -663,7 +1127,7 @@ else
         }
         if (_columns.Any(c => c.Id != column.Id && string.Equals(c.Name, name, StringComparison.CurrentCultureIgnoreCase)))
         {
-            _columnError = "En priskolumn med detta namn finns redan. Välj ett annat namn.";
+            _columnError = "En utvärderingsdel med detta namn finns redan. Välj ett annat namn.";
             return;
         }
 
@@ -671,11 +1135,17 @@ else
         _columnError = string.Empty;
         try
         {
-            var ok = await Repo.ProjectBid.RenameColumnAsync(column.Id, ProjectId, new ProjectBidPriceColumnPostDTO { Name = name });
+            var ok = await Repo.ProjectBid.RenameColumnAsync(column.Id, ProjectId,
+                new ProjectBidPriceColumnPostDTO { Name = name, PartType = type });
             if (ok)
                 await LoadAsync();
             else
-                _columnError = "Namnet kunde inte sparas. Försök igen.";
+                _columnError = "Ändringen kunde inte sparas. Försök igen.";
+        }
+        catch (Exception ex)
+        {
+            _columnError = "Ändringen kunde inte sparas just nu. Försök igen om en stund.";
+            await ClientLog.ErrorAsync($"Failed to update bid evaluation part {column.Id} for project {ProjectId}.", ex: ex);
         }
         finally
         {
@@ -690,6 +1160,10 @@ else
         {
             if (await Repo.ProjectBid.MoveColumnAsync(column.Id, ProjectId, direction))
                 await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            await ClientLog.ErrorAsync($"Failed to move bid evaluation part {column.Id} for project {ProjectId}.", ex: ex);
         }
         finally
         {
@@ -708,6 +1182,10 @@ else
                 if (ok)
                     await LoadAsync();
                 MHD.Notifications(ToastType.Delete, ok);
+            }
+            catch (Exception ex)
+            {
+                await ClientLog.ErrorAsync($"Failed to delete bid evaluation part {column.Id} for project {ProjectId}.", ex: ex);
             }
             finally
             {
@@ -731,6 +1209,11 @@ else
             ? value.Value.ToString("0.##", System.Globalization.CultureInfo.GetCultureInfo("sv-SE"))
             : string.Empty;
 
+    private static string FormatPoints(decimal? value) =>
+        value.HasValue
+            ? value.Value.ToString("0.##", System.Globalization.CultureInfo.GetCultureInfo("sv-SE"))
+            : string.Empty;
+
     private static decimal? ParseAmount(string? value)
     {
         if (string.IsNullOrWhiteSpace(value))
@@ -743,6 +1226,12 @@ else
             : null;
     }
 
+    private enum ComparisonField
+    {
+        Deduction,
+        Comparison
+    }
+
     private sealed class ProjectBidFormModel
     {
         public int Id { get; set; }
@@ -750,7 +1239,12 @@ else
         public decimal? Amount { get; set; }
         public Dictionary<int, decimal> Prices { get; } = new();
         public decimal? DeductionPercent { get; set; }
+        public decimal? ComparisonAmount { get; set; }
         public string? Note { get; set; }
-        public bool IsWinner { get; set; }
+        public bool IsAwarded { get; set; }
+        public int? Placement { get; set; }
+        public BidStatus Status { get; set; } = BidStatus.Valid;
+        public string? RejectionReason { get; set; }
+        public ComparisonField LastEdited { get; set; } = ComparisonField.Deduction;
     }
 }

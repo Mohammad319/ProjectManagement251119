@@ -5,6 +5,7 @@ using Domain.Entities.Project;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Factory;
 using ProjectManagement.Shared.DTO.Project;
+using ProjectManagement.Shared.Enums;
 using System.Text.Json;
 
 namespace Persistence.Service.Project
@@ -18,6 +19,12 @@ namespace Persistence.Service.Project
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
+            var evaluationModel = await context.Projects
+                .Where(x => x.Id == projectId &&
+                    (!departmentId.HasValue || x.Folder.DepartmentId == departmentId.Value))
+                .Select(x => (BidEvaluationModel?)x.BidEvaluationModel)
+                .FirstOrDefaultAsync(ct) ?? BidEvaluationModel.LowestComparison;
+
             var columns = await context.ProjectBidPriceColumns
                 .Where(x => x.ProjectId == projectId &&
                     (!departmentId.HasValue || x.Project.Folder.DepartmentId == departmentId.Value))
@@ -28,6 +35,7 @@ namespace Persistence.Service.Project
                 {
                     Id = x.Id,
                     Name = x.Name,
+                    PartType = x.PartType,
                     SortOrder = x.SortOrder
                 })
                 .ToListAsync(ct);
@@ -46,26 +54,42 @@ namespace Persistence.Service.Project
                     x.PricesJson,
                     x.DeductionPercent,
                     x.Note,
-                    x.IsWinner,
+                    x.IsAwarded,
+                    x.Placement,
+                    x.Status,
+                    x.RejectionReason,
                     x.SortOrder
                 })
                 .ToListAsync(ct);
 
             var columnIds = columns.Select(c => c.Id).ToHashSet();
+            var pointColumnIds = columns.Where(c => c.PartType == BidPartType.Points).Select(c => c.Id).ToHashSet();
+            var hasPointColumns = pointColumnIds.Count > 0;
 
             return new ProjectBidsViewDTO
             {
+                EvaluationModel = evaluationModel,
                 PriceColumns = columns,
-                Bids = bids.Select(x => new ProjectBidListDTO
+                Bids = bids.Select(x =>
                 {
-                    Id = x.Id,
-                    BidderName = x.BidderName,
-                    Amount = x.Amount,
-                    Prices = DeserializePrices(x.PricesJson, columnIds),
-                    DeductionPercent = x.DeductionPercent,
-                    Note = x.Note,
-                    IsWinner = x.IsWinner,
-                    SortOrder = x.SortOrder
+                    var prices = DeserializePrices(x.PricesJson, columnIds);
+                    return new ProjectBidListDTO
+                    {
+                        Id = x.Id,
+                        BidderName = x.BidderName,
+                        Amount = x.Amount,
+                        Prices = prices,
+                        DeductionPercent = x.DeductionPercent,
+                        Note = x.Note,
+                        IsAwarded = x.IsAwarded,
+                        Placement = x.Placement,
+                        Status = x.Status,
+                        RejectionReason = x.RejectionReason,
+                        TotalPoints = hasPointColumns
+                            ? prices.Where(kv => pointColumnIds.Contains(kv.Key)).Sum(kv => kv.Value)
+                            : null,
+                        SortOrder = x.SortOrder
+                    };
                 }).ToList()
             };
         }
@@ -93,17 +117,20 @@ namespace Persistence.Service.Project
                 .MaxAsync(x => (int?)x.SortOrder, ct) ?? 0;
 
             var (pricesJson, amount) = await ResolvePricesAsync(context, projectId, dto, ct);
+            var (isAwarded, placement, status, rejectionReason) = NormalizeAward(dto);
 
             var bid = new ProjectBidEntity(
                 projectId: projectId,
                 bidderName: dto.BidderName,
                 amount: amount,
                 note: dto.Note,
-                isWinner: dto.IsWinner,
+                isAwarded: isAwarded,
                 sortOrder: sortOrder + 100);
 
             bid.SetPrices(pricesJson, amount);
             bid.SetDeductionPercent(NormalizeDeduction(dto.DeductionPercent));
+            bid.SetStatus(status, rejectionReason);
+            bid.SetAwarded(isAwarded && status == BidStatus.Valid, placement);
 
             context.ProjectBids.Add(bid);
             await context.SaveChangesAsync(ct);
@@ -131,10 +158,12 @@ namespace Persistence.Service.Project
                 return false;
 
             var (pricesJson, amount) = await ResolvePricesAsync(context, projectId, dto, ct);
+            var (isAwarded, placement, status, rejectionReason) = NormalizeAward(dto);
 
-            bid.Update(dto.BidderName, amount, dto.Note, dto.IsWinner);
+            bid.Update(dto.BidderName, amount, dto.Note, isAwarded && status == BidStatus.Valid, placement);
             bid.SetPrices(pricesJson, amount);
             bid.SetDeductionPercent(NormalizeDeduction(dto.DeductionPercent));
+            bid.SetStatus(status, rejectionReason);
 
             await context.SaveChangesAsync(ct);
             return true;
@@ -157,6 +186,26 @@ namespace Persistence.Service.Project
                 return false;
 
             context.ProjectBids.Remove(bid);
+            await context.SaveChangesAsync(ct);
+            return true;
+        }
+
+        public async Task<bool> SetEvaluationModelAsync(
+            Guid projectId,
+            BidEvaluationModel model,
+            int? departmentId,
+            CancellationToken ct = default)
+        {
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            var project = await context.Projects
+                .FirstOrDefaultAsync(x => x.Id == projectId &&
+                    (!departmentId.HasValue || x.Folder.DepartmentId == departmentId.Value), ct);
+
+            if (project is null)
+                return false;
+
+            project.SetBidEvaluationModel(model);
             await context.SaveChangesAsync(ct);
             return true;
         }
@@ -190,7 +239,7 @@ namespace Persistence.Service.Project
                 .Where(x => x.ProjectId == projectId)
                 .MaxAsync(x => (int?)x.SortOrder, ct) ?? 0;
 
-            var column = new ProjectBidPriceColumnEntity(projectId, name, sortOrder + 100);
+            var column = new ProjectBidPriceColumnEntity(projectId, name, sortOrder + 100, dto.PartType);
             context.ProjectBidPriceColumns.Add(column);
             await context.SaveChangesAsync(ct);
             return column.Id;
@@ -220,6 +269,7 @@ namespace Persistence.Service.Project
                 return false;
 
             column.Rename(name);
+            column.SetPartType(dto.PartType);
             await context.SaveChangesAsync(ct);
             return true;
         }
@@ -236,11 +286,20 @@ namespace Persistence.Service.Project
             if (column is null)
                 return false;
 
+            // Which columns are price parts after this one is removed, so we can
+            // recompute each bid's Anbudssumma without the deleted part.
+            var priceColumnIds = await context.ProjectBidPriceColumns
+                .Where(x => x.ProjectId == projectId && x.Id != id && x.PartType == BidPartType.Price)
+                .Select(x => x.Id)
+                .ToListAsync(ct);
+
             // Strip this column's values from all bids and recompute their totals
             // so no stale amounts survive the deletion.
             var bidsWithPrices = await context.ProjectBids
                 .Where(x => x.ProjectId == projectId && x.PricesJson != null)
                 .ToListAsync(ct);
+
+            var priceColumnSet = priceColumnIds.ToHashSet();
 
             foreach (var bid in bidsWithPrices)
             {
@@ -251,7 +310,7 @@ namespace Persistence.Service.Project
                 if (prices.Count == 0)
                     bid.SetPrices(null, null);
                 else
-                    bid.SetPrices(JsonSerializer.Serialize(prices), prices.Values.Sum());
+                    bid.SetPrices(JsonSerializer.Serialize(prices), SumPriceParts(prices, priceColumnSet));
             }
 
             context.ProjectBidPriceColumns.Remove(column);
@@ -321,15 +380,34 @@ namespace Persistence.Service.Project
                 return false;
             if (dto.DeductionPercent is < 0 or > 100)
                 return false;
+            if (dto.Placement is < 1)
+                return false;
             return true;
+        }
+
+        /// <summary>
+        /// Förkastade anbud kan inte vara tilldelade. Tilldelning kräver giltigt anbud
+        /// och placering behålls bara för tilldelade anbud.
+        /// </summary>
+        private static (bool IsAwarded, int? Placement, BidStatus Status, string? RejectionReason) NormalizeAward(ProjectBidPostDTO dto)
+        {
+            var status = dto.Status;
+            var rejectionReason = status == BidStatus.Rejected ? dto.RejectionReason : null;
+            var isAwarded = dto.IsAwarded && status == BidStatus.Valid;
+            var placement = isAwarded && dto.Placement is > 0 ? dto.Placement : null;
+            return (isAwarded, placement, status, rejectionReason);
         }
 
         private static decimal? NormalizeDeduction(decimal? value) =>
             value is null or 0 ? null : value;
 
+        private static decimal SumPriceParts(Dictionary<int, decimal> prices, HashSet<int> priceColumnIds) =>
+            prices.Where(kv => priceColumnIds.Contains(kv.Key)).Sum(kv => kv.Value);
+
         /// <summary>
-        /// When the project has price columns and the client sent price parts,
-        /// the total (Anbudssumma) is the sum of the parts. Otherwise the legacy
+        /// When the project has evaluation parts and the client sent part values,
+        /// the total (Anbudssumma) is the sum of the <b>price</b> parts only — point
+        /// parts are stored alongside but don't affect the bid sum. Otherwise the legacy
         /// single amount is kept so existing bids keep working unchanged.
         /// </summary>
         private static async Task<(string? PricesJson, decimal? Amount)> ResolvePricesAsync(
@@ -341,10 +419,13 @@ namespace Persistence.Service.Project
             if (dto.Prices is null || dto.Prices.Count == 0)
                 return (null, dto.Amount);
 
-            var columnIds = await context.ProjectBidPriceColumns
+            var columns = await context.ProjectBidPriceColumns
                 .Where(x => x.ProjectId == projectId)
-                .Select(x => x.Id)
+                .Select(x => new { x.Id, x.PartType })
                 .ToListAsync(ct);
+
+            var columnIds = columns.Select(c => c.Id).ToHashSet();
+            var priceColumnIds = columns.Where(c => c.PartType == BidPartType.Price).Select(c => c.Id).ToHashSet();
 
             var valid = dto.Prices
                 .Where(kv => columnIds.Contains(kv.Key))
@@ -353,7 +434,10 @@ namespace Persistence.Service.Project
             if (valid.Count == 0)
                 return (null, dto.Amount);
 
-            return (JsonSerializer.Serialize(valid), valid.Values.Sum());
+            // Anbudssumma is the sum of the price parts. If the project only has
+            // point parts there is no price sum, so fall back to any sent Amount.
+            var amount = priceColumnIds.Count > 0 ? SumPriceParts(valid, priceColumnIds) : dto.Amount;
+            return (JsonSerializer.Serialize(valid), amount);
         }
 
         private static Dictionary<int, decimal> DeserializePrices(string? json, HashSet<int>? columnIds)

@@ -4,6 +4,7 @@ using Domain.Entities.Folder;
 using Domain.Entities.Organisation;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Project;
+using ProjectManagement.Shared.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
@@ -74,6 +75,9 @@ namespace Domain.Entities.Project
 
         public bool IsArchived { get; private set; } = false;
 
+        /// <summary>Utvärderingsmodell för projektets anbud (Anbud-fönstret).</summary>
+        public BidEvaluationModel BidEvaluationModel { get; private set; } = BidEvaluationModel.LowestComparison;
+
         [JsonIgnore]
         public ICollection<CalculationEntity> Calculations { get; private set; } = [];
 
@@ -136,6 +140,8 @@ namespace Domain.Entities.Project
         }
 
         public void UpdateOrder(int newOrder) => SortOrder = newOrder;
+
+        public void SetBidEvaluationModel(BidEvaluationModel model) => BidEvaluationModel = model;
 
         public void MoveToFolder(Guid folderId)
         {
