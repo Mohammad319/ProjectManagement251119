@@ -1607,18 +1607,22 @@
 
     private List<MhdColumnPickerItem> CalculationColumnOptions => new()
     {
+
         new("code", CalcResource.code),
         new("name", AppLoc["calculationName"].Value),
         new("version", AppLoc["version"].Value),
         new("project", AppLoc["project"].Value),
-        new("folder", AppLoc["folder"].Value),
+        
+        new("qa", "Frågor/svar"),
+        new("deadline", CalcResource.tenderDeadline),
         new("status", "Kalkylstatus"),
+
+        new("folder", AppLoc["folder"].Value),
         new("calculationRole", AppLoc["calculationRole"].Value),
         new("calculationType", AppLoc["calculationType"].Value),
         new("responsible", AppLoc["calculationResponsible"].Value),
         new("inspector", AppLoc["reviewer"].Value),
-        new("qa", "Frågor/svar"),
-        new("deadline", CalcResource.tenderDeadline),
+     
         new("priority", "Vinstchans"),
         new("address", "Adress"),
         new("createdAt", AppLoc["createdDate"].Value),

@@ -39,12 +39,10 @@
             @if (Part == 1)
             {
                 <div class="relative z-0 pr-1">
-                    <div class="grid grid-cols-1 gap-3 xl:grid-cols-2">
+                    @* Kalkyl (full). Sedan halva/halva: vänster = Ansvar + Projektplats staplade, höger = Datum. Anteckning (full). *@
+                    <div class="flex flex-col gap-3">
 
-                        @* ── Vänster kolumn: Kalkyl + Ansvar + Projektplats + Anteckning ── *@
-                        <div class="flex flex-col gap-3">
-
-                            @* Kalkyl *@
+                            @* Kalkyl — full bredd *@
                             <section class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
                                 <h3 class="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">@CalcResource.calculation</h3>
 
@@ -156,14 +154,15 @@
 
                                 @* Versionspanel *@
                                 <div class="mb-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-950">
-                                    <div class="flex flex-wrap items-center justify-between gap-2">
-                                        <div>
+                                    @* Allt på en rad oavsett bredd: ingen radbrytning, etiketten kortas av vid behov, knapparna krymper inte. *@
+                                    <div class="flex flex-nowrap items-center justify-between gap-2">
+                                        <div class="flex min-w-0 items-baseline gap-2 truncate">
                                             <span class="text-sm font-semibold text-slate-800 dark:text-slate-100">V.@CalculationUpdate.VersionNumber.ToString("D2")</span>
-                                            <span class="ml-2 text-xs text-slate-500 dark:text-slate-400">
+                                            <span class="truncate text-xs text-slate-500 dark:text-slate-400">
                                                 @(CalculationUpdate.IsCurrentVersion ? AppLoc["currentVersionLabel"].Value : AppLoc["olderVersionLabel"].Value)
                                             </span>
                                         </div>
-                                        <div class="flex flex-wrap items-center gap-2">
+                                        <div class="flex flex-nowrap items-center gap-2 shrink-0">
                                             @if (CalculationVersions.Count() > 1)
                                             {
                                                 <button type="button"
@@ -187,8 +186,8 @@
 
                                 @* Moms + vinstchans + arkiverad *@
                                 <div class="flex flex-row flex-nowrap items-end gap-2 overflow-x-auto pb-1 max-[430px]:flex-col max-[430px]:items-stretch max-[430px]:overflow-visible">
-                                    @* Vinstchans *@
-                                    <div class="w-[150px] shrink-0 max-[430px]:w-full">
+                                    @* Vinstchans — växer och fyller raden så den tar hela bredden *@
+                                    <div class="min-w-[150px] flex-1 max-[430px]:w-full">
                                         <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400"
                                                title="Sannolikhet att vinna">
                                             Vinstchans (@CalculationUpdate.Priority %)
@@ -239,8 +238,11 @@
 
                             </section>
 
-                            @* Ansvar + Projektplats ── sida vid sida utom på mobil *@
-                            <div class="grid grid-cols-2 gap-3 max-sm:grid-cols-1">
+                            @* Vänster: Ansvar överst, Projektplats under. Höger: Datum. Sida vid sida utom på mobil. *@
+                            <div class="grid grid-cols-2 items-start gap-3 max-sm:grid-cols-1">
+
+                                @* Vänster kolumn — Ansvar + Projektplats staplade *@
+                                <div class="flex flex-col gap-3">
 
                                 @* Ansvar *@
                                 <section class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
@@ -325,7 +327,76 @@
                                     </div>
                                 </section>
 
-                            </div>@* end Ansvar + Projektplats *@
+                                </div>@* end vänster kolumn (Ansvar + Projektplats) *@
+
+                                @* Datum — höger kolumn, halva bredden bredvid Ansvar/Projektplats *@
+                                <section class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                                    <h3 class="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">@ResourceApp.date</h3>
+                                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 [&>*]:min-w-0 [&_input]:min-w-0 [&_select]:min-w-0 [&_input]:w-full [&_select]:w-full">
+                                        <div>
+                                            <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                                   title="Sista dag för frågor och svar">Frågor/svar senast</label>
+                                            <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900" @bind-Value="@CalculationUpdate.TenderQA" disabled="@IsContentLocked" />
+                                            @if (CalculationUpdate.TenderQA != default && CalculationUpdate.TenderQA < DateTime.Today)
+                                            {
+                                                <p class="mt-0.5 text-[11px] text-amber-600 dark:text-amber-400">@AppLoc["qaDeadlinePassed"]</p>
+                                            }
+                                        </div>
+                                        <div>
+                                            <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.tenderDeadline</label>
+                                            <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900" @bind-Value="@CalculationUpdate.TenderDeadline" disabled="@IsContentLocked" />
+                                            @if (CalculationUpdate.TenderDeadline != default && CalculationUpdate.TenderDeadline < DateTime.Today)
+                                            {
+                                                <p class="mt-0.5 text-[11px] text-amber-600 dark:text-amber-400">@AppLoc["tenderDeadlinePassed"]</p>
+                                            }
+                                        </div>
+                                        <div>
+                                            <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.startDate</label>
+                                            <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
+                                                       @bind-Value="@CalculationUpdate.StartDate"
+                                                       disabled="@IsContentLocked"
+                                                       @bind-Value:after="OnStartDateChanged" />
+                                            @if (CalculationUpdate.StartDate != default && CalculationUpdate.StartDate < DateTime.Today)
+                                            {
+                                                <p class="mt-0.5 text-[11px] text-amber-600 dark:text-amber-400">@AppLoc["startDatePassed"]</p>
+                                            }
+                                        </div>
+                                        <div>
+                                            <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.endDate</label>
+                                            <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
+                                                       @bind-Value="@CalculationUpdate.EndDate"
+                                                       disabled="@IsContentLocked"
+                                                       @bind-Value:after="OnEndDateChanged" />
+                                            @if (CalculationUpdate.EndDate != default && CalculationUpdate.StartDate != default && CalculationUpdate.EndDate < CalculationUpdate.StartDate)
+                                            {
+                                                <p class="mt-0.5 text-[11px] text-red-600 dark:text-red-400">@AppLoc["endBeforeStartError"]</p>
+                                            }
+                                        </div>
+                                        <div class="sm:col-span-2">
+                                            <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">
+                                                @AppLoc["projectDurationMonths"]
+                                                @if (CalculationUpdate.StartDate != default && CalculationUpdate.EndDate != default)
+                                                {
+                                                    <span class="ml-1 text-slate-400">@AppLoc["calculatedAutomatically"]</span>
+                                                }
+                                            </label>
+                                            <input class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
+                                                   value="@FormatMonthsInput(CalculationUpdate.TimeMonth)"
+                                                   disabled="@IsContentLocked"
+                                                   @onchange="OnTimeMonthInputChanged" />
+                                            @if (CalculationUpdate.StartDate != default && CalculationUpdate.EndDate == default && CalculationUpdate.TimeMonth > 0)
+                                            {
+                                                <p class="mt-0.5 text-[11px] text-sky-600 dark:text-sky-400">@AppLoc["endDateFromStartMonths"]</p>
+                                            }
+                                            @if (CalculationUpdate.EndDate != default && CalculationUpdate.StartDate == default && CalculationUpdate.TimeMonth > 0)
+                                            {
+                                                <p class="mt-0.5 text-[11px] text-sky-600 dark:text-sky-400">@AppLoc["startDateFromEndMonths"]</p>
+                                            }
+                                        </div>
+                                    </div>
+                                </section>
+
+                            </div>@* end Ansvar/Projektplats + Datum *@
 
                             @* Anteckning *@
                             <section class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
@@ -371,80 +442,6 @@
                                     @CalcResource.addNote
                                 </button>
                             </section>
-
-                        </div>
-
-                        @* ── Höger kolumn: Datum ────────────────────────────── *@
-                        <div class="flex flex-col gap-3">
-
-                            @* Datum *@
-                            <section class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                                <h3 class="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">@ResourceApp.date</h3>
-                                <div class="grid grid-cols-1 gap-3 sm:!grid-cols-[minmax(0,1fr)_minmax(0,1fr)] [&>*]:min-w-0 [&_input]:min-w-0 [&_select]:min-w-0 [&_input]:w-full [&_select]:w-full">
-                                    <div>
-                                        <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400"
-                                               title="Sista dag för frågor och svar">Frågor/svar senast</label>
-                                        <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900" @bind-Value="@CalculationUpdate.TenderQA" disabled="@IsContentLocked" />
-                                        @if (CalculationUpdate.TenderQA != default && CalculationUpdate.TenderQA < DateTime.Today)
-                                        {
-                                            <p class="mt-0.5 text-[11px] text-amber-600 dark:text-amber-400">@AppLoc["qaDeadlinePassed"]</p>
-                                        }
-                                    </div>
-                                    <div>
-                                        <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.tenderDeadline</label>
-                                        <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900" @bind-Value="@CalculationUpdate.TenderDeadline" disabled="@IsContentLocked" />
-                                        @if (CalculationUpdate.TenderDeadline != default && CalculationUpdate.TenderDeadline < DateTime.Today)
-                                        {
-                                            <p class="mt-0.5 text-[11px] text-amber-600 dark:text-amber-400">@AppLoc["tenderDeadlinePassed"]</p>
-                                        }
-                                    </div>
-                                    <div>
-                                        <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.startDate</label>
-                                        <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
-                                                   @bind-Value="@CalculationUpdate.StartDate"
-                                                   disabled="@IsContentLocked"
-                                                   @bind-Value:after="OnStartDateChanged" />
-                                        @if (CalculationUpdate.StartDate != default && CalculationUpdate.StartDate < DateTime.Today)
-                                        {
-                                            <p class="mt-0.5 text-[11px] text-amber-600 dark:text-amber-400">@AppLoc["startDatePassed"]</p>
-                                        }
-                                    </div>
-                                    <div>
-                                        <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.endDate</label>
-                                        <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
-                                                   @bind-Value="@CalculationUpdate.EndDate"
-                                                   disabled="@IsContentLocked"
-                                                   @bind-Value:after="OnEndDateChanged" />
-                                        @if (CalculationUpdate.EndDate != default && CalculationUpdate.StartDate != default && CalculationUpdate.EndDate < CalculationUpdate.StartDate)
-                                        {
-                                            <p class="mt-0.5 text-[11px] text-red-600 dark:text-red-400">@AppLoc["endBeforeStartError"]</p>
-                                        }
-                                    </div>
-                                    <div class="sm:col-span-2">
-                                        <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">
-                                            @AppLoc["projectDurationMonths"]
-                                            @if (CalculationUpdate.StartDate != default && CalculationUpdate.EndDate != default)
-                                            {
-                                                <span class="ml-1 text-slate-400">@AppLoc["calculatedAutomatically"]</span>
-                                            }
-                                        </label>
-                                        <input class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
-                                               value="@FormatMonthsInput(CalculationUpdate.TimeMonth)"
-                                               disabled="@IsContentLocked"
-                                               @onchange="OnTimeMonthInputChanged" />
-                                        @if (CalculationUpdate.StartDate != default && CalculationUpdate.EndDate == default && CalculationUpdate.TimeMonth > 0)
-                                        {
-                                            <p class="mt-0.5 text-[11px] text-sky-600 dark:text-sky-400">@AppLoc["endDateFromStartMonths"]</p>
-                                        }
-                                        @if (CalculationUpdate.EndDate != default && CalculationUpdate.StartDate == default && CalculationUpdate.TimeMonth > 0)
-                                        {
-                                            <p class="mt-0.5 text-[11px] text-sky-600 dark:text-sky-400">@AppLoc["startDateFromEndMonths"]</p>
-                                        }
-                                    </div>
-                                </div>
-                            </section>
-
-                        </div>
 
                     </div>
                 </div>
