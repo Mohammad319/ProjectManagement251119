@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+@source "../**/*.{razor,html,cshtml,cs}";
+
+@custom-variant dark (&:is(.dark *));
+
+@source inline("dark:{bg-slate-950,bg-slate-950/80,bg-slate-900,bg-slate-900/70,text-slate-100,text-slate-200,text-slate-300,text-slate-400,border-slate-800,border-slate-700}");
+
+@layer base {
+  html {
+    color-scheme: light;
+    @apply bg-slate-50 text-slate-900;
+  }
+
+  html.dark {
+    color-scheme: dark;
+    @apply bg-slate-950 text-slate-100;
+  }
+
+  body {
+    @apply min-h-screen bg-inherit text-inherit antialiased;
+  }
+
+  input,
+  select,
+  textarea {
+    color-scheme: inherit;
+  }
+
+  html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  html.dark select,
+  html.dark textarea {
+    @apply border-slate-700 bg-slate-900 text-slate-100 placeholder:text-slate-500;
+    color-scheme: dark;
+  }
+
+  html.dark input::placeholder,
+  html.dark textarea::placeholder {
+    @apply text-slate-500;
+  }
+
+  html.dark input[type="date"],
+  html.dark input[type="datetime-local"],
+  html.dark input[type="time"],
+  html.dark input[type="month"] {
+    color-scheme: dark;
+  }
+}
+
+@layer components {
+  .tw-field {
+    @apply block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500;
+  }
+
+  .tw-surface {
+    @apply rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/80;
+  }
+
+  .tw-muted-surface {
+    @apply rounded-2xl border border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900/60;
+  }
+}

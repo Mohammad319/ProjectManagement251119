@@ -39,6 +39,7 @@
         public static string ResourceType => ApiV1 + "ResourceType/";
         public static string Departments => ApiV1 + "Departments/";
         public static string ItemCalcCategory => ApiV1 + "ItemCalcCategory/";
+        public static string UserListSettings => ApiV1 + "UserListSettings/";
         public static string Details => "details/";
 
     }

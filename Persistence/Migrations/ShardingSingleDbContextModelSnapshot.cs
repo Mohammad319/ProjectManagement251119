@@ -3317,6 +3317,70 @@ namespace Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Domain.Entities.Users.UserListSettingEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("Scope")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("UpdatedBy");
+
+                    b.HasIndex("TenantId", "UserId", "Scope", "Kind")
+                        .IsUnique()
+                        .HasDatabaseName("UX_UserListSettings_Tenant_User_Scope_Kind");
+
+                    b.ToTable("UserListSettings", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_UserListSettings_Kind_NotEmpty", "LEN(LTRIM(RTRIM([Kind]))) > 0");
+
+                            t.HasCheckConstraint("CK_UserListSettings_Scope_NotEmpty", "LEN(LTRIM(RTRIM([Scope]))) > 0");
+                        });
+                });
+
             modelBuilder.Entity("Domain.Entities.Application.ApplicationEntity", b =>
                 {
                     b.HasOne("Domain.Entities.Users.DepartmentEntity", "Department")
@@ -4308,6 +4372,23 @@ namespace Persistence.Migrations
                     b.Navigation("CreatedByUser");
 
                     b.Navigation("Department");
+
+                    b.Navigation("UpdatedByUser");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Users.UserListSettingEntity", b =>
+                {
+                    b.HasOne("Domain.Entities.Users.UserEntity", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Entities.Users.UserEntity", "UpdatedByUser")
+                        .WithMany()
+                        .HasForeignKey("UpdatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CreatedByUser");
 
                     b.Navigation("UpdatedByUser");
                 });

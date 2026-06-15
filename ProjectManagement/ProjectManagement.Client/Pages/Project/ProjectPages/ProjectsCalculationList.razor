@@ -923,11 +923,19 @@
     private sealed record ScopeCalculationRow(FolderMVVM Folder, ListProjectMVVM Project, ListCalculationMVVM Calculation);
 
     private DotNetObjectReference<ProjectsCalculationList>? _dotNetRef;
+    private Dictionary<string, int> _columnWidths = new();
+    private bool _columnWidthsApplied;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         _dotNetRef ??= DotNetObjectReference.Create(this);
         await JS.InvokeVoidAsync("initializeResizableColumns", _dotNetRef);
+
+        if (!_columnWidthsApplied && _columnWidths.Count > 0)
+        {
+            _columnWidthsApplied = true;
+            await JS.InvokeVoidAsync("applySavedColumnWidths", _columnWidths);
+        }
 
         var scopeKey = CurrentViewKey;
         if (_prevProjectId != scopeKey)
@@ -943,7 +951,19 @@
     }
 
     [JSInvokable]
-    public void SaveTemplateBlazor(string data) { }
+    public async Task SaveTemplateBlazor(string data)
+    {
+        if (string.IsNullOrWhiteSpace(data))
+            return;
+
+        // Payload from resizableTable.js is "columnKey||width" (e.g. "code||180").
+        var parts = data.Split("||", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length < 2 || !int.TryParse(parts[1], out var width) || width <= 0)
+            return;
+
+        _columnWidths[parts[0]] = width;
+        await ViewPreference.SaveColumnWidthsAsync(_columnWidths);
+    }
 
     public void Dispose() => _dotNetRef?.Dispose();
 
@@ -1046,6 +1066,8 @@
             _calculationColumns["project"] = true;
             _calculationColumns["folder"] = IsDepartmentScope;
         }
+
+        _columnWidths = await ViewPreference.LoadColumnWidthsAsync() ?? new();
     }
 
     protected override async Task OnParametersSetAsync()

@@ -4,46 +4,89 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.JSInterop;
 using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Shared.Model.Filter;
+using ProjectManagement.Client.Shared.Repositories.UserSettings;
 using ProjectManagement.Shared.Constant;
 
 namespace ProjectManagement.Client.Services.Folder;
 
 /// <summary>
-/// Persists named column views ("kolumnvyer") for the right-panel lists.
-/// Views are personal (the storage key includes the current user id) and
-/// kept completely separate from saved filters and from the other list:
-/// project list and calculation list use different scopes and never mix.
+/// Persists named column views ("kolumnvyer") per user. The server (per
+/// tenant/user) is the source of truth; localStorage is kept only as a fast
+/// cache and offline fallback. Project list and calculation list use separate
+/// scopes and never mix with saved filters.
 /// </summary>
 public sealed class ListSavedColumnViewStorage(
     IJSRuntime js,
     IClientLogger clientLogger,
-    AuthenticationStateProvider authenticationStateProvider)
+    AuthenticationStateProvider authenticationStateProvider,
+    UserListSettingsRepository settingsRepository)
 {
     public const string ProjectListScope = "ProjectList";
     public const string CalculationListScope = "CalculationList";
+    private const string Kind = "SavedColumnViews";
 
     public async Task<List<SavedColumnView>> LoadAsync(string scope)
+    {
+        var cached = await LoadFromCacheAsync(scope);
+
+        try
+        {
+            var settings = await settingsRepository.GetByScopeAsync(scope);
+            var payload = settings.FirstOrDefault(s => s.Kind == Kind)?.Payload;
+
+            if (!string.IsNullOrWhiteSpace(payload))
+            {
+                var fromServer = Normalize(Deserialize(payload));
+                await SaveToCacheAsync(scope, fromServer);
+                return fromServer;
+            }
+
+            // Nothing on the server yet: migrate any existing local cache up once.
+            if (cached.Count > 0)
+                await settingsRepository.UpsertAsync(scope, Kind, JsonSerializer.Serialize(cached));
+
+            return cached;
+        }
+        catch (Exception ex)
+        {
+            await clientLogger.ErrorAsync($"Loading saved column views from server failed ({scope})", ex: ex);
+            return cached;
+        }
+    }
+
+    public async Task SaveAllAsync(string scope, List<SavedColumnView> views)
+    {
+        // Write-through: update the cache immediately, then persist to the server.
+        await SaveToCacheAsync(scope, views);
+
+        try
+        {
+            await settingsRepository.UpsertAsync(scope, Kind, JsonSerializer.Serialize(views));
+        }
+        catch (Exception ex)
+        {
+            await clientLogger.ErrorAsync($"Saving saved column views to server failed ({scope})", ex: ex);
+        }
+    }
+
+    // ── cache helpers ──────────────────────────────────────────────────────
+
+    private async Task<List<SavedColumnView>> LoadFromCacheAsync(string scope)
     {
         try
         {
             var json = await js.InvokeAsync<string?>("localStorage.getItem", await GetStorageKeyAsync(scope));
             if (!string.IsNullOrWhiteSpace(json))
-            {
-                var views = JsonSerializer.Deserialize<List<SavedColumnView>>(json) ?? [];
-                return views
-                    .Where(v => !string.IsNullOrWhiteSpace(v.Name))
-                    .OrderBy(v => v.Name, StringComparer.CurrentCultureIgnoreCase)
-                    .ToList();
-            }
+                return Normalize(Deserialize(json));
         }
         catch (Exception ex)
         {
-            await clientLogger.ErrorAsync($"Loading saved column views failed ({scope})", ex: ex);
+            await clientLogger.ErrorAsync($"Loading cached column views failed ({scope})", ex: ex);
         }
         return [];
     }
 
-    public async Task SaveAllAsync(string scope, List<SavedColumnView> views)
+    private async Task SaveToCacheAsync(string scope, List<SavedColumnView> views)
     {
         try
         {
@@ -52,9 +95,18 @@ public sealed class ListSavedColumnViewStorage(
         }
         catch (Exception ex)
         {
-            await clientLogger.ErrorAsync($"Saving saved column views failed ({scope})", ex: ex);
+            await clientLogger.ErrorAsync($"Caching column views failed ({scope})", ex: ex);
         }
     }
+
+    private static List<SavedColumnView> Deserialize(string json)
+        => JsonSerializer.Deserialize<List<SavedColumnView>>(json) ?? [];
+
+    private static List<SavedColumnView> Normalize(List<SavedColumnView> views)
+        => views
+            .Where(v => !string.IsNullOrWhiteSpace(v.Name))
+            .OrderBy(v => v.Name, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
 
     private async Task<string> GetStorageKeyAsync(string scope)
     {

@@ -86,7 +86,30 @@
       "Bash(git commit -m ' *)",
       "Bash(tasklist)",
       "Bash(echo \"exit: $?\")",
-      "Bash(echo \"=== EXIT CODE: $? ===\")"
+      "Bash(echo \"=== EXIT CODE: $? ===\")",
+      "Bash(git stash *)",
+      "Bash(export PM_TEMPLATE_CONN=\"Data Source=.\\\\\\\\SQLEXPRESS;Initial Catalog=PM_Tenant_DB1;User ID=ProjectManagementDb;Password=Car123987MAAt;Connect Timeout=30;Encrypt=False;Trust Server Certificate=True;MultipleActiveResultSets=True\")",
+      "Bash(export PM_TEMPLATE_CONN=\"Data Source=.\\\\\\\\SQLEXPRESS;Initial Catalog=PM_Tenant_DB2;User ID=ProjectManagementDb;Password=Car123987MAAt;Connect Timeout=30;Encrypt=False;Trust Server Certificate=True;MultipleActiveResultSets=True\")",
+      "Bash(ASPNETCORE_ENVIRONMENT=Development ASPNETCORE_URLS=\"http://localhost:5286\" dotnet run --project \"ProjectManagement/ProjectManagement/ProjectManagement.csproj\" --no-build)",
+      "Bash(grep -oiE '\\(Invalid login attempt|locked out|two-factor|The Email field|The Password field|validation-message[^<]*|text-red[^>]*>[^<]+\\)' __TRACKED_VAR__/post.html)",
+      "Bash(grep -ivE \"forgot|reset|change|hash|confirm|RequireDigit|RequiredLength|RequireNon|RequireUpper|RequireLower|PasswordSignIn|passwordUser|Input.Password|DataType|MaxLength|//|label|placeholder|aria|svg|icon\")",
+      "Bash(curl -s -b __TRACKED_VAR__/c.txt -X PUT http://localhost:5286/api/v1/UserListSettings -H 'Content-Type: application/json' --data '{\"scope\":\"ProjectList\",\"kind\":\"ColumnWidths\",\"payload\":\"{\\\\\"code\\\\\":180,\\\\\"name\\\\\":260}\"}' -w '\\\\nPUT_http=%{http_code}\\\\n')",
+      "Bash(curl -s -b __TRACKED_VAR__/c.txt http://localhost:5286/api/v1/UserListSettings?scope=ProjectList -w '\\\\nGET_http=%{http_code}\\\\n')",
+      "Bash(curl -s -b __TRACKED_VAR__/c.txt -X PUT http://localhost:5286/api/v1/UserListSettings -H 'Content-Type: application/json' --data '{\"scope\":\"ProjectList\",\"kind\":\"ColumnWidths\",\"payload\":\"{\\\\\"code\\\\\":999}\"}' -w ' \\(PUT_http=%{http_code}\\)\\\\n')",
+      "Bash(curl -s -b __TRACKED_VAR__/c.txt http://localhost:5286/api/v1/UserListSettings?scope=ProjectList)",
+      "Bash(curl -s -b __TRACKED_VAR__/c.txt http://localhost:5286/api/v1/UserListSettings?scope=CalculationList)",
+      "Bash(curl -s -b __TRACKED_VAR__/c.txt -o /dev/null -w 'GET no-scope http=%{http_code}\\\\n' http://localhost:5286/api/v1/UserListSettings)",
+      "Bash(curl -s -b __TRACKED_VAR__/c.txt -X PUT http://localhost:5286/api/v1/UserListSettings -H 'Content-Type: application/json' --data '{\"scope\":\"ProjectList\",\"kind\":\"SavedFilters\",\"payload\":\"[{\\\\\"Name\\\\\":\\\\\"Mina\\\\\"}]\"}' -w ' \\(PUT_http=%{http_code}\\)\\\\n')",
+      "PowerShell($conn = Get-NetTCPConnection -LocalPort 5286 -State Listen -ErrorAction SilentlyContinue; if \\($conn\\) { $conn.OwningProcess | Select-Object -Unique | ForEach-Object { try { Stop-Process -Id $_ -Force; \"stopped PID $_\" } catch {} } } else { \"no listener on 5286\" })",
+      "PowerShell($conn = Get-NetTCPConnection -LocalPort 5286 -State Listen -ErrorAction SilentlyContinue; if \\($conn\\) { $conn.OwningProcess | Select-Object -Unique | ForEach-Object { try { Stop-Process -Id $_ -Force; \"stopped PID $_\" } catch {} } } else { \"no listener\" })",
+      "Bash(rm -rf \"C:/Users/Administrator/AppData/Local/Temp/2/tmp.mKngsVDQ3n\")",
+      "Bash(rm -f /tmp/pmverify_token /tmp/pmverify_dir /tmp/pmpw_dir /tmp/pmpw_install.log)",
+      "Bash(ls tools/operations/)",
+      "Bash(ls .codex-temp-build/)",
+      "PowerShell(dotnet list *)",
+      "WebFetch(domain:api.nuget.org)",
+      "WebFetch(domain:github.com)",
+      "PowerShell(dotnet nuget why *)"
     ]
   }
 }

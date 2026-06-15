@@ -14,6 +14,7 @@ using ProjectManagement.Client.Shared.Repositories.Organisation.Implement;
 using ProjectManagement.Client.Shared.Repositories.Project;
 using ProjectManagement.Client.Shared.Repositories.Project.Implement;
 using ProjectManagement.Client.Shared.Repositories.ResourceType;
+using ProjectManagement.Client.Shared.Repositories.UserSettings;
 using ProjectManagement.Client.Shared.Services.TfIdf;
 using ProjectManagement.Shared.DTO.ProjectAppStorage.Service;
 namespace ProjectManagement.Client.DependencyInjection
@@ -42,6 +43,7 @@ namespace ProjectManagement.Client.DependencyInjection
             services.AddScoped<ITenderRepository, TenderRepository>();
             services.AddScoped<IProjectBidRepository, ProjectBidRepository>();
             services.AddScoped<IItemCalcCategoryRepository, ItemCalcCategoryRepository>();
+            services.AddScoped<UserListSettingsRepository>();
             services.AddScoped<IUnitOfWorkRepository, UnitOfWorkRepository>();
             services.AddScoped<ITasksUserComputationServiceWasm, TasksUserComputationServiceWasm>();
 

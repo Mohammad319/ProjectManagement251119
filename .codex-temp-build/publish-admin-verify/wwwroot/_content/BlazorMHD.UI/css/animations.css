@@ -1,0 +1,37 @@
+@keyframes mhd-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mhd-animate-slide-in,
+.mhd-scope .animate-slide-in {
+  animation: mhd-slide-in 0.15s ease-out;
+}
+
+@keyframes mhd-toast-progress {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
+.mhd-animate-toast-progress,
+.mhd-scope .animate-toast-progress {
+  animation-name: mhd-toast-progress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mhd-animate-slide-in,
+  .mhd-animate-toast-progress,
+  .mhd-scope .animate-slide-in,
+  .mhd-scope .animate-toast-progress {
+    animation: none !important;
+  }
+}

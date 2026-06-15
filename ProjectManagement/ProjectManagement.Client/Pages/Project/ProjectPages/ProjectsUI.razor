@@ -1648,14 +1648,42 @@
         new("archived",          AppLoc["archived"].Value)
     };
 
+    private Dictionary<string, int> _columnWidths = new();
+    private bool _columnWidthsApplied;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        // Only the projects table lives in this component. In Kalkyler mode the
+        // child ProjectsCalculationList owns the #resizeMe table and the shared
+        // JS resize callback ref, so we must not hijack it here (that would route
+        // calc-column resizes to this component under the wrong scope).
+        if (_contentMode != ContentModeProjects)
+            return;
+
         _dotNetRef ??= DotNetObjectReference.Create(this);
         await JS.InvokeVoidAsync("initializeResizableColumns", _dotNetRef);
+
+        if (!_columnWidthsApplied && _columnWidths.Count > 0)
+        {
+            _columnWidthsApplied = true;
+            await JS.InvokeVoidAsync("applySavedColumnWidths", _columnWidths);
+        }
     }
 
     [JSInvokable]
-    public void SaveTemplateBlazor(string data) { }
+    public async Task SaveTemplateBlazor(string data)
+    {
+        if (string.IsNullOrWhiteSpace(data))
+            return;
+
+        // Payload from resizableTable.js is "columnKey||width" (e.g. "code||180").
+        var parts = data.Split("||", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length < 2 || !int.TryParse(parts[1], out var width) || width <= 0)
+            return;
+
+        _columnWidths[parts[0]] = width;
+        await ViewPreference.SaveColumnWidthsAsync(_columnWidths);
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -1664,6 +1692,8 @@
             foreach (var (k, v) in saved)
                 if (_projectColumns.ContainsKey(k))
                     _projectColumns[k] = v;
+
+        _columnWidths = await ViewPreference.LoadColumnWidthsAsync() ?? new();
 
         _savedProjectFilters = await SavedFilterStorage.LoadAsync(ListSavedFilterStorage.ProjectListScope);
         _savedColumnViews = await SavedColumnViewStorage.LoadAsync(ListSavedColumnViewStorage.ProjectListScope);

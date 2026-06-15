@@ -1,0 +1,395 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>BlazorMHD.UI</name>
+    </assembly>
+    <members>
+        <member name="T:BlazorMHD.UI.Core.Base.MhdAttributes">
+            <summary>
+            Helpers for working with a component's captured unmatched attributes
+            (merging the <c>class</c> attribute and splatting the rest).
+            </summary>
+        </member>
+        <member name="M:BlazorMHD.UI.Core.Base.MhdAttributes.Without(System.Collections.Generic.IReadOnlyDictionary{System.String,System.Object},System.String[])">
+            <summary>Returns the attributes without the given keys (case-insensitive). Safe for splatting via <c>@attributes</c>.</summary>
+        </member>
+        <member name="M:BlazorMHD.UI.Core.Base.MhdAttributes.MergeClass(System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.Object})">
+            <summary>Appends a consumer-supplied <c>class</c> attribute (if any) to the component's base classes.</summary>
+        </member>
+        <member name="M:BlazorMHD.UI.Core.Base.MhdAttributes.GetString(System.Collections.Generic.IReadOnlyDictionary{System.String,System.Object},System.String,System.String)">
+            <summary>Reads a string attribute value (case-insensitive) or returns <paramref name="fallback"/>.</summary>
+        </member>
+        <member name="M:BlazorMHD.UI.Core.Base.MhdComponentBase.SafeRender">
+            <summary>
+            Re-renders the component safely (marshalled to the sync context, and a no-op after disposal).
+            Suitable as a handler for service <c>OnChange</c> events that may fire from background threads.
+            </summary>
+        </member>
+        <member name="M:BlazorMHD.UI.Core.Base.MhdComponentBase.Bind(System.Action{System.Action},System.Action{System.Action})">
+            <summary>
+            Subscribes to a service change event and guarantees it is unsubscribed on disposal.
+            Usage: <c>Bind(h =&gt; Toast.OnChange += h, h =&gt; Toast.OnChange -= h);</c>
+            </summary>
+        </member>
+        <member name="T:BlazorMHD.UI.Core.Data.MhdTableDataRequest">
+            <summary>
+            Describes the page/sort/search state the table needs the server to satisfy.
+            Passed to <c>MhdTable.DataProvider</c> in server-side mode.
+            </summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Core.Data.MhdTableDataRequest.Page">
+            <summary>1-based page index.</summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Core.Data.MhdTableDataRequest.PageSize">
+            <summary>Number of rows requested for this page.</summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Core.Data.MhdTableDataRequest.SearchText">
+            <summary>Current search text, or <c>null</c>/empty when no filter is applied.</summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Core.Data.MhdTableDataRequest.SortField">
+            <summary>
+            The sort field of the active sort column. Resolves to the column's
+            <c>Field</c> when set, otherwise its <c>Title</c>. <c>null</c> when unsorted.
+            </summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Core.Data.MhdTableDataRequest.SortAscending">
+            <summary><c>true</c> for ascending sort, <c>false</c> for descending.</summary>
+        </member>
+        <member name="T:BlazorMHD.UI.Core.Data.MhdTableDataResult`1">
+            <summary>
+            The slice of data returned by a <c>MhdTable.DataProvider</c> for one request.
+            </summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Core.Data.MhdTableDataResult`1.Items">
+            <summary>The rows for the requested page (already paged, sorted and filtered by the server).</summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Core.Data.MhdTableDataResult`1.TotalCount">
+            <summary>Total number of rows matching the current filter, across all pages.</summary>
+        </member>
+        <member name="T:BlazorMHD.UI.Core.Data.TreeNode`1">
+            <summary>A node in <c>MhdTreeView</c>, carrying an arbitrary payload of type <typeparamref name="TItem"/>.</summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Core.Data.TreeNode`1.Key">
+            <summary>Stable identity used for selection, focus and node lookup.</summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Core.Data.TreeNode`1.Text">
+            <summary>Label shown for the node (when no <c>NodeTemplate</c> is supplied).</summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Core.Data.TreeNode`1.Value">
+            <summary>Application payload associated with the node.</summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Core.Data.TreeNode`1.IsExpanded">
+            <summary>Whether the node's children are currently shown.</summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Core.Data.TreeNode`1.IsSelected">
+            <summary>Whether the node is the selected one.</summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Core.Data.TreeNode`1.Children">
+            <summary>Child nodes.</summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Core.Data.TreeNode`1.HasChildren">
+            <summary><c>true</c> when the node has at least one child.</summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Core.Navigation.ContextMenuItem.Icon">
+            <summary>
+            Safe icon as a Razor render fragment (preferred). Use this for app-defined SVG/markup.
+            </summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Core.Navigation.ContextMenuItem.IconHtml">
+            <summary>
+            Raw HTML rendered via <see cref="T:Microsoft.AspNetCore.Components.MarkupString"/>. Used only when <see cref="P:BlazorMHD.UI.Core.Navigation.ContextMenuItem.Icon"/> is null.
+            WARNING: injected without sanitization — never bind untrusted/user-supplied input here (XSS risk).
+            </summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Core.Navigation.DrawerItem.Icon">
+            <summary>
+            Raw HTML icon rendered via <see cref="T:Microsoft.AspNetCore.Components.MarkupString"/> when <see cref="P:BlazorMHD.UI.Core.Navigation.DrawerItem.IconContent"/> is null.
+            WARNING: injected without sanitization — never bind untrusted/user-supplied input here (XSS risk).
+            </summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Core.Navigation.DrawerItem.IconContent">
+            <summary>
+            Safe icon as a Razor render fragment (preferred). Takes precedence over <see cref="P:BlazorMHD.UI.Core.Navigation.DrawerItem.Icon"/>.
+            </summary>
+        </member>
+        <member name="T:BlazorMHD.UI.Core.Navigation.TabItem">
+            <summary>A single tab in <c>MhdTabs</c>.</summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Core.Navigation.TabItem.Key">
+            <summary>Stable identity used for selection and <c>@bind-ActiveKey</c>.</summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Core.Navigation.TabItem.Text">
+            <summary>Label shown on the tab.</summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Core.Navigation.TabItem.Icon">
+            <summary>Optional icon (markup for horizontal mode, CSS class for vertical mode).</summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Core.Navigation.TabItem.Content">
+            <summary>Content rendered in the tab panel when this tab is active.</summary>
+        </member>
+        <member name="T:BlazorMHD.UI.Core.Services.ContextMenuService">
+            <summary>
+            Shows and hides the shared right-click context menu host. Register with
+            <c>AddBlazorMhdUI()</c> and inject where you handle <c>@oncontextmenu</c>.
+            </summary>
+        </member>
+        <member name="E:BlazorMHD.UI.Core.Services.ContextMenuService.OnShowMenuRequested">
+            <summary>Raised when a menu should open; handled by the menu host.</summary>
+        </member>
+        <member name="M:BlazorMHD.UI.Core.Services.ContextMenuService.ShowMenuAsync(System.Collections.Generic.List{BlazorMHD.UI.Core.Navigation.ContextMenuItem})">
+            <summary>Opens the context menu at the cursor with the given <paramref name="items"/>.</summary>
+        </member>
+        <member name="E:BlazorMHD.UI.Core.Services.ContextMenuService.OnHideMenuRequested">
+            <summary>Raised when the menu should close; handled by the menu host.</summary>
+        </member>
+        <member name="M:BlazorMHD.UI.Core.Services.ContextMenuService.HideMenuAsync">
+            <summary>Closes the context menu if it is open.</summary>
+        </member>
+        <member name="M:BlazorMHD.UI.Core.Services.DependencyInjection.AddBlazorMhdUI(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Preferred registration entry point.
+            </summary>
+        </member>
+        <member name="M:BlazorMHD.UI.Core.Services.DependencyInjection.BlazorMHD(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Backward-compatible alias kept for existing projects.
+            </summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Core.Services.DialogModel.Icon">
+            <summary>
+            Raw HTML icon rendered via <see cref="T:Microsoft.AspNetCore.Components.MarkupString"/> when <see cref="P:BlazorMHD.UI.Core.Services.DialogModel.IconContent"/> is null.
+            WARNING: injected without sanitization — never bind untrusted/user-supplied input here (XSS risk).
+            </summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Core.Services.DialogModel.IconContent">
+            <summary>
+            Safe icon as a Razor render fragment (preferred). Takes precedence over <see cref="P:BlazorMHD.UI.Core.Services.DialogModel.Icon"/>.
+            </summary>
+        </member>
+        <member name="T:BlazorMHD.UI.Core.Services.DialogService">
+            <summary>
+            Opens and closes stacked dialogs rendered by the host. Register with
+            <c>AddBlazorMhdUI()</c> and inject where you open dialogs.
+            </summary>
+        </member>
+        <member name="E:BlazorMHD.UI.Core.Services.DialogService.OnChange">
+            <summary>Raised when the open dialog set changes; the host subscribes to re-render.</summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Core.Services.DialogService.Dialogs">
+            <summary>The currently open dialogs, in stacking order.</summary>
+        </member>
+        <member name="T:BlazorMHD.UI.Core.Services.LoadingService">
+            <summary>
+            Reference-counted global loading state driving the loading overlay. Register with
+            <c>AddBlazorMhdUI()</c>; prefer <see cref="M:BlazorMHD.UI.Core.Services.LoadingService.Scope"/> for balanced begin/end.
+            </summary>
+        </member>
+        <member name="E:BlazorMHD.UI.Core.Services.LoadingService.OnChange">
+            <summary>Raised when the busy state changes; the overlay subscribes to re-render.</summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Core.Services.LoadingService.IsBusy">
+            <summary><c>true</c> while at least one operation is in progress.</summary>
+        </member>
+        <member name="M:BlazorMHD.UI.Core.Services.LoadingService.Begin">
+            <summary>Increments the busy counter (shows the overlay).</summary>
+        </member>
+        <member name="M:BlazorMHD.UI.Core.Services.LoadingService.End">
+            <summary>Decrements the busy counter (hides the overlay when it reaches zero).</summary>
+        </member>
+        <member name="M:BlazorMHD.UI.Core.Services.LoadingService.Scope">
+            <summary>Begins a busy scope; dispose it (e.g. with <c>using</c>) to end.</summary>
+        </member>
+        <member name="T:BlazorMHD.UI.Core.Services.MessageBoxService">
+            <summary>
+            Shows a single inline message box (banner). Register with <c>AddBlazorMhdUI()</c>.
+            </summary>
+        </member>
+        <member name="E:BlazorMHD.UI.Core.Services.MessageBoxService.OnChange">
+            <summary>Raised when the current message changes; the host subscribes to re-render.</summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Core.Services.MessageBoxService.Current">
+            <summary>The message currently shown, or <c>null</c> when none.</summary>
+        </member>
+        <member name="T:BlazorMHD.UI.Core.Services.MhdJsInterop">
+            <summary>
+            Lazily imports the BlazorMHD.UI JavaScript as an ES module and proxies interop
+            calls to it. Because the module is fetched on first use via dynamic
+            <c>import()</c>, consumers no longer need to add a
+            <c>&lt;script src="_content/BlazorMHD.UI/js/BlazorMHDUI.js"&gt;</c> tag to their
+            host page — registering the services with <c>AddBlazorMhdUI()</c> is enough.
+            (The module still assigns a <c>window.BlazorMHDUI</c> global; to use it directly,
+            load the file with <c>&lt;script type="module"&gt;</c> rather than a classic script tag.)
+            </summary>
+            <remarks>
+            Registered as scoped, so the imported module reference lives for the duration of
+            the user's circuit (Blazor Server) or app instance (WebAssembly) and is released
+            on disposal. The import is started lazily on the first call rather than in the
+            constructor, so injecting the service during static prerender (where JS interop
+            is unavailable) does not throw.
+            </remarks>
+        </member>
+        <member name="M:BlazorMHD.UI.Core.Services.MhdJsInterop.InvokeVoidAsync(System.String,System.Object[])">
+            <summary>Invokes a module export that returns no value (e.g. <c>"dialogFocus.trap"</c>).</summary>
+        </member>
+        <member name="M:BlazorMHD.UI.Core.Services.MhdJsInterop.InvokeAsync``1(System.String,System.Object[])">
+            <summary>Invokes a module export and returns its result (e.g. <c>"resizableDiv.getWidth"</c>).</summary>
+        </member>
+        <member name="T:BlazorMHD.UI.Core.Services.ToastModel">
+            <summary>A single toast notification tracked by <see cref="T:BlazorMHD.UI.Core.Services.ToastService"/>.</summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Core.Services.ToastModel.Id">
+            <summary>Unique id, used to dismiss the toast.</summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Core.Services.ToastModel.Title">
+            <summary>Bold heading shown at the top of the toast.</summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Core.Services.ToastModel.Message">
+            <summary>Body text shown beneath the title.</summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Core.Services.ToastModel.State">
+            <summary>Visual state (colour) of the toast.</summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Core.Services.ToastModel.ExpireAt">
+            <summary>Absolute time at which the toast auto-dismisses.</summary>
+        </member>
+        <member name="T:BlazorMHD.UI.Core.Services.ToastService">
+            <summary>
+            Queues transient toast notifications rendered by the host. Register with
+            <c>AddBlazorMhdUI()</c> and inject where you need to raise toasts.
+            </summary>
+        </member>
+        <member name="E:BlazorMHD.UI.Core.Services.ToastService.OnChange">
+            <summary>Raised whenever the toast list changes; the host subscribes to re-render.</summary>
+        </member>
+        <member name="M:BlazorMHD.UI.Core.Services.ToastService.Show(System.String,System.String,BlazorMHD.UI.Core.DesignSystem.MhdState,System.Int32)">
+            <summary>Shows a toast that auto-dismisses after <paramref name="seconds"/>.</summary>
+            <param name="title">Bold heading.</param>
+            <param name="message">Body text.</param>
+            <param name="state">Visual state (colour).</param>
+            <param name="seconds">Seconds before the toast auto-dismisses.</param>
+        </member>
+        <member name="M:BlazorMHD.UI.Core.Services.ToastService.GetToasts">
+            <summary>Returns a snapshot of the currently visible toasts.</summary>
+        </member>
+        <member name="M:BlazorMHD.UI.Core.Services.ToastService.Dismiss(System.Guid)">
+            <summary>Dismisses the toast with the given <paramref name="id"/> if still present.</summary>
+        </member>
+        <member name="T:BlazorMHD.UI.Shared.Localization">
+            <summary>
+              A strongly-typed resource class, for looking up localized strings, etc.
+            </summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Shared.Localization.ResourceManager">
+            <summary>
+              Returns the cached ResourceManager instance used by this class.
+            </summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Shared.Localization.Culture">
+            <summary>
+              Overrides the current thread's CurrentUICulture property for all
+              resource lookups using this strongly typed resource class.
+            </summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Shared.Localization.Button_Search">
+            <summary>
+              Looks up a localized string similar to Search .
+            </summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Shared.Localization.Instruction_DragToResize">
+            <summary>
+              Looks up a localized string similar to Drag left/right to resize.
+            </summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Shared.Localization.Instruction_DragUpDownToResize">
+            <summary>
+              Looks up a localized string similar to Drag up/down to resize.
+            </summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Shared.Localization.Status_Loading">
+            <summary>
+              Looks up a localized string similar to Loading .
+            </summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Shared.Localization.Status_Processing">
+            <summary>
+              Looks up a localized string similar to Processing .
+            </summary>
+        </member>
+        <member name="T:BlazorMHD.UI.Shared.LocalizationExtensions">
+            <summary>
+            Helpers for localization fallback and direction detection.
+            </summary>
+        </member>
+        <member name="M:BlazorMHD.UI.Shared.LocalizationExtensions.Get(System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.String)">
+            <summary>
+            Resolves a key with chained fallbacks: component-local dict → cascading global dict → built-in defaults → key.
+            </summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Components.Data.Table.MhdTable`1.DataProvider">
+            <summary>
+            Server-side data source. When set, the table delegates paging, sorting and
+            filtering to this callback instead of processing <see cref="P:BlazorMHD.UI.Components.Data.Table.MhdTable`1.Items"/> locally.
+            </summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Components.Data.Table.MhdTable`1.EnableSelection">
+            <summary>Renders a leading checkbox column and enables row selection.</summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Components.Data.Table.MhdTable`1.SelectedItems">
+            <summary>
+            The set of selected rows. Supports <c>@bind-SelectedItems</c>.
+            In server-side mode set <see cref="P:BlazorMHD.UI.Components.Data.Table.MhdTable`1.RowKeySelector"/> so selection is tracked by
+            key and persists as the user pages through freshly fetched rows.
+            </summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Components.Data.Table.MhdTable`1.EnableExport">
+            <summary>Renders an "Export" button that downloads the current rows as CSV.</summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Components.Data.Table.MhdTable`1.ExportFileName">
+            <summary>File name used for the CSV export download.</summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Components.Data.Table.MhdTable`1.ExportDataProvider">
+            <summary>
+            Optional source of rows for CSV export in server-side mode. When set, Export
+            downloads every row returned by this callback instead of only the currently
+            loaded page. The request carries the active search/sort with
+            <see cref="P:BlazorMHD.UI.Core.Data.MhdTableDataRequest.PageSize"/> set to <see cref="F:System.Int32.MaxValue"/> to
+            signal "return all matching rows". Ignored in client mode (which already
+            exports all filtered rows).
+            </summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Components.Data.Table.MhdTable`1.RowKeySelector">
+            <summary>
+            Returns a stable identity for a row, used both for <c>@key</c> and — when
+            <see cref="P:BlazorMHD.UI.Components.Data.Table.MhdTable`1.EnableSelection"/> is on — to track selection by key instead of by
+            instance. Recommended whenever rows are re-created between renders (e.g. server-side data).
+            </summary>
+        </member>
+        <member name="M:BlazorMHD.UI.Components.Data.Table.MhdTable`1.ReloadAsync">
+            <summary>
+            Forces a reload from the <see cref="P:BlazorMHD.UI.Components.Data.Table.MhdTable`1.DataProvider"/>. Call this after the
+            underlying server data changes. No-op in client mode.
+            </summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Components.Data.Table.MhdTable`1.ColumnDefinition`1.Field">
+            <summary>Optional server-side sort key sent in <see cref="P:BlazorMHD.UI.Core.Data.MhdTableDataRequest.SortField"/>; falls back to <see cref="P:BlazorMHD.UI.Components.Data.Table.MhdTable`1.ColumnDefinition`1.Title"/>.</summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Components.Data.Table.MhdTableColumn`1.Field">
+            <summary>Optional server-side sort key (sent to MhdTable.DataProvider); falls back to <see cref="P:BlazorMHD.UI.Components.Data.Table.MhdTableColumn`1.Title"/>.</summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Components.Navigation.Drawer.MhdDrawer.Localization">
+            <summary>Per-instance overrides; cascading <c>MhdLocalization</c> + defaults fill the rest.</summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Components.Navigation.Stepper.MhdStepper.Localization">
+            <summary>Per-instance overrides; cascading <c>MhdLocalization</c> + defaults fill the rest.</summary>
+        </member>
+        <member name="P:BlazorMHD.UI.Components.Navigation.Tabs.MhdTabs.Localization">
+            <summary>Per-instance overrides; cascading <c>MhdLocalization</c> + defaults fill the rest.</summary>
+        </member>
+        <member name="P:BlazorMHD.UI.MhdUiHost.Localization">
+            <summary>
+            Global localization overrides keyed by string. Components that take a local
+            <c>Localization</c> dict still win; cascading values fill the gap otherwise.
+            </summary>
+        </member>
+    </members>
+</doc>
