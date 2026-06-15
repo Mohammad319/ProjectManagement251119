@@ -94,6 +94,100 @@ namespace Persistence.Service.Project
             };
         }
 
+        public async Task<List<ProjectBidComparisonRowDTO>> GetComparisonAsync(
+            IReadOnlyList<Guid> projectIds,
+            int? departmentId,
+            CancellationToken ct = default)
+        {
+            var ids = projectIds?.Distinct().ToList() ?? [];
+            if (ids.Count == 0)
+                return [];
+
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            // Utvärderingsmodell per projekt (en samlad query).
+            var models = await context.Projects
+                .Where(x => ids.Contains(x.Id) &&
+                    (!departmentId.HasValue || x.Folder.DepartmentId == departmentId.Value))
+                .Select(x => new { x.Id, x.BidEvaluationModel })
+                .ToListAsync(ct);
+
+            var modelByProject = models.ToDictionary(x => x.Id, x => x.BidEvaluationModel);
+
+            // Poängdelar per projekt (en samlad query) – behövs för totalpoäng.
+            var pointColumns = await context.ProjectBidPriceColumns
+                .Where(x => ids.Contains(x.ProjectId) && x.PartType == BidPartType.Points &&
+                    (!departmentId.HasValue || x.Project.Folder.DepartmentId == departmentId.Value))
+                .Select(x => new { x.ProjectId, x.Id })
+                .ToListAsync(ct);
+
+            var pointColumnsByProject = pointColumns
+                .GroupBy(x => x.ProjectId)
+                .ToDictionary(g => g.Key, g => g.Select(x => x.Id).ToHashSet());
+
+            // Anbud för alla projekt (en samlad query) – undviker N+1.
+            var bids = await context.ProjectBids
+                .Where(x => ids.Contains(x.ProjectId) &&
+                    (!departmentId.HasValue || x.Project.Folder.DepartmentId == departmentId.Value))
+                .AsNoTracking()
+                .OrderBy(x => x.ProjectId)
+                .ThenBy(x => x.SortOrder)
+                .ThenBy(x => x.CreatedAt)
+                .Select(x => new
+                {
+                    x.Id,
+                    x.ProjectId,
+                    x.BidderName,
+                    x.Amount,
+                    x.PricesJson,
+                    x.DeductionPercent,
+                    x.Note,
+                    x.IsAwarded,
+                    x.Placement,
+                    x.Status,
+                    x.RejectionReason,
+                    x.SortOrder,
+                    x.CreatedAt,
+                    x.UpdatedAt
+                })
+                .ToListAsync(ct);
+
+            return bids.Select(x =>
+            {
+                var pointIds = pointColumnsByProject.TryGetValue(x.ProjectId, out var p) ? p : null;
+                decimal? totalPoints = null;
+                if (pointIds is { Count: > 0 })
+                {
+                    var prices = DeserializePrices(x.PricesJson, columnIds: null);
+                    totalPoints = prices.Where(kv => pointIds.Contains(kv.Key)).Sum(kv => kv.Value);
+                }
+
+                var comparison = x.Amount.HasValue
+                    ? x.Amount.Value - x.Amount.Value * (x.DeductionPercent ?? 0) / 100m
+                    : (decimal?)null;
+
+                return new ProjectBidComparisonRowDTO
+                {
+                    ProjectId = x.ProjectId,
+                    EvaluationModel = modelByProject.TryGetValue(x.ProjectId, out var m) ? m : BidEvaluationModel.LowestComparison,
+                    BidId = x.Id,
+                    BidderName = x.BidderName,
+                    Amount = x.Amount,
+                    DeductionPercent = x.DeductionPercent,
+                    ComparisonAmount = comparison,
+                    TotalPoints = totalPoints,
+                    IsAwarded = x.IsAwarded,
+                    Placement = x.Placement,
+                    Status = x.Status,
+                    RejectionReason = x.RejectionReason,
+                    Note = x.Note,
+                    SortOrder = x.SortOrder,
+                    CreatedAt = x.CreatedAt,
+                    UpdatedAt = x.UpdatedAt
+                };
+            }).ToList();
+        }
+
         public async Task<int> CreateAsync(
             Guid projectId,
             ProjectBidPostDTO dto,

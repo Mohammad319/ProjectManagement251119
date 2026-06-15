@@ -96,6 +96,46 @@ namespace ProjectManagement.Shared.DTO.Project
         public BidPartType PartType { get; set; } = BidPartType.Price;
     }
 
+    /// <summary>
+    /// One bid in one project, flattened for the "Anbudsjämförelse"-report so that
+    /// bids for many projects can be fetched in a single round trip. Project name/code
+    /// and folder are resolved client-side from the already-loaded project list.
+    /// </summary>
+    public class ProjectBidComparisonRowDTO
+    {
+        public Guid ProjectId { get; set; }
+
+        /// <summary>Projektets utvärderingsmodell (lägsta jämförelsesumma / högsta poäng).</summary>
+        public BidEvaluationModel EvaluationModel { get; set; } = BidEvaluationModel.LowestComparison;
+
+        public int BidId { get; set; }
+        public string BidderName { get; set; } = string.Empty;
+
+        /// <summary>Anbudssumma.</summary>
+        public decimal? Amount { get; set; }
+
+        /// <summary>Mervärdeavdrag i procent.</summary>
+        public decimal? DeductionPercent { get; set; }
+
+        /// <summary>Jämförelsesumma = Amount − (Amount × DeductionPercent / 100).</summary>
+        public decimal? ComparisonAmount { get; set; }
+
+        /// <summary>Totalpoäng — summa av poängdelarna (null när poängdelar saknas).</summary>
+        public decimal? TotalPoints { get; set; }
+
+        public bool IsAwarded { get; set; }
+        public int? Placement { get; set; }
+        public BidStatus Status { get; set; } = BidStatus.Valid;
+        public string? RejectionReason { get; set; }
+        public string? Note { get; set; }
+        public int SortOrder { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+
+        /// <summary>True när anbudet är giltigt (räknas i jämförelse/placering).</summary>
+        public bool IsValid => Status == BidStatus.Valid;
+    }
+
     /// <summary>Everything the bid window needs in one round trip.</summary>
     public class ProjectBidsViewDTO
     {

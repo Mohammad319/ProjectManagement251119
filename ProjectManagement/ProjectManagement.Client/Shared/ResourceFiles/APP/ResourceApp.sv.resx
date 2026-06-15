@@ -1065,6 +1065,9 @@
   <data name="projectListReport" xml:space="preserve">
     <value>Projektlista</value>
   </data>
+  <data name="bidComparison" xml:space="preserve">
+    <value>Anbudsjämförelse</value>
+  </data>
   <data name="columnSelection" xml:space="preserve">
     <value>Kolumnval</value>
   </data>

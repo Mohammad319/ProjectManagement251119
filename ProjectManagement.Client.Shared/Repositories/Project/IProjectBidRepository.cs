@@ -6,6 +6,7 @@ namespace ProjectManagement.Client.Shared.Repositories.Project
     public interface IProjectBidRepository
     {
         Task<ProjectBidsViewDTO> GetViewAsync(Guid projectId);
+        Task<List<ProjectBidComparisonRowDTO>> GetComparisonAsync(IReadOnlyList<Guid> projectIds);
         Task<int> CreateAsync(Guid projectId, ProjectBidPostDTO dto);
         Task<bool> UpdateAsync(int id, Guid projectId, ProjectBidPostDTO dto);
         Task<bool> DeleteAsync(int id, Guid projectId);

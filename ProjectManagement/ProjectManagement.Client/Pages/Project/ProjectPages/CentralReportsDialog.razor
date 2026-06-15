@@ -4,6 +4,7 @@
 @using ProjectManagement.Client.Shared.MVVM.Folder
 @using ProjectManagement.Shared.Base.Calculation
 @using ProjectManagement.Shared.DTO.Calculation
+@using ProjectManagement.Shared.DTO.Project
 @using ProjectManagement.Shared.Enums
 @using ProjectManagement.Shared.Helper
 @inject IJSRuntime JS
@@ -29,7 +30,7 @@
     }
     else
     {
-        @if (_activeView != ReportView.HitRate && _activeView != ReportView.Projects && _activeView != ReportView.Calculations)
+        @if (_activeView != ReportView.HitRate && _activeView != ReportView.Projects && _activeView != ReportView.Calculations && _activeView != ReportView.BidComparison)
         {
         <div class="grid grid-cols-2 gap-2 rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-950 md:grid-cols-4 xl:grid-cols-6">
 
@@ -432,6 +433,172 @@
                 @ProjectTable(_lockedProjReportProjects)
             }
         }
+
+        @* ═══ ANBUDSJÄMFÖRELSE ═══ *@
+        else if (_activeView == ReportView.BidComparison)
+        {
+            <div class="rounded-lg border border-sky-200 bg-sky-50 p-3 text-xs text-sky-800 dark:border-sky-800/50 dark:bg-sky-950/30 dark:text-sky-200">
+                <p class="mb-0.5 font-semibold">Projekturval</p>
+                <p>@_bidReportSelectionLine</p>
+                @if (!string.IsNullOrWhiteSpace(_bidReportSelectionFilters))
+                {
+                    <p class="mt-1 text-sky-700 dark:text-sky-300">@_bidReportSelectionFilters</p>
+                }
+                <p class="mt-1.5 italic text-slate-500 dark:text-slate-400">Stäng rapporten och ändra projektlistans filter om du vill ändra urvalet.</p>
+            </div>
+
+            @if (_lockedBidRows.Count == 0)
+            {
+                <div class="rounded-lg border border-slate-200 bg-white p-4 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-950">
+                    <p class="font-medium text-slate-600 dark:text-slate-300">Inga anbud hittades för aktuellt projekturval.</p>
+                    <p class="mt-1">Kontrollera att projekten har registrerade anbud eller ändra projektlistans filter.</p>
+                </div>
+            }
+            else
+            {
+                <div class="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-5">
+                    <div class="@TotalCardClass"><span>Projekt med anbud</span><strong>@BidProjectsWithBids</strong></div>
+                    <div class="@TotalCardClass"><span>Antal anbud</span><strong>@BidCount</strong></div>
+                    <div class="@TotalCardClass"><span>Antal anbudsgivare</span><strong>@BidderCount</strong></div>
+                    <div class="@TotalCardClass"><span>Tilldelade anbud</span><strong>@AwardedCount</strong></div>
+                    <div class="@TotalCardClass"><span>Genomsnittlig avvikelse %</span><strong>@AvgDeviationDisplay</strong></div>
+                </div>
+                @if (HasOwnCompany)
+                {
+                    <div class="grid grid-cols-2 gap-2 md:grid-cols-4">
+                        <div class="@TotalCardClass"><span>Våra anbud</span><strong>@OwnBidCount</strong></div>
+                        <div class="@TotalCardClass"><span>Våra tilldelningar</span><strong>@OwnAwardedCount</strong></div>
+                        <div class="@TotalCardClass"><span>Genomsnittlig placering (vi)</span><strong>@OwnAvgPlacement</strong></div>
+                        <div class="@TotalCardClass"><span>Vår avvikelse %</span><strong>@OwnAvgDeviation</strong></div>
+                    </div>
+                }
+
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        @* Anbudsgivare – multi-select *@
+                        <div class="relative">
+                            <button type="button" class="@SelectClass flex h-8 w-48 items-center justify-between text-left" @onclick="() => _showBidderDropdown = !_showBidderDropdown">
+                                <span class="truncate">@(_selectedBidders.Count == 0 ? "Alla anbudsgivare" : $"{_selectedBidders.Count} valda")</span>
+                                @ChevronSvg
+                            </button>
+                            @if (_showBidderDropdown)
+                            {
+                                <div class="fixed inset-0 z-40" @onclick="() => _showBidderDropdown = false"></div>
+                                <div class="absolute z-50 mt-0.5 min-w-full overflow-auto rounded-md border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900" style="max-height:14rem">
+                                    <label class="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-xs hover:bg-sky-50 dark:hover:bg-sky-950/30">
+                                        <input type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300" checked="@(_selectedBidders.Count == 0)" @onchange="() => _selectedBidders.Clear()" />
+                                        <span class="text-slate-500 dark:text-slate-400">Alla anbudsgivare</span>
+                                    </label>
+                                    @foreach (var b in AvailableBidders) { var bv = b;
+                                        <label class="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-xs text-slate-800 hover:bg-sky-50 dark:text-slate-200 dark:hover:bg-sky-950/30">
+                                            <input type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300" checked="@_selectedBidders.Contains(bv)" @onchange="e => ToggleBidder(bv, (bool)(e.Value ?? false))" />
+                                            <span>@bv</span>
+                                        </label>
+                                    }
+                                </div>
+                            }
+                        </div>
+
+                        @* Eget företag *@
+                        <div class="relative">
+                            <button type="button" class="@SelectClass flex h-8 w-48 items-center justify-between text-left" @onclick="() => _showOwnCompanyDropdown = !_showOwnCompanyDropdown">
+                                <span class="truncate">@(HasOwnCompany ? $"Eget företag: {_ownCompanyName}" : "Eget företag: inget")</span>
+                                @ChevronSvg
+                            </button>
+                            @if (_showOwnCompanyDropdown)
+                            {
+                                <div class="fixed inset-0 z-40" @onclick="() => _showOwnCompanyDropdown = false"></div>
+                                <div class="absolute z-50 mt-0.5 min-w-full overflow-auto rounded-md border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900" style="max-height:14rem">
+                                    <label class="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-xs hover:bg-sky-50 dark:hover:bg-sky-950/30">
+                                        <input type="radio" name="ownco" class="h-3.5 w-3.5" checked="@(!HasOwnCompany)" @onchange="() => { _ownCompanyName = string.Empty; _showOwnCompanyDropdown = false; }" />
+                                        <span class="text-slate-500 dark:text-slate-400">Inget</span>
+                                    </label>
+                                    @foreach (var b in AvailableBidders) { var bv = b;
+                                        <label class="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-xs text-slate-800 hover:bg-sky-50 dark:text-slate-200 dark:hover:bg-sky-950/30">
+                                            <input type="radio" name="ownco" class="h-3.5 w-3.5" checked="@(string.Equals(_ownCompanyName, bv, StringComparison.OrdinalIgnoreCase))" @onchange="() => { _ownCompanyName = bv; _showOwnCompanyDropdown = false; }" />
+                                            <span>@bv</span>
+                                        </label>
+                                    }
+                                </div>
+                            }
+                        </div>
+
+                        @* Tilldelad / ej tilldelad *@
+                        <select class="@SelectClass h-8 w-44" @bind="_awardedFilter">
+                            <option value="all">Alla anbud</option>
+                            <option value="awarded">Endast tilldelade</option>
+                            <option value="notawarded">Endast ej tilldelade</option>
+                        </select>
+
+                        @* Visa förkastade *@
+                        <label class="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-2.5 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                            <input type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300" checked="@_showRejectedBids" @onchange="e => _showRejectedBids = (bool)(e.Value ?? false)" />
+                            Visa förkastade
+                        </label>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        @BidColumnPanel()
+                        <button type="button" class="@ActionButtonClass" @onclick="ExportExcelAsync">@AppLoc["exportExcel"]</button>
+                        <button type="button" class="@ActionButtonClass" @onclick="ExportPdfAsync">@AppLoc["exportPdf"]</button>
+                        <button type="button" class="@ActionButtonClass" @onclick="PrintAsync">@AppLoc["print"]</button>
+                    </div>
+                </div>
+
+                @if (!FilteredBidRows.Any())
+                {
+                    <p class="rounded-lg border border-slate-200 bg-white p-4 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-950">Inga anbud matchar aktuella anbudsfilter.</p>
+                }
+                else
+                {
+                    var bidRows = FilteredBidRows.ToList();
+                    var bidCols = BidVisibleColumns.ToList();
+                    <div class="@TableContainerClass">
+                        <table class="@TableClass">
+                            <thead class="@TableHeadClass"><tr>@foreach (var c in bidCols) { <th>@GetBidColumnLabel(c)</th> }</tr></thead>
+                            <tbody class="@TableBodyClass">
+                                @{ var bi = 0; }
+                                @foreach (var r in bidRows)
+                                {
+                                    var rejected = r.Row.Status == BidStatus.Rejected;
+                                    <tr class="@(bi++ % 2 == 0 ? "" : "bg-slate-50/70 dark:bg-slate-900/30") @(IsOwnCompany(r) ? "bg-sky-50/70 dark:bg-sky-950/20" : "") @(rejected ? "text-slate-400 dark:text-slate-500" : "")">
+                                        @foreach (var c in bidCols)
+                                        {
+                                            @if (c == BidReportColumn.BidStatus)
+                                            {
+                                                <td>
+                                                    @if (rejected)
+                                                    {
+                                                        <span class="inline-flex rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-700 dark:bg-red-950/50 dark:text-red-300" title="@r.Row.RejectionReason">Förkastat</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="inline-flex rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">Giltigt</span>
+                                                    }
+                                                </td>
+                                            }
+                                            else if (c == BidReportColumn.OwnCompany)
+                                            {
+                                                <td>@if (IsOwnCompany(r)) { <span class="inline-flex rounded-full bg-sky-100 px-1.5 py-0.5 text-[10px] font-semibold text-sky-700 dark:bg-sky-950/50 dark:text-sky-300">Eget företag</span> }</td>
+                                            }
+                                            else if (c == BidReportColumn.Awarded)
+                                            {
+                                                <td>@if (r.Row.IsAwarded) { <span class="inline-flex rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">Ja</span> } else { <span class="text-slate-400">Nej</span> }</td>
+                                            }
+                                            else
+                                            {
+                                                <td>@GetBidCellValue(r, c)</td>
+                                            }
+                                        }
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="text-xs text-slate-400">@bidRows.Count anbud</p>
+                }
+            }
+        }
     }
 </div>
 
@@ -442,6 +609,7 @@
         public const string HitRate = "hit-rate";
         public const string Calculations = "calculations";
         public const string Projects = "projects";
+        public const string BidComparison = "bid-comparison";
         public const string Export = "export";
     }
 
@@ -453,6 +621,7 @@
 
     public const string ShowProjectsFirstTooltip = "Visa projekt först för att använda denna rapport.";
     public const string ShowProjectsFirstIncomeTooltip = "Visa projekt först för att använda Intäktsöversikt.";
+    public const string ShowProjectsFirstBidTooltip = "Visa projekt först för att använda Anbudsjämförelse.";
     public const string ShowCalculationsFirstTooltip = "Visa kalkyler först för att använda denna rapport.";
 
     public static IReadOnlyList<ReportAvailability> GetReportAvailability(ReportHost host) => host switch
@@ -462,12 +631,14 @@
             new(ReportView.Calculations, "calculationListReport", true, null),
             new(ReportView.Income, "incomeOverview", false, ShowProjectsFirstIncomeTooltip),
             new(ReportView.HitRate, "hitRate", false, ShowProjectsFirstTooltip),
+            new(ReportView.BidComparison, "bidComparison", false, ShowProjectsFirstBidTooltip),
             new(ReportView.Projects, "projectListReport", false, ShowProjectsFirstTooltip)
         ],
         _ =>
         [
             new(ReportView.Income, "incomeOverview", true, null),
             new(ReportView.HitRate, "hitRate", true, null),
+            new(ReportView.BidComparison, "bidComparison", true, null),
             new(ReportView.Projects, "projectListReport", true, null),
             new(ReportView.Calculations, "calculationListReport", false, ShowCalculationsFirstTooltip)
         ]
@@ -545,11 +716,30 @@
         HitRateReportColumn.TenderDeadline
     ];
 
+    private enum BidReportColumn
+    {
+        Project, Folder, Bidder, OwnCompany, BidStatus, Amount, Deduction, Comparison,
+        Deviation, Placement, Awarded, Rejected, RejectionReason,
+        // Valbara
+        ProjectCode, ProjectType, ProjStatus, Organisation, Developer, TenderDeadline,
+        EvaluationModel, TotalPoints, Note, CreatedAt, UpdatedAt
+    }
+
+    private static readonly BidReportColumn[] BidAllColumns = Enum.GetValues<BidReportColumn>();
+    private static readonly BidReportColumn[] BidDefaultColumns =
+    [
+        BidReportColumn.Project, BidReportColumn.Folder, BidReportColumn.Bidder,
+        BidReportColumn.OwnCompany, BidReportColumn.BidStatus, BidReportColumn.Amount,
+        BidReportColumn.Deduction, BidReportColumn.Comparison, BidReportColumn.Deviation,
+        BidReportColumn.Placement, BidReportColumn.Awarded
+    ];
+
     private const string MissingPersonValue = "__missing__";
     private const string CalcColumnsStorageKey = "ReportCalcColumnsV2";
     private const string ProjColumnsStorageKey = "ReportProjColumnsV2";
     private const string IncomeColumnsStorageKey = "RevenueOverviewColumnsV1";
     private const string HitRateColumnsStorageKey = "HitRateColumnsV1";
+    private const string BidColumnsStorageKey = "BidComparisonColumnsV1";
 
     private sealed class IncomeTableRow
     {
@@ -687,6 +877,20 @@
     private string _calcReportSelectionFilters = "";
     private bool _lockedCalcShowAllVersions;
 
+    // ── Anbudsjämförelse ──────────────────────────────────────────────
+    private bool _showColumnPanelBid;
+    private HashSet<BidReportColumn> _visibleBidColumns = new(BidDefaultColumns);
+    private List<BidRow> _lockedBidRows = [];
+    private string _bidReportSelectionLine = "";
+    private string _bidReportSelectionFilters = "";
+    private readonly HashSet<string> _selectedBidders = new(StringComparer.OrdinalIgnoreCase);
+    private bool _showBidderDropdown;
+    private bool _showRejectedBids;
+    private string _awardedFilter = "all"; // all | awarded | notawarded
+    private string _ownCompanyName = string.Empty;
+    private bool _showOwnCompanyDropdown;
+    private List<ProjectBidComparisonRowDTO> _bidRowsRaw = [];
+
     private bool _prefsLoaded;
 
     // ── Data ──────────────────────────────────────────────────────────
@@ -758,6 +962,25 @@
         _showColumnPanelProj, v => { _showColumnPanelProj = v; StateHasChanged(); },
         openUp: true);
 
+    private IEnumerable<BidReportColumn> BidVisibleColumns =>
+        BidAllColumns.Where(c => _visibleBidColumns.Contains(c));
+
+    private RenderFragment BidColumnPanel() => ColumnPanelImpl(
+        BidAllColumns, _visibleBidColumns, GetBidColumnLabel,
+        async (c, v) => await ToggleBidColumn(c, v),
+        () => { _visibleBidColumns = new(BidAllColumns); _ = SaveBidColumnsAsync(); },
+        () => { _visibleBidColumns = new(BidDefaultColumns); _ = SaveBidColumnsAsync(); },
+        _showColumnPanelBid, v => { _showColumnPanelBid = v; StateHasChanged(); },
+        openUp: true);
+
+    private async Task ToggleBidColumn(BidReportColumn c, bool on)
+    {
+        if (on) _visibleBidColumns.Add(c); else _visibleBidColumns.Remove(c);
+        await SaveBidColumnsAsync();
+    }
+
+    private Task SaveBidColumnsAsync() => SaveColumnsAsync(BidColumnsStorageKey, _visibleBidColumns);
+
     private RenderFragment ColumnPanelImpl<T>(T[] allCols, HashSet<T> visible, Func<T, string> getLabel,
         Func<T, bool, Task> toggle, Action selectAll, Action selectDefault,
         bool panelVisible, Action<bool> setPanelVisible, bool openUp = false)
@@ -799,6 +1022,7 @@
     [
         (ReportView.Income, L("incomeOverview")),
         (ReportView.HitRate, L("hitRate")),
+        (ReportView.BidComparison, L("bidComparison")),
         (ReportView.Calculations, L("calculationListReport")),
         (ReportView.Projects, L("projectListReport"))
     ];
@@ -920,6 +1144,7 @@
         if (IsViewEnabled(ReportView.Projects)) LockProjReportProjects();
         if (IsViewEnabled(ReportView.HitRate)) LockHitRateProjects();
         if (IsViewEnabled(ReportView.Calculations)) LockCalcReportList();
+        if (IsViewEnabled(ReportView.BidComparison)) LockBidComparison();
 
         if (!string.IsNullOrWhiteSpace(_selectedProjectId))
         {
@@ -939,6 +1164,7 @@
         stateChanged |= await LoadColumnPrefsAsync<ProjReportColumn>(ProjColumnsStorageKey, _visibleProjColumns);
         stateChanged |= await LoadColumnPrefsAsync<IncomeReportColumn>(IncomeColumnsStorageKey, _visibleIncomeColumns);
         stateChanged |= await LoadColumnPrefsAsync<HitRateReportColumn>(HitRateColumnsStorageKey, _visibleHitRateColumns);
+        stateChanged |= await LoadColumnPrefsAsync<BidReportColumn>(BidColumnsStorageKey, _visibleBidColumns);
         if (stateChanged) await InvokeAsync(StateHasChanged);
     }
 
@@ -1000,6 +1226,17 @@
                 catch (Exception ex) { await ClientLog.ErrorAsync("Loading calculation report data failed", ex: ex); }
             }
         }
+
+        // Anbudsdata hämtas i EN samlad query för alla filtrerade projekt (ej N+1).
+        if (IsViewEnabled(ReportView.BidComparison) && _projects.Count > 0)
+        {
+            try
+            {
+                var ids = _projects.Select(e => e.Project.Id).Distinct().ToList();
+                _bidRowsRaw = await Repo.ProjectBid.GetComparisonAsync(ids);
+            }
+            catch (Exception ex) { await ClientLog.ErrorAsync("Loading bid comparison data failed", ex: ex); }
+        }
     }
 
     private async Task LoadCalculationsAsync(FolderMVVM folder, ListProjectMVVM project)
@@ -1057,6 +1294,178 @@
             _projReportSelectionLine = $"Rapporten baseras på {count} projekt från aktuell projektlista.";
         _projReportSelectionFilters = string.Join(" · ", filters);
     }
+
+    // ── Anbudsjämförelse ──────────────────────────────────────────────
+
+    private sealed record BidRow(
+        ProjectBidComparisonRowDTO Row,
+        ListProjectMVVM? Project,
+        string ProjectName,
+        string FolderName,
+        decimal? Deviation);
+
+    private void LockBidComparison()
+    {
+        // Exakt det låsta projekturvalet från projektlistan (LockedProjectIds) styr vilka
+        // projekt som ingår – samma urval som övriga projektbaserade rapportflikar.
+        var projectById = _projects
+            .GroupBy(e => e.Project.Id)
+            .ToDictionary(g => g.Key, g => g.First());
+        var allowed = projectById.Keys.ToHashSet();
+
+        // Bästa (lägsta) giltiga jämförelsesumma per projekt – förkastade anbud räknas inte.
+        var bestByProject = _bidRowsRaw
+            .Where(r => allowed.Contains(r.ProjectId) && r.IsValid && r.ComparisonAmount.HasValue)
+            .GroupBy(r => r.ProjectId)
+            .ToDictionary(g => g.Key, g => g.Min(r => r.ComparisonAmount!.Value));
+
+        _lockedBidRows = _bidRowsRaw
+            .Where(r => allowed.Contains(r.ProjectId))
+            .Select(r =>
+            {
+                projectById.TryGetValue(r.ProjectId, out var pe);
+                decimal? deviation = null;
+                if (r.IsValid && r.ComparisonAmount.HasValue &&
+                    bestByProject.TryGetValue(r.ProjectId, out var best) && best > 0)
+                    deviation = (r.ComparisonAmount.Value - best) / best * 100m;
+
+                return new BidRow(r, pe?.Project, pe?.Project.Name ?? "-", pe?.Folder.Name ?? "-", deviation);
+            })
+            .OrderBy(r => r.ProjectName)
+            .ThenByDescending(r => r.Row.IsAwarded)
+            .ThenBy(r => r.Row.Placement ?? int.MaxValue)
+            .ThenBy(r => r.Row.ComparisonAmount ?? decimal.MaxValue)
+            .ToList();
+
+        _bidReportSelectionLine = string.IsNullOrWhiteSpace(_projReportSelectionLine)
+            ? $"Rapporten baseras på {allowed.Count} projekt från aktuell projektlista."
+            : _projReportSelectionLine;
+        _bidReportSelectionFilters = _projReportSelectionFilters;
+    }
+
+    private IEnumerable<BidRow> FilteredBidRows =>
+        _lockedBidRows.Where(r =>
+            (_showRejectedBids || r.Row.Status != BidStatus.Rejected) &&
+            (_selectedBidders.Count == 0 || _selectedBidders.Contains(r.Row.BidderName)) &&
+            (_awardedFilter switch { "awarded" => r.Row.IsAwarded, "notawarded" => !r.Row.IsAwarded, _ => true }));
+
+    private IEnumerable<string> AvailableBidders =>
+        _lockedBidRows.Select(r => r.Row.BidderName).Where(s => !string.IsNullOrWhiteSpace(s))
+            .Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(s => s);
+
+    private void ToggleBidder(string name, bool on)
+    {
+        if (on) _selectedBidders.Add(name); else _selectedBidders.Remove(name);
+    }
+
+    private bool HasOwnCompany => !string.IsNullOrWhiteSpace(_ownCompanyName);
+
+    private bool IsOwnCompany(BidRow r) =>
+        HasOwnCompany && string.Equals(r.Row.BidderName, _ownCompanyName, StringComparison.OrdinalIgnoreCase);
+
+    // KPI:er beräknas på den visade (filtrerade) listan.
+    private List<BidRow> BidKpiRows => FilteredBidRows.ToList();
+    private int BidProjectsWithBids => BidKpiRows.Select(r => r.Row.ProjectId).Distinct().Count();
+    private int BidCount => BidKpiRows.Count;
+    private int BidderCount => BidKpiRows.Select(r => r.Row.BidderName).Distinct(StringComparer.OrdinalIgnoreCase).Count();
+    private int AwardedCount => BidKpiRows.Count(r => r.Row.IsAwarded);
+
+    private string AvgDeviationDisplay
+    {
+        get
+        {
+            var devs = BidKpiRows.Where(r => r.Row.IsValid && r.Deviation.HasValue).Select(r => r.Deviation!.Value).ToList();
+            return devs.Count == 0 ? "–" : FormatSignedPercent(devs.Average());
+        }
+    }
+
+    private List<BidRow> OwnRows => BidKpiRows.Where(IsOwnCompany).ToList();
+    private int OwnBidCount => OwnRows.Count;
+    private int OwnAwardedCount => OwnRows.Count(r => r.Row.IsAwarded);
+
+    private string OwnAvgPlacement
+    {
+        get
+        {
+            var pl = OwnRows.Where(r => r.Row.IsAwarded && r.Row.Placement.HasValue).Select(r => r.Row.Placement!.Value).ToList();
+            return pl.Count == 0 ? "–" : pl.Average().ToString("0.#");
+        }
+    }
+
+    private string OwnAvgDeviation
+    {
+        get
+        {
+            var d = OwnRows.Where(r => r.Row.IsValid && r.Deviation.HasValue).Select(r => r.Deviation!.Value).ToList();
+            return d.Count == 0 ? "–" : FormatSignedPercent(d.Average());
+        }
+    }
+
+    private static string FormatSignedPercent(decimal v) => (v > 0 ? "+" : "") + v.ToString("0.#") + " %";
+    private static string FormatNullableMoney(decimal? v) => v.HasValue ? FormatMoney(v.Value) : "-";
+
+    private string BidDeviationText(BidRow r) =>
+        r.Row.Status == BidStatus.Rejected
+            ? "Förkastat"
+            : r.Deviation.HasValue ? FormatSignedPercent(r.Deviation.Value) : "-";
+
+    private string GetBidCellValue(BidRow r, BidReportColumn col) => col switch
+    {
+        BidReportColumn.Project => r.ProjectName,
+        BidReportColumn.Folder => r.FolderName,
+        BidReportColumn.Bidder => r.Row.BidderName,
+        BidReportColumn.OwnCompany => IsOwnCompany(r) ? "Eget företag" : "",
+        BidReportColumn.BidStatus => r.Row.Status == BidStatus.Rejected ? "Förkastat" : "Giltigt",
+        BidReportColumn.Amount => FormatNullableMoney(r.Row.Amount),
+        BidReportColumn.Deduction => (r.Row.DeductionPercent ?? 0) > 0 ? $"{r.Row.DeductionPercent!.Value.ToString("0.##")} %" : "-",
+        BidReportColumn.Comparison => FormatNullableMoney(r.Row.ComparisonAmount),
+        BidReportColumn.Deviation => BidDeviationText(r),
+        BidReportColumn.Placement => r.Row.IsAwarded && r.Row.Placement.HasValue ? r.Row.Placement.Value.ToString() : "-",
+        BidReportColumn.Awarded => r.Row.IsAwarded ? "Ja" : "Nej",
+        BidReportColumn.Rejected => r.Row.Status == BidStatus.Rejected ? "Ja" : "",
+        BidReportColumn.RejectionReason => r.Row.RejectionReason ?? "",
+        BidReportColumn.ProjectCode => r.Project?.Code ?? "",
+        BidReportColumn.ProjectType => r.Project?.Type ?? "",
+        BidReportColumn.ProjStatus => r.Project?.Status ?? "",
+        BidReportColumn.Organisation => r.Project?.Organisation ?? "",
+        BidReportColumn.Developer => r.Project?.Developer ?? "",
+        BidReportColumn.TenderDeadline => r.Project is null ? "" : FormatDate(r.Project.TenderDeadline),
+        BidReportColumn.EvaluationModel => r.Row.EvaluationModel == BidEvaluationModel.HighestPoints ? "Högsta poäng" : "Lägsta jämförelsesumma",
+        BidReportColumn.TotalPoints => r.Row.TotalPoints.HasValue ? r.Row.TotalPoints.Value.ToString("0.##") : "-",
+        BidReportColumn.Note => r.Row.Note ?? "",
+        BidReportColumn.CreatedAt => r.Row.CreatedAt == default ? "" : r.Row.CreatedAt.ToString("yyyy-MM-dd"),
+        BidReportColumn.UpdatedAt => r.Row.UpdatedAt?.ToString("yyyy-MM-dd") ?? "",
+        _ => ""
+    };
+
+    private static string GetBidColumnLabel(BidReportColumn col) => col switch
+    {
+        BidReportColumn.Project => "Projekt",
+        BidReportColumn.Folder => "Mapp",
+        BidReportColumn.Bidder => "Anbudsgivare",
+        BidReportColumn.OwnCompany => "Eget företag",
+        BidReportColumn.BidStatus => "Anbudsstatus",
+        BidReportColumn.Amount => "Anbudssumma",
+        BidReportColumn.Deduction => "Mervärdeavdrag %",
+        BidReportColumn.Comparison => "Jämförelsesumma",
+        BidReportColumn.Deviation => "Avvikelse %",
+        BidReportColumn.Placement => "Placering",
+        BidReportColumn.Awarded => "Tilldelad",
+        BidReportColumn.Rejected => "Förkastad",
+        BidReportColumn.RejectionReason => "Förkastningsorsak",
+        BidReportColumn.ProjectCode => "Projektkod",
+        BidReportColumn.ProjectType => "Projekttyp",
+        BidReportColumn.ProjStatus => "Projektstatus",
+        BidReportColumn.Organisation => "Beställare",
+        BidReportColumn.Developer => "Byggherre",
+        BidReportColumn.TenderDeadline => "Anbudsdeadline",
+        BidReportColumn.EvaluationModel => "Utvärderingsmodell",
+        BidReportColumn.TotalPoints => "Totalpoäng",
+        BidReportColumn.Note => "Anteckning",
+        BidReportColumn.CreatedAt => "Skapad",
+        BidReportColumn.UpdatedAt => "Senast ändrad",
+        _ => col.ToString()
+    };
 
     // ── Hit rate lock ─────────────────────────────────────────────────
 
@@ -1726,6 +2135,7 @@
             ReportView.HitRate => "hit-rate-traffsakerhet",
             ReportView.Calculations => "kalkyllista",
             ReportView.Projects => "projektlista",
+            ReportView.BidComparison => "anbudsjamforelse",
             _ => $"rapport-{_activeView}"
         };
         await ReportExportInterop.ExportExcelAsync(JS, name, ToExportHeader(export), export.Columns, export.Rows);
@@ -1752,6 +2162,7 @@
         ReportView.HitRate => BuildHitRateExport(),
         ReportView.Calculations => BuildCalcExport(),
         ReportView.Projects => BuildProjExport(),
+        ReportView.BidComparison => BuildBidExport(),
         _ => BuildCalcExport()
     };
 
@@ -1884,6 +2295,40 @@
         var rows = _lockedProjReportProjects
             .Select(e => cols.Select(c => (object?)GetProjCellValue(e, c)));
         return new(L("projectListReport"), headers, rows, sections, null);
+    }
+
+    private ExportModel BuildBidExport()
+    {
+        var cols = BidVisibleColumns.ToList();
+        var headers = cols.Select(GetBidColumnLabel).ToArray();
+        var data = FilteredBidRows.ToList();
+        var sections = new List<ReportExportSection>
+        {
+            new("Projekturval:", [_bidReportSelectionLine, _bidReportSelectionFilters]),
+            new("Anbudsfilter:", [BuildBidReportFilterLine()])
+        };
+        var kpis = new List<ReportExportKpi>
+        {
+            new("Projekt med anbud", BidProjectsWithBids.ToString()),
+            new("Antal anbud", BidCount.ToString()),
+            new("Antal anbudsgivare", BidderCount.ToString()),
+            new("Tilldelade anbud", AwardedCount.ToString()),
+            new("Genomsnittlig avvikelse %", AvgDeviationDisplay)
+        };
+        var exportRows = data.Select(r => cols.Select(c => (object?)GetBidCellValue(r, c)));
+        return new("Anbudsjämförelse", headers, exportRows, sections, kpis);
+    }
+
+    private string BuildBidReportFilterLine()
+    {
+        var parts = new List<string>
+        {
+            $"Anbudsgivare: {(_selectedBidders.Count == 0 ? "Alla" : string.Join(", ", _selectedBidders))}"
+        };
+        if (HasOwnCompany) parts.Add($"Eget företag: {_ownCompanyName}");
+        parts.Add($"Tilldelade: {_awardedFilter switch { "awarded" => "Endast tilldelade", "notawarded" => "Endast ej tilldelade", _ => "Alla" }}");
+        parts.Add($"Visa förkastade: {(_showRejectedBids ? "Ja" : "Nej")}");
+        return string.Join(" · ", parts);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────

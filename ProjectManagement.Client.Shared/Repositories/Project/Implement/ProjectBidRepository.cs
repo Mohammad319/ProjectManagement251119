@@ -11,6 +11,9 @@ namespace ProjectManagement.Client.Shared.Repositories.Project.Implement
         public Task<ProjectBidsViewDTO> GetViewAsync(Guid projectId)
             => httpRepository.GetAsync<ProjectBidsViewDTO>(Base + projectId);
 
+        public Task<List<ProjectBidComparisonRowDTO>> GetComparisonAsync(IReadOnlyList<Guid> projectIds)
+            => httpRepository.PostAsync<List<ProjectBidComparisonRowDTO>, List<Guid>>(projectIds.ToList(), Base + "comparison");
+
         public Task<int> CreateAsync(Guid projectId, ProjectBidPostDTO dto)
             => httpRepository.PostAsync<int, ProjectBidPostDTO>(dto, Base + projectId);
 

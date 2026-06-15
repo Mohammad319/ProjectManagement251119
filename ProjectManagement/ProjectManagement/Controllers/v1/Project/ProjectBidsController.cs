@@ -15,6 +15,12 @@ namespace ProjectManagement.Server.Controllers.v1.Project
         public async Task<IActionResult> GetAll(Guid projectId)
             => Ok(await MicroBus.Send(new GetProjectBidsQuery(projectId, GetDepartmentId())));
 
+        // ─── Anbudsjämförelse: anbud för flera projekt i en samlad query ─────
+        [Authorize(Roles = PMRolesConst.Tenant.Users)]
+        [HttpPost("comparison")]
+        public async Task<IActionResult> Comparison([FromBody] List<Guid> projectIds)
+            => Ok(await MicroBus.Send(new GetProjectBidComparisonQuery(projectIds ?? [], GetDepartmentId())));
+
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpPost("{projectId}")]
         public async Task<IActionResult> Create(Guid projectId, ProjectBidPostDTO dto)

@@ -14,4 +14,17 @@ namespace Application.Feature.Project.ProjectBid
         public Task<ProjectBidsViewDTO> Handle(GetProjectBidsQuery request, CancellationToken cancellationToken)
             => service.GetViewAsync(request.ProjectId, request.DepartmentId, cancellationToken);
     }
+
+    // ─── Anbudsjämförelse (bulk över flera projekt) ───────────────────────────
+    public sealed record GetProjectBidComparisonQuery(
+        IReadOnlyList<Guid> ProjectIds,
+        int? DepartmentId
+    ) : IRequest<List<ProjectBidComparisonRowDTO>>;
+
+    public sealed class GetProjectBidComparisonQueryHandler(IProjectBidService service)
+        : IRequestHandler<GetProjectBidComparisonQuery, List<ProjectBidComparisonRowDTO>>
+    {
+        public Task<List<ProjectBidComparisonRowDTO>> Handle(GetProjectBidComparisonQuery request, CancellationToken cancellationToken)
+            => service.GetComparisonAsync(request.ProjectIds, request.DepartmentId, cancellationToken);
+    }
 }
