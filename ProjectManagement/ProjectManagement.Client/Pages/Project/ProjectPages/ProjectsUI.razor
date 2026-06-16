@@ -1708,6 +1708,9 @@
                 if (_projectColumns.ContainsKey(k))
                     _projectColumns[k] = v;
 
+        // Radnummer visas alltid som standard (även om en äldre sparad vy saknar/döljer den).
+        _projectColumns["rowNumber"] = true;
+
         _columnWidths = await ViewPreference.LoadColumnWidthsAsync() ?? new();
 
         _savedProjectFilters = await SavedFilterStorage.LoadAsync(ListSavedFilterStorage.ProjectListScope);

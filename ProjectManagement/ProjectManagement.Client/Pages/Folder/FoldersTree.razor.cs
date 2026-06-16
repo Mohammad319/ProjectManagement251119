@@ -1603,6 +1603,16 @@ namespace ProjectManagement.Client.Pages.Folder
                                 UoWService.Folder.State.Notify();
                             }
                             await Modal.CloseAsync();
+                        }),
+                    // Refresh the project's calculations in the tree without closing the dialog
+                    // (used after approve-and-lock and after creating a contract/production calc).
+                    [nameof(CalculationFormUI.OnReloadList)] = EventCallback.Factory.Create(this,
+                        async () =>
+                        {
+                            project.CalculationsLoaded = false;
+                            await Folder.SetCalcsToProject(project);
+                            project.ShowCalculations = ProjectHasChildren(project);
+                            UoWService.Folder.State.Notify();
                         })
                 },
                 BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge,

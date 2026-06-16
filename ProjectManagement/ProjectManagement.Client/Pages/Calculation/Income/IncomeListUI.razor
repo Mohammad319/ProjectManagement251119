@@ -23,11 +23,14 @@
                 <thead>
                     <tr>
                         <th class="bg-slate-50 px-1.5 py-1 dark:bg-slate-800/80">
-                            <button type="button" @onclick="AddIncome"
-                                    class="inline-flex items-center rounded border border-emerald-500 px-1 py-0.5 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-500 dark:text-emerald-300 dark:hover:bg-emerald-900/30"
-                                    title="Lägg till intäktsrad">
-                                @((MarkupString)Icons.Plus)
-                            </button>
+                            @if (!ReadOnly)
+                            {
+                                <button type="button" @onclick="AddIncome"
+                                        class="inline-flex items-center rounded border border-emerald-500 px-1 py-0.5 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-500 dark:text-emerald-300 dark:hover:bg-emerald-900/30"
+                                        title="Lägg till intäktsrad">
+                                    @((MarkupString)Icons.Plus)
+                                </button>
+                            }
                         </th>
                         <th class="bg-slate-50 px-1.5 py-1 whitespace-nowrap font-semibold text-slate-600 dark:bg-slate-800/80 dark:text-slate-300">@ResourceLoc.year</th>
                         <th class="bg-slate-50 px-2 py-1 font-semibold text-slate-600 dark:bg-slate-800/80 dark:text-slate-300">Beskrivning</th>
@@ -44,26 +47,32 @@
                     {
                         <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40">
                             <td class="px-1.5 py-0.5">
-                                <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
-                                    <button type="button" @onclick="() => Remove(income)"
-                                            class="inline-flex items-center rounded border border-rose-300 px-1 py-0.5 text-rose-600 hover:bg-rose-50 dark:border-rose-700 dark:text-rose-400 dark:hover:bg-rose-900/20">
-                                        @((MarkupString)Icons.DeleteSVG)
-                                    </button>
-                                </AuthorizeView>
+                                @if (!ReadOnly)
+                                {
+                                    <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
+                                        <button type="button" @onclick="() => Remove(income)"
+                                                class="inline-flex items-center rounded border border-rose-300 px-1 py-0.5 text-rose-600 hover:bg-rose-50 dark:border-rose-700 dark:text-rose-400 dark:hover:bg-rose-900/20">
+                                            @((MarkupString)Icons.DeleteSVG)
+                                        </button>
+                                    </AuthorizeView>
+                                }
                             </td>
                             <td class="px-1.5 py-0.5">
                                 <input type="number" min="@MinYear" value="@income.Year"
                                        @onchange="e => SetIncomeYear(income, e.Value)"
+                                       disabled="@ReadOnly"
                                        class="@InputBase w-full min-w-0" />
                             </td>
                             <td class="px-2 py-0.5">
                                 <input type="text" placeholder="Beskrivning (valfri)"
                                        value="@income.Description"
                                        @onchange="e => income.Description = e.Value?.ToString()"
+                                       disabled="@ReadOnly"
                                        class="@InputBase w-full min-w-0" />
                             </td>
                             <td class="px-1 py-0.5">
                                 <select value="@((int)income.SubType)" @onchange="e => SetSubType(income, e.Value)"
+                                        disabled="@ReadOnly"
                                         class="@InputBase w-full min-w-0">
                                     <option value="0">Grunddel</option>
                                     <option value="1">Option</option>
@@ -73,26 +82,31 @@
                             <td style="width: 4.2rem; min-width: 4.2rem; max-width: 4.2rem;" class="border-l border-slate-100 px-1 py-0.5 dark:border-slate-800">
                                 <input type="number" value="@DisplayQ(income, income.Q1)"
                                        @onchange="e => OnQChanged(income, 1, e.Value)"
+                                       disabled="@ReadOnly"
                                        class="@InputBase w-full min-w-0 text-right" />
                             </td>
                             <td style="width: 4.2rem; min-width: 4.2rem; max-width: 4.2rem;" class="px-1 py-0.5">
                                 <input type="number" value="@DisplayQ(income, income.Q2)"
                                        @onchange="e => OnQChanged(income, 2, e.Value)"
+                                       disabled="@ReadOnly"
                                        class="@InputBase w-full min-w-0 text-right" />
                             </td>
                             <td style="width: 4.2rem; min-width: 4.2rem; max-width: 4.2rem;" class="px-1 py-0.5">
                                 <input type="number" value="@DisplayQ(income, income.Q3)"
                                        @onchange="e => OnQChanged(income, 3, e.Value)"
+                                       disabled="@ReadOnly"
                                        class="@InputBase w-full min-w-0 text-right" />
                             </td>
                             <td style="width: 4.2rem; min-width: 4.2rem; max-width: 4.2rem;" class="px-1 py-0.5">
                                 <input type="number" value="@DisplayQ(income, income.Q4)"
                                        @onchange="e => OnQChanged(income, 4, e.Value)"
+                                       disabled="@ReadOnly"
                                        class="@InputBase w-full min-w-0 text-right" />
                             </td>
                             <td class="border-l border-slate-100 px-1 py-0.5 dark:border-slate-800">
                                 <input type="number" value="@DisplayYearly(income)"
                                        @onchange="e => DistributeYearly(income, e.Value)"
+                                       disabled="@ReadOnly"
                                        class="@InputBase @InputSumExtra w-full min-w-0 text-right font-medium" />
                             </td>
                         </tr>
@@ -133,6 +147,10 @@
     [Parameter] public List<IncomeBase>? Incomes { get; set; }
     [Parameter] public int? MinYear { get; set; }
 
+    // When true the revenues are shown as read-only history (locked calculation):
+    // every field is disabled and the add/remove actions are hidden, summaries stay.
+    [Parameter] public bool ReadOnly { get; set; }
+
     private readonly HashSet<IncomeBase> _newEmptyRows = [];
 
     private const string InputBase = "h-6 rounded border border-slate-300 bg-white px-1 py-0.5 text-[11px] leading-tight text-slate-800 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100";
@@ -150,7 +168,8 @@
     protected override void OnParametersSet()
     {
         Incomes ??= [];
-        if (MinYear.HasValue)
+        // Never mutate the historical rows of a locked/read-only calculation.
+        if (MinYear.HasValue && !ReadOnly)
             Incomes.RemoveAll(income => income.Year > 0 && income.Year < MinYear.Value);
         _newEmptyRows.RemoveWhere(row => !Incomes.Contains(row));
     }

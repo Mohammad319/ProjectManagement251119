@@ -926,6 +926,39 @@
     </div>
 }
 
+@* ── Delete calculation dialog ──────────────────────── *@
+@if (_deleteDialogCalculation is not null)
+{
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-6">
+        <div class="w-full max-w-lg rounded-lg border border-slate-200 bg-white p-5 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
+            <div class="space-y-3 text-slate-700 dark:text-slate-200">
+                <h2 class="text-base font-semibold text-slate-900 dark:text-slate-50">@AppLoc["deleteCalculationTitle"]</h2>
+                <p class="text-sm leading-6">@string.Format(AppLoc["deleteCalculationConfirm"].Value, _deleteDialogCalculation.Name)</p>
+                @if (!string.IsNullOrWhiteSpace(_deleteDialogMessage))
+                {
+                    <div class="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
+                        @_deleteDialogMessage
+                    </div>
+                }
+            </div>
+            <div class="mt-5 flex flex-wrap justify-end gap-2">
+                <button type="button"
+                        class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                        disabled="@_isDeletingCalculation"
+                        @onclick="CancelDeleteDialog">
+                    @AppLoc["cancel"]
+                </button>
+                <button type="button"
+                        class="rounded-lg border border-red-500 bg-red-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-500 dark:bg-red-500 dark:hover:bg-red-600"
+                        disabled="@_isDeletingCalculation"
+                        @onclick="ConfirmDeleteCalculationAsync">
+                    @AppLoc["delete"]
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
 
 @code {
     [Parameter] public bool FolderScopeMode { get; set; }
@@ -1079,6 +1112,9 @@
             _calculationColumns["project"] = true;
             _calculationColumns["folder"] = IsDepartmentScope;
         }
+
+        // Radnummer visas alltid som standard (även om en äldre sparad vy saknar/döljer den).
+        _calculationColumns["rowNumber"] = true;
 
         _columnWidths = await ViewPreference.LoadColumnWidthsAsync() ?? new();
     }
@@ -2085,6 +2121,19 @@
             else
                 list.Add(new() { IconHtml = Icons.Restore, Label = AppLoc["restoreFromArchive"], OnClickAsync = async () => await ArchiveOrRestoreCalculationAsync(item, archive: false) });
 
+            // Ta bort kalkyl — destructive, separated from the edit actions. Locked/approved
+            // calculations can't be deleted in this version (archive them instead), so hide it.
+            if (!item.IsLocked)
+            {
+                list.Add(new() { IsSeparator = true });
+                list.Add(new()
+                {
+                    IconHtml = Icons.Delete,
+                    Label = AppLoc["deleteCalculation"],
+                    CssClass = "text-red-600 dark:text-red-400",
+                    OnClickAsync = () => { OpenDeleteDialog(item); return Task.CompletedTask; }
+                });
+            }
         }
 
         await ContextService.ShowMenuAsync(list);
@@ -2308,7 +2357,9 @@
             {
                 [nameof(CalculationFormUI.Calculation)] = model,
                 [nameof(CalculationFormUI.Callback)] =
-                    EventCallback.Factory.Create<ListCalculationMVVM?>(this, CalcFormAsync)
+                    EventCallback.Factory.Create<ListCalculationMVVM?>(this, CalcFormAsync),
+                [nameof(CalculationFormUI.OnReloadList)] =
+                    EventCallback.Factory.Create(this, () => ReloadCalculationsAsync(closeModal: false))
             },
             BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge,
             DialogButtonsHelper.CreateSaveCancelButtons(CalculationFormUI.DialogFormId));
@@ -2369,21 +2420,62 @@
         await ReloadCalculationsAsync(closeModal: true);
     }
 
-    void Remove(ListCalculationMVVM calculation) =>
-        MHD.DeleteMessage(calculation.Name,
-            EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(calculation)));
+    private ListCalculationMVVM? _deleteDialogCalculation;
+    private bool _isDeletingCalculation;
+    private string _deleteDialogMessage = string.Empty;
 
-    async Task ConfirmRemoveAsync(ListCalculationMVVM calculation)
+    private void OpenDeleteDialog(ListCalculationMVVM calculation)
     {
-        bool result = await Repo.Calculation.DeleteAsync(calculation.Id);
+        _deleteDialogMessage = string.Empty;
+        _deleteDialogCalculation = calculation;
+    }
 
-        if (result)
+    private void CancelDeleteDialog()
+    {
+        if (_isDeletingCalculation)
+            return;
+
+        _deleteDialogCalculation = null;
+        _deleteDialogMessage = string.Empty;
+    }
+
+    private async Task ConfirmDeleteCalculationAsync()
+    {
+        if (_deleteDialogCalculation is null || _isDeletingCalculation)
+            return;
+
+        _isDeletingCalculation = true;
+        _deleteDialogMessage = string.Empty;
+
+        var calculation = _deleteDialogCalculation;
+        try
         {
-            GetCalculationProject(calculation)?.Calculations.Remove(calculation);
-            StateHasChanged();
-        }
+            bool result = await Repo.Calculation.DeleteAsync(calculation.Id);
+            if (!result)
+            {
+                _deleteDialogMessage = AppLoc["calculationDeleteFailed"].Value;
+                MHD.Notifications(ToastType.Delete, false);
+                return;
+            }
 
-        MHD.Notifications(ToastType.Delete, result);
+            // Clear the open calculation if it was the deleted one, then refresh list + tree.
+            var calcFolder = GetCalculationFolder(calculation);
+            if (Folder.State.Calculation?.Id == calculation.Id && calcFolder is not null)
+                Folder.State.SetCalculation(null, Folder.State.ProjectSelected, calcFolder);
+
+            _deleteDialogCalculation = null;
+            await ReloadCalculationsAsync();
+            MHD.Notifications(ToastType.Delete, true);
+        }
+        catch (Exception ex)
+        {
+            _deleteDialogMessage = AppLoc["calculationDeleteFailed"].Value;
+            await ClientLog.ErrorAsync("Delete calculation failed", ex: ex);
+        }
+        finally
+        {
+            _isDeletingCalculation = false;
+        }
     }
 
     private async Task HandleDrop(ListCalculationMVVM calc)

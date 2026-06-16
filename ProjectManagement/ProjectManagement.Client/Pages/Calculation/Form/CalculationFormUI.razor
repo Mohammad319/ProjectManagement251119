@@ -303,6 +303,28 @@
                                                 }
                                             </div>
                                         }
+                                        @if (!string.IsNullOrWhiteSpace(_createBlockMessage))
+                                        {
+                                            <div class="sm:col-span-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300">
+                                                @_createBlockMessage
+                                            </div>
+                                        }
+                                        @if (_createdCalcId.HasValue)
+                                        {
+                                            <div class="sm:col-span-2 flex flex-col gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2.5 dark:border-emerald-900/60 dark:bg-emerald-950/30 sm:flex-row sm:items-center sm:justify-between">
+                                                <div class="flex items-start gap-1.5 text-xs text-emerald-800 dark:text-emerald-200">
+                                                    <svg class="mt-0.5 h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                    <span>@AppLoc[_postCreateInfoKey]</span>
+                                                </div>
+                                                <button type="button"
+                                                        class="shrink-0 rounded-lg border border-emerald-500 bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-emerald-700 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-600"
+                                                        @onclick="OpenCreatedCalculationAsync">
+                                                    @AppLoc["openCalculation"]
+                                                </button>
+                                            </div>
+                                        }
                                     </div>
                                 </section>
 
@@ -451,14 +473,14 @@
                 <div class="relative z-0 rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
                     @if (IsContentLocked)
                     {
-                        <div class="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300">
-                            Kalkylen är låst och intäkter kan inte ändras.
+                        <div class="mb-3 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
+                            <svg class="mt-0.5 h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25z" />
+                            </svg>
+                            <span>@AppLoc["incomeLockedHistoryInfo"]</span>
                         </div>
                     }
-                    else
-                    {
-                        <ProjectManagement.Client.Pages.Calculation.Income.IncomeListUI Incomes="CalculationUpdate.Income" MinYear="CalculationIncomeStartYear" />
-                    }
+                    <ProjectManagement.Client.Pages.Calculation.Income.IncomeListUI Incomes="CalculationUpdate.Income" MinYear="CalculationIncomeStartYear" ReadOnly="IsContentLocked" />
                 </div>
             }
         </div>
@@ -691,7 +713,16 @@
     private ElementReference _approvalDialogRef;
     private bool _focusApprovalDialog;
 
+    // After a contract/production calculation is created we keep the form open showing the
+    // new (editable) calculation, with a success row and an explicit "Öppna kalkyl" button.
+    private int? _createdCalcId;
+    private string _postCreateInfoKey = "contractCalculationCreatedInfo";
+    private string _createBlockMessage = string.Empty;
+
     [Parameter] public EventCallback<ListCalculationMVVM?> Callback { get; set; }
+    // Reloads the parent calculation list/tree WITHOUT closing the dialog. Used after
+    // approve-and-lock and after creating a contract/production calculation.
+    [Parameter] public EventCallback OnReloadList { get; set; }
     [Parameter] public required ListCalculationMVVM Calculation { get; set; }
 
     CalculationPostDTO CalculationUpdate = new();
@@ -1010,7 +1041,9 @@
         {
             CalculationUpdate.StatusId = _pendingApprovalStatusId;
             _showApprovalDialog = false;
-            await HandleSubmitAsync();
+            // Lock the calculation but keep the form open so the user sees the locked
+            // state and the next-step actions (create contract/production calculation).
+            await HandleSubmitAsync(keepOpen: true);
         }
         catch (Exception ex)
         {
@@ -1028,6 +1061,7 @@
     private void OpenContractDialog()
     {
         _contractDialogMessage = string.Empty;
+        _createBlockMessage = string.Empty;
         _showContractDialog = true;
     }
 
@@ -1059,9 +1093,13 @@
 
             _showContractDialog = false;
             MHD.Notifications(ToastType.Add, true);
-            await Callback.InvokeAsync(Calculation);
-            await Callback.InvokeAsync(null);
-            await CalcService.SetCalc(newCalculationId);
+
+            // Don't jump into the calculation table. Reload the list/tree, then show the
+            // new (editable) contract calculation in the form so the user can review and save.
+            await OnReloadList.InvokeAsync();
+            await LoadCalculationByIdAsync(newCalculationId);
+            _createdCalcId = newCalculationId;
+            _postCreateInfoKey = "contractCalculationCreatedInfo";
         }
         catch (Exception ex)
         {
@@ -1076,6 +1114,16 @@
 
     private void OpenProductionDialog()
     {
+        _createBlockMessage = string.Empty;
+
+        // Require the calculation to be saved first so the production copy is made from
+        // persisted data (first-version rule: save before creating the production copy).
+        if (editContext is not null && editContext.IsModified())
+        {
+            _createBlockMessage = AppLoc["saveBeforeCreateProduction"].Value;
+            return;
+        }
+
         _productionDialogMessage = string.Empty;
         _showProductionDialog = true;
     }
@@ -1108,9 +1156,13 @@
 
             _showProductionDialog = false;
             MHD.Notifications(ToastType.Add, true);
-            await Callback.InvokeAsync(Calculation);
-            await Callback.InvokeAsync(null);
-            await CalcService.SetCalc(newCalculationId);
+
+            // Show the new (editable) production calculation in the form instead of opening
+            // the table; the user reviews/saves and opens it explicitly via "Öppna kalkyl".
+            await OnReloadList.InvokeAsync();
+            await LoadCalculationByIdAsync(newCalculationId);
+            _createdCalcId = newCalculationId;
+            _postCreateInfoKey = "productionCalculationCreatedInfo";
         }
         catch (Exception ex)
         {
@@ -1318,8 +1370,13 @@
         }
     }
 
-    protected override async Task OnInitializedAsync()
+    protected override Task OnInitializedAsync() => LoadCalculationAsync();
+
+    // Loads (or reloads) the form for the current Calculation.Id. Safe to call again after
+    // creating a contract/production calculation so the new calculation is shown in the form.
+    private async Task LoadCalculationAsync()
     {
+        CalculationUpdate = new CalculationPostDTO();
         ResetEditContext();
 
         if (CalculationUpdate.Responsibles.Count == 0)
@@ -1368,6 +1425,27 @@
         _originalStatusId = CalculationUpdate.StatusId;
         RecalculateDateFields(DateFieldChanged.EndDate);
         ResetEditContext();
+    }
+
+    // Switches the form to a different calculation (e.g. the freshly created contract/
+    // production calculation) and reloads its data, keeping the dialog open.
+    private async Task LoadCalculationByIdAsync(int id)
+    {
+        Calculation = new ListCalculationMVVM { Id = id };
+        Part = 1;
+        await LoadCalculationAsync();
+        StateHasChanged();
+    }
+
+    // Explicit user action: open the newly created calculation's rows (net calculation).
+    private async Task OpenCreatedCalculationAsync()
+    {
+        var id = _createdCalcId ?? Calculation.Id;
+        if (id <= 0)
+            return;
+
+        await Callback.InvokeAsync(null); // closes the dialog
+        await CalcService.SetCalc(id);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -1457,7 +1535,7 @@
         editContext.SetFieldCssClassProvider(RequiredFieldCssClassProvider.Instance);
     }
 
-    async Task HandleSubmitAsync()
+    async Task HandleSubmitAsync(bool keepOpen = false)
     {
         if (btnSubmitDisabled)
             return;
@@ -1481,6 +1559,17 @@
                     MHD.Notifications(ToastType.Update, true);
                     PropertyCopier.CopyPropertiesTo(CalculationUpdate, Calculation);
                     _originalStatusId = CalculationUpdate.StatusId;
+                }
+
+                if (keepOpen)
+                {
+                    // Refresh the parent list/tree and reload the form so the locked state
+                    // (read-only fields, "Låst & godkänd", next-step buttons) is shown.
+                    await OnReloadList.InvokeAsync();
+                    btnSubmitDisabled = false;
+                    await LoadCalculationAsync();
+                    StateHasChanged();
+                    return;
                 }
 
                 await Callback.InvokeAsync(Calculation);

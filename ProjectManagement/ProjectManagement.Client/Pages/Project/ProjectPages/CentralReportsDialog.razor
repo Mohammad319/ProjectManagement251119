@@ -228,14 +228,14 @@
             {
                 <p class="text-xs text-slate-500 dark:text-slate-400">@AppLoc["reportCurrentVersionRule"]</p>
             }
-            <div class="flex flex-wrap items-center justify-between gap-2">
-                <div class="grid grid-cols-2 gap-2 md:grid-cols-4">
+            <div class="flex flex-nowrap items-center justify-between gap-2">
+                <div class="grid min-w-0 grid-cols-2 gap-2 md:grid-cols-4">
                     <div class="@TotalCardClass"><span>@AppLoc["revenue"]</span><strong>@FormatMoney(IncludedFilteredIncomeRows.Sum(r => r.Amount))</strong></div>
                     <div class="@TotalCardClass"><span>@AppLoc["forecast"]</span><strong>@FormatMoney(IncludedFilteredIncomeRows.Sum(r => r.Forecast))</strong></div>
                     <div class="@TotalCardClass"><span>Projekt</span><strong>@IncludedFilteredIncomeRows.Select(r => r.Entry.Project.Id).Distinct().Count()</strong></div>
                     <div class="@TotalCardClass"><span>Kalkyler</span><strong>@IncludedFilteredIncomeRows.Select(r => r.Entry.Calculation.Id).Distinct().Count()</strong></div>
                 </div>
-                <div class="flex flex-wrap items-center gap-1.5">
+                <div class="flex flex-nowrap items-center gap-1.5 shrink-0">
                     <button type="button"
                             class="@(_showQuarters ? "inline-flex h-8 items-center rounded-lg bg-sky-600 px-3 text-xs font-semibold text-white shadow-sm transition hover:bg-sky-700" : ActionButtonClass)"
                             @onclick="() => _showQuarters = !_showQuarters">
@@ -361,9 +361,9 @@
                 {
                     <p class="text-xs text-slate-500 dark:text-slate-400">Hit rate kan inte beräknas eftersom inga vunna eller förlorade projekt finns i urvalet.</p>
                 }
-                <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="flex flex-nowrap items-center justify-between gap-2">
                     <span class="text-xs text-slate-400">@DecidedCount vunna/förlorade</span>
-                    <div class="flex flex-wrap items-center gap-1.5">
+                    <div class="flex flex-nowrap items-center gap-1.5 shrink-0">
                         @HitRateColumnPanel()
                         <button type="button" class="@ActionButtonClass" @onclick="ExportExcelAsync">@AppLoc["exportExcel"]</button>
                         <button type="button" class="@ActionButtonClass" @onclick="ExportPdfAsync">@AppLoc["exportPdf"]</button>
@@ -385,9 +385,9 @@
             }
             else
             {
-                <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="flex flex-nowrap items-center justify-between gap-2">
                     <span class="text-xs text-slate-400">@IncludedCalcReportList.Count @AppLoc["rows"].Value.ToLower()</span>
-                    <div class="flex flex-wrap items-center gap-1.5">
+                    <div class="flex flex-nowrap items-center gap-1.5 shrink-0">
                         @CalcColumnPanel()
                         <button type="button" class="@ActionButtonClass" @onclick="ExportExcelAsync">@AppLoc["exportExcel"]</button>
                         <button type="button" class="@ActionButtonClass" @onclick="ExportPdfAsync">@AppLoc["exportPdf"]</button>
@@ -409,9 +409,9 @@
             }
             else
             {
-                <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="flex flex-nowrap items-center justify-between gap-2">
                     <span class="text-xs text-slate-400">@IncludedProjReportProjects.Count projekt</span>
-                    <div class="flex flex-wrap items-center gap-1.5">
+                    <div class="flex flex-nowrap items-center gap-1.5 shrink-0">
                         @ProjColumnPanel()
                         <button type="button" class="@ActionButtonClass" @onclick="ExportExcelAsync">@AppLoc["exportExcel"]</button>
                         <button type="button" class="@ActionButtonClass" @onclick="ExportPdfAsync">@AppLoc["exportPdf"]</button>
@@ -452,11 +452,11 @@
                     </div>
                 }
 
-                <div class="flex flex-wrap items-center justify-between gap-2">
-                    <div class="flex flex-wrap items-center gap-1.5">
+                <div class="flex flex-nowrap items-center justify-between gap-2">
+                    <div class="flex flex-nowrap items-center gap-1.5 min-w-0">
                         @* Anbudsgivare – multi-select *@
-                        <div class="relative">
-                            <button type="button" class="@SelectClass flex h-8 w-48 items-center justify-between text-left" @onclick="() => _showBidderDropdown = !_showBidderDropdown">
+                        <div class="relative w-48 min-w-0 shrink">
+                            <button type="button" class="@SelectClass flex h-8 w-full items-center justify-between text-left" @onclick="() => _showBidderDropdown = !_showBidderDropdown">
                                 <span class="truncate">@(_selectedBidders.Count == 0 ? "Alla anbudsgivare" : $"{_selectedBidders.Count} valda")</span>
                                 @ChevronSvg
                             </button>
@@ -479,8 +479,8 @@
                         </div>
 
                         @* Jämför mot (referensföretag — påverkar endast rapportens jämförelseberäkning) *@
-                        <div class="relative">
-                            <button type="button" class="@SelectClass flex h-8 w-48 items-center justify-between text-left" @onclick="() => _showOwnCompanyDropdown = !_showOwnCompanyDropdown">
+                        <div class="relative w-48 min-w-0 shrink">
+                            <button type="button" class="@SelectClass flex h-8 w-full items-center justify-between text-left" @onclick="() => _showOwnCompanyDropdown = !_showOwnCompanyDropdown">
                                 <span class="truncate">@(HasOwnCompany ? $"Jämför mot: {_ownCompanyName}" : "Jämför mot: inget")</span>
                                 @ChevronSvg
                             </button>
@@ -503,20 +503,20 @@
                         </div>
 
                         @* Tilldelad / ej tilldelad *@
-                        <select class="@SelectClass h-8 w-44" @bind="_awardedFilter">
+                        <select class="@SelectClass h-8 w-44 min-w-0 shrink" @bind="_awardedFilter">
                             <option value="all">Alla anbud</option>
                             <option value="awarded">Endast tilldelade</option>
                             <option value="notawarded">Endast ej tilldelade</option>
                         </select>
 
                         @* Visa förkastade *@
-                        <label class="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-2.5 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                        <label class="inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-lg border border-slate-300 bg-white px-2.5 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
                             <input type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300" checked="@_showRejectedBids" @onchange="e => _showRejectedBids = (bool)(e.Value ?? false)" />
                             Visa förkastade
                         </label>
                     </div>
 
-                    <div class="flex flex-wrap items-center gap-1.5">
+                    <div class="flex flex-nowrap items-center gap-1.5 shrink-0">
                         @BidColumnPanel()
                         <button type="button" class="@ActionButtonClass" @onclick="ExportExcelAsync">@AppLoc["exportExcel"]</button>
                         <button type="button" class="@ActionButtonClass" @onclick="ExportPdfAsync">@AppLoc["exportPdf"]</button>
@@ -1126,25 +1126,63 @@
 
     private Task SaveBidColumnsAsync() => SaveColumnsAsync(BidColumnsStorageKey, _visibleBidColumns);
 
+    // Column panels are anchored with position:fixed (via the shared JS helper) so they escape
+    // the dialog's scroll container — otherwise the list gets clipped and shows a second scrollbar.
+    private ElementReference _colPanelBtnRef;
+    private double _colPanelX;
+    private double _colPanelY;
+
+    private const string ColumnPanelPopupClass =
+        "fixed z-[2147483647] w-64 overflow-y-auto rounded-md border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900";
+
+    private string ColumnPanelPopupStyle =>
+        $"top:{_colPanelY.ToString("F0")}px;left:min(calc(100vw - 16rem - 8px),max(4px,{_colPanelX.ToString("F0")}px));max-height:min(22rem, calc(100vh - 8rem))";
+
+    private async Task ToggleColumnPanelAsync(bool currentlyVisible, Action<bool> setVisible)
+    {
+        if (currentlyVisible)
+        {
+            setVisible(false);
+            return;
+        }
+
+        try
+        {
+            var pos = await JS.InvokeAsync<ColumnPanelPosition>("tableColumnFilterPosition.calculate", _colPanelBtnRef, 256, 8);
+            _colPanelX = pos.X;
+            _colPanelY = pos.Y;
+        }
+        catch
+        {
+            _colPanelX = 8;
+            _colPanelY = 8;
+        }
+
+        setVisible(true);
+    }
+
+    private sealed class ColumnPanelPosition
+    {
+        public double X { get; set; }
+        public double Y { get; set; }
+    }
+
     private RenderFragment ColumnPanelImpl<T>(T[] allCols, HashSet<T> visible, Func<T, string> getLabel,
         Func<T, bool, Task> toggle, Action selectAll, Action selectDefault,
         bool panelVisible, Action<bool> setPanelVisible, bool openUp = false)
         where T : struct, Enum
     {
-        var panelClass = openUp
-            ? "absolute bottom-full right-0 z-50 mb-1 w-64 overflow-auto rounded-md border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900"
-            : "absolute right-0 z-50 mt-0.5 w-64 overflow-auto rounded-md border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900";
-
         return @<div class="relative">
             <button type="button"
+                    @ref="_colPanelBtnRef"
                     class="@(visible.Count < allCols.Length ? "inline-flex h-8 items-center rounded-lg bg-sky-50 border border-sky-300 px-2.5 text-xs font-semibold text-sky-700 transition hover:bg-sky-100 dark:bg-sky-950/30 dark:border-sky-700 dark:text-sky-300" : ActionButtonClass)"
-                    @onclick="() => setPanelVisible(!panelVisible)">
+                    @onclick="() => ToggleColumnPanelAsync(panelVisible, setPanelVisible)">
                 @AppLoc["columnSelection"] @(visible.Count < allCols.Length ? $"({visible.Count}/{allCols.Length})" : "")
             </button>
             @if (panelVisible)
             {
-                <div class="fixed inset-0 z-40" @onclick="() => setPanelVisible(false)"></div>
-                <div class="@panelClass" style="max-height:min(22rem, calc(100vh - 8rem))">
+                <div class="fixed inset-0 z-[2147483646]" @onclick="() => setPanelVisible(false)"></div>
+                <div class="@ColumnPanelPopupClass" style="@ColumnPanelPopupStyle">
                     <p class="mb-1.5 text-[10px] font-semibold text-slate-400">@AppLoc["visibleColumns"]</p>
                     @foreach (var col in allCols) { var cc = col;
                         <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-xs text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800">
@@ -1169,20 +1207,17 @@
     {
         var allCount = groups.Sum(g => g.Cols.Length);
         var visibleCount = groups.SelectMany(g => g.Cols).Count(visible.Contains);
-        var panelClass = openUp
-            ? "absolute bottom-full right-0 z-50 mb-1 w-64 overflow-auto rounded-md border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900"
-            : "absolute right-0 z-50 mt-0.5 w-64 overflow-auto rounded-md border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900";
-
         return @<div class="relative">
             <button type="button"
+                    @ref="_colPanelBtnRef"
                     class="@(visibleCount < allCount ? "inline-flex h-8 items-center rounded-lg bg-sky-50 border border-sky-300 px-2.5 text-xs font-semibold text-sky-700 transition hover:bg-sky-100 dark:bg-sky-950/30 dark:border-sky-700 dark:text-sky-300" : ActionButtonClass)"
-                    @onclick="() => setPanelVisible(!panelVisible)">
+                    @onclick="() => ToggleColumnPanelAsync(panelVisible, setPanelVisible)">
                 @AppLoc["columnSelection"] @(visibleCount < allCount ? $"({visibleCount}/{allCount})" : "")
             </button>
             @if (panelVisible)
             {
-                <div class="fixed inset-0 z-40" @onclick="() => setPanelVisible(false)"></div>
-                <div class="@panelClass" style="max-height:min(22rem, calc(100vh - 8rem))">
+                <div class="fixed inset-0 z-[2147483646]" @onclick="() => setPanelVisible(false)"></div>
+                <div class="@ColumnPanelPopupClass" style="@ColumnPanelPopupStyle">
                     @foreach (var group in groups)
                     {
                         <p class="mb-1 mt-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400 first:mt-0">@group.Label</p>

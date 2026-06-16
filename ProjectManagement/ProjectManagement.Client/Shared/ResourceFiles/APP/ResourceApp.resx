@@ -1327,7 +1327,7 @@
     <value>Create production calculation?</value>
   </data>
   <data name="createProductionCalculationDescription" xml:space="preserve">
-    <value>The locked tender calculation will be saved as history. A copy is created as a production calculation and opened for continued work.</value>
+    <value>A new production calculation is created and shown in the form so you can review and save it before opening the calculation.</value>
   </data>
   <data name="continueQuestion" xml:space="preserve">
     <value>Do you want to continue?</value>
@@ -1335,14 +1335,47 @@
   <data name="productionCalculationCreateFailed" xml:space="preserve">
     <value>The production calculation could not be created.</value>
   </data>
+  <data name="createContractCalculation" xml:space="preserve">
+    <value>Create contract calculation</value>
+  </data>
   <data name="createContractCalculationTitle" xml:space="preserve">
     <value>Create contract calculation?</value>
   </data>
   <data name="createContractCalculationDescription" xml:space="preserve">
-    <value>The locked tender calculation will be saved as history. A copy is created as a contract calculation and opened for continued work.</value>
+    <value>The locked tender calculation is saved as history. A new contract calculation is created and shown in the form so you can review and save it before opening the calculation.</value>
   </data>
   <data name="contractCalculationCreateFailed" xml:space="preserve">
     <value>The contract calculation could not be created.</value>
+  </data>
+  <data name="contractCalculationCreatedInfo" xml:space="preserve">
+    <value>Contract calculation created from the locked tender calculation.</value>
+  </data>
+  <data name="productionCalculationCreatedInfo" xml:space="preserve">
+    <value>Production calculation created.</value>
+  </data>
+  <data name="saveBeforeCreateProduction" xml:space="preserve">
+    <value>Save the contract calculation before creating a production calculation.</value>
+  </data>
+  <data name="incomeLockedHistoryInfo" xml:space="preserve">
+    <value>The calculation is locked. Revenues are shown as history and cannot be changed.</value>
+  </data>
+  <data name="deleteCalculation" xml:space="preserve">
+    <value>Delete calculation</value>
+  </data>
+  <data name="deleteCalculationTitle" xml:space="preserve">
+    <value>Delete calculation?</value>
+  </data>
+  <data name="deleteCalculationConfirm" xml:space="preserve">
+    <value>You are about to delete the calculation ”{0}”. This action cannot be undone. Do you want to continue?</value>
+  </data>
+  <data name="calculationDeleted" xml:space="preserve">
+    <value>The calculation has been deleted.</value>
+  </data>
+  <data name="calculationDeleteFailed" xml:space="preserve">
+    <value>The calculation could not be deleted. Try again or contact an administrator.</value>
+  </data>
+  <data name="lockedCalculationCannotBeDeleted" xml:space="preserve">
+    <value>Locked calculations cannot be deleted.</value>
   </data>
   <data name="notSelectedNeuter" xml:space="preserve">
     <value>Not selected</value>

@@ -1327,7 +1327,7 @@
     <value>Skapa produktionskalkyl?</value>
   </data>
   <data name="createProductionCalculationDescription" xml:space="preserve">
-    <value>Den låsta anbudskalkylen kommer att sparas som historik. En kopia skapas som produktionskalkyl och öppnas för fortsatt arbete.</value>
+    <value>En ny produktionskalkyl skapas och visas i formuläret så att du kan kontrollera och spara den innan du öppnar kalkylen.</value>
   </data>
   <data name="continueQuestion" xml:space="preserve">
     <value>Vill du fortsätta?</value>
@@ -1335,14 +1335,47 @@
   <data name="productionCalculationCreateFailed" xml:space="preserve">
     <value>Produktionskalkylen kunde inte skapas.</value>
   </data>
+  <data name="createContractCalculation" xml:space="preserve">
+    <value>Skapa kontraktskalkyl</value>
+  </data>
   <data name="createContractCalculationTitle" xml:space="preserve">
     <value>Skapa kontraktskalkyl?</value>
   </data>
   <data name="createContractCalculationDescription" xml:space="preserve">
-    <value>Den låsta anbudskalkylen sparas som historik. En kopia skapas som kontraktskalkyl och öppnas för fortsatt arbete.</value>
+    <value>Den låsta anbudskalkylen sparas som historik. En ny kontraktskalkyl skapas och visas i formuläret så att du kan kontrollera och spara den innan du öppnar kalkylen.</value>
   </data>
   <data name="contractCalculationCreateFailed" xml:space="preserve">
     <value>Kontraktskalkylen kunde inte skapas.</value>
+  </data>
+  <data name="contractCalculationCreatedInfo" xml:space="preserve">
+    <value>Kontraktskalkyl skapad från låst anbudskalkyl.</value>
+  </data>
+  <data name="productionCalculationCreatedInfo" xml:space="preserve">
+    <value>Produktionskalkyl skapad.</value>
+  </data>
+  <data name="saveBeforeCreateProduction" xml:space="preserve">
+    <value>Spara kontraktskalkylen innan du skapar produktionskalkyl.</value>
+  </data>
+  <data name="incomeLockedHistoryInfo" xml:space="preserve">
+    <value>Kalkylen är låst. Intäkter visas som historik och kan inte ändras.</value>
+  </data>
+  <data name="deleteCalculation" xml:space="preserve">
+    <value>Ta bort kalkyl</value>
+  </data>
+  <data name="deleteCalculationTitle" xml:space="preserve">
+    <value>Ta bort kalkyl?</value>
+  </data>
+  <data name="deleteCalculationConfirm" xml:space="preserve">
+    <value>Du håller på att ta bort kalkylen ”{0}”. Denna åtgärd kan inte ångras. Vill du fortsätta?</value>
+  </data>
+  <data name="calculationDeleted" xml:space="preserve">
+    <value>Kalkylen har tagits bort.</value>
+  </data>
+  <data name="calculationDeleteFailed" xml:space="preserve">
+    <value>Kalkylen kunde inte tas bort. Försök igen eller kontakta administratör.</value>
+  </data>
+  <data name="lockedCalculationCannotBeDeleted" xml:space="preserve">
+    <value>Låsta kalkyler kan inte tas bort.</value>
   </data>
   <data name="notSelectedNeuter" xml:space="preserve">
     <value>Ej valt</value>

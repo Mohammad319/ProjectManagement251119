@@ -146,8 +146,14 @@ namespace Persistence.Service.CalculationItems.Calculation
 
             var calculation = await GetUnlockedCalculationAsync(db, id, departmentId, cancellationToken);
             if (calculation is null ||
-                calculation.IsCurrentVersion ||
                 await HasDerivedCalculationsAsync(db, calculation.Id, cancellationToken))
+            {
+                return false;
+            }
+
+            // A current version may only be deleted when it is the sole version in its family.
+            // Multi-version families must keep their head and use the version handling instead.
+            if (calculation.IsCurrentVersion && await HasOtherVersionsAsync(db, calculation, cancellationToken))
             {
                 return false;
             }
@@ -269,6 +275,9 @@ namespace Persistence.Service.CalculationItems.Calculation
             copyDto.Name = EnsureUniqueName(copyDto.Name, existingNames);
             copyDto.Code = EnsureUniqueCode(copyDto.Code, existingCodes);
             copyDto.CalculationType = CalculationVersionType.Production;
+            // A production calculation is a fresh work step — it must not inherit the
+            // tender's "won/assigned" status. Start from the configured default status.
+            copyDto.StatusId = await GetDefaultCalculationStatusIdAsync(db, cancellationToken) ?? copyDto.StatusId;
 
             copy.Update(copyDto);
             copy.AssignDepartment(original.DepartmentId);
@@ -337,6 +346,9 @@ namespace Persistence.Service.CalculationItems.Calculation
             copyDto.Name = EnsureUniqueName(copyDto.Name, existingNames);
             copyDto.Code = EnsureUniqueCode(copyDto.Code, existingCodes);
             copyDto.CalculationType = CalculationVersionType.Contract;
+            // A contract calculation is a fresh work step — it must not inherit the
+            // tender's "won/assigned" status. Start from the configured default status.
+            copyDto.StatusId = await GetDefaultCalculationStatusIdAsync(db, cancellationToken) ?? copyDto.StatusId;
 
             copy.Update(copyDto);
             copy.AssignDepartment(original.DepartmentId);
@@ -709,6 +721,26 @@ namespace Persistence.Service.CalculationItems.Calculation
                 .AnyAsync(
                     calculation => !calculation.IsDeleted &&
                         calculation.SourceCalculationId == sourceCalculationId,
+                    cancellationToken);
+        }
+
+        // True when the calculation belongs to a version family that has more than one
+        // (non-deleted) version. A legacy calculation without a version group is always "sole".
+        private static Task<bool> HasOtherVersionsAsync(
+            ShardingSingleDbContext db,
+            CalculationEntity calculation,
+            CancellationToken cancellationToken)
+        {
+            if (calculation.VersionGroupId == Guid.Empty)
+                return System.Threading.Tasks.Task.FromResult(false);
+
+            return db.Calculations
+                .AsNoTracking()
+                .AnyAsync(
+                    other => !other.IsDeleted &&
+                        other.Id != calculation.Id &&
+                        other.ProjectId == calculation.ProjectId &&
+                        other.VersionGroupId == calculation.VersionGroupId,
                     cancellationToken);
         }
 
