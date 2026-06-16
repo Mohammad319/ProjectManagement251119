@@ -29,7 +29,7 @@ public partial class TaskFormUI
         LastStatusReference = Status;
     }
 
-    private void CloseModal() => MHD.Modal.Close();
+    private void CloseModal() => MHD.Modal.CloseAsync();
 
     private async Task HandleSubmitAsync()
     {

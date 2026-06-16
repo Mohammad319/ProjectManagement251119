@@ -38,6 +38,6 @@
         if (OnClose.HasDelegate)
             await OnClose.InvokeAsync();
 
-        DialogService.Close();
+        await DialogService.CloseAsync();
     }
 }

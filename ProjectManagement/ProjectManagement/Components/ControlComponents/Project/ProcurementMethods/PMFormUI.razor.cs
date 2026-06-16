@@ -32,7 +32,7 @@ public partial class PMFormUI
         LastProcurementReference = Procurement;
     }
 
-    private void CloseModal() => MHD.Modal.Close();
+    private void CloseModal() => MHD.Modal.CloseAsync();
 
     private async Task HandleSubmitAsync()
     {

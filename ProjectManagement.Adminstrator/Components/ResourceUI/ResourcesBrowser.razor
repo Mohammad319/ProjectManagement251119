@@ -124,7 +124,7 @@
 
     async Task ContextF(ResourceCategory item)
     {
-        var list = new List<ContextMenuItem>()
+        var list = new List<MhdContextMenuItem>()
             {
                 new() { Label = $"➕ Resource", OnClickAsync = () => {UpdateForm(new ResourceDefinition(){FolderId = item.Id}); return Task.CompletedTask; } },
                 new() { Label = $"➕ Subfolder", OnClickAsync = () => {AddFolder(item.Id); return Task.CompletedTask; } },
@@ -138,7 +138,7 @@ new Dictionary<string, object>
 {
 [nameof(ResourceFormDLUI.model)] = model,
     [nameof(ResourceFormDLUI.CallBack)] = EventCallback.Factory.Create<bool>(this, RefreshAsync),
-}, DialogSize.ExtraLarge);
+}, MhdDialogSize.ExtraLarge);
     async Task RefreshAsync()
     {
         await UpdateResourcesAsync();
@@ -152,7 +152,7 @@ new Dictionary<string, object>
         {
             [nameof(FolderFormUI.Form)] = model,
             [nameof(FolderFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate)
-        }, DialogSize.Large);
+        }, MhdDialogSize.Large);
     void Remove(ResourceCategory model) => MHD.DeleteMessage(model.DisplayName, EventCallback.Factory.Create(this, () => DeleteFolder(model.Id)));
     private async Task DeleteFolder(int id)
     {
@@ -177,7 +177,7 @@ new Dictionary<string, object>
 
     async Task BtnUpdate(bool IsSuccess)
     {
-        Modal.Close();
+        await Modal.CloseAsync();
         if (IsSuccess)
         {
             Folders = await ResourceFolderService.GetAllAsync();

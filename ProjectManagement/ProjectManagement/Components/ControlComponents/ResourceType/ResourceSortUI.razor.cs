@@ -94,7 +94,7 @@ public partial class ResourceSortUI
                 [nameof(ResourceSortFormUI.ResourceSort)] = model,
                 [nameof(ResourceSortFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, OnSavedAsync)
             },
-            DialogSize.ExtraLarge,
+            MhdDialogSize.ExtraLarge,
             DialogButtonsHelper.CreateSaveCancelButtons(ResourceSortFormUI.DialogFormId));
     }
 
@@ -103,6 +103,6 @@ public partial class ResourceSortUI
         if (isSuccess)
             await GetSortResourcesAsync();
 
-        MHD.Modal.Close();
+        await MHD.Modal.CloseAsync();
     }
 }

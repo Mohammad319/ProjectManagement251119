@@ -58,7 +58,7 @@
 @if (_loading)
 {
     <div class="pt-3">
-        <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
+        <MhdLoading />
     </div>
 }
 else if (_tasks != null)
@@ -135,7 +135,7 @@ else if (_tasks != null)
     @if (_loadingMore)
     {
         <div class="flex justify-center pt-3 pb-2">
-            <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
+            <MhdLoading />
         </div>
     }
     else if (_hasMore && results.Count > 0)
@@ -506,7 +506,7 @@ else if (_tasks != null)
                 }
             }
         }
-        Modal.Close();
+        Modal.CloseAsync();
     }
 
     private bool _loading = true;

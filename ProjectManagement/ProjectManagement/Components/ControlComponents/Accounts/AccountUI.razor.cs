@@ -98,7 +98,7 @@ public partial class AccountUI
                 [nameof(AccountsFormUI.OnSaved)] =
                     EventCallback.Factory.Create<bool>(this, OnSavedAsync)
             },
-            DialogSize.ExtraLarge,
+            MhdDialogSize.ExtraLarge,
             DialogButtonsHelper.CreateSaveCancelButtons(AccountsFormUI.DialogFormId));
     }
 
@@ -114,7 +114,7 @@ public partial class AccountUI
     {
         await ContextService.ShowMenuAsync(
         [
-            new ContextMenuItem
+            new MhdContextMenuItem
             {
                 Label = $"✏️ {AppLoc[nameof(ResourceApp.update)]}",
                 OnClickAsync = () =>
@@ -123,7 +123,7 @@ public partial class AccountUI
                     return Task.CompletedTask;
                 }
             },
-            new ContextMenuItem
+            new MhdContextMenuItem
             {
                 Label = $"🗑️ {AppLoc[nameof(ResourceApp.delete)]}",
                 OnClickAsync = () =>

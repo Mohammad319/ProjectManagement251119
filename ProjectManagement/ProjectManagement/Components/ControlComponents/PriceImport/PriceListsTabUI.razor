@@ -217,7 +217,7 @@
 
     private async Task ShowPriceListContextMenu(PriceListListItemDto priceList)
     {
-        await ContextService.ShowMenuAsync(new List<ContextMenuItem>
+        await ContextService.ShowMenuAsync(new List<MhdContextMenuItem>
         {
             new() { Label = "Open", OnClickAsync = () => { OpenPriceListModal(priceList.Id); return Task.CompletedTask; } },
             new() { Label = "Edit", OnClickAsync = () => { OpenEdit(priceList); return Task.CompletedTask; } },

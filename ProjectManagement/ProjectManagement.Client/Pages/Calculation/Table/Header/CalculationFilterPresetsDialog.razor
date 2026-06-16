@@ -254,7 +254,7 @@
         await InvokeAsync(StateHasChanged);
     }
 
-    private void CloseDialog() => Modal.Close();
+    private void CloseDialog() => Modal.CloseAsync();
 
     private static string GetPresetRowClass(bool isSelected, bool isActive)
     {

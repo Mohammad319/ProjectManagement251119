@@ -15,7 +15,7 @@
 @attribute [Authorize]
 @using ProjectManagement.Shared.Enums
 @using BlazorMHD.UI.Core.Data
-@using NavTabItem = BlazorMHD.UI.Core.Navigation.TabItem
+@using NavTabItem = BlazorMHD.UI.Core.Navigation.MhdTabItem
 
 @inherits AppComponentBase
 @inject IJSRuntime JS
@@ -505,15 +505,20 @@
             <table id="resizeMe" class="w-max min-w-full table-auto text-left text-xs">
                 <thead class="sticky top-0 z-50 bg-slate-50 text-[11px] font-semibold text-slate-500 dark:bg-slate-900 dark:text-slate-400">
                     <tr>
+                        @* Row number — visual helper column (not sortable/filterable/searchable) *@
+                        @if (IsCalculationColumnVisible("rowNumber"))
+                        {
+                            <th id="hrowNumber" data-pm-frozen="true" class="sticky left-0 z-[60] w-12 select-none whitespace-nowrap bg-slate-50 px-2 py-2 text-right font-semibold text-slate-400 dark:bg-slate-900 dark:text-slate-500" style="min-width:44px;" title="Radnummer i aktuell vy">#</th>
+                        }
                         @if (IsCalculationColumnVisible("code"))
                         {
-                            <th id="hcode" data-pm-frozen="true" class="@SortableHeaderClass("code") sticky left-0 z-[60] w-28 bg-slate-50 dark:bg-slate-900" style="min-width:70px;" @onclick='() => SortBy("code")'>
+                            <th id="hcode" data-pm-frozen="true" class="@SortableHeaderClass("code") sticky @CodeStickyLeftClass z-[60] w-28 bg-slate-50 dark:bg-slate-900" style="min-width:70px;" @onclick='() => SortBy("code")'>
                                 <span class="inline-flex items-center gap-1">@CalcResource.code @((MarkupString)SortIndicatorHtml("code")) <TableColumnFilter FilterState='CF("code")' OnChanged="OnColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsCalculationColumnVisible("name"))
                         {
-                            <th id="hname" data-pm-frozen="true" class="@SortableHeaderClass("name") sticky left-28 z-[59] min-w-52 border-r border-slate-300 bg-slate-50 dark:border-slate-600 dark:bg-slate-900" style="min-width:160px;" @onclick='() => SortBy("name")'>
+                            <th id="hname" data-pm-frozen="true" class="@SortableHeaderClass("name") sticky @NameStickyLeftClass z-[59] min-w-52 border-r border-slate-300 bg-slate-50 dark:border-slate-600 dark:bg-slate-900" style="min-width:160px;" @onclick='() => SortBy("name")'>
                                 <span class="inline-flex items-center gap-1">@AppLoc["calculationName"] @((MarkupString)SortIndicatorHtml("name")) <TableColumnFilter FilterState='CF("name")' OnChanged="OnColumnFilterChanged" /></span>
                             </th>
                         }
@@ -659,10 +664,12 @@
                             </td>
                         </tr>
                     }
+                    @{ var _calcRowNo = PageStart; }
                     @foreach (var calu in PagedCalculations)
                     {
                         var isSelected = Folder.State.Calculation?.Id == calu.Id;
                         var rowClasses = GetCalculationRowClass(calu, isSelected);
+                        var rowNumber = _calcRowNo++;
 
                         <tr @key="calu.Id"
                             class="@rowClasses"
@@ -676,15 +683,21 @@
                             @ondragstart="() => calcDraging = calu"
                             @ondragend="() => calcDraging = null"
                             draggable="@(!FolderScopeMode)">
+                            @if (IsCalculationColumnVisible("rowNumber"))
+                            {
+                                <td class="sticky left-0 z-[2] w-12 whitespace-nowrap bg-white px-2 py-2 text-right font-mono text-[11px] text-slate-400 group-hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-500 dark:group-hover:bg-slate-900/80 @(isSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
+                                    @rowNumber
+                                </td>
+                            }
                             @if (IsCalculationColumnVisible("code"))
                             {
-                                <td class="sticky left-0 z-[2] w-28 whitespace-nowrap bg-white px-3 py-2 font-mono text-[11px] text-slate-500 group-hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-400 dark:group-hover:bg-slate-900/80 @(isSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
+                                <td class="sticky @CodeStickyLeftClass z-[2] w-28 whitespace-nowrap bg-white px-3 py-2 font-mono text-[11px] text-slate-500 group-hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-400 dark:group-hover:bg-slate-900/80 @(isSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
                                     @FormatText(calu.Code)
                                 </td>
                             }
                             @if (IsCalculationColumnVisible("name"))
                             {
-                                <td class="sticky left-28 z-[2] max-w-80 border-r border-slate-200 bg-white px-3 py-2 group-hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:group-hover:bg-slate-900/80 @(isSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
+                                <td class="sticky @NameStickyLeftClass z-[2] max-w-80 border-r border-slate-200 bg-white px-3 py-2 group-hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:group-hover:bg-slate-900/80 @(isSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
                                     <span class="truncate font-semibold text-slate-800 dark:text-slate-100" title="@calu.Name">@calu.Name</span>
                                 </td>
                             }
@@ -1579,6 +1592,7 @@
     private static readonly IReadOnlyDictionary<string, bool> DefaultCalculationColumns =
         new Dictionary<string, bool>
         {
+            ["rowNumber"] = true,
             ["code"] = true,
             ["name"] = true,
             ["version"] = true,
@@ -1607,7 +1621,7 @@
 
     private List<MhdColumnPickerItem> CalculationColumnOptions => new()
     {
-
+        new("rowNumber", "Radnummer"),
         new("code", CalcResource.code),
         new("name", AppLoc["calculationName"].Value),
         new("version", AppLoc["version"].Value),
@@ -1821,6 +1835,11 @@
     private bool IsCalculationColumnVisible(string key) =>
         _calculationColumns.TryGetValue(key, out var visible) && visible;
 
+    // The radnummer column (when shown) is the first frozen column at left-0 (w-12).
+    // Shift the following frozen columns (code, name) right so they don't overlap it.
+    private string CodeStickyLeftClass => IsCalculationColumnVisible("rowNumber") ? "left-12" : "left-0";
+    private string NameStickyLeftClass => IsCalculationColumnVisible("rowNumber") ? "left-40" : "left-28";
+
     private int VisibleCalculationColumnCount =>
         Math.Max(1, _calculationColumns.Count(c => c.Value));
 
@@ -1938,7 +1957,7 @@
                 [nameof(CalculationVersionsDialog.Calculation)] = calculation,
                 [nameof(CalculationVersionsDialog.OnReloadRequired)] = EventCallback.Factory.Create(this, async () => await ReloadCalculationsAsync())
             },
-            BlazorMHD.UI.Core.Services.DialogSize.Large);
+            BlazorMHD.UI.Core.Services.MhdDialogSize.Large);
     }
 
     private static bool CanCreateProductionCalculation(ListCalculationMVVM calculation) =>
@@ -2046,7 +2065,7 @@
 
     async Task Context(ListCalculationMVVM item)
     {
-        var list = new List<ContextMenuItem>();
+        var list = new List<MhdContextMenuItem>();
 
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
@@ -2092,7 +2111,7 @@
             {
                 [nameof(ShareCalculationUI.ListCalculation)] = model
             },
-            BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
+            BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
     }
 
     void OpenMoveCopyDialog(ListCalculationMVVM calculation, string operation)
@@ -2113,7 +2132,7 @@
                 [nameof(MoveCopyDialog.SourceCalculation)] = calculation,
                 [nameof(MoveCopyDialog.OnCompleted)] = EventCallback.Factory.Create(this, ReloadAfterMoveCopyAsync)
             },
-            BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
+            BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
     }
 
     private async Task ReloadAfterMoveCopyAsync()
@@ -2180,7 +2199,7 @@
         Modal.ShowComponent<CentralReportsDialog>(
             AppLoc["reports"].Value,
             parameters,
-            BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
+            BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
     }
 
     private string GetCalcFilterLabel(string key, ColumnFilterState state)
@@ -2237,7 +2256,10 @@
 
     private async Task ExportCalculationListAsync(bool pdfMode, bool printOnly)
     {
-        var columns = CalculationColumnOptions.Where(column => IsCalculationColumnVisible(column.Key)).ToList();
+        // Row number is a visual helper column and is excluded from export/print.
+        var columns = CalculationColumnOptions
+            .Where(column => column.Key != "rowNumber" && IsCalculationColumnVisible(column.Key))
+            .ToList();
         var rows = SortedCalculations.Select(calculation => columns.Select(column => GetCalculationExportValue(calculation, column.Key)));
         var title = FolderScopeMode
             ? $"Kalkyler i {(IsDepartmentScope ? DepartmentName : Folder.State.FolderSelected?.Name ?? "-")}"
@@ -2288,7 +2310,7 @@
                 [nameof(CalculationFormUI.Callback)] =
                     EventCallback.Factory.Create<ListCalculationMVVM?>(this, CalcFormAsync)
             },
-            BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge,
+            BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge,
             DialogButtonsHelper.CreateSaveCancelButtons(CalculationFormUI.DialogFormId));
     }
 
@@ -2300,7 +2322,7 @@
             {
                 [nameof(CalculationDetailsUI.Id)] = model.Id,
                 [nameof(CalculationDetailsUI.ProjectId)] = GetCalculationProject(model)?.Id ?? Guid.Empty
-            }, BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
+            }, BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
     }
 
     void TenderPage(ListCalculationMVVM model)
@@ -2311,7 +2333,7 @@
             {
                 [nameof(TenderListUI.Calculation)] = model
             },
-            BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
+            BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
     }
 
     private async Task ShowProjectsAsync()
@@ -2340,7 +2362,7 @@
     {
         if (calc is null)
         {
-            Modal.Close();
+            await Modal.CloseAsync();
             return;
         }
 
@@ -2401,7 +2423,7 @@
             UoWService.Folder.State.Notify();
 
             if (closeModal)
-                Modal.Close();
+                await Modal.CloseAsync();
 
             return;
         }
@@ -2424,6 +2446,6 @@
         UoWService.Folder.State.Notify();
 
         if (closeModal)
-            Modal.Close();
+            await Modal.CloseAsync();
     }
 }

@@ -73,7 +73,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Table
     Modal.ShowComponent<Template.TemplateSetDefaultUI>(ResourceLoc.templates, new Dictionary<string, object>()
     {
         [nameof(Pages.Calculation.Template.TemplateSetDefaultUI.Tab)] = 3,
-    }, DialogSize.ExtraLarge);
+    }, MhdDialogSize.ExtraLarge);
         protected override void OnInitialized()
         {
             if (Folder?.State?.Calculation != null)

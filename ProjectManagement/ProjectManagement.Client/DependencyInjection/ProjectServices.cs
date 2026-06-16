@@ -12,14 +12,14 @@ namespace ProjectManagement.Client.DependencyInjection
             services.AddApplicationServices();
             services.AddBlazoredLocalStorage();
             services.AddLocalization();
-            // ContextMenuService is registered by AddBlazorMhdUI() (merged from ContextMenuMHD)
+            // ContextMenuService is registered by AddBlazorMhdUI(o => o.DefaultToastSeconds = 6) (merged from ContextMenuMHD)
             services.AddChartJs(options =>
             {
                 options.ChartJsLocation = "https://cdn.jsdelivr.net/npm/chart.js";
                 options.ChartJsPluginDatalabelsLocation = "https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2";
             });
 
-            services.AddBlazorMhdUI();
+            services.AddBlazorMhdUI(o => o.DefaultToastSeconds = 6);
             return services;
         }
     }

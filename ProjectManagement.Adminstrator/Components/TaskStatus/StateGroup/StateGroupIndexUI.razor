@@ -101,7 +101,7 @@ else
         {
             [nameof(StateGroupFormUI.Model)] = model,
             [nameof(StateGroupFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, OnGroupSaved)
-        }, DialogSize.Medium);
+        }, MhdDialogSize.Medium);
     }
 
     void EditGroup(TaskStateGroup group)
@@ -111,7 +111,7 @@ else
         {
             [nameof(StateGroupFormUI.Model)] = copy,
             [nameof(StateGroupFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, OnGroupSaved)
-        }, DialogSize.Medium);
+        }, MhdDialogSize.Medium);
     }
 
     void AddState(TaskStateGroup group)
@@ -122,7 +122,7 @@ else
             [nameof(StateItemFormUI.Model)] = model,
             [nameof(StateItemFormUI.GroupId)] = group.Id,
             [nameof(StateItemFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, OnGroupSaved)
-        }, DialogSize.Medium);
+        }, MhdDialogSize.Medium);
     }
 
     void EditState(TaskStateGroup group, TaskState state)
@@ -133,7 +133,7 @@ else
             [nameof(StateItemFormUI.Model)] = copy,
             [nameof(StateItemFormUI.GroupId)] = group.Id,
             [nameof(StateItemFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, OnGroupSaved)
-        }, DialogSize.Medium);
+        }, MhdDialogSize.Medium);
     }
 
     void RemoveGroup(TaskStateGroup group) =>
@@ -160,7 +160,7 @@ else
 
     async Task OnGroupSaved(bool isSuccess)
     {
-        Modal.Close();
+        await Modal.CloseAsync();
         if (isSuccess)
             Groups = await ExHandlers.RunCheckTokenAsync(() => StateGroupService.GetGroupsWithStatesAsync());
         StateHasChanged();

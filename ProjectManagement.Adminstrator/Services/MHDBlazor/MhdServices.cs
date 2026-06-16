@@ -21,7 +21,7 @@ namespace ProjectManagement.Adminstrator.Services.MHDBlazor
                 ? _appLocalizer[ResourceApp.deleteConfirmMsg]
                 : _appLocalizer[LocalizerConst.deleteConfirmMsg, itemName];
 
-            var model = new DialogModel
+            var model = new MhdDialogModel
             {
                 Title = _appLocalizer[title],
                 Content = builder =>
@@ -34,21 +34,21 @@ namespace ProjectManagement.Adminstrator.Services.MHDBlazor
                 CloseOnOverlayClick = false,
                 Buttons =
                 {
-                    new DialogButtonModel
+                    new MhdDialogButtonModel
                     {
                         Text = ResourceApp.yes,
                         State = MhdState.Danger,
                         IsPrimary = true,
-                        OnClick = onYes ?? EventCallback.Factory.Create(this, () => Modal.Close())
+                        OnClick = onYes ?? EventCallback.Factory.Create(this, () => Modal.CloseAsync())
                     },
-                    new DialogButtonModel
+                    new MhdDialogButtonModel
                     {
                         Text = ResourceApp.no,
                         State = MhdState.Secondary,
-                        OnClick = EventCallback.Factory.Create(this, () => Modal.Close())
+                        OnClick = EventCallback.Factory.Create(this, () => Modal.CloseAsync())
                     }
                 },
-                Size = DialogSize.Medium,
+                Size = MhdDialogSize.Medium,
                 State = MhdState.Danger,
             };
 
@@ -60,9 +60,9 @@ namespace ProjectManagement.Adminstrator.Services.MHDBlazor
     MhdState state = MhdState.Danger,
     EventCallback? onYes = null)
         {
-            DialogModel model = new()
+            MhdDialogModel model = new()
             {
-                Size = DialogSize.Medium,
+                Size = MhdDialogSize.Medium,
                 State = state,
                 Title = title,
                 Content = builder =>
@@ -75,19 +75,19 @@ namespace ProjectManagement.Adminstrator.Services.MHDBlazor
                 CloseOnOverlayClick = false,
                 Buttons =
                 {
-                    new DialogButtonModel
+                    new MhdDialogButtonModel
                     {
                         Text = _appLocalizer[ResourceApp.yes],
                         State = state,
                         IsPrimary = true,
-                        OnClick = onYes ?? EventCallback.Factory.Create(this, () => Modal.Close())
+                        OnClick = onYes ?? EventCallback.Factory.Create(this, () => Modal.CloseAsync())
                     },
-                    new DialogButtonModel
+                    new MhdDialogButtonModel
                     {
                         Text = _appLocalizer[ResourceApp.no],
                         State = MhdState.Neutral,
                         IsPrimary = false,
-                        OnClick = EventCallback.Factory.Create(this, () => Modal.Close())
+                        OnClick = EventCallback.Factory.Create(this, () => Modal.CloseAsync())
                     }
                 },
 
@@ -109,7 +109,7 @@ namespace ProjectManagement.Adminstrator.Services.MHDBlazor
                 return;
             }
 
-            var model = new DialogModel
+            var model = new MhdDialogModel
             {
                 Title = title,
                 State = state,
@@ -123,7 +123,7 @@ namespace ProjectManagement.Adminstrator.Services.MHDBlazor
                 CloseOnOverlayClick = true,
                 Buttons =
                 {
-                    new DialogButtonModel
+                    new MhdDialogButtonModel
                     {
                         Text = _appLocalizer["ok"],
                         State = state,
@@ -143,16 +143,15 @@ namespace ProjectManagement.Adminstrator.Services.MHDBlazor
         {
             if (isSuccess)
             {
-                int time = 6;
 
                 if (type == ToastType.Delete)
-                    ToasterService.Show(name, ResourceApp.HasBeenRemoved, MhdState.Danger, time);
+                    ToasterService.Show(name, ResourceApp.HasBeenRemoved, MhdState.Danger);
                 if (type == ToastType.Add)
-                    ToasterService.Show(name, ResourceApp.HasBeenAdded, MhdState.Success, time);
+                    ToasterService.Show(name, ResourceApp.HasBeenAdded, MhdState.Success);
                 if (type == ToastType.Update)
-                    ToasterService.Show(name, ResourceApp.HasBeedUpdated, MhdState.Success, time);
+                    ToasterService.Show(name, ResourceApp.HasBeedUpdated, MhdState.Success);
                 if (type == ToastType.Info)
-                    ToasterService.Show(name, ResourceApp.completedSuccessfully, MhdState.Success, time);
+                    ToasterService.Show(name, ResourceApp.completedSuccessfully, MhdState.Success);
             }
             else
             {
@@ -184,7 +183,6 @@ namespace ProjectManagement.Adminstrator.Services.MHDBlazor
 
         public void ToastMessage(string? itemName, ToastType type, MhdState state)
         {
-            int time = 20;
 
             if (string.IsNullOrEmpty(itemName))
             {
@@ -199,21 +197,21 @@ namespace ProjectManagement.Adminstrator.Services.MHDBlazor
 
             if (type == ToastType.Delete)
             {
-                ToasterService.Show(itemName, _appLocalizer[LocalizerConst.hasBeenDeletedSuccessfully, itemName], state, time);
+                ToasterService.Show(itemName, _appLocalizer[LocalizerConst.hasBeenDeletedSuccessfully, itemName], state);
             }
             else if (type == ToastType.Add)
             {
-                ToasterService.Show(itemName, _appLocalizer[LocalizerConst.hasBeenAddedSuccessfully, itemName], state, time);
+                ToasterService.Show(itemName, _appLocalizer[LocalizerConst.hasBeenAddedSuccessfully, itemName], state);
 
             }
             else if (type == ToastType.Update)
             {
-                ToasterService.Show(itemName, _appLocalizer[LocalizerConst.hasBeenUpdatedSuccessfully, itemName], state, time);
+                ToasterService.Show(itemName, _appLocalizer[LocalizerConst.hasBeenUpdatedSuccessfully, itemName], state);
 
             }
             else if (type == ToastType.Info)
             {
-                ToasterService.Show(itemName, _appLocalizer[LocalizerConst.hasBeenDeletedSuccessfully, itemName], state, time);
+                ToasterService.Show(itemName, _appLocalizer[LocalizerConst.hasBeenDeletedSuccessfully, itemName], state);
 
             }
         }

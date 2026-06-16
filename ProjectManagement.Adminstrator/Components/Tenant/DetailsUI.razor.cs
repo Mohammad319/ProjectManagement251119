@@ -27,7 +27,7 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
                 return;
             }
 
-            var list = new List<ContextMenuItem>
+            var list = new List<MhdContextMenuItem>
             {
                 new() { Label = ResourceApp.edit, OnClickAsync = () => { UserRoleDialog(item); return Task.CompletedTask; } },
                 new() { Label = ResourceApp.delete, OnClickAsync = () => { Remove(item); return Task.CompletedTask; } },
@@ -49,7 +49,7 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
             {
                 await GetUsersAsync();
             }
-            Modal.Close();
+            await Modal.CloseAsync();
         }
 
         private async Task RemoveAsync(ApplicationUser deleteConfirmed)

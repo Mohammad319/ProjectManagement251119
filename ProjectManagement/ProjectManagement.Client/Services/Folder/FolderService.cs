@@ -43,7 +43,7 @@ namespace ProjectManagement.Client.Services.Folder
             {
                 if (!ShowArchived && !folder.IsVisible)
                 {
-                    dialogService.Close();
+                    dialogService.CloseAsync();
                     return;
                 }
 
@@ -67,7 +67,7 @@ namespace ProjectManagement.Client.Services.Folder
                 if (!ShowArchived && !folder.IsVisible)
                 {
                     folderState.RemoveFolder(existing);
-                    dialogService.Close();
+                    dialogService.CloseAsync();
                     return;
                 }
 
@@ -77,7 +77,7 @@ namespace ProjectManagement.Client.Services.Folder
                 folderState.UpdateFolder(existing);
             }
 
-            dialogService.Close();
+            dialogService.CloseAsync();
         }
 
         public void RemoveFolder(FolderMVVM folder)

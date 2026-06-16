@@ -15,7 +15,7 @@ namespace ProjectManagement.Client.Shared.Error
                     [nameof(ApiErrorDialogUI.Message)] = message,
                     [nameof(ApiErrorDialogUI.TraceId)] = traceId ?? string.Empty
                 },
-                DialogSize.Medium
+                MhdDialogSize.Medium
             );
         }
     }

@@ -41,7 +41,7 @@ public partial class CalculationDisplayOptions : ComponentBase
                 [nameof(CalculationDisplayOptionsPresetsDialog.OnSave)] = EventCallback.Factory.Create<DisplayOptionsPresetStore>(this, SavePresetsAsync),
                 [nameof(CalculationDisplayOptionsPresetsDialog.OnClear)] = EventCallback.Factory.Create(this, ClearPresetOverrides),
             },
-            DialogSize.Medium);
+            MhdDialogSize.Medium);
     }
 
     private void ApplyPreset(DisplayOptionsPreset preset)

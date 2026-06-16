@@ -30,7 +30,7 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
                 {
                     [nameof(FormUI.Id)] = model.Id,
                     [nameof(FormUI.Callback)] = EventCallback.Factory.Create<bool>(this, CallBack)
-                }, DialogSize.ExtraLarge);
+                }, MhdDialogSize.ExtraLarge);
         } 
 
         void Remove(GetTenantsDTO obj)
@@ -63,7 +63,7 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
 
         async Task CallBack(bool refresh)
         {
-            Modal.Close();
+            await Modal.CloseAsync();
             if (refresh)
             {
                 await GetTenantsAsync();
@@ -86,7 +86,7 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
 
         async Task Context(GetTenantsDTO item)
         {
-            var list = new List<ContextMenuItem>
+            var list = new List<MhdContextMenuItem>
             {
                 new() { Label = $"ℹ️ {ResourceLoc.details}", OnClickAsync = () => { DetailsPage = item; return Task.CompletedTask; } }
             };

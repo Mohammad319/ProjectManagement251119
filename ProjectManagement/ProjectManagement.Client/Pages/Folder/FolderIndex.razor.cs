@@ -59,17 +59,17 @@ namespace ProjectManagement.Client.Pages.Folder
         private sealed record OpenTreeSnapshot(HashSet<Guid> FolderIds, HashSet<Guid> ProjectIds);
 
         void ModalSeachForm() =>
-            Modal.Show(new DialogModel
+            Modal.Show(new MhdDialogModel
             {
                 Title = CalcLoc["searchFoldersProjectsCalcs"],
                 Content = builder =>
                 {
                     builder.OpenComponent(0, typeof(ProjectsSearch));
                     builder.AddAttribute(1, "CallBack",
-                        EventCallback.Factory.Create(this, () => Modal.Close()));
+                        EventCallback.Factory.Create(this, () => Modal.CloseAsync()));
                     builder.CloseComponent();
                 },
-                Buttons = [], Size = DialogSize.ExtraLarge, IsDraggable = true, CloseOnOverlayClick = true
+                Buttons = [], Size = MhdDialogSize.ExtraLarge, IsDraggable = true, CloseOnOverlayClick = true
             });
 
         void ModalForm(FolderModel model) =>
@@ -82,7 +82,7 @@ namespace ProjectManagement.Client.Pages.Folder
                     [nameof(FolderFormUI.TargetDepartmentId)] = SelectedDepartmentId.GetValueOrDefault(),
                     [nameof(FolderFormUI.OnClickCallback)] = EventCallback.Factory.Create(this, (FolderModel f) => Folder.AddOrUpdateFolder(f))
                 },
-                DialogSize.Large,
+                MhdDialogSize.Large,
                 DialogButtonsHelper.CreateSaveCancelButtons(FolderFormUI.DialogFormId));
 
         public void Dispose()

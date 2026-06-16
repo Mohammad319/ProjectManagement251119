@@ -36,6 +36,6 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
         }
 
         private void Close()
-            => MHD.Modal.Close();
+            => MHD.Modal.CloseAsync();
     }
 }

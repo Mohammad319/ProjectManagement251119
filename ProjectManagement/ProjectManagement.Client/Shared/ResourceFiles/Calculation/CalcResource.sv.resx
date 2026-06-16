@@ -517,13 +517,21 @@
     <value>Inga dolda statusar att visa.</value>
   </data>
   <data name="matchType" xml:space="preserve"><value>Matchning</value></data>
+  <data name="matchSmart" xml:space="preserve"><value>Smart sökning</value></data>
   <data name="matchContains" xml:space="preserve"><value>Innehåller</value></data>
   <data name="matchEquals" xml:space="preserve"><value>Är lika med</value></data>
   <data name="matchNotEquals" xml:space="preserve"><value>Är inte lika med</value></data>
-  <data name="matchSimilar" xml:space="preserve"><value>Liknar</value></data>
+  <data name="matchSimilar" xml:space="preserve"><value>Liknande stavning</value></data>
   <data name="similarResults" xml:space="preserve"><value>Liknande träffar</value></data>
+  <data name="similarMatchBadge" xml:space="preserve"><value>Liknande träff</value></data>
   <data name="matchStartsWith" xml:space="preserve"><value>Börjar med</value></data>
   <data name="matchEndsWith" xml:space="preserve"><value>Slutar med</value></data>
+  <data name="matchSmartTip" xml:space="preserve"><value>Rekommenderas. Söker med exakt träff, börjar med, innehåller och liknande stavning. Hittar även vissa stavfel.</value></data>
+  <data name="matchContainsTip" xml:space="preserve"><value>Hittar poster där söktexten finns som exakt del av texten. Exempel: 'Nack' hittar 'Nackaa'.</value></data>
+  <data name="matchEqualsTip" xml:space="preserve"><value>Hittar endast poster där hela värdet matchar söktexten.</value></data>
+  <data name="matchStartsWithTip" xml:space="preserve"><value>Hittar poster där värdet börjar med söktexten.</value></data>
+  <data name="matchEndsWithTip" xml:space="preserve"><value>Hittar poster där värdet slutar med söktexten.</value></data>
+  <data name="matchSimilarTip" xml:space="preserve"><value>Hittar poster med liknande stavning och tolererar små stavfel. Exempel: 'Naacka' kan hitta 'Nackaa'.</value></data>
   <data name="includeArchived" xml:space="preserve"><value>Inkludera arkiverade</value></data>
   <data name="typeFilter" xml:space="preserve"><value>Typ</value></data>
   <data name="allTypes" xml:space="preserve"><value>Alla</value></data>

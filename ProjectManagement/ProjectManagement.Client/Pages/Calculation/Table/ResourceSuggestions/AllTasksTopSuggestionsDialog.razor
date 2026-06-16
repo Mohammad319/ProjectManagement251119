@@ -79,7 +79,7 @@
     <!-- ── States ── -->
     @if (_loading)
     {
-        <div class="py-12"><BlazorMHD.UI.Components.Feedback.Loading.MhdLoading /></div>
+        <div class="py-12"><MhdLoading /></div>
     }
     else if (!_hasLoaded)
     {
@@ -210,7 +210,7 @@
                         @if (isLoad)
                         {
                             <div class="border-t border-gray-100 px-4 py-3 dark:border-gray-800">
-                                <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
+                                <MhdLoading />
                             </div>
                         }
                         else if (selRows is { Count: 0 })
@@ -468,7 +468,7 @@
                         else if (selIdx.HasValue)
                         {
                             <div class="border-t border-gray-100 px-4 py-3 dark:border-gray-800">
-                                <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
+                                <MhdLoading />
                             </div>
                         }
                     }
@@ -812,7 +812,7 @@
 
         MHD.Notifications(ToastType.Add, true);
         _saving = false;
-        Modal.Close();
+        await Modal.CloseAsync();
     }
 
     private async Task RecordFeedbackAsync(

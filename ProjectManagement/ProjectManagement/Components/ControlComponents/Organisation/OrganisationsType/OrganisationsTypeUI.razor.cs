@@ -68,7 +68,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
             finally
             {
                 IsLoading = false;
-                MHD.Modal.Close();
+                await MHD.Modal.CloseAsync();
                 await InvokeAsync(StateHasChanged);
             }
         }

@@ -28,7 +28,7 @@
             @if (_loading)
             {
                 <div class="flex min-h-[120px] items-center justify-center text-sm text-slate-500 dark:text-slate-400">
-                    <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
+                    <MhdLoading />
                 </div>
             }
             else if (_loadError is not null)
@@ -113,7 +113,7 @@
 
     async Task CallBack(bool newLoading)
     {
-        Modal.Close();
+        await Modal.CloseAsync();
         if (newLoading)
             await LoadAsync();
     }
@@ -160,7 +160,7 @@
 
     async Task Context(TenantDatabaseEntity item)
     {
-        var list = new List<ContextMenuItem>()
+        var list = new List<MhdContextMenuItem>()
         {
             new() { Label = $"✏️ {ResourceApp.edit}", OnClickAsync = () => { UpdateForm(item); return Task.CompletedTask; } },
             new() { Label = $"🗑️ {ResourceApp.delete}", OnClickAsync = () => { Remove(item); return Task.CompletedTask; } },

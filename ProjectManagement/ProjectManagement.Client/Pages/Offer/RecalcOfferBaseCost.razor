@@ -66,6 +66,6 @@
         if (OrgID <= 0) return;
 
         if (await Repo.Offer.ReCalc(Calc.Id, OrgID, Basecost))
-            Modal.Close();
+            await Modal.CloseAsync();
     }
 }

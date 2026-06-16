@@ -32,7 +32,7 @@ public partial class ContractFormUI
         LastContractReference = Contract;
     }
 
-    private void CloseModal() => MHD.Modal.Close();
+    private void CloseModal() => MHD.Modal.CloseAsync();
 
     private async Task HandleSubmitAsync()
     {

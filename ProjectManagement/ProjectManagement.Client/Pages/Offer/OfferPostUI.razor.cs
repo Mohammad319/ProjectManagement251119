@@ -50,14 +50,14 @@ namespace ProjectManagement.Client.Pages.Offer
                 offer.Id = await Repo.Offer.AddAsync(PostOffer);
                 offer.Date = DateTime.Now;
                 MHD.Notifications(ToastType.Add, offer.Id > 0);
-                Modal.Close();
+                await Modal.CloseAsync();
             }
             else
             {
                 Change(Offer);
                 bool res = await Repo.Offer.UpdateAsync(Offer.Id, PostOffer);
                 MHD.Notifications(ToastType.Update, res);
-                Modal.Close();
+                await Modal.CloseAsync();
             }
         }
     }

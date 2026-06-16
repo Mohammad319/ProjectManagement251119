@@ -82,7 +82,7 @@ public partial class IndexUI
 
     private async Task BtnUpdateAsync(bool isSuccess)
     {
-        MHD.Modal.Close();
+        await MHD.Modal.CloseAsync();
 
         if (isSuccess)
             await LoadAsync();

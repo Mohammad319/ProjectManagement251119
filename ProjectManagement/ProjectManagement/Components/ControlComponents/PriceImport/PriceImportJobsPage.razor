@@ -11,19 +11,19 @@
 
 @code {
     private string? _activeKey;
-    private List<TabItem> _tabs = [];
+    private List<MhdTabItem> _tabs = [];
 
     protected override void OnInitialized()
     {
         _tabs =
         [
-            new TabItem
+            new MhdTabItem
             {
                 Key = "jobs",
                 Text = "Import Jobs",
                 Content = @<PriceImportJobsTabUI />
             },
-            new TabItem
+            new MhdTabItem
             {
                 Key = "price-lists",
                 Text = "Price Lists",

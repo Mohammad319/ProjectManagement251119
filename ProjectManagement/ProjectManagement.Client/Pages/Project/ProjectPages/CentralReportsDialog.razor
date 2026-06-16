@@ -26,7 +26,7 @@
 
     @if (_isLoading)
     {
-        <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
+        <MhdLoading />
     }
     else
     {
@@ -223,15 +223,7 @@
         @* ═══ INTÄKTSÖVERSIKT ═══ *@
         @if (_activeView == ReportView.Income)
         {
-            <div class="rounded-lg border border-sky-200 bg-sky-50 p-3 text-xs text-sky-800 dark:border-sky-800/50 dark:bg-sky-950/30 dark:text-sky-200">
-                <p class="mb-0.5 font-semibold">Urval</p>
-                <p>@_incomeSelectionLine</p>
-                @if (!string.IsNullOrWhiteSpace(_incomeSelectionFilters))
-                {
-                    <p class="mt-1 text-sky-700 dark:text-sky-300">@_incomeSelectionFilters</p>
-                }
-                <p class="mt-1.5 italic text-slate-500 dark:text-slate-400">Stäng rapporten och ändra listans filter om du vill ändra urvalet.</p>
-            </div>
+            @SelectionBox("Urval", _incomeSelectionLine, _incomeSelectionFilters, null, "Stäng rapporten och ändra listans filter om du vill ändra urvalet.")
             @if (!string.IsNullOrWhiteSpace(AppLoc["reportCurrentVersionRule"].Value))
             {
                 <p class="text-xs text-slate-500 dark:text-slate-400">@AppLoc["reportCurrentVersionRule"]</p>
@@ -241,7 +233,7 @@
                     <div class="@TotalCardClass"><span>@AppLoc["revenue"]</span><strong>@FormatMoney(IncludedFilteredIncomeRows.Sum(r => r.Amount))</strong></div>
                     <div class="@TotalCardClass"><span>@AppLoc["forecast"]</span><strong>@FormatMoney(IncludedFilteredIncomeRows.Sum(r => r.Forecast))</strong></div>
                     <div class="@TotalCardClass"><span>Projekt</span><strong>@IncludedFilteredIncomeRows.Select(r => r.Entry.Project.Id).Distinct().Count()</strong></div>
-                    <div class="@TotalCardClass"><span>@AppLoc["rows"]</span><strong>@IncludedFilteredIncomeRows.Count()</strong></div>
+                    <div class="@TotalCardClass"><span>Kalkyler</span><strong>@IncludedFilteredIncomeRows.Select(r => r.Entry.Calculation.Id).Distinct().Count()</strong></div>
                 </div>
                 <div class="flex flex-wrap items-center gap-1.5">
                     <button type="button"
@@ -255,15 +247,19 @@
                     <button type="button" class="@ActionButtonClass" @onclick="PrintAsync">@AppLoc["print"]</button>
                 </div>
             </div>
-            var _incCols = IncomeVisibleColumns.ToList();
+            var _incCalcCols = IncomeCalcColumns.Where(c => _visibleIncomeColumns.Contains(c)).ToList();
+            var _incShowRowNo = _visibleIncomeColumns.Contains(IncomeReportColumn.RowNumber);
+            var _incShowQ = _showQuarters && _incCalcCols.Contains(IncomeReportColumn.Year);
+            var _incColSpan = 1 + (_incShowRowNo ? 1 : 0) + _incCalcCols.Count + (_incShowQ ? 4 : 0);
             <div class="@TableContainerClass">
                 <table class="@TableClass">
                     <thead class="@TableHeadClass">
                         <tr>
-                            <th class="w-8 text-center">Räkna med</th>
-                            @for (int hi = 0; hi < _incCols.Count; hi++)
+                            <th class="w-8 text-center" title="@IncludeColumnTooltip"><span aria-hidden="true">☑</span><span class="sr-only">@IncludeColumnTooltip</span></th>
+                            @if (_incShowRowNo) { <th class="w-10 text-right text-slate-400">#</th> }
+                            @for (int hi = 0; hi < _incCalcCols.Count; hi++)
                             {
-                                var hcol = _incCols[hi];
+                                var hcol = _incCalcCols[hi];
                                 <th class="@(IsIncomeColumnNumeric(hcol) ? "text-right" : "")" title="@GetIncomeColumnTitle(hcol)">@GetIncomeColumnLabel(hcol)</th>
                                 if (hcol == IncomeReportColumn.Year && _showQuarters)
                                 {
@@ -273,17 +269,19 @@
                         </tr>
                     </thead>
                     <tbody class="@TableBodyClass">
-                        @{ var dri = 0; }
+                        @{ var dri = 0; var incRowNo = 0; }
                         @foreach (var row in BuildIncomeTableRows())
                         {
                             if (row.Kind == IncomeTableRowKind.Data)
                             {
                                 var excl = _excludedRowKeys.Contains(row.RowKey);
+                                var incNo = ++incRowNo;
                                 <tr class="@(dri++ % 2 == 0 ? "" : "bg-slate-50/70 dark:bg-slate-900/30") @(excl ? "opacity-40" : "")">
-                                    <td class="text-center"><input type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300 text-sky-600" checked="@(!excl)" @onchange="() => ToggleRowInclusion(row.RowKey)" /></td>
-                                    @for (int di = 0; di < _incCols.Count; di++)
+                                    <td class="text-center"><input type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300 text-sky-600" title="@IncludeRowTooltip" aria-label="@IncludeRowTooltip" checked="@(!excl)" @onchange="() => ToggleRowInclusion(row.RowKey)" /></td>
+                                    @if (_incShowRowNo) { <td class="text-right text-slate-400">@incNo</td> }
+                                    @for (int di = 0; di < _incCalcCols.Count; di++)
                                     {
-                                        var dcol = _incCols[di];
+                                        var dcol = _incCalcCols[di];
                                         <td class="@GetIncomeTdClass(dcol)">@GetIncomeDataCellValue(row, dcol)</td>
                                         if (dcol == IncomeReportColumn.Year && _showQuarters)
                                         {
@@ -292,13 +290,28 @@
                                     }
                                 </tr>
                             }
+                            else if (row.Kind == IncomeTableRowKind.ProjectHeader)
+                            {
+                                var _projFields = BuildIncomeProjectFields(row);
+                                <tr class="border-t border-slate-200 bg-slate-100/80 dark:border-slate-700 dark:bg-slate-800/60">
+                                    <td colspan="@_incColSpan" class="!py-1.5">
+                                        <span class="font-semibold text-slate-700 dark:text-slate-100">@IncomeProjectHeaderTitle(row)</span>
+                                        @if (!string.IsNullOrWhiteSpace(_projFields))
+                                        {
+                                            <span class="ml-2 text-[11px] font-normal text-slate-500 dark:text-slate-400">@_projFields</span>
+                                        }
+                                        <span class="ml-2 text-[11px] font-normal text-slate-500 dark:text-slate-400">@IncomeProjectSummary(row)</span>
+                                    </td>
+                                </tr>
+                            }
                             else
                             {
                                 <tr class="@IncomeRowClass(row.Kind)">
                                     <td></td>
-                                    @for (int si = 0; si < _incCols.Count; si++)
+                                    @if (_incShowRowNo) { <td></td> }
+                                    @for (int si = 0; si < _incCalcCols.Count; si++)
                                     {
-                                        var scol = _incCols[si];
+                                        var scol = _incCalcCols[si];
                                         if (si == 0)
                                         {
                                             <td>@row.SummaryLabel</td>
@@ -331,16 +344,7 @@
         @* ═══ HIT RATE ═══ *@
         else if (_activeView == ReportView.HitRate)
         {
-            <div class="rounded-lg border border-sky-200 bg-sky-50 p-3 text-xs text-sky-800 dark:border-sky-800/50 dark:bg-sky-950/30 dark:text-sky-200">
-                <p class="mb-0.5 font-semibold">Projekturval</p>
-                <p>@_hitRateSelectionLine</p>
-                @if (!string.IsNullOrWhiteSpace(_hitRateSelectionFilters))
-                {
-                    <p class="mt-1 text-sky-700 dark:text-sky-300">@_hitRateSelectionFilters</p>
-                }
-                <p class="mt-1.5 font-medium text-sky-800 dark:text-sky-200">@HitRateBasisLine</p>
-                <p class="mt-1.5 italic text-slate-500 dark:text-slate-400">Stäng rapporten och ändra projektlistans filter om du vill ändra urvalet.</p>
-            </div>
+            @SelectionBox("Projekturval", _hitRateSelectionLine, _hitRateSelectionFilters, HitRateBasisLine, "Stäng rapporten och ändra projektlistans filter om du vill ändra urvalet.")
 
             @if (_lockedHitRateProjects.Count == 0)
             {
@@ -373,15 +377,7 @@
         @* ═══ KALKYLLISTA ═══ *@
         else if (_activeView == ReportView.Calculations)
         {
-            <div class="rounded-lg border border-sky-200 bg-sky-50 p-3 text-xs text-sky-800 dark:border-sky-800/50 dark:bg-sky-950/30 dark:text-sky-200">
-                <p class="mb-0.5 font-semibold">Kalkylurval</p>
-                <p>@_calcReportSelectionLine</p>
-                @if (!string.IsNullOrWhiteSpace(_calcReportSelectionFilters))
-                {
-                    <p class="mt-1 text-sky-700 dark:text-sky-300">@_calcReportSelectionFilters</p>
-                }
-                <p class="mt-1.5 italic text-slate-500 dark:text-slate-400">Stäng rapporten och ändra filtren om du vill ändra urvalet.</p>
-            </div>
+            @SelectionBox("Kalkylurval", _calcReportSelectionLine, _calcReportSelectionFilters, null, "Stäng rapporten och ändra filtren om du vill ändra urvalet.")
 
             @if (_lockedCalcReportList.Count == 0)
             {
@@ -390,7 +386,7 @@
             else
             {
                 <div class="flex flex-wrap items-center justify-between gap-2">
-                    <span class="text-xs text-slate-400">@_lockedCalcReportList.Count @AppLoc["rows"].Value.ToLower()</span>
+                    <span class="text-xs text-slate-400">@IncludedCalcReportList.Count @AppLoc["rows"].Value.ToLower()</span>
                     <div class="flex flex-wrap items-center gap-1.5">
                         @CalcColumnPanel()
                         <button type="button" class="@ActionButtonClass" @onclick="ExportExcelAsync">@AppLoc["exportExcel"]</button>
@@ -405,15 +401,7 @@
         @* ═══ PROJEKTLISTA ═══ *@
         else if (_activeView == ReportView.Projects)
         {
-            <div class="rounded-lg border border-sky-200 bg-sky-50 p-3 text-xs text-sky-800 dark:border-sky-800/50 dark:bg-sky-950/30 dark:text-sky-200">
-                <p class="mb-0.5 font-semibold">Projekturval</p>
-                <p>@_projReportSelectionLine</p>
-                @if (!string.IsNullOrWhiteSpace(_projReportSelectionFilters))
-                {
-                    <p class="mt-1 text-sky-700 dark:text-sky-300">@_projReportSelectionFilters</p>
-                }
-                <p class="mt-1.5 italic text-slate-500 dark:text-slate-400">Stäng rapporten och ändra projektlistans filter om du vill ändra urvalet.</p>
-            </div>
+            @SelectionBox("Projekturval", _projReportSelectionLine, _projReportSelectionFilters, null, "Stäng rapporten och ändra projektlistans filter om du vill ändra urvalet.")
 
             @if (_lockedProjReportProjects.Count == 0)
             {
@@ -422,7 +410,7 @@
             else
             {
                 <div class="flex flex-wrap items-center justify-between gap-2">
-                    <span class="text-xs text-slate-400">@_lockedProjReportProjects.Count projekt</span>
+                    <span class="text-xs text-slate-400">@IncludedProjReportProjects.Count projekt</span>
                     <div class="flex flex-wrap items-center gap-1.5">
                         @ProjColumnPanel()
                         <button type="button" class="@ActionButtonClass" @onclick="ExportExcelAsync">@AppLoc["exportExcel"]</button>
@@ -437,15 +425,7 @@
         @* ═══ ANBUDSJÄMFÖRELSE ═══ *@
         else if (_activeView == ReportView.BidComparison)
         {
-            <div class="rounded-lg border border-sky-200 bg-sky-50 p-3 text-xs text-sky-800 dark:border-sky-800/50 dark:bg-sky-950/30 dark:text-sky-200">
-                <p class="mb-0.5 font-semibold">Projekturval</p>
-                <p>@_bidReportSelectionLine</p>
-                @if (!string.IsNullOrWhiteSpace(_bidReportSelectionFilters))
-                {
-                    <p class="mt-1 text-sky-700 dark:text-sky-300">@_bidReportSelectionFilters</p>
-                }
-                <p class="mt-1.5 italic text-slate-500 dark:text-slate-400">Stäng rapporten och ändra projektlistans filter om du vill ändra urvalet.</p>
-            </div>
+            @SelectionBox("Projekturval", _bidReportSelectionLine, _bidReportSelectionFilters, null, "Stäng rapporten och ändra projektlistans filter om du vill ändra urvalet.")
 
             @if (_lockedBidRows.Count == 0)
             {
@@ -456,20 +436,19 @@
             }
             else
             {
-                <div class="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-5">
+                <div class="grid grid-cols-2 gap-2 md:grid-cols-4">
                     <div class="@TotalCardClass"><span>Projekt med anbud</span><strong>@BidProjectsWithBids</strong></div>
                     <div class="@TotalCardClass"><span>Antal anbud</span><strong>@BidCount</strong></div>
                     <div class="@TotalCardClass"><span>Antal anbudsgivare</span><strong>@BidderCount</strong></div>
                     <div class="@TotalCardClass"><span>Tilldelade anbud</span><strong>@AwardedCount</strong></div>
-                    <div class="@TotalCardClass"><span>Genomsnittlig avvikelse %</span><strong>@AvgDeviationDisplay</strong></div>
                 </div>
+                @* Separat KPI-rad för valt jämförelseföretag ("Jämför mot"). *@
                 @if (HasOwnCompany)
                 {
-                    <div class="grid grid-cols-2 gap-2 md:grid-cols-4">
-                        <div class="@TotalCardClass"><span>Våra anbud</span><strong>@OwnBidCount</strong></div>
-                        <div class="@TotalCardClass"><span>Våra tilldelningar</span><strong>@OwnAwardedCount</strong></div>
-                        <div class="@TotalCardClass"><span>Genomsnittlig placering (vi)</span><strong>@OwnAvgPlacement</strong></div>
-                        <div class="@TotalCardClass"><span>Vår avvikelse %</span><strong>@OwnAvgDeviation</strong></div>
+                    <div class="grid grid-cols-2 gap-2 md:grid-cols-3">
+                        <div class="@TotalCardClass"><span>Anbud för @_ownCompanyName</span><strong>@OwnBidCount</strong></div>
+                        <div class="@TotalCardClass"><span>Tilldelningar</span><strong>@OwnAwardedCount</strong></div>
+                        <div class="@TotalCardClass"><span>Genomsnittlig placering</span><strong>@OwnAvgPlacement</strong></div>
                     </div>
                 }
 
@@ -499,10 +478,10 @@
                             }
                         </div>
 
-                        @* Eget företag *@
+                        @* Jämför mot (referensföretag — påverkar endast rapportens jämförelseberäkning) *@
                         <div class="relative">
                             <button type="button" class="@SelectClass flex h-8 w-48 items-center justify-between text-left" @onclick="() => _showOwnCompanyDropdown = !_showOwnCompanyDropdown">
-                                <span class="truncate">@(HasOwnCompany ? $"Eget företag: {_ownCompanyName}" : "Eget företag: inget")</span>
+                                <span class="truncate">@(HasOwnCompany ? $"Jämför mot: {_ownCompanyName}" : "Jämför mot: inget")</span>
                                 @ChevronSvg
                             </button>
                             @if (_showOwnCompanyDropdown)
@@ -551,51 +530,99 @@
                 }
                 else
                 {
-                    var bidRows = FilteredBidRows.ToList();
-                    var bidCols = BidVisibleColumns.ToList();
+                    @* Grupperad per projekt: Projekt/Mapp visas i gruppheader, anbuden under. *@
+                    var rowCols = BidRowColumns.ToList();
+                    var showRowNo = _visibleBidColumns.Contains(BidReportColumn.RowNumber);
+                    var colSpan = 1 + (showRowNo ? 1 : 0) + rowCols.Count;
+                    var groups = FilteredBidRows
+                        .GroupBy(r => r.Row.ProjectId)
+                        .OrderBy(g => g.First().ProjectName, StringComparer.CurrentCultureIgnoreCase)
+                        .ToList();
                     <div class="@TableContainerClass">
                         <table class="@TableClass">
-                            <thead class="@TableHeadClass"><tr>@foreach (var c in bidCols) { <th>@GetBidColumnLabel(c)</th> }</tr></thead>
+                            <thead class="@TableHeadClass"><tr>
+                                <th class="w-8 text-center" title="@IncludeColumnTooltip"><span aria-hidden="true">☑</span><span class="sr-only">@IncludeColumnTooltip</span></th>
+                                @if (showRowNo) { <th class="w-10 text-right text-slate-400">#</th> }
+                                @foreach (var c in rowCols) { <th>@GetBidColumnLabel(c)</th> }
+                            </tr></thead>
                             <tbody class="@TableBodyClass">
-                                @{ var bi = 0; }
-                                @foreach (var r in bidRows)
+                                @{ var bidRowNo = 0; }
+                                @foreach (var g in groups)
                                 {
-                                    var rejected = r.Row.Status == BidStatus.Rejected;
-                                    <tr class="@(bi++ % 2 == 0 ? "" : "bg-slate-50/70 dark:bg-slate-900/30") @(IsOwnCompany(r) ? "bg-sky-50/70 dark:bg-sky-950/20" : "") @(rejected ? "text-slate-400 dark:text-slate-500" : "")">
-                                        @foreach (var c in bidCols)
-                                        {
-                                            @if (c == BidReportColumn.BidStatus)
-                                            {
-                                                <td>
-                                                    @if (rejected)
-                                                    {
-                                                        <span class="inline-flex rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-700 dark:bg-red-950/50 dark:text-red-300" title="@r.Row.RejectionReason">Förkastat</span>
-                                                    }
-                                                    else
-                                                    {
-                                                        <span class="inline-flex rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">Giltigt</span>
-                                                    }
-                                                </td>
-                                            }
-                                            else if (c == BidReportColumn.OwnCompany)
-                                            {
-                                                <td>@if (IsOwnCompany(r)) { <span class="inline-flex rounded-full bg-sky-100 px-1.5 py-0.5 text-[10px] font-semibold text-sky-700 dark:bg-sky-950/50 dark:text-sky-300">Eget företag</span> }</td>
-                                            }
-                                            else if (c == BidReportColumn.Awarded)
-                                            {
-                                                <td>@if (r.Row.IsAwarded) { <span class="inline-flex rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">Ja</span> } else { <span class="text-slate-400">Nej</span> }</td>
-                                            }
-                                            else
-                                            {
-                                                <td>@GetBidCellValue(r, c)</td>
-                                            }
-                                        }
+                                    var head = g.First();
+                                    var validInGroup = g.Where(r => r.Row.IsValid && r.Row.ComparisonAmount.HasValue).ToList();
+                                    var lowestInGroup = validInGroup.Count > 0 ? validInGroup.Min(r => r.Row.ComparisonAmount!.Value) : (decimal?)null;
+                                    var awardedNames = g.Where(r => r.Row.IsAwarded).Select(r => r.Row.BidderName).ToList();
+                                    <tr class="border-t border-slate-200 bg-slate-100/80 dark:border-slate-700 dark:bg-slate-800/60">
+                                        <td colspan="@colSpan" class="!py-1.5">
+                                            <span class="font-semibold text-slate-700 dark:text-slate-100">@head.ProjectName</span>
+                                            <span class="text-slate-400"> · @head.FolderName</span>
+                                            <span class="ml-2 text-[11px] font-normal text-slate-500 dark:text-slate-400">
+                                                @g.Count() anbud · lägst jämförelsesumma @(lowestInGroup.HasValue ? FormatMoney(lowestInGroup.Value) : "–") · tilldelad: @(awardedNames.Count > 0 ? string.Join(", ", awardedNames) : "–")
+                                            </span>
+                                        </td>
                                     </tr>
+                                    @foreach (var r in g)
+                                    {
+                                        var key = BidRowKey(r); var inc = RowIncluded(key); bidRowNo++;
+                                        var rejected = r.Row.Status == BidStatus.Rejected;
+                                        <tr class="@(IsOwnCompany(r) ? "bg-sky-50/70 dark:bg-sky-950/20" : "") @(rejected ? "text-slate-400 dark:text-slate-500" : "") @(inc ? "" : "opacity-40")">
+                                            <td class="text-center"><input type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300 text-sky-600" title="@IncludeRowTooltip" aria-label="@IncludeRowTooltip" checked="@inc" @onchange="() => ToggleRowInclusion(key)" /></td>
+                                            @if (showRowNo) { <td class="text-right text-slate-400">@bidRowNo</td> }
+                                            @foreach (var c in rowCols)
+                                            {
+                                                @if (c == BidReportColumn.Bidder)
+                                                {
+                                                    <td>
+                                                        <span class="font-medium text-slate-700 dark:text-slate-200">@r.Row.BidderName</span>
+                                                        @if (IsOwnCompany(r))
+                                                        {
+                                                            <span class="ml-1.5 inline-flex rounded-full bg-sky-100 px-1.5 py-0.5 text-[10px] font-semibold text-sky-700 dark:bg-sky-950/50 dark:text-sky-300">Eget</span>
+                                                        }
+                                                    </td>
+                                                }
+                                                else if (c == BidReportColumn.Awarded)
+                                                {
+                                                    <td class="text-center">
+                                                        @if (r.Row.IsAwarded)
+                                                        {
+                                                            <span class="font-semibold text-emerald-600 dark:text-emerald-400" title="Tilldelad">✓</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="text-slate-300 dark:text-slate-600">–</span>
+                                                        }
+                                                    </td>
+                                                }
+                                                else if (c == BidReportColumn.BidStatus)
+                                                {
+                                                    <td>
+                                                        @if (rejected)
+                                                        {
+                                                            <span class="inline-flex rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-700 dark:bg-red-950/50 dark:text-red-300" title="@r.Row.RejectionReason">Förkastat</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="inline-flex rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">Giltigt</span>
+                                                        }
+                                                    </td>
+                                                }
+                                                else if (c == BidReportColumn.Deviation)
+                                                {
+                                                    <td>@BidDeviationText(r)</td>
+                                                }
+                                                else
+                                                {
+                                                    <td>@GetBidCellValue(r, c)</td>
+                                                }
+                                            }
+                                        </tr>
+                                    }
                                 }
                             </tbody>
                         </table>
                     </div>
-                    <p class="text-xs text-slate-400">@bidRows.Count anbud</p>
+                    <p class="text-xs text-slate-400">@FilteredBidRows.Count() anbud</p>
                 }
             }
         }
@@ -647,13 +674,15 @@
     public static bool IsReportEnabled(ReportHost host, string view) =>
         GetReportAvailability(host).FirstOrDefault(a => a.View == view)?.Enabled ?? false;
 
-    private enum IncomeTableRowKind { Data, ProjectSum, GrandTotal, SubTypeTotal }
+    private enum IncomeTableRowKind { Data, ProjectHeader, ProjectSum, GrandTotal, SubTypeTotal }
 
     private enum CalcReportColumn
     {
         Folder, Project, Calculation, Version, CalcType, CalcStatus, CalcRole,
         Responsible, Inspector, TenderQA, TenderDeadline, Priority, CreatedAt, UpdatedAt, Archived,
-        Code, Private
+        Code, Private,
+        // Appended last to keep existing stored column-pref indices stable.
+        RowNumber
     }
 
     private enum ProjReportColumn
@@ -663,12 +692,15 @@
         Responsible, Inspector, ProjectType, Contract,
         Organisation, ProcurementName, Archived,
         ProcurementProcedure, Compensation, ProcurementNumber,
-        Developer, PublicationDate, DecisionDate, CreatedAt, UpdatedAt
+        Developer, PublicationDate, DecisionDate, CreatedAt, UpdatedAt,
+        // Appended last to keep existing stored column-pref indices stable.
+        RowNumber
     }
 
     private static readonly CalcReportColumn[] CalcAllColumns = Enum.GetValues<CalcReportColumn>();
     private static readonly CalcReportColumn[] CalcDefaultColumns =
     [
+        CalcReportColumn.RowNumber,
         CalcReportColumn.Folder, CalcReportColumn.Project, CalcReportColumn.Calculation,
         CalcReportColumn.Version, CalcReportColumn.CalcType, CalcReportColumn.CalcStatus,
         CalcReportColumn.Responsible, CalcReportColumn.Inspector
@@ -677,6 +709,7 @@
     private static readonly ProjReportColumn[] ProjAllColumns = Enum.GetValues<ProjReportColumn>();
     private static readonly ProjReportColumn[] ProjDefaultColumns =
     [
+        ProjReportColumn.RowNumber,
         ProjReportColumn.Folder, ProjReportColumn.Project, ProjReportColumn.Code,
         ProjReportColumn.ProjStatus, ProjReportColumn.CalcCount,
         ProjReportColumn.StartDate, ProjReportColumn.EndDate,
@@ -689,28 +722,64 @@
         ProjectCode, ProjectType, ProjStatus, Organisation, Developer,
         CalcCode, Version, CalcType, CalcRole, Responsible, Inspector,
         TenderDeadline, PublicationDate, DecisionDate,
-        Contract, Compensation, ProcurementName, ProcurementProcedure, Archived
+        Contract, Compensation, ProcurementName, ProcurementProcedure, Archived,
+        // Appended last to keep existing stored column-pref indices stable.
+        RowNumber
     }
 
     private static readonly IncomeReportColumn[] IncomeAllColumns = Enum.GetValues<IncomeReportColumn>();
     private static readonly IncomeReportColumn[] IncomeDefaultColumns =
     [
+        IncomeReportColumn.RowNumber,
         IncomeReportColumn.Folder, IncomeReportColumn.Project, IncomeReportColumn.Calculation,
         IncomeReportColumn.Source, IncomeReportColumn.CalcStatus, IncomeReportColumn.Year,
         IncomeReportColumn.SubType, IncomeReportColumn.Amount, IncomeReportColumn.Probability,
         IncomeReportColumn.Forecast
     ];
 
+    // Intäktsöversikt: projektfält visas i projektsektionen (gruppraden), kalkylfält på
+    // kalkylraderna. Kolumnvalet delas upp i dessa grupper. RowNumber är en visningskolumn.
+    private static readonly IncomeReportColumn[] IncomeProjectColumns =
+    [
+        IncomeReportColumn.Folder, IncomeReportColumn.Project, IncomeReportColumn.ProjStatus,
+        IncomeReportColumn.Organisation, IncomeReportColumn.Developer, IncomeReportColumn.ProjectCode,
+        IncomeReportColumn.ProjectType, IncomeReportColumn.Contract, IncomeReportColumn.Compensation,
+        IncomeReportColumn.ProcurementName, IncomeReportColumn.ProcurementProcedure,
+        IncomeReportColumn.PublicationDate, IncomeReportColumn.DecisionDate, IncomeReportColumn.Archived
+    ];
+
+    private static readonly IncomeReportColumn[] IncomeCalcColumns =
+    [
+        IncomeReportColumn.Calculation, IncomeReportColumn.Source, IncomeReportColumn.CalcStatus,
+        IncomeReportColumn.Year, IncomeReportColumn.SubType, IncomeReportColumn.Amount,
+        IncomeReportColumn.Probability, IncomeReportColumn.Forecast,
+        IncomeReportColumn.CalcCode, IncomeReportColumn.Version, IncomeReportColumn.CalcType,
+        IncomeReportColumn.CalcRole, IncomeReportColumn.Responsible, IncomeReportColumn.Inspector,
+        IncomeReportColumn.TenderDeadline
+    ];
+
+    private static readonly (string Label, IncomeReportColumn[] Cols)[] IncomeColumnGroups =
+    [
+        ("Projektuppgifter", IncomeProjectColumns),
+        ("Kalkyluppgifter", IncomeCalcColumns),
+        ("Övrigt", [IncomeReportColumn.RowNumber])
+    ];
+
+    private static bool IsIncomeProjectColumn(IncomeReportColumn c) => Array.IndexOf(IncomeProjectColumns, c) >= 0;
+
     private enum HitRateReportColumn
     {
         Project, ProjStatus, ProjectType, Folder, Responsible, Inspector, TenderDeadline,
         Code, Organisation, Developer, Contract, Compensation, ProcurementName, ProcurementProcedure,
-        PublicationDate, DecisionDate, UpdatedAt, CreatedAt, Archived, TenderQA
+        PublicationDate, DecisionDate, UpdatedAt, CreatedAt, Archived, TenderQA,
+        // Appended last to keep existing stored column-pref indices stable.
+        RowNumber
     }
 
     private static readonly HitRateReportColumn[] HitRateAllColumns = Enum.GetValues<HitRateReportColumn>();
     private static readonly HitRateReportColumn[] HitRateDefaultColumns =
     [
+        HitRateReportColumn.RowNumber,
         HitRateReportColumn.Project, HitRateReportColumn.ProjStatus, HitRateReportColumn.ProjectType,
         HitRateReportColumn.Folder, HitRateReportColumn.Responsible, HitRateReportColumn.Inspector,
         HitRateReportColumn.TenderDeadline
@@ -722,17 +791,41 @@
         Deviation, Placement, Awarded, Rejected, RejectionReason,
         // Valbara
         ProjectCode, ProjectType, ProjStatus, Organisation, Developer, TenderDeadline,
-        EvaluationModel, TotalPoints, Note, CreatedAt, UpdatedAt
+        EvaluationModel, TotalPoints, Note, CreatedAt, UpdatedAt,
+        // Appended last to keep existing stored column-pref indices stable.
+        RowNumber
     }
 
     private static readonly BidReportColumn[] BidAllColumns = Enum.GetValues<BidReportColumn>();
     private static readonly BidReportColumn[] BidDefaultColumns =
     [
+        BidReportColumn.RowNumber,
         BidReportColumn.Project, BidReportColumn.Folder, BidReportColumn.Bidder,
-        BidReportColumn.OwnCompany, BidReportColumn.BidStatus, BidReportColumn.Amount,
-        BidReportColumn.Deduction, BidReportColumn.Comparison, BidReportColumn.Deviation,
-        BidReportColumn.Placement, BidReportColumn.Awarded
+        BidReportColumn.Placement, BidReportColumn.Awarded, BidReportColumn.BidStatus,
+        BidReportColumn.Amount, BidReportColumn.Deduction, BidReportColumn.Comparison,
+        BidReportColumn.Deviation
     ];
+
+    // Project/Folder become group headers and OwnCompany becomes a badge, so they
+    // are not offered as toggleable columns; RowNumber stays selectable.
+    private static readonly BidReportColumn[] BidPanelColumns =
+        BidAllColumns.Where(c => c is not (BidReportColumn.Project or BidReportColumn.Folder or BidReportColumn.OwnCompany)).ToArray();
+
+    // Logical render order for the grouped on-screen table rows (Placering &
+    // Tilldelning sit right after Anbudsgivare). Project/Folder/OwnCompany/RowNumber
+    // are handled structurally and excluded here.
+    private static readonly BidReportColumn[] BidRowColumnOrder =
+    [
+        BidReportColumn.Bidder, BidReportColumn.Placement, BidReportColumn.Awarded, BidReportColumn.BidStatus,
+        BidReportColumn.Amount, BidReportColumn.Deduction, BidReportColumn.Comparison, BidReportColumn.Deviation,
+        BidReportColumn.ProjectCode, BidReportColumn.ProjectType, BidReportColumn.ProjStatus, BidReportColumn.Organisation,
+        BidReportColumn.Developer, BidReportColumn.TenderDeadline, BidReportColumn.EvaluationModel, BidReportColumn.TotalPoints,
+        BidReportColumn.Note, BidReportColumn.Rejected, BidReportColumn.RejectionReason, BidReportColumn.CreatedAt, BidReportColumn.UpdatedAt
+    ];
+
+    // Flat export keeps Project/Folder as ordinary columns (no grouping in Excel/PDF).
+    private static readonly BidReportColumn[] BidExportColumnOrder =
+        new[] { BidReportColumn.Project, BidReportColumn.Folder }.Concat(BidRowColumnOrder).ToArray();
 
     private const string MissingPersonValue = "__missing__";
     private const string CalcColumnsStorageKey = "ReportCalcColumnsV2";
@@ -761,6 +854,7 @@
         public decimal Forecast { get; init; }
         public bool IsFirstForProject { get; init; }
         public bool IsFirstForCalc { get; init; }
+        public int CalcCount { get; init; }
         public string SummaryLabel { get; init; } = "";
         // Optional columns
         public string ProjectCode { get; init; } = "";
@@ -842,6 +936,10 @@
     private bool _showProjectDropdown;
     private readonly HashSet<string> _excludedRowKeys = new(StringComparer.Ordinal);
 
+    // ── Urval-ruta (hopfällbar, sparas i localStorage) ────────────────
+    private bool _selectionCollapsed;
+    private const string SelectionCollapsedStorageKey = "ReportSelectionCollapsedV1";
+
     // ── Kalkyllista ───────────────────────────────────────────────────
     private bool _showAllVersions;
     private bool _showColumnPanelCalc;
@@ -913,6 +1011,48 @@
         <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
     </svg>;
 
+    // Hopfällbar "Urval"-ruta. Visar full information öppen, kompakt sammanfattning stängd.
+    private RenderFragment SelectionBox(string title, string line, string? filters, string? emphasisLine, string note) => @<div class="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800 dark:border-sky-800/50 dark:bg-sky-950/30 dark:text-sky-200">
+        <button type="button" class="flex w-full items-center justify-between gap-2 text-left" @onclick="ToggleSelectionCollapsed" aria-expanded="@(!_selectionCollapsed)" title="@(_selectionCollapsed ? "Visa urval" : "Dölj urval")">
+            @if (_selectionCollapsed)
+            {
+                <span class="min-w-0 truncate"><span class="font-semibold">@(title):</span> @CompactSelection(line, filters)</span>
+            }
+            else
+            {
+                <span class="font-semibold">@title</span>
+            }
+            <span class="flex shrink-0 items-center gap-1 font-medium text-sky-700 dark:text-sky-300">
+                @(_selectionCollapsed ? "Visa" : "Dölj")
+                <svg class="h-3 w-3 transition-transform @(_selectionCollapsed ? "" : "rotate-180")" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+            </span>
+        </button>
+        @if (!_selectionCollapsed)
+        {
+            <div class="mt-1">
+                <p>@line</p>
+                @if (!string.IsNullOrWhiteSpace(filters))
+                {
+                    <p class="mt-1 text-sky-700 dark:text-sky-300">@filters</p>
+                }
+                @if (!string.IsNullOrWhiteSpace(emphasisLine))
+                {
+                    <p class="mt-1.5 font-medium text-sky-800 dark:text-sky-200">@emphasisLine</p>
+                }
+                <p class="mt-1.5 italic text-slate-500 dark:text-slate-400">@note</p>
+            </div>
+        }
+    </div>;
+
+    private static string CompactSelection(string line, string? filters) =>
+        string.Join(" · ", new[] { line, filters }.Where(s => !string.IsNullOrWhiteSpace(s)));
+
+    private async Task ToggleSelectionCollapsed()
+    {
+        _selectionCollapsed = !_selectionCollapsed;
+        try { await JS.InvokeVoidAsync("localStorage.setItem", SelectionCollapsedStorageKey, _selectionCollapsed ? "1" : "0"); } catch { }
+    }
+
     private RenderFragment PersonDropdownHeader(HashSet<string> set, Action clear) => @<label class="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-xs hover:bg-sky-50 dark:hover:bg-sky-950/30">
         <input type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300" checked="@(set.Count == 0)" @onchange="() => clear()" />
         <span class="text-slate-500 dark:text-slate-400">Alla</span>
@@ -938,8 +1078,8 @@
     private IEnumerable<IncomeReportColumn> IncomeVisibleColumns =>
         IncomeAllColumns.Where(c => _visibleIncomeColumns.Contains(c));
 
-    private RenderFragment IncomeColumnPanel() => ColumnPanelImpl(
-        IncomeAllColumns, _visibleIncomeColumns, GetIncomeColumnLabel,
+    private RenderFragment IncomeColumnPanel() => GroupedColumnPanelImpl(
+        IncomeColumnGroups, _visibleIncomeColumns, GetIncomeColumnLabel,
         async (c, v) => await ToggleIncomeColumn(c, v),
         () => { _visibleIncomeColumns = new(IncomeAllColumns); _ = SaveIncomeColumnsAsync(); },
         () => { _visibleIncomeColumns = new(IncomeDefaultColumns); _ = SaveIncomeColumnsAsync(); },
@@ -962,13 +1102,18 @@
         _showColumnPanelProj, v => { _showColumnPanelProj = v; StateHasChanged(); },
         openUp: true);
 
-    private IEnumerable<BidReportColumn> BidVisibleColumns =>
-        BidAllColumns.Where(c => _visibleBidColumns.Contains(c));
+    // On-screen grouped-table row columns (ordered, excludes structural columns).
+    private IEnumerable<BidReportColumn> BidRowColumns =>
+        BidRowColumnOrder.Where(c => _visibleBidColumns.Contains(c));
+
+    // Flat export columns (ordered, includes Project/Folder, excludes OwnCompany/RowNumber).
+    private IEnumerable<BidReportColumn> BidExportColumns =>
+        BidExportColumnOrder.Where(c => _visibleBidColumns.Contains(c));
 
     private RenderFragment BidColumnPanel() => ColumnPanelImpl(
-        BidAllColumns, _visibleBidColumns, GetBidColumnLabel,
+        BidPanelColumns, _visibleBidColumns, GetBidColumnLabel,
         async (c, v) => await ToggleBidColumn(c, v),
-        () => { _visibleBidColumns = new(BidAllColumns); _ = SaveBidColumnsAsync(); },
+        () => { _visibleBidColumns = new(BidPanelColumns); _ = SaveBidColumnsAsync(); },
         () => { _visibleBidColumns = new(BidDefaultColumns); _ = SaveBidColumnsAsync(); },
         _showColumnPanelBid, v => { _showColumnPanelBid = v; StateHasChanged(); },
         openUp: true);
@@ -1006,6 +1151,47 @@
                             <input type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300" checked="@visible.Contains(cc)" @onchange="e => toggle(cc, (bool)(e.Value ?? false))" />
                             <span>@getLabel(cc)</span>
                         </label>
+                    }
+                    <div class="mt-1.5 flex gap-1 border-t border-slate-100 pt-1.5 dark:border-slate-800">
+                        <button type="button" class="flex-1 rounded bg-slate-50 px-2 py-1 text-[10px] font-medium text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700" @onclick="() => selectAll()">@AppLoc["allItems"]</button>
+                        <button type="button" class="flex-1 rounded bg-slate-50 px-2 py-1 text-[10px] font-medium text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700" @onclick="() => selectDefault()">@AppLoc["defaultValue"]</button>
+                    </div>
+                </div>
+            }
+        </div>;
+    }
+
+    // Column panel with logical sections (e.g. Projektuppgifter / Kalkyluppgifter).
+    private RenderFragment GroupedColumnPanelImpl<T>((string Label, T[] Cols)[] groups, HashSet<T> visible, Func<T, string> getLabel,
+        Func<T, bool, Task> toggle, Action selectAll, Action selectDefault,
+        bool panelVisible, Action<bool> setPanelVisible, bool openUp = false)
+        where T : struct, Enum
+    {
+        var allCount = groups.Sum(g => g.Cols.Length);
+        var visibleCount = groups.SelectMany(g => g.Cols).Count(visible.Contains);
+        var panelClass = openUp
+            ? "absolute bottom-full right-0 z-50 mb-1 w-64 overflow-auto rounded-md border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900"
+            : "absolute right-0 z-50 mt-0.5 w-64 overflow-auto rounded-md border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900";
+
+        return @<div class="relative">
+            <button type="button"
+                    class="@(visibleCount < allCount ? "inline-flex h-8 items-center rounded-lg bg-sky-50 border border-sky-300 px-2.5 text-xs font-semibold text-sky-700 transition hover:bg-sky-100 dark:bg-sky-950/30 dark:border-sky-700 dark:text-sky-300" : ActionButtonClass)"
+                    @onclick="() => setPanelVisible(!panelVisible)">
+                @AppLoc["columnSelection"] @(visibleCount < allCount ? $"({visibleCount}/{allCount})" : "")
+            </button>
+            @if (panelVisible)
+            {
+                <div class="fixed inset-0 z-40" @onclick="() => setPanelVisible(false)"></div>
+                <div class="@panelClass" style="max-height:min(22rem, calc(100vh - 8rem))">
+                    @foreach (var group in groups)
+                    {
+                        <p class="mb-1 mt-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400 first:mt-0">@group.Label</p>
+                        @foreach (var col in group.Cols) { var cc = col;
+                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-xs text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800">
+                                <input type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300" checked="@visible.Contains(cc)" @onchange="e => toggle(cc, (bool)(e.Value ?? false))" />
+                                <span>@getLabel(cc)</span>
+                            </label>
+                        }
                     }
                     <div class="mt-1.5 flex gap-1 border-t border-slate-100 pt-1.5 dark:border-slate-800">
                         <button type="button" class="flex-1 rounded bg-slate-50 px-2 py-1 text-[10px] font-medium text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700" @onclick="() => selectAll()">@AppLoc["allItems"]</button>
@@ -1103,8 +1289,9 @@
     private IEnumerable<ProjectHitRateEntry> HitRateTableProjects =>
         _lockedHitRateProjects.Where(e => e.Result is BidHitRateResult.Won or BidHitRateResult.Lost);
 
-    private int WonCount => _lockedHitRateProjects.Count(e => e.Result == BidHitRateResult.Won);
-    private int LostCount => _lockedHitRateProjects.Count(e => e.Result == BidHitRateResult.Lost);
+    // Only rows kept via "Ta med" count toward the hit-rate KPIs.
+    private int WonCount => HitRateTableProjects.Count(e => e.Result == BidHitRateResult.Won && RowIncluded(HitRateRowKey(e)));
+    private int LostCount => HitRateTableProjects.Count(e => e.Result == BidHitRateResult.Lost && RowIncluded(HitRateRowKey(e)));
     private int DecidedCount => WonCount + LostCount;
     private decimal HitRate => DecidedCount == 0 ? 0 : (decimal)WonCount / DecidedCount * 100m;
 
@@ -1160,6 +1347,12 @@
         if (!firstRender || _prefsLoaded) return;
         _prefsLoaded = true;
         bool stateChanged = false;
+        try
+        {
+            var collapsed = await JS.InvokeAsync<string?>("localStorage.getItem", SelectionCollapsedStorageKey);
+            if (collapsed == "1") { _selectionCollapsed = true; stateChanged = true; }
+        }
+        catch { }
         stateChanged |= await LoadColumnPrefsAsync<CalcReportColumn>(CalcColumnsStorageKey, _visibleCalcColumns);
         stateChanged |= await LoadColumnPrefsAsync<ProjReportColumn>(ProjColumnsStorageKey, _visibleProjColumns);
         stateChanged |= await LoadColumnPrefsAsync<IncomeReportColumn>(IncomeColumnsStorageKey, _visibleIncomeColumns);
@@ -1301,8 +1494,7 @@
         ProjectBidComparisonRowDTO Row,
         ListProjectMVVM? Project,
         string ProjectName,
-        string FolderName,
-        decimal? Deviation);
+        string FolderName);
 
     private void LockBidComparison()
     {
@@ -1313,23 +1505,14 @@
             .ToDictionary(g => g.Key, g => g.First());
         var allowed = projectById.Keys.ToHashSet();
 
-        // Bästa (lägsta) giltiga jämförelsesumma per projekt – förkastade anbud räknas inte.
-        var bestByProject = _bidRowsRaw
-            .Where(r => allowed.Contains(r.ProjectId) && r.IsValid && r.ComparisonAmount.HasValue)
-            .GroupBy(r => r.ProjectId)
-            .ToDictionary(g => g.Key, g => g.Min(r => r.ComparisonAmount!.Value));
-
+        // Avvikelse % beräknas dynamiskt (mot lägsta jämförelsesumma eller mot valt
+        // "Jämför mot"-företag), så den är inte låst här – se BidProjectReference.
         _lockedBidRows = _bidRowsRaw
             .Where(r => allowed.Contains(r.ProjectId))
             .Select(r =>
             {
                 projectById.TryGetValue(r.ProjectId, out var pe);
-                decimal? deviation = null;
-                if (r.IsValid && r.ComparisonAmount.HasValue &&
-                    bestByProject.TryGetValue(r.ProjectId, out var best) && best > 0)
-                    deviation = (r.ComparisonAmount.Value - best) / best * 100m;
-
-                return new BidRow(r, pe?.Project, pe?.Project.Name ?? "-", pe?.Folder.Name ?? "-", deviation);
+                return new BidRow(r, pe?.Project, pe?.Project.Name ?? "-", pe?.Folder.Name ?? "-");
             })
             .OrderBy(r => r.ProjectName)
             .ThenByDescending(r => r.Row.IsAwarded)
@@ -1363,21 +1546,12 @@
     private bool IsOwnCompany(BidRow r) =>
         HasOwnCompany && string.Equals(r.Row.BidderName, _ownCompanyName, StringComparison.OrdinalIgnoreCase);
 
-    // KPI:er beräknas på den visade (filtrerade) listan.
-    private List<BidRow> BidKpiRows => FilteredBidRows.ToList();
+    // KPI:er beräknas på den visade listan, men bara rader markerade med "Ta med".
+    private List<BidRow> BidKpiRows => FilteredBidRows.Where(r => RowIncluded(BidRowKey(r))).ToList();
     private int BidProjectsWithBids => BidKpiRows.Select(r => r.Row.ProjectId).Distinct().Count();
     private int BidCount => BidKpiRows.Count;
     private int BidderCount => BidKpiRows.Select(r => r.Row.BidderName).Distinct(StringComparer.OrdinalIgnoreCase).Count();
     private int AwardedCount => BidKpiRows.Count(r => r.Row.IsAwarded);
-
-    private string AvgDeviationDisplay
-    {
-        get
-        {
-            var devs = BidKpiRows.Where(r => r.Row.IsValid && r.Deviation.HasValue).Select(r => r.Deviation!.Value).ToList();
-            return devs.Count == 0 ? "–" : FormatSignedPercent(devs.Average());
-        }
-    }
 
     private List<BidRow> OwnRows => BidKpiRows.Where(IsOwnCompany).ToList();
     private int OwnBidCount => OwnRows.Count;
@@ -1392,22 +1566,62 @@
         }
     }
 
-    private string OwnAvgDeviation
-    {
-        get
-        {
-            var d = OwnRows.Where(r => r.Row.IsValid && r.Deviation.HasValue).Select(r => r.Deviation!.Value).ToList();
-            return d.Count == 0 ? "–" : FormatSignedPercent(d.Average());
-        }
-    }
-
     private static string FormatSignedPercent(decimal v) => (v > 0 ? "+" : "") + v.ToString("0.#") + " %";
     private static string FormatNullableMoney(decimal? v) => v.HasValue ? FormatMoney(v.Value) : "-";
 
-    private string BidDeviationText(BidRow r) =>
-        r.Row.Status == BidStatus.Rejected
-            ? "Förkastat"
-            : r.Deviation.HasValue ? FormatSignedPercent(r.Deviation.Value) : "-";
+    // ── Avvikelse % (dynamisk referens per projekt) ───────────────────
+    // Utan valt "Jämför mot"-företag: referens = lägsta jämförelsesumma i projektet.
+    // Med valt företag: referens = det företagets jämförelsesumma i projektet (null
+    // om företaget saknas i projektet → "-" för raderna i det projektet).
+    private string? _bidRefSig;
+    private Dictionary<Guid, decimal?> _bidRefMap = new();
+    private IReadOnlyDictionary<Guid, decimal?> BidProjectReference
+    {
+        get
+        {
+            var sig = $"{_ownCompanyName}|{_lockedBidRows.Count}";
+            if (sig != _bidRefSig) { _bidRefMap = BuildBidReference(); _bidRefSig = sig; }
+            return _bidRefMap;
+        }
+    }
+
+    private Dictionary<Guid, decimal?> BuildBidReference()
+    {
+        var dict = new Dictionary<Guid, decimal?>();
+        foreach (var g in _lockedBidRows.GroupBy(r => r.Row.ProjectId))
+        {
+            decimal? reference;
+            if (HasOwnCompany)
+            {
+                var refRow = g.FirstOrDefault(r => r.Row.IsValid && r.Row.ComparisonAmount.HasValue &&
+                    string.Equals(r.Row.BidderName, _ownCompanyName, StringComparison.OrdinalIgnoreCase));
+                reference = refRow?.Row.ComparisonAmount;
+            }
+            else
+            {
+                var valid = g.Where(r => r.Row.IsValid && r.Row.ComparisonAmount.HasValue)
+                    .Select(r => r.Row.ComparisonAmount!.Value).ToList();
+                reference = valid.Count > 0 ? valid.Min() : (decimal?)null;
+            }
+            dict[g.Key] = reference;
+        }
+        return dict;
+    }
+
+    private decimal? BidDeviationValue(BidRow r)
+    {
+        if (!r.Row.IsValid || !r.Row.ComparisonAmount.HasValue) return null;
+        if (!BidProjectReference.TryGetValue(r.Row.ProjectId, out var refn) || refn is not { } reference || reference <= 0)
+            return null;
+        return (r.Row.ComparisonAmount.Value - reference) / reference * 100m;
+    }
+
+    private string BidDeviationText(BidRow r)
+    {
+        if (r.Row.Status == BidStatus.Rejected) return "Förkastat";
+        var d = BidDeviationValue(r);
+        return d.HasValue ? FormatSignedPercent(d.Value) : "-";
+    }
 
     private string GetBidCellValue(BidRow r, BidReportColumn col) => col switch
     {
@@ -1450,7 +1664,7 @@
         BidReportColumn.Comparison => "Jämförelsesumma",
         BidReportColumn.Deviation => "Avvikelse %",
         BidReportColumn.Placement => "Placering",
-        BidReportColumn.Awarded => "Tilldelad",
+        BidReportColumn.Awarded => "Tilldelning",
         BidReportColumn.Rejected => "Förkastad",
         BidReportColumn.RejectionReason => "Förkastningsorsak",
         BidReportColumn.ProjectCode => "Projektkod",
@@ -1464,6 +1678,7 @@
         BidReportColumn.Note => "Anteckning",
         BidReportColumn.CreatedAt => "Skapad",
         BidReportColumn.UpdatedAt => "Senast ändrad",
+        BidReportColumn.RowNumber => "Radnummer",
         _ => col.ToString()
     };
 
@@ -1588,6 +1803,22 @@
     private static string IncomeRowKey(IncomeRow r) => $"{r.Entry.Calculation.Id}:{r.Year}:{(int)r.SubType}";
     private void ToggleRowInclusion(string key) { if (!_excludedRowKeys.Remove(key)) _excludedRowKeys.Add(key); }
 
+    // ── Shared "Ta med" inclusion (per report row) ────────────────────
+    // A row is included unless its key is in _excludedRowKeys, so newly shown
+    // rows default to included. Keys are prefixed per view to avoid collisions.
+    private const string IncludeColumnTooltip = "Ta med i summering och export";
+    private const string IncludeRowTooltip = "Ta med denna rad i rapportens summering och export";
+    private const string ExportIncludeNote = "Exporten innehåller endast rader markerade för summering/export.";
+    private bool RowIncluded(string key) => !_excludedRowKeys.Contains(key);
+    private static string CalcRowKey(CalculationEntry e) => $"calc:{e.Calculation.Id}";
+    private static string ProjRowKey(ProjectEntry e) => $"proj:{e.Project.Id}";
+    private static string HitRateRowKey(ProjectHitRateEntry e) => $"hr:{e.Project.Id}";
+    private static string BidRowKey(BidRow r) => $"bid:{r.Row.BidId}";
+
+    // Only rows kept via "Ta med" feed counts/summaries/export.
+    private List<CalculationEntry> IncludedCalcReportList => _lockedCalcReportList.Where(e => RowIncluded(CalcRowKey(e))).ToList();
+    private List<ProjectEntry> IncludedProjReportProjects => _lockedProjReportProjects.Where(e => RowIncluded(ProjRowKey(e))).ToList();
+
     private IReadOnlyList<IncomeTableRow> BuildIncomeTableRows()
     {
         var result = new List<IncomeTableRow>();
@@ -1596,7 +1827,28 @@
 
         foreach (var pg in all.GroupBy(r => r.Entry.Project.Id))
         {
-            bool fp = true;
+            var p = pg.First().Entry.Project;
+            var folderName = pg.First().Entry.Folder.Name;
+            var inclP = incl.Where(r => r.Entry.Project.Id == pg.Key).ToList();
+
+            // Projektsektion (grupprad): visar valda projektuppgifter + sammanfattning.
+            // Kalkylraderna under den visar enbart kalkyluppgifter.
+            result.Add(new IncomeTableRow
+            {
+                Kind = IncomeTableRowKind.ProjectHeader,
+                FolderName = folderName, ProjectName = p.Name,
+                ProjectCode = p.Code, ProjectType = p.Type, ProjStatus = p.Status,
+                Organisation = p.Organisation, Developer = p.Developer,
+                Contract = p.Contract, Compensation = p.Compensation,
+                ProcurementName = p.ProcurementName, ProcurementProcedure = p.ProcurementProcedure,
+                PublicationDateText = p.PublicationDate.HasValue ? p.PublicationDate.Value.ToString("yyyy-MM-dd") : "",
+                DecisionDateText = p.DecisionDate.HasValue ? p.DecisionDate.Value.ToString("yyyy-MM-dd") : "",
+                ArchivedText = !p.IsArchived ? "" : L("archived"),
+                CalcCount = pg.Select(r => r.Entry.Calculation.Id).Distinct().Count(),
+                Amount = inclP.Sum(r => r.Amount), Forecast = inclP.Sum(r => r.Forecast),
+                Q1 = inclP.Sum(r => r.Q1), Q2 = inclP.Sum(r => r.Q2), Q3 = inclP.Sum(r => r.Q3), Q4 = inclP.Sum(r => r.Q4),
+            });
+
             foreach (var cg in pg.GroupBy(r => r.Entry.Calculation.Id))
             {
                 bool fc = true;
@@ -1610,12 +1862,7 @@
                         Status = row.Entry.Calculation.Status, Year = row.Year, SubTypeText = SubTypeLabel(row.SubType),
                         Q1 = row.Q1, Q2 = row.Q2, Q3 = row.Q3, Q4 = row.Q4,
                         Amount = row.Amount, Probability = row.Probability, Forecast = row.Forecast,
-                        IsFirstForProject = fp, IsFirstForCalc = fc,
-                        ProjectCode = fp ? row.Entry.Project.Code : "",
-                        ProjectType = fp ? row.Entry.Project.Type : "",
-                        ProjStatus = fp ? row.Entry.Project.Status : "",
-                        Organisation = fp ? row.Entry.Project.Organisation : "",
-                        Developer = fp ? row.Entry.Project.Developer : "",
+                        IsFirstForCalc = fc,
                         CalcCode = fc ? row.Entry.Calculation.Code : "",
                         CalcVersion = fc ? $"V.{row.Entry.Calculation.VersionNumber:D2}" : "",
                         CalcTypeName = fc ? TypeLabel(row.Entry.Calculation.CalculationType) : "",
@@ -1623,20 +1870,10 @@
                         Responsible = fc ? row.Entry.Calculation.Responsible ?? "" : "",
                         Inspector = fc ? row.Entry.Calculation.Inspector ?? "" : "",
                         TenderDeadlineText = fc ? FormatDate(row.Entry.Calculation.TenderDeadline) : "",
-                        PublicationDateText = fp ? (row.Entry.Project.PublicationDate.HasValue ? row.Entry.Project.PublicationDate.Value.ToString("yyyy-MM-dd") : "") : "",
-                        DecisionDateText = fp ? (row.Entry.Project.DecisionDate.HasValue ? row.Entry.Project.DecisionDate.Value.ToString("yyyy-MM-dd") : "") : "",
-                        Contract = fp ? row.Entry.Project.Contract : "",
-                        Compensation = fp ? row.Entry.Project.Compensation : "",
-                        ProcurementName = fp ? row.Entry.Project.ProcurementName : "",
-                        ProcurementProcedure = fp ? row.Entry.Project.ProcurementProcedure : "",
-                        ArchivedText = !row.Entry.Calculation.IsArchived ? "" : L("archived"),
                     });
-                    fp = false; fc = false;
+                    fc = false;
                 }
             }
-            var inclP = incl.Where(r => r.Entry.Project.Id == pg.Key).ToList();
-            if (pg.Count() > 1 && inclP.Count > 0)
-                result.Add(new IncomeTableRow { Kind = IncomeTableRowKind.ProjectSum, SummaryLabel = $"Summa projekt: {pg.First().Entry.Project.Name}", Q1 = inclP.Sum(r => r.Q1), Q2 = inclP.Sum(r => r.Q2), Q3 = inclP.Sum(r => r.Q3), Q4 = inclP.Sum(r => r.Q4), Amount = inclP.Sum(r => r.Amount), Forecast = inclP.Sum(r => r.Forecast) });
         }
 
         if (incl.Count > 1)
@@ -1655,6 +1892,34 @@
         IncomeTableRowKind.SubTypeTotal => "bg-slate-50 text-xs italic text-slate-500 dark:bg-slate-900/40 dark:text-slate-400",
         _ => "bg-slate-50 font-semibold italic text-slate-600 dark:bg-slate-900/60 dark:text-slate-300"
     };
+
+    // ── Intäktsöversikt: projektsektion (grupprad) ────────────────────
+    private string IncomeProjectHeaderTitle(IncomeTableRow row) =>
+        _visibleIncomeColumns.Contains(IncomeReportColumn.Folder) && !string.IsNullOrWhiteSpace(row.FolderName)
+            ? $"{row.FolderName} · {row.ProjectName}"
+            : row.ProjectName;
+
+    // Valda projektuppgifter (utom Mapp/Projekt som utgör rubriken) som "Etikett: Värde".
+    private string BuildIncomeProjectFields(IncomeTableRow row)
+    {
+        var parts = new List<string>();
+        foreach (var c in IncomeProjectColumns)
+        {
+            if (c is IncomeReportColumn.Folder or IncomeReportColumn.Project) continue;
+            if (!_visibleIncomeColumns.Contains(c)) continue;
+            var val = GetIncomeDataCellValue(row, c);
+            if (!string.IsNullOrWhiteSpace(val)) parts.Add($"{GetIncomeColumnLabel(c)}: {val}");
+        }
+        return string.Join(" · ", parts);
+    }
+
+    private string IncomeProjectSummary(IncomeTableRow row)
+    {
+        var parts = new List<string> { $"{row.CalcCount} kalkyler" };
+        if (_visibleIncomeColumns.Contains(IncomeReportColumn.Amount)) parts.Add($"Intäkt: {FormatMoney(row.Amount)}");
+        if (_visibleIncomeColumns.Contains(IncomeReportColumn.Forecast)) parts.Add($"Prognos: {FormatMoney(row.Forecast)}");
+        return string.Join(" · ", parts);
+    }
 
     private CalculationEntry? ChooseIncomeSource(IEnumerable<CalculationEntry> entries)
     {
@@ -1826,6 +2091,7 @@
         HitRateReportColumn.CreatedAt => "Skapad datum",
         HitRateReportColumn.Archived => "Arkiverad",
         HitRateReportColumn.TenderQA => "Frågor/svar",
+        HitRateReportColumn.RowNumber => "Radnummer",
         _ => col.ToString()
     };
 
@@ -1885,6 +2151,7 @@
         IncomeReportColumn.ProcurementName => "Upphandlingsform",
         IncomeReportColumn.ProcurementProcedure => "Upphandlingsförfarande",
         IncomeReportColumn.Archived => "Arkiverad",
+        IncomeReportColumn.RowNumber => "Radnummer",
         _ => col.ToString()
     };
 
@@ -1957,6 +2224,7 @@
         CalcReportColumn.Archived => "Arkiverad",
         CalcReportColumn.Code => "Kalkylkod",
         CalcReportColumn.Private => "Privat",
+        CalcReportColumn.RowNumber => "Radnummer",
         _ => col.ToString()
     };
 
@@ -2017,6 +2285,7 @@
         ProjReportColumn.DecisionDate => "Beslutsdatum",
         ProjReportColumn.CreatedAt => "Skapad datum",
         ProjReportColumn.UpdatedAt => "Senast ändrad",
+        ProjReportColumn.RowNumber => "Radnummer",
         _ => col.ToString()
     };
 
@@ -2060,15 +2329,23 @@
 
     private RenderFragment CalculationTable(IEnumerable<CalculationEntry> entries)
     {
-        var cols = CalcAllColumns.Where(c => _visibleCalcColumns.Contains(c)).ToList();
+        var cols = CalcAllColumns.Where(c => c != CalcReportColumn.RowNumber && _visibleCalcColumns.Contains(c)).ToList();
+        var showRowNo = _visibleCalcColumns.Contains(CalcReportColumn.RowNumber);
         return @<div class="@TableContainerClass">
             <table class="@TableClass">
-                <thead class="@TableHeadClass"><tr>@foreach (var c in cols) { <th title="@GetCalcColumnTitle(c)">@GetCalcColumnLabel(c)</th> }</tr></thead>
+                <thead class="@TableHeadClass"><tr>
+                    <th class="w-8 text-center" title="@IncludeColumnTooltip"><span aria-hidden="true">☑</span><span class="sr-only">@IncludeColumnTooltip</span></th>
+                    @if (showRowNo) { <th class="w-10 text-right text-slate-400">#</th> }
+                    @foreach (var c in cols) { <th title="@GetCalcColumnTitle(c)">@GetCalcColumnLabel(c)</th> }
+                </tr></thead>
                 <tbody class="@TableBodyClass">
                     @{ var ci = 0; }
                     @foreach (var e in entries)
                     {
-                        <tr class="@(ci++ % 2 == 0 ? "" : "bg-slate-50/70 dark:bg-slate-900/30")">
+                        var key = CalcRowKey(e); var inc = RowIncluded(key); var rowNo = ++ci;
+                        <tr class="@(rowNo % 2 == 1 ? "" : "bg-slate-50/70 dark:bg-slate-900/30") @(inc ? "" : "opacity-40")">
+                            <td class="text-center"><input type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300 text-sky-600" title="@IncludeRowTooltip" aria-label="@IncludeRowTooltip" checked="@inc" @onchange="() => ToggleRowInclusion(key)" /></td>
+                            @if (showRowNo) { <td class="text-right text-slate-400">@rowNo</td> }
                             @foreach (var c in cols) { <td>@GetCalcCellValue(e, c)</td> }
                         </tr>
                     }
@@ -2079,15 +2356,23 @@
 
     private RenderFragment ProjectTable(IEnumerable<ProjectEntry> entries)
     {
-        var cols = ProjAllColumns.Where(c => _visibleProjColumns.Contains(c)).ToList();
+        var cols = ProjAllColumns.Where(c => c != ProjReportColumn.RowNumber && _visibleProjColumns.Contains(c)).ToList();
+        var showRowNo = _visibleProjColumns.Contains(ProjReportColumn.RowNumber);
         return @<div class="@TableContainerClass">
             <table class="@TableClass">
-                <thead class="@TableHeadClass"><tr>@foreach (var c in cols) { <th title="@GetProjColumnTitle(c)">@GetProjColumnLabel(c)</th> }</tr></thead>
+                <thead class="@TableHeadClass"><tr>
+                    <th class="w-8 text-center" title="@IncludeColumnTooltip"><span aria-hidden="true">☑</span><span class="sr-only">@IncludeColumnTooltip</span></th>
+                    @if (showRowNo) { <th class="w-10 text-right text-slate-400">#</th> }
+                    @foreach (var c in cols) { <th title="@GetProjColumnTitle(c)">@GetProjColumnLabel(c)</th> }
+                </tr></thead>
                 <tbody class="@TableBodyClass">
                     @{ var pi = 0; }
                     @foreach (var e in entries)
                     {
-                        <tr class="@(pi++ % 2 == 0 ? "" : "bg-slate-50/70 dark:bg-slate-900/30")">
+                        var key = ProjRowKey(e); var inc = RowIncluded(key); var rowNo = ++pi;
+                        <tr class="@(rowNo % 2 == 1 ? "" : "bg-slate-50/70 dark:bg-slate-900/30") @(inc ? "" : "opacity-40")">
+                            <td class="text-center"><input type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300 text-sky-600" title="@IncludeRowTooltip" aria-label="@IncludeRowTooltip" checked="@inc" @onchange="() => ToggleRowInclusion(key)" /></td>
+                            @if (showRowNo) { <td class="text-right text-slate-400">@rowNo</td> }
                             @foreach (var c in cols) { <td>@GetProjCellValue(e, c)</td> }
                         </tr>
                     }
@@ -2098,15 +2383,23 @@
 
     private RenderFragment HitRateProjectTable()
     {
-        var cols = HitRateAllColumns.Where(c => _visibleHitRateColumns.Contains(c)).ToList();
+        var cols = HitRateAllColumns.Where(c => c != HitRateReportColumn.RowNumber && _visibleHitRateColumns.Contains(c)).ToList();
+        var showRowNo = _visibleHitRateColumns.Contains(HitRateReportColumn.RowNumber);
         return @<div class="@TableContainerClass">
             <table class="@TableClass">
-                <thead class="@TableHeadClass"><tr>@foreach (var c in cols) { <th>@GetHitRateColumnLabel(c)</th> }</tr></thead>
+                <thead class="@TableHeadClass"><tr>
+                    <th class="w-8 text-center" title="@IncludeColumnTooltip"><span aria-hidden="true">☑</span><span class="sr-only">@IncludeColumnTooltip</span></th>
+                    @if (showRowNo) { <th class="w-10 text-right text-slate-400">#</th> }
+                    @foreach (var c in cols) { <th>@GetHitRateColumnLabel(c)</th> }
+                </tr></thead>
                 <tbody class="@TableBodyClass">
                     @{ var hi = 0; }
                     @foreach (var e in HitRateTableProjects)
                     {
-                        <tr class="@(hi++ % 2 == 0 ? "" : "bg-slate-50/70 dark:bg-slate-900/30")">
+                        var key = HitRateRowKey(e); var inc = RowIncluded(key); var rowNo = ++hi;
+                        <tr class="@(rowNo % 2 == 1 ? "" : "bg-slate-50/70 dark:bg-slate-900/30") @(inc ? "" : "opacity-40")">
+                            <td class="text-center"><input type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300 text-sky-600" title="@IncludeRowTooltip" aria-label="@IncludeRowTooltip" checked="@inc" @onchange="() => ToggleRowInclusion(key)" /></td>
+                            @if (showRowNo) { <td class="text-right text-slate-400">@rowNo</td> }
                             @foreach (var c in cols) { <td>@GetHitRateCellValue(e, c)</td> }
                         </tr>
                     }
@@ -2168,7 +2461,9 @@
 
     private ExportModel BuildIncomeExport()
     {
-        var cols = IncomeVisibleColumns.ToList();
+        // Export mirrors the on-screen layout: only calc columns; project info appears
+        // as a project-section row before each project's calc rows.
+        var cols = IncomeCalcColumns.Where(c => _visibleIncomeColumns.Contains(c)).ToList();
         var headers = new List<string>();
         foreach (var c in cols)
         {
@@ -2179,7 +2474,7 @@
 
         var sections = new List<ReportExportSection>
         {
-            new("Urval:", [_incomeSelectionLine, _incomeSelectionFilters]),
+            new("Urval:", [_incomeSelectionLine, _incomeSelectionFilters, ExportIncludeNote]),
             new("Rapportfilter:", [BuildIncomeReportFilterLine()])
         };
         var included = IncludedFilteredIncomeRows.ToList();
@@ -2188,7 +2483,7 @@
             new(L("revenue"), FormatMoney(included.Sum(r => r.Amount))),
             new(L("forecast"), FormatMoney(included.Sum(r => r.Forecast))),
             new("Projekt", included.Select(r => r.Entry.Project.Id).Distinct().Count().ToString()),
-            new(L("rows"), included.Count.ToString())
+            new("Kalkyler", included.Select(r => r.Entry.Calculation.Id).Distinct().Count().ToString())
         };
         return new(L("incomeOverview"), headers.ToArray(), BuildIncomeExportRowsDynamic(cols), sections, kpis);
     }
@@ -2224,6 +2519,9 @@
     {
         foreach (var row in BuildIncomeTableRows())
         {
+            // Excluded ("Ta med" unchecked) data rows are left out of the export.
+            if (row.Kind == IncomeTableRowKind.Data && _excludedRowKeys.Contains(row.RowKey))
+                continue;
             var cells = new List<object?>();
             if (row.Kind == IncomeTableRowKind.Data)
             {
@@ -2232,6 +2530,22 @@
                     cells.Add(GetIncomeDataCellValue(row, c));
                     if (c == IncomeReportColumn.Year && _showQuarters)
                     { cells.Add(row.Q1); cells.Add(row.Q2); cells.Add(row.Q3); cells.Add(row.Q4); }
+                }
+            }
+            else if (row.Kind == IncomeTableRowKind.ProjectHeader)
+            {
+                // Project section row: title + selected project fields + summary in the first cell.
+                var label = IncomeProjectHeaderTitle(row);
+                var fields = BuildIncomeProjectFields(row);
+                if (!string.IsNullOrWhiteSpace(fields)) label += " — " + fields;
+                label += " · " + IncomeProjectSummary(row);
+                bool first = true;
+                foreach (var c in cols)
+                {
+                    cells.Add(first ? label : "");
+                    first = false;
+                    if (c == IncomeReportColumn.Year && _showQuarters)
+                    { cells.Add(""); cells.Add(""); cells.Add(""); cells.Add(""); }
                 }
             }
             else
@@ -2253,11 +2567,11 @@
 
     private ExportModel BuildHitRateExport()
     {
-        var dataCols = HitRateAllColumns.Where(c => _visibleHitRateColumns.Contains(c)).ToList();
+        var dataCols = HitRateAllColumns.Where(c => c != HitRateReportColumn.RowNumber && _visibleHitRateColumns.Contains(c)).ToList();
         string[] headers = dataCols.Select(GetHitRateColumnLabel).ToArray();
         var sections = new List<ReportExportSection>
         {
-            new("Projekturval:", [_hitRateSelectionLine, _hitRateSelectionFilters]),
+            new("Projekturval:", [_hitRateSelectionLine, _hitRateSelectionFilters, ExportIncludeNote]),
             new("Beräkning:", [HitRateBasisLine])
         };
         var kpis = new List<ReportExportKpi>
@@ -2267,44 +2581,46 @@
             new("Hit rate / träffsäkerhet", HitRateDisplay)
         };
         var rows = HitRateTableProjects
+            .Where(e => RowIncluded(HitRateRowKey(e)))
             .Select(e => dataCols.Select(c => (object?)GetHitRateCellValue(e, c)));
         return new(L("hitRate"), headers, rows, sections, kpis);
     }
 
     private ExportModel BuildCalcExport()
     {
-        var cols = CalcAllColumns.Where(c => _visibleCalcColumns.Contains(c)).ToList();
+        var cols = CalcAllColumns.Where(c => c != CalcReportColumn.RowNumber && _visibleCalcColumns.Contains(c)).ToList();
         var headers = cols.Select(GetCalcColumnLabel).ToArray();
         var sections = new List<ReportExportSection>
         {
-            new("Kalkylurval:", [_calcReportSelectionLine, _calcReportSelectionFilters])
+            new("Kalkylurval:", [_calcReportSelectionLine, _calcReportSelectionFilters, ExportIncludeNote])
         };
-        var rows = _lockedCalcReportList
+        var rows = IncludedCalcReportList
             .Select(e => cols.Select(c => (object?)GetCalcCellValue(e, c)));
         return new(L("calculationListReport"), headers, rows, sections, null);
     }
 
     private ExportModel BuildProjExport()
     {
-        var cols = ProjAllColumns.Where(c => _visibleProjColumns.Contains(c)).ToList();
+        var cols = ProjAllColumns.Where(c => c != ProjReportColumn.RowNumber && _visibleProjColumns.Contains(c)).ToList();
         var headers = cols.Select(GetProjColumnLabel).ToArray();
         var sections = new List<ReportExportSection>
         {
-            new("Projekturval:", [_projReportSelectionLine, _projReportSelectionFilters])
+            new("Projekturval:", [_projReportSelectionLine, _projReportSelectionFilters, ExportIncludeNote])
         };
-        var rows = _lockedProjReportProjects
+        var rows = IncludedProjReportProjects
             .Select(e => cols.Select(c => (object?)GetProjCellValue(e, c)));
         return new(L("projectListReport"), headers, rows, sections, null);
     }
 
     private ExportModel BuildBidExport()
     {
-        var cols = BidVisibleColumns.ToList();
+        var cols = BidExportColumns.ToList();
         var headers = cols.Select(GetBidColumnLabel).ToArray();
-        var data = FilteredBidRows.ToList();
+        // Only rows kept via "Ta med" are exported.
+        var data = FilteredBidRows.Where(r => RowIncluded(BidRowKey(r))).ToList();
         var sections = new List<ReportExportSection>
         {
-            new("Projekturval:", [_bidReportSelectionLine, _bidReportSelectionFilters]),
+            new("Projekturval:", [_bidReportSelectionLine, _bidReportSelectionFilters, ExportIncludeNote]),
             new("Anbudsfilter:", [BuildBidReportFilterLine()])
         };
         var kpis = new List<ReportExportKpi>
@@ -2312,8 +2628,7 @@
             new("Projekt med anbud", BidProjectsWithBids.ToString()),
             new("Antal anbud", BidCount.ToString()),
             new("Antal anbudsgivare", BidderCount.ToString()),
-            new("Tilldelade anbud", AwardedCount.ToString()),
-            new("Genomsnittlig avvikelse %", AvgDeviationDisplay)
+            new("Tilldelade anbud", AwardedCount.ToString())
         };
         var exportRows = data.Select(r => cols.Select(c => (object?)GetBidCellValue(r, c)));
         return new("Anbudsjämförelse", headers, exportRows, sections, kpis);
@@ -2325,7 +2640,7 @@
         {
             $"Anbudsgivare: {(_selectedBidders.Count == 0 ? "Alla" : string.Join(", ", _selectedBidders))}"
         };
-        if (HasOwnCompany) parts.Add($"Eget företag: {_ownCompanyName}");
+        if (HasOwnCompany) parts.Add($"Jämför mot: {_ownCompanyName}");
         parts.Add($"Tilldelade: {_awardedFilter switch { "awarded" => "Endast tilldelade", "notawarded" => "Endast ej tilldelade", _ => "Alla" }}");
         parts.Add($"Visa förkastade: {(_showRejectedBids ? "Ja" : "Nej")}");
         return string.Join(" · ", parts);

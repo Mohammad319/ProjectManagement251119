@@ -53,11 +53,11 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
             if (!await CanManageAsync())
                 return;
 
-            List<ContextMenuItem> list = [];
+            List<MhdContextMenuItem> list = [];
 
             if (item.ParentCategoryId is null)
             {
-                list.Add(new ContextMenuItem
+                list.Add(new MhdContextMenuItem
                 {
                     Label = $"➕ {AppLoc[LocalizerConst.New, ResourceLoc.category]}",
                     OnClickAsync = () =>
@@ -68,7 +68,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
                 });
             }
 
-            list.Add(new ContextMenuItem
+            list.Add(new MhdContextMenuItem
             {
                 Label = $"✏️ {AppLoc[nameof(ResourceApp.update)]}",
                 OnClickAsync = () =>
@@ -78,7 +78,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
                 }
             });
 
-            list.Add(new ContextMenuItem
+            list.Add(new MhdContextMenuItem
             {
                 Label = $"🗑️ {AppLoc[nameof(ResourceApp.delete)]}",
                 OnClickAsync = () =>
@@ -100,7 +100,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
                 {
                     [nameof(CategoryFormUI.OrganisationCategory)] = model,
                     [nameof(CategoryFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, CallbackAsync)
-                }, BlazorMHD.UI.Core.Services.DialogSize.Large);
+                }, BlazorMHD.UI.Core.Services.MhdDialogSize.Large);
 
         private void Remove(ListOrganisationCategoryDTO category)
         {
@@ -135,7 +135,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
 
         private async Task CallbackAsync(bool isSuccess)
         {
-            MHD.Modal.Close();
+            await MHD.Modal.CloseAsync();
 
             if (isSuccess)
                 await LoadCategoriesAsync();

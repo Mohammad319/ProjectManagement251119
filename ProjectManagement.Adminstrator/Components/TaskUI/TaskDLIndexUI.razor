@@ -217,7 +217,7 @@
         @if (_loadingMore)
         {
             <div class="flex justify-center pt-3 pb-2">
-                <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
+                <MhdLoading />
             </div>
         }
         else if (_hasMore)
@@ -243,7 +243,7 @@ new Dictionary<string, object>
 {
     [nameof(TaskResourceUI.Task)] = row.GetTaskForAssignment(resourceId.AssignmentId),
     [nameof(TaskResourceUI.Resource)] = resourceId,
-}, DialogSize.ExtraLarge);
+}, MhdDialogSize.ExtraLarge);
     private List<ProjectTaskListItemDto>? tasks;
     private List<TaskDisplayRow> taskRows = [];
     private string? errorMessage;
@@ -396,7 +396,7 @@ new Dictionary<string, object>
         {
             [nameof(TaskDLFormUI.TaskId)] = id,
             [nameof(TaskDLFormUI.Saved)] = EventCallback.Factory.Create<bool>(this, ReloadAsync),
-        }, DialogSize.ExtraLarge);
+        }, MhdDialogSize.ExtraLarge);
     }
 
     private void OpenTaskFolders(int id, string name)
@@ -404,7 +404,7 @@ new Dictionary<string, object>
         MHD.Modal.ShowComponent<TaskFolders>(ResourceLoc.resource, new Dictionary<string, object>
         {
             [nameof(TaskFolders.TaskId)] = id
-        }, DialogSize.ExtraLarge);
+        }, MhdDialogSize.ExtraLarge);
     }
 
     private void ConfirmDelete(TaskDisplayRow row)

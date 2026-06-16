@@ -45,7 +45,7 @@ public partial class ResourceTypeUI
                 [nameof(ResourceTypeFormUI.ResourceType)] = model,
                 [nameof(ResourceTypeFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdateAsync)
             },
-            DialogSize.ExtraLarge,
+            MhdDialogSize.ExtraLarge,
             DialogButtonsHelper.CreateSaveCancelButtons(ResourceTypeFormUI.DialogFormId));
 
     private Task ToggleVisibleAsync()
@@ -94,7 +94,7 @@ public partial class ResourceTypeUI
             await LoadItemsAsync();
 
         Sort = null;
-        MHD.Modal.Close();
+        await MHD.Modal.CloseAsync();
         await InvokeAsync(StateHasChanged);
     }
 

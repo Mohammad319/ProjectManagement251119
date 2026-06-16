@@ -63,8 +63,11 @@ namespace Persistence.Service.Project
                 .ToListAsync(ct);
 
             var columnIds = columns.Select(c => c.Id).ToHashSet();
-            var pointColumnIds = columns.Where(c => c.PartType == BidPartType.Points).Select(c => c.Id).ToHashSet();
-            var hasPointColumns = pointColumnIds.Count > 0;
+
+            // Utvärderingsdelarnas tolkning styrs numera av modellen, inte av en typ
+            // per del: i poängmodellen är varje del poäng, annars är varje del pris.
+            var isPointsModel = evaluationModel == BidEvaluationModel.HighestPoints;
+            var hasColumns = columns.Count > 0;
 
             return new ProjectBidsViewDTO
             {
@@ -73,11 +76,17 @@ namespace Persistence.Service.Project
                 Bids = bids.Select(x =>
                 {
                     var prices = DeserializePrices(x.PricesJson, columnIds);
+                    // Summan av delarna härleds vid läsning så att den alltid stämmer
+                    // med aktuell modell (även efter att modellen bytts). Legacy-anbud
+                    // utan delvärden faller tillbaka på det sparade beloppet.
+                    var hasParts = hasColumns && prices.Count > 0;
+                    var partsSum = prices.Values.Sum();
+
                     return new ProjectBidListDTO
                     {
                         Id = x.Id,
                         BidderName = x.BidderName,
-                        Amount = x.Amount,
+                        Amount = isPointsModel ? null : (hasParts ? partsSum : x.Amount),
                         Prices = prices,
                         DeductionPercent = x.DeductionPercent,
                         Note = x.Note,
@@ -85,9 +94,7 @@ namespace Persistence.Service.Project
                         Placement = x.Placement,
                         Status = x.Status,
                         RejectionReason = x.RejectionReason,
-                        TotalPoints = hasPointColumns
-                            ? prices.Where(kv => pointColumnIds.Contains(kv.Key)).Sum(kv => kv.Value)
-                            : null,
+                        TotalPoints = isPointsModel ? (hasParts ? partsSum : x.Amount) : null,
                         SortOrder = x.SortOrder
                     };
                 }).ToList()
@@ -114,14 +121,15 @@ namespace Persistence.Service.Project
 
             var modelByProject = models.ToDictionary(x => x.Id, x => x.BidEvaluationModel);
 
-            // Poängdelar per projekt (en samlad query) – behövs för totalpoäng.
-            var pointColumns = await context.ProjectBidPriceColumns
-                .Where(x => ids.Contains(x.ProjectId) && x.PartType == BidPartType.Points &&
+            // Alla utvärderingsdelar per projekt (en samlad query). Modellen avgör hur
+            // delarna tolkas vid läsning, så vi behöver inte längre filtrera på typ.
+            var allColumns = await context.ProjectBidPriceColumns
+                .Where(x => ids.Contains(x.ProjectId) &&
                     (!departmentId.HasValue || x.Project.Folder.DepartmentId == departmentId.Value))
                 .Select(x => new { x.ProjectId, x.Id })
                 .ToListAsync(ct);
 
-            var pointColumnsByProject = pointColumns
+            var columnsByProject = allColumns
                 .GroupBy(x => x.ProjectId)
                 .ToDictionary(g => g.Key, g => g.Select(x => x.Id).ToHashSet());
 
@@ -154,25 +162,27 @@ namespace Persistence.Service.Project
 
             return bids.Select(x =>
             {
-                var pointIds = pointColumnsByProject.TryGetValue(x.ProjectId, out var p) ? p : null;
-                decimal? totalPoints = null;
-                if (pointIds is { Count: > 0 })
-                {
-                    var prices = DeserializePrices(x.PricesJson, columnIds: null);
-                    totalPoints = prices.Where(kv => pointIds.Contains(kv.Key)).Sum(kv => kv.Value);
-                }
+                var model = modelByProject.TryGetValue(x.ProjectId, out var m) ? m : BidEvaluationModel.LowestComparison;
+                var isPointsModel = model == BidEvaluationModel.HighestPoints;
+                var columnIds = columnsByProject.TryGetValue(x.ProjectId, out var c) ? c : null;
+                var prices = DeserializePrices(x.PricesJson, columnIds);
+                var hasParts = columnIds is { Count: > 0 } && prices.Count > 0;
+                var partsSum = prices.Values.Sum();
 
-                var comparison = x.Amount.HasValue
-                    ? x.Amount.Value - x.Amount.Value * (x.DeductionPercent ?? 0) / 100m
+                decimal? totalPoints = isPointsModel ? (hasParts ? partsSum : x.Amount) : null;
+                decimal? amount = isPointsModel ? null : (hasParts ? partsSum : x.Amount);
+
+                var comparison = amount.HasValue
+                    ? amount.Value - amount.Value * (x.DeductionPercent ?? 0) / 100m
                     : (decimal?)null;
 
                 return new ProjectBidComparisonRowDTO
                 {
                     ProjectId = x.ProjectId,
-                    EvaluationModel = modelByProject.TryGetValue(x.ProjectId, out var m) ? m : BidEvaluationModel.LowestComparison,
+                    EvaluationModel = model,
                     BidId = x.Id,
                     BidderName = x.BidderName,
-                    Amount = x.Amount,
+                    Amount = amount,
                     DeductionPercent = x.DeductionPercent,
                     ComparisonAmount = comparison,
                     TotalPoints = totalPoints,
@@ -363,7 +373,8 @@ namespace Persistence.Service.Project
                 return false;
 
             column.Rename(name);
-            column.SetPartType(dto.PartType);
+            // Typfältet styrs inte längre från UI – modellen avgör tolkningen. Det
+            // sparade värdet lämnas orört för bakåtkompatibilitet.
             await context.SaveChangesAsync(ct);
             return true;
         }
@@ -380,20 +391,26 @@ namespace Persistence.Service.Project
             if (column is null)
                 return false;
 
-            // Which columns are price parts after this one is removed, so we can
-            // recompute each bid's Anbudssumma without the deleted part.
-            var priceColumnIds = await context.ProjectBidPriceColumns
-                .Where(x => x.ProjectId == projectId && x.Id != id && x.PartType == BidPartType.Price)
+            // Anbudssumma härleds bara i prismodellen; i poängmodellen finns ingen
+            // prissumma och beloppet lämnas orört.
+            var model = await context.Projects
+                .Where(x => x.Id == projectId)
+                .Select(x => x.BidEvaluationModel)
+                .FirstOrDefaultAsync(ct);
+            var isPriceModel = model == BidEvaluationModel.LowestComparison;
+
+            // Remaining columns after this one is removed, so we can recompute each
+            // bid's Anbudssumma without the deleted part.
+            var remainingColumnIds = (await context.ProjectBidPriceColumns
+                .Where(x => x.ProjectId == projectId && x.Id != id)
                 .Select(x => x.Id)
-                .ToListAsync(ct);
+                .ToListAsync(ct)).ToHashSet();
 
             // Strip this column's values from all bids and recompute their totals
             // so no stale amounts survive the deletion.
             var bidsWithPrices = await context.ProjectBids
                 .Where(x => x.ProjectId == projectId && x.PricesJson != null)
                 .ToListAsync(ct);
-
-            var priceColumnSet = priceColumnIds.ToHashSet();
 
             foreach (var bid in bidsWithPrices)
             {
@@ -402,9 +419,11 @@ namespace Persistence.Service.Project
                     continue;
 
                 if (prices.Count == 0)
-                    bid.SetPrices(null, null);
+                    bid.SetPrices(null, isPriceModel ? null : bid.Amount);
                 else
-                    bid.SetPrices(JsonSerializer.Serialize(prices), SumPriceParts(prices, priceColumnSet));
+                    bid.SetPrices(
+                        JsonSerializer.Serialize(prices),
+                        isPriceModel ? SumPriceParts(prices, remainingColumnIds) : bid.Amount);
             }
 
             context.ProjectBidPriceColumns.Remove(column);
@@ -500,9 +519,11 @@ namespace Persistence.Service.Project
 
         /// <summary>
         /// When the project has evaluation parts and the client sent part values,
-        /// the total (Anbudssumma) is the sum of the <b>price</b> parts only — point
-        /// parts are stored alongside but don't affect the bid sum. Otherwise the legacy
-        /// single amount is kept so existing bids keep working unchanged.
+        /// the interpretation follows the project's evaluation model: in the price
+        /// model (Lägst jämförelsesumma) every part is a price and Anbudssumma is their
+        /// sum; in the points model (Högst totalpoäng) the parts are points and form no
+        /// price sum (Amount stays null). Without parts the legacy single amount is kept
+        /// so existing bids keep working unchanged.
         /// </summary>
         private static async Task<(string? PricesJson, decimal? Amount)> ResolvePricesAsync(
             Context.ShardingSingleDbContext context,
@@ -513,13 +534,10 @@ namespace Persistence.Service.Project
             if (dto.Prices is null || dto.Prices.Count == 0)
                 return (null, dto.Amount);
 
-            var columns = await context.ProjectBidPriceColumns
+            var columnIds = (await context.ProjectBidPriceColumns
                 .Where(x => x.ProjectId == projectId)
-                .Select(x => new { x.Id, x.PartType })
-                .ToListAsync(ct);
-
-            var columnIds = columns.Select(c => c.Id).ToHashSet();
-            var priceColumnIds = columns.Where(c => c.PartType == BidPartType.Price).Select(c => c.Id).ToHashSet();
+                .Select(x => x.Id)
+                .ToListAsync(ct)).ToHashSet();
 
             var valid = dto.Prices
                 .Where(kv => columnIds.Contains(kv.Key))
@@ -528,9 +546,16 @@ namespace Persistence.Service.Project
             if (valid.Count == 0)
                 return (null, dto.Amount);
 
-            // Anbudssumma is the sum of the price parts. If the project only has
-            // point parts there is no price sum, so fall back to any sent Amount.
-            var amount = priceColumnIds.Count > 0 ? SumPriceParts(valid, priceColumnIds) : dto.Amount;
+            var model = await context.Projects
+                .Where(x => x.Id == projectId)
+                .Select(x => x.BidEvaluationModel)
+                .FirstOrDefaultAsync(ct);
+
+            // Price model: Anbudssumma = summan av alla delar. Points model: ingen
+            // prissumma – behåll ev. sänt belopp (null när delar finns).
+            var amount = model == BidEvaluationModel.LowestComparison
+                ? valid.Values.Sum()
+                : dto.Amount;
             return (JsonSerializer.Serialize(valid), amount);
         }
 

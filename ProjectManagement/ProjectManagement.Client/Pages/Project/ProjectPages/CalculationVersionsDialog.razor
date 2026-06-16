@@ -106,7 +106,7 @@
 
     private async Task OpenVersionAsync(ListCalculationMVVM version)
     {
-        Modal.Close();
+        await Modal.CloseAsync();
         await CalcService.SetCalc(version.Id);
     }
 

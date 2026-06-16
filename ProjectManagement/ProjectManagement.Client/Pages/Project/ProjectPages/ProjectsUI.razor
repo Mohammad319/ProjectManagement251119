@@ -519,15 +519,20 @@
             <table id="resizeMe" class="w-max min-w-full table-auto text-left text-xs">
                 <thead class="sticky top-0 z-50 bg-slate-50 text-[11px] font-semibold text-slate-500 dark:bg-slate-900 dark:text-slate-400">
                     <tr>
+                        @* Radnummer — visuell hjälpkolumn (ej sorterbar/filterbar/sökbar) *@
+                        @if (IsProjectColumnVisible("rowNumber"))
+                        {
+                            <th id="hrowNumber" data-pm-frozen="true" class="sticky left-0 z-[60] w-12 select-none whitespace-nowrap bg-slate-50 px-2 py-2 text-right font-semibold text-slate-400 dark:bg-slate-900 dark:text-slate-500" style="min-width:44px;" title="Radnummer i aktuell vy">#</th>
+                        }
                         @if (IsProjectColumnVisible("code"))
                         {
-                            <th id="hcode" data-pm-frozen="true" class="@SortableHeaderClass("code") sticky left-0 z-[60] w-28 bg-slate-50 dark:bg-slate-900" style="min-width:70px;" @onclick='() => SortBy("code")'>
+                            <th id="hcode" data-pm-frozen="true" class="@SortableHeaderClass("code") sticky @CodeStickyLeftClass z-[60] w-28 bg-slate-50 dark:bg-slate-900" style="min-width:70px;" @onclick='() => SortBy("code")'>
                                 <span class="inline-flex items-center gap-1">@CalcResource.code @((MarkupString)SortIndicatorHtml("code")) <TableColumnFilter FilterState='PF("code")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
                         @if (IsProjectColumnVisible("name"))
                         {
-                            <th id="hname" data-pm-frozen="true" class="@SortableHeaderClass("name") sticky left-28 z-[59] min-w-52 border-r border-slate-300 bg-slate-50 dark:border-slate-600 dark:bg-slate-900" style="min-width:160px;" @onclick='() => SortBy("name")'>
+                            <th id="hname" data-pm-frozen="true" class="@SortableHeaderClass("name") sticky @NameStickyLeftClass z-[59] min-w-52 border-r border-slate-300 bg-slate-50 dark:border-slate-600 dark:bg-slate-900" style="min-width:160px;" @onclick='() => SortBy("name")'>
                                 <span class="inline-flex items-center gap-1">@AppLoc["projectName"] @((MarkupString)SortIndicatorHtml("name")) <TableColumnFilter FilterState='PF("name")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
@@ -715,11 +720,13 @@
                             </td>
                         </tr>
                     }
+                    @{ var _projectRowNo = FirstProjectIndex; }
                     @foreach (var project in PagedProjects)
                     {
                         var isProjectArchived = project.IsArchived;
                         var isProjectSelected = Folder.State.ProjectSelected?.Id == project.Id;
                         var rowClasses = GetProjectRowClass(project, isProjectSelected, isProjectArchived);
+                        var rowNumber = _projectRowNo++;
 
                         <tr @key="project.Id"
                             class="@rowClasses"
@@ -733,15 +740,21 @@
                             @ondragstart="() => draggingProject = project"
                             @ondragend="() => draggingProject = null"
                             draggable="true">
+                            @if (IsProjectColumnVisible("rowNumber"))
+                            {
+                                <td class="sticky left-0 z-[2] w-12 whitespace-nowrap bg-white px-2 py-2 text-right font-mono text-[11px] text-slate-400 group-hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-500 dark:group-hover:bg-slate-900/80 @(isProjectSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
+                                    @rowNumber
+                                </td>
+                            }
                             @if (IsProjectColumnVisible("code"))
                             {
-                                <td class="sticky left-0 z-[2] w-28 whitespace-nowrap bg-white px-3 py-2 font-mono text-[11px] text-slate-500 group-hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-400 dark:group-hover:bg-slate-900/80 @(isProjectSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
+                                <td class="sticky @CodeStickyLeftClass z-[2] w-28 whitespace-nowrap bg-white px-3 py-2 font-mono text-[11px] text-slate-500 group-hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-400 dark:group-hover:bg-slate-900/80 @(isProjectSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
                                     @(string.IsNullOrWhiteSpace(project.Code) ? "-" : project.Code)
                                 </td>
                             }
                             @if (IsProjectColumnVisible("name"))
                             {
-                                <td class="sticky left-28 z-[2] max-w-80 border-r border-slate-200 bg-white px-3 py-2 group-hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:group-hover:bg-slate-900/80 @(isProjectSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
+                                <td class="sticky @NameStickyLeftClass z-[2] max-w-80 border-r border-slate-200 bg-white px-3 py-2 group-hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:group-hover:bg-slate-900/80 @(isProjectSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
                                     <span class="block truncate font-semibold text-slate-800 dark:text-slate-100" title="@project.Name">@project.Name</span>
                                 </td>
                             }
@@ -1588,6 +1601,7 @@
     private static readonly IReadOnlyDictionary<string, bool> DefaultProjectColumns =
         new Dictionary<string, bool>
         {
+            ["rowNumber"]         = true,
             ["code"]              = true,
             ["name"]              = true,
             ["procurementNumber"] = false,
@@ -1620,6 +1634,7 @@
 
     private List<MhdColumnPickerItem> ProjectColumnOptions => new()
     {
+        new("rowNumber",         "Radnummer"),
         new("code",              CalcResource.code),
         new("name",              AppLoc["projectName"].Value),
         new("procurementNumber", AppLoc["procurementNumber"].Value),
@@ -1715,6 +1730,11 @@
     private bool IsProjectColumnVisible(string key) =>
         _projectColumns.TryGetValue(key, out var visible) && visible;
 
+    // The radnummer column (when shown) is the first frozen column at left-0 (w-12).
+    // Shift the following frozen columns (code, name) right so they don't overlap it.
+    private string CodeStickyLeftClass => IsProjectColumnVisible("rowNumber") ? "left-12" : "left-0";
+    private string NameStickyLeftClass => IsProjectColumnVisible("rowNumber") ? "left-40" : "left-28";
+
     private int VisibleProjectColumnCount =>
         Math.Max(1, _projectColumns.Count(c => c.Value));
 
@@ -1770,7 +1790,7 @@
     async Task Context(ListProjectMVVM item)
     {
         if (Folder.State.OtherDepartment) return;
-        var list = new List<ContextMenuItem>();
+        var list = new List<MhdContextMenuItem>();
 
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
@@ -1815,13 +1835,13 @@
 
     void OpenProjectBidsDialog(ListProjectMVVM project) =>
         Modal.ShowComponent<ProjectBidsDialog>(
-            ResourceLoc.tender,
+            "Anbudsutvärdering",
             new Dictionary<string, object>
             {
                 [nameof(ProjectBidsDialog.ProjectId)]   = project.Id,
                 [nameof(ProjectBidsDialog.ProjectName)] = project.Name
             },
-            BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
+            BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
 
     void OpenMoveCopyDialog(ListProjectMVVM project, string operation) =>
         Modal.ShowComponent<MoveCopyDialog>(
@@ -1834,7 +1854,7 @@
                 [nameof(MoveCopyDialog.SourceProject)] = project,
                 [nameof(MoveCopyDialog.OnCompleted)]   = EventCallback.Factory.Create(this, ReloadAfterMoveCopyAsync)
             },
-            BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
+            BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
 
     async Task ReloadAfterMoveCopyAsync()
     {
@@ -1880,7 +1900,7 @@
         Modal.ShowComponent<CentralReportsDialog>(
             AppLoc["reports"].Value,
             parameters,
-            BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
+            BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
     }
 
     private string GetProjectFilterLabel(string key, ColumnFilterState state)
@@ -1944,7 +1964,10 @@
 
     private async Task ExportProjectListAsync(bool pdfMode, bool printOnly)
     {
-        var columns = ProjectColumnOptions.Where(column => IsProjectColumnVisible(column.Key)).ToList();
+        // Radnummer är en visuell hjälpkolumn och tas inte med i export/utskrift.
+        var columns = ProjectColumnOptions
+            .Where(column => column.Key != "rowNumber" && IsProjectColumnVisible(column.Key))
+            .ToList();
         var rows = SortedProjects.Select(project => columns.Select(column => GetProjectExportValue(project, column.Key)));
         var title = AppLoc["projectListTitleFormat", Folder.State.FolderSelected?.Name ?? "-"].Value;
 
@@ -1999,7 +2022,7 @@
                 [nameof(ProjectForm.FolderId)]  = Folder.State.FolderSelected!.Id,
                 [nameof(ProjectForm.Callback)]  = EventCallback.Factory.Create<Tuple<bool, ListProjectMVVM>>(this, AddProjectAsync)
             },
-            BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge,
+            BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge,
             DialogButtonsHelper.CreateSaveCancelButtons(ProjectForm.DialogFormId));
     }
 
@@ -2022,14 +2045,14 @@
                         .OrderByDescending(x => x.Order)
                         .ToList();
         }
-        Modal.Close();
+        await Modal.CloseAsync();
     }
 
     void AddProjectAsync(Tuple<bool, ListProjectMVVM> callBack)
     {
         if (callBack == null)
         {
-            Modal.Close();
+            Modal.CloseAsync();
             return;
         }
 
@@ -2062,7 +2085,7 @@
                 .ToList();
 
         UoWService.Folder.State.Notify();
-        Modal.Close();
+        Modal.CloseAsync();
     }
 
     void Remove(ListProjectMVVM project) =>

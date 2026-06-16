@@ -188,7 +188,7 @@
     <div class="flex justify-end gap-2">
         <button type="button"
                 class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-                @onclick="Modal.Close">
+                @onclick="Modal.CloseAsync">
             @ResourceApp.cancel
         </button>
         <button type="button"
@@ -371,7 +371,7 @@
             if (result)
             {
                 await OnCompleted.InvokeAsync();
-                Modal.Close();
+                await Modal.CloseAsync();
             }
             else if (string.IsNullOrWhiteSpace(_message))
             {

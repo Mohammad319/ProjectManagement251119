@@ -40,7 +40,7 @@ public partial class AccountsFormUI
         LastModelReference = Model;
     }
 
-    private void CloseModal() => DialogService.Close();
+    private void CloseModal() => DialogService.CloseAsync();
 
     private async Task HandleSubmitAsync()
     {

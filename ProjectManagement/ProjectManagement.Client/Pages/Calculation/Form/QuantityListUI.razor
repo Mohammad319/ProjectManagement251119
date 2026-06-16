@@ -79,7 +79,7 @@
         try
         {
             await Repo.Calculation.UpdateAsync(Calc.QuanityList, Calc.Id);
-            Modal.Close();
+            await Modal.CloseAsync();
         }
         finally
         {

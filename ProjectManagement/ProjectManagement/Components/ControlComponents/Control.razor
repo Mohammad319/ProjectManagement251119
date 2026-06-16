@@ -27,7 +27,7 @@
 @code {
     [Parameter] public string? ActiveKey { get; set; }
 
-    private List<TabItem> Tabs { get; set; } = [];
+    private List<MhdTabItem> Tabs { get; set; } = [];
     private bool collapsed;
 
     protected override async Task OnInitializedAsync()
@@ -65,7 +65,7 @@
 
     private void AddTab(string key, string text, string icon, RenderFragment content)
     {
-        Tabs.Add(new TabItem
+        Tabs.Add(new MhdTabItem
         {
             Key = key,
             Text = text,

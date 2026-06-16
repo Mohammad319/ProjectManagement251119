@@ -154,7 +154,7 @@
 
         if (!(user.Identity?.IsAuthenticated == true && isInAnyRole)) return;
 
-        var list = new List<ContextMenuItem>()
+        var list = new List<MhdContextMenuItem>()
         {
             new() {
                 Label = ResourceApp.edit,
@@ -187,7 +187,7 @@
             {
                 [nameof(OpportunityFormUI.Opportunity)] = model,
             },
-            DialogSize.ExtraLarge,
+            MhdDialogSize.ExtraLarge,
             DialogButtonsHelper.CreateSaveCancelButtons(OpportunityFormUI.DialogFormId));
     }
 

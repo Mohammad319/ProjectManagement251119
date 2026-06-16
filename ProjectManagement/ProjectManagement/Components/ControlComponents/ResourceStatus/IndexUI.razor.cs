@@ -90,7 +90,7 @@ public partial class IndexUI
 
     private async Task CallbackAsync(bool isSuccess)
     {
-        MHD.Modal.Close();
+        await MHD.Modal.CloseAsync();
 
         if (isSuccess)
             await LoadStatusesAsync();

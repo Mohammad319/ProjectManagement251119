@@ -81,7 +81,7 @@ namespace ProjectManagement.Client.Pages.Folder
 
         private async Task ContextHelaAvdelning()
         {
-            var list = new List<ContextMenuItem>();
+            var list = new List<MhdContextMenuItem>();
 
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             var user = authState.User;
@@ -1334,7 +1334,7 @@ namespace ProjectManagement.Client.Pages.Folder
                     [nameof(FolderFormUI.OnClickCallback)] =
                         EventCallback.Factory.Create(this, (FolderModel f) => UoWService.Folder.AddOrUpdateFolder(f))
                 },
-                BlazorMHD.UI.Core.Services.DialogSize.Large,
+                BlazorMHD.UI.Core.Services.MhdDialogSize.Large,
                 DialogButtonsHelper.CreateSaveCancelButtons(FolderFormUI.DialogFormId)
             );
 
@@ -1345,7 +1345,7 @@ namespace ProjectManagement.Client.Pages.Folder
                 new Dictionary<string, object>
                 {
                     [nameof(DetailsUI.Id)] = model.Id,
-                    [nameof(DetailsUI.CallBack)] = EventCallback.Factory.Create(this, Modal.Close)
+                    [nameof(DetailsUI.CallBack)] = EventCallback.Factory.Create(this, Modal.CloseAsync)
                 });
 
         private void UpdateForm(FolderMVVM folder) =>
@@ -1359,7 +1359,7 @@ namespace ProjectManagement.Client.Pages.Folder
 
         private async Task Context(FolderMVVM item)
         {
-            List<ContextMenuItem> list = [];
+            List<MhdContextMenuItem> list = [];
 
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             var user = authState.User;
@@ -1387,7 +1387,7 @@ namespace ProjectManagement.Client.Pages.Folder
 
         private async Task ContextProject(FolderMVVM folder, ListProjectMVVM project)
         {
-            List<ContextMenuItem> list = [];
+            List<MhdContextMenuItem> list = [];
 
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             var user = authState.User;
@@ -1416,7 +1416,7 @@ namespace ProjectManagement.Client.Pages.Folder
 
         private async Task ContextCalc(FolderMVVM folder, ListProjectMVVM project, ListCalculationMVVM cal)
         {
-            List<ContextMenuItem> list = [];
+            List<MhdContextMenuItem> list = [];
 
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             var user = authState.User;
@@ -1527,7 +1527,7 @@ namespace ProjectManagement.Client.Pages.Folder
                     [nameof(ProjectForm.Callback)] = EventCallback.Factory.Create<Tuple<bool, ListProjectMVVM>>(this,
                         async t => await OnProjectEditedFromTreeAsync(folder, t))
                 },
-                BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge,
+                BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge,
                 DialogButtonsHelper.CreateSaveCancelButtons(ProjectForm.DialogFormId));
         }
 
@@ -1553,10 +1553,10 @@ namespace ProjectManagement.Client.Pages.Folder
                                 project.ShowCalculations = ProjectHasChildren(project);
                                 UoWService.Folder.State.Notify();
                             }
-                            Modal.Close();
+                            await Modal.CloseAsync();
                         })
                 },
-                BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge,
+                BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge,
                 DialogButtonsHelper.CreateSaveCancelButtons(CalculationFormUI.DialogFormId));
         }
 
@@ -1571,18 +1571,18 @@ namespace ProjectManagement.Client.Pages.Folder
                     [nameof(ProjectForm.Callback)] = EventCallback.Factory.Create<Tuple<bool, ListProjectMVVM>>(this,
                         async t => await OnProjectEditedFromTreeAsync(folder, t))
                 },
-                BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge,
+                BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge,
                 DialogButtonsHelper.CreateSaveCancelButtons(ProjectForm.DialogFormId));
         }
 
         private async Task OnProjectEditedFromTreeAsync(FolderMVVM folder, Tuple<bool, ListProjectMVVM>? result)
         {
-            if (result is null) { Modal.Close(); return; }
+            if (result is null) { await Modal.CloseAsync(); return; }
             folder.Projects = await Repo.Project.GetByFolderIdAsync(folder.Id, UoWService.Folder.ShowArchived);
             if (folder.Projects != null)
                 folder.Projects = folder.Projects.OrderByDescending(x => x.Order).ToList();
             UoWService.Folder.State.Notify();
-            Modal.Close();
+            await Modal.CloseAsync();
         }
 
         private void EditCalculationFromTree(ListProjectMVVM project, ListCalculationMVVM cal)
@@ -1602,10 +1602,10 @@ namespace ProjectManagement.Client.Pages.Folder
                                 cal.Status = updated.Status;
                                 UoWService.Folder.State.Notify();
                             }
-                            Modal.Close();
+                            await Modal.CloseAsync();
                         })
                 },
-                BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge,
+                BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge,
                 DialogButtonsHelper.CreateSaveCancelButtons(CalculationFormUI.DialogFormId));
         }
 
@@ -1617,7 +1617,7 @@ namespace ProjectManagement.Client.Pages.Folder
                     [nameof(ProjectBidsDialog.ProjectId)] = project.Id,
                     [nameof(ProjectBidsDialog.ProjectName)] = project.Name
                 },
-                BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
+                BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
 
         private void OpenMoveCopyProjectDialog(FolderMVVM folder, ListProjectMVVM project, string operation) =>
             Modal.ShowComponent<MoveCopyDialog>(
@@ -1630,7 +1630,7 @@ namespace ProjectManagement.Client.Pages.Folder
                     [nameof(MoveCopyDialog.SourceProject)] = project,
                     [nameof(MoveCopyDialog.OnCompleted)] = EventCallback.Factory.Create(this, RefreshAfterMoveCopyAsync)
                 },
-                BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
+                BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
 
         private void OpenMoveCopyCalcDialog(FolderMVVM folder, ListProjectMVVM project, ListCalculationMVVM cal, string operation) =>
             Modal.ShowComponent<MoveCopyDialog>(
@@ -1644,7 +1644,7 @@ namespace ProjectManagement.Client.Pages.Folder
                     [nameof(MoveCopyDialog.SourceCalculation)] = cal,
                     [nameof(MoveCopyDialog.OnCompleted)] = EventCallback.Factory.Create(this, RefreshAfterMoveCopyAsync)
                 },
-                BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
+                BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
 
         private void OpenMoveCopyDialog(string itemKind, string operation, FolderMVVM folder) =>
             Modal.ShowComponent<MoveCopyDialog>(
@@ -1656,7 +1656,7 @@ namespace ProjectManagement.Client.Pages.Folder
                     [nameof(MoveCopyDialog.SourceFolder)] = folder,
                     [nameof(MoveCopyDialog.OnCompleted)] = EventCallback.Factory.Create(this, RefreshAfterMoveCopyAsync)
                 },
-                BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
+                BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
 
         private async Task RefreshAfterMoveCopyAsync()
         {

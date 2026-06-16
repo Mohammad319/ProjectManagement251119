@@ -403,10 +403,10 @@
             await ResourceService.CreateAsync(model);
 
         await CallBack.InvokeAsync(true);
-        MHD.Modal.Close();
+        await MHD.Modal.CloseAsync();
     }
 
-    void GoBack() => MHD.Modal.Close();
+    void GoBack() => MHD.Modal.CloseAsync();
 
     void RefreshCalcAsync(bool refre)
     {

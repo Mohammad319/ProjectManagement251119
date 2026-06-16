@@ -44,7 +44,7 @@ public partial class Index
         WithoutDepartmentOnly = false;
         Mode = ViewMode.List;
 
-        MHD.Modal.Close();
+        MHD.Modal.CloseAsync();
         _ = InvokeAsync(StateHasChanged);
     }
 
@@ -59,7 +59,7 @@ public partial class Index
                 [nameof(UpdateUserUI.UserForm)] = user,
                 [nameof(UpdateUserUI.Callback)] = EventCallback.Factory.Create<bool>(this, OnModalResultAsync),
             },
-            DialogSize.ExtraLarge,
+            MhdDialogSize.ExtraLarge,
             DialogButtonsHelper.CreateSaveCancelButtons(UpdateUserUI.DialogFormId));
     }
 
@@ -84,7 +84,7 @@ public partial class Index
                 [nameof(CreateDepartment.DepartmentList)] = department,
                 [nameof(CreateDepartment.OnClickCallback)] = EventCallback.Factory.Create<bool>(this, OnModalResultAsync),
             },
-            DialogSize.ExtraLarge);
+            MhdDialogSize.ExtraLarge);
     }
 
     private void OpenAllUsers()

@@ -59,7 +59,7 @@ public partial class ProjectStatusFormUI
         }
     }
 
-    private void CloseModal() => MHD.Modal.Close();
+    private void CloseModal() => MHD.Modal.CloseAsync();
 
     private async Task HandleSubmitAsync()
     {

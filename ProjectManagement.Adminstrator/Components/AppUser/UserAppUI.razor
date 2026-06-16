@@ -31,7 +31,7 @@
     @if (Users is null)
     {
         <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
-            <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
+            <MhdLoading />
         </div>
     }
     else if (Users.Count > 0)
@@ -106,8 +106,8 @@
 
         await ContextService.ShowMenuAsync(new()
         {
-            new ContextMenuItem { Label = $"✏️ {ResourceApp.update}", OnClickAsync = () => { UpdateUser(item); return Task.CompletedTask; } },
-            new ContextMenuItem { Label = $"🗑️ {ResourceApp.delete}", OnClickAsync = () => { Delete_Click(item); return Task.CompletedTask; } }
+            new MhdContextMenuItem { Label = $"✏️ {ResourceApp.update}", OnClickAsync = () => { UpdateUser(item); return Task.CompletedTask; } },
+            new MhdContextMenuItem { Label = $"🗑️ {ResourceApp.delete}", OnClickAsync = () => { Delete_Click(item); return Task.CompletedTask; } }
         });
     }
 
@@ -128,7 +128,7 @@
     async Task CallBack(bool refresh)
     {
         if (refresh) await GetUsersAsync();
-        Modal.Close();
+        await Modal.CloseAsync();
     }
 
     private async Task RemoveAsync(ApplicationUser deleteConfirmed)

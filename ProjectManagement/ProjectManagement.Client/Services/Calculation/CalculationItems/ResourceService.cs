@@ -434,7 +434,7 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
 
             interactionState.ResetSelection();
             await calculationService.RefreshAfterStructuralMutationAsync();
-            dialogService.Close();
+            await dialogService.CloseAsync();
         }
 
         public void Dispose() { }

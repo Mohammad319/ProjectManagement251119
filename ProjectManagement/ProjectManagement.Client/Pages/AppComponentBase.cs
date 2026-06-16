@@ -19,9 +19,10 @@ namespace ProjectManagement.Client.Pages
         [Inject] protected IStringLocalizer<CalcResource> CalcLoc { get; set; } = default!;
 
         // 🟩 Common Services
-        [Inject] protected DialogService Modal { get; set; } = default!;
         [Inject] protected IClientLogger ClientLog { get; set; } = default!;
         protected MhdServices MHD => UoWService.Mhd;
+        // Single source for the dialog service (same scoped instance the facade uses).
+        protected DialogService Modal => MHD.Modal;
         protected CalculationMVVM Calc => Folder?.State?.Calculation ?? default!;
         protected TemplateMVVM Template => Folder?.State?.Calculation?.Template?? default!;
         // 🟩 Repository

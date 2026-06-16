@@ -90,6 +90,6 @@
             _ = ClientLog.ErrorAsync("OpportunityForm submit failed", ex: ex);
         }
         IsLoading = false;
-        Modal.Close();
+        await Modal.CloseAsync();
     }
 }

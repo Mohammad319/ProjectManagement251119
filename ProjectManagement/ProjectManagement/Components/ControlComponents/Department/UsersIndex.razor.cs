@@ -162,13 +162,13 @@ public partial class UsersIndex
                 [nameof(UpdateUserUI.DepartmentId)] = DepartmentId ?? 0,
                 [nameof(UpdateUserUI.Callback)] = EventCallback.Factory.Create<bool>(this, OnEditUserResultAsync)
             },
-            DialogSize.ExtraLarge,
+            MhdDialogSize.ExtraLarge,
             DialogButtonsHelper.CreateSaveCancelButtons(UpdateUserUI.DialogFormId));
     }
 
     private async Task OnEditUserResultAsync(bool isSuccess)
     {
-        MHD.Modal.Close();
+        await MHD.Modal.CloseAsync();
 
         if (isSuccess)
             await LoadAsync();

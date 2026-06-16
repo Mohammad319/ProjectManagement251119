@@ -26,7 +26,7 @@
     </NotFound>
 </Router>
 
-@* ContextMenu is now hosted inside <BlazorMHD.UI.MHD/> below (both rendermodes) *@
+@* ContextMenu is now hosted inside <MhdUiHost/> below (both rendermodes) *@
 @* <MhdDialog @rendermode="InteractiveServer" />
 <MhdDialog @rendermode="InteractiveWebAssembly" />
 
@@ -35,9 +35,9 @@
 <MhdMessageBox @rendermode="InteractiveWebAssembly" />
 <MhdToastContainer @rendermode="InteractiveWebAssembly" />
 
-<BlazorMHD.UI.Components.Feedback.Loading.MhdLoadingOverlay @rendermode="InteractiveServer"></BlazorMHD.UI.Components.Feedback.Loading.MhdLoadingOverlay>
-<BlazorMHD.UI.Components.Feedback.Loading.MhdLoadingOverlay @rendermode="InteractiveWebAssembly"></BlazorMHD.UI.Components.Feedback.Loading.MhdLoadingOverlay>
+<MhdLoadingOverlay @rendermode="InteractiveServer"></MhdLoadingOverlay>
+<MhdLoadingOverlay @rendermode="InteractiveWebAssembly"></MhdLoadingOverlay>
  *@
 
-<BlazorMHD.UI.MHD @rendermode="InteractiveServer" />
-<BlazorMHD.UI.MHD @rendermode="InteractiveWebAssembly" />
+<MhdUiHost @rendermode="InteractiveServer" />
+<MhdUiHost @rendermode="InteractiveWebAssembly" />

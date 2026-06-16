@@ -21,9 +21,9 @@ namespace ProjectManagement.Adminstrator.DependencyInjection
             services.AddHostedService<TenantMlAutoTrainingHostedService>();
             services.AddScoped<ILoggerPM, Logger>();
             services.AddScoped<ITasksUserComputationServiceWasm, TasksUserComputationServiceWasm>();
-            services.AddBlazorMhdUI();
+            services.AddBlazorMhdUI(o => o.DefaultToastSeconds = 6);
             services.AddAuthorizationCore();
-            // ContextMenuService is registered (scoped) by AddBlazorMhdUI() — merged from ContextMenuMHD
+            // ContextMenuService is registered (scoped) by AddBlazorMhdUI(o => o.DefaultToastSeconds = 6) — merged from ContextMenuMHD
             services.AddLocalization();
             services.AddHttpContextAccessor();
             services.AddScoped<LocalizedIdentityEmailSender>();

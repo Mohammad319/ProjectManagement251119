@@ -50,13 +50,16 @@
                 @CalcLoc[nameof(CalcResource.matchType)]
             </label>
             <select @bind="MatchOperator"
+                    title="@MatchOperatorHelp"
                     class="h-8 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20">
-                <option value="%var%">@CalcLoc[nameof(CalcResource.matchContains)]</option>
-                <option value="==">@CalcLoc[nameof(CalcResource.matchEquals)]</option>
-                <option value="var%">@CalcLoc[nameof(CalcResource.matchStartsWith)]</option>
-                <option value="%var">@CalcLoc[nameof(CalcResource.matchEndsWith)]</option>
-                <option value="~">@CalcLoc[nameof(CalcResource.matchSimilar)]</option>
+                <option value="smart" title="@CalcLoc[nameof(CalcResource.matchSmartTip)]">@CalcLoc[nameof(CalcResource.matchSmart)]</option>
+                <option value="%var%" title="@CalcLoc[nameof(CalcResource.matchContainsTip)]">@CalcLoc[nameof(CalcResource.matchContains)]</option>
+                <option value="==" title="@CalcLoc[nameof(CalcResource.matchEqualsTip)]">@CalcLoc[nameof(CalcResource.matchEquals)]</option>
+                <option value="var%" title="@CalcLoc[nameof(CalcResource.matchStartsWithTip)]">@CalcLoc[nameof(CalcResource.matchStartsWith)]</option>
+                <option value="%var" title="@CalcLoc[nameof(CalcResource.matchEndsWithTip)]">@CalcLoc[nameof(CalcResource.matchEndsWith)]</option>
+                <option value="~" title="@CalcLoc[nameof(CalcResource.matchSimilarTip)]">@CalcLoc[nameof(CalcResource.matchSimilar)]</option>
             </select>
+            <p class="mt-1 text-[10px] leading-tight text-slate-400 dark:text-slate-500">@MatchOperatorHelp</p>
         </div>
 
         <!-- Calc status filter -->
@@ -143,9 +146,9 @@
                     <p class="mt-1 text-xs text-slate-400 dark:text-slate-500">@CalcLoc[nameof(CalcResource.checkSpellingOrFilter)]</p>
                 </div>
 
-                @* Fuzzy fallback: show similar results if not already in fuzzy mode *@
-                @if (!string.IsNullOrWhiteSpace(SearchText) && MatchOperator != "~" &&
-                     (FuzzyFolderResults.Any() || FuzzyCalcResults.Any()))
+                @* Fuzzy fallback: show similar results for strict operators that found nothing *@
+                @if (!string.IsNullOrWhiteSpace(SearchText) &&
+                     (FuzzyFolderResults.Any() || FuzzyProjectResults.Any() || FuzzyCalcResults.Any()))
                 {
                     <div class="border-t border-slate-200 dark:border-slate-700">
                         <div class="bg-amber-50/80 px-4 py-2 dark:bg-amber-950/30">
@@ -166,14 +169,31 @@
                                     </span>
                                     <div class="min-w-0 flex-1">
                                         <div class="truncate text-xs font-medium text-slate-700 dark:text-slate-200">@folder.Item.Name</div>
-                                        <span class="text-[10px] text-slate-400">Mapp</span>
+                                        <span class="text-[10px] text-slate-400">Mapp · @SimilarBadge</span>
+                                    </div>
+                                </button>
+                            }
+                            @foreach (var entry in FuzzyProjectResults.Take(5))
+                            {
+                                <button type="button"
+                                        @onclick="async () => await ProjectSelected(entry.Item)"
+                                        class="flex w-full items-center gap-3 px-4 py-2 text-left transition hover:bg-slate-50 dark:hover:bg-slate-800/60">
+                                    <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-sky-100 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300">
+                                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4.5 5.5h15v13h-15z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 9h8M8 13h3M14 13h2M8 16h8" />
+                                        </svg>
+                                    </span>
+                                    <div class="min-w-0 flex-1">
+                                        <div class="truncate text-xs font-medium text-slate-700 dark:text-slate-200">@entry.Item.Name</div>
+                                        <span class="text-[10px] text-slate-400">Projekt · @SimilarBadge</span>
                                     </div>
                                 </button>
                             }
                             @foreach (var entry in FuzzyCalcResults.Take(5))
                             {
                                 <button type="button"
-                                        @onclick="async () => await CalcSelected(entry.Item.Calc, entry.Item.Project, entry.Item.Folder)"
+                                        @onclick="async () => await CalcSelected(entry.Calc, entry.Project, entry.Folder)"
                                         class="flex w-full items-center gap-3 px-4 py-2 text-left transition hover:bg-slate-50 dark:hover:bg-slate-800/60">
                                     <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                                         <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
@@ -182,8 +202,8 @@
                                         </svg>
                                     </span>
                                     <div class="min-w-0 flex-1">
-                                        <div class="truncate text-xs font-medium text-slate-700 dark:text-slate-200">@entry.Item.Calc.Name</div>
-                                        <span class="text-[10px] text-slate-400">Kalkyl · @entry.Item.Project.Name · @entry.Item.Folder.Name</span>
+                                        <div class="truncate text-xs font-medium text-slate-700 dark:text-slate-200">@entry.Calc.Name</div>
+                                        <span class="text-[10px] text-slate-400">Kalkyl · @entry.Project.Name · @entry.Folder.Name · @SimilarBadge</span>
                                     </div>
                                 </button>
                             }
@@ -204,10 +224,10 @@
                                     @CalcLoc[nameof(CalcResource.foldersLabel)]
                                 </span>
                             </div>
-                            @foreach (var folder in FolderResults)
+                            @foreach (var hit in FolderResults)
                             {
                                 <button type="button"
-                                        @onclick="async () => await FolderSelected(folder)"
+                                        @onclick="async () => await FolderSelected(hit.Item)"
                                         class="flex w-full items-center gap-3 px-4 py-2.5 text-left transition hover:bg-slate-50 dark:hover:bg-slate-800/60">
                                     <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
                                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -215,11 +235,18 @@
                                         </svg>
                                     </span>
                                     <div class="min-w-0 flex-1">
-                                        <div class="truncate text-sm font-medium text-slate-800 dark:text-slate-100">@folder.Name</div>
-                                        @if (!folder.IsVisible)
-                                        {
-                                            <span class="text-[11px] text-slate-400">@AppLoc["archived"]</span>
-                                        }
+                                        <div class="truncate text-sm font-medium text-slate-800 dark:text-slate-100">@hit.Item.Name</div>
+                                        <div class="flex flex-wrap items-center gap-1.5 text-[11px] text-slate-400 dark:text-slate-500">
+                                            <span class="font-medium text-slate-500 dark:text-slate-400">Mapp</span>
+                                            @if (!hit.Item.IsVisible)
+                                            {
+                                                <span class="text-amber-500">· @AppLoc["archived"]</span>
+                                            }
+                                            @if (hit.Fuzzy)
+                                            {
+                                                <span>· @SimilarBadge</span>
+                                            }
+                                        </div>
                                     </div>
                                 </button>
                             }
@@ -235,8 +262,9 @@
                                     @CalcLoc[nameof(CalcResource.projectsLabel)]
                                 </span>
                             </div>
-                            @foreach (var project in ProjectResults)
+                            @foreach (var hit in ProjectResults)
                             {
+                                var project = hit.Item;
                                 <button type="button"
                                         @onclick="async () => await ProjectSelected(project)"
                                         class="flex w-full items-center gap-3 px-4 py-2.5 text-left transition hover:bg-slate-50 dark:hover:bg-slate-800/60"
@@ -270,6 +298,10 @@
                                             {
                                                 <span class="text-amber-500">· @AppLoc["archived"]</span>
                                             }
+                                            @if (hit.Fuzzy)
+                                            {
+                                                <span>· @SimilarBadge</span>
+                                            }
                                         </div>
                                     </div>
                                 </button>
@@ -286,8 +318,11 @@
                                     @CalcLoc[nameof(CalcResource.calculationsLabel)]
                                 </span>
                             </div>
-                            @foreach (var (calc, project, folder) in CalcResults)
+                            @foreach (var hit in CalcResults)
                             {
+                                var calc = hit.Calc;
+                                var project = hit.Project;
+                                var folder = hit.Folder;
                                 <button type="button"
                                         @onclick="async () => await CalcSelected(calc, project, folder)"
                                         class="flex w-full items-center gap-3 px-4 py-2.5 text-left transition hover:bg-slate-50 dark:hover:bg-slate-800/60">
@@ -314,6 +349,10 @@
                                                 </span>
                                             }
                                             <span>· @project.Name · @folder.Name</span>
+                                            @if (hit.Fuzzy)
+                                            {
+                                                <span>· @SimilarBadge</span>
+                                            }
                                         </div>
                                     </div>
                                 </button>
@@ -328,7 +367,7 @@
 
 @code {
     private string SearchText = string.Empty;
-    private string MatchOperator = "%var%";
+    private string MatchOperator = "smart";
     private SearchTypeFilter TypeFilter = SearchTypeFilter.All;
     private string CalcStatusFilter = string.Empty;
     private bool IncludeArchived = false;
@@ -338,16 +377,40 @@
     private bool IsLoading = false;
     private bool HasSearched = false;
 
-    private List<FolderMVVM> FolderResults = [];
-    private List<SearchProjectsMVVM> ProjectResults = [];
-    private List<(ListCalculationMVVM Calc, ListProjectMVVM Project, FolderMVVM Folder)> CalcResults = [];
+    // Normalized search text, recomputed once per search for the scoring helpers.
+    private string _ns = string.Empty;
+    // Project candidates fetched from the server during the current search (reused by the fuzzy fallback).
+    private List<SearchProjectsMVVM> _projectCandidates = [];
 
-    private List<(int Score, FolderMVVM Item)> FuzzyFolderResults = [];
-    private List<(int Score, (ListCalculationMVVM Calc, ListProjectMVVM Project, FolderMVVM Folder) Item)> FuzzyCalcResults = [];
+    private sealed record Hit<T>(int Score, bool Fuzzy, T Item);
+    private sealed record CalcHit(int Score, bool Fuzzy, ListCalculationMVVM Calc, ListProjectMVVM Project, FolderMVVM Folder);
+
+    private List<Hit<FolderMVVM>> FolderResults = [];
+    private List<Hit<SearchProjectsMVVM>> ProjectResults = [];
+    private List<CalcHit> CalcResults = [];
+
+    private List<Hit<FolderMVVM>> FuzzyFolderResults = [];
+    private List<Hit<SearchProjectsMVVM>> FuzzyProjectResults = [];
+    private List<CalcHit> FuzzyCalcResults = [];
+
+    // Score tiers: 100 = exact, 90 = starts-with, 85 = ends-with, 80 = contains, 1-70 = fuzzy.
+    private const int ContainsScore = 80;
 
     [Parameter] public EventCallback CallBack { get; set; }
 
     private enum SearchTypeFilter { All, Folders, Projects, Calculations }
+
+    private string SimilarBadge => CalcLoc[nameof(CalcResource.similarMatchBadge)];
+
+    private string MatchOperatorHelp => MatchOperator switch
+    {
+        "%var%" => CalcLoc[nameof(CalcResource.matchContainsTip)],
+        "==" => CalcLoc[nameof(CalcResource.matchEqualsTip)],
+        "var%" => CalcLoc[nameof(CalcResource.matchStartsWithTip)],
+        "%var" => CalcLoc[nameof(CalcResource.matchEndsWithTip)],
+        "~" => CalcLoc[nameof(CalcResource.matchSimilarTip)],
+        _ => CalcLoc[nameof(CalcResource.matchSmartTip)],
+    };
 
     private IEnumerable<string> AvailableCalcStatuses =>
         (UoWService?.Folder?.State?.FoldersList ?? [])
@@ -387,30 +450,40 @@
             ProjectResults = [];
             CalcResults = [];
             FuzzyFolderResults = [];
+            FuzzyProjectResults = [];
             FuzzyCalcResults = [];
+            _projectCandidates = [];
+
+            // Normalize the search text once for all field comparisons.
+            _ns = Normalize(SearchText);
+            var hasText = _ns.Length > 0;
 
             var folders = UoWService?.Folder?.State?.FoldersList ?? [];
 
-            // Folder search (client-side)
+            // Folder search (client-side, name only — folders have no other text fields)
             if (TypeFilter is SearchTypeFilter.All or SearchTypeFilter.Folders)
-                FolderResults = SearchFolders(folders);
+                FolderResults = ScoreFolders(folders);
 
-            // Project search (server-side)
+            // Project search (server provides candidates, scoring/fuzzy done client-side across all fields)
             if (TypeFilter is SearchTypeFilter.All or SearchTypeFilter.Projects)
-                ProjectResults = await SearchProjectsAsync();
+                ProjectResults = await ScoreProjectsAsync(hasText);
 
             // Calculation search (client-side from loaded data)
             if (TypeFilter is SearchTypeFilter.All or SearchTypeFilter.Calculations)
-                CalcResults = SearchCalculations(folders);
+                CalcResults = ScoreCalculations(folders, hasText);
 
-            // Fuzzy fallback when no results and not already in fuzzy mode
-            if (MatchOperator != "~" && !string.IsNullOrWhiteSpace(SearchText) &&
-                !FolderResults.Any() && !ProjectResults.Any() && !CalcResults.Any())
+            // Fuzzy fallback for the strict operators: only when nothing matched.
+            // Smart and "Liknande stavning" already fold fuzzy hits into the main results.
+            bool strict = MatchOperator is "%var%" or "==" or "var%" or "%var";
+            if (strict && hasText &&
+                FolderResults.Count == 0 && ProjectResults.Count == 0 && CalcResults.Count == 0)
             {
                 if (TypeFilter is SearchTypeFilter.All or SearchTypeFilter.Folders)
-                    FuzzyFolderResults = FuzzySearchFolders(folders);
+                    FuzzyFolderResults = FuzzyFolders(folders);
+                if (TypeFilter is SearchTypeFilter.All or SearchTypeFilter.Projects)
+                    FuzzyProjectResults = FuzzyProjects(_projectCandidates);
                 if (TypeFilter is SearchTypeFilter.All or SearchTypeFilter.Calculations)
-                    FuzzyCalcResults = FuzzySearchCalculations(folders);
+                    FuzzyCalcResults = FuzzyCalcs(folders);
             }
         }
         finally
@@ -420,25 +493,55 @@
         }
     }
 
-    private List<FolderMVVM> SearchFolders(IEnumerable<FolderMVVM> folders)
+    // ── Result builders ───────────────────────────────────────────────
+
+    private List<Hit<FolderMVVM>> ScoreFolders(IEnumerable<FolderMVVM> folders)
     {
-        return folders
-            .Where(f => IncludeArchived || f.IsVisible)
-            .Where(f => string.IsNullOrWhiteSpace(SearchText) || MatchesText(f.Name, SearchText))
-            .ToList();
+        if (_ns.Length == 0) return [];
+
+        var hits = new List<Hit<FolderMVVM>>();
+        foreach (var f in folders)
+        {
+            if (!IncludeArchived && !f.IsVisible) continue;
+            var score = FieldScore(f.Name, MatchOperator);
+            if (score > 0)
+                hits.Add(new Hit<FolderMVVM>(score, IsFuzzy(score), f));
+        }
+        return hits.OrderByDescending(h => h.Score).ThenBy(h => h.Item.Name).ToList();
     }
 
-    private async Task<List<SearchProjectsMVVM>> SearchProjectsAsync()
+    private async Task<List<Hit<SearchProjectsMVVM>>> ScoreProjectsAsync(bool hasText)
+    {
+        _projectCandidates = await FetchProjectCandidatesAsync();
+
+        if (!hasText)
+        {
+            // No text – the server already applied the archive/date filters; show all candidates.
+            return _projectCandidates
+                .Select(p => new Hit<SearchProjectsMVVM>(0, false, p))
+                .OrderBy(p => p.Item.Name)
+                .ToList();
+        }
+
+        var hits = new List<Hit<SearchProjectsMVVM>>();
+        foreach (var p in _projectCandidates)
+        {
+            var (score, fuzzy) = Evaluate(ProjectFields(p), MatchOperator);
+            if (score > 0)
+                hits.Add(new Hit<SearchProjectsMVVM>(score, fuzzy, p));
+        }
+        return hits.OrderByDescending(h => h.Score).ThenBy(h => h.Item.Name).ToList();
+    }
+
+    private async Task<List<SearchProjectsMVVM>> FetchProjectCandidatesAsync()
     {
         try
         {
-            // Map fuzzy operator to contains for server-side (server doesn't support fuzzy)
-            var serverOperator = MatchOperator == "~" ? "%var%" : MatchOperator;
-
+            // Fetch all projects in scope (with archive/date filters); text matching is done
+            // client-side so we can search every field and apply fuzzy matching.
             var filter = new ProjectFilter
             {
-                Name = SearchText ?? string.Empty,
-                NameOperator = serverOperator,
+                Name = string.Empty,
                 IsArchived = IncludeArchived ? null : false,
             };
 
@@ -455,10 +558,12 @@
         }
     }
 
-    private List<(ListCalculationMVVM, ListProjectMVVM, FolderMVVM)> SearchCalculations(IEnumerable<FolderMVVM> folders)
+    private List<CalcHit> ScoreCalculations(IEnumerable<FolderMVVM> folders, bool hasText)
     {
-        var results = new List<(ListCalculationMVVM, ListProjectMVVM, FolderMVVM)>();
+        var hasStatus = !string.IsNullOrWhiteSpace(CalcStatusFilter);
+        if (!hasText && !hasStatus) return [];
 
+        var hits = new List<CalcHit>();
         foreach (var folder in folders)
         {
             if (!IncludeArchived && !folder.IsVisible) continue;
@@ -472,41 +577,47 @@
                 {
                     if (!IncludeArchived && calc.IsArchived) continue;
 
-                    bool matchesText = string.IsNullOrWhiteSpace(SearchText)
-                        || MatchesText(calc.Name, SearchText)
-                        || MatchesText(calc.Code, SearchText);
+                    if (hasStatus && !string.Equals(calc.Status, CalcStatusFilter, StringComparison.OrdinalIgnoreCase))
+                        continue;
 
-                    bool matchesStatus = string.IsNullOrWhiteSpace(CalcStatusFilter)
-                        || string.Equals(calc.Status, CalcStatusFilter, StringComparison.OrdinalIgnoreCase);
+                    int score = 0;
+                    bool fuzzy = false;
+                    if (hasText)
+                    {
+                        (score, fuzzy) = Evaluate(CalcFields(calc), MatchOperator);
+                        if (score == 0) continue;
+                    }
 
-                    if (matchesText && matchesStatus)
-                        results.Add((calc, project, folder));
+                    hits.Add(new CalcHit(score, fuzzy, calc, project, folder));
                 }
             }
         }
 
-        return results;
+        return hits.OrderByDescending(h => h.Score).ThenBy(h => h.Calc.Name).ToList();
     }
 
-    private List<(int Score, FolderMVVM)> FuzzySearchFolders(IEnumerable<FolderMVVM> folders)
-    {
-        if (string.IsNullOrWhiteSpace(SearchText)) return [];
+    // ── Fuzzy fallback builders (strict operators that found nothing) ──
 
-        return folders
+    private List<Hit<FolderMVVM>> FuzzyFolders(IEnumerable<FolderMVVM> folders) =>
+        folders
             .Where(f => IncludeArchived || f.IsVisible)
-            .Select(f => (Score: FuzzyScore(f.Name, SearchText), Item: f))
-            .Where(x => x.Score > 0)
-            .OrderByDescending(x => x.Score)
+            .Select(f => new Hit<FolderMVVM>(FieldScore(f.Name, "~"), true, f))
+            .Where(h => h.Score > 0)
+            .OrderByDescending(h => h.Score)
             .Take(10)
             .ToList();
-    }
 
-    private List<(int Score, (ListCalculationMVVM Calc, ListProjectMVVM Project, FolderMVVM Folder))> FuzzySearchCalculations(IEnumerable<FolderMVVM> folders)
+    private List<Hit<SearchProjectsMVVM>> FuzzyProjects(IEnumerable<SearchProjectsMVVM> candidates) =>
+        candidates
+            .Select(p => new Hit<SearchProjectsMVVM>(Evaluate(ProjectFields(p), "~").Score, true, p))
+            .Where(h => h.Score > 0)
+            .OrderByDescending(h => h.Score)
+            .Take(10)
+            .ToList();
+
+    private List<CalcHit> FuzzyCalcs(IEnumerable<FolderMVVM> folders)
     {
-        if (string.IsNullOrWhiteSpace(SearchText)) return [];
-
-        var results = new List<(int Score, (ListCalculationMVVM, ListProjectMVVM, FolderMVVM))>();
-
+        var results = new List<CalcHit>();
         foreach (var folder in folders)
         {
             if (!IncludeArchived && !folder.IsVisible) continue;
@@ -517,56 +628,119 @@
                 foreach (var calc in project.Calculations)
                 {
                     if (!IncludeArchived && calc.IsArchived) continue;
-                    var score = Math.Max(FuzzyScore(calc.Name, SearchText), FuzzyScore(calc.Code, SearchText));
+                    var score = Evaluate(CalcFields(calc), "~").Score;
                     if (score > 0)
-                        results.Add((score, (calc, project, folder)));
+                        results.Add(new CalcHit(score, true, calc, project, folder));
                 }
             }
         }
+        return results.OrderByDescending(h => h.Score).Take(10).ToList();
+    }
 
-        return results.OrderByDescending(x => x.Score).Take(10).ToList();
+    private static IEnumerable<string?> ProjectFields(SearchProjectsMVVM p)
+    {
+        yield return p.Name;
+        yield return p.Code;
+        yield return p.Status;
+        yield return p.Organisation;
+        yield return p.ProcurementName;
+        yield return p.ProcurementNumber;
+        yield return p.CustomerReference;
+        yield return p.AddressText;
+        yield return p.Responsible;
+    }
+
+    private static IEnumerable<string?> CalcFields(ListCalculationMVVM c)
+    {
+        yield return c.Name;
+        yield return c.Code;
+        yield return c.Status;
     }
 
     // ── Matching logic ────────────────────────────────────────────────
 
-    private bool MatchesText(string? value, string search)
+    // Best score across all of an item's fields, plus whether the best hit was fuzzy.
+    private (int Score, bool Fuzzy) Evaluate(IEnumerable<string?> fields, string op)
     {
-        if (string.IsNullOrWhiteSpace(value)) return false;
-
-        var v = Normalize(value);
-        var s = Normalize(search);
-
-        return MatchOperator switch
+        var best = 0;
+        foreach (var f in fields)
         {
-            "==" => v == s,
-            "var%" => v.StartsWith(s),
-            "%var" => v.EndsWith(s),
-            "~" => FuzzyScore(v, s) > 0,
-            _ => v.Contains(s), // %var% = contains (default)
+            var sc = FieldScore(f, op);
+            if (sc > best) best = sc;
+            if (best >= 100) break;
+        }
+        return (best, IsFuzzy(best));
+    }
+
+    // A hit is "fuzzy/similar" when it only matched via Levenshtein (below the contains tier).
+    private static bool IsFuzzy(int score) => score > 0 && score < ContainsScore;
+
+    private int FieldScore(string? value, string op)
+    {
+        var v = Normalize(value);
+        if (v.Length == 0 || _ns.Length == 0) return 0;
+
+        return op switch
+        {
+            "==" => v == _ns ? 100 : 0,
+            "var%" => v.StartsWith(_ns, StringComparison.Ordinal) ? 90 : 0,
+            "%var" => v.EndsWith(_ns, StringComparison.Ordinal) ? 85 : 0,
+            "%var%" => v.Contains(_ns, StringComparison.Ordinal) ? ContainsScore : 0,
+            // "~" (Liknande stavning) and "smart" both fold exact/contains/fuzzy together.
+            _ => SmartScore(v),
         };
     }
 
-    private static string Normalize(string? value)
-        => (value ?? string.Empty).Trim().ToLowerInvariant();
-
-    // Scoring: 100=exact, 90=starts-with, 80=contains, 1-70=fuzzy (Levenshtein)
-    private static int FuzzyScore(string? source, string? pattern)
+    // Cheap tiers first (exact, starts-with, contains); fuzzy only when those fail.
+    private int SmartScore(string v)
     {
-        var s = Normalize(source);
-        var p = Normalize(pattern);
+        if (v == _ns) return 100;
+        if (v.StartsWith(_ns, StringComparison.Ordinal)) return 90;
+        if (v.Contains(_ns, StringComparison.Ordinal)) return ContainsScore;
+        return FuzzyTier(v);
+    }
 
-        if (string.IsNullOrEmpty(s) || string.IsNullOrEmpty(p)) return 0;
-        if (s == p) return 100;
-        if (s.StartsWith(p)) return 90;
-        if (s.Contains(p)) return 80;
+    // Token-aware fuzzy: compare the search against the whole value and each word.
+    private int FuzzyTier(string v)
+    {
+        var best = FuzzyPair(v, _ns);
+        if (v.IndexOf(' ') >= 0)
+        {
+            foreach (var token in v.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            {
+                var sc = FuzzyPair(token, _ns);
+                if (sc > best) best = sc;
+            }
+        }
+        return best;
+    }
 
-        // Levenshtein-based similarity
-        var distance = LevenshteinDistance(s, p);
-        var maxLen = Math.Max(s.Length, p.Length);
-        if (maxLen == 0) return 0;
+    private static int FuzzyPair(string a, string b)
+    {
+        if (a.Length == 0 || b.Length == 0) return 0;
+
+        var distance = LevenshteinDistance(a, b);
+        var maxLen = Math.Max(a.Length, b.Length);
+        if (distance > MaxFuzzyDistance(maxLen)) return 0;
 
         var similarity = 1.0 - (double)distance / maxLen;
-        return similarity >= 0.55 ? (int)(similarity * 70) : 0;
+        return (int)(similarity * 70);
+    }
+
+    // Relative tolerance: short words allow ~1 error, longer words ~2-3.
+    private static int MaxFuzzyDistance(int length)
+        => length <= 4 ? 1 : length <= 8 ? 2 : 3;
+
+    private static readonly System.Text.RegularExpressions.Regex SeparatorRegex =
+        new(@"[\s\-_/\\.,;:()\[\]{}]+", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    // Trim, lower-case, collapse whitespace, and treat hyphens/punctuation as separators.
+    // Swedish characters (å/ä/ö) are preserved so normal Swedish search keeps working.
+    private static string Normalize(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return string.Empty;
+        var lowered = value.Trim().ToLowerInvariant();
+        return SeparatorRegex.Replace(lowered, " ").Trim();
     }
 
     private static int LevenshteinDistance(string s, string t)
@@ -592,7 +766,7 @@
     private async Task FolderSelected(FolderMVVM folder)
     {
         await Folder.NewFolder(folder);
-        Modal.Close();
+        await Modal.CloseAsync();
     }
 
     private async Task ProjectSelected(SearchProjectsMVVM pro)
@@ -604,13 +778,13 @@
         PropertyCopier.CopyPropertiesTo(pro, projectMvvm);
         await Folder.NewFolder(folder);
         await Folder.NewProject(projectMvvm);
-        Modal.Close();
+        await Modal.CloseAsync();
     }
 
     private async Task CalcSelected(ListCalculationMVVM calc, ListProjectMVVM project, FolderMVVM folder)
     {
         await Folder.NewFolder(folder);
         await Folder.NewProject(project);
-        Modal.Close();
+        await Modal.CloseAsync();
     }
 }

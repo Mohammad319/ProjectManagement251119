@@ -205,5 +205,5 @@
         return $"h-2 w-2 rounded-full {colorClass} {(isSelected ? "opacity-100" : "opacity-0")}";
     }
 
-    private void Close() => Modal.Close();
+    private void Close() => Modal.CloseAsync();
 }

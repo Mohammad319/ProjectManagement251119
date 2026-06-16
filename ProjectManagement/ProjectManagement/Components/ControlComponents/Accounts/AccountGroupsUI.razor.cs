@@ -51,7 +51,7 @@ public partial class AccountGroupsUI
                 [nameof(AccountImportFromFile.OnSaved)] =
                     EventCallback.Factory.Create<bool>(this, OnImportSavedAsync)
             },
-            DialogSize.ExtraLarge);
+            MhdDialogSize.ExtraLarge);
 
     private void CreateForm()
     {
@@ -64,7 +64,7 @@ public partial class AccountGroupsUI
                 [nameof(AccountGroupsFormUI.OnSaved)] =
                     EventCallback.Factory.Create<bool>(this, RefreshAsync)
             },
-            DialogSize.Large,
+            MhdDialogSize.Large,
             DialogButtonsHelper.CreateSaveCancelButtons(AccountGroupsFormUI.DialogFormId));
     }
 
@@ -80,7 +80,7 @@ public partial class AccountGroupsUI
                 [nameof(AccountGroupsFormUI.OnSaved)] =
                     EventCallback.Factory.Create<bool>(this, RefreshAsync)
             },
-            DialogSize.Large,
+            MhdDialogSize.Large,
             DialogButtonsHelper.CreateSaveCancelButtons(AccountGroupsFormUI.DialogFormId));
     }
 
@@ -126,7 +126,7 @@ public partial class AccountGroupsUI
     {
         await ContextService.ShowMenuAsync(
         [
-            new ContextMenuItem
+            new MhdContextMenuItem
             {
                 Label = $"✏️ {AppLoc[nameof(ResourceApp.update)]}",
                 OnClickAsync = () =>
@@ -135,7 +135,7 @@ public partial class AccountGroupsUI
                     return Task.CompletedTask;
                 }
             },
-            new ContextMenuItem
+            new MhdContextMenuItem
             {
                 Label = $"🗑️ {AppLoc[nameof(ResourceApp.delete)]}",
                 OnClickAsync = () =>

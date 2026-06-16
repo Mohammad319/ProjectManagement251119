@@ -268,7 +268,7 @@
         Modal.ShowComponent<CentralReportsDialog>(
             AppLoc["reports"].Value,
             parameters,
-            BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
+            BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
     }
 
     private Task ExportExcelAsync() => ExportAsync(pdfMode: false, printOnly: false);

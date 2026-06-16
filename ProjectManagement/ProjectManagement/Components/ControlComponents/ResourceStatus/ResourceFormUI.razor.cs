@@ -29,7 +29,7 @@ public partial class ResourceFormUI
         LastResStatusReference = ResStatus;
     }
 
-    private void CloseModal() => MHD.Modal.Close();
+    private void CloseModal() => MHD.Modal.CloseAsync();
 
     private async Task HandleSubmitAsync()
     {

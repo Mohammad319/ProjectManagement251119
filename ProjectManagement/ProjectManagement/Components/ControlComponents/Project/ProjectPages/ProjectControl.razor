@@ -5,61 +5,61 @@
 
 @code {
     private string? activeKey;
-    private List<TabItem> Tabs = new();
+    private List<MhdTabItem> Tabs = new();
 
     protected override void OnInitialized()
     {
         Tabs =
         [
-            new TabItem
+            new MhdTabItem
             {
                 Key = "type",
                 Text = "Projekttyp",
                 Content = @<ProjectManagement.Components.ControlComponents.Project.Type.IndexUI />
             },
-            new TabItem
+            new MhdTabItem
             {
                 Key = "contract",
                 Text = "Entreprenadform",
                 Content = @<ProjectManagement.Components.ControlComponents.Project.Contract.IndexUI />
             },
-            new TabItem
+            new MhdTabItem
             {
                 Key = "compensation",
                 Text = "Ersättningsform",
                 Content = @<ProjectManagement.Components.ControlComponents.Project.Compensation.IndexUI />
             },
-            new TabItem
+            new MhdTabItem
             {
                 Key = "procurement",
                 Text = "Upphandlingsform",
                 Content = @<ProjectManagement.Components.ControlComponents.Project.ProcurementMethods.IndexUI />
             },
-            new TabItem
+            new MhdTabItem
             {
                 Key = "procurement-procedure",
                 Text = "Upphandlingsförfarande",
                 Content = @<ProjectManagement.Components.ControlComponents.Project.ProcurementProcedure.IndexUI />
             },
-            new TabItem
+            new MhdTabItem
             {
                 Key = "project-status",
                 Text = "Projektstatus / Upphandlingsstatus",
                 Content = @<ProjectManagement.Components.ControlComponents.Project.ProjectStatus.IndexUI />
             },
-            new TabItem
+            new MhdTabItem
             {
                 Key = "calculation-status",
                 Text = CalcResource.calculationStatus,
                 Content = @<ProjectManagement.Components.ControlComponents.Project.Status.IndexUI />
             },
-            new TabItem
+            new MhdTabItem
             {
                 Key = "task-status",
                 Text = ResourceLoc.taskStatus,
                 Content = @<ProjectManagement.Components.ControlComponents.TaskStatus.IndexUI />
             },
-            new TabItem
+            new MhdTabItem
             {
                 Key = "resource-status",
                 Text = CalcResource.resourcesStatus,

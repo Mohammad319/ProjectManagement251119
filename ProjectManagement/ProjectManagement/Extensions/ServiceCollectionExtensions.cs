@@ -101,7 +101,7 @@ public static class ServiceCollectionExtensions
         });
 
         // Misc
-        services.AddBlazorMhdUI();
+        services.AddBlazorMhdUI(o => o.DefaultToastSeconds = 6);
         services.AddHttpContextAccessor();
 
         // Data Protection keys should be persisted in production so auth cookies remain valid across restarts.

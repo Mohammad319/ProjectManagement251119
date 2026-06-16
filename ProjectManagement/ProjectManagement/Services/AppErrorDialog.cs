@@ -18,7 +18,7 @@ namespace ProjectManagement.Services
             dialog.ShowComponent<ErrorDialogUI>(
                 title,
                 parameters!,
-                DialogSize.Medium
+                MhdDialogSize.Medium
             );
         }
     }

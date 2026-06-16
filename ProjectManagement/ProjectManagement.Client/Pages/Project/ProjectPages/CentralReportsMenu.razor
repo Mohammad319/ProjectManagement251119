@@ -23,7 +23,7 @@
     private Task ShowReportsMenu()
     {
         var items = MenuItems
-            .Select(item => new ContextMenuItem
+            .Select(item => new MhdContextMenuItem
             {
                 Label = item.Label,
                 OnClickAsync = () =>
@@ -53,6 +53,6 @@
         Modal.ShowComponent<CentralReportsDialog>(
             AppLoc["reports"].Value,
             parameters,
-            BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
+            BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
     }
 }

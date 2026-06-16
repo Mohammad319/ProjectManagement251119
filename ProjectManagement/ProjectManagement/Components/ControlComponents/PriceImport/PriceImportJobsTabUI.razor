@@ -571,7 +571,7 @@
 
     private async Task ShowJobContextMenu(PriceImportJobListItemDto job)
     {
-        await ContextService.ShowMenuAsync(new List<ContextMenuItem>
+        await ContextService.ShowMenuAsync(new List<MhdContextMenuItem>
         {
             new() { Label = "Open",   OnClickAsync = () => { OpenJobModal(job.Id); return Task.CompletedTask; } },
             new() { Label = "Delete", OnClickAsync = () => DeleteClickedAsync(job) }

@@ -166,7 +166,7 @@ else
         Calc.Template = tempNew != null ? tempNew : new TemplateMVVM();
         Calc.TemplateId = newTemplate.Id;
         Refresh();
-        Modal.Close();
+        await Modal.CloseAsync();
     }
 
     async Task HandleSubmitAsync()
@@ -184,6 +184,6 @@ else
             _ = ClientLog.ErrorAsync("TemplateSetDefault submit failed", ex: ex);
         }
 
-        dialogService.Close();
+        await dialogService.CloseAsync();
     }
 }

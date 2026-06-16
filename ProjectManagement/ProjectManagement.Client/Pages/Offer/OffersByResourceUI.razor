@@ -237,7 +237,7 @@
 
     void OfferFilterUI() =>
         Modal.ShowComponent<OfferFilterUI>("", ResourceLoc.offer, null,
-            BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
+            BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
 
     private void ToggleCollSpan(int id)
     {
@@ -266,7 +266,7 @@
         {
             [nameof(OfferPostUI.Offer)] = offer,
             [nameof(OfferPostUI.Resource)] = resource,
-        }, BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
+        }, BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
 
     protected override void OnInitialized()
     {

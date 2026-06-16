@@ -45,7 +45,7 @@ public partial class StatusFormUI
         StatusUpdate.AllowsProductionCalculation = e.Value is bool b && b;
     }
 
-    private void CloseModal() => MHD.Modal.Close();
+    private void CloseModal() => MHD.Modal.CloseAsync();
 
     private async Task HandleSubmitAsync()
     {

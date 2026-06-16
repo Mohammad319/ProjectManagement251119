@@ -144,7 +144,7 @@ namespace ProjectManagement.Client.Services.Calculation
                 title,
                 Icons.NewTask,
                 new Dictionary<string, object> { [nameof(TaskFormUI.Task)] = model },
-                DialogSize.ExtraLarge,
+                MhdDialogSize.ExtraLarge,
                 DialogButtonsHelper.CreateSaveCancelButtons(TaskFormUI.DialogFormId));
         }
 
@@ -161,7 +161,7 @@ namespace ProjectManagement.Client.Services.Calculation
                 {
                     [nameof(ResourceFormUI.Resource)] = model
                 },
-                DialogSize.ExtraLarge,
+                MhdDialogSize.ExtraLarge,
                 DialogButtonsHelper.CreateSaveCancelButtons(ResourceFormUI.DialogFormId));
         }
 
@@ -184,7 +184,7 @@ namespace ProjectManagement.Client.Services.Calculation
                 {
                     [nameof(TaskResourceSuggestionsDialog.TaskItem)] = task 
                 },
-                DialogSize.ExtraLarge);
+                MhdDialogSize.ExtraLarge);
         }
 
         public void ShowResourceSuggestions(IEnumerable<TaskListMVVM> tasks)
@@ -215,7 +215,7 @@ namespace ProjectManagement.Client.Services.Calculation
                     [nameof(AllTasksTopSuggestionsDialog.CalcModel)] = calculation,
                     [nameof(AllTasksTopSuggestionsDialog.Tasks)] = taskList,
                 },
-                DialogSize.FullScreen);
+                MhdDialogSize.FullScreen);
         }
 
         private List<TaskListMVVM> GetSelectedTasksForSuggestion(TaskListMVVM task)
@@ -244,7 +244,7 @@ namespace ProjectManagement.Client.Services.Calculation
                 && (task.Tasks == null || task.Tasks.Count == 0);
 
         public void ShowImportDialog() =>
-            dialogService.ShowComponent<CSVUI>("Importera Excel-mängdförteckning", Icons.ImportFromFile, null, DialogSize.FullScreen, closeOnOverlayClick: false);
+            dialogService.ShowComponent<CSVUI>("Importera Excel-mängdförteckning", Icons.ImportFromFile, null, MhdDialogSize.FullScreen, closeOnOverlayClick: false);
 
         public void ShowTemplateDialog() =>
             dialogService.ShowComponent<Pages.Calculation.Template.TemplateSetDefaultUI>(
@@ -254,7 +254,7 @@ namespace ProjectManagement.Client.Services.Calculation
                 {
                     [nameof(Pages.Calculation.Template.TemplateSetDefaultUI.Tab)] = 1,
                 },
-                DialogSize.ExtraLarge);
+                MhdDialogSize.ExtraLarge);
 
         public void ShowTaskReorderDialog(TaskListMVVM? task = null) =>
             dialogService.ShowComponent<DragDropTaskUI>(
@@ -264,14 +264,14 @@ namespace ProjectManagement.Client.Services.Calculation
                 {
                     [nameof(DragDropTaskUI.Task)] = task ?? new TaskListMVVM()
                 },
-                DialogSize.ExtraLarge);
+                MhdDialogSize.ExtraLarge);
 
         public void ShowQuantityDialog() =>
             dialogService.ShowComponent<QuantityListUI>(
                 CalcResource.quantity,
                 Icons.ResetQuantity,
                 null,
-                DialogSize.Medium,
+                MhdDialogSize.Medium,
                 DialogButtonsHelper.CreateSaveCancelButtons(QuantityListUI.DialogFormId));
 
         public void ShowSaveToStorage(object item) =>
@@ -282,7 +282,7 @@ namespace ProjectManagement.Client.Services.Calculation
                 {
                     [nameof(SaveStorargeUI.Parent)] = item
                 },
-                DialogSize.ExtraLarge);
+                MhdDialogSize.ExtraLarge);
 
         public void ShowGetFromStorage(int parentId, CalculationItemType type) =>
             dialogService.ShowComponent<GetFromStorage>(
@@ -293,6 +293,6 @@ namespace ProjectManagement.Client.Services.Calculation
                     [nameof(GetFromStorage.ParentID)] = parentId,
                     [nameof(GetFromStorage.CalcType)] = type
                 },
-                DialogSize.ExtraLarge);
+                MhdDialogSize.ExtraLarge);
     }
 }

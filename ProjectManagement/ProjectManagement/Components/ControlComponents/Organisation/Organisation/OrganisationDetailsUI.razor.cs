@@ -39,6 +39,6 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
             Company = await MicroBus.Send(new GetOrganisationByIdQuery(CompanyId));
         }
 
-        private void Close() => MHD.Modal.Close();
+        private void Close() => MHD.Modal.CloseAsync();
     }
 }

@@ -509,9 +509,9 @@
 
     void Save()
     {
-        var model = new DialogModel
+        var model = new MhdDialogModel
         {
-            Size = DialogSize.Medium,
+            Size = MhdDialogSize.Medium,
             State = MhdState.Primary,
             Title = T("Överför data till kalkyl", "Transfer data to calculation"),
             Content = builder =>
@@ -524,33 +524,33 @@
             CloseOnOverlayClick = false,
             Buttons =
             {
-                new DialogButtonModel
+                new MhdDialogButtonModel
                 {
                     Text = T("Ja", "Yes"),
                     State = MhdState.Primary,
                     IsPrimary = true,
                     OnClick = EventCallback.Factory.Create(this, async () =>
                     {
-                        Modal.Close();
+                        await Modal.CloseAsync();
                         await SaveConfirm(closeImportWindow: false);
                     })
                 },
-                new DialogButtonModel
+                new MhdDialogButtonModel
                 {
                     Text = T("Ja och stäng importfönstret", "Yes and close import window"),
                     State = MhdState.Success,
                     IsPrimary = true,
                     OnClick = EventCallback.Factory.Create(this, async () =>
                     {
-                        Modal.Close();
+                        await Modal.CloseAsync();
                         await SaveConfirm(closeImportWindow: true);
                     })
                 },
-                new DialogButtonModel
+                new MhdDialogButtonModel
                 {
                     Text = T("Nej", "No"),
                     State = MhdState.Neutral,
-                    OnClick = EventCallback.Factory.Create(this, () => Modal.Close())
+                    OnClick = EventCallback.Factory.Create(this, () => Modal.CloseAsync())
                 }
             }
         };
@@ -572,9 +572,9 @@
             OnNameChanged(task, _fullTextDraft);
         }
 
-        var model = new DialogModel
+        var model = new MhdDialogModel
         {
-            Size = DialogSize.Medium,
+            Size = MhdDialogSize.Medium,
             State = MhdState.Primary,
             Title = title,
             Content = builder =>
@@ -589,25 +589,25 @@
             CloseOnOverlayClick = false,
             Buttons =
             {
-                new DialogButtonModel
+                new MhdDialogButtonModel
                 {
                     Text = T("Spara", "Save"),
                     State = MhdState.Primary,
                     IsPrimary = true,
                     OnClick = EventCallback.Factory.Create(this, ApplyDraft)
                 },
-                new DialogButtonModel
+                new MhdDialogButtonModel
                 {
                     Text = T("Spara och stäng", "Save and close"),
                     State = MhdState.Success,
                     IsPrimary = true,
-                    OnClick = EventCallback.Factory.Create(this, () => { ApplyDraft(); Modal.Close(); })
+                    OnClick = EventCallback.Factory.Create(this, () => { ApplyDraft(); Modal.CloseAsync(); })
                 },
-                new DialogButtonModel
+                new MhdDialogButtonModel
                 {
                     Text = T("Avbryt", "Cancel"),
                     State = MhdState.Neutral,
-                    OnClick = EventCallback.Factory.Create(this, () => Modal.Close())
+                    OnClick = EventCallback.Factory.Create(this, () => Modal.CloseAsync())
                 }
             }
         };
@@ -1049,7 +1049,7 @@
             await Task.Delay(1);
     }
 
-    void Close() => Modal.Close();
+    void Close() => Modal.CloseAsync();
 
     public void Dispose()
     {

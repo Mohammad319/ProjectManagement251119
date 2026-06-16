@@ -132,7 +132,7 @@
     {
         isNavOpen = false;
         MHD.Modal.ShowComponent<Components.ControlComponents.Control>(
-            PMWebResource.Settings, null, DialogSize.FullScreen);
+            PMWebResource.Settings, null, MhdDialogSize.FullScreen);
     }
 
     private void OpenOrgDialog()
@@ -141,7 +141,7 @@
         MHD.Modal.ShowComponent<Components.ControlComponents.Control>(
             PMWebResource.AdminSettings,
             new Dictionary<string, object> { ["ActiveKey"] = "organisation" },
-            DialogSize.FullScreen);
+            MhdDialogSize.FullScreen);
     }
 
     private void PersonalSettingFun() => _navigationManager.NavigateTo("Account/Manage", true);
@@ -149,7 +149,7 @@
     {
         isNavOpen = false;
         MHD.Modal.ShowComponent<Components.Support.SupportUI>(
-            PMWebResource.SupportNavTitle, null, DialogSize.Large);
+            PMWebResource.SupportNavTitle, null, MhdDialogSize.Large);
     }
 
     private void ToggleNavMenu() => isNavOpen = !isNavOpen;
@@ -157,7 +157,7 @@
     void PriceList()
     {
         MHD.Modal.ShowComponent<Components.ControlComponents.PriceImport.PriceImportJobsPage>(
-            "Price List", null, DialogSize.FullScreen);
+            "Price List", null, MhdDialogSize.FullScreen);
     }
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

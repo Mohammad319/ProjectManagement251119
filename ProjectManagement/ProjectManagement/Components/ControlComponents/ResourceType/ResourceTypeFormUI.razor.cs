@@ -64,7 +64,7 @@ public partial class ResourceTypeFormUI
         AccountGroupSelected = AccountGroups?.FirstOrDefault(x => x.Id == id);
     }
 
-    private void CloseModal() => MHD.Modal.Close();
+    private void CloseModal() => MHD.Modal.CloseAsync();
 
     private async Task HandleSubmitAsync()
     {

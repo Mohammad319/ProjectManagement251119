@@ -6,11 +6,11 @@ namespace ProjectManagement.Client.Helper;
 
 public static class DialogButtonsHelper
 {
-    public static List<DialogButtonModel> CreateSaveCancelButtons(string formId)
+    public static List<MhdDialogButtonModel> CreateSaveCancelButtons(string formId)
     {
         return
         [
-            new DialogButtonModel
+            new MhdDialogButtonModel
             {
                 Text = ResourceApp.save,
                 State = MhdState.Success,
@@ -18,7 +18,7 @@ public static class DialogButtonsHelper
                 Type = "submit",
                 FormId = formId
             },
-            new DialogButtonModel
+            new MhdDialogButtonModel
             {
                 Text = ResourceApp.cancel,
                 State = MhdState.Secondary

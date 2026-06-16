@@ -69,7 +69,7 @@
     @if (_loading)
     {
         <div class="py-4">
-            <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
+            <MhdLoading />
         </div>
     }
     else if (_states.Count == 0)
@@ -232,7 +232,7 @@
                         if (state.IsLoadingResources)
                         {
                             <div class="py-3">
-                                <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
+                                <MhdLoading />
                             </div>
                         }
                         else if (state.Rows.Count == 0)
@@ -644,7 +644,7 @@
             if (result)
             {
                 await RecordFeedbackAsync(state, TaskResourceSuggestionFeedbackKind.Accepted, notify: false);
-                Modal.Close();
+                await Modal.CloseAsync();
             }
         }
         finally

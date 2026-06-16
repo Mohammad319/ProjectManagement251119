@@ -1,5 +1,5 @@
 ﻿global using Application.Interfaces;
-global using ContextMenuItem = BlazorMHD.UI.Core.Navigation.ContextMenuItem;
+global using MhdContextMenuItem = BlazorMHD.UI.Core.Navigation.MhdContextMenuItem;
 global using ContextMenuService = BlazorMHD.UI.Core.Services.ContextMenuService;
 global using Microsoft.Extensions.Localization;
 global using ProjectManagement.Client.Constant;

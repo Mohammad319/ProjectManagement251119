@@ -34,7 +34,7 @@ public partial class AccountImportFromFile
         Groups.Clear();
     }
 
-    private void CloseModal() => DialogService.Close();
+    private void CloseModal() => DialogService.CloseAsync();
 
     private void Save()
     {

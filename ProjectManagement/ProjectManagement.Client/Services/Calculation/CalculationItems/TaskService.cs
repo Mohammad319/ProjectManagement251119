@@ -50,7 +50,7 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
 
         public async Task ContextMenu(TaskListMVVM task)
         {
-            List<ContextMenuItem> list = context.BuildTaskContextMenu(task, () => Remove(task), async () => await Duplicate(task));
+            List<MhdContextMenuItem> list = context.BuildTaskContextMenu(task, () => Remove(task), async () => await Duplicate(task));
             await ContextMenuService.ShowMenuAsync(list);
         }
 
@@ -211,7 +211,7 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
 
             interactionState.ResetSelection();
             await calculationService.RefreshAfterStructuralMutationAsync();
-            dialogService.Close();
+            await dialogService.CloseAsync();
         }
     }
 }

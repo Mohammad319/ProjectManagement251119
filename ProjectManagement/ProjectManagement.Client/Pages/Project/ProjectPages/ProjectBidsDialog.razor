@@ -64,9 +64,9 @@
             @if (IsPointsModel)
             {
                 @* ── Poängbaserad utvärdering ── *@
-                @if (HasPointParts)
+                @if (HasColumns)
                 {
-                    @foreach (var col in PointParts)
+                    @foreach (var col in _columns)
                     {
                         var columnId = col.Id;
                         <div>
@@ -82,9 +82,14 @@
                 }
                 else
                 {
-                    <div class="sm:col-span-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
-                        Utvärderingsmodellen är <span class="font-semibold">Högsta poäng</span> men det finns inga poängdelar ännu.
-                        Lägg till utvärderingsdelar av typen <span class="font-semibold">Poäng</span> för att kunna sätta poäng.
+                    <div>
+                        <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Poäng</label>
+                        <input type="text"
+                               inputmode="decimal"
+                               class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-right text-sm text-slate-800 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                               placeholder="0"
+                               value="@FormatPoints(_editItem.Amount)"
+                               @onchange="e => _editItem.Amount = ParseAmount(e.Value?.ToString())" />
                     </div>
                 }
 
@@ -98,10 +103,10 @@
             }
             else
             {
-                @* ── Prisbaserad utvärdering (lägsta jämförelsesumma) ── *@
-                @if (HasPriceParts)
+                @* ── Prisbaserad utvärdering (lägst jämförelsesumma) ── *@
+                @if (HasColumns)
                 {
-                    @foreach (var col in PriceParts)
+                    @foreach (var col in _columns)
                     {
                         var columnId = col.Id;
                         <div>
@@ -237,16 +242,23 @@ else
                                 class="@(IsPointsModel ? "px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800" : "bg-sky-600 px-2.5 py-1 text-xs font-semibold text-white")"
                                 disabled="@_isModelSaving"
                                 @onclick="() => SetEvaluationModelAsync(BidEvaluationModel.LowestComparison)">
-                            Lägsta jämförelsesumma
+                            Lägst jämförelsesumma
                         </button>
                         <button type="button"
                                 class="@(IsPointsModel ? "bg-sky-600 px-2.5 py-1 text-xs font-semibold text-white" : "border-l border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800")"
                                 disabled="@_isModelSaving"
                                 @onclick="() => SetEvaluationModelAsync(BidEvaluationModel.HighestPoints)">
-                            Högsta poäng
+                            Högst totalpoäng
                         </button>
                     </div>
                 </div>
+
+                @* Hjälptext beroende på vald modell *@
+                <p class="text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+                    @(IsPointsModel
+                        ? "Utvärderingsdelarna anges som poäng och summeras till totalpoäng. Högst totalpoäng får bäst placering."
+                        : "Prisdelar summeras till anbudssumma. Eventuellt mervärdeavdrag räknas av. Lägst jämförelsesumma får bäst placering.")
+                </p>
 
                 @* Knappar *@
                 <div class="flex items-center justify-between">
@@ -289,17 +301,30 @@ else
                     </button>
                 </div>
 
-                @if (!HasColumns)
-                {
-                    <p class="mb-2 text-[11px] text-slate-500 dark:text-slate-400">
-                        Utan egna utvärderingsdelar används standarddelen <span class="font-semibold">Pris</span>.
-                        Lägg till delar om anbudet består av flera delar, t.ex. Grundanbud, Option 1, Miljö eller Referenser.
-                    </p>
-                }
+                <p class="mb-2 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+                    Standard är att endast en del utvärderas. Lägg till utvärderingsdelar om anbudet
+                    består av flera delar som ska summeras, till exempel Del 1, Del 2, Option 1 eller Option 2.
+                </p>
 
+                @* Lägg-till-rad ligger fast högst upp i sektionen *@
+                <div class="mb-2 flex items-center gap-1.5">
+                    <input type="text"
+                           class="h-7 flex-1 rounded-lg border border-slate-300 bg-white px-2 text-xs text-slate-800 outline-none transition focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                           placeholder="Ny utvärderingsdel, t.ex. Del 1, Option 1..."
+                           @bind="_newColumnName"
+                           @bind:event="oninput" />
+                    <button type="button"
+                            class="inline-flex h-7 items-center gap-1 rounded-lg border border-emerald-300 bg-emerald-50 px-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
+                            disabled="@(_isColumnSaving || string.IsNullOrWhiteSpace(_newColumnName))"
+                            @onclick="CreateColumnAsync">
+                        Lägg till
+                    </button>
+                </div>
+
+                @* Nya utvärderingsdelar visas i listan under lägg-till-raden *@
                 @if (HasColumns)
                 {
-                    <div class="mb-2 space-y-1.5">
+                    <div class="space-y-1.5">
                         @foreach (var col in _columns)
                         {
                             var column = col;
@@ -309,12 +334,6 @@ else
                                        class="h-7 flex-1 rounded-lg border border-slate-300 bg-white px-2 text-xs text-slate-800 outline-none transition focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                                        value="@GetColumnEditName(column.Id)"
                                        @onchange="e => _columnNameEdits[column.Id] = e.Value?.ToString() ?? string.Empty" />
-                                <select class="h-7 w-24 shrink-0 rounded-lg border border-slate-300 bg-white px-1 text-xs text-slate-800 outline-none transition focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                                        value="@GetColumnEditType(column.Id)"
-                                        @onchange="e => SetColumnEditType(column.Id, e.Value?.ToString())">
-                                    <option value="@BidPartType.Price">Pris</option>
-                                    <option value="@BidPartType.Points">Poäng</option>
-                                </select>
                                 <button type="button"
                                         class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-500 transition hover:text-emerald-600 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
                                         title="Spara ändring"
@@ -348,25 +367,6 @@ else
                     </div>
                 }
 
-                <div class="flex items-center gap-1.5">
-                    <input type="text"
-                           class="h-7 flex-1 rounded-lg border border-slate-300 bg-white px-2 text-xs text-slate-800 outline-none transition focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                           placeholder="Ny utvärderingsdel, t.ex. Grundanbud, Miljö..."
-                           @bind="_newColumnName"
-                           @bind:event="oninput" />
-                    <select class="h-7 w-24 shrink-0 rounded-lg border border-slate-300 bg-white px-1 text-xs text-slate-800 outline-none transition focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                            @bind="_newColumnType">
-                        <option value="@BidPartType.Price">Pris</option>
-                        <option value="@BidPartType.Points">Poäng</option>
-                    </select>
-                    <button type="button"
-                            class="inline-flex h-7 items-center gap-1 rounded-lg border border-emerald-300 bg-emerald-50 px-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
-                            disabled="@(_isColumnSaving || string.IsNullOrWhiteSpace(_newColumnName))"
-                            @onclick="CreateColumnAsync">
-                        Lägg till
-                    </button>
-                </div>
-
                 @if (!string.IsNullOrWhiteSpace(_columnError))
                 {
                     <p class="mt-1.5 text-[11px] text-red-600 dark:text-red-400">@_columnError</p>
@@ -398,17 +398,20 @@ else
 
                             @if (IsPointsModel)
                             {
-                                @foreach (var col in PointParts)
+                                @if (HasColumns)
                                 {
-                                    <th class="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400" title="@col.Name">@col.Name</th>
+                                    @foreach (var col in _columns)
+                                    {
+                                        <th class="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400" title="@col.Name">@col.Name</th>
+                                    }
                                 }
                                 <th class="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Totalpoäng</th>
                             }
                             else
                             {
-                                @if (HasPriceParts)
+                                @if (HasColumns)
                                 {
-                                    @foreach (var col in PriceParts)
+                                    @foreach (var col in _columns)
                                     {
                                         <th class="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400" title="@col.Name">@col.Name</th>
                                     }
@@ -454,12 +457,15 @@ else
 
                                 @if (IsPointsModel)
                                 {
-                                    @foreach (var col in PointParts)
+                                    @if (HasColumns)
                                     {
-                                        var value = GetBidPartValue(bid, col.Id);
-                                        <td class="px-3 py-2 text-right font-mono text-slate-600 dark:text-slate-300">
-                                            @(value.HasValue ? FormatPoints(value.Value) : "-")
-                                        </td>
+                                        @foreach (var col in _columns)
+                                        {
+                                            var value = GetBidPartValue(bid, col.Id);
+                                            <td class="px-3 py-2 text-right font-mono text-slate-600 dark:text-slate-300">
+                                                @(value.HasValue ? FormatPoints(value.Value) : "-")
+                                            </td>
+                                        }
                                     }
                                     <td class="px-3 py-2 text-right font-mono font-semibold text-sky-700 dark:text-sky-300">
                                         @(bid.TotalPoints.HasValue ? FormatPoints(bid.TotalPoints.Value) : "-")
@@ -467,9 +473,9 @@ else
                                 }
                                 else
                                 {
-                                    @if (HasPriceParts)
+                                    @if (HasColumns)
                                     {
-                                        @foreach (var col in PriceParts)
+                                        @foreach (var col in _columns)
                                         {
                                             var value = GetBidPartValue(bid, col.Id);
                                             <td class="px-3 py-2 text-right font-mono text-slate-600 dark:text-slate-300">
@@ -612,17 +618,11 @@ else
     private bool _isColumnSaving;
     private bool _isModelSaving;
     private string _newColumnName = string.Empty;
-    private BidPartType _newColumnType = BidPartType.Price;
     private string _columnError = string.Empty;
     private readonly Dictionary<int, string> _columnNameEdits = new();
-    private readonly Dictionary<int, BidPartType> _columnTypeEdits = new();
 
     private bool HasColumns => _columns.Count > 0;
     private bool IsPointsModel => _evaluationModel == BidEvaluationModel.HighestPoints;
-    private List<ProjectBidPriceColumnDTO> PriceParts => _columns.Where(c => c.PartType == BidPartType.Price).ToList();
-    private List<ProjectBidPriceColumnDTO> PointParts => _columns.Where(c => c.PartType == BidPartType.Points).ToList();
-    private bool HasPriceParts => _columns.Any(c => c.PartType == BidPartType.Price);
-    private bool HasPointParts => _columns.Any(c => c.PartType == BidPartType.Points);
 
     protected override async Task OnInitializedAsync()
     {
@@ -642,7 +642,6 @@ else
             _evaluationModel = view.EvaluationModel;
             _rejectedCount = _bids.Count(b => b.Status == BidStatus.Rejected);
             _columnNameEdits.Clear();
-            _columnTypeEdits.Clear();
         }
         catch (Exception ex)
         {
@@ -711,8 +710,8 @@ else
         if (bid.Prices.TryGetValue(columnId, out var value))
             return value;
 
-        if (bid.Prices.Count == 0 && !IsPointsModel && bid.Amount.HasValue &&
-            PriceParts.Count > 0 && PriceParts[0].Id == columnId)
+        if (bid.Prices.Count == 0 && bid.Amount.HasValue &&
+            _columns.Count > 0 && _columns[0].Id == columnId)
             return bid.Amount;
 
         return null;
@@ -734,7 +733,9 @@ else
         {
             Id = bid.Id,
             BidderName = bid.BidderName,
-            Amount = bid.Amount,
+            // Enkel-fältet (Pris/Poäng) saknar egna delar. I poängmodellen ligger värdet
+            // i Totalpoäng (Amount returneras som null för poäng), annars i Amount.
+            Amount = !HasColumns && IsPointsModel ? bid.TotalPoints : bid.Amount,
             DeductionPercent = bid.DeductionPercent,
             ComparisonAmount = bid.ComparisonAmount,
             Note = bid.Note,
@@ -748,9 +749,11 @@ else
         foreach (var (columnId, value) in bid.Prices)
             model.Prices[columnId] = value;
 
-        // Legacy bid in a project that now has price parts: prefill the first part.
-        if (HasPriceParts && model.Prices.Count == 0 && bid.Amount.HasValue)
-            model.Prices[PriceParts[0].Id] = bid.Amount.Value;
+        // Legacy bid in a project that now has evaluation parts: prefill the first part
+        // from the effective single value (Totalpoäng i poängmodellen, annars Amount).
+        var legacySingle = IsPointsModel ? bid.TotalPoints : bid.Amount;
+        if (HasColumns && model.Prices.Count == 0 && legacySingle.HasValue)
+            model.Prices[_columns[0].Id] = legacySingle.Value;
 
         _editItem = model;
         _formTouched = false;
@@ -784,21 +787,22 @@ else
         OnTotalChanged();
     }
 
-    /// <summary>Anbudssumma — summa av prisdelarna (eller legacy-belopp).</summary>
-    private decimal FormTotal =>
+    /// <summary>
+    /// Summan av utvärderingsdelarna (eller legacy-/enkelbeloppet när inga delar finns).
+    /// Modellen avgör om summan tolkas som anbudssumma eller totalpoäng.
+    /// </summary>
+    private decimal FormPartsSum =>
         _editItem is null
             ? 0
-            : HasPriceParts
-                ? PriceParts.Sum(c => _editItem.Prices.TryGetValue(c.Id, out var v) ? v : 0)
+            : HasColumns
+                ? _columns.Sum(c => _editItem.Prices.TryGetValue(c.Id, out var v) ? v : 0)
                 : _editItem.Amount ?? 0;
 
-    private decimal FormPriceTotal => FormTotal;
+    /// <summary>Anbudssumma (prismodell).</summary>
+    private decimal FormTotal => FormPartsSum;
 
-    /// <summary>Totalpoäng — summa av poängdelarna.</summary>
-    private decimal FormPointsTotal =>
-        _editItem is null
-            ? 0
-            : PointParts.Sum(c => _editItem.Prices.TryGetValue(c.Id, out var v) ? v : 0);
+    /// <summary>Totalpoäng (poängmodell).</summary>
+    private decimal FormPointsTotal => FormPartsSum;
 
     // ── Jämförelsesumma ⇄ Mervärdeavdrag (båda hållen) ──────
     // Senast ändrat fält styr beräkningen.
@@ -966,11 +970,12 @@ else
             var dto = new ProjectBidPostDTO
             {
                 BidderName = _editItem.BidderName.Trim(),
-                // Skicka det enkla beloppet så länge projektet inte har prisdelar.
-                // Med enbart poängdelar (utan prisdelar) visas fältet "Pris" och får inte tappas.
-                Amount = HasPriceParts ? null : _editItem.Amount,
+                // Utan utvärderingsdelar skickas det enkla beloppet (Pris/Poäng).
+                // Med delar härleder servern summan av delarna utifrån modellen.
+                Amount = HasColumns ? null : _editItem.Amount,
                 Prices = HasColumns ? new Dictionary<int, decimal>(_editItem.Prices) : null,
-                DeductionPercent = _editItem.DeductionPercent is null or 0 ? null : _editItem.DeductionPercent,
+                // Mervärdeavdrag används bara i prismodellen.
+                DeductionPercent = IsPointsModel || _editItem.DeductionPercent is null or 0 ? null : _editItem.DeductionPercent,
                 Note = string.IsNullOrWhiteSpace(_editItem.Note) ? null : _editItem.Note.Trim(),
                 IsAwarded = isAwarded,
                 Placement = isAwarded ? (_editItem.Placement is > 0 ? _editItem.Placement : 1) : null,
@@ -1036,7 +1041,6 @@ else
         _manageColumnsOpen = !_manageColumnsOpen;
         _columnError = string.Empty;
         _newColumnName = string.Empty;
-        _newColumnType = BidPartType.Price;
     }
 
     private string GetColumnEditName(int columnId) =>
@@ -1044,34 +1048,10 @@ else
             ? edited
             : _columns.FirstOrDefault(c => c.Id == columnId)?.Name ?? string.Empty;
 
-    private BidPartType GetColumnEditType(int columnId) =>
-        _columnTypeEdits.TryGetValue(columnId, out var edited)
-            ? edited
-            : _columns.FirstOrDefault(c => c.Id == columnId)?.PartType ?? BidPartType.Price;
-
-    private void SetColumnEditType(int columnId, string? raw)
-    {
-        if (Enum.TryParse<BidPartType>(raw, out var type))
-            _columnTypeEdits[columnId] = type;
-    }
-
-    private bool IsColumnChanged(ProjectBidPriceColumnDTO column)
-    {
-        var nameChanged =
-            _columnNameEdits.TryGetValue(column.Id, out var editedName) &&
-            !string.Equals(editedName.Trim(), column.Name, StringComparison.Ordinal) &&
-            !string.IsNullOrWhiteSpace(editedName);
-
-        var typeChanged =
-            _columnTypeEdits.TryGetValue(column.Id, out var editedType) &&
-            editedType != column.PartType;
-
-        // A type-only change is allowed as long as the (unchanged) name is valid.
-        if (typeChanged && !_columnNameEdits.ContainsKey(column.Id))
-            return true;
-
-        return nameChanged || typeChanged;
-    }
+    private bool IsColumnChanged(ProjectBidPriceColumnDTO column) =>
+        _columnNameEdits.TryGetValue(column.Id, out var editedName) &&
+        !string.Equals(editedName.Trim(), column.Name, StringComparison.Ordinal) &&
+        !string.IsNullOrWhiteSpace(editedName);
 
     private async Task CreateColumnAsync()
     {
@@ -1092,11 +1072,10 @@ else
         try
         {
             var id = await Repo.ProjectBid.CreateColumnAsync(ProjectId,
-                new ProjectBidPriceColumnPostDTO { Name = name, PartType = _newColumnType });
+                new ProjectBidPriceColumnPostDTO { Name = name });
             if (id > 0)
             {
                 _newColumnName = string.Empty;
-                _newColumnType = BidPartType.Price;
                 await LoadAsync();
             }
             else
@@ -1118,7 +1097,6 @@ else
     private async Task RenameColumnAsync(ProjectBidPriceColumnDTO column)
     {
         var name = GetColumnEditName(column.Id).Trim();
-        var type = GetColumnEditType(column.Id);
 
         if (name.Length == 0)
         {
@@ -1136,7 +1114,7 @@ else
         try
         {
             var ok = await Repo.ProjectBid.RenameColumnAsync(column.Id, ProjectId,
-                new ProjectBidPriceColumnPostDTO { Name = name, PartType = type });
+                new ProjectBidPriceColumnPostDTO { Name = name });
             if (ok)
                 await LoadAsync();
             else

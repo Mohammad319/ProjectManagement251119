@@ -55,7 +55,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
 
         private async Task Context(ShortListOrganisationDTO item)
         {
-            var list = new List<ContextMenuItem>
+            var list = new List<MhdContextMenuItem>
             {
                 new()
                 {
@@ -105,7 +105,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
                 {
                     [nameof(OrganisationDetailsUI.CompanyId)] = obj.Id
                 },
-                BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
+                BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
         }
 
         private void UpdateForm(ShortListOrganisationDTO model)
@@ -124,7 +124,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
                     [nameof(OrganisationFormUI.Callback)] =
                         EventCallback.Factory.Create<bool>(this, RefreshAsync)
                 },
-                BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge,
+                BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge,
                 DialogButtonsHelper.CreateSaveCancelButtons(OrganisationFormUI.DialogFormId));
         }
 
@@ -158,7 +158,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
             if (load)
                 await GetAsync();
 
-            MHD.Modal.Close();
+            await MHD.Modal.CloseAsync();
             await InvokeAsync(StateHasChanged);
         }
     }

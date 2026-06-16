@@ -203,7 +203,7 @@ public partial class NelCalculationPage : ComponentBase, IDisposable
             {
                 [nameof(AllTasksTopSuggestionsDialog.CalcModel)] = Calc,
             },
-            DialogSize.FullScreen);
+            MhdDialogSize.FullScreen);
     }
 
     private void OpenDisplayPresetsDialog()
@@ -219,7 +219,7 @@ public partial class NelCalculationPage : ComponentBase, IDisposable
                 [nameof(CalculationDisplayOptionsPresetsDialog.OnSave)] = EventCallback.Factory.Create<DisplayOptionsPresetStore>(this, SaveDisplayPresetsAsync),
                 [nameof(CalculationDisplayOptionsPresetsDialog.OnClear)] = EventCallback.Factory.Create(this, ClearPresetOverrides),
             },
-            DialogSize.Medium);
+            MhdDialogSize.Medium);
     }
 
     private void ApplyDisplayPreset(DisplayOptionsPreset preset)

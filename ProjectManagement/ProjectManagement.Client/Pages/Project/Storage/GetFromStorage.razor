@@ -141,7 +141,7 @@ else
             await CalcService.RefreshAfterStructuralMutationAsync();
 
         MHD.Notifications(ToastType.Info, result);
-        Modal.Close();
+        await Modal.CloseAsync();
     }
 
     void GetStorageSort(ChangeEventArgs e)

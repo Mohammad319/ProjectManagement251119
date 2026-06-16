@@ -163,7 +163,7 @@
             {
                 [nameof(UpdateResourceDataUI.Resource)] = resource,
                 [nameof(UpdateResourceDataUI.Config)] = Config,
-                [nameof(UpdateResourceDataUI.OnChanged)] = EventCallback.Factory.Create(this, Modal.Close)
+                [nameof(UpdateResourceDataUI.OnChanged)] = EventCallback.Factory.Create(this, Modal.CloseAsync)
             });
         }
     }

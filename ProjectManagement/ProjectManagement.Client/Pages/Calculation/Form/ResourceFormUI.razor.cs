@@ -429,6 +429,6 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
                 editContext.OnFieldChanged -= HandleFieldChanged;
             }
         }
-        void Close() => Modal.Close();
+        void Close() => Modal.CloseAsync();
     }
 }

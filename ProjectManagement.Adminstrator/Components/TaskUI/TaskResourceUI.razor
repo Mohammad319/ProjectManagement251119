@@ -441,7 +441,7 @@
 
             <button type="button"
                     class="@NeutralButtonClass"
-                    @onclick="MHD.Modal.Close">
+                    @onclick="MHD.Modal.CloseAsync">
                 @ResourceApp.cancel
             </button>
         </div>
@@ -593,7 +593,7 @@
 
         if (await TaskResourceService.UpdateAssignmentAsync(Task.Id, Resource.ResourceId, TaskResource, CancellationToken.None))
         {
-            MHD.Modal.Close();
+            await MHD.Modal.CloseAsync();
         }
         else
         {

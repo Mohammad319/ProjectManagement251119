@@ -517,13 +517,21 @@
     <value>No hidden statuses to display.</value>
   </data>
   <data name="matchType" xml:space="preserve"><value>Matching</value></data>
+  <data name="matchSmart" xml:space="preserve"><value>Smart search</value></data>
   <data name="matchContains" xml:space="preserve"><value>Contains</value></data>
   <data name="matchEquals" xml:space="preserve"><value>Is equal to</value></data>
   <data name="matchNotEquals" xml:space="preserve"><value>Is not equal to</value></data>
-  <data name="matchSimilar" xml:space="preserve"><value>Similar to</value></data>
+  <data name="matchSimilar" xml:space="preserve"><value>Similar spelling</value></data>
   <data name="similarResults" xml:space="preserve"><value>Similar results</value></data>
+  <data name="similarMatchBadge" xml:space="preserve"><value>Similar match</value></data>
   <data name="matchStartsWith" xml:space="preserve"><value>Starts with</value></data>
   <data name="matchEndsWith" xml:space="preserve"><value>Ends with</value></data>
+  <data name="matchSmartTip" xml:space="preserve"><value>Recommended. Searches using exact match, starts with, contains and similar spelling. Also finds some misspellings.</value></data>
+  <data name="matchContainsTip" xml:space="preserve"><value>Finds entries where the search text appears as an exact part of the text. Example: 'Nack' finds 'Nackaa'.</value></data>
+  <data name="matchEqualsTip" xml:space="preserve"><value>Finds only entries where the whole value matches the search text.</value></data>
+  <data name="matchStartsWithTip" xml:space="preserve"><value>Finds entries where the value starts with the search text.</value></data>
+  <data name="matchEndsWithTip" xml:space="preserve"><value>Finds entries where the value ends with the search text.</value></data>
+  <data name="matchSimilarTip" xml:space="preserve"><value>Finds entries with similar spelling and tolerates small misspellings. Example: 'Naacka' can find 'Nackaa'.</value></data>
   <data name="includeArchived" xml:space="preserve"><value>Include archived</value></data>
   <data name="typeFilter" xml:space="preserve"><value>Type</value></data>
   <data name="allTypes" xml:space="preserve"><value>All</value></data>
