@@ -616,8 +616,8 @@ public sealed class TenantMlTrainingService(
         var targetNameNormalized = SwedishTaskTextNormalizer.Normalize(request.TaskName);
         var targetCodeDepth = GetCodeDepth(request.TaskCode);
 
-        var tenantEngine = CreatePredictionEngine(TaskResourceSuggestionMlModelPath.GetTenantModelPath(request.TenantId));
-        var globalEngine = CreatePredictionEngine(TaskResourceSuggestionMlModelPath.GetDefaultModelPath());
+        using var tenantEngine = CreatePredictionEngine(TaskResourceSuggestionMlModelPath.GetTenantModelPath(request.TenantId));
+        using var globalEngine = CreatePredictionEngine(TaskResourceSuggestionMlModelPath.GetDefaultModelPath());
         var usageMode = TenantMlModelConfigStore.ReadUsageMode(request.TenantId);
 
         var candidates = new List<TenantMlSuggestionPreviewItem>();
@@ -1343,8 +1343,8 @@ public sealed class TenantMlTrainingService(
             .Take(2000)
             .ToList();
 
-        var globalEngine = CreatePredictionEngine(TaskResourceSuggestionMlModelPath.GetDefaultModelPath());
-        var tenantEngine = CreatePredictionEngine(tenantModelPath);
+        using var globalEngine = CreatePredictionEngine(TaskResourceSuggestionMlModelPath.GetDefaultModelPath());
+        using var tenantEngine = CreatePredictionEngine(tenantModelPath);
 
         var report = new TenantMlComparisonReport
         {

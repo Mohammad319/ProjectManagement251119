@@ -1547,7 +1547,7 @@ public sealed class TaskResourceSuggestionService(
         await using var sharedTenantDb = await dbFactory.CreateDbContextAsync(cancellationToken);
         var sharedFeedbackStats = await GetFeedbackStatsMapAsync(sharedTenantDb.TenantId, cancellationToken);
 
-        var sem = new SemaphoreSlim(4);
+        using var sem = new SemaphoreSlim(4);
         var pairs = await System.Threading.Tasks.Task.WhenAll(taskIds.Select(async taskId =>
         {
             await sem.WaitAsync(cancellationToken);

@@ -1,0 +1,54 @@
+root = true
+
+#######################################################################
+# إعدادات عامة لكل الملفات
+#######################################################################
+[*]
+charset = utf-8
+end_of_line = crlf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{json,yml,yaml,xml,csproj,props,targets,slnx}]
+indent_size = 2
+
+#######################################################################
+# قواعد C# — شِدّة محلّلات Roslyn
+# (التفعيل يتم من Directory.Build.props عبر AllEnabledByDefault)
+#######################################################################
+[*.cs]
+
+# --- إيقاف: ضجيج غير مناسب لتطبيق Blazor/ASP.NET ---
+dotnet_diagnostic.CA2007.severity = none   # ConfigureAwait — للمكتبات فقط
+dotnet_diagnostic.CA1062.severity = none   # فحص null لوسائط عامة
+dotnet_diagnostic.CA1002.severity = none   # عدم كشف List<T>
+dotnet_diagnostic.CA1515.severity = none   # جعل أنواع التطبيق internal
+dotnet_diagnostic.CA2227.severity = none   # خصائص المجموعات للقراءة فقط
+dotnet_diagnostic.CA1725.severity = none   # تطابق أسماء المعاملات مع الـ base
+dotnet_diagnostic.CA1707.severity = none   # underscores في الأسماء (migrations/tests)
+dotnet_diagnostic.CA1716.severity = none   # تعارض المعرّفات مع كلمات محجوزة
+dotnet_diagnostic.CA1848.severity = none   # LoggerMessage delegates
+dotnet_diagnostic.CA1812.severity = none   # كلاس internal غير مُنشأ (DI)
+dotnet_diagnostic.CA1051.severity = none   # حقول instance مرئية
+dotnet_diagnostic.CA1034.severity = none   # أنواع متداخلة public
+# CA1063/CA1816: نمط Dispose الكامل (finalizer/موارد غير مُدارة) — لا ينطبق على
+# مكوّنات Blazor وخدمات DI المُدارة؛ Dispose() البسيط لإلغاء الاشتراكات هو النمط الصحيح.
+dotnet_diagnostic.CA1063.severity = none   # تنفيذ IDisposable بالنمط الكامل
+dotnet_diagnostic.CA1816.severity = none   # استدعاء GC.SuppressFinalize
+
+# --- اقتراحات: ذات قيمة لكن نخفّفها الآن ---
+dotnet_diagnostic.CA1307.severity = suggestion   # StringComparison
+dotnet_diagnostic.CA1305.severity = suggestion   # IFormatProvider
+dotnet_diagnostic.CA1308.severity = suggestion   # ToUpperInvariant بدل ToLower
+dotnet_diagnostic.CA1304.severity = suggestion   # CultureInfo
+dotnet_diagnostic.CA1310.severity = suggestion   # StringComparison في Compare
+dotnet_diagnostic.CA1861.severity = suggestion   # مصفوفات ثابتة
+dotnet_diagnostic.CA1031.severity = suggestion   # التقاط Exception عام
+dotnet_diagnostic.CA1805.severity = suggestion   # تهيئة بالقيمة الافتراضية
+dotnet_diagnostic.CA1859.severity = suggestion   # استخدام أنواع concrete للأداء
+dotnet_diagnostic.CA1822.severity = suggestion   # أعضاء يمكن جعلها static
+
+# --- قواعد التنسيق (IDE) كاقتراحات لتجنّب الضجيج ---
+dotnet_diagnostic.IDE0005.severity = warning     # usings غير مستخدمة (مفيدة وآمنة)

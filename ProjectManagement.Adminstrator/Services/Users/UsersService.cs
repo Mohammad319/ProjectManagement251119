@@ -1439,6 +1439,11 @@ namespace ProjectManagement.Adminstrator.Services.Users
 
                 return false;
             }
+            finally
+            {
+                if (tenantDb != null)
+                    await tenantDb.DisposeAsync();
+            }
         }
     }
 }

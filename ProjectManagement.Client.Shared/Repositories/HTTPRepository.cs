@@ -86,7 +86,7 @@ namespace ProjectManagement.Client.Shared.Repositories
 
         public async Task<T> DeleteAsync<T, TBody>(string url, TBody body, CancellationToken ct = default)
         {
-            var request = new HttpRequestMessage(HttpMethod.Delete, url)
+            using var request = new HttpRequestMessage(HttpMethod.Delete, url)
             {
                 Content = JsonContent.Create(body, options: JsonOptions)
             };
