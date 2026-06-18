@@ -18,8 +18,13 @@
                 <p class="mt-1 text-sm text-slate-600 dark:text-slate-400 mt-1">Manage tenant database entries and connection strings used by the admin application.</p>
             </div>
 
-            <div class="flex flex-wrap items-center gap-2">
-                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@(Tenants?.Count ?? 0)</span>
+            <div class="mt-2 flex flex-wrap items-center gap-2">
+                <input type="search"
+                       placeholder="Search by name…"
+                       value="@_search"
+                       @oninput="@(e => _search = e.Value?.ToString() ?? string.Empty)"
+                       class="w-full max-w-xs rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@Filtered.Count / @(Tenants?.Count ?? 0)</span>
                 <button class="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400" @onclick="() => UpdateForm(new())">@ResourceApp._new</button>
             </div>
         </div>
@@ -37,13 +42,14 @@
                     <strong>Error:</strong> @_loadError
                 </div>
             }
-            else if (Tenants is { Count: > 0 })
+            else if (Filtered.Count > 0)
             {
                 <div class="overflow-x-auto">
-                    <MhdTable TItem="TenantDatabaseEntity" Items="Tenants" ShowFilter="false">
+                    <MhdTable TItem="TenantDatabaseEntity" Items="Filtered" ShowFilter="false">
                         <HeaderTemplate>
                             <th class="w-40 p-2 text-left text-sm font-semibold text-slate-700 dark:text-slate-200"></th>
                             <th class="p-2 text-left text-sm font-semibold text-slate-700 dark:text-slate-200">@CalcResource.name</th>
+                            <th class="p-2 text-left text-sm font-semibold text-slate-700 dark:text-slate-200">@AppControll.tenant</th>
                             <th class="p-2 text-left text-sm font-semibold text-slate-700 dark:text-slate-200">@AppControll.Db</th>
                         </HeaderTemplate>
                         <ChildContent>
@@ -72,11 +78,25 @@
                             </MhdTableColumn>
                             <MhdTableColumn>
                                 <Template Context="tenant">
-                                    <div class="max-w-[42rem] truncate py-1 text-sm text-slate-600 dark:text-slate-300"
-                                         title="@tenant.ConnectionString"
+                                    <span class="inline-flex min-w-[2rem] items-center justify-center rounded-full px-2.5 py-1 text-xs font-semibold @(TenantCount(tenant.Id) > 0 ? "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300" : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400")">
+                                        @TenantCount(tenant.Id)
+                                    </span>
+                                </Template>
+                            </MhdTableColumn>
+                            <MhdTableColumn>
+                                <Template Context="tenant">
+                                    <div class="flex items-center gap-2 py-1"
                                          @oncontextmenu:preventDefault
                                          @oncontextmenu="() => Context(tenant)">
-                                        @tenant.ConnectionString
+                                        <code class="max-w-[36rem] truncate text-xs text-slate-600 dark:text-slate-300" title="@(IsRevealed(tenant.Id) ? tenant.ConnectionString : "")">
+                                            @ConnectionDisplay(tenant)
+                                        </code>
+                                        <button type="button"
+                                                class="shrink-0 rounded-lg border border-slate-300 px-2 py-1 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                                                title="@(IsRevealed(tenant.Id) ? "Hide" : "Show")"
+                                                @onclick="() => ToggleReveal(tenant.Id)">
+                                            @(IsRevealed(tenant.Id) ? "Hide" : "Show")
+                                        </button>
                                     </div>
                                 </Template>
                             </MhdTableColumn>
@@ -94,8 +114,52 @@
 
 @code{
     List<TenantDatabaseEntity>? Tenants;
+    Dictionary<int, int> _tenantCounts = new();
+    readonly HashSet<int> _revealed = new();
+    string _search = string.Empty;
     bool _loading = true;
+    bool _busy;
     string? _loadError;
+
+    IReadOnlyList<TenantDatabaseEntity> Filtered
+    {
+        get
+        {
+            var all = Tenants ?? Enumerable.Empty<TenantDatabaseEntity>();
+            if (!string.IsNullOrWhiteSpace(_search))
+            {
+                var term = _search.Trim();
+                all = all.Where(t => !string.IsNullOrEmpty(t.Name) && t.Name.Contains(term, StringComparison.OrdinalIgnoreCase));
+            }
+            return all.ToList();
+        }
+    }
+
+    int TenantCount(int dbId) => _tenantCounts.TryGetValue(dbId, out var c) ? c : 0;
+
+    bool IsRevealed(int id) => _revealed.Contains(id);
+
+    void ToggleReveal(int id)
+    {
+        if (!_revealed.Add(id))
+            _revealed.Remove(id);
+    }
+
+    string ConnectionDisplay(TenantDatabaseEntity t)
+        => IsRevealed(t.Id) ? t.ConnectionString : MaskConnectionString(t.ConnectionString);
+
+    private static string MaskConnectionString(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return string.Empty;
+
+        // Hide credential values; keep server/database visible for identification.
+        return System.Text.RegularExpressions.Regex.Replace(
+            value,
+            @"(?<key>\b(password|pwd|user\s*id|uid)\s*=)[^;]*",
+            "${key}***",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+    }
 
     void UpdateForm(TenantDatabaseEntity model)
     {
@@ -120,16 +184,43 @@
 
     void Remove(TenantDatabaseEntity obj)
     {
+        var count = TenantCount(obj.Id);
+        if (count > 0)
+        {
+            MHD.MessageOk(
+                AppControll.Db,
+                $"'{obj.Name}' is used by {count} tenant(s). Reassign or remove those tenants before deleting this database.",
+                MhdState.Warning);
+            return;
+        }
+
         MHD.DeleteMessage(obj.Name, EventCallback.Factory.Create(this, () => RemoveAsync(obj)));
     }
 
     async Task RemoveAsync(TenantDatabaseEntity obj)
     {
-        await using var db = await DbFactory.CreateDbContextAsync();
-        db.TenantDatabase.Remove(obj);
-        await db.SaveChangesAsync();
-        Tenants?.Remove(obj);
-        MHD.ToastMessage(ResourceApp.delete, ToastType.Delete, true);
+        if (_busy)
+            return;
+
+        _busy = true;
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+            db.TenantDatabase.Remove(obj);
+            await db.SaveChangesAsync();
+            Tenants?.Remove(obj);
+            _tenantCounts.Remove(obj.Id);
+            MHD.ToastMessage(ResourceApp.delete, ToastType.Delete, true);
+        }
+        catch (Exception ex)
+        {
+            MHD.MessageOk(AppControll.Db, ex.Message, MhdState.Danger);
+        }
+        finally
+        {
+            _busy = false;
+            StateHasChanged();
+        }
     }
 
     protected override async Task OnInitializedAsync() => await LoadAsync();
@@ -145,6 +236,12 @@
                 .AsNoTracking()
                 .OrderBy(x => x.Name)
                 .ToListAsync();
+
+            _tenantCounts = await db.Tenants
+                .AsNoTracking()
+                .GroupBy(t => t.TenantDBId)
+                .Select(g => new { DbId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.DbId, x => x.Count);
         }
         catch (Exception ex)
         {

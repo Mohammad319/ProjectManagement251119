@@ -1,10 +1,11 @@
-﻿@using BlazorMHD.UI.Core.Navigation
+@using BlazorMHD.UI.Core.Navigation
 @using Microsoft.AspNetCore.Components.Authorization
 @using ProjectManagement.Adminstrator.Services.Users
 @using ProjectManagement.Shared.Models.Account
 @inherits AppComponentBase
 @inject IUsersService UsersService
 @inject AuthenticationStateProvider AuthStateProvider
+@inject Microsoft.Extensions.Localization.IStringLocalizer<ResourceIdentity> IdLoc
 @attribute [Authorize(Roles = PMRolesConst.APP.AdminManger)]
 
 <div class="space-y-1 text-slate-900 dark:text-slate-100">
@@ -13,10 +14,31 @@
             <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Manage site users, access state, and account details.</p>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2">
+        <div class="mt-2 flex flex-wrap items-center gap-2">
+            <input type="search"
+                   placeholder="Search by email or name…"
+                   value="@_search"
+                   @oninput="OnSearchInput"
+                   class="w-full max-w-xs rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+
+            <select @bind="_roleFilter" @bind:after="ResetPage"
+                    class="rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+                <option value="">@IdLoc["AllRoles"]</option>
+                <option value="@PMRolesConst.APP.Admin">@IdLoc["LevelManager"]</option>
+                <option value="@PMRolesConst.APP.Manger">@IdLoc["LevelUser"]</option>
+                <option value="@PMRolesConst.APP.User">@IdLoc["LevelGuest"]</option>
+            </select>
+
+            <select @bind="_statusFilter" @bind:after="ResetPage"
+                    class="rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+                <option value="@StatusFilter.All">@IdLoc["AllStatuses"]</option>
+                <option value="@StatusFilter.Active">@IdLoc["StatusActive"]</option>
+                <option value="@StatusFilter.Locked">@IdLoc["StatusLocked"]</option>
+            </select>
+
             @if (Users is not null)
             {
-                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@Users.Count @ResourceIdentity.users</span>
+                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@FilteredCount / @Users.Count @ResourceIdentity.users</span>
             }
 
             @if (CanManageSiteUsers)
@@ -34,22 +56,23 @@
             <MhdLoading />
         </div>
     }
-    else if (Users.Count > 0)
+    else if (FilteredCount > 0)
     {
         <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-800">
                     <thead>
                         <tr>
-                            <th class="px-0.5 py-0.5text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@ResourceIdentity.email</th>
-                            <th class="px-0.5 py-0.5text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@CalcResource.name</th>
-                            <th class="px-0.5 py-0.5text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@CalcResource.active</th>
-                            <th class="px-0.5 py-0.5text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@ResourceIdentity.lockoutStart</th>
-                            <th class="px-0.5 py-0.5text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@ResourceIdentity.lockoutEnd</th>
+                            <th class="cursor-pointer select-none px-0.5 py-0.5 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400" @onclick="() => ToggleSort(SortColumn.Email)">@ResourceIdentity.email @SortIndicator(SortColumn.Email)</th>
+                            <th class="cursor-pointer select-none px-0.5 py-0.5 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400" @onclick="() => ToggleSort(SortColumn.Name)">@CalcResource.name @SortIndicator(SortColumn.Name)</th>
+                            <th class="cursor-pointer select-none px-0.5 py-0.5 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400" @onclick="() => ToggleSort(SortColumn.Role)">@ResourceIdentity.role @SortIndicator(SortColumn.Role)</th>
+                            <th class="px-0.5 py-0.5 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@CalcResource.active</th>
+                            <th class="cursor-pointer select-none px-0.5 py-0.5 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400" @onclick="() => ToggleSort(SortColumn.LastLogin)">Last login @SortIndicator(SortColumn.LastLogin)</th>
+                            <th class="px-0.5 py-0.5 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@ResourceIdentity.lockoutEnd</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var user in Users)
+                        @foreach (var user in Paged)
                         {
                             <tr class="cursor-context-menu"
                                 @oncontextmenu:preventDefault
@@ -64,17 +87,31 @@
                                     <div class="font-medium">@user.Firstname @user.Lastname</div>
                                 </td>
                                 <td class="px-0.5 py-0.5 align-top text-sm text-slate-700 dark:text-slate-200">
-                                    <span class="@(user.LockoutEnabled ?"inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200" :"inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200")">
-                                        @(user.LockoutEnabled ? ResourceIdentity.logout : CalcResource.active)
+                                    <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@RoleName(user)</span>
+                                </td>
+                                <td class="px-0.5 py-0.5 align-top text-sm text-slate-700 dark:text-slate-200">
+                                    <span class="@(IsLocked(user) ?"inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200" :"inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200")">
+                                        @(IsLocked(user) ? IdLoc["StatusLocked"] : IdLoc["StatusActive"])
                                     </span>
                                 </td>
-                                <td class="text-slate-600 dark:text-slate-300">@(user.LockoutStart?.ToString("dd.MM.yyyy") ??"—")</td>
-                                <td class="text-slate-600 dark:text-slate-300">@(user.LockoutEnd?.ToString("dd.MM.yyyy") ??"—")</td>
+                                <td class="px-0.5 py-0.5 align-top text-sm text-slate-600 dark:text-slate-300">@FormatDateTime(user.LastLoginAt)</td>
+                                <td class="px-0.5 py-0.5 align-top text-sm text-slate-600 dark:text-slate-300">@(user.LockoutEnd?.ToString("dd.MM.yyyy") ??"—")</td>
                             </tr>
                         }
                     </tbody>
                 </table>
             </div>
+
+            @if (TotalPages > 1)
+            {
+                <div class="flex items-center justify-between gap-2 border-t border-slate-200 px-3 py-2 text-xs text-slate-600 dark:border-slate-800 dark:text-slate-300">
+                    <span>@($"{_page} / {TotalPages}")</span>
+                    <div class="flex items-center gap-1">
+                        <button type="button" class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-2 py-1 font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" disabled="@(_page <= 1)" @onclick="() => GoToPage(_page - 1)">‹</button>
+                        <button type="button" class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-2 py-1 font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" disabled="@(_page >= TotalPages)" @onclick="() => GoToPage(_page + 1)">›</button>
+                    </div>
+                </div>
+            }
         </div>
     }
     else
@@ -87,6 +124,113 @@
 
 @code {
     private bool CanManageSiteUsers;
+    string _search = string.Empty;
+    string _roleFilter = string.Empty;
+    StatusFilter _statusFilter = StatusFilter.All;
+    SortColumn _sortColumn = SortColumn.Email;
+    bool _sortAscending = true;
+    int _page = 1;
+    const int PageSize = 25;
+    readonly Dictionary<string, string?> _roles = new(StringComparer.Ordinal);
+
+    enum StatusFilter { All, Active, Locked }
+    enum SortColumn { Email, Name, Role, LastLogin }
+
+    IReadOnlyList<ApplicationUser> Filtered
+    {
+        get
+        {
+            IEnumerable<ApplicationUser> all = Users ?? Enumerable.Empty<ApplicationUser>();
+
+            if (!string.IsNullOrWhiteSpace(_search))
+            {
+                var term = _search.Trim();
+                all = all.Where(u =>
+                    Match(u.Email, term) || Match(u.UserName, term)
+                    || Match(u.Firstname, term) || Match(u.Lastname, term));
+            }
+
+            if (!string.IsNullOrWhiteSpace(_roleFilter))
+            {
+                all = all.Where(u => string.Equals(RoleOf(u), _roleFilter, StringComparison.Ordinal));
+            }
+
+            all = _statusFilter switch
+            {
+                StatusFilter.Active => all.Where(u => !IsLocked(u)),
+                StatusFilter.Locked => all.Where(IsLocked),
+                _ => all
+            };
+
+            return Sort(all).ToList();
+        }
+    }
+
+    int FilteredCount => Filtered.Count;
+    int TotalPages => Math.Max(1, (int)Math.Ceiling(FilteredCount / (double)PageSize));
+    IReadOnlyList<ApplicationUser> Paged => Filtered.Skip((_page - 1) * PageSize).Take(PageSize).ToList();
+
+    IEnumerable<ApplicationUser> Sort(IEnumerable<ApplicationUser> source)
+    {
+        Func<ApplicationUser, object?> key = _sortColumn switch
+        {
+            SortColumn.Name => u => $"{u.Firstname} {u.Lastname}".Trim(),
+            SortColumn.Role => u => RoleName(u),
+            SortColumn.LastLogin => u => u.LastLoginAt ?? DateTimeOffset.MinValue,
+            _ => u => u.Email ?? string.Empty
+        };
+
+        return _sortAscending ? source.OrderBy(key) : source.OrderByDescending(key);
+    }
+
+    static bool Match(string? value, string term)
+        => !string.IsNullOrEmpty(value) && value.Contains(term, StringComparison.OrdinalIgnoreCase);
+
+    static bool IsLocked(ApplicationUser u)
+        => u.LockoutEnd.HasValue && u.LockoutEnd.Value > DateTimeOffset.UtcNow;
+
+    string? RoleOf(ApplicationUser u) => _roles.TryGetValue(u.Id, out var r) ? r : null;
+
+    string RoleName(ApplicationUser u)
+        => RoleOf(u) switch
+        {
+            PMRolesConst.APP.Admin => IdLoc["LevelManager"].Value,
+            PMRolesConst.APP.Manger => IdLoc["LevelUser"].Value,
+            PMRolesConst.APP.User => IdLoc["LevelGuest"].Value,
+            var role => string.IsNullOrWhiteSpace(role) ? "—" : role
+        };
+
+    static string FormatDateTime(DateTimeOffset? value)
+        => value?.ToLocalTime().ToString("dd.MM.yyyy HH:mm") ?? "—";
+
+    MarkupString SortIndicator(SortColumn column)
+        => _sortColumn == column
+            ? (MarkupString)(_sortAscending ? "▲" : "▼")
+            : (MarkupString)string.Empty;
+
+    void ToggleSort(SortColumn column)
+    {
+        if (_sortColumn == column)
+        {
+            _sortAscending = !_sortAscending;
+        }
+        else
+        {
+            _sortColumn = column;
+            _sortAscending = true;
+        }
+        _page = 1;
+    }
+
+    void OnSearchInput(ChangeEventArgs e)
+    {
+        _search = e.Value?.ToString() ?? string.Empty;
+        _page = 1;
+    }
+
+    void ResetPage() => _page = 1;
+
+    void GoToPage(int page) => _page = Math.Clamp(page, 1, TotalPages);
 
     protected override async Task OnInitializedAsync()
     {
@@ -104,9 +248,17 @@
             return;
         }
 
+        var locked = IsLocked(item);
+
         await ContextService.ShowMenuAsync(new()
         {
             new MhdContextMenuItem { Label = $"✏️ {ResourceApp.update}", OnClickAsync = () => { UpdateUser(item); return Task.CompletedTask; } },
+            new MhdContextMenuItem
+            {
+                Label = locked ? $"🔓 {IdLoc["UnlockUser"].Value}" : $"🔒 {IdLoc["LockUser"].Value}",
+                OnClickAsync = () => { ToggleLock(item, !locked); return Task.CompletedTask; }
+            },
+            new MhdContextMenuItem { Label = $"🔑 {IdLoc["ResetPassword"].Value}", OnClickAsync = () => { ResetPassword(item); return Task.CompletedTask; } },
             new MhdContextMenuItem { Label = $"🗑️ {ResourceApp.delete}", OnClickAsync = () => { Delete_Click(item); return Task.CompletedTask; } }
         });
     }
@@ -125,6 +277,40 @@
             [nameof(UpdateUserUI.Callback)] = EventCallback.Factory.Create<bool>(this, CallBack),
         });
 
+    void ToggleLock(ApplicationUser user, bool block)
+    {
+        var format = (block ? IdLoc["LockConfirmFormat"] : IdLoc["UnlockConfirmFormat"]).Value;
+        MHD.MessageYesNo(
+            block ? IdLoc["LockUser"].Value : IdLoc["UnlockUser"].Value,
+            string.Format(format, user.Email),
+            MhdState.Warning,
+            EventCallback.Factory.Create(this, () => ToggleLockConfirmedAsync(user, block)));
+    }
+
+    async Task ToggleLockConfirmedAsync(ApplicationUser user, bool block)
+    {
+        await Modal.CloseAsync();
+        var result = await ExHandlers.RunCheckTokenAsync(() => UsersService.BlockTenantAsync(user.Id, block));
+        MHD.Notifications(ToastType.Update, result);
+        if (result) await GetUsersAsync();
+    }
+
+    void ResetPassword(ApplicationUser user)
+    {
+        MHD.MessageYesNo(
+            IdLoc["ResetPassword"].Value,
+            string.Format(IdLoc["ResetPasswordConfirmFormat"].Value, user.Email),
+            MhdState.Warning,
+            EventCallback.Factory.Create(this, () => ResetPasswordConfirmedAsync(user)));
+    }
+
+    async Task ResetPasswordConfirmedAsync(ApplicationUser user)
+    {
+        await Modal.CloseAsync();
+        var result = await ExHandlers.RunCheckTokenAsync(() => UsersService.ResetUserPasswordAsync(user.Id, null));
+        MHD.Notifications(ToastType.Update, result);
+    }
+
     async Task CallBack(bool refresh)
     {
         if (refresh) await GetUsersAsync();
@@ -136,20 +322,16 @@
         if (await ExHandlers.RunCheckTokenAsync(() => UsersService.RemoveUserAsync(deleteConfirmed.Id, null)))
         {
             Users?.Remove(deleteConfirmed);
+            _roles.Remove(deleteConfirmed.Id);
         }
 
         StateHasChanged();
     }
 
-    bool Remove(ApplicationUser user)
-    {
-        MHD.MessageYesNo(ResourceApp.delete, AppLoc[LocalizerConst.deleteConfirmMsg, user.Email ?? string.Empty], MhdState.Warning, EventCallback.Factory.Create(this, () => RemoveAsync(user)));
-        return true;
-    }
-
     void Delete_Click(ApplicationUser user)
     {
-        MHD.DeleteMessage(user.Email, EventCallback.Factory.Create(this, () => Remove(user)));
+        // Single confirmation only (previously this chained two dialogs).
+        MHD.DeleteMessage(user.Email, EventCallback.Factory.Create(this, () => RemoveAsync(user)));
     }
 
     List<ApplicationUser>? Users;
@@ -157,9 +339,26 @@
     async Task GetUsersAsync()
     {
         MHD.Loading.Begin();
-        Users = null;
-        Users = await UsersService.GetUsersAsync(null);
-        MHD.Loading.End();
-        StateHasChanged();
+        try
+        {
+            Users = null;
+            Users = await UsersService.GetUsersAsync(null);
+
+            // Single batched query for all roles instead of one call per user (avoids N+1).
+            _roles.Clear();
+            var map = await ExHandlers.RunCheckTokenAsync(() => UsersService.GetUserRolesMapAsync(null));
+            if (map is not null)
+            {
+                foreach (var kvp in map)
+                    _roles[kvp.Key] = kvp.Value;
+            }
+
+            if (_page > TotalPages) _page = TotalPages;
+        }
+        finally
+        {
+            MHD.Loading.End();
+            StateHasChanged();
+        }
     }
 }

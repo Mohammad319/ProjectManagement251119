@@ -25,9 +25,6 @@ public partial class ProcurementProcedureFormUI
         ProcedureUpdate = new PostTaskStatusDTO();
         PropertyCopier.CopyPropertiesTo(Procedure, ProcedureUpdate);
 
-        if (string.IsNullOrWhiteSpace(ProcedureUpdate.Color))
-            ProcedureUpdate.Color = "#3b82f6";
-
         LastId = currentId;
         LastReference = Procedure;
     }

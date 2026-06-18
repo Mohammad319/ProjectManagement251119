@@ -138,6 +138,9 @@
   <data name="confirmTenantBlockout" xml:space="preserve">
     <value>Are you sure you want to unblock the user?</value>
   </data>
+  <data name="confirmResetPassword" xml:space="preserve">
+    <value>Reset this user's password and e-mail them a new temporary password?</value>
+  </data>
   <data name="dateExpire" xml:space="preserve">
     <value>Date Expire</value>
   </data>
@@ -158,9 +161,6 @@
   </data>
   <data name="max" xml:space="preserve">
     <value>Max</value>
-  </data>
-  <data name="maxCalculations" xml:space="preserve">
-    <value>Max Calculations</value>
   </data>
   <data name="maxUsers" xml:space="preserve">
     <value>Max Users</value>

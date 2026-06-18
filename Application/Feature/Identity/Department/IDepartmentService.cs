@@ -16,5 +16,6 @@ namespace Application.Feature.Identity.Department
         Task<List<ListDTO>> GetAsListAsync(CancellationToken ct = default);
         Task<List<TenantUserDto>> GetUsersByDepartmentIdAsync(int? departmentId,CancellationToken ct = default);
         Task<List<DepartmentDetailsDTO>> GetDetailsAsync(CancellationToken ct = default);
+        Task<int> GetTotalUsersCountAsync(CancellationToken ct = default);
     }
 }

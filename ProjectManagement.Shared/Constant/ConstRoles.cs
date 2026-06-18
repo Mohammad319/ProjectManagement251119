@@ -389,31 +389,77 @@ namespace ProjectManagement.Shared.Constants
 
 namespace ProjectManagement.Shared.Constant
 {
+    /// <summary>
+    /// Canonical role identifiers used for ASP.NET Identity role-based authorization.
+    /// <para>
+    /// There are two independent scopes:
+    /// <list type="bullet">
+    ///   <item><b>APP</b> — platform/super-admin scope, used only by the Administrator portal.</item>
+    ///   <item><b>Tenant</b> — roles of users inside an organisation (the main application).</item>
+    /// </list>
+    /// </para>
+    /// <para>
+    /// There are exactly three role tiers per scope, highest → lowest: <b>Manager</b> (full control),
+    /// <b>User</b> (editor), <b>Guest</b> (read-only). The string <i>values</i> below are the ASP.NET Identity
+    /// role names persisted in the auth DB (seeded at startup; changing a value just re-seeds on a fresh DB).
+    /// </para>
+    /// <para>
+    /// NOTE on the C# constant <i>names</i>: they are the legacy <c>Admin</c>/<c>Manger</c>/<c>User</c> identifiers
+    /// (kept to avoid a wide, risky rename), and they map to the tiers by POSITION, not by their text:
+    /// <c>Admin</c> = top tier = "Manager", <c>Manger</c> = middle tier = "User", <c>User</c> = bottom tier = "Guest".
+    /// Always reach roles through these constants; never hard-code the string values.
+    /// To add a 4th role later, add a constant + value here and to <c>IdentityUserSyncHelper.AppRoles/TenantRoles</c>.
+    /// </para>
+    /// </summary>
     public class PMRolesConst
     {
-
+        /// <summary>Platform-level roles (Administrator portal only). Tiers: Manager / User / Guest.</summary>
         public class APP
         {
-            public const string Admin = "AA";
-            public const string Manger = "MA";
-            public const string User = "UA";
+            /// <summary>Top tier — value "AppManager", UI label "Manager". Full platform control.</summary>
+            public const string Admin = "AppManager";
+            /// <summary>Middle tier — value "AppUser", UI label "User". Platform editor.</summary>
+            public const string Manger = "AppUser";
+            /// <summary>Bottom tier — value "AppGuest", UI label "Guest". Read-only.</summary>
+            public const string User = "AppGuest";
 
+            /// <summary>Editors: Manager + User ("AppManager,AppUser").</summary>
             public const string AdminManger = Admin + "," + Manger;
+            /// <summary>Everyone: Manager + User + Guest ("AppManager,AppUser,AppGuest").</summary>
             public const string Users = AdminManger + "," + User;
         }
 
+        /// <summary>
+        /// Roles of users within an organisation (tenant). Three tiers, highest to lowest:
+        /// <list type="number">
+        ///   <item><see cref="Admin"/> — value "TenantManager", UI label "Manager". Full control of the
+        ///   organisation: the ONLY tier that manages departments and users. Tenant-wide, has no department.</item>
+        ///   <item><see cref="Manger"/> — value "TenantUser", UI label "User". Editor: create/edit/delete
+        ///   projects, calculations, tasks, resources, tenders, etc. Belongs to a department. Cannot manage users.</item>
+        ///   <item><see cref="User"/> — value "TenantGuest", UI label "Guest". Read-only: can view
+        ///   reports/lists; all create/edit/delete actions are hidden (not part of <see cref="AdminManger"/>).</item>
+        /// </list>
+        /// </summary>
         public class Tenant
         {
-            public const string Admin = "AT";
-            public const string Manger = "MT";
-            public const string User = "UT";
+            /// <summary>Top tier — value "TenantManager", UI label "Manager". Organisation admin; manages departments and users.</summary>
+            public const string Admin = "TenantManager";
+            /// <summary>Middle tier — value "TenantUser", UI label "User". Editor of projects/calculations; scoped to a department.</summary>
+            public const string Manger = "TenantUser";
+            /// <summary>Bottom tier — value "TenantGuest", UI label "Guest". Read-only viewer.</summary>
+            public const string User = "TenantGuest";
 
+            /// <summary>Editors: Manager + User ("TenantManager,TenantUser"). Used to gate every write/edit action.</summary>
             public const string AdminManger = Admin + "," + Manger;
+            /// <summary>Everyone: Manager + User + Guest ("TenantManager,TenantUser,TenantGuest"). Used to gate read access.</summary>
             public const string Users = AdminManger + "," + User;
+            /// <summary>Non-top tiers: User + Guest ("TenantGuest,TenantUser").</summary>
             public const string UsersNotAdmin = User + "," + Manger;
         }
 
+        /// <summary>Managers of either scope: APP editors + Tenant editors.</summary>
         public const string MangerTenantMangerApp = APP.AdminManger + "," + Tenant.AdminManger;
+        /// <summary>Every authenticated role across both scopes.</summary>
         public const string All = Tenant.Users + "," + APP.Users;
     }
 

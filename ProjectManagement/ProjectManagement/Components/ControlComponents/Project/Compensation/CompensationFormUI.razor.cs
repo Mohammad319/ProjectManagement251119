@@ -25,9 +25,6 @@ public partial class CompensationFormUI
         CompensationUpdate = new PostTaskStatusDTO();
         PropertyCopier.CopyPropertiesTo(Compensation, CompensationUpdate);
 
-        if (string.IsNullOrWhiteSpace(CompensationUpdate.Color))
-            CompensationUpdate.Color = "#3b82f6";
-
         LastCompensationId = currentId;
         LastCompensationReference = Compensation;
     }

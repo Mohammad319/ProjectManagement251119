@@ -25,9 +25,6 @@ public partial class ContractFormUI
         UpdateObj = new PostTaskStatusDTO();
         PropertyCopier.CopyPropertiesTo(Contract, UpdateObj);
 
-        if (string.IsNullOrWhiteSpace(UpdateObj.Color))
-            UpdateObj.Color = "#0ea5e9";
-
         LastContractId = currentId;
         LastContractReference = Contract;
     }

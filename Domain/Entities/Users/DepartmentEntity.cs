@@ -15,6 +15,13 @@ namespace Domain.Entities.Users
         [MaxLength(FieldLengths.Comment)]
         public string? Description { get; private set; }
 
+        /// <summary>Optional UI accent colour (hex, e.g. "#10b981").</summary>
+        [MaxLength(16)]
+        public string? Color { get; private set; }
+
+        /// <summary>Optional id of the user who heads this department (soft reference, no FK constraint).</summary>
+        public int? HeadUserId { get; private set; }
+
         [JsonIgnore]
         public ICollection<FolderEntity> Folders { get; private set; } = [];
 
@@ -28,7 +35,9 @@ namespace Domain.Entities.Users
             return new DepartmentEntity
             {
                 Name = NormalizeRequired(dto.Name),
-                Description = NormalizeOptional(dto.Description)
+                Description = NormalizeOptional(dto.Description),
+                Color = NormalizeColor(dto.Color),
+                HeadUserId = NormalizeHeadUserId(dto.HeadUserId)
             };
         }
 
@@ -36,7 +45,26 @@ namespace Domain.Entities.Users
         {
             Name = NormalizeRequired(dto.Name);
             Description = NormalizeOptional(dto.Description);
+            Color = NormalizeColor(dto.Color);
+            HeadUserId = NormalizeHeadUserId(dto.HeadUserId);
         }
+
+        public void ClearHeadIfMatches(int userId)
+        {
+            if (HeadUserId == userId)
+                HeadUserId = null;
+        }
+
+        private static string? NormalizeColor(string? value)
+        {
+            var normalized = value?.Trim();
+            return string.IsNullOrWhiteSpace(normalized)
+                ? null
+                : (normalized.Length > 16 ? normalized[..16] : normalized);
+        }
+
+        private static int? NormalizeHeadUserId(int? value)
+            => value.HasValue && value.Value > 0 ? value : null;
 
         private static string NormalizeRequired(string? value)
         {

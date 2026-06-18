@@ -12,15 +12,15 @@ using TaskResourceBlueprints.Infrastructure;
 namespace TaskResourceBlueprints.Migrations
 {
     [DbContext(typeof(TaskResourceBlueprintsContext))]
-    [Migration("20260603092236_DB260603")]
-    partial class DB260603
+    [Migration("20260617170646_DB260617")]
+    partial class DB260617
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.8")
+                .HasAnnotation("ProductVersion", "10.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);

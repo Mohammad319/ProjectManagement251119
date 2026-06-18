@@ -4,6 +4,7 @@ using AuthPermissions.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,13 +12,15 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AuthPermissions.Migrations
 {
     [DbContext(typeof(AuthPermissionDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260618084336_DB260617_2")]
+    partial class DB260617_2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.8")
+                .HasAnnotation("ProductVersion", "10.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -53,6 +56,12 @@ namespace AuthPermissions.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset?>("LastLoginAt")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Lastname")
                         .IsRequired()
@@ -245,9 +254,6 @@ namespace AuthPermissions.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
 
-                    b.Property<int>("MaxCalculations")
-                        .HasColumnType("int");
-
                     b.Property<int>("MaxUsers")
                         .HasColumnType("int");
 
@@ -290,8 +296,6 @@ namespace AuthPermissions.Migrations
 
                     b.ToTable("Tenants", null, t =>
                         {
-                            t.HasCheckConstraint("CK_Tenants_MaxCalculations_Positive", "[MaxCalculations] >= 1");
-
                             t.HasCheckConstraint("CK_Tenants_MaxUsers_Positive", "[MaxUsers] >= 1");
 
                             t.HasCheckConstraint("CK_Tenants_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");

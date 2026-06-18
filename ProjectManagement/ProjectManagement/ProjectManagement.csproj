@@ -92,6 +92,19 @@
 
 	</Target>
 
+	<!--
+	  Debug/dev builds must also regenerate app.css, otherwise newly added Tailwind utility
+	  classes in markup (e.g. the Department list's responsive `hidden lg:block` table) never
+	  make it into the served stylesheet and the related UI silently disappears at runtime.
+	  Reuses the already-installed node_modules for speed, and is skipped when Node deps are
+	  not installed so contributors without Node can still build.
+	-->
+	<Target Name="BuildTailwindCssForDebug" BeforeTargets="PrepareForBuild" Condition="'$(Configuration)' != 'Release' And Exists('$(MSBuildProjectDirectory)\package.json') And Exists('$(MSBuildProjectDirectory)\node_modules')">
+
+		<Exec Command="npm run tw:build" WorkingDirectory="$(MSBuildProjectDirectory)" />
+
+	</Target>
+
 	<Target Name="ValidatePublishedTailwindCss" AfterTargets="Publish" Condition="'$(Configuration)' == 'Release'">
 
 		<PropertyGroup>

@@ -14,6 +14,11 @@ namespace Persistence.Service.Department
         public async Task<int> CreateAsync(DepartmentBase dto, CancellationToken ct)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            var name = (dto.Name ?? string.Empty).Trim();
+            if (await NameExistsAsync(context, name, null, ct))
+                return 0;
+
             var entity = DepartmentEntity.Create(dto);
             context.Department.Add(entity);
             await context.SaveChangesAsync(ct);
@@ -28,9 +33,25 @@ namespace Persistence.Service.Department
             if (entity is null)
                 return false;
 
+            var name = (dto.Name ?? string.Empty).Trim();
+            if (await NameExistsAsync(context, name, id, ct))
+                return false;
+
             entity.Update(dto);
             await context.SaveChangesAsync(ct);
             return true;
+        }
+
+        private static Task<bool> NameExistsAsync(
+            Persistence.Context.ShardingSingleDbContext context, string name, int? excludeId, CancellationToken ct)
+            => context.Department
+                .AsNoTracking()
+                .AnyAsync(d => d.Name == name && (!excludeId.HasValue || d.Id != excludeId.Value), ct);
+
+        public async Task<int> GetTotalUsersCountAsync(CancellationToken ct = default)
+        {
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+            return await context.User.AsNoTracking().CountAsync(ct);
         }
 
         public async Task<bool> DeleteAsync(int id, CancellationToken ct)
@@ -100,6 +121,14 @@ namespace Persistence.Service.Department
                     Id = x.Id,
                     Name = x.Name,
                     Description = x.Description ?? string.Empty,
+                    Color = x.Color,
+                    HeadUserId = x.HeadUserId,
+                    HeadUserName = x.Users
+                        .Where(u => u.Id == x.HeadUserId)
+                        .Select(u => ((u.FirstName ?? "") + " " + (u.LastName ?? "")).Trim() != ""
+                            ? ((u.FirstName ?? "") + " " + (u.LastName ?? "")).Trim()
+                            : u.Email)
+                        .FirstOrDefault(),
                     Created = x.CreatedAt,
                     LastModified = x.UpdatedAt,
                     UsersCount = x.Users.Count,

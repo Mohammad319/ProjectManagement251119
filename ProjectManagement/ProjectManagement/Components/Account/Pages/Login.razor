@@ -178,6 +178,8 @@
 
         if (result.Succeeded)
         {
+            await StampLastLoginAsync(passwordUser);
+
             Logger.LogInformation(
                 "Login succeeded. Method={Method} EmailHint={EmailHint} UserId={UserId} RemoteIp={RemoteIp}",
                 signInMethod,
@@ -202,6 +204,26 @@
         {
             Logger.LogWarning("Invalid login attempt for {Email}.", Input.Email);
             errorMessage = PMResourceIdentity.Error_InvalidLoginAttempt;
+        }
+    }
+
+    private async Task StampLastLoginAsync(ApplicationUser? user)
+    {
+        try
+        {
+            user ??= string.IsNullOrWhiteSpace(Input.Email)
+                ? null
+                : await UserManager.FindByEmailAsync(Input.Email.Trim());
+
+            if (user is null)
+                return;
+
+            user.LastLoginAt = DateTimeOffset.UtcNow;
+            await UserManager.UpdateAsync(user);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Could not record last-login timestamp.");
         }
     }
 

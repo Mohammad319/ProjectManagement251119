@@ -17,7 +17,7 @@ namespace Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.8")
+                .HasAnnotation("ProductVersion", "10.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -1851,7 +1851,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "ImportJobId", "Status");
 
-                    b.ToTable("PriceImportCandidates", t =>
+                    b.ToTable("PriceImportCandidates", null, t =>
                         {
                             t.HasCheckConstraint("CK_PriceImportCandidates_BasePrice_NonNegative", "[BasePrice] IS NULL OR [BasePrice] >= 0");
 
@@ -1929,7 +1929,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "SupplierName");
 
-                    b.ToTable("PriceImportJobs", t =>
+                    b.ToTable("PriceImportJobs", null, t =>
                         {
                             t.HasCheckConstraint("CK_PriceImportJobs_Counts_NonNegative", "[TotalCandidates] >= 0 AND [ReadyCount] >= 0 AND [ReviewCount] >= 0 AND [ErrorCount] >= 0 AND [ApprovedCount] >= 0");
 
@@ -1975,7 +1975,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "SupplierName", "ExternalColumnName");
 
-                    b.ToTable("PriceImportMappings", t =>
+                    b.ToTable("PriceImportMappings", null, t =>
                         {
                             t.HasCheckConstraint("CK_PriceImportMappings_ExternalColumnName_NotEmpty", "LEN(LTRIM(RTRIM([ExternalColumnName]))) > 0");
 
@@ -2043,7 +2043,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "SupplierName");
 
-                    b.ToTable("PriceLists", t =>
+                    b.ToTable("PriceLists", null, t =>
                         {
                             t.HasCheckConstraint("CK_PriceLists_DateRange", "[ValidTo] IS NULL OR [ValidFrom] IS NULL OR [ValidTo] >= [ValidFrom]");
 
@@ -2164,7 +2164,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "PriceListId", "ArticleNumber");
 
-                    b.ToTable("PriceListItems", t =>
+                    b.ToTable("PriceListItems", null, t =>
                         {
                             t.HasCheckConstraint("CK_PriceListItems_BasePrice_NonNegative", "[BasePrice] IS NULL OR [BasePrice] >= 0");
 
@@ -2189,11 +2189,6 @@ namespace Persistence.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Color")
-                        .IsRequired()
-                        .HasMaxLength(7)
-                        .HasColumnType("nvarchar(7)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -2247,8 +2242,6 @@ namespace Persistence.Migrations
 
                     b.ToTable("Compensations", null, t =>
                         {
-                            t.HasCheckConstraint("CK_Compensations_Color_Hex", "[Color] LIKE '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'");
-
                             t.HasCheckConstraint("CK_Compensations_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
 
                             t.HasCheckConstraint("CK_Compensations_SortOrder_NonNegative", "[SortOrder] >= 0");
@@ -2262,11 +2255,6 @@ namespace Persistence.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Color")
-                        .IsRequired()
-                        .HasMaxLength(7)
-                        .HasColumnType("nvarchar(7)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -2320,8 +2308,6 @@ namespace Persistence.Migrations
 
                     b.ToTable("Contracts", null, t =>
                         {
-                            t.HasCheckConstraint("CK_Contracts_Color_Hex", "[Color] LIKE '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'");
-
                             t.HasCheckConstraint("CK_Contracts_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
 
                             t.HasCheckConstraint("CK_Contracts_SortOrder_NonNegative", "[SortOrder] >= 0");
@@ -2335,11 +2321,6 @@ namespace Persistence.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Color")
-                        .IsRequired()
-                        .HasMaxLength(7)
-                        .HasColumnType("nvarchar(7)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -2393,8 +2374,6 @@ namespace Persistence.Migrations
 
                     b.ToTable("ProcurementMethods", null, t =>
                         {
-                            t.HasCheckConstraint("CK_ProcurementMethods_Color_Hex", "[Color] LIKE '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'");
-
                             t.HasCheckConstraint("CK_ProcurementMethods_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
 
                             t.HasCheckConstraint("CK_ProcurementMethods_SortOrder_NonNegative", "[SortOrder] >= 0");
@@ -2408,11 +2387,6 @@ namespace Persistence.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Color")
-                        .IsRequired()
-                        .HasMaxLength(7)
-                        .HasColumnType("nvarchar(7)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -2464,8 +2438,6 @@ namespace Persistence.Migrations
 
                     b.ToTable("ProcurementProcedures", null, t =>
                         {
-                            t.HasCheckConstraint("CK_ProcurementProcedures_Color_Hex", "[Color] LIKE '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'");
-
                             t.HasCheckConstraint("CK_ProcurementProcedures_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
 
                             t.HasCheckConstraint("CK_ProcurementProcedures_SortOrder_NonNegative", "[SortOrder] >= 0");
@@ -2948,11 +2920,6 @@ namespace Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Color")
-                        .IsRequired()
-                        .HasMaxLength(7)
-                        .HasColumnType("nvarchar(7)");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -3005,8 +2972,6 @@ namespace Persistence.Migrations
 
                     b.ToTable("ProjectTypes", null, t =>
                         {
-                            t.HasCheckConstraint("CK_ProjectTypes_Color_Hex", "[Color] LIKE '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'");
-
                             t.HasCheckConstraint("CK_ProjectTypes_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
 
                             t.HasCheckConstraint("CK_ProjectTypes_SortOrder_NonNegative", "[SortOrder] >= 0");
@@ -3188,6 +3153,10 @@ namespace Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Color")
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -3197,6 +3166,9 @@ namespace Persistence.Migrations
                     b.Property<string>("Description")
                         .HasMaxLength(3000)
                         .HasColumnType("nvarchar(3000)");
+
+                    b.Property<int?>("HeadUserId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -3379,6 +3351,63 @@ namespace Persistence.Migrations
 
                             t.HasCheckConstraint("CK_UserListSettings_Scope_NotEmpty", "LEN(LTRIM(RTRIM([Scope]))) > 0");
                         });
+                });
+
+            modelBuilder.Entity("Domain.Entities.Users.UserManagementAuditEntity", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<string>("ActorDisplayName")
+                        .IsRequired()
+                        .HasMaxLength(240)
+                        .HasColumnType("nvarchar(240)");
+
+                    b.Property<int?>("ActorUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Details")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<bool>("Succeeded")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("TargetAuthId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("TargetDisplayName")
+                        .IsRequired()
+                        .HasMaxLength(240)
+                        .HasColumnType("nvarchar(240)");
+
+                    b.Property<int?>("TargetUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CreatedAtUtc")
+                        .HasDatabaseName("IX_UserManagementAuditLogs_Tenant_CreatedAt");
+
+                    b.HasIndex("TenantId", "TargetUserId")
+                        .HasDatabaseName("IX_UserManagementAuditLogs_Tenant_TargetUser");
+
+                    b.ToTable("UserManagementAuditLogs", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.Application.ApplicationEntity", b =>

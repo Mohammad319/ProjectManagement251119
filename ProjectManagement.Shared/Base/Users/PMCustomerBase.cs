@@ -27,7 +27,5 @@ namespace ProjectManagement.Shared.Base.Users
         public DateTimeOffset? DateExpire { get; set; }
         [Range(1, int.MaxValue, ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public  int MaxUsers { get; set; } = 5;
-        [Range(1, int.MaxValue, ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public  int MaxCalculations { get; set; } = int.MaxValue;
     }
 }

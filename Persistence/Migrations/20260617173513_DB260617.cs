@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class DB260603 : Migration
+    public partial class DB260617 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -297,7 +297,6 @@ namespace Persistence.Migrations
                     Code = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     Name = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
                     Tax = table.Column<int>(type: "int", nullable: false),
-                    Procurement = table.Column<int>(type: "int", nullable: false),
                     TenderDeadline = table.Column<DateTime>(type: "datetime2", nullable: false),
                     TenderQA = table.Column<DateTime>(type: "datetime2", nullable: false),
                     StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -308,7 +307,7 @@ namespace Persistence.Migrations
                     PublicationDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     DecisionDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     IsPrivate = table.Column<bool>(type: "bit", nullable: false),
-                    IsVisible = table.Column<bool>(type: "bit", nullable: false),
+                    IsArchived = table.Column<bool>(type: "bit", nullable: false),
                     CalculationType = table.Column<int>(type: "int", nullable: false),
                     BidRole = table.Column<int>(type: "int", nullable: false),
                     CalculationRole = table.Column<int>(type: "int", nullable: false),
@@ -383,6 +382,7 @@ namespace Persistence.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    IsDefault = table.Column<bool>(type: "bit", nullable: false),
                     TenantId = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<int>(type: "int", nullable: true),
@@ -390,14 +390,12 @@ namespace Persistence.Migrations
                     UpdatedBy = table.Column<int>(type: "int", nullable: true),
                     RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
                     Name = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: false),
-                    Color = table.Column<string>(type: "nvarchar(7)", maxLength: 7, nullable: false),
                     SortOrder = table.Column<int>(type: "int", nullable: false, defaultValueSql: "NEXT VALUE FOR OrderSeq"),
                     IsVisible = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Compensations", x => x.Id);
-                    table.CheckConstraint("CK_Compensations_Color_Hex", "[Color] LIKE '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'");
                     table.CheckConstraint("CK_Compensations_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
                     table.CheckConstraint("CK_Compensations_SortOrder_NonNegative", "[SortOrder] >= 0");
                 });
@@ -408,6 +406,7 @@ namespace Persistence.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    IsDefault = table.Column<bool>(type: "bit", nullable: false),
                     TenantId = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<int>(type: "int", nullable: true),
@@ -415,14 +414,12 @@ namespace Persistence.Migrations
                     UpdatedBy = table.Column<int>(type: "int", nullable: true),
                     RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
                     Name = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: false),
-                    Color = table.Column<string>(type: "nvarchar(7)", maxLength: 7, nullable: false),
                     SortOrder = table.Column<int>(type: "int", nullable: false, defaultValueSql: "NEXT VALUE FOR OrderSeq"),
                     IsVisible = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Contracts", x => x.Id);
-                    table.CheckConstraint("CK_Contracts_Color_Hex", "[Color] LIKE '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'");
                     table.CheckConstraint("CK_Contracts_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
                     table.CheckConstraint("CK_Contracts_SortOrder_NonNegative", "[SortOrder] >= 0");
                 });
@@ -435,6 +432,8 @@ namespace Persistence.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: false),
                     Description = table.Column<string>(type: "nvarchar(3000)", maxLength: 3000, nullable: true),
+                    Color = table.Column<string>(type: "nvarchar(16)", maxLength: 16, nullable: true),
+                    HeadUserId = table.Column<int>(type: "int", nullable: true),
                     TenantId = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<int>(type: "int", nullable: true),
@@ -655,6 +654,7 @@ namespace Persistence.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    IsDefault = table.Column<bool>(type: "bit", nullable: false),
                     TenantId = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<int>(type: "int", nullable: true),
@@ -662,14 +662,12 @@ namespace Persistence.Migrations
                     UpdatedBy = table.Column<int>(type: "int", nullable: true),
                     RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
                     Name = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: false),
-                    Color = table.Column<string>(type: "nvarchar(7)", maxLength: 7, nullable: false),
                     SortOrder = table.Column<int>(type: "int", nullable: false, defaultValueSql: "NEXT VALUE FOR OrderSeq"),
                     IsVisible = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ProcurementMethods", x => x.Id);
-                    table.CheckConstraint("CK_ProcurementMethods_Color_Hex", "[Color] LIKE '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'");
                     table.CheckConstraint("CK_ProcurementMethods_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
                     table.CheckConstraint("CK_ProcurementMethods_SortOrder_NonNegative", "[SortOrder] >= 0");
                     table.ForeignKey(
@@ -687,6 +685,42 @@ namespace Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ProcurementProcedures",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    IsDefault = table.Column<bool>(type: "bit", nullable: false),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<int>(type: "int", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<int>(type: "int", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: false),
+                    SortOrder = table.Column<int>(type: "int", nullable: false),
+                    IsVisible = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProcurementProcedures", x => x.Id);
+                    table.CheckConstraint("CK_ProcurementProcedures_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+                    table.CheckConstraint("CK_ProcurementProcedures_SortOrder_NonNegative", "[SortOrder] >= 0");
+                    table.ForeignKey(
+                        name: "FK_ProcurementProcedures_Users_CreatedBy",
+                        column: x => x.CreatedBy,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_ProcurementProcedures_Users_UpdatedBy",
+                        column: x => x.UpdatedBy,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "ProjectStatuses",
                 columns: table => new
                 {
@@ -695,6 +729,7 @@ namespace Persistence.Migrations
                     CountsAsSubmittedBid = table.Column<bool>(type: "bit", nullable: false),
                     CountsAsWonBid = table.Column<bool>(type: "bit", nullable: false),
                     CountsAsLostBid = table.Column<bool>(type: "bit", nullable: false),
+                    IsDefault = table.Column<bool>(type: "bit", nullable: false),
                     TenantId = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<int>(type: "int", nullable: true),
@@ -734,6 +769,7 @@ namespace Persistence.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    IsDefault = table.Column<bool>(type: "bit", nullable: false),
                     TenantId = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<int>(type: "int", nullable: true),
@@ -741,14 +777,12 @@ namespace Persistence.Migrations
                     UpdatedBy = table.Column<int>(type: "int", nullable: true),
                     RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
                     Name = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: false),
-                    Color = table.Column<string>(type: "nvarchar(7)", maxLength: 7, nullable: false),
                     SortOrder = table.Column<int>(type: "int", nullable: false, defaultValueSql: "NEXT VALUE FOR OrderSeq"),
                     IsVisible = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ProjectTypes", x => x.Id);
-                    table.CheckConstraint("CK_ProjectTypes_Color_Hex", "[Color] LIKE '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'");
                     table.CheckConstraint("CK_ProjectTypes_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
                     table.CheckConstraint("CK_ProjectTypes_SortOrder_NonNegative", "[SortOrder] >= 0");
                     table.ForeignKey(
@@ -774,6 +808,7 @@ namespace Persistence.Migrations
                     Name = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: false),
                     SortOrder = table.Column<int>(type: "int", nullable: false, defaultValueSql: "NEXT VALUE FOR OrderSeq"),
                     IsVisible = table.Column<bool>(type: "bit", nullable: false),
+                    IsDefault = table.Column<bool>(type: "bit", nullable: false),
                     Kind = table.Column<int>(type: "int", nullable: false),
                     AccountId = table.Column<int>(type: "int", nullable: true),
                     Metadata = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -872,6 +907,7 @@ namespace Persistence.Migrations
                     CountsAsSubmittedBid = table.Column<bool>(type: "bit", nullable: false),
                     CountsAsWonBid = table.Column<bool>(type: "bit", nullable: false),
                     CountsAsLostBid = table.Column<bool>(type: "bit", nullable: false),
+                    IsDefault = table.Column<bool>(type: "bit", nullable: false),
                     TenantId = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<int>(type: "int", nullable: true),
@@ -1110,6 +1146,42 @@ namespace Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "UserListSettings",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    Scope = table.Column<string>(type: "nvarchar(60)", maxLength: 60, nullable: false),
+                    Kind = table.Column<string>(type: "nvarchar(60)", maxLength: 60, nullable: false),
+                    Payload = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<int>(type: "int", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<int>(type: "int", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserListSettings", x => x.Id);
+                    table.CheckConstraint("CK_UserListSettings_Kind_NotEmpty", "LEN(LTRIM(RTRIM([Kind]))) > 0");
+                    table.CheckConstraint("CK_UserListSettings_Scope_NotEmpty", "LEN(LTRIM(RTRIM([Scope]))) > 0");
+                    table.ForeignKey(
+                        name: "FK_UserListSettings_Users_CreatedBy",
+                        column: x => x.CreatedBy,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_UserListSettings_Users_UpdatedBy",
+                        column: x => x.UpdatedBy,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Organisations",
                 columns: table => new
                 {
@@ -1165,6 +1237,7 @@ namespace Persistence.Migrations
                     Metadata = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: false),
                     IsVisible = table.Column<bool>(type: "bit", nullable: false),
+                    IsDefault = table.Column<bool>(type: "bit", nullable: false),
                     SortOrder = table.Column<int>(type: "int", nullable: false),
                     ResourceTypeId = table.Column<int>(type: "int", nullable: false),
                     AccountId = table.Column<int>(type: "int", nullable: true),
@@ -1296,9 +1369,11 @@ namespace Persistence.Migrations
                     FolderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     OrganisationId = table.Column<int>(type: "int", nullable: true),
                     ProcurementMethodId = table.Column<int>(type: "int", nullable: true),
+                    ProcurementProcedureId = table.Column<int>(type: "int", nullable: true),
                     CompensationId = table.Column<int>(type: "int", nullable: true),
                     ContractId = table.Column<int>(type: "int", nullable: true),
-                    IsVisible = table.Column<bool>(type: "bit", nullable: false),
+                    IsArchived = table.Column<bool>(type: "bit", nullable: false),
+                    BidEvaluationModel = table.Column<int>(type: "int", nullable: false),
                     TenantId = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
                     CreatedBy = table.Column<int>(type: "int", nullable: true),
@@ -1340,6 +1415,11 @@ namespace Persistence.Migrations
                         name: "FK_Projects_ProcurementMethods_ProcurementMethodId",
                         column: x => x.ProcurementMethodId,
                         principalTable: "ProcurementMethods",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Projects_ProcurementProcedures_ProcurementProcedureId",
+                        column: x => x.ProcurementProcedureId,
+                        principalTable: "ProcurementProcedures",
                         principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Projects_ProjectStatuses_ProjectStatusId",
@@ -1491,6 +1571,94 @@ namespace Persistence.Migrations
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Resources_Users_UpdatedBy",
+                        column: x => x.UpdatedBy,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ProjectBidPriceColumns",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ProjectId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: false),
+                    PartType = table.Column<int>(type: "int", nullable: false),
+                    SortOrder = table.Column<int>(type: "int", nullable: false),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<int>(type: "int", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<int>(type: "int", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProjectBidPriceColumns", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ProjectBidPriceColumns_Projects_ProjectId",
+                        column: x => x.ProjectId,
+                        principalTable: "Projects",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ProjectBidPriceColumns_Users_CreatedBy",
+                        column: x => x.CreatedBy,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_ProjectBidPriceColumns_Users_UpdatedBy",
+                        column: x => x.UpdatedBy,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ProjectBids",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ProjectId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    BidderName = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
+                    Amount = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    PricesJson = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    DeductionPercent = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    Note = table.Column<string>(type: "nvarchar(3000)", maxLength: 3000, nullable: true),
+                    IsWinner = table.Column<bool>(type: "bit", nullable: false),
+                    IsAwarded = table.Column<bool>(type: "bit", nullable: false),
+                    Placement = table.Column<int>(type: "int", nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    RejectionReason = table.Column<string>(type: "nvarchar(3000)", maxLength: 3000, nullable: true),
+                    SortOrder = table.Column<int>(type: "int", nullable: false),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<int>(type: "int", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<int>(type: "int", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProjectBids", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ProjectBids_Projects_ProjectId",
+                        column: x => x.ProjectId,
+                        principalTable: "Projects",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ProjectBids_Users_CreatedBy",
+                        column: x => x.CreatedBy,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_ProjectBids_Users_UpdatedBy",
                         column: x => x.UpdatedBy,
                         principalTable: "Users",
                         principalColumn: "Id",
@@ -2137,6 +2305,67 @@ namespace Persistence.Migrations
                 column: "UpdatedBy");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ProcurementProcedures_CreatedBy",
+                table: "ProcurementProcedures",
+                column: "CreatedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProcurementProcedures_Tenant_Name",
+                table: "ProcurementProcedures",
+                columns: new[] { "TenantId", "Name" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProcurementProcedures_Tenant_Visible_Order",
+                table: "ProcurementProcedures",
+                columns: new[] { "TenantId", "IsVisible", "SortOrder" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProcurementProcedures_UpdatedBy",
+                table: "ProcurementProcedures",
+                column: "UpdatedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProjectBidPriceColumns_CreatedBy",
+                table: "ProjectBidPriceColumns",
+                column: "CreatedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProjectBidPriceColumns_ProjectId",
+                table: "ProjectBidPriceColumns",
+                column: "ProjectId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProjectBidPriceColumns_Tenant_Project",
+                table: "ProjectBidPriceColumns",
+                columns: new[] { "TenantId", "ProjectId" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProjectBidPriceColumns_UpdatedBy",
+                table: "ProjectBidPriceColumns",
+                column: "UpdatedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProjectBids_CreatedBy",
+                table: "ProjectBids",
+                column: "CreatedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProjectBids_ProjectId",
+                table: "ProjectBids",
+                column: "ProjectId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProjectBids_Tenant_Project",
+                table: "ProjectBids",
+                columns: new[] { "TenantId", "ProjectId" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProjectBids_UpdatedBy",
+                table: "ProjectBids",
+                column: "UpdatedBy");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Projects_CompensationId",
                 table: "Projects",
                 column: "CompensationId");
@@ -2172,6 +2401,11 @@ namespace Persistence.Migrations
                 column: "ProcurementMethodId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Projects_ProcurementProcedureId",
+                table: "Projects",
+                column: "ProcurementProcedureId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Projects_ProjectStatusId",
                 table: "Projects",
                 column: "ProjectStatusId");
@@ -2189,7 +2423,7 @@ namespace Persistence.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Projects_Tenant_Folder_Visible_Order",
                 table: "Projects",
-                columns: new[] { "TenantId", "FolderId", "IsVisible", "SortOrder" });
+                columns: new[] { "TenantId", "FolderId", "IsArchived", "SortOrder" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Projects_Tenant_Name",
@@ -2715,6 +2949,22 @@ namespace Persistence.Migrations
                 column: "UpdatedBy");
 
             migrationBuilder.CreateIndex(
+                name: "IX_UserListSettings_CreatedBy",
+                table: "UserListSettings",
+                column: "CreatedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserListSettings_UpdatedBy",
+                table: "UserListSettings",
+                column: "UpdatedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "UX_UserListSettings_Tenant_User_Scope_Kind",
+                table: "UserListSettings",
+                columns: new[] { "TenantId", "UserId", "Scope", "Kind" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Users_CreatedBy",
                 table: "Users",
                 column: "CreatedBy");
@@ -2967,6 +3217,12 @@ namespace Persistence.Migrations
                 name: "PriceListItems");
 
             migrationBuilder.DropTable(
+                name: "ProjectBidPriceColumns");
+
+            migrationBuilder.DropTable(
+                name: "ProjectBids");
+
+            migrationBuilder.DropTable(
                 name: "ShareCalcs");
 
             migrationBuilder.DropTable(
@@ -2974,6 +3230,9 @@ namespace Persistence.Migrations
 
             migrationBuilder.DropTable(
                 name: "TenderAttributeBinds");
+
+            migrationBuilder.DropTable(
+                name: "UserListSettings");
 
             migrationBuilder.DropTable(
                 name: "Applications");
@@ -3046,6 +3305,9 @@ namespace Persistence.Migrations
 
             migrationBuilder.DropTable(
                 name: "ProcurementMethods");
+
+            migrationBuilder.DropTable(
+                name: "ProcurementProcedures");
 
             migrationBuilder.DropTable(
                 name: "ProjectStatuses");

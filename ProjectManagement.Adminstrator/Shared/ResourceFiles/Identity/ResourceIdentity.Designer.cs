@@ -347,7 +347,16 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles.Identity {
                 return ResourceManager.GetString("password", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Reset password.
+        /// </summary>
+        public static string ResetPassword {
+            get {
+                return ResourceManager.GetString("ResetPassword", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Forgot password?.
         /// </summary>

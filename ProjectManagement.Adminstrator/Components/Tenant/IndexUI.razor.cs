@@ -22,6 +22,42 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
         GetTenantsDTO? DetailsPage;
         bool CanManageTenants;
 
+        // Search state
+        protected string Search { get; set; } = string.Empty;
+
+        protected IReadOnlyList<GetTenantsDTO> FilteredTenants
+        {
+            get
+            {
+                IEnumerable<GetTenantsDTO> all = Tenants;
+                if (!string.IsNullOrWhiteSpace(Search))
+                {
+                    var term = Search.Trim();
+                    all = all.Where(t =>
+                        (!string.IsNullOrEmpty(t.Name) && t.Name.Contains(term, StringComparison.OrdinalIgnoreCase))
+                        || (!string.IsNullOrEmpty(t.DB) && t.DB.Contains(term, StringComparison.OrdinalIgnoreCase)));
+                }
+
+                return all.OrderBy(t => t.Name, StringComparer.OrdinalIgnoreCase).ToList();
+            }
+        }
+
+        // Summary stats
+        protected int TotalCount => Tenants.Count;
+        protected int DedicatedCount => Tenants.Count(t => t.HasOwnDb);
+        protected int SharedCount => Tenants.Count(t => !t.HasOwnDb);
+        protected int ExpiredCount => Tenants.Count(IsExpired);
+        protected int ExpiringSoonCount => Tenants.Count(IsExpiringSoon);
+        protected int BlockedCount => Tenants.Count(t => t.IsBlocked);
+
+        protected static bool IsExpired(GetTenantsDTO t)
+            => t.DateExpire.HasValue && t.DateExpire.Value < DateTimeOffset.Now;
+
+        protected static bool IsExpiringSoon(GetTenantsDTO t)
+            => t.DateExpire.HasValue
+               && t.DateExpire.Value >= DateTimeOffset.Now
+               && t.DateExpire.Value <= DateTimeOffset.Now.AddDays(30);
+
         void UpdateForm(GetTenantsDTO model) {
 
             Modal.ShowComponent<FormUI>(model.Id == 0 ?
@@ -58,6 +94,8 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
 
         async Task ConfirmBlockAsync(int id, bool block)
         {
+            var result = await ExHandlers.RunCheckTokenAsync(() => sersService.BlockTenantAsync(id, block));
+            MHD.ToastMessage(AppControll.block, ToastType.Update, result);
             await GetTenantsAsync();
         }
 
@@ -95,8 +133,8 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
             {
                 list.Add(new() { Label = $"✏️ {ResourceApp.edit}", OnClickAsync = () => { UpdateForm(item); return Task.CompletedTask; } });
                 list.Add(new() { Label = $"🗑️ {ResourceApp.delete}", OnClickAsync = () => { Remove(item); return Task.CompletedTask; } });
-                list.Add(new() { Label = $"🔓 {AppControll.blockout}", OnClickAsync = () => { TenantBlock(item.Id, true); return Task.CompletedTask; } });
-                list.Add(new() { Label = $"🔒 {AppControll.block}", OnClickAsync = () => { TenantBlock(item.Id, false); return Task.CompletedTask; } });
+                list.Add(new() { Label = $"🔒 {AppControll.block}", OnClickAsync = () => { TenantBlock(item.Id, true); return Task.CompletedTask; } });
+                list.Add(new() { Label = $"🔓 {AppControll.blockout}", OnClickAsync = () => { TenantBlock(item.Id, false); return Task.CompletedTask; } });
             }
 
             await ContextService.ShowMenuAsync(list);

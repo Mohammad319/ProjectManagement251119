@@ -1126,19 +1126,20 @@
 
     private Task SaveBidColumnsAsync() => SaveColumnsAsync(BidColumnsStorageKey, _visibleBidColumns);
 
-    // Column panels are anchored with position:fixed (via the shared JS helper) so they escape
-    // the dialog's scroll container — otherwise the list gets clipped and shows a second scrollbar.
-    private ElementReference _colPanelBtnRef;
+    // Column panels are anchored with position:fixed at the click point so they escape the
+    // dialog's scroll container — otherwise the list gets clipped and shows a second scrollbar.
     private double _colPanelX;
     private double _colPanelY;
 
+    // z-index is set inline (not a Tailwind class) so it always beats the dialog overlay —
+    // a runtime class string isn't picked up by Tailwind's scanner and would render behind it.
     private const string ColumnPanelPopupClass =
-        "fixed z-[2147483647] w-64 overflow-y-auto rounded-md border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900";
+        "fixed overflow-y-auto rounded-md border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900";
 
     private string ColumnPanelPopupStyle =>
-        $"top:{_colPanelY.ToString("F0")}px;left:min(calc(100vw - 16rem - 8px),max(4px,{_colPanelX.ToString("F0")}px));max-height:min(22rem, calc(100vh - 8rem))";
+        $"z-index:2147483647;width:min(48rem, calc(100vw - 1rem));top:{_colPanelY.ToString("F0")}px;left:max(0.5rem,min(calc(100vw - min(48rem, calc(100vw - 1rem)) - 0.5rem),{_colPanelX.ToString("F0")}px));max-height:calc(100vh - {_colPanelY.ToString("F0")}px - 0.75rem)";
 
-    private async Task ToggleColumnPanelAsync(bool currentlyVisible, Action<bool> setVisible)
+    private void ToggleColumnPanel(MouseEventArgs e, bool currentlyVisible, Action<bool> setVisible)
     {
         if (currentlyVisible)
         {
@@ -1146,25 +1147,11 @@
             return;
         }
 
-        try
-        {
-            var pos = await JS.InvokeAsync<ColumnPanelPosition>("tableColumnFilterPosition.calculate", _colPanelBtnRef, 256, 8);
-            _colPanelX = pos.X;
-            _colPanelY = pos.Y;
-        }
-        catch
-        {
-            _colPanelX = 8;
-            _colPanelY = 8;
-        }
-
+        // Keep the panel high in the reports dialog; anchoring vertically to the button can
+        // push the action buttons below the modal edge on shorter report popups.
+        _colPanelX = e.ClientX - 700;
+        _colPanelY = 88;
         setVisible(true);
-    }
-
-    private sealed class ColumnPanelPosition
-    {
-        public double X { get; set; }
-        public double Y { get; set; }
     }
 
     private RenderFragment ColumnPanelImpl<T>(T[] allCols, HashSet<T> visible, Func<T, string> getLabel,
@@ -1174,9 +1161,8 @@
     {
         return @<div class="relative">
             <button type="button"
-                    @ref="_colPanelBtnRef"
                     class="@(visible.Count < allCols.Length ? "inline-flex h-8 items-center rounded-lg bg-sky-50 border border-sky-300 px-2.5 text-xs font-semibold text-sky-700 transition hover:bg-sky-100 dark:bg-sky-950/30 dark:border-sky-700 dark:text-sky-300" : ActionButtonClass)"
-                    @onclick="() => ToggleColumnPanelAsync(panelVisible, setPanelVisible)">
+                    @onclick="(e) => ToggleColumnPanel(e, panelVisible, setPanelVisible)">
                 @AppLoc["columnSelection"] @(visible.Count < allCols.Length ? $"({visible.Count}/{allCols.Length})" : "")
             </button>
             @if (panelVisible)
@@ -1184,12 +1170,14 @@
                 <div class="fixed inset-0 z-[2147483646]" @onclick="() => setPanelVisible(false)"></div>
                 <div class="@ColumnPanelPopupClass" style="@ColumnPanelPopupStyle">
                     <p class="mb-1.5 text-[10px] font-semibold text-slate-400">@AppLoc["visibleColumns"]</p>
-                    @foreach (var col in allCols) { var cc = col;
-                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-xs text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800">
-                            <input type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300" checked="@visible.Contains(cc)" @onchange="e => toggle(cc, (bool)(e.Value ?? false))" />
-                            <span>@getLabel(cc)</span>
-                        </label>
-                    }
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(10rem,1fr));gap:0.0625rem 0.5rem;">
+                        @foreach (var col in allCols) { var cc = col;
+                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-xs text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800">
+                                <input type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300" checked="@visible.Contains(cc)" @onchange="e => toggle(cc, (bool)(e.Value ?? false))" />
+                                <span class="min-w-0 truncate" title="@getLabel(cc)">@getLabel(cc)</span>
+                            </label>
+                        }
+                    </div>
                     <div class="mt-1.5 flex gap-1 border-t border-slate-100 pt-1.5 dark:border-slate-800">
                         <button type="button" class="flex-1 rounded bg-slate-50 px-2 py-1 text-[10px] font-medium text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700" @onclick="() => selectAll()">@AppLoc["allItems"]</button>
                         <button type="button" class="flex-1 rounded bg-slate-50 px-2 py-1 text-[10px] font-medium text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700" @onclick="() => selectDefault()">@AppLoc["defaultValue"]</button>
@@ -1209,9 +1197,8 @@
         var visibleCount = groups.SelectMany(g => g.Cols).Count(visible.Contains);
         return @<div class="relative">
             <button type="button"
-                    @ref="_colPanelBtnRef"
                     class="@(visibleCount < allCount ? "inline-flex h-8 items-center rounded-lg bg-sky-50 border border-sky-300 px-2.5 text-xs font-semibold text-sky-700 transition hover:bg-sky-100 dark:bg-sky-950/30 dark:border-sky-700 dark:text-sky-300" : ActionButtonClass)"
-                    @onclick="() => ToggleColumnPanelAsync(panelVisible, setPanelVisible)">
+                    @onclick="(e) => ToggleColumnPanel(e, panelVisible, setPanelVisible)">
                 @AppLoc["columnSelection"] @(visibleCount < allCount ? $"({visibleCount}/{allCount})" : "")
             </button>
             @if (panelVisible)
@@ -1221,12 +1208,14 @@
                     @foreach (var group in groups)
                     {
                         <p class="mb-1 mt-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400 first:mt-0">@group.Label</p>
-                        @foreach (var col in group.Cols) { var cc = col;
-                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-xs text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800">
-                                <input type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300" checked="@visible.Contains(cc)" @onchange="e => toggle(cc, (bool)(e.Value ?? false))" />
-                                <span>@getLabel(cc)</span>
-                            </label>
-                        }
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(10rem,1fr));gap:0.0625rem 0.5rem;">
+                            @foreach (var col in group.Cols) { var cc = col;
+                                <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-xs text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800">
+                                    <input type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300" checked="@visible.Contains(cc)" @onchange="e => toggle(cc, (bool)(e.Value ?? false))" />
+                                    <span class="min-w-0 truncate" title="@getLabel(cc)">@getLabel(cc)</span>
+                                </label>
+                            }
+                        </div>
                     }
                     <div class="mt-1.5 flex gap-1 border-t border-slate-100 pt-1.5 dark:border-slate-800">
                         <button type="button" class="flex-1 rounded bg-slate-50 px-2 py-1 text-[10px] font-medium text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700" @onclick="() => selectAll()">@AppLoc["allItems"]</button>

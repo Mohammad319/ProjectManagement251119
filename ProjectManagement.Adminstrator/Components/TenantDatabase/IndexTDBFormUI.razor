@@ -1,6 +1,7 @@
 @using AuthPermissions.Entity
 @using Microsoft.EntityFrameworkCore
 @inject IDbContextFactory<AuthPermissionDbContext> ContextFactory
+@inject ProjectManagement.Adminstrator.Services.Users.IUsersService UsersService
 
 <div class="space-y-3">
     <EditForm Model="@Put" OnValidSubmit="HandleSubmitAsync" id="tenantForm" class="space-y-3">
@@ -21,8 +22,31 @@
 
                 <div class="space-y-1.5 md:col-span-2">
                     <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">ConnectionString</label>
-                    <InputText class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind-Value="@Put.ConnectionString" />
+                    <InputTextArea rows="3" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 font-mono text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind-Value="@Put.ConnectionString" />
                     <ValidationMessage For="@(() => Put.ConnectionString)" class="text-xs text-rose-600 dark:text-rose-400" />
+
+                    <div class="flex flex-wrap items-center gap-2 pt-1">
+                        <button type="button"
+                                class="inline-flex items-center justify-center gap-2 rounded-xl border border-sky-300 bg-sky-50 px-3 py-1.5 text-xs font-medium text-sky-700 transition hover:bg-sky-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-300 dark:hover:bg-sky-950/60"
+                                disabled="@_testing"
+                                @onclick="TestConnectionAsync">
+                            @if (_testing)
+                            {
+                                <span class="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-sky-500/40 border-t-sky-500"></span>
+                            }
+                            Test connection
+                        </button>
+
+                        @if (_testMessage is not null)
+                        {
+                            <span class="@(_testOk
+                                ? "inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300"
+                                : "inline-flex max-w-full items-center truncate rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-medium text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300")"
+                                  title="@_testMessage">
+                                @_testMessage
+                            </span>
+                        }
+                    </div>
                 </div>
             </div>
         </section>
@@ -42,6 +66,34 @@
 @code {
     [Parameter] public TenantDatabaseEntity Put { get; set; } = new();
     [Parameter] public EventCallback<bool> Callback { get; set; }
+
+    bool _testing;
+    bool _testOk;
+    string? _testMessage;
+
+    private async Task TestConnectionAsync()
+    {
+        if (_testing)
+            return;
+
+        _testing = true;
+        _testMessage = null;
+        try
+        {
+            var (ok, error) = await UsersService.TestDatabaseConnectionAsync(Put.ConnectionString);
+            _testOk = ok;
+            _testMessage = ok ? "Connection succeeded." : $"Failed: {error}";
+        }
+        catch (Exception ex)
+        {
+            _testOk = false;
+            _testMessage = $"Failed: {ex.Message}";
+        }
+        finally
+        {
+            _testing = false;
+        }
+    }
 
     private async Task HandleSubmitAsync()
     {

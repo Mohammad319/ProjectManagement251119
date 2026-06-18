@@ -96,7 +96,6 @@ namespace AuthPermissions.Context
                 {
                     t.HasCheckConstraint("CK_Tenants_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
                     t.HasCheckConstraint("CK_Tenants_MaxUsers_Positive", "[MaxUsers] >= 1");
-                    t.HasCheckConstraint("CK_Tenants_MaxCalculations_Positive", "[MaxCalculations] >= 1");
                 });
             });
 

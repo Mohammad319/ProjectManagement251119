@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Domain.Entities.Project
 {
-    public sealed class ProcurementProcedureEntity : ColoredListEntity
+    public sealed class ProcurementProcedureEntity : OrderedListEntity
     {
         public bool IsDefault { get; private set; }
 

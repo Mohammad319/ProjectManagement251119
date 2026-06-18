@@ -45,6 +45,22 @@
   <data name="UserRegistered" xml:space="preserve"><value>Connected</value></data>
   <data name="UserMissingAuth" xml:space="preserve"><value>Missing sign-in</value></data>
   <data name="Lockout" xml:space="preserve"><value>Lockout</value></data>
+  <data name="StatusActive" xml:space="preserve"><value>Active</value></data>
+  <data name="InvitePending" xml:space="preserve"><value>Pending invitation</value></data>
+  <data name="StatusStale" xml:space="preserve"><value>Inactive 90+ days</value></data>
+  <data name="ResendInvite" xml:space="preserve"><value>Resend invitation</value></data>
+  <data name="ResendInviteConfirmFormat" xml:space="preserve"><value>Resend the invitation email to {0} with a new temporary password?</value></data>
+  <data name="RoleDistribution" xml:space="preserve"><value>Roles</value></data>
+  <data name="FilterByStatusHint" xml:space="preserve"><value>Click a card to filter</value></data>
+  <data name="StatusInactive" xml:space="preserve"><value>Deactivated</value></data>
+  <data name="Deactivate" xml:space="preserve"><value>Deactivate</value></data>
+  <data name="Activate" xml:space="preserve"><value>Activate</value></data>
+  <data name="DeactivateConfirmFormat" xml:space="preserve"><value>Deactivate {0}? They will be signed out and unable to sign in until reactivated.</value></data>
+  <data name="ActivateConfirmFormat" xml:space="preserve"><value>Reactivate {0} so they can sign in again?</value></data>
+  <data name="CapacityLabel" xml:space="preserve"><value>Capacity</value></data>
+  <data name="CapacityReached" xml:space="preserve"><value>User limit reached</value></data>
+  <data name="AuditUserDeactivated" xml:space="preserve"><value>User deactivated</value></data>
+  <data name="AuditUserActivated" xml:space="preserve"><value>User activated</value></data>
   <data name="LockoutStart" xml:space="preserve"><value>Lockout start</value></data>
   <data name="LockoutEnd" xml:space="preserve"><value>Lockout end</value></data>
   <data name="Enabled" xml:space="preserve"><value>Enabled</value></data>
@@ -123,4 +139,80 @@
   <data name="SupportReferenceNumber" xml:space="preserve"><value>Reference number</value></data>
   <data name="SupportContextInfo" xml:space="preserve"><value>This information is automatically included to help us investigate the problem.</value></data>
   <data name="SupportNavTitle" xml:space="preserve"><value>Support</value></data>
+  <data name="SearchUsersPlaceholder" xml:space="preserve"><value>Search by name, email or phone…</value></data>
+  <data name="SearchDepartmentsPlaceholder" xml:space="preserve"><value>Search departments…</value></data>
+  <data name="AllRoles" xml:space="preserve"><value>All roles</value></data>
+  <data name="AllStatuses" xml:space="preserve"><value>All statuses</value></data>
+  <data name="ShowingCountFormat" xml:space="preserve"><value>Showing {0} of {1}</value></data>
+  <data name="NoResultsMatch" xml:space="preserve"><value>No results match your filters.</value></data>
+  <data name="ClearFilters" xml:space="preserve"><value>Clear filters</value></data>
+  <data name="ActiveLabel" xml:space="preserve"><value>Active</value></data>
+  <data name="DepartmentBadge" xml:space="preserve"><value>Department</value></data>
+  <data name="TotalUsers" xml:space="preserve"><value>Total users</value></data>
+  <data name="TotalProjects" xml:space="preserve"><value>Total projects</value></data>
+  <data name="LevelManager" xml:space="preserve"><value>Admin</value></data>
+  <data name="LevelUser" xml:space="preserve"><value>User</value></data>
+  <data name="LevelGuest" xml:space="preserve"><value>Viewer</value></data>
+  <data name="LockUser" xml:space="preserve"><value>Lock</value></data>
+  <data name="UnlockUser" xml:space="preserve"><value>Unlock</value></data>
+  <data name="LockConfirmFormat" xml:space="preserve"><value>Lock sign-in for {0}? The user will be signed out and unable to log in.</value></data>
+  <data name="UnlockConfirmFormat" xml:space="preserve"><value>Unlock {0}? The user will be able to sign in again.</value></data>
+  <data name="SelectAll" xml:space="preserve"><value>Select all</value></data>
+  <data name="SelectedCountFormat" xml:space="preserve"><value>{0} selected</value></data>
+  <data name="ClearSelection" xml:space="preserve"><value>Clear selection</value></data>
+  <data name="BulkMoveToDepartment" xml:space="preserve"><value>Move to department</value></data>
+  <data name="BulkChangeRole" xml:space="preserve"><value>Change role…</value></data>
+  <data name="BulkLock" xml:space="preserve"><value>Lock</value></data>
+  <data name="BulkUnlock" xml:space="preserve"><value>Unlock</value></data>
+  <data name="BulkDelete" xml:space="preserve"><value>Delete</value></data>
+  <data name="Apply" xml:space="preserve"><value>Apply</value></data>
+  <data name="BulkConfirmFormat" xml:space="preserve"><value>Apply this action to {0} user(s)?</value></data>
+  <data name="BulkDeleteConfirmFormat" xml:space="preserve"><value>Delete {0} selected user(s)? This cannot be undone.</value></data>
+  <data name="BulkRoleConfirmFormat" xml:space="preserve"><value>Change the role of {0} selected user(s)?</value></data>
+  <data name="BulkResultFormat" xml:space="preserve"><value>{0} succeeded, {1} failed, {2} skipped (last administrator protected).</value></data>
+  <data name="DepartmentInUseTitle" xml:space="preserve"><value>Cannot delete department</value></data>
+  <data name="DepartmentInUseMessageFormat" xml:space="preserve"><value>'{0}' cannot be deleted because it still has {1} user(s), {2} project(s) and {3} folder(s). Reassign or remove them first.</value></data>
+  <data name="LastAdminTitle" xml:space="preserve"><value>Action blocked</value></data>
+  <data name="LastAdminMessage" xml:space="preserve"><value>This is the only administrator. Promote another user to administrator before deleting, locking or changing this one.</value></data>
+  <data name="ResetPassword" xml:space="preserve"><value>Reset password</value></data>
+  <data name="ResetPasswordConfirmFormat" xml:space="preserve"><value>Generate a new temporary password for {0} and email it to them?</value></data>
+  <data name="ExportExcel" xml:space="preserve"><value>Export to Excel</value></data>
+  <data name="FoldersLabel" xml:space="preserve"><value>Folders</value></data>
+  <data name="DuplicateDepartmentTitle" xml:space="preserve"><value>Duplicate name</value></data>
+  <data name="DuplicateDepartmentMessage" xml:space="preserve"><value>A department with this name already exists. Please choose a different name.</value></data>
+  <data name="Previous" xml:space="preserve"><value>Previous</value></data>
+  <data name="Next" xml:space="preserve"><value>Next</value></data>
+  <data name="PageOfFormat" xml:space="preserve"><value>Page {0} of {1}</value></data>
+  <data name="DepartmentColor" xml:space="preserve"><value>Colour</value></data>
+  <data name="ClearColor" xml:space="preserve"><value>Clear</value></data>
+  <data name="DepartmentHead" xml:space="preserve"><value>Department head</value></data>
+  <data name="NoHead" xml:space="preserve"><value>No head</value></data>
+  <data name="LastLogin" xml:space="preserve"><value>Last login</value></data>
+  <data name="UserDetails" xml:space="preserve"><value>User details</value></data>
+  <data name="ExportSelected" xml:space="preserve"><value>Export selected</value></data>
+  <data name="DepartmentDetails" xml:space="preserve"><value>Department details</value></data>
+  <data name="CreatedLabel" xml:space="preserve"><value>Created</value></data>
+  <data name="UpdatedLabel" xml:space="preserve"><value>Updated</value></data>
+  <data name="InviteUser" xml:space="preserve"><value>Invite user</value></data>
+  <data name="UserSummary" xml:space="preserve"><value>User summary</value></data>
+  <data name="UserAuditLog" xml:space="preserve"><value>User activity log</value></data>
+  <data name="UserAuditLogDescription" xml:space="preserve"><value>Recent administrative changes to tenant users.</value></data>
+  <data name="NoAuditEntries" xml:space="preserve"><value>No user activity has been recorded yet.</value></data>
+  <data name="AuditTemporarilyUnavailable" xml:space="preserve"><value>The activity log is temporarily unavailable. User management remains available.</value></data>
+  <data name="AuditAction" xml:space="preserve"><value>Action</value></data>
+  <data name="AuditTarget" xml:space="preserve"><value>Target user</value></data>
+  <data name="AuditActor" xml:space="preserve"><value>Performed by</value></data>
+  <data name="AuditDetails" xml:space="preserve"><value>Details</value></data>
+  <data name="Refresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="AuditUserCreated" xml:space="preserve"><value>User created</value></data>
+  <data name="AuditUserRegistered" xml:space="preserve"><value>User registered</value></data>
+  <data name="AuditAuthRecreated" xml:space="preserve"><value>Authentication recreated</value></data>
+  <data name="AuditUserUpdated" xml:space="preserve"><value>User updated</value></data>
+  <data name="AuditUserUnregistered" xml:space="preserve"><value>Authentication removed</value></data>
+  <data name="AuditUserDeleted" xml:space="preserve"><value>User deleted</value></data>
+  <data name="AuditPasswordReset" xml:space="preserve"><value>Password reset</value></data>
+  <data name="AuditUserLocked" xml:space="preserve"><value>User locked</value></data>
+  <data name="AuditUserUnlocked" xml:space="preserve"><value>User unlocked</value></data>
+  <data name="AuditDepartmentChanged" xml:space="preserve"><value>Department changed</value></data>
+  <data name="AuditRoleChanged" xml:space="preserve"><value>Role changed</value></data>
 </root>

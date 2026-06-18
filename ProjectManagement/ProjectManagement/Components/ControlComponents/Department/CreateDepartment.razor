@@ -4,8 +4,8 @@
 
 @if (editContext is not null)
 {
-    <div class="space-y-4">
-        <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-300">
+    <div class="space-y-2.5">
+        <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-300">
             @if ((DepartmentList?.Id ?? 0) > 0)
             {
                 <span>@WebLoc["EditDepartmentHint"]</span>
@@ -18,40 +18,73 @@
 
         <EditForm EditContext="editContext"
                   id="createDepartmentForm"
-                  class="space-y-4"
+                  class="space-y-2.5"
                   OnValidSubmit="HandleSubmitAsync">
             <DataAnnotationsValidator />
-            <ValidationSummary class="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300" />
+            <ValidationSummary class="rounded-lg border border-rose-200 bg-rose-50 p-2 text-xs text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300" />
 
-            <div class="grid gap-4 md:grid-cols-2">
+            <div class="grid gap-2.5 sm:grid-cols-2">
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.name</label>
-                    <InputText class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                    <label class="mb-0.5 block text-xs font-medium text-slate-700 dark:text-slate-200">@CalcResource.name</label>
+                    <InputText class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                                @bind-Value="departmentPost!.Name"
                                disabled="@IsSaving" />
-                    <ValidationMessage For="() => departmentPost!.Name" class="mt-1 block text-xs text-rose-600 dark:text-rose-300" />
+                    <ValidationMessage For="() => departmentPost!.Name" class="mt-0.5 block text-[11px] text-rose-600 dark:text-rose-300" />
                 </div>
 
-                <div class="md:col-span-2">
-                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceLoc.description</label>
-                    <InputTextArea class="min-h-28 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                <div>
+                    <label class="mb-0.5 block text-xs font-medium text-slate-700 dark:text-slate-200">@WebLoc["DepartmentColor"]</label>
+                    <div class="flex items-center gap-1.5">
+                        <input type="color"
+                               value="@(string.IsNullOrWhiteSpace(departmentPost!.Color) ? "#10b981" : departmentPost!.Color)"
+                               @oninput="@(e => departmentPost!.Color = e.Value?.ToString())"
+                               disabled="@IsSaving"
+                               class="h-8 w-12 cursor-pointer rounded-lg border border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-950" />
+                        <button type="button"
+                                class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                                disabled="@IsSaving"
+                                @onclick="@(() => departmentPost!.Color = null)">
+                            @WebLoc["ClearColor"]
+                        </button>
+                    </div>
+                </div>
+
+                @if (DepartmentUsers?.Any() == true)
+                {
+                    <div>
+                        <label class="mb-0.5 block text-xs font-medium text-slate-700 dark:text-slate-200">@WebLoc["DepartmentHead"]</label>
+                        <InputSelect class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                                     @bind-Value="departmentPost!.HeadUserId"
+                                     disabled="@IsSaving">
+                            <option value="">@WebLoc["NoHead"]</option>
+                            @foreach (var user in DepartmentUsers)
+                            {
+                                <option value="@user.Id">@HeadUserDisplay(user)</option>
+                            }
+                        </InputSelect>
+                    </div>
+                }
+
+                <div class="sm:col-span-2">
+                    <label class="mb-0.5 block text-xs font-medium text-slate-700 dark:text-slate-200">@ResourceLoc.description</label>
+                    <InputTextArea class="min-h-20 w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                                    @bind-Value="departmentPost!.Description"
                                    disabled="@IsSaving" />
-                    <ValidationMessage For="() => departmentPost!.Description" class="mt-1 block text-xs text-rose-600 dark:text-rose-300" />
+                    <ValidationMessage For="() => departmentPost!.Description" class="mt-0.5 block text-[11px] text-rose-600 dark:text-rose-300" />
                 </div>
             </div>
         </EditForm>
 
-        <div class="flex flex-wrap items-center justify-end gap-2 border-t border-slate-200 pt-4 dark:border-slate-700">
+        <div class="flex flex-wrap items-center justify-end gap-1.5 border-t border-slate-200 pt-2.5 dark:border-slate-700">
             <button type="submit"
                     form="createDepartmentForm"
-                    class="inline-flex items-center justify-center rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-950/50"
+                    class="inline-flex items-center justify-center rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-950/50"
                     disabled="@IsSaving">
                 @AppLoc[nameof(ResourceApp.save)]
             </button>
 
             <button type="button"
-                    class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                    class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
                     disabled="@IsSaving"
                     @onclick="Close">
                 @AppLoc[nameof(ResourceApp.cancel)]

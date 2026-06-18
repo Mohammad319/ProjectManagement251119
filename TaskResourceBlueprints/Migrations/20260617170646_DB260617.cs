@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace TaskResourceBlueprints.Migrations
 {
     /// <inheritdoc />
-    public partial class DB260603 : Migration
+    public partial class DB260617 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

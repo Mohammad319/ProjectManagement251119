@@ -45,6 +45,22 @@
   <data name="UserRegistered" xml:space="preserve"><value>Ansluten</value></data>
   <data name="UserMissingAuth" xml:space="preserve"><value>Saknar inloggning</value></data>
   <data name="Lockout" xml:space="preserve"><value>Spärr</value></data>
+  <data name="StatusActive" xml:space="preserve"><value>Aktiv</value></data>
+  <data name="InvitePending" xml:space="preserve"><value>Väntande inbjudan</value></data>
+  <data name="StatusStale" xml:space="preserve"><value>Inaktiv 90+ dagar</value></data>
+  <data name="ResendInvite" xml:space="preserve"><value>Skicka inbjudan igen</value></data>
+  <data name="ResendInviteConfirmFormat" xml:space="preserve"><value>Skicka inbjudningsmejlet till {0} igen med ett nytt tillfälligt lösenord?</value></data>
+  <data name="RoleDistribution" xml:space="preserve"><value>Roller</value></data>
+  <data name="FilterByStatusHint" xml:space="preserve"><value>Klicka på ett kort för att filtrera</value></data>
+  <data name="StatusInactive" xml:space="preserve"><value>Inaktiverad</value></data>
+  <data name="Deactivate" xml:space="preserve"><value>Inaktivera</value></data>
+  <data name="Activate" xml:space="preserve"><value>Aktivera</value></data>
+  <data name="DeactivateConfirmFormat" xml:space="preserve"><value>Inaktivera {0}? De loggas ut och kan inte logga in förrän de återaktiveras.</value></data>
+  <data name="ActivateConfirmFormat" xml:space="preserve"><value>Återaktivera {0} så att de kan logga in igen?</value></data>
+  <data name="CapacityLabel" xml:space="preserve"><value>Kapacitet</value></data>
+  <data name="CapacityReached" xml:space="preserve"><value>Användargränsen är nådd</value></data>
+  <data name="AuditUserDeactivated" xml:space="preserve"><value>Användare inaktiverad</value></data>
+  <data name="AuditUserActivated" xml:space="preserve"><value>Användare aktiverad</value></data>
   <data name="LockoutStart" xml:space="preserve"><value>Spärr start</value></data>
   <data name="LockoutEnd" xml:space="preserve"><value>Spärr slut</value></data>
   <data name="Enabled" xml:space="preserve"><value>Aktiverad</value></data>
@@ -123,4 +139,80 @@
   <data name="SupportReferenceNumber" xml:space="preserve"><value>Referensnummer</value></data>
   <data name="SupportContextInfo" xml:space="preserve"><value>Denna information inkluderas automatiskt för att hjälpa oss undersöka problemet.</value></data>
   <data name="SupportNavTitle" xml:space="preserve"><value>Support</value></data>
+  <data name="SearchUsersPlaceholder" xml:space="preserve"><value>Sök på namn, e-post eller telefon…</value></data>
+  <data name="SearchDepartmentsPlaceholder" xml:space="preserve"><value>Sök avdelningar…</value></data>
+  <data name="AllRoles" xml:space="preserve"><value>Alla roller</value></data>
+  <data name="AllStatuses" xml:space="preserve"><value>Alla statusar</value></data>
+  <data name="ShowingCountFormat" xml:space="preserve"><value>Visar {0} av {1}</value></data>
+  <data name="NoResultsMatch" xml:space="preserve"><value>Inga resultat matchar dina filter.</value></data>
+  <data name="ClearFilters" xml:space="preserve"><value>Rensa filter</value></data>
+  <data name="ActiveLabel" xml:space="preserve"><value>Aktiva</value></data>
+  <data name="DepartmentBadge" xml:space="preserve"><value>Avdelning</value></data>
+  <data name="TotalUsers" xml:space="preserve"><value>Totalt antal användare</value></data>
+  <data name="TotalProjects" xml:space="preserve"><value>Totalt antal projekt</value></data>
+  <data name="LevelManager" xml:space="preserve"><value>Admin</value></data>
+  <data name="LevelUser" xml:space="preserve"><value>Användare</value></data>
+  <data name="LevelGuest" xml:space="preserve"><value>Visare</value></data>
+  <data name="LockUser" xml:space="preserve"><value>Lås</value></data>
+  <data name="UnlockUser" xml:space="preserve"><value>Lås upp</value></data>
+  <data name="LockConfirmFormat" xml:space="preserve"><value>Lås inloggning för {0}? Användaren loggas ut och kan inte logga in.</value></data>
+  <data name="UnlockConfirmFormat" xml:space="preserve"><value>Lås upp {0}? Användaren kan logga in igen.</value></data>
+  <data name="SelectAll" xml:space="preserve"><value>Markera alla</value></data>
+  <data name="SelectedCountFormat" xml:space="preserve"><value>{0} markerade</value></data>
+  <data name="ClearSelection" xml:space="preserve"><value>Rensa markering</value></data>
+  <data name="BulkMoveToDepartment" xml:space="preserve"><value>Flytta till avdelning</value></data>
+  <data name="BulkChangeRole" xml:space="preserve"><value>Ändra roll…</value></data>
+  <data name="BulkLock" xml:space="preserve"><value>Lås</value></data>
+  <data name="BulkUnlock" xml:space="preserve"><value>Lås upp</value></data>
+  <data name="BulkDelete" xml:space="preserve"><value>Ta bort</value></data>
+  <data name="Apply" xml:space="preserve"><value>Tillämpa</value></data>
+  <data name="BulkConfirmFormat" xml:space="preserve"><value>Tillämpa åtgärden på {0} användare?</value></data>
+  <data name="BulkDeleteConfirmFormat" xml:space="preserve"><value>Ta bort {0} markerade användare? Detta kan inte ångras.</value></data>
+  <data name="BulkRoleConfirmFormat" xml:space="preserve"><value>Ändra rollen för {0} markerade användare?</value></data>
+  <data name="BulkResultFormat" xml:space="preserve"><value>{0} lyckades, {1} misslyckades, {2} hoppades över (sista administratören skyddad).</value></data>
+  <data name="DepartmentInUseTitle" xml:space="preserve"><value>Kan inte ta bort avdelning</value></data>
+  <data name="DepartmentInUseMessageFormat" xml:space="preserve"><value>'{0}' kan inte tas bort eftersom den fortfarande har {1} användare, {2} projekt och {3} mappar. Flytta eller ta bort dem först.</value></data>
+  <data name="LastAdminTitle" xml:space="preserve"><value>Åtgärd blockerad</value></data>
+  <data name="LastAdminMessage" xml:space="preserve"><value>Detta är den enda administratören. Gör en annan användare till administratör innan du tar bort, låser eller ändrar denna.</value></data>
+  <data name="ResetPassword" xml:space="preserve"><value>Återställ lösenord</value></data>
+  <data name="ResetPasswordConfirmFormat" xml:space="preserve"><value>Skapa ett nytt tillfälligt lösenord för {0} och skicka det via e-post?</value></data>
+  <data name="ExportExcel" xml:space="preserve"><value>Exportera till Excel</value></data>
+  <data name="FoldersLabel" xml:space="preserve"><value>Mappar</value></data>
+  <data name="DuplicateDepartmentTitle" xml:space="preserve"><value>Dubblettnamn</value></data>
+  <data name="DuplicateDepartmentMessage" xml:space="preserve"><value>En avdelning med detta namn finns redan. Välj ett annat namn.</value></data>
+  <data name="Previous" xml:space="preserve"><value>Föregående</value></data>
+  <data name="Next" xml:space="preserve"><value>Nästa</value></data>
+  <data name="PageOfFormat" xml:space="preserve"><value>Sida {0} av {1}</value></data>
+  <data name="DepartmentColor" xml:space="preserve"><value>Färg</value></data>
+  <data name="ClearColor" xml:space="preserve"><value>Rensa</value></data>
+  <data name="DepartmentHead" xml:space="preserve"><value>Avdelningschef</value></data>
+  <data name="NoHead" xml:space="preserve"><value>Ingen chef</value></data>
+  <data name="LastLogin" xml:space="preserve"><value>Senaste inloggning</value></data>
+  <data name="UserDetails" xml:space="preserve"><value>User details</value></data>
+  <data name="ExportSelected" xml:space="preserve"><value>Export selected</value></data>
+  <data name="DepartmentDetails" xml:space="preserve"><value>Department details</value></data>
+  <data name="CreatedLabel" xml:space="preserve"><value>Created</value></data>
+  <data name="UpdatedLabel" xml:space="preserve"><value>Updated</value></data>
+  <data name="InviteUser" xml:space="preserve"><value>Invite user</value></data>
+  <data name="UserSummary" xml:space="preserve"><value>Användaröversikt</value></data>
+  <data name="UserAuditLog" xml:space="preserve"><value>Användaraktivitetslogg</value></data>
+  <data name="UserAuditLogDescription" xml:space="preserve"><value>Senaste administrativa ändringar av företagsanvändare.</value></data>
+  <data name="NoAuditEntries" xml:space="preserve"><value>Ingen användaraktivitet har registrerats ännu.</value></data>
+  <data name="AuditTemporarilyUnavailable" xml:space="preserve"><value>Aktivitetsloggen är tillfälligt otillgänglig. Användarhanteringen är fortfarande tillgänglig.</value></data>
+  <data name="AuditAction" xml:space="preserve"><value>Åtgärd</value></data>
+  <data name="AuditTarget" xml:space="preserve"><value>Målanvändare</value></data>
+  <data name="AuditActor" xml:space="preserve"><value>Utförd av</value></data>
+  <data name="AuditDetails" xml:space="preserve"><value>Detaljer</value></data>
+  <data name="Refresh" xml:space="preserve"><value>Uppdatera</value></data>
+  <data name="AuditUserCreated" xml:space="preserve"><value>Användare skapad</value></data>
+  <data name="AuditUserRegistered" xml:space="preserve"><value>Användare registrerad</value></data>
+  <data name="AuditAuthRecreated" xml:space="preserve"><value>Autentisering återskapad</value></data>
+  <data name="AuditUserUpdated" xml:space="preserve"><value>Användare uppdaterad</value></data>
+  <data name="AuditUserUnregistered" xml:space="preserve"><value>Autentisering borttagen</value></data>
+  <data name="AuditUserDeleted" xml:space="preserve"><value>Användare borttagen</value></data>
+  <data name="AuditPasswordReset" xml:space="preserve"><value>Lösenord återställt</value></data>
+  <data name="AuditUserLocked" xml:space="preserve"><value>Användare låst</value></data>
+  <data name="AuditUserUnlocked" xml:space="preserve"><value>Användare upplåst</value></data>
+  <data name="AuditDepartmentChanged" xml:space="preserve"><value>Avdelning ändrad</value></data>
+  <data name="AuditRoleChanged" xml:space="preserve"><value>Roll ändrad</value></data>
 </root>

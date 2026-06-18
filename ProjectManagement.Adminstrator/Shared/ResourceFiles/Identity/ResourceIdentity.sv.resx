@@ -271,6 +271,15 @@
   <data name="User" xml:space="preserve">
     <value>Användare</value>
   </data>
+  <data name="LevelManager" xml:space="preserve">
+    <value>Admin</value>
+  </data>
+  <data name="LevelUser" xml:space="preserve">
+    <value>Användare</value>
+  </data>
+  <data name="LevelGuest" xml:space="preserve">
+    <value>Visare</value>
+  </data>
   <data name="UserDataIsUpdated" xml:space="preserve">
     <value>Användardata uppdateras</value>
   </data>
@@ -282,5 +291,35 @@
   </data>
   <data name="zipCode" xml:space="preserve">
     <value>Postnummer</value>
+  </data>
+  <data name="LockUser" xml:space="preserve">
+    <value>Lås</value>
+  </data>
+  <data name="UnlockUser" xml:space="preserve">
+    <value>Lås upp</value>
+  </data>
+  <data name="ResetPassword" xml:space="preserve">
+    <value>Återställ lösenord</value>
+  </data>
+  <data name="LockConfirmFormat" xml:space="preserve">
+    <value>Lås inloggning för {0}? Användaren loggas ut och kan inte logga in.</value>
+  </data>
+  <data name="UnlockConfirmFormat" xml:space="preserve">
+    <value>Lås upp inloggning för {0}?</value>
+  </data>
+  <data name="ResetPasswordConfirmFormat" xml:space="preserve">
+    <value>Återställ lösenordet för {0}? Ett nytt tillfälligt lösenord genereras och skickas till användaren.</value>
+  </data>
+  <data name="AllRoles" xml:space="preserve">
+    <value>Alla roller</value>
+  </data>
+  <data name="AllStatuses" xml:space="preserve">
+    <value>Alla statusar</value>
+  </data>
+  <data name="StatusActive" xml:space="preserve">
+    <value>Aktiv</value>
+  </data>
+  <data name="StatusLocked" xml:space="preserve">
+    <value>Låst</value>
   </data>
 </root>

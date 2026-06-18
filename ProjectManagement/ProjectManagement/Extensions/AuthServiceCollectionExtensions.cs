@@ -26,6 +26,7 @@ public static class AuthRegistration
 
         services.AddIdentity<ApplicationUser, IdentityRole>()
             .AddEntityFrameworkStores<AuthPermissionDbContext>()
+            .AddSignInManager<ProjectManagement.Services.ActiveCheckSignInManager>()
             .AddDefaultTokenProviders();
 
         services.ConfigureApplicationCookie(options =>

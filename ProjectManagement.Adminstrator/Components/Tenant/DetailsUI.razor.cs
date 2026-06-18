@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Adminstrator.Components.AppUser;
 using ProjectManagement.Adminstrator.Constants;
+using ProjectManagement.Adminstrator.Services.MHDBlazor;
+using ProjectManagement.Adminstrator.Shared.ResourceFiles.AppControll;
+using ProjectManagement.Adminstrator.Shared.ResourceFiles.Identity;
 using ProjectManagement.Shared.Constant;
 
 namespace ProjectManagement.Adminstrator.Components.Tenant
@@ -19,6 +22,17 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
         TenantEntity? TenantPut;
         List<ApplicationUser>? Users;
         bool CanManageTenantUsers;
+        Dictionary<int, string> DepartmentNames = [];
+
+        protected string DepartmentName(int? id)
+            => id.HasValue && DepartmentNames.TryGetValue(id.Value, out var name) && !string.IsNullOrWhiteSpace(name)
+                ? name
+                : "—";
+
+        protected static bool IsLocked(ApplicationUser user)
+            => user.LockoutEnabled && user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow;
+
+        protected int LockedUsersCount => Users?.Count(IsLocked) ?? 0;
 
         async Task Context(ApplicationUser item)
         {
@@ -30,9 +44,51 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
             var list = new List<MhdContextMenuItem>
             {
                 new() { Label = ResourceApp.edit, OnClickAsync = () => { UserRoleDialog(item); return Task.CompletedTask; } },
-                new() { Label = ResourceApp.delete, OnClickAsync = () => { Remove(item); return Task.CompletedTask; } },
             };
+
+            if (IsLocked(item))
+                list.Add(new() { Label = $"🔓 {AppControll.blockout}", OnClickAsync = () => { AskSetLockout(item, false); return Task.CompletedTask; } });
+            else
+                list.Add(new() { Label = $"🔒 {AppControll.block}", OnClickAsync = () => { AskSetLockout(item, true); return Task.CompletedTask; } });
+
+            list.Add(new() { Label = $"🔑 {ResourceIdentity.ResetPassword}", OnClickAsync = () => { AskResetPassword(item); return Task.CompletedTask; } });
+            list.Add(new() { Label = ResourceApp.delete, OnClickAsync = () => { Remove(item); return Task.CompletedTask; } });
+
             await ContextService.ShowMenuAsync(list);
+        }
+
+        void AskSetLockout(ApplicationUser user, bool block)
+        {
+            MHD.MessageYesNo(
+                AppControll.block,
+                block ? AppControll.confirmTenantBlock : AppControll.confirmTenantBlockout,
+                MhdState.Warning,
+                EventCallback.Factory.Create(this, () => SetLockoutAsync(user, block)));
+        }
+
+        async Task SetLockoutAsync(ApplicationUser user, bool block)
+        {
+            await Modal.CloseAsync();
+            var result = await ExHandlers.RunCheckTokenAsync(() => UsersService.SetTenantUserLockoutAsync(user.Id, Id, block));
+            MHD.ToastMessage(AppControll.block, ToastType.Update, result);
+            if (result)
+                await GetUsersAsync();
+        }
+
+        void AskResetPassword(ApplicationUser user)
+        {
+            MHD.MessageYesNo(
+                ResourceIdentity.ResetPassword,
+                AppControll.confirmResetPassword,
+                MhdState.Warning,
+                EventCallback.Factory.Create(this, () => ResetPasswordAsync(user)));
+        }
+
+        async Task ResetPasswordAsync(ApplicationUser user)
+        {
+            await Modal.CloseAsync();
+            var result = await ExHandlers.RunCheckTokenAsync(() => UsersService.ResetUserPasswordAsync(user.Id, Id));
+            MHD.ToastMessage(ResourceIdentity.ResetPassword, ToastType.Update, result);
         }
 
         void UserRoleDialog(ApplicationUser user) =>
@@ -86,6 +142,12 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
                 {
                     TenantPut.TenantDB = await appContext.TenantDatabase.FirstOrDefaultAsync(a => a.Id == TenantPut.TenantDBId);
                 }
+
+                // Resolve department names from the tenant DB so the users table shows names, not ids.
+                DepartmentNames = await ExHandlers.RunCheckTokenAsync(() => UsersService.GetDepartmentNamesAsync(Id)) ?? [];
+
+                // Load linked users up front so usage is visible without an extra click.
+                await GetUsersAsync();
             }
         }
     }

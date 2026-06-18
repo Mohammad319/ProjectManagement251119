@@ -74,7 +74,6 @@ internal sealed class TypeLookupConfiguration : IEntityTypeConfiguration<TypeEnt
         builder.ToTable(t =>
         {
             t.HasCheckConstraint("CK_ProjectTypes_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
-            t.HasCheckConstraint("CK_ProjectTypes_Color_Hex", LookupChecks.HexColorCheck);
             t.HasCheckConstraint("CK_ProjectTypes_SortOrder_NonNegative", LookupChecks.NonNegativeSortOrderCheck);
         });
     }
@@ -96,7 +95,6 @@ internal sealed class ContractLookupConfiguration : IEntityTypeConfiguration<Con
         builder.ToTable(t =>
         {
             t.HasCheckConstraint("CK_Contracts_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
-            t.HasCheckConstraint("CK_Contracts_Color_Hex", LookupChecks.HexColorCheck);
             t.HasCheckConstraint("CK_Contracts_SortOrder_NonNegative", LookupChecks.NonNegativeSortOrderCheck);
         });
     }
@@ -118,7 +116,6 @@ internal sealed class CompensationLookupConfiguration : IEntityTypeConfiguration
         builder.ToTable(t =>
         {
             t.HasCheckConstraint("CK_Compensations_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
-            t.HasCheckConstraint("CK_Compensations_Color_Hex", LookupChecks.HexColorCheck);
             t.HasCheckConstraint("CK_Compensations_SortOrder_NonNegative", LookupChecks.NonNegativeSortOrderCheck);
         });
     }
@@ -140,7 +137,6 @@ internal sealed class ProcurementProcedureLookupConfiguration : IEntityTypeConfi
         builder.ToTable(t =>
         {
             t.HasCheckConstraint("CK_ProcurementProcedures_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
-            t.HasCheckConstraint("CK_ProcurementProcedures_Color_Hex", LookupChecks.HexColorCheck);
             t.HasCheckConstraint("CK_ProcurementProcedures_SortOrder_NonNegative", LookupChecks.NonNegativeSortOrderCheck);
         });
     }
@@ -162,7 +158,6 @@ internal sealed class ProcurementMethodLookupConfiguration : IEntityTypeConfigur
         builder.ToTable(t =>
         {
             t.HasCheckConstraint("CK_ProcurementMethods_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
-            t.HasCheckConstraint("CK_ProcurementMethods_Color_Hex", LookupChecks.HexColorCheck);
             t.HasCheckConstraint("CK_ProcurementMethods_SortOrder_NonNegative", LookupChecks.NonNegativeSortOrderCheck);
         });
     }

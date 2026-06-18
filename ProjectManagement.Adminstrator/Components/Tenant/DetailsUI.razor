@@ -13,12 +13,27 @@
     <section class="rounded-2xl border border-slate-200 bg-white px-4 py-1 shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
         <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
-                <h2 class="mt-1 text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">@(TenantPut?.Name ??"Tenant")</h2>
-                <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Inspect tenant metadata, limits, contact details, and linked users from one screen.</p>
+                <h2 class="mt-1 text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">@(TenantPut?.Name ??"Hyresgäst")</h2>
+                <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Granska hyresgästens uppgifter, gränser, kontaktinformation och kopplade användare på en skärm.</p>
             </div>
-            <button class="inline-flex items-center justify-center gap-2 rounded-xl px-1 py-1 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-1 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" @onclick="async () => await Callback.InvokeAsync()">
-                @ResourceApp.back
-            </button>
+            <div class="flex flex-wrap items-center gap-2">
+                @if (CanManageTenantUsers)
+                {
+                    <button class="inline-flex items-center justify-center gap-2 rounded-xl border border-sky-600 bg-sky-600 px-3 py-1 text-xs font-medium text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-500 dark:bg-sky-500 dark:hover:bg-sky-400"
+                            disabled="@IsSeedingDefaults"
+                            @onclick="AskInitializeDefaults">
+                        @(IsSeedingDefaults ? "Initierar…" : "Initiera standardinställningar")
+                    </button>
+                    <button class="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-600 bg-emerald-600 px-3 py-1 text-xs font-medium text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400"
+                            disabled="@IsSeedingSampleData"
+                            @onclick="AskGenerateSampleData">
+                        @(IsSeedingSampleData ? "Genererar…" : "Generera exempeldata")
+                    </button>
+                }
+                <button class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" @onclick="async () => await Callback.InvokeAsync()">
+                    @ResourceApp.back
+                </button>
+            </div>
         </div>
     </section>
 
@@ -43,14 +58,12 @@
         
                     <div class="rounded-2xl border border-slate-200 bg-slate-50/80 shadow-sm dark:border-slate-800 dark:bg-slate-900/60 px-3 py-1">
                         <dt class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">@AppControll.maxUsers</dt>
-                        <dd class="mt-1 text-sm font-medium text-slate-900 dark:text-slate-100">@tenant.MaxUsers</dd>
-                    </div>
-                    <div class="rounded-2xl border border-slate-200 bg-slate-50/80 shadow-sm dark:border-slate-800 dark:bg-slate-900/60 px-3 py-1">
-                        <dt class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">@AppControll.maxCalculations</dt>
-                        <dd class="mt-1 text-sm font-medium text-slate-900 dark:text-slate-100">@tenant.MaxCalculations</dd>
+                        <dd class="mt-1 text-sm font-medium @(Users is not null && Users.Count > tenant.MaxUsers ? "text-rose-600 dark:text-rose-400" : "text-slate-900 dark:text-slate-100")">
+                            @(Users?.Count ?? 0) / @tenant.MaxUsers
+                        </dd>
                     </div>
                     <div class="rounded-2xl border border-slate-200 bg-slate-50/80 shadow-sm dark:border-slate-800 dark:bg-slate-900/60 px-3 py-1 sm:col-span-2">
-                        <dt class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">Contact</dt>
+                        <dt class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">Kontakt</dt>
                         <dd class="mt-1 grid gap-1 text-sm text-slate-700 dark:text-slate-200 sm:grid-cols-2">
                             <div><span class="font-medium">@ResourceIdentity.email:</span> @tenant.Email</div>
                             <div><span class="font-medium">@ResourceIdentity.phone:</span> @tenant.Phone</div>
@@ -66,13 +79,23 @@
             <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/80 px-3 py-1">
                 <div class="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                        <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">Tenant users</div>
-                        <div class="mt-1 text-xs text-slate-600 dark:text-slate-400">View linked users and apply administrative actions.</div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">Hyresgästens användare</div>
+                            @if (Users is not null && Users.Any())
+                            {
+                                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@Users.Count</span>
+                                @if (LockedUsersCount > 0)
+                                {
+                                    <span class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">@LockedUsersCount Låsta</span>
+                                }
+                            }
+                        </div>
+                        <div class="mt-1 text-xs text-slate-600 dark:text-slate-400">Visa kopplade användare och utför administrativa åtgärder.</div>
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
                         @if (CanManageTenantUsers)
                         {
-                            <button class="inline-flex items-center justify-center gap-2 rounded-xl px-1 py-1 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-sky-600 bg-sky-600 px-1 py-1 text-xs font-medium text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-500 dark:bg-sky-500 dark:hover:bg-sky-400" @onclick="() => UserRoleDialog(new ApplicationUser() { Id = string.Empty })">New user</button>
+                            <button class="inline-flex items-center justify-center gap-2 rounded-xl px-1 py-1 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-sky-600 bg-sky-600 px-1 py-1 text-xs font-medium text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-500 dark:bg-sky-500 dark:hover:bg-sky-400" @onclick="() => UserRoleDialog(new ApplicationUser() { Id = string.Empty })">Ny användare</button>
                         }
 
                         @if (Users == null || !Users.Any())
@@ -85,8 +108,8 @@
                 @if (Users == null || !Users.Any())
                 {
                     <div class="flex min-h-[180px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-8 text-center dark:border-slate-700 dark:bg-slate-900/40 mt-4 min-h-[220px]">
-                        <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">No users loaded</div>
-                        <div class="mt-1 max-w-xl text-sm text-slate-600 dark:text-slate-400">Load tenant users to inspect lockout status, department assignment, and add baseline company information.</div>
+                        <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">Inga användare laddade</div>
+                        <div class="mt-1 max-w-xl text-sm text-slate-600 dark:text-slate-400">Ladda hyresgästens användare för att se låsningsstatus, avdelningstillhörighet och lägga till grundläggande företagsinformation.</div>
                     </div>
                 }
                 else
@@ -102,7 +125,6 @@
                                         <th class="px-1 py-1 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@ResourceIdentity.lockoutEnd</th>
                                         <th class="px-1 py-1 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@ResourceIdentity.lockoutStart</th>
                                         <th class="px-1 py-1 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@ResourceApp.department</th>
-                                        <th class="px-1 py-1 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -114,29 +136,19 @@
                                             <td class="px-1 py-1 align-top text-sm text-slate-700 dark:text-slate-200">@user.Firstname @user.Lastname</td>
                                             <td class="px-1 py-1 align-top text-sm text-slate-700 dark:text-slate-200">
                                                 <div class="flex items-center gap-2">
-                                                    @if (user.LockoutEnabled)
+                                                    @if (IsLocked(user))
                                                     {
-                                                        <span class="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">Locked</span>
+                                                        <span class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">Låst</span>
                                                     }
                                                     else
                                                     {
-                                                        <span class="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">Open</span>
+                                                        <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">Öppen</span>
                                                     }
                                                 </div>
                                                 <div class="mt-1 text-xs text-slate-500 dark:text-slate-400">@(user.LockoutEnd.HasValue ? user.LockoutEnd.Value.ToString("dd.MM.yyyy") :"—")</div>
                                             </td>
                                             <td class="px-1 py-1 align-top text-sm text-slate-700 dark:text-slate-200">@(user.LockoutStart.HasValue ? user.LockoutStart.Value.ToString("dd.MM.yyyy") :"—")</td>
-                                            <td class="px-1 py-1 align-top text-sm text-slate-700 dark:text-slate-200">@user.DepartmentId</td>
-                                            <td class="px-1 py-1 align-top text-sm text-slate-700 dark:text-slate-200">
-                                                @if (CanManageTenantUsers)
-                                                {
-                                                    <button class="inline-flex items-center justify-center gap-2 rounded-xl px-1 py-1 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-1 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 px-1 py-1 text-xs"
-                                                            @onclick="() => AddBasicCompanyInfoAsync(user)"
-                                                            disabled="@IsAddingCompanyInfoFor(user)">
-                                                        @(IsAddingCompanyInfoFor(user) ?"Adding..." :"Add Basic Company Info")
-                                                    </button>
-                                                }
-                                            </td>
+                                            <td class="px-1 py-1 align-top text-sm text-slate-700 dark:text-slate-200">@DepartmentName(user.DepartmentId)</td>
                                         </tr>
                                     }
                                 </tbody>
@@ -151,32 +163,99 @@
 </div>
 
 @code {
-    bool IsAddingCompanyInfoFor(ApplicationUser user) =>
-        !string.IsNullOrWhiteSpace(AddingCompanyInfoForUserId) && AddingCompanyInfoForUserId == user.Id;
+    bool IsSeedingDefaults;
+    bool IsSeedingSampleData;
 
-    string? AddingCompanyInfoForUserId;
+    const string SeedTitle = "Initiera standardinställningar";
+    const string SampleTitle = "Generera exempeldata";
 
-    async Task AddBasicCompanyInfoAsync(ApplicationUser user)
+    void AskInitializeDefaults()
     {
-        if (!CanManageTenantUsers || Id <= 0 || user is null || string.IsNullOrWhiteSpace(user.Id) || IsAddingCompanyInfoFor(user)) return;
-
-        if (!user.UserId.HasValue || user.UserId.Value <= 0)
-        {
-            MHD.MessageOk(ResourceApp.newItem,"Selected user does not have a linked tenant user id.", MhdState.Warning);
+        if (!CanManageTenantUsers || Id <= 0 || IsSeedingDefaults)
             return;
-        }
 
-        AddingCompanyInfoForUserId = user.Id;
+        MHD.MessageYesNo(
+            SeedTitle,
+            "Detta skapar saknade standardinställningar för hyresgästen (statusar, konton, avdelningar, projekt- och upphandlingslistor). Befintliga objekt lämnas oförändrade. Vill du fortsätta?",
+            MhdState.Warning,
+            EventCallback.Factory.Create(this, InitializeDefaultsAsync));
+    }
+
+    async Task InitializeDefaultsAsync()
+    {
+        if (IsSeedingDefaults || Id <= 0)
+            return;
+
+        IsSeedingDefaults = true;
         try
         {
-            var result = await ExHandlers.RunCheckTokenAsync(() => UsersService.AddBasicCompanyInfoAsync(Id, user.UserId));
-            MHD.MessageOk(ResourceApp.newItem,
-                result ?"Basic company info added/updated successfully." :"No changes were required.",
-                result ? MhdState.Success : MhdState.Info);
+            await Modal.CloseAsync();
+            var result = await ExHandlers.RunCheckTokenAsync(() => UsersService.AddBasicCompanyInfoAsync(Id, null));
+
+            if (result is null)
+            {
+                MHD.MessageOk(SeedTitle, "Åtgärden kunde inte slutföras.", MhdState.Danger);
+                return;
+            }
+
+            var message = result.AnyChanges
+                ? $"Klart. Skapade {result.Created}, uppdaterade {result.Updated} objekt."
+                : "Allt är redan uppdaterat – inga ändringar behövdes.";
+
+            MHD.MessageOk(SeedTitle, message, result.AnyChanges ? MhdState.Success : MhdState.Info);
         }
         finally
         {
-            AddingCompanyInfoForUserId = null;
+            IsSeedingDefaults = false;
+            StateHasChanged();
+        }
+    }
+
+    void AskGenerateSampleData()
+    {
+        if (!CanManageTenantUsers || Id <= 0 || IsSeedingSampleData)
+            return;
+
+        // Sample records must be owned by a real tenant user, so guard before asking to proceed.
+        if (Users is null || !Users.Any())
+        {
+            MHD.MessageOk(SampleTitle, "Lägg till minst en användare för hyresgästen innan du genererar exempeldata.", MhdState.Info);
+            return;
+        }
+
+        MHD.MessageYesNo(
+            SampleTitle,
+            "Detta skapar en exempelmapp med projekt, kalkyler och några aktiviteter och resurser så att hyresgästen får demoinnehåll. Hoppas över om exempelmappen redan finns. Vill du fortsätta?",
+            MhdState.Warning,
+            EventCallback.Factory.Create(this, GenerateSampleDataAsync));
+    }
+
+    async Task GenerateSampleDataAsync()
+    {
+        if (IsSeedingSampleData || Id <= 0)
+            return;
+
+        IsSeedingSampleData = true;
+        try
+        {
+            await Modal.CloseAsync();
+            var result = await ExHandlers.RunCheckTokenAsync(() => UsersService.AddSampleProjectDataAsync(Id, null));
+
+            if (result is null)
+            {
+                MHD.MessageOk(SampleTitle, "Åtgärden kunde inte slutföras.", MhdState.Danger);
+                return;
+            }
+
+            var message = result.AnyChanges
+                ? $"Klart. Skapade {result.Created}, uppdaterade {result.Updated} objekt."
+                : "Exempeldata finns redan – inga ändringar behövdes.";
+
+            MHD.MessageOk(SampleTitle, message, result.AnyChanges ? MhdState.Success : MhdState.Info);
+        }
+        finally
+        {
+            IsSeedingSampleData = false;
             StateHasChanged();
         }
     }

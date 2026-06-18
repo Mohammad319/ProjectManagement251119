@@ -7,6 +7,7 @@ using ProjectManagement.Client.Helper;
 using ProjectManagement.BlazorServer;
 using ProjectManagement.Services;
 using ProjectManagement.SignalR;
+using ProjectManagement.Services.UI;
 
 namespace ProjectManagement.Extensions;
 
@@ -55,6 +56,7 @@ public static class ProjectServicesRegistrationExtensions
 
         services.AddScoped<INotificationHub, SendHubNotification>();
         services.AddScoped<ITenantUserService, TenantUserService>();
+        services.AddScoped<IUserManagementAuditService, UserManagementAuditService>();
 
         return services;
     }

@@ -12,15 +12,15 @@ using Persistence.Context;
 namespace Persistence.Migrations
 {
     [DbContext(typeof(ShardingSingleDbContext))]
-    [Migration("20260603131939_AddProcurementMethodIsDefault")]
-    partial class AddProcurementMethodIsDefault
+    [Migration("20260618080123_AddUserManagementAudit")]
+    partial class AddUserManagementAudit
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.8")
+                .HasAnnotation("ProductVersion", "10.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -343,6 +343,9 @@ namespace Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsCurrentVersion")
                         .HasColumnType("bit");
 
@@ -353,9 +356,6 @@ namespace Persistence.Migrations
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsPrivate")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsVisible")
                         .HasColumnType("bit");
 
                     b.Property<DateTime?>("LockedAtUtc")
@@ -374,9 +374,6 @@ namespace Persistence.Migrations
                         .HasColumnType("nvarchar(1000)");
 
                     b.Property<int?>("OrganisationId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Procurement")
                         .HasColumnType("int");
 
                     b.Property<int?>("ProcurementMethodsId")
@@ -2196,11 +2193,6 @@ namespace Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Color")
-                        .IsRequired()
-                        .HasMaxLength(7)
-                        .HasColumnType("nvarchar(7)");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -2253,8 +2245,6 @@ namespace Persistence.Migrations
 
                     b.ToTable("Compensations", null, t =>
                         {
-                            t.HasCheckConstraint("CK_Compensations_Color_Hex", "[Color] LIKE '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'");
-
                             t.HasCheckConstraint("CK_Compensations_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
 
                             t.HasCheckConstraint("CK_Compensations_SortOrder_NonNegative", "[SortOrder] >= 0");
@@ -2268,11 +2258,6 @@ namespace Persistence.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Color")
-                        .IsRequired()
-                        .HasMaxLength(7)
-                        .HasColumnType("nvarchar(7)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -2326,8 +2311,6 @@ namespace Persistence.Migrations
 
                     b.ToTable("Contracts", null, t =>
                         {
-                            t.HasCheckConstraint("CK_Contracts_Color_Hex", "[Color] LIKE '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'");
-
                             t.HasCheckConstraint("CK_Contracts_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
 
                             t.HasCheckConstraint("CK_Contracts_SortOrder_NonNegative", "[SortOrder] >= 0");
@@ -2341,11 +2324,6 @@ namespace Persistence.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Color")
-                        .IsRequired()
-                        .HasMaxLength(7)
-                        .HasColumnType("nvarchar(7)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -2399,12 +2377,214 @@ namespace Persistence.Migrations
 
                     b.ToTable("ProcurementMethods", null, t =>
                         {
-                            t.HasCheckConstraint("CK_ProcurementMethods_Color_Hex", "[Color] LIKE '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'");
-
                             t.HasCheckConstraint("CK_ProcurementMethods_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
 
                             t.HasCheckConstraint("CK_ProcurementMethods_SortOrder_NonNegative", "[SortOrder] >= 0");
                         });
+                });
+
+            modelBuilder.Entity("Domain.Entities.Project.ProcurementProcedureEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsVisible")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("UpdatedBy");
+
+                    b.HasIndex("TenantId", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ProcurementProcedures_Tenant_Name");
+
+                    b.HasIndex("TenantId", "IsVisible", "SortOrder")
+                        .HasDatabaseName("IX_ProcurementProcedures_Tenant_Visible_Order");
+
+                    b.ToTable("ProcurementProcedures", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_ProcurementProcedures_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+
+                            t.HasCheckConstraint("CK_ProcurementProcedures_SortOrder_NonNegative", "[SortOrder] >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("Domain.Entities.Project.ProjectBidEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal?>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("BidderName")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("DeductionPercent")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("IsAwarded")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsWinner")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(3000)
+                        .HasColumnType("nvarchar(3000)");
+
+                    b.Property<int?>("Placement")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PricesJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(3000)
+                        .HasColumnType("nvarchar(3000)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("UpdatedBy");
+
+                    b.HasIndex("TenantId", "ProjectId")
+                        .HasDatabaseName("IX_ProjectBids_Tenant_Project");
+
+                    b.ToTable("ProjectBids", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.Project.ProjectBidPriceColumnEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<int>("PartType")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("UpdatedBy");
+
+                    b.HasIndex("TenantId", "ProjectId")
+                        .HasDatabaseName("IX_ProjectBidPriceColumns_Tenant_Project");
+
+                    b.ToTable("ProjectBidPriceColumns", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.Project.ProjectEntity", b =>
@@ -2412,6 +2592,9 @@ namespace Persistence.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("BidEvaluationModel")
+                        .HasColumnType("int");
 
                     b.Property<string>("Code")
                         .HasMaxLength(20)
@@ -2443,10 +2626,10 @@ namespace Persistence.Migrations
                     b.Property<Guid>("FolderId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<bool>("IsDeleted")
+                    b.Property<bool>("IsArchived")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsVisible")
+                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<string>("Metadata")
@@ -2465,6 +2648,9 @@ namespace Persistence.Migrations
                         .HasColumnType("int");
 
                     b.Property<int?>("ProcurementMethodId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ProcurementProcedureId")
                         .HasColumnType("int");
 
                     b.Property<int?>("ProjectStatusId")
@@ -2516,6 +2702,8 @@ namespace Persistence.Migrations
 
                     b.HasIndex("ProcurementMethodId");
 
+                    b.HasIndex("ProcurementProcedureId");
+
                     b.HasIndex("ProjectStatusId");
 
                     b.HasIndex("ProjectTypeId");
@@ -2533,7 +2721,7 @@ namespace Persistence.Migrations
                     b.HasIndex("TenantId", "Name")
                         .HasDatabaseName("IX_Projects_Tenant_Name");
 
-                    b.HasIndex("TenantId", "FolderId", "IsVisible", "SortOrder")
+                    b.HasIndex("TenantId", "FolderId", "IsArchived", "SortOrder")
                         .HasDatabaseName("IX_Projects_Tenant_Folder_Visible_Order");
 
                     b.ToTable("Projects", null, t =>
@@ -2735,11 +2923,6 @@ namespace Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Color")
-                        .IsRequired()
-                        .HasMaxLength(7)
-                        .HasColumnType("nvarchar(7)");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -2792,8 +2975,6 @@ namespace Persistence.Migrations
 
                     b.ToTable("ProjectTypes", null, t =>
                         {
-                            t.HasCheckConstraint("CK_ProjectTypes_Color_Hex", "[Color] LIKE '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'");
-
                             t.HasCheckConstraint("CK_ProjectTypes_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
 
                             t.HasCheckConstraint("CK_ProjectTypes_SortOrder_NonNegative", "[SortOrder] >= 0");
@@ -2816,6 +2997,9 @@ namespace Persistence.Migrations
 
                     b.Property<int?>("CreatedBy")
                         .HasColumnType("int");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsVisible")
                         .HasColumnType("bit");
@@ -2896,6 +3080,9 @@ namespace Persistence.Migrations
                     b.Property<int?>("CreatedBy")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsVisible")
                         .HasColumnType("bit");
 
@@ -2969,6 +3156,10 @@ namespace Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Color")
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -2978,6 +3169,9 @@ namespace Persistence.Migrations
                     b.Property<string>("Description")
                         .HasMaxLength(3000)
                         .HasColumnType("nvarchar(3000)");
+
+                    b.Property<int?>("HeadUserId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -3096,6 +3290,127 @@ namespace Persistence.Migrations
 
                             t.HasCheckConstraint("CK_Users_UserName_NotEmpty", "LEN(LTRIM(RTRIM([UserName]))) > 0");
                         });
+                });
+
+            modelBuilder.Entity("Domain.Entities.Users.UserListSettingEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("Scope")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("UpdatedBy");
+
+                    b.HasIndex("TenantId", "UserId", "Scope", "Kind")
+                        .IsUnique()
+                        .HasDatabaseName("UX_UserListSettings_Tenant_User_Scope_Kind");
+
+                    b.ToTable("UserListSettings", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_UserListSettings_Kind_NotEmpty", "LEN(LTRIM(RTRIM([Kind]))) > 0");
+
+                            t.HasCheckConstraint("CK_UserListSettings_Scope_NotEmpty", "LEN(LTRIM(RTRIM([Scope]))) > 0");
+                        });
+                });
+
+            modelBuilder.Entity("Domain.Entities.Users.UserManagementAuditEntity", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<string>("ActorDisplayName")
+                        .IsRequired()
+                        .HasMaxLength(240)
+                        .HasColumnType("nvarchar(240)");
+
+                    b.Property<int?>("ActorUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Details")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<bool>("Succeeded")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("TargetAuthId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("TargetDisplayName")
+                        .IsRequired()
+                        .HasMaxLength(240)
+                        .HasColumnType("nvarchar(240)");
+
+                    b.Property<int?>("TargetUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CreatedAtUtc")
+                        .HasDatabaseName("IX_UserManagementAuditLogs_Tenant_CreatedAt");
+
+                    b.HasIndex("TenantId", "TargetUserId")
+                        .HasDatabaseName("IX_UserManagementAuditLogs_Tenant_TargetUser");
+
+                    b.ToTable("UserManagementAuditLogs", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.Application.ApplicationEntity", b =>
@@ -3806,6 +4121,73 @@ namespace Persistence.Migrations
                     b.Navigation("UpdatedByUser");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Project.ProcurementProcedureEntity", b =>
+                {
+                    b.HasOne("Domain.Entities.Users.UserEntity", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Entities.Users.UserEntity", "UpdatedByUser")
+                        .WithMany()
+                        .HasForeignKey("UpdatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("UpdatedByUser");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Project.ProjectBidEntity", b =>
+                {
+                    b.HasOne("Domain.Entities.Users.UserEntity", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Entities.Project.ProjectEntity", "Project")
+                        .WithMany("Bids")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Users.UserEntity", "UpdatedByUser")
+                        .WithMany()
+                        .HasForeignKey("UpdatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("Project");
+
+                    b.Navigation("UpdatedByUser");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Project.ProjectBidPriceColumnEntity", b =>
+                {
+                    b.HasOne("Domain.Entities.Users.UserEntity", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Entities.Project.ProjectEntity", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Users.UserEntity", "UpdatedByUser")
+                        .WithMany()
+                        .HasForeignKey("UpdatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("Project");
+
+                    b.Navigation("UpdatedByUser");
+                });
+
             modelBuilder.Entity("Domain.Entities.Project.ProjectEntity", b =>
                 {
                     b.HasOne("Domain.Entities.Project.CompensationEntity", "Compensation")
@@ -3840,6 +4222,10 @@ namespace Persistence.Migrations
                         .WithMany("Projects")
                         .HasForeignKey("ProcurementMethodId");
 
+                    b.HasOne("Domain.Entities.Project.ProcurementProcedureEntity", "ProcurementProcedure")
+                        .WithMany("Projects")
+                        .HasForeignKey("ProcurementProcedureId");
+
                     b.HasOne("Domain.Entities.Project.ProjectStatusEntity", "ProjectStatus")
                         .WithMany("Projects")
                         .HasForeignKey("ProjectStatusId");
@@ -3866,6 +4252,8 @@ namespace Persistence.Migrations
                     b.Navigation("Organisation");
 
                     b.Navigation("ProcurementMethod");
+
+                    b.Navigation("ProcurementProcedure");
 
                     b.Navigation("ProjectStatus");
 
@@ -4020,6 +4408,23 @@ namespace Persistence.Migrations
                     b.Navigation("UpdatedByUser");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Users.UserListSettingEntity", b =>
+                {
+                    b.HasOne("Domain.Entities.Users.UserEntity", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Entities.Users.UserEntity", "UpdatedByUser")
+                        .WithMany()
+                        .HasForeignKey("UpdatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("UpdatedByUser");
+                });
+
             modelBuilder.Entity("Domain.Entities.Calculation.AccountEntity", b =>
                 {
                     b.Navigation("ResourceSorts");
@@ -4157,8 +4562,15 @@ namespace Persistence.Migrations
                     b.Navigation("Projects");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Project.ProcurementProcedureEntity", b =>
+                {
+                    b.Navigation("Projects");
+                });
+
             modelBuilder.Entity("Domain.Entities.Project.ProjectEntity", b =>
                 {
+                    b.Navigation("Bids");
+
                     b.Navigation("Calculations");
                 });
 

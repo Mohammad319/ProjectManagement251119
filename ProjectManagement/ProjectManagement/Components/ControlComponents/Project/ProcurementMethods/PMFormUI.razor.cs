@@ -25,9 +25,6 @@ public partial class PMFormUI
         ProcurementUpdate = new PostTaskStatusDTO();
         PropertyCopier.CopyPropertiesTo(Procurement, ProcurementUpdate);
 
-        if (string.IsNullOrWhiteSpace(ProcurementUpdate.Color))
-            ProcurementUpdate.Color = "#3b82f6";
-
         LastProcurementId = currentId;
         LastProcurementReference = Procurement;
     }

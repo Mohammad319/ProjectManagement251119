@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace Domain.Entities.Project
 {
-    public sealed class ProcurementMethodEntity : ColoredListEntity
+    public sealed class ProcurementMethodEntity : OrderedListEntity
     {
         public bool IsDefault { get; private set; }
 

@@ -149,7 +149,16 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles.AppControll {
                 return ResourceManager.GetString("confirmTenantBlockout", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Reset this user's password and e-mail them a new temporary password?.
+        /// </summary>
+        public static string confirmResetPassword {
+            get {
+                return ResourceManager.GetString("confirmResetPassword", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Date Expire.
         /// </summary>
@@ -228,15 +237,6 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles.AppControll {
         public static string max {
             get {
                 return ResourceManager.GetString("max", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Max Calculations.
-        /// </summary>
-        public static string maxCalculations {
-            get {
-                return ResourceManager.GetString("maxCalculations", resourceCulture);
             }
         }
         

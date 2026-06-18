@@ -138,6 +138,9 @@
   <data name="confirmTenantBlockout" xml:space="preserve">
     <value>Är du säker på att du vill avblockera användaren?</value>
   </data>
+  <data name="confirmResetPassword" xml:space="preserve">
+    <value>Återställ användarens lösenord och mejla ett nytt tillfälligt lösenord?</value>
+  </data>
   <data name="dateExpire" xml:space="preserve">
     <value>Utgångsdatum</value>
   </data>
@@ -158,9 +161,6 @@
   </data>
   <data name="max" xml:space="preserve">
     <value>Max</value>
-  </data>
-  <data name="maxCalculations" xml:space="preserve">
-    <value>Maxberäkningar</value>
   </data>
   <data name="maxUsers" xml:space="preserve">
     <value>Max antal användare</value>

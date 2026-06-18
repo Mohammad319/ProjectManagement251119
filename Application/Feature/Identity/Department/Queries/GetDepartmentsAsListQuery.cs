@@ -7,7 +7,16 @@ namespace Application.Feature.Identity.Department.Queries
 {
     public sealed record GetDepartmentsAsListQuery() : IRequest<List<ListDTO>>;
     public sealed record GetDepartmentsQuery() : IRequest<List<DepartmentDetailsDTO>>;
+    public sealed record GetTenantUsersCountQuery() : IRequest<int>;
     public sealed record GetUserssQuery(int? departmentId) : IRequest<List<TenantUserDto>>;
+
+    public sealed class GetTenantUsersCountQueryHandler(IDepartmentService service)
+        : IRequestHandler<GetTenantUsersCountQuery, int>
+    {
+        public Task<int> Handle(GetTenantUsersCountQuery request, CancellationToken ct)
+            => service.GetTotalUsersCountAsync(ct);
+    }
+
     public sealed class GetUserssQueryHandler(IDepartmentService service)
     : IRequestHandler<GetUserssQuery, List<TenantUserDto>>
     {

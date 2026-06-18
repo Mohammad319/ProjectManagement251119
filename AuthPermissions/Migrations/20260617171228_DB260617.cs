@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace AuthPermissions.Migrations
 {
     /// <inheritdoc />
-    public partial class DB260603 : Migration
+    public partial class DB260617 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -37,6 +37,7 @@ namespace AuthPermissions.Migrations
                     DB = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
                     UserId = table.Column<int>(type: "int", nullable: true),
                     LockoutStart = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    LastLoginAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
                     Firstname = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Lastname = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
