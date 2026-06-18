@@ -35,11 +35,16 @@ namespace ProjectManagement.Client.Pages.Calculation
 
             _disposed = true;
 
+            CancellationTokenSource? hubFlushCts;
             lock (_hubBatchLock)
             {
-                _hubFlushCts?.Cancel();
-                _hubFlushCts?.Dispose();
+                hubFlushCts = _hubFlushCts;
                 _hubFlushCts = null;
+            }
+            if (hubFlushCts is not null)
+            {
+                await hubFlushCts.CancelAsync();
+                hubFlushCts.Dispose();
             }
 
             _calcSubscription?.Dispose();

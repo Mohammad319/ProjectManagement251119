@@ -107,4 +107,4 @@ app.MapGet("/health/ready", async (IServiceProvider services, CancellationToken 
     .AllowAnonymous()
     .WithTags("Health");
 
-app.Run();
+await app.RunAsync();

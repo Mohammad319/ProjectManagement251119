@@ -173,7 +173,8 @@ public partial class UsersIndex : IAsyncDisposable
     protected async Task HandleSearchInput(ChangeEventArgs args)
     {
         SearchInput = args.Value?.ToString() ?? string.Empty;
-        _searchCts?.Cancel();
+        if (_searchCts is not null)
+            await _searchCts.CancelAsync();
         _searchCts?.Dispose();
         _searchCts = new CancellationTokenSource();
 
@@ -261,7 +262,8 @@ public partial class UsersIndex : IAsyncDisposable
 
     protected async Task LoadAsync()
     {
-        _loadCts?.Cancel();
+        if (_loadCts is not null)
+            await _loadCts.CancelAsync();
         _loadCts?.Dispose();
         _loadCts = new CancellationTokenSource();
         var ct = _loadCts.Token;
@@ -922,13 +924,14 @@ public partial class UsersIndex : IAsyncDisposable
 
     #endregion
 
-    public ValueTask DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
-        _searchCts?.Cancel();
+        if (_searchCts is not null)
+            await _searchCts.CancelAsync();
         _searchCts?.Dispose();
-        _loadCts?.Cancel();
+        if (_loadCts is not null)
+            await _loadCts.CancelAsync();
         _loadCts?.Dispose();
-        return ValueTask.CompletedTask;
     }
 
     private sealed record UserFilterPreferences(string? Search, string? Role, string? Status);

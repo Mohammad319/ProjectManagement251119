@@ -49,6 +49,10 @@ dotnet_diagnostic.CA1031.severity = suggestion   # التقاط Exception عام
 dotnet_diagnostic.CA1805.severity = suggestion   # تهيئة بالقيمة الافتراضية
 dotnet_diagnostic.CA1859.severity = suggestion   # استخدام أنواع concrete للأداء
 dotnet_diagnostic.CA1822.severity = suggestion   # أعضاء يمكن جعلها static
+# CA1873: تقييم وسيط log قد يكون مكلفًا — نفس عائلة CA1848 (أداء التسجيل).
+# معظم الحالات boxing لقيم int/long عند Information؛ نُبقيها كاقتراح ليظهر
+# المكلِّف فعليًا (مثل await داخل وسيط log) دون ضجيج في البناء.
+dotnet_diagnostic.CA1873.severity = suggestion
 
 # --- قواعد التنسيق (IDE) كاقتراحات لتجنّب الضجيج ---
 dotnet_diagnostic.IDE0005.severity = warning     # usings غير مستخدمة (مفيدة وآمنة)

@@ -161,4 +161,4 @@ app.MapRazorComponents<App>()
 
 app.MapAdditionalIdentityEndpoints();
 
-app.Run();
+await app.RunAsync();

@@ -69,7 +69,8 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
                 }, MhdDialogSize.ExtraLarge);
         } 
 
-        void Remove(GetTenantsDTO obj)
+        // Shows a confirmation dialog; the actual delete runs in RemoveAsync after the user confirms.
+        void AskRemove(GetTenantsDTO obj)
         {
             MHD.DeleteMessage(obj.Name, EventCallback.Factory.Create(this, () => RemoveAsync(obj)));
         }
@@ -132,7 +133,7 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
             if (CanManageTenants)
             {
                 list.Add(new() { Label = $"✏️ {ResourceApp.edit}", OnClickAsync = () => { UpdateForm(item); return Task.CompletedTask; } });
-                list.Add(new() { Label = $"🗑️ {ResourceApp.delete}", OnClickAsync = () => { Remove(item); return Task.CompletedTask; } });
+                list.Add(new() { Label = $"🗑️ {ResourceApp.delete}", OnClickAsync = () => { AskRemove(item); return Task.CompletedTask; } });
                 list.Add(new() { Label = $"🔒 {AppControll.block}", OnClickAsync = () => { TenantBlock(item.Id, true); return Task.CompletedTask; } });
                 list.Add(new() { Label = $"🔓 {AppControll.blockout}", OnClickAsync = () => { TenantBlock(item.Id, false); return Task.CompletedTask; } });
             }

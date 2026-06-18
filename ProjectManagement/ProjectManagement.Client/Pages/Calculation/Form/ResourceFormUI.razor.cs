@@ -307,13 +307,13 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
             {
                 var oppTask = Repo.Opportunity.GetAsync(Calc.Id);
                 await Task.WhenAll(configTask, oppTask);
-                Calc.Opportunities = oppTask.Result;
+                Calc.Opportunities = await oppTask;
             }
             else
             {
                 await configTask;
             }
-            Config = configTask.Result;
+            Config = await configTask;
             if (Resource is not null)
             {
                 PropertyCopier.CopyPropertiesTo(Resource, ResourceUpdate);

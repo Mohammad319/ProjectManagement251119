@@ -52,7 +52,7 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
                 list.Add(new() { Label = $"🔒 {AppControll.block}", OnClickAsync = () => { AskSetLockout(item, true); return Task.CompletedTask; } });
 
             list.Add(new() { Label = $"🔑 {ResourceIdentity.ResetPassword}", OnClickAsync = () => { AskResetPassword(item); return Task.CompletedTask; } });
-            list.Add(new() { Label = ResourceApp.delete, OnClickAsync = () => { Remove(item); return Task.CompletedTask; } });
+            list.Add(new() { Label = ResourceApp.delete, OnClickAsync = () => { AskRemove(item); return Task.CompletedTask; } });
 
             await ContextService.ShowMenuAsync(list);
         }
@@ -117,7 +117,8 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
             }
         }
 
-        void Remove(ApplicationUser user)
+        // Shows a confirmation dialog; the actual delete runs in RemoveAsync after the user confirms.
+        void AskRemove(ApplicationUser user)
         {
             MHD.MessageYesNo(ResourceApp.delete, AppLoc[LocalizerConst.deleteConfirmMsg, user.Email ?? string.Empty], MhdState.Warning, EventCallback.Factory.Create(this, () => RemoveAsync(user)));
         }
