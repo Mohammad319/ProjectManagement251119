@@ -32,7 +32,7 @@ public class CalculationStatusReportingTests
     {
         var names = TenantSeedCatalog.CalculationStatuses.Select(status => status.Name).ToHashSet();
 
-        Assert.Contains("Utkast", names);
+        Assert.Contains("Förfrågan", names);
         Assert.Contains("Planerad", names);
         Assert.Contains("Pågående", names);
         Assert.Contains("Behöver granskas", names);

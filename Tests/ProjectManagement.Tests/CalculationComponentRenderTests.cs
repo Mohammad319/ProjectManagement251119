@@ -55,7 +55,7 @@ public class CalculationComponentRenderTests : BunitContext
         var container = cut.Find("td > div");
         Assert.Contains("padding-left:24px", container.GetAttribute("style"));
 
-        cut.Find("span[role='button']").Click();
+        cut.Find("button").Click();
 
         Assert.Equal(1, toggleCount);
     }
@@ -381,14 +381,14 @@ public class CalculationComponentRenderTests : BunitContext
                 this,
                 toggledTask => toggledTask.Ui.CollSpan = !toggledTask.Ui.CollSpan)));
 
-        Assert.Single(cut.FindAll("span[role='button']"));
+        Assert.Single(cut.FindAll("button"));
         Assert.Contains("Length", cut.Markup);
 
-        cut.Find("span[role='button']").Click();
+        cut.Find("button").Click();
 
         cut.WaitForAssertion(() =>
         {
-            Assert.Equal("+", cut.Find("span[role='button']").TextContent.Trim());
+            Assert.Equal("+", cut.Find("button").TextContent.Trim());
             Assert.DoesNotContain("Length", cut.Markup);
         });
     }
@@ -696,7 +696,7 @@ public class CalculationComponentRenderTests : BunitContext
         });
 
         var taskComponent = cut.FindComponents<TaskRowComponent>().Single();
-        taskComponent.Find("span[role='button']").Click();
+        taskComponent.Find("button").Click();
 
         cut.WaitForAssertion(() =>
         {
@@ -706,7 +706,7 @@ public class CalculationComponentRenderTests : BunitContext
         });
 
         taskComponent = cut.FindComponents<TaskRowComponent>().Single();
-        taskComponent.Find("span[role='button']").Click();
+        taskComponent.Find("button").Click();
 
         cut.WaitForAssertion(() =>
         {
