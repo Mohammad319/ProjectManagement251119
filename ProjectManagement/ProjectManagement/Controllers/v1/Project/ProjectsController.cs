@@ -19,19 +19,19 @@ namespace ProjectManagement.Server.Controllers.v1
         {
             return Ok(await MicroBus.Send(new GetProjectCalcConfigQuery() { Methods = m, Contracts = con, Compensations = com, Types = t, ProjectStatuses = st, Procedures = proc, TypeObj = 0 }));
         }
-        [Authorize(Roles = Tenant.Users)]
+        [Authorize(Roles = Tenant.UsersAndViewer)]
         [HttpGet(URLConst.Project.GetByFolderDepartmentId + "/{folderId}")]
         public async Task<IActionResult> GetByFolderId(Guid folderId, bool includeArchived = false)
         {
-            return Ok(await MicroBus.Send(new GetProjectsGroupsByFolderQuery(folderId, includeArchived, GetUserId(), GetDepartmentId())));
+            return Ok(await MicroBus.Send(new GetProjectsGroupsByFolderQuery(folderId, includeArchived, GetUserId(), GetDepartmentId(), IsViewer())));
         }
-        [Authorize(Roles = Tenant.Users)]
+        [Authorize(Roles = Tenant.UsersAndViewer)]
         [HttpGet(URLConst.Project.GetProjectsOtherDepartment + "/{folderId}")]
         public async Task<IActionResult> GetOtherDepartmentAsync(Guid folderId, bool includeArchived = false)
         {
-            return Ok(await MicroBus.Send(new GetProjectsOtherGroupByFolderQuery(folderId, GetUserId(), GetDepartmentId(), includeArchived)));
+            return Ok(await MicroBus.Send(new GetProjectsOtherGroupByFolderQuery(folderId, GetUserId(), GetDepartmentId(), includeArchived, IsViewer())));
         }
-        [Authorize(Roles = Tenant.Users)]
+        [Authorize(Roles = Tenant.UsersAndViewer)]
         [HttpPost(URLConst.Project.Search)]
         public async Task<IActionResult> Filter(ProjectFilter dto)
         {
@@ -39,7 +39,7 @@ namespace ProjectManagement.Server.Controllers.v1
             if (!departmentId.HasValue)
                 return BadRequest("Department not found.");
 
-            return Ok(await MicroBus.Send(new GetProjectsBySearchQuery(dto, GetUserId(), departmentId.Value)));
+            return Ok(await MicroBus.Send(new GetProjectsBySearchQuery(dto, GetUserId(), departmentId.Value, IsViewer())));
         }
         [Authorize(Roles = Tenant.Users)]
         [HttpGet(URLConst.Details + "/{id}")]
@@ -51,7 +51,7 @@ namespace ProjectManagement.Server.Controllers.v1
         [HttpGet(URLConst.Project.GetProjectPost + "/{id}")]
         public async Task<IActionResult> GetToPost(Guid id)
         {
-            return Ok(await MicroBus.Send(new GetProjectPostQuery(id, GetUserId(), GetDepartmentId())));
+            return Ok(await MicroBus.Send(new GetProjectPostQuery(id, GetUserId(), GetDepartmentId(), IsViewer())));
         }
         [Authorize(Roles = Tenant.AdminManger)]
         [HttpGet(URLConst.ReOrder + "/{Id}/{NewOrder}")]

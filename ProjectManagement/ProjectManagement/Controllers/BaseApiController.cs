@@ -62,6 +62,13 @@ namespace ProjectManagement.Server.Controllers
                    User.IsInRole(PMRolesConst.Tenant.Manger);
         }
 
+        /// <summary>
+        /// True när aktuell användare har rollen Visare (TenantViewer) – en läs-/kommenteringsroll
+        /// som bara får se projekt/kalkyler som delats med användaren eller avdelningen. Skickas till
+        /// åtkomstfiltret (isViewer) så att Visare aldrig ser odelade/privata objekt.
+        /// </summary>
+        protected bool IsViewer() => User.IsInRole(PMRolesConst.Tenant.Viewer);
+
         private ICommandDispatcher? _dispatcher;
         protected ICommandDispatcher MicroBus => _dispatcher ??= HttpContext.RequestServices.GetRequiredService<ICommandDispatcher>();
 

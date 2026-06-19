@@ -144,9 +144,36 @@ namespace Persistence.Service.Folder
                 .ToListAsync(ct);
         }
 
-        public async Task<List<ListFolderDTO>> GetByDepartmentAsync(bool includeArchived, int? departmentId, CancellationToken ct = default)
+        public async Task<List<ListFolderDTO>> GetByDepartmentAsync(bool includeArchived, int? departmentId, CancellationToken ct = default, int userId = 0, bool isViewer = false)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            // Visare: visa bara mappar som innehåller minst ett projekt som delats med
+            // användaren/avdelningen via intern projektdelning (tomma/odelade mappar döljs),
+            // och räkna bara delade projekt. Övriga: befintlig avdelningsvy.
+            if (isViewer)
+            {
+                return await context.Folders
+                    .AsNoTracking()
+                    .Where(x => (includeArchived || x.IsVisible) &&
+                        x.FolderProjects.Any(p => (includeArchived || !p.IsArchived) &&
+                            p.Shares.Any(s => s.SharedWithUserId == userId || (departmentId != null && s.DepartmentId == departmentId))))
+                    .OrderBy(x => x.SortOrder)
+                    .ThenBy(x => x.Name)
+                    .Select(x => new ListFolderDTO
+                    {
+                        Id = x.Id,
+                        Name = x.Name,
+                        Color = x.Color,
+                        Order = (int)x.SortOrder,
+                        IsVisible = x.IsVisible,
+                        CreatedAt = x.CreatedAt,
+                        UpdatedAt = x.UpdatedAt,
+                        ProjectCount = x.FolderProjects.Count(p => (includeArchived || !p.IsArchived) &&
+                            p.Shares.Any(s => s.SharedWithUserId == userId || (departmentId != null && s.DepartmentId == departmentId)))
+                    })
+                    .ToListAsync(ct);
+            }
 
             return await context.Folders
                 .AsNoTracking()

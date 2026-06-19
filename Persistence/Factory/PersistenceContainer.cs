@@ -62,6 +62,7 @@ namespace Persistence.Factory
             services.AddScoped<IOpportunityService, OpportunityService>();
             services.AddScoped<IResourceQueryService, ResourceQueryService>();
             services.AddScoped<IShareCalcService, ShareCalcCommandService>();
+            services.AddScoped<Application.Feature.Project.ProjectShare.IProjectShareService, Persistence.Service.Project.ProjectShareService>();
             services.AddScoped<IStorageCommandService, StorageCommandService>();
             services.AddScoped<IStorageQueryService, StorageQueryService>();
             services.AddScoped<ITaskQueryService, TaskQueryService>();

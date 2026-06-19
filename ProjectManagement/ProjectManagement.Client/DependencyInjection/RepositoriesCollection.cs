@@ -42,6 +42,7 @@ namespace ProjectManagement.Client.DependencyInjection
             services.AddScoped<IShareCalcRepository, ShareCalcRepository>();
             services.AddScoped<ITenderRepository, TenderRepository>();
             services.AddScoped<IProjectBidRepository, ProjectBidRepository>();
+            services.AddScoped<IProjectShareRepository, ProjectShareRepository>();
             services.AddScoped<IItemCalcCategoryRepository, ItemCalcCategoryRepository>();
             services.AddScoped<UserListSettingsRepository>();
             services.AddScoped<IUnitOfWorkRepository, UnitOfWorkRepository>();

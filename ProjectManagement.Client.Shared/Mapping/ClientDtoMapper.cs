@@ -332,6 +332,7 @@ namespace ProjectManagement.Client.Shared.Mapping
                 TenderDeadline = dto.TenderDeadline,
                 TenderQA = dto.TenderQA,
                 IsArchived = dto.IsArchived,
+                IsShared = dto.IsShared,
                 CalculationCount = dto.CalculationCount,
                 StatusId = dto.StatusId,
                 StatusSortOrder = dto.StatusSortOrder,

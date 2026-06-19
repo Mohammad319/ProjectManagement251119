@@ -62,11 +62,11 @@ namespace ProjectManagement.Server.Controllers.v1.Project
             return Ok(await MicroBus.Send(new MoveCalculationCommand(calcId, projectId, GetDepartmentId(), GetUserId(), CanUseTargetDepartmentAccessAcrossDepartments())));
         }
 
-        [Authorize(Roles = Tenant.Users)]
+        [Authorize(Roles = Tenant.UsersAndViewer)]
         [HttpGet("{projectId}")]
         public async Task<IActionResult> Get(Guid projectId, bool isArchived = false)
         {
-            return Ok(await MicroBus.Send(new GetAllCalculationsQuery(projectId, isArchived, GetUserId(), GetDepartmentId())));
+            return Ok(await MicroBus.Send(new GetAllCalculationsQuery(projectId, isArchived, GetUserId(), GetDepartmentId(), IsViewer())));
         }
         [Authorize(Roles = Tenant.Users)]
         [HttpGet(URLConst.Calculation.HourlyPriceList + "/{id}")]
@@ -74,38 +74,38 @@ namespace ProjectManagement.Server.Controllers.v1.Project
         {
             return Ok(await MicroBus.Send(new HourlyPriceListQuery(id, GetDepartmentId())));
         }
-        [Authorize(Roles = Tenant.Users)]
+        [Authorize(Roles = Tenant.UsersAndViewer)]
         [HttpGet(URLConst.Calculation.Share + "/{projectId}")]
         public async Task<IActionResult> GetShareCalculations(Guid projectId)
         {
-            return Ok(await MicroBus.Send(new GetAllCalculationsByDepartmentQuery(projectId, GetUserId(), GetDepartmentId())));
+            return Ok(await MicroBus.Send(new GetAllCalculationsByDepartmentQuery(projectId, GetUserId(), GetDepartmentId(), IsViewer())));
         }
-        [Authorize(Roles = Tenant.Users)]
+        [Authorize(Roles = Tenant.UsersAndViewer)]
         [HttpGet(URLConst.Details + "/{id}")]
         public async Task<IActionResult> Details(int id)
         {
-            return Ok(await MicroBus.Send(new GetCalculationDetailsQuery(id, GetUserId(), GetDepartmentId())));
+            return Ok(await MicroBus.Send(new GetCalculationDetailsQuery(id, GetUserId(), GetDepartmentId(), IsViewer())));
         }
-        [Authorize(Roles = Tenant.Users)]
+        [Authorize(Roles = Tenant.UsersAndViewer)]
         [HttpGet(URLConst.Calculation.Page + "/{id}")]
         public async Task<IActionResult> GetPage1(int id)
         {
-            return Ok(await MicroBus.Send(new GetCalculationPageQuery(id, GetUserId(), GetDepartmentId())));
+            return Ok(await MicroBus.Send(new GetCalculationPageQuery(id, GetUserId(), GetDepartmentId(), IsViewer())));
         }
 
-        [Authorize(Roles = Tenant.Users)]
+        [Authorize(Roles = Tenant.UsersAndViewer)]
         [HttpGet(URLConst.Calculation.SharedPage + "/{id}")]
         public async Task<IActionResult> GetPage2(int id)
         {
             var departmentId = GetDepartmentId();
             if (departmentId is null) return BadRequest();
-            return Ok(await MicroBus.Send(new GetShareCalculationPageQuery(id, GetUserId(), departmentId.Value)));
+            return Ok(await MicroBus.Send(new GetShareCalculationPageQuery(id, GetUserId(), departmentId.Value, IsViewer())));
         }
-        [Authorize(Roles = Tenant.Users)]
+        [Authorize(Roles = Tenant.UsersAndViewer)]
         [HttpGet(URLConst.Calculation.GetToPost + "/{id}")]
         public async Task<IActionResult> GetPost(int id)
         {
-            return Ok(await MicroBus.Send(new GetCalculationPostQuery(id, GetUserId(), GetDepartmentId())));
+            return Ok(await MicroBus.Send(new GetCalculationPostQuery(id, GetUserId(), GetDepartmentId(), IsViewer())));
         }
         [Authorize(Roles = Tenant.AdminManger)]
         [HttpPost(URLConst.Calculation.Create + "/{ProjectId}")]

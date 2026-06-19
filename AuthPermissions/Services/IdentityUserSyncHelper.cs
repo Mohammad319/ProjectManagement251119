@@ -19,7 +19,8 @@ public static class IdentityUserSyncHelper
     [
         PMRolesConst.Tenant.Admin,
         PMRolesConst.Tenant.Manger,
-        PMRolesConst.Tenant.User
+        PMRolesConst.Tenant.User,
+        PMRolesConst.Tenant.Viewer
     ];
 
     private const string UpperChars = "ABCDEFGHJKLMNPQRSTUVWXYZ";

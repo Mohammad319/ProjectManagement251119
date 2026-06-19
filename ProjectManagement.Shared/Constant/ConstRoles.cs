@@ -449,10 +449,33 @@ namespace ProjectManagement.Shared.Constant
             /// <summary>Bottom tier — value "TenantGuest", UI label "Guest". Read-only viewer.</summary>
             public const string User = "TenantGuest";
 
+            /// <summary>
+            /// Sharing-recipient read tier — value "TenantViewer", UI label "Visare". Used for PL/AL/chef:
+            /// may read projects/calculations that have been shared with them and write comments /
+            /// production notes, but cannot edit calculation economy, lock/approve, create versions or
+            /// delete. Deliberately NOT part of <see cref="AdminManger"/> (no write access) and NOT part of
+            /// <see cref="Users"/> (so it can NOT reach the many generic read endpoints — tender/offer/storage/
+            /// resource sub-resources etc. — that are not viewer-filtered).
+            /// <para>
+            /// ACTIVATED via <see cref="UsersAndViewer"/>: only the viewer-FILTERED read endpoints (project
+            /// list/single/search/other-dept, calc list/single/details/post/page/share, folder list) are gated
+            /// with <see cref="UsersAndViewer"/> so Visare can reach exactly those. The shared access-filter
+            /// (ProjectAccessRules/CalculationAccessRules + folder filter, isViewer) then restricts Visare to
+            /// only projects/calculations/folders shared with them (never private/odelade).
+            /// </para>
+            /// </summary>
+            public const string Viewer = "TenantViewer";
+
             /// <summary>Editors: Manager + User ("TenantManager,TenantUser"). Used to gate every write/edit action.</summary>
             public const string AdminManger = Admin + "," + Manger;
-            /// <summary>Everyone: Manager + User + Guest ("TenantManager,TenantUser,TenantGuest"). Used to gate read access.</summary>
+            /// <summary>Everyone (no Visare): Manager + User + Guest. Default gate for read endpoints.</summary>
             public const string Users = AdminManger + "," + User;
+            /// <summary>
+            /// Read gate that ALSO admits Visare. Apply ONLY to viewer-filtered read endpoints
+            /// (project/calc/folder reads that pass isViewer to the access filter). Never on generic
+            /// sub-resource or write endpoints.
+            /// </summary>
+            public const string UsersAndViewer = Users + "," + Viewer;
             /// <summary>Non-top tiers: User + Guest ("TenantGuest,TenantUser").</summary>
             public const string UsersNotAdmin = User + "," + Manger;
         }

@@ -207,6 +207,7 @@ public partial class UsersIndex : IAsyncDisposable
         PMRolesConst.Tenant.Admin => WebLoc["LevelManager"].Value,
         PMRolesConst.Tenant.Manger => WebLoc["LevelUser"].Value,
         PMRolesConst.Tenant.User => WebLoc["LevelGuest"].Value,
+        PMRolesConst.Tenant.Viewer => "Visare",
         _ => string.IsNullOrWhiteSpace(user.Role) ? "—" : user.Role
     };
 

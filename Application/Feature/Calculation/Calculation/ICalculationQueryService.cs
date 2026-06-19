@@ -10,31 +10,36 @@ namespace Application.Feature.Calculation.Calculation
             bool isArchived,
             int userId,
             int? departmentId,
-            CancellationToken cancellationToken = default);
+            CancellationToken cancellationToken = default,
+            bool isViewer = false);
 
         Task<IEnumerable<ListCalculationDTO>> GetByDepartmentAsync(
             Guid projectId,
             int userId,
             int? departmentId,
-            CancellationToken cancellationToken = default);
+            CancellationToken cancellationToken = default,
+            bool isViewer = false);
 
         Task<CalculationDetailsDTO?> GetDetailsAsync(
             int id,
             int userId,
             int? departmentId,
-            CancellationToken cancellationToken = default);
+            CancellationToken cancellationToken = default,
+            bool isViewer = false);
 
         Task<CalculationPostDTO?> GetPostModelAsync(
             int id,
             int userId,
             int? departmentId,
-            CancellationToken cancellationToken = default);
+            CancellationToken cancellationToken = default,
+            bool isViewer = false);
 
         Task<CalculationPageDTO?> GetPageAsync(
             int id,
             int userId,
             int? departmentId,
-            CancellationToken cancellationToken = default);
+            CancellationToken cancellationToken = default,
+            bool isViewer = false);
 
         Task<List<HourlyPriceListGroupDTO>> GetHourlyPriceListAsync(
             int id,

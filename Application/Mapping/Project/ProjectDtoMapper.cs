@@ -63,7 +63,8 @@ namespace Application.Mapping.Project
         public static ListProjectDTO ToListDto(
             this ProjectEntity entity,
             int? statusSortOrder = null,
-            int calculationCount = 0)
+            int calculationCount = 0,
+            bool isShared = false)
         {
             ArgumentNullException.ThrowIfNull(entity);
 
@@ -80,6 +81,7 @@ namespace Application.Mapping.Project
                 TenderQA = entity.TenderQA,
                 Order = entity.SortOrder,
                 IsArchived = entity.IsArchived,
+                IsShared = isShared,
                 CalculationCount = calculationCount,
                 Status = entity.ProjectStatus?.Name ?? metadata.StatusName,
                 StatusId = entity.ProjectStatusId ?? metadata.StatusId,

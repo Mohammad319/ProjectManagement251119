@@ -20,11 +20,11 @@ namespace ProjectManagement.Server.Controllers.v1.Project
         {
             return Ok(await MicroBus.Send(new GetAllFoldersQuery()));
         }
-        [Authorize(Roles = PMRolesConst.Tenant.Users)]
+        [Authorize(Roles = PMRolesConst.Tenant.UsersAndViewer)]
         [HttpGet(URLConst.GetList)]
         public async Task<IActionResult> GetByVisible(bool includeArchived = false)
         {
-            return Ok(await MicroBus.Send(new GetFoldersDepartmentQuery(includeArchived, GetDepartmentId())));
+            return Ok(await MicroBus.Send(new GetFoldersDepartmentQuery(includeArchived, GetDepartmentId(), GetUserId(), IsViewer())));
         }
         [Authorize(Roles = PMRolesConst.Tenant.Users), HttpGet(URLConst.Details + "/{id}")]
         public async Task<IActionResult> Details(Guid id)

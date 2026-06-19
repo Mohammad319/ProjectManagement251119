@@ -155,7 +155,18 @@
       "Bash(git -C \"C:/Users/Administrator/Desktop/PM/b07/ProjectManagement251119\" status --short)",
       "Bash(git -C \"C:/Users/Administrator/Desktop/PM/b07/ProjectManagement251119\" diff --stat)",
       "Bash(rm -f build_ca1849.txt)",
-      "Bash(ls build_ca1849.txt)"
+      "Bash(ls build_ca1849.txt)",
+      "Read(//c/Users/Administrator/Desktop/PM/**)",
+      "Bash(grep -c 'py-0\\\\\\\\\\\\.5' tailwind.css)",
+      "Bash(grep -c 'h-2\\\\\\\\\\\\.5' tailwind.css)",
+      "Bash(grep -c 'w-2\\\\\\\\\\\\.5' tailwind.css)",
+      "Bash(grep -c 'pr-0\\\\\\\\\\\\.5' tailwind.css)",
+      "Bash(git --no-pager diff Application/Feature/Folder/IFolderService.cs Application/Feature/Folder/Queries/GetAllFoldersQuery.cs ProjectManagement/ProjectManagement/Controllers/v1/Project/FoldersController.cs)",
+      "Bash(git --no-pager diff Persistence/Service/Folder/FolderService.cs)",
+      "Bash(git --no-pager diff Persistence/Service/Project/ProjectService.cs)",
+      "Bash(git --no-pager diff Persistence/Context/ShardingSingleDbContextDataset.cs)",
+      "Bash(git --no-pager diff ProjectManagement/ProjectManagement/Controllers/BaseApiController.cs ProjectManagement/ProjectManagement/Controllers/v1/Project/ProjectsController.cs ProjectManagement/ProjectManagement/Controllers/v1/Project/CalculationsController.cs)",
+      "Bash(git --no-pager diff ProjectManagement.Shared/Constant/ConstRoles.cs)"
     ]
   }
 }

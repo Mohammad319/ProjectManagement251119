@@ -89,7 +89,8 @@ namespace Persistence.Service.CalculationItems.Calculation
             int id,
             int userId,
             int? departmentId,
-            CancellationToken ct = default)
+            CancellationToken ct = default,
+            bool isViewer = false)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
@@ -97,10 +98,8 @@ namespace Persistence.Service.CalculationItems.Calculation
             var header = await context.Calculations
                 .AsNoTracking()
                 .TagWith("CalcPageOptimizedV2.Header")
-                .Where(x =>
-                    x.Id == id &&
-                    (!departmentId.HasValue || x.Project.Folder.DepartmentId == departmentId.Value) &&
-                    (!x.IsPrivate || x.CreatedBy == userId))
+                .Where(x => x.Id == id)
+                .Where(Access.CalculationAccessRules.CanSee(userId, departmentId, isViewer))
                 .Select(x => new CalculationPageHeaderRow
                 {
                     Tax = x.Tax,

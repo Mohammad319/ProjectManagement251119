@@ -698,6 +698,12 @@
                                 <span class="inline-flex items-center gap-1">@AppLoc["archived"] @((MarkupString)SortIndicatorHtml("archived")) <TableColumnFilter FilterState='PF("archived")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
+                        @if (IsProjectColumnVisible("shared"))
+                        {
+                            <th id="hshared" class="@SortableHeaderClass("shared")" style="min-width:70px;" @onclick='() => SortBy("shared")'>
+                                <span class="inline-flex items-center gap-1">Delat @((MarkupString)SortIndicatorHtml("shared")) <TableColumnFilter FilterState='PF("shared")' OnChanged="OnProjectColumnFilterChanged" /></span>
+                            </th>
+                        }
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -879,6 +885,21 @@
                             {
                                 <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatYesNo(project.IsArchived)</td>
                             }
+                            @if (IsProjectColumnVisible("shared"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">
+                                    @if (project.IsShared)
+                                    {
+                                        <span class="inline-flex items-center gap-1" title="Projektet är delat med andra användare eller avdelningar.">
+                                            <i class="fa-solid fa-share-nodes text-sky-500"></i> Ja
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span>Nej</span>
+                                    }
+                                </td>
+                            }
                         </tr>
                     }
                 </tbody>
@@ -1022,6 +1043,7 @@
         ["createdAt"]            = new() { Type = ColumnFilterType.Date },
         ["updatedAt"]            = new() { Type = ColumnFilterType.Date },
         ["archived"]             = new() { Type = ColumnFilterType.Boolean },
+        ["shared"]               = new() { Type = ColumnFilterType.Boolean },
     };
 
     private bool HasActiveProjectFilters => _projColFilters.Values.Any(f => f.IsActive);
@@ -1482,6 +1504,9 @@
                 projects = projects.Where(p => _projColFilters["updatedAt"].MatchesDate(p.UpdatedAt));
             if (_projColFilters["archived"].IsActive)
                 projects = projects.Where(p => _projColFilters["archived"].MatchesBool(p.IsArchived));
+
+            if (_projColFilters["shared"].IsActive)
+                projects = projects.Where(p => _projColFilters["shared"].MatchesBool(p.IsShared));
             return projects;
         }
     }
@@ -1522,6 +1547,7 @@
                 "createdAt"        => _sortAscending ? projects.OrderBy(x => x.CreatedAt)          : projects.OrderByDescending(x => x.CreatedAt),
                 "updatedAt"        => _sortAscending ? projects.OrderBy(x => x.UpdatedAt)          : projects.OrderByDescending(x => x.UpdatedAt),
                 "archived"         => _sortAscending ? projects.OrderBy(x => x.IsArchived)         : projects.OrderByDescending(x => x.IsArchived),
+                "shared"           => _sortAscending ? projects.OrderBy(x => x.IsShared)          : projects.OrderByDescending(x => x.IsShared),
                 _                  => projects.OrderByDescending(x => x.Order).ThenBy(x => x.Name, StringComparer.CurrentCultureIgnoreCase)
             };
         }
@@ -1627,7 +1653,8 @@
             ["clientsManager"]    = false,
             ["publicationDate"]   = false,
             ["decisionDate"]      = false,
-            ["archived"]          = true
+            ["archived"]          = true,
+            ["shared"]            = false
         };
 
     private readonly Dictionary<string, bool> _projectColumns = new(DefaultProjectColumns);
@@ -1660,7 +1687,8 @@
         new("clientsManager",    ResourceLoc.clientsProjectmanager),
         new("publicationDate",   CalcResource.publicationDate),
         new("decisionDate",      CalcResource.decisionDate),
-        new("archived",          AppLoc["archived"].Value)
+        new("archived",          AppLoc["archived"].Value),
+        new("shared",            "Delat")
     };
 
     private Dictionary<string, int> _columnWidths = new();
@@ -1792,17 +1820,18 @@
 
     async Task Context(ListProjectMVVM item)
     {
-        if (Folder.State.OtherDepartment) return;
         var list = new List<MhdContextMenuItem>();
 
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
         bool isInAnyRole = PMRolesConst.Tenant.AdminManger.Split(',').Any(r => user.IsInRole(r));
+        bool canManage = !Folder.State.OtherDepartment && user.Identity?.IsAuthenticated == true && isInAnyRole;
 
-        if (user.Identity?.IsAuthenticated == true && isInAnyRole)
+        if (canManage)
         {
             list.Add(new() { IconHtml = Icons.Edit, Label = ResourceApp.edit, OnClickAsync = () => { UpdateForm(item); return Task.CompletedTask; } });
             list.Add(new() { IconHtml = Icons.Tender, Label = ResourceLoc.tender, OnClickAsync = () => { OpenProjectBidsDialog(item); return Task.CompletedTask; } });
+            list.Add(new() { IconHtml = Icons.PermissionShield, Label = "Delning och behörighet", OnClickAsync = () => { OpenShareDialog(item); return Task.CompletedTask; } });
             list.Add(new() { IconHtml = Icons.Folder, Label = AppLoc["moveProject"], OnClickAsync = () => { OpenMoveCopyDialog(item, MoveCopyOperation.Move); return Task.CompletedTask; } });
             list.Add(new() { IconHtml = Icons.Copy, Label = AppLoc["copyProject"], OnClickAsync = () => { OpenMoveCopyDialog(item, MoveCopyOperation.Copy); return Task.CompletedTask; } });
 
@@ -1810,10 +1839,23 @@
                 list.Add(new() { IconHtml = Icons.Archive, Label = AppLoc["archiveProject"], OnClickAsync = async () => await ArchiveOrRestoreProjectAsync(item, archive: true) });
             else
                 list.Add(new() { IconHtml = Icons.Restore, Label = AppLoc["restoreFromArchive"], OnClickAsync = async () => await ArchiveOrRestoreProjectAsync(item, archive: false) });
-
-            list.Add(new() { IsSeparator = true });
-            list.Add(new() { IconHtml = Icons.Delete, Label = ResourceApp.delete, CssClass = "text-red-600 dark:text-red-400", OnClickAsync = () => { Remove(item); return Task.CompletedTask; } });
         }
+
+        // "Ta bort projekt" visas alltid längst ner med separator och destruktiv stil.
+        // Aktivt för tomma projekt; annars öppnas en informationsdialog som förklarar
+        // varför borttagning inte är tillåten (kalkyler, anbudsdata eller behörighet).
+        if (list.Count > 0)
+            list.Add(new() { IsSeparator = true });
+
+        list.Add(new()
+        {
+            IconHtml = Icons.Delete,
+            Label = ProjectDeleteHelper.DeleteLabel,
+            CssClass = ProjectDeleteHelper.DeleteCssClass,
+            OnClickAsync = () => ProjectDeleteHelper.RequestDeleteAsync(
+                this, Repo, MHD, ClientLog, item, canManage,
+                () => DeleteProjectConfirmedAsync(item))
+        });
 
         await ContextService.ShowMenuAsync(list);
     }
@@ -1835,6 +1877,17 @@
         }
         MHD.Notifications(ToastType.Update, ok);
     }
+
+    void OpenShareDialog(ListProjectMVVM project) =>
+        Modal.ShowComponent<ProjectShareUI>(
+            "Delning och behörighet",
+            new Dictionary<string, object>
+            {
+                [nameof(ProjectShareUI.ProjectId)]   = project.Id,
+                [nameof(ProjectShareUI.ProjectName)] = project.Name,
+                [nameof(ProjectShareUI.OnCompleted)] = EventCallback.Factory.Create(this, ReloadAfterMoveCopyAsync)
+            },
+            BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
 
     void OpenProjectBidsDialog(ListProjectMVVM project) =>
         Modal.ShowComponent<ProjectBidsDialog>(
@@ -1939,6 +1992,7 @@
             "createdAt"            => "Skapad",
             "updatedAt"            => "Senast ändrad",
             "archived"             => AppLoc["archived"].Value,
+            "shared"               => "Delat",
             _                      => key
         };
         return state.Type switch
@@ -2011,6 +2065,7 @@
         "createdAt"         => FormatDate(project.CreatedAt),
         "updatedAt"         => FormatDate(project.UpdatedAt),
         "archived"          => FormatYesNo(project.IsArchived),
+        "shared"            => FormatYesNo(project.IsShared),
         _                   => string.Empty
     };
 
@@ -2091,16 +2146,28 @@
         Modal.CloseAsync();
     }
 
-    void Remove(ListProjectMVVM project) =>
-        MHD.DeleteMessage(project.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(project)));
-
-    async Task ConfirmRemoveAsync(ListProjectMVVM project)
+    async Task DeleteProjectConfirmedAsync(ListProjectMVVM project)
     {
-        bool result = await Repo.Project.DeleteAsync(project.Id);
-        if (result)
-            Folder.State.FolderSelected!.Projects.Remove(project);
-        MHD.Notifications(ToastType.Delete, result);
+        bool ok = await Repo.Project.DeleteAsync(project.Id);
+        if (!ok)
+        {
+            // Bekräftelsedialogen stängs automatiskt (AutoClose); visa felmeddelande.
+            MHD.Notifications(ToastType.Delete, isSuccess: false);
+            return;
+        }
+
+        // Uppdatera projektlistan och vänsterträdet – ta bort projektet ur alla
+        // laddade mappar (täcker både mapp-vy och avdelningsvy).
+        foreach (var folder in Folder.State.FoldersList)
+            folder.Projects?.RemoveAll(p => p.Id == project.Id);
+        Folder.State.FolderSelected?.Projects?.RemoveAll(p => p.Id == project.Id);
+
         UoWService.Folder.State.Notify();
+
+        // Successmeddelande: "Projektet har tagits bort."
+        MHD.ToastMessage(project.Name, ToastType.Delete, isSuccess: true);
+
+        StateHasChanged();
     }
 
     private async Task HandleDrop(ListProjectMVVM project)

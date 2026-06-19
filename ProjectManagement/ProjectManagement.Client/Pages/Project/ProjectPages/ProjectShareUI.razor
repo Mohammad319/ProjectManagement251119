@@ -1,0 +1,364 @@
+@using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Shared.DTO.General
+@using ProjectManagement.Shared.DTO.Project
+@using ProjectManagement.Shared.Helper
+@using Microsoft.AspNetCore.Authorization
+@inherits AppComponentBase
+@attribute [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
+
+<div class="space-y-4">
+
+    <div class="text-sm text-slate-600 dark:text-slate-300">
+        <span class="font-semibold text-slate-800 dark:text-slate-100">Projekt:</span> @ProjectName
+    </div>
+
+    @* ── Lägg till / redigera delning ─────────────────────────────── *@
+    <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/60">
+        <div class="mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            @(_editingId.HasValue ? "Ändra delning" : "Dela med")
+        </div>
+
+        <div class="grid gap-3 md:grid-cols-2">
+
+            @* Mottagartyp *@
+            <div>
+                <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Mottagare</label>
+                <div class="inline-flex overflow-hidden rounded-lg border border-slate-300 dark:border-slate-600">
+                    <button type="button"
+                            class="@RecipientTabClass(ProjectShareRecipientType.User)"
+                            @onclick="() => SetRecipientType(ProjectShareRecipientType.User)">Användare</button>
+                    <button type="button"
+                            class="@RecipientTabClass(ProjectShareRecipientType.Department)"
+                            @onclick="() => SetRecipientType(ProjectShareRecipientType.Department)">Avdelning</button>
+                </div>
+            </div>
+
+            @* Roll *@
+            <div>
+                <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Roll</label>
+                <select class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
+                        value="@_role" @onchange="e => _role = e.Value?.ToString() ?? PMRolesConst.Tenant.Viewer">
+                    <option value="@PMRolesConst.Tenant.Viewer">Visare</option>
+                    <option value="@PMRolesConst.Tenant.Manger">Användare</option>
+                </select>
+            </div>
+
+            @if (_recipientType == ProjectShareRecipientType.User)
+            {
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Avdelning</label>
+                    <select class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
+                            value="@_userDeptId" @onchange="OnUserDeptChanged">
+                        <option value="">Välj avdelning...</option>
+                        @foreach (var d in _departments)
+                        {
+                            <option value="@d.Id">@d.Name</option>
+                        }
+                    </select>
+                </div>
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Användare</label>
+                    <select class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm disabled:bg-slate-100 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100 dark:disabled:bg-slate-900"
+                            disabled="@(_usersInDept.Count == 0)"
+                            value="@_userId" @onchange="e => _userId = ParseNullableInt(e.Value)">
+                        <option value="">Välj användare...</option>
+                        @foreach (var u in _usersInDept)
+                        {
+                            <option value="@u.Id">@u.Name</option>
+                        }
+                    </select>
+                </div>
+            }
+            else
+            {
+                <div class="md:col-span-2">
+                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Avdelning</label>
+                    <select class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
+                            value="@_departmentId" @onchange="e => _departmentId = ParseNullableInt(e.Value)">
+                        <option value="">Välj avdelning...</option>
+                        @foreach (var d in _departments)
+                        {
+                            <option value="@d.Id">@d.Name</option>
+                        }
+                    </select>
+                </div>
+            }
+        </div>
+
+        @* Kalkyler *@
+        <div class="mt-3">
+            <div class="mb-1 flex items-center justify-between">
+                <label class="text-xs font-medium text-slate-600 dark:text-slate-300">Välj kalkyler som ska delas</label>
+                <button type="button"
+                        class="text-[11px] font-semibold text-sky-700 hover:text-sky-900 disabled:opacity-40 dark:text-sky-300"
+                        disabled="@(!_calcs.Any(c => !c.IsPrivate))"
+                        @onclick="SelectAllShareable">Välj alla delbara</button>
+            </div>
+
+            @if (_calcs.Count == 0)
+            {
+                <p class="rounded border border-dashed border-slate-300 px-2 py-3 text-center text-xs text-slate-400 dark:border-slate-700">
+                    Det finns inga kalkyler i projektet.
+                </p>
+            }
+            else
+            {
+                <div class="max-h-48 space-y-1 overflow-y-auto rounded border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-950">
+                    @foreach (var c in _calcs)
+                    {
+                        var calc = c;
+                        <label class="flex items-center gap-2 rounded px-1.5 py-1 text-sm @(calc.IsPrivate ? "opacity-60" : "hover:bg-slate-50 dark:hover:bg-slate-800")">
+                            <input type="checkbox"
+                                   class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 disabled:cursor-not-allowed dark:border-slate-600 dark:bg-slate-800"
+                                   checked="@_selectedCalcIds.Contains(calc.Id)"
+                                   disabled="@calc.IsPrivate"
+                                   @onchange="e => ToggleCalc(calc.Id, e.Value is bool b && b)" />
+                            <span class="font-mono text-[11px] text-slate-400">V.@(calc.VersionNumber.ToString("D2"))</span>
+                            <span class="min-w-0 flex-1 truncate text-slate-700 dark:text-slate-200">@calc.Name</span>
+                            @if (calc.IsPrivate)
+                            {
+                                <span class="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">Privat</span>
+                            }
+                        </label>
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="mt-3 flex items-center justify-end gap-2">
+            @if (_editingId.HasValue)
+            {
+                <button type="button"
+                        class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+                        @onclick="ResetForm">Avbryt</button>
+            }
+            <button type="button"
+                    class="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    disabled="@(!CanSave || _saving)"
+                    @onclick="SaveAsync">
+                <span aria-hidden="true">@((MarkupString)Icons.PermissionShield)</span>
+                @(_editingId.HasValue ? "Spara delning" : "Lägg till delning")
+            </button>
+        </div>
+    </div>
+
+    @* ── Befintliga delningar ─────────────────────────────────────── *@
+    <div>
+        <div class="mb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Delat med</div>
+        @if (_shares.Count == 0)
+        {
+            <p class="rounded border border-dashed border-slate-300 px-2 py-3 text-center text-xs text-slate-400 dark:border-slate-700">
+                Projektet är inte delat med någon ännu.
+            </p>
+        }
+        else
+        {
+            <div class="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
+                <table class="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-700">
+                    <thead class="bg-slate-100 dark:bg-slate-800">
+                        <tr>
+                            <th class="p-2 text-left font-medium text-slate-700 dark:text-slate-200">Mottagare</th>
+                            <th class="p-2 text-left font-medium text-slate-700 dark:text-slate-200">Typ</th>
+                            <th class="p-2 text-left font-medium text-slate-700 dark:text-slate-200">Roll</th>
+                            <th class="p-2 text-right font-medium text-slate-700 dark:text-slate-200">Kalkyler</th>
+                            <th class="p-2"></th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                        @foreach (var s in _shares)
+                        {
+                            var share = s;
+                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60">
+                                <td class="p-2 text-slate-800 dark:text-slate-200">@share.RecipientName</td>
+                                <td class="p-2 text-slate-500 dark:text-slate-400">@(share.RecipientType == ProjectShareRecipientType.User ? "Användare" : "Avdelning")</td>
+                                <td class="p-2 text-slate-500 dark:text-slate-400">@RoleLabel(share.Role)</td>
+                                <td class="p-2 text-right text-slate-500 dark:text-slate-400">@share.CalculationIds.Count</td>
+                                <td class="p-2">
+                                    <div class="flex items-center justify-end gap-1">
+                                        <button type="button"
+                                                class="inline-flex h-7 items-center rounded border border-sky-600 px-2 text-xs text-sky-600 transition hover:bg-sky-600 hover:text-white dark:border-sky-400 dark:text-sky-300"
+                                                @onclick="() => EditShare(share)">Ändra</button>
+                                        <button type="button"
+                                                class="inline-flex h-7 items-center rounded border border-red-600 px-2 text-xs text-red-600 transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-300"
+                                                @onclick="() => RemoveAsync(share)">Ta bort</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public Guid ProjectId { get; set; }
+    [Parameter] public string ProjectName { get; set; } = string.Empty;
+    [Parameter] public EventCallback OnCompleted { get; set; }
+
+    private List<ProjectShareListItemDTO> _shares = [];
+    private List<ListCalculationMVVM> _calcs = [];
+    private List<ListDTO> _departments = [];
+    private List<ListDTO> _usersInDept = [];
+
+    // Form state
+    private int? _editingId;
+    private ProjectShareRecipientType _recipientType = ProjectShareRecipientType.User;
+    private int? _userDeptId;
+    private int? _userId;
+    private int? _departmentId;
+    private string _role = PMRolesConst.Tenant.Viewer;
+    private readonly HashSet<int> _selectedCalcIds = [];
+    private bool _saving;
+
+    private bool CanSave =>
+        !string.IsNullOrWhiteSpace(_role) &&
+        (_recipientType == ProjectShareRecipientType.User ? _userId is > 0 : _departmentId is > 0);
+
+    protected override async Task OnInitializedAsync()
+    {
+        _departments = await Repo.Departments.GetDepartmentsAsListAsync() ?? [];
+        var all = await Repo.Calculation.GetAsync(ProjectId) ?? [];
+        _calcs = CalculationVersionSelector.SelectCurrentVersions(all)
+            .OrderByDescending(c => c.Order)
+            .ToList();
+        await ReloadSharesAsync();
+    }
+
+    private async Task ReloadSharesAsync()
+    {
+        _shares = await Repo.ProjectShare.GetByProjectAsync(ProjectId) ?? [];
+        StateHasChanged();
+    }
+
+    private void SetRecipientType(ProjectShareRecipientType type)
+    {
+        _recipientType = type;
+        _userId = null;
+        _departmentId = null;
+    }
+
+    private async Task OnUserDeptChanged(ChangeEventArgs e)
+    {
+        _userDeptId = ParseNullableInt(e.Value);
+        _userId = null;
+        _usersInDept = _userDeptId is > 0
+            ? await Repo.Departments.GetUsersAsListAsync(_userDeptId.Value) ?? []
+            : [];
+    }
+
+    private void ToggleCalc(int id, bool on)
+    {
+        if (on) _selectedCalcIds.Add(id);
+        else _selectedCalcIds.Remove(id);
+    }
+
+    private void SelectAllShareable()
+    {
+        foreach (var c in _calcs.Where(c => !c.IsPrivate))
+            _selectedCalcIds.Add(c.Id);
+    }
+
+    private async Task SaveAsync()
+    {
+        if (!CanSave || _saving) return;
+        _saving = true;
+        try
+        {
+            var dto = new ProjectShareUpsertDTO
+            {
+                Id = _editingId,
+                RecipientType = _recipientType,
+                UserId = _recipientType == ProjectShareRecipientType.User ? _userId : null,
+                DepartmentId = _recipientType == ProjectShareRecipientType.Department ? _departmentId : null,
+                Role = _role,
+                // Privata kalkyler kan aldrig delas – filtrera bort dem defensivt.
+                CalculationIds = _selectedCalcIds.Where(id => _calcs.Any(c => c.Id == id && !c.IsPrivate)).ToList()
+            };
+
+            int id = await Repo.ProjectShare.UpsertAsync(ProjectId, dto);
+            bool ok = id > 0;
+            if (ok)
+            {
+                ResetForm();
+                await ReloadSharesAsync();
+                if (OnCompleted.HasDelegate)
+                    await OnCompleted.InvokeAsync();
+            }
+            MHD.Notifications(ToastType.Update, ok);
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task EditShare(ProjectShareListItemDTO share)
+    {
+        _editingId = share.Id;
+        _recipientType = share.RecipientType;
+        _role = string.IsNullOrWhiteSpace(share.Role) ? PMRolesConst.Tenant.Viewer : share.Role;
+        _departmentId = share.RecipientType == ProjectShareRecipientType.Department ? share.DepartmentId : null;
+        _userId = share.RecipientType == ProjectShareRecipientType.User ? share.UserId : null;
+
+        _selectedCalcIds.Clear();
+        foreach (var cid in share.CalculationIds)
+            _selectedCalcIds.Add(cid);
+
+        if (_recipientType == ProjectShareRecipientType.User && _userId is > 0)
+        {
+            // Försök fylla användarlistan utifrån mottagarens avdelning är inte känd här;
+            // ladda alla avdelningars användare först när admin väljer avdelning på nytt.
+            _usersInDept = [];
+            _userDeptId = null;
+        }
+        StateHasChanged();
+    }
+
+    private void ResetForm()
+    {
+        _editingId = null;
+        _recipientType = ProjectShareRecipientType.User;
+        _userDeptId = null;
+        _userId = null;
+        _departmentId = null;
+        _role = PMRolesConst.Tenant.Viewer;
+        _usersInDept = [];
+        _selectedCalcIds.Clear();
+    }
+
+    private void RemoveAsync(ProjectShareListItemDTO share)
+    {
+        MHD.DeleteMessage(share.RecipientName, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(share)));
+    }
+
+    private async Task ConfirmRemoveAsync(ProjectShareListItemDTO share)
+    {
+        bool ok = await Repo.ProjectShare.DeleteAsync(share.Id);
+        if (ok)
+        {
+            if (_editingId == share.Id) ResetForm();
+            await ReloadSharesAsync();
+            if (OnCompleted.HasDelegate)
+                await OnCompleted.InvokeAsync();
+        }
+        MHD.Notifications(ToastType.Delete, ok);
+    }
+
+    private static int? ParseNullableInt(object? value)
+        => int.TryParse(value?.ToString(), out var n) && n > 0 ? n : null;
+
+    private string RecipientTabClass(ProjectShareRecipientType type) =>
+        _recipientType == type
+            ? "px-3 py-1.5 text-xs font-semibold bg-sky-600 text-white"
+            : "px-3 py-1.5 text-xs font-medium bg-white text-slate-600 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-300";
+
+    private static string RoleLabel(string role) => role switch
+    {
+        PMRolesConst.Tenant.Viewer => "Visare",
+        PMRolesConst.Tenant.Manger => "Användare",
+        PMRolesConst.Tenant.Admin => "Admin",
+        _ => string.IsNullOrWhiteSpace(role) ? "—" : role
+    };
+}

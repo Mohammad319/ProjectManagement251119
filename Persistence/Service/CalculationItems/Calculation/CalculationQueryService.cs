@@ -20,7 +20,8 @@ namespace Persistence.Service.CalculationItems.Calculation
             bool isArchived,
             int userId,
             int? departmentId,
-            CancellationToken ct = default)
+            CancellationToken ct = default,
+            bool isViewer = false)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
@@ -29,10 +30,8 @@ namespace Persistence.Service.CalculationItems.Calculation
                 .Include(x => x.Status)
                 .Include(x => x.Project)
                     .ThenInclude(x => x.Folder)
-                .Where(x => !x.IsDeleted &&
-                    x.ProjectId == projectId &&
-                    (!departmentId.HasValue || x.Project.Folder.DepartmentId == departmentId.Value || x.CreatedBy == userId) &&
-                    (!x.IsPrivate || x.CreatedBy == userId))
+                .Where(x => !x.IsDeleted && x.ProjectId == projectId)
+                .Where(Access.CalculationAccessRules.CanSee(userId, departmentId, isViewer))
                 .OrderBy(x => x.SortOrder)
                 .ToListAsync(ct);
 
@@ -54,24 +53,34 @@ namespace Persistence.Service.CalculationItems.Calculation
             Guid projectId,
             int userId,
             int? departmentId,
-            CancellationToken ct = default)
+            CancellationToken ct = default,
+            bool isViewer = false)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            var calculationEntities = await context.Calculations
+            IQueryable<Domain.Entities.Calculation.CalculationEntity> query = context.Calculations
                 .AsNoTracking()
                 .Include(x => x.Status)
                 .Include(x => x.Project)
                     .ThenInclude(x => x.Folder)
-                .Where(x => !x.IsDeleted && x.ProjectId == projectId)
-                .Where(x =>
-                    departmentId == null ||
-                    x.DepartmentId == departmentId.Value ||
-                    x.SharesCalc.Any(s => s.DepartmentId == departmentId.Value))
-                .Where(x =>
-                    !x.IsPrivate ||
-                    x.CreatedBy == userId ||
-                    x.SharesCalc.Any(s => s.CreatedBy == userId || (departmentId != null && s.DepartmentId == departmentId.Value)))
+                .Where(x => !x.IsDeleted && x.ProjectId == projectId);
+
+            // Visare: bara kalkyler valda i en projektdelning, aldrig privata.
+            // Övriga: befintlig delningslogik via kalkyldelning (ShareCalc).
+            query = isViewer
+                ? query.Where(Access.CalculationAccessRules.CanSee(userId, departmentId, isViewerOnly: true))
+                : query
+                    .Where(x =>
+                        departmentId == null ||
+                        x.DepartmentId == departmentId.Value ||
+                        x.SharesCalc.Any(s => s.DepartmentId == departmentId.Value))
+                    .Where(x =>
+                        !x.IsPrivate ||
+                        x.CreatedBy == userId ||
+                        departmentId == null ||
+                        x.SharesCalc.Any(s => s.CreatedBy == userId || (departmentId != null && s.DepartmentId == departmentId.Value)));
+
+            var calculationEntities = await query
                 .OrderBy(x => x.SortOrder)
                 .ToListAsync(ct);
 
@@ -82,7 +91,8 @@ namespace Persistence.Service.CalculationItems.Calculation
             int id,
             int userId,
             int? departmentId,
-            CancellationToken ct = default)
+            CancellationToken ct = default,
+            bool isViewer = false)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
@@ -92,9 +102,8 @@ namespace Persistence.Service.CalculationItems.Calculation
                 .Include(x => x.Contract)
                 .Include(x => x.ProcurementMethods)
                 .Include(x => x.Type)
-                .Where(x => x.Id == id &&
-                    (!departmentId.HasValue || x.Project.Folder.DepartmentId == departmentId.Value || x.CreatedBy == userId) &&
-                    (!x.IsPrivate || x.CreatedBy == userId))
+                .Where(x => x.Id == id)
+                .Where(Access.CalculationAccessRules.CanSee(userId, departmentId, isViewer))
                 .FirstOrDefaultAsync(ct);
 
             return calculation?.ToDetailsDto();
@@ -104,15 +113,15 @@ namespace Persistence.Service.CalculationItems.Calculation
             int id,
             int userId,
             int? departmentId,
-            CancellationToken ct = default)
+            CancellationToken ct = default,
+            bool isViewer = false)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var calculation = await context.Calculations
                 .AsNoTracking()
-                .Where(x => x.Id == id &&
-                    (!departmentId.HasValue || x.Project.Folder.DepartmentId == departmentId.Value || x.CreatedBy == userId) &&
-                    (!x.IsPrivate || x.CreatedBy == userId))
+                .Where(x => x.Id == id)
+                .Where(Access.CalculationAccessRules.CanSee(userId, departmentId, isViewer))
                 .FirstOrDefaultAsync(ct);
 
             return calculation?.ToPostDto();

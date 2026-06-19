@@ -1364,8 +1364,9 @@ namespace ProjectManagement.Client.Pages.Folder
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             var user = authState.User;
             bool isInAnyRole = PMRolesConst.Tenant.AdminManger.Split(',').Any(r => user.IsInRole(r));
+            bool canManageFolder = !Folder.State.OtherDepartment && user.Identity?.IsAuthenticated == true && isInAnyRole;
 
-            if (!Folder.State.OtherDepartment && user.Identity?.IsAuthenticated == true && isInAnyRole)
+            if (canManageFolder)
             {
                 list.Add(new() { IconHtml = Icons.Plus, Label = AppLoc[LocalizerConst.New, CalcResource.project], OnClickAsync = () => { CreateProjectFromFolderTree(item); return Task.CompletedTask; } });
                 list.Add(new() { IsSeparator = true });
@@ -1377,12 +1378,139 @@ namespace ProjectManagement.Client.Pages.Folder
                     list.Add(new() { IconHtml = Icons.Archive, Label = AppLoc["archiveFolder"], OnClickAsync = async () => await ArchiveOrRestoreFolderAsync(item, archive: true) });
                 else
                     list.Add(new() { IconHtml = Icons.Restore, Label = AppLoc["restoreFromArchive"], OnClickAsync = async () => await ArchiveOrRestoreFolderAsync(item, archive: false) });
-
-                list.Add(new() { IsSeparator = true });
-                list.Add(new() { IconHtml = Icons.Delete, Label = ResourceApp.delete, CssClass = "text-red-600 dark:text-red-400", OnClickAsync = () => { UoWService.Folder.RemoveFolder(item); return Task.CompletedTask; } });
             }
 
+            // "Ta bort mapp" visas alltid längst ner med separator och destruktiv stil.
+            // Den är aktiv för helt tomma mappar; annars öppnas en informationsdialog
+            // som förklarar varför borttagning inte är tillåten (innehåll eller behörighet).
+            if (list.Count > 0)
+                list.Add(new() { IsSeparator = true });
+
+            list.Add(new()
+            {
+                IconHtml = Icons.Delete,
+                Label = "Ta bort mapp",
+                CssClass = "text-red-600 dark:text-red-400",
+                OnClickAsync = () => RequestDeleteFolderAsync(item, canManageFolder)
+            });
+
             await ContextService.ShowMenuAsync(list);
+        }
+
+        // ---- Ta bort mapp: enkel och säker regelhantering -----------------------
+        // En mapp får bara tas bort om den är helt tom. Innehåller den projekt eller
+        // arkiverade projekt visas en informationsdialog som förklarar varför
+        // borttagning inte är tillåten. "Arkivera mapp" finns kvar som säkert
+        // alternativ för mappar med innehåll/historik.
+        private async Task RequestDeleteFolderAsync(FolderMVVM folder, bool canManageFolder)
+        {
+            const string blockedTitle = "Mappen kan inte tas bort";
+
+            // Behörighet
+            if (!canManageFolder)
+            {
+                MHD.MessageOk(blockedTitle, "Du saknar behörighet att ta bort mappar.",
+                    BlazorMHD.UI.Core.DesignSystem.MhdState.Warning);
+                return;
+            }
+
+            // Hämta mappens innehåll – inklusive arkiverade projekt – så att en mapp
+            // inte kan tas bort bara för att projekten är dolda i aktuell vy.
+            List<ListProjectMVVM> projects;
+            try
+            {
+                projects = await Repo.Project.GetByFolderIdAsync(folder.Id, includeArchived: true) ?? [];
+            }
+            catch (Exception ex)
+            {
+                await ClientLogger.ErrorAsync("Checking folder contents before delete failed", ex: ex);
+                MHD.MessageOk(blockedTitle,
+                    "Det gick inte att kontrollera mappens innehåll. Försök igen.",
+                    BlazorMHD.UI.Core.DesignSystem.MhdState.Danger);
+                return;
+            }
+
+            // Mapp med projekt
+            if (projects.Any(p => !p.IsArchived))
+            {
+                MHD.MessageOk(blockedTitle,
+                    "Mappen kan inte tas bort eftersom den innehåller projekt. Flytta eller ta bort projekten först, eller arkivera mappen.",
+                    BlazorMHD.UI.Core.DesignSystem.MhdState.Warning);
+                return;
+            }
+
+            // Mapp med arkiverade projekt
+            if (projects.Any(p => p.IsArchived))
+            {
+                MHD.MessageOk(blockedTitle,
+                    "Mappen kan inte tas bort eftersom den innehåller arkiverade projekt. Visa arkiverade objekt eller arkivera mappen i stället.",
+                    BlazorMHD.UI.Core.DesignSystem.MhdState.Warning);
+                return;
+            }
+
+            // Helt tom mapp – bekräftelsedialog krävs innan borttagning.
+            ShowDeleteFolderConfirmation(folder);
+        }
+
+        private void ShowDeleteFolderConfirmation(FolderMVVM folder)
+        {
+            var model = new BlazorMHD.UI.Core.Services.MhdDialogModel
+            {
+                Title = "Ta bort mapp?",
+                State = BlazorMHD.UI.Core.DesignSystem.MhdState.Danger,
+                Size = BlazorMHD.UI.Core.Services.MhdDialogSize.Medium,
+                CloseOnOverlayClick = false,
+                Content = builder =>
+                {
+                    builder.OpenElement(0, "p");
+                    builder.AddAttribute(1, "class", "text-sm leading-relaxed text-slate-700 dark:text-slate-300");
+                    builder.AddContent(2, $"Du håller på att ta bort mappen \"{folder.Name}\". Denna åtgärd kan inte ångras. Vill du fortsätta?");
+                    builder.CloseElement();
+                },
+                Buttons =
+                {
+                    new BlazorMHD.UI.Core.Services.MhdDialogButtonModel
+                    {
+                        Text = "Avbryt",
+                        State = BlazorMHD.UI.Core.DesignSystem.MhdState.Secondary,
+                        IsPrimary = false,
+                        OnClick = EventCallback.Factory.Create(this, () => Modal.CloseAsync())
+                    },
+                    new BlazorMHD.UI.Core.Services.MhdDialogButtonModel
+                    {
+                        Text = "Ta bort",
+                        State = BlazorMHD.UI.Core.DesignSystem.MhdState.Danger,
+                        IsPrimary = true,
+                        OnClick = EventCallback.Factory.Create(this, () => ConfirmDeleteFolderAsync(folder))
+                    }
+                }
+            };
+
+            Modal.Show(model);
+        }
+
+        private async Task ConfirmDeleteFolderAsync(FolderMVVM folder)
+        {
+            bool ok = await Repo.Folder.DeleteAsync(folder.Id);
+            if (!ok)
+            {
+                // Bekräftelsedialogen stängs automatiskt (AutoClose); visa felmeddelande.
+                MHD.Notifications(ToastType.Delete, isSuccess: false);
+                return;
+            }
+
+            // Uppdatera vänsterträdet.
+            UoWService.Folder.State.RemoveFolder(folder);
+
+            // Uppdatera högerpanelen – om den borttagna mappen var vald, gå till
+            // Hela avdelningen (mappar är platta, ingen överordnad mapp finns).
+            if (Folder.State.FolderSelected?.Id == folder.Id)
+                await SelectWholeDepartmentAsync();
+
+            // Successmeddelande: "Mappen har tagits bort."
+            MHD.ToastMessage(folder.Name, ToastType.Delete, isSuccess: true);
+
+            await InvokeAsync(StateHasChanged);
         }
 
         private async Task ContextProject(FolderMVVM folder, ListProjectMVVM project)
@@ -1392,13 +1520,15 @@ namespace ProjectManagement.Client.Pages.Folder
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             var user = authState.User;
             bool isInAnyRole = PMRolesConst.Tenant.AdminManger.Split(',').Any(r => user.IsInRole(r));
+            bool canManageProject = !Folder.State.OtherDepartment && user.Identity?.IsAuthenticated == true && isInAnyRole;
 
-            if (!Folder.State.OtherDepartment && user.Identity?.IsAuthenticated == true && isInAnyRole)
+            if (canManageProject)
             {
                 list.Add(new() { IconHtml = Icons.Plus, Label = AppLoc[LocalizerConst.New, CalcResource.calculation], OnClickAsync = async () => await CreateCalcFromProjectTreeAsync(folder, project) });
                 list.Add(new() { IsSeparator = true });
                 list.Add(new() { IconHtml = Icons.Edit, Label = AppLoc["editProject"], OnClickAsync = () => { EditProjectFromTree(folder, project); return Task.CompletedTask; } });
                 list.Add(new() { IconHtml = Icons.Tender, Label = ResourceLoc.tender, OnClickAsync = () => { OpenProjectBidsFromTree(project); return Task.CompletedTask; } });
+                list.Add(new() { IconHtml = Icons.PermissionShield, Label = "Delning och behörighet", OnClickAsync = () => { OpenProjectShareFromTree(project); return Task.CompletedTask; } });
                 list.Add(new() { IconHtml = Icons.Folder, Label = AppLoc["moveProject"], OnClickAsync = () => { OpenMoveCopyProjectDialog(folder, project, MoveCopyOperation.Move); return Task.CompletedTask; } });
                 list.Add(new() { IconHtml = Icons.Copy, Label = AppLoc["copyProject"], OnClickAsync = () => { OpenMoveCopyProjectDialog(folder, project, MoveCopyOperation.Copy); return Task.CompletedTask; } });
 
@@ -1406,12 +1536,51 @@ namespace ProjectManagement.Client.Pages.Folder
                     list.Add(new() { IconHtml = Icons.Archive, Label = AppLoc["archiveProject"], OnClickAsync = async () => await ArchiveOrRestoreProjectAsync(project, archive: true) });
                 else
                     list.Add(new() { IconHtml = Icons.Restore, Label = AppLoc["restoreFromArchive"], OnClickAsync = async () => await ArchiveOrRestoreProjectAsync(project, archive: false) });
-
-                list.Add(new() { IsSeparator = true });
-                list.Add(new() { IconHtml = Icons.Delete, Label = ResourceApp.delete, CssClass = "text-red-600 dark:text-red-400", OnClickAsync = () => { RemoveProjectFromTree(folder, project); return Task.CompletedTask; } });
             }
 
+            // "Ta bort projekt" visas alltid längst ner med separator och destruktiv stil.
+            // Aktivt för tomma projekt; annars öppnas en informationsdialog som förklarar
+            // varför borttagning inte är tillåten (kalkyler, anbudsdata eller behörighet).
+            if (list.Count > 0)
+                list.Add(new() { IsSeparator = true });
+
+            list.Add(new()
+            {
+                IconHtml = Icons.Delete,
+                Label = ProjectDeleteHelper.DeleteLabel,
+                CssClass = ProjectDeleteHelper.DeleteCssClass,
+                OnClickAsync = () => ProjectDeleteHelper.RequestDeleteAsync(
+                    this, Repo, MHD, ClientLog, project, canManageProject,
+                    () => DeleteProjectFromTreeConfirmedAsync(folder, project))
+            });
+
             await ContextService.ShowMenuAsync(list);
+        }
+
+        private async Task DeleteProjectFromTreeConfirmedAsync(FolderMVVM folder, ListProjectMVVM project)
+        {
+            bool ok = await Repo.Project.DeleteAsync(project.Id);
+            if (!ok)
+            {
+                // Bekräftelsedialogen stängs automatiskt (AutoClose); visa felmeddelande.
+                MHD.Notifications(ToastType.Delete, isSuccess: false);
+                return;
+            }
+
+            // Uppdatera vänsterträdet.
+            folder.Projects?.Remove(project);
+
+            // Uppdatera högerpanelen – om det borttagna projektet var valt, gå tillbaka
+            // till mappens projektlista.
+            if (Folder.State.ProjectSelected?.Id == project.Id)
+                await SelectFolder(folder);
+
+            UoWService.Folder.State.Notify();
+
+            // Successmeddelande: "Projektet har tagits bort."
+            MHD.ToastMessage(project.Name, ToastType.Delete, isSuccess: true);
+
+            await InvokeAsync(StateHasChanged);
         }
 
         private async Task ContextCalc(FolderMVVM folder, ListProjectMVVM project, ListCalculationMVVM cal)
@@ -1421,10 +1590,11 @@ namespace ProjectManagement.Client.Pages.Folder
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             var user = authState.User;
             bool isInAnyRole = PMRolesConst.Tenant.AdminManger.Split(',').Any(r => user.IsInRole(r));
+            bool canManageCalc = !Folder.State.OtherDepartment && user.Identity?.IsAuthenticated == true && isInAnyRole;
 
             list.Add(new() { IconHtml = Icons.Active, Label = AppLoc["openCalculation"], OnClickAsync = async () => await NewCalculations(folder, project, cal) });
 
-            if (user.Identity?.IsAuthenticated == true && isInAnyRole)
+            if (canManageCalc)
             {
                 list.Add(new() { IconHtml = Icons.Edit, Label = ResourceApp.edit, OnClickAsync = () => { EditCalculationFromTree(project, cal); return Task.CompletedTask; } });
                 list.Add(new() { IconHtml = Icons.Folder, Label = AppLoc["moveCalculation"], OnClickAsync = () => { OpenMoveCopyCalcDialog(folder, project, cal, MoveCopyOperation.Move); return Task.CompletedTask; } });
@@ -1432,7 +1602,46 @@ namespace ProjectManagement.Client.Pages.Folder
                 list.Add(new() { IconHtml = Icons.Archive, Label = AppLoc["archiveCalculation"], OnClickAsync = async () => await ArchiveCalculationFromTreeAsync(project, cal) });
             }
 
+            // "Ta bort kalkyl" / "Ta bort version" visas alltid längst ner med separator och
+            // destruktiv stil; blockerade fall förklaras i en informationsdialog.
+            var projectCalcs = project.Calculations ?? [];
+
+            list.Add(new() { IsSeparator = true });
+            list.Add(new()
+            {
+                IconHtml = Icons.Delete,
+                Label = CalculationDeleteHelper.DeleteLabel(projectCalcs, cal),
+                CssClass = CalculationDeleteHelper.DeleteCssClass,
+                OnClickAsync = () => CalculationDeleteHelper.RequestDeleteAsync(
+                    this, Repo, MHD, ClientLog, cal, projectCalcs, canManageCalc,
+                    () => DeleteCalculationFromTreeConfirmedAsync(folder, project, cal))
+            });
+
             await ContextService.ShowMenuAsync(list);
+        }
+
+        private async Task DeleteCalculationFromTreeConfirmedAsync(FolderMVVM folder, ListProjectMVVM project, ListCalculationMVVM cal)
+        {
+            bool ok = await Repo.Calculation.DeleteAsync(cal.Id);
+            if (!ok)
+            {
+                MHD.Notifications(ToastType.Delete, isSuccess: false);
+                return;
+            }
+
+            // Stäng öppen kalkyl om det var den som togs bort.
+            if (Folder.State.Calculation?.Id == cal.Id)
+                Folder.State.SetCalculation(null, project, folder);
+
+            // Uppdatera vänsterträdet – ladda om projektets kalkyler.
+            project.CalculationsLoaded = false;
+            await Folder.SetCalcsToProject(project);
+            UoWService.Folder.State.Notify();
+
+            // Successmeddelande: "Kalkylen har tagits bort."
+            MHD.ToastMessage(cal.Name, ToastType.Delete, isSuccess: true);
+
+            await InvokeAsync(StateHasChanged);
         }
 
         private async Task ArchiveOrRestoreFolderAsync(FolderMVVM folder, bool archive)
@@ -1492,28 +1701,6 @@ namespace ProjectManagement.Client.Pages.Folder
                 UoWService.Folder.State.Notify();
             }
             MHD.Notifications(ToastType.Update, ok);
-        }
-
-        private void RemoveProjectFromTree(FolderMVVM folder, ListProjectMVVM project)
-        {
-            MHD.DeleteMessage(project.Name, EventCallback.Factory.Create(this, async () =>
-            {
-                bool ok = await Repo.Project.DeleteAsync(project.Id);
-                if (ok) folder.Projects?.Remove(project);
-                MHD.Notifications(ToastType.Delete, ok);
-                UoWService.Folder.State.Notify();
-            }));
-        }
-
-        private void RemoveCalculationFromTree(ListProjectMVVM project, ListCalculationMVVM cal)
-        {
-            MHD.DeleteMessage(cal.Name, EventCallback.Factory.Create(this, async () =>
-            {
-                bool ok = await Repo.Calculation.DeleteAsync(cal.Id);
-                if (ok) project.Calculations?.Remove(cal);
-                MHD.Notifications(ToastType.Delete, ok);
-                UoWService.Folder.State.Notify();
-            }));
         }
 
         private void CreateProjectFromFolderTree(FolderMVVM folder)
@@ -1618,6 +1805,16 @@ namespace ProjectManagement.Client.Pages.Folder
                 BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge,
                 DialogButtonsHelper.CreateSaveCancelButtons(CalculationFormUI.DialogFormId));
         }
+
+        private void OpenProjectShareFromTree(ListProjectMVVM project) =>
+            Modal.ShowComponent<ProjectShareUI>(
+                "Delning och behörighet",
+                new Dictionary<string, object>
+                {
+                    [nameof(ProjectShareUI.ProjectId)] = project.Id,
+                    [nameof(ProjectShareUI.ProjectName)] = project.Name
+                },
+                BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
 
         private void OpenProjectBidsFromTree(ListProjectMVVM project) =>
             Modal.ShowComponent<ProjectBidsDialog>(

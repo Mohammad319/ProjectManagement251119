@@ -84,6 +84,10 @@ namespace Domain.Entities.Project
         [JsonIgnore]
         public ICollection<ProjectBidEntity> Bids { get; private set; } = [];
 
+        /// <summary>Interna delningar av projektet (intern projektdelning).</summary>
+        [JsonIgnore]
+        public ICollection<ProjectShareEntity> Shares { get; private set; } = [];
+
         private ProjectEntity() { }
 
         public static ProjectEntity Create(

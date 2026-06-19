@@ -30,10 +30,10 @@ namespace Application.Feature.Project.Project
      CancellationToken ct = default);
     
         Task<ProjectDetailsDTO?> GetDetailsAsync(Guid id, int userId, int? departmentId, CancellationToken ct);
-        Task<PostProjectDTO?> GetPostAsync(Guid id, int userId, int? departmentId, CancellationToken ct);
-        Task<IEnumerable<ListProjectDTO>> GetByFolderAsync(Guid folderId, bool includeArchived, int userId, int? departmentId, CancellationToken ct);
-        Task<IEnumerable<ListProjectDTO>> GetOtherGroupByFolderAsync(Guid folderId, int userId, int? departmentId, bool includeArchived, CancellationToken ct);
-        Task<IEnumerable<SearchProjectDTO>> SearchAsync(ProjectFilter filter, int userId, int? departmentId, CancellationToken ct);
+        Task<PostProjectDTO?> GetPostAsync(Guid id, int userId, int? departmentId, CancellationToken ct, bool isViewer = false);
+        Task<IEnumerable<ListProjectDTO>> GetByFolderAsync(Guid folderId, bool includeArchived, int userId, int? departmentId, CancellationToken ct, bool isViewer = false);
+        Task<IEnumerable<ListProjectDTO>> GetOtherGroupByFolderAsync(Guid folderId, int userId, int? departmentId, bool includeArchived, CancellationToken ct, bool isViewer = false);
+        Task<IEnumerable<SearchProjectDTO>> SearchAsync(ProjectFilter filter, int userId, int? departmentId, CancellationToken ct, bool isViewer = false);
     }
 
 }

@@ -44,6 +44,8 @@ public partial class ShardingSingleDbContext
     public DbSet<AccountGroupEntity> AccountGroup { get; set; } = default!;
     public DbSet<AccountEntity> Accounts { get; set; } = default!;
     public DbSet<ShareCalcEntity> ShareCalc { get; set; } = default!;
+    public DbSet<ProjectShareEntity> ProjectShare { get; set; } = default!;
+    public DbSet<ProjectShareCalculationEntity> ProjectShareCalculation { get; set; } = default!;
     public DbSet<OpportunityEntity> Opportunity { get; set; } = default!;
     public DbSet<DepartmentEntity> Department { get; set; } = default!;
     public DbSet<StatusResourcesEntity> ResourceStatus { get; set; } = default!;

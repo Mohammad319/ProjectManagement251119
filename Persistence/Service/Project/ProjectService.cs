@@ -354,20 +354,20 @@ namespace Persistence.Service.Project
             return project?.ToDetailsDto();
         }
 
-        public async Task<PostProjectDTO?> GetPostAsync(Guid id, int userId, int? departmentId, CancellationToken ct)
+        public async Task<PostProjectDTO?> GetPostAsync(Guid id, int userId, int? departmentId, CancellationToken ct, bool isViewer = false)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var project = await context.Projects
                 .AsNoTracking()
-                .Where(x => x.Id == id &&
-                    (departmentId == null || x.Folder.DepartmentId == departmentId || x.CreatedBy == userId))
+                .Where(x => x.Id == id)
+                .Where(Access.ProjectAccessRules.CanSee(userId, departmentId, isViewer))
                 .FirstOrDefaultAsync(ct);
 
             return project?.ToPostDto();
         }
 
-        public async Task<IEnumerable<ListProjectDTO>> GetByFolderAsync(Guid folderId, bool includeArchived, int userId, int? departmentId, CancellationToken ct)
+        public async Task<IEnumerable<ListProjectDTO>> GetByFolderAsync(Guid folderId, bool includeArchived, int userId, int? departmentId, CancellationToken ct, bool isViewer = false)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
@@ -379,28 +379,29 @@ namespace Persistence.Service.Project
                 .Include(x => x.ProcurementProcedure)
                 .Include(x => x.ProjectType)
                 .Include(x => x.ProjectStatus)
-                .Where(x => x.FolderId == folderId && (includeArchived || !x.IsArchived) &&
-                       (departmentId == null || x.Folder.DepartmentId == departmentId || x.CreatedBy == userId))
+                .Where(x => x.FolderId == folderId && (includeArchived || !x.IsArchived))
+                .Where(Access.ProjectAccessRules.CanSee(userId, departmentId, isViewer))
                 .OrderBy(x => x.SortOrder)
                 .ThenBy(x => x.Name)
                 .ToListAsync(ct);
 
             var statusSortOrders = await GetProjectStatusSortOrdersAsync(context, ct);
             var calculationCounts = await GetCalculationCountsAsync(context, projects.Select(x => x.Id), ct);
+            var sharedIds = await GetSharedProjectIdsAsync(context, projects.Select(x => x.Id), ct);
             return projects.Select(x =>
             {
                 var metadata = x.GetMetadataSnapshot();
                 statusSortOrders.TryGetValue(x.ProjectStatusId ?? metadata.StatusId ?? 0, out var statusSortOrder);
                 calculationCounts.TryGetValue(x.Id, out var calculationCount);
-                return x.ToListDto(statusSortOrder, calculationCount);
+                return x.ToListDto(statusSortOrder, calculationCount, sharedIds.Contains(x.Id));
             }).ToList();
         }
 
-        public async Task<IEnumerable<ListProjectDTO>> GetOtherGroupByFolderAsync(Guid folderId, int userId, int? departmentId, bool includeArchived, CancellationToken ct)
+        public async Task<IEnumerable<ListProjectDTO>> GetOtherGroupByFolderAsync(Guid folderId, int userId, int? departmentId, bool includeArchived, CancellationToken ct, bool isViewer = false)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            var projects = await context.Projects.AsNoTracking()
+            IQueryable<ProjectEntity> baseQuery = context.Projects.AsNoTracking()
                 .Include(x => x.Organisation)
                 .Include(x => x.Contract)
                 .Include(x => x.Compensation)
@@ -408,25 +409,33 @@ namespace Persistence.Service.Project
                 .Include(x => x.ProcurementProcedure)
                 .Include(x => x.ProjectType)
                 .Include(x => x.ProjectStatus)
-                .Where(x => x.FolderId == folderId && (includeArchived || !x.IsArchived) &&
-                    x.Calculations.SelectMany(c => c.SharesCalc)
-                        .Any(s => s.CreatedBy == userId || s.DepartmentId == departmentId))
+                .Where(x => x.FolderId == folderId && (includeArchived || !x.IsArchived));
+
+            // Visare: bara projekt som delats med dem via intern projektdelning.
+            // Övriga: befintlig "annan avdelning"-vy via kalkyldelning (ShareCalc).
+            baseQuery = isViewer
+                ? baseQuery.Where(Access.ProjectAccessRules.CanSee(userId, departmentId, isViewerOnly: true))
+                : baseQuery.Where(x => x.Calculations.SelectMany(c => c.SharesCalc)
+                        .Any(s => s.CreatedBy == userId || s.DepartmentId == departmentId));
+
+            var projects = await baseQuery
                 .OrderBy(x => x.SortOrder)
                 .ThenBy(x => x.Name)
                 .ToListAsync(ct);
 
             var statusSortOrders = await GetProjectStatusSortOrdersAsync(context, ct);
             var calculationCounts = await GetCalculationCountsAsync(context, projects.Select(x => x.Id), ct);
+            var sharedIds = await GetSharedProjectIdsAsync(context, projects.Select(x => x.Id), ct);
             return projects.Select(x =>
             {
                 var metadata = x.GetMetadataSnapshot();
                 statusSortOrders.TryGetValue(x.ProjectStatusId ?? metadata.StatusId ?? 0, out var statusSortOrder);
                 calculationCounts.TryGetValue(x.Id, out var calculationCount);
-                return x.ToListDto(statusSortOrder, calculationCount);
+                return x.ToListDto(statusSortOrder, calculationCount, sharedIds.Contains(x.Id));
             }).ToList();
         }
 
-        public async Task<IEnumerable<SearchProjectDTO>> SearchAsync(ProjectFilter filter, int userId, int? departmentId, CancellationToken ct)
+        public async Task<IEnumerable<SearchProjectDTO>> SearchAsync(ProjectFilter filter, int userId, int? departmentId, CancellationToken ct, bool isViewer = false)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
@@ -435,7 +444,7 @@ namespace Persistence.Service.Project
             IQueryable<ProjectEntity> query = context.Projects
                 .AsNoTracking()
                 .Where(x => filter.IsArchived == null || x.IsArchived == filter.IsArchived.Value)
-                .Where(x => departmentId == null || x.Folder.DepartmentId == departmentId || x.CreatedBy == userId);
+                .Where(Access.ProjectAccessRules.CanSee(userId, departmentId, isViewer));
 
             if (filter.FolderId.HasValue && filter.FolderId.Value != Guid.Empty)
                 query = query.Where(x => x.FolderId == filter.FolderId.Value);
@@ -550,6 +559,27 @@ namespace Persistence.Service.Project
                             .First())
                         .Where(calculation => !calculation.IsArchived)
                         .Count());
+        }
+
+        // Projekt-id:n som är delade med minst en användare eller avdelning via intern
+        // projektdelning (ProjectShare). Används för "Delat"-kolumnen i projektlistan.
+        private static async Task<HashSet<Guid>> GetSharedProjectIdsAsync(
+            ShardingSingleDbContext context,
+            IEnumerable<Guid> projectIds,
+            CancellationToken ct)
+        {
+            var ids = projectIds.Distinct().ToList();
+            if (ids.Count == 0)
+                return [];
+
+            var sharedIds = await context.ProjectShare
+                .AsNoTracking()
+                .Where(s => ids.Contains(s.ProjectId))
+                .Select(s => s.ProjectId)
+                .Distinct()
+                .ToListAsync(ct);
+
+            return sharedIds.ToHashSet();
         }
 
         private static string EnsureUniqueName(string name, IEnumerable<string> existingNames)

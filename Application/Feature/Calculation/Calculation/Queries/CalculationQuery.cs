@@ -11,7 +11,8 @@ public sealed record GetAllCalculationsQuery(
     Guid ProjectId,
     bool IsArchived,
     int UserId,
-    int? DepartmentId
+    int? DepartmentId,
+    bool IsViewer = false
 ) : IRequest<IEnumerable<ListCalculationDTO>>;
 
 public sealed class GetAllCalculationsQueryHandler(ICalculationQueryService service)
@@ -26,7 +27,8 @@ public sealed class GetAllCalculationsQueryHandler(ICalculationQueryService serv
             request.IsArchived,
             request.UserId,
             request.DepartmentId,
-            cancellationToken);
+            cancellationToken,
+            request.IsViewer);
     }
 }
 
@@ -37,7 +39,8 @@ public sealed class GetAllCalculationsQueryHandler(ICalculationQueryService serv
 public sealed record GetAllCalculationsByDepartmentQuery(
     Guid ProjectId,
     int UserId,
-    int? DepartmentId
+    int? DepartmentId,
+    bool IsViewer = false
 ) : IRequest<IEnumerable<ListCalculationDTO>>;
 
 public sealed class GetAllCalculationsByDepartmentQueryHandler(ICalculationQueryService service)
@@ -50,7 +53,8 @@ public sealed class GetAllCalculationsByDepartmentQueryHandler(ICalculationQuery
             request.ProjectId,
             request.UserId,
             request.DepartmentId,
-            cancellationToken);
+            cancellationToken,
+            request.IsViewer);
     }
 }
 
@@ -61,7 +65,8 @@ public sealed class GetAllCalculationsByDepartmentQueryHandler(ICalculationQuery
 public sealed record GetCalculationDetailsQuery(
     int Id,
     int UserId,
-    int? DepartmentId
+    int? DepartmentId,
+    bool IsViewer = false
 ) : IRequest<CalculationDetailsDTO?>;
 
 public sealed class GetCalculationDetailsQueryHandler(ICalculationQueryService service)
@@ -75,7 +80,8 @@ public sealed class GetCalculationDetailsQueryHandler(ICalculationQueryService s
             request.Id,
             request.UserId,
             request.DepartmentId,
-            cancellationToken);
+            cancellationToken,
+            request.IsViewer);
     }
 }
 
@@ -86,7 +92,8 @@ public sealed class GetCalculationDetailsQueryHandler(ICalculationQueryService s
 public sealed record GetCalculationPostQuery(
     int Id,
     int UserId,
-    int? DepartmentId
+    int? DepartmentId,
+    bool IsViewer = false
 ) : IRequest<CalculationPostDTO?>;
 
 public sealed class GetCalculationPostQueryHandler(ICalculationQueryService service)
@@ -100,7 +107,8 @@ public sealed class GetCalculationPostQueryHandler(ICalculationQueryService serv
             request.Id,
             request.UserId,
             request.DepartmentId,
-            cancellationToken);
+            cancellationToken,
+            request.IsViewer);
     }
 }
 
@@ -111,7 +119,8 @@ public sealed class GetCalculationPostQueryHandler(ICalculationQueryService serv
 public sealed record GetCalculationPageQuery(
     int Id,
     int UserId,
-    int? DepartmentId
+    int? DepartmentId,
+    bool IsViewer = false
 ) : IRequest<CalculationPageDTO?>;
 
 public sealed class GetCalculationPageQueryHandler(ICalculationQueryService service)
@@ -125,7 +134,8 @@ public sealed class GetCalculationPageQueryHandler(ICalculationQueryService serv
             request.Id,
             request.UserId,
             request.DepartmentId,
-            cancellationToken);
+            cancellationToken,
+            request.IsViewer);
     }
 }
 
@@ -139,7 +149,8 @@ public sealed class GetCalculationPageQueryHandler(ICalculationQueryService serv
 public sealed record GetShareCalculationPageQuery(
     int Id,
     int UserId,
-    int? DepartmentId
+    int? DepartmentId,
+    bool IsViewer = false
 ) : IRequest<CalculationPageDTO?>;
 
 public sealed class GetShareCalculationPageQueryHandler(ICalculationQueryService service)
@@ -155,7 +166,8 @@ public sealed class GetShareCalculationPageQueryHandler(ICalculationQueryService
             request.Id,
             request.UserId,
             request.DepartmentId,
-            cancellationToken);
+            cancellationToken,
+            request.IsViewer);
     }
 }
 

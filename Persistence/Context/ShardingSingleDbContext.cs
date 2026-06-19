@@ -272,6 +272,13 @@ public partial class ShardingSingleDbContext(DbContextOptions<ShardingSingleDbCo
             return NotDeleted(project);
         }
 
+        // ProjectShare -> Project (soft-deletable): dölj delningar för borttagna projekt.
+        if (clrType == typeof(ProjectShareEntity))
+        {
+            var project = Expression.Property(parameter, nameof(ProjectShareEntity.Project));
+            return NotDeleted(project);
+        }
+
         // Offer -> Resource -> Task -> Calculation -> Project
         if (clrType == typeof(OfferEntity))
         {

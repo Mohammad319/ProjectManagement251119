@@ -19,13 +19,13 @@ namespace Application.Feature.Project.Folder.Queries
         public Task<DetailsFolderDTO?> Handle(GetDetailsFoldersQuery request, CancellationToken ct)
             => service.GetDetailsAsync(request.Id, request.DepartmentId, ct);
     }
-    public sealed record GetFoldersDepartmentQuery(bool IncludeArchived, int? DepartmentId) : IRequest<List<ListFolderDTO>>;
+    public sealed record GetFoldersDepartmentQuery(bool IncludeArchived, int? DepartmentId, int UserId = 0, bool IsViewer = false) : IRequest<List<ListFolderDTO>>;
 
     public sealed class GetFoldersDepartmentQueryHandler(IFolderService service)
         : IRequestHandler<GetFoldersDepartmentQuery, List<ListFolderDTO>>
     {
         public Task<List<ListFolderDTO>> Handle(GetFoldersDepartmentQuery request, CancellationToken ct)
-            => service.GetByDepartmentAsync(request.IncludeArchived, request.DepartmentId, ct);
+            => service.GetByDepartmentAsync(request.IncludeArchived, request.DepartmentId, ct, request.UserId, request.IsViewer);
     }
     public sealed record GetFoldersFromOtherDepartmentQuery(int DepartmentId, bool IncludeArchived) : IRequest<List<ListFolderDTO>>;
 

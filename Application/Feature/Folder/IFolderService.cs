@@ -13,7 +13,7 @@ namespace Application.Feature.Project.Folder
 
         // Queries
         Task<List<ListFolderDTO>> GetAllVisibleAsync(CancellationToken ct = default);
-        Task<List<ListFolderDTO>> GetByDepartmentAsync(bool includeArchived, int? departmentId, CancellationToken ct = default);
+        Task<List<ListFolderDTO>> GetByDepartmentAsync(bool includeArchived, int? departmentId, CancellationToken ct = default, int userId = 0, bool isViewer = false);
         Task<List<ListFolderDTO>> GetFromOtherDepartmentAsync(int departmentId, bool includeArchived, CancellationToken ct = default);
         Task<DetailsFolderDTO?> GetDetailsAsync(Guid id, int? departmentId, CancellationToken ct = default);
     }

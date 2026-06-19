@@ -290,6 +290,7 @@ namespace ProjectManagement.Shared.DTO.Project
         public DateTime TenderDeadline { get; set; } = DateTime.Now;
         public DateTime TenderQA { get; set; } = DateTime.Now;
         public bool IsArchived { get; set; } = false;
+        public bool IsShared { get; set; } = false;
         public int CalculationCount { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
