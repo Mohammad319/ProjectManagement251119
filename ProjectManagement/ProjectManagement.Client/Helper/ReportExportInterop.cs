@@ -4,7 +4,16 @@ namespace ProjectManagement.Client.Helper;
 
 public sealed record ReportExportSection(string Heading, IReadOnlyList<string?> Lines);
 
-public sealed record ReportExportKpi(string Label, string Value);
+public sealed record ReportExportKpi(
+    string Label,
+    object? Value,
+    string? Formula = null,
+    string? NumberFormat = null);
+
+public sealed record ReportExcelCell(
+    object? Value,
+    string? Formula = null,
+    string? NumberFormat = null);
 
 public sealed record ReportExportHeader(
     string Title,
@@ -70,9 +79,26 @@ public static class ReportExportInterop
             })
             .Where(s => s.lines.Length > 0)
             .ToArray(),
-        kpis = (header.Kpis ?? []).Select(k => new { label = k.Label, value = k.Value }).ToArray()
+        kpis = (header.Kpis ?? []).Select(k => new
+        {
+            label = k.Label,
+            value = k.Value,
+            formula = k.Formula,
+            numberFormat = k.NumberFormat
+        }).ToArray()
     };
 
-    private static string[][] NormalizeRows(IEnumerable<IEnumerable<object?>> rows) =>
-        rows.Select(row => row.Select(value => value?.ToString() ?? string.Empty).ToArray()).ToArray();
+    private static object?[][] NormalizeRows(IEnumerable<IEnumerable<object?>> rows) =>
+        rows.Select(row => row.Select(ToJsCell).ToArray()).ToArray();
+
+    private static object? ToJsCell(object? value) => value switch
+    {
+        ReportExcelCell cell => new
+        {
+            value = cell.Value,
+            formula = cell.Formula,
+            numberFormat = cell.NumberFormat
+        },
+        _ => value
+    };
 }

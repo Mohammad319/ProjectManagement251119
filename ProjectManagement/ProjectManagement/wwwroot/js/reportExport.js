@@ -115,11 +115,12 @@
     // ── XLSX workbook ──────────────────────────────────────────────────
 
     // Cell style ids (cellXfs index in styles.xml)
-    var XS = { DEFAULT: 0, TITLE: 1, META: 2, SECTION_HEAD: 3, SECTION_LINE: 4, KPI_LABEL: 5, COL_HEAD: 6, EVEN: 7, SUM: 8, TOTAL: 9 };
+    var XS = { DEFAULT: 0, TITLE: 1, META: 2, SECTION_HEAD: 3, SECTION_LINE: 4, KPI_LABEL: 5, COL_HEAD: 6, EVEN: 7, SUM: 8, TOTAL: 9, MONEY: 10, PERCENT: 11, INTEGER: 12 };
 
     var STYLES_XML =
         '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
         '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+        '<numFmts count="1"><numFmt numFmtId="164" formatCode="#,##0"/></numFmts>' +
         '<fonts count="5">' +
         '<font><sz val="11"/><name val="Calibri"/></font>' +
         '<font><b/><sz val="11"/><name val="Calibri"/></font>' +
@@ -140,7 +141,7 @@
         '<border><left/><right/><top/><bottom style="thin"><color rgb="FFCBD5E1"/></bottom><diagonal/></border>' +
         '</borders>' +
         '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
-        '<cellXfs count="10">' +
+        '<cellXfs count="13">' +
         '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
         '<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
         '<xf numFmtId="0" fontId="4" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
@@ -151,6 +152,9 @@
         '<xf numFmtId="0" fontId="0" fillId="3" borderId="0" xfId="0" applyFill="1"/>' +
         '<xf numFmtId="0" fontId="3" fillId="3" borderId="0" xfId="0" applyFont="1" applyFill="1"/>' +
         '<xf numFmtId="0" fontId="1" fillId="4" borderId="0" xfId="0" applyFont="1" applyFill="1"/>' +
+        '<xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' +
+        '<xf numFmtId="10" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' +
+        '<xf numFmtId="1" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' +
         '</cellXfs>' +
         '</styleSheet>';
 
@@ -169,7 +173,29 @@
     }
 
     // grid: array of { cells: [{ v, s }] }; numeric detection happens here
-    function buildSheetXml(grid, columnCount, freezeAtRow) {
+    function formulaText(formula, currentRow, dataStartRow) {
+        return String(formula || '')
+            .replace(/^=/, '')
+            .replace(/\{row\}/g, String(currentRow))
+            .replace(/\{row:(\d+)\}/g, function (_, index) { return String(dataStartRow + Number(index)); });
+    }
+
+    function cellStyle(cell, fallback) {
+        if (cell.numberFormat === 'money') return XS.MONEY;
+        if (cell.numberFormat === 'percent') return XS.PERCENT;
+        if (cell.numberFormat === 'integer') return XS.INTEGER;
+        return cell.s ?? fallback ?? XS.DEFAULT;
+    }
+
+    function exportCell(value, fallbackStyle) {
+        if (value && typeof value === 'object' && !Array.isArray(value) &&
+            ('value' in value || 'formula' in value || 'numberFormat' in value)) {
+            return { v: value.value, f: value.formula, numberFormat: value.numberFormat, s: cellStyle(value, fallbackStyle) };
+        }
+        return { v: value, s: fallbackStyle };
+    }
+
+    function buildSheetXml(grid, columnCount, freezeAtRow, dataStartRow) {
         // Approximate column widths from longest content (table area dominates)
         var widths = [];
         grid.forEach(function (row) {
@@ -196,7 +222,10 @@
                 var ref = colRef(ci) + r;
                 var s = cell.s ? ' s="' + cell.s + '"' : '';
                 var raw = String(cell.v ?? '');
-                if (cell.forceText !== true && isNumeric(raw)) {
+                if (cell.f) {
+                    var cached = isNumeric(raw) ? '<v>' + toNumber(raw) + '</v>' : '';
+                    rowsXml += '<c r="' + ref + '"' + s + '><f>' + escapeXml(formulaText(cell.f, r, dataStartRow)) + '</f>' + cached + '</c>';
+                } else if (cell.forceText !== true && isNumeric(raw)) {
                     rowsXml += '<c r="' + ref + '"' + s + '><v>' + toNumber(raw) + '</v></c>';
                 } else if (raw !== '') {
                     rowsXml += '<c r="' + ref + '" t="inlineStr"' + s + '><is><t xml:space="preserve">' + escapeXml(raw) + '</t></is></c>';
@@ -234,7 +263,7 @@
         });
 
         (header.kpis || []).forEach(function (kpi) {
-            grid.push({ cells: [{ v: kpi.label + ':', s: XS.KPI_LABEL, forceText: true }, { v: kpi.value }] });
+            grid.push({ cells: [{ v: kpi.label + ':', s: XS.KPI_LABEL, forceText: true }, exportCell(kpi, XS.DEFAULT)] });
         });
 
         grid.push({ cells: [] });
@@ -251,10 +280,10 @@
                 ? (firstVal === 'Totalt' ? XS.TOTAL : XS.SUM)
                 : (dataIndex % 2 === 1 ? XS.EVEN : XS.DEFAULT);
             if (!isSummary) dataIndex++;
-            grid.push({ cells: cells.map(function (value) { return { v: value, s: styleId }; }) });
+            grid.push({ cells: cells.map(function (value) { return exportCell(value, styleId); }) });
         });
 
-        var sheetXml = buildSheetXml(grid, (columns || []).length, freezeAtRow);
+        var sheetXml = buildSheetXml(grid, (columns || []).length, freezeAtRow, freezeAtRow + 1);
         var name = sheetNameSafe(header.title);
 
         return buildZip([
@@ -281,6 +310,7 @@
                 content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
                     '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' +
                     '<sheets><sheet name="' + escapeXml(name) + '" sheetId="1" r:id="rId1"/></sheets>' +
+                    '<calcPr calcId="191029" fullCalcOnLoad="1" forceFullCalc="1"/>' +
                     '</workbook>'
             },
             {
@@ -313,7 +343,10 @@
 
         var head = (columns || []).map(function (col) { return '<th>' + escapeHtml(col) + '</th>'; }).join('');
         var body = (rows || []).map(function (row, i) {
-            var cells = (row || []).map(function (val) { return '<td>' + escapeHtml(val) + '</td>'; }).join('');
+            var cells = (row || []).map(function (val) {
+                var display = val && typeof val === 'object' && !Array.isArray(val) && 'value' in val ? val.value : val;
+                return '<td>' + escapeHtml(display) + '</td>';
+            }).join('');
             var firstVal = String((row || [])[0] ?? '').trim();
             var cls = firstVal === 'Totalt' ? ' class="total"'
                 : firstVal.startsWith('Summa') ? ' class="sum"'

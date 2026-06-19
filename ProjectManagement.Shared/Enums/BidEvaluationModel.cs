@@ -9,5 +9,8 @@ public enum BidEvaluationModel
     LowestComparison = 0,
 
     /// <summary>Högsta totalpoäng vinner (poäng-baserad utvärdering).</summary>
-    HighestPoints = 1
+    HighestPoints = 1,
+
+    /// <summary>Lägsta totala anbudskostnad vinner.</summary>
+    LowestTotalCost = 2
 }

@@ -48,6 +48,10 @@
 
             public const string HourlyPriceList = "hplzu";
             public const string DisplayPresets = "displaypresets";
+
+            // External calculation copy (ATACOST package)
+            public const string ExportCopy = "exportcopy";
+            public const string ImportCopy = "importcopy";
         }
 
         public static class ResourceType
@@ -115,6 +119,11 @@
             public const string GetByFolderDepartmentId = "gpmyg";
             public const string Move = "move";
             public const string Copy = "copy";
+
+            // External project copy (ATACOST package)
+            public const string ExportCopy = "exportcopy";
+            public const string ImportCopy = "importcopy";
+            public const string InspectCopy = "inspectcopy";
         }
 
         public static class Auth

@@ -1,12 +1,14 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.Rendering;
+using ProjectManagement.Client.Services.Calculation;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Calculation.Template;
 using ProjectManagement.Shared.DTO.Project;
+using ProjectManagement.Shared.Enums;
 
 namespace ProjectManagement.Client.Pages.Calculation.Table.SectionsList.Rows;
 
@@ -15,6 +17,8 @@ public partial class TaskRowComponent : CalculationSelectableRowComponentBase
     private readonly RenderFragment _taskCells;
 
     public TaskRowComponent() => _taskCells = RenderTaskCells;
+
+    [Inject] private CalculationService CalcService { get; set; } = default!;
 
     [Parameter] public EventCallback<TaskListMVVM> OnCollapseToggle { get; set; }
     [Parameter] public TaskListMVVM Task { get; set; } = default!;
@@ -50,7 +54,17 @@ public partial class TaskRowComponent : CalculationSelectableRowComponentBase
     private System.Threading.Tasks.Task ToggleCollapse() => OnCollapseToggle.InvokeAsync(Task);
 
     private void RenderTaskCells(RenderTreeBuilder builder)
-        => CalculationRowCellRenderer.RenderTaskCells(builder, Colmuns, Task, Left, ShowActiveToggle, ToggleActive, ActiveParent);
+        => CalculationRowCellRenderer.RenderTaskCells(builder, Colmuns, Task, Left, ShowActiveToggle, ToggleActive, ActiveParent, EditProductionNote);
 
     private Task ToggleActive() => OnToggleActive.InvokeAsync();
+
+    private Task EditProductionNote()
+    {
+        CalcService.EditProductionNote(
+            CalculationItemType.task,
+            Task.Id,
+            Task.ProductionNote,
+            v => { Task.ProductionNote = v; InvokeAsync(StateHasChanged); });
+        return System.Threading.Tasks.Task.CompletedTask;
+    }
 }

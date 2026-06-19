@@ -37,6 +37,12 @@ namespace Domain.Entities.Calculation
         [MaxLength(FieldLengths.Comment)]
         public string? Note { get; private set; }
 
+        // Production note – a standalone comment from production/PL/AL/Viewer per calculation row.
+        // Stored separately from the economic metadata; does not change quantity/price/cost/calculation.
+        // May be edited even when the calculation is locked (permission is enforced in the backend).
+        [MaxLength(FieldLengths.Comment)]
+        public string? ProductionNote { get; private set; }
+
         public decimal? Quantity { get; private set; }
 
         [MaxLength(FieldLengths.Code)]
@@ -144,6 +150,16 @@ namespace Domain.Entities.Calculation
         }
 
         public void SetIsOH(bool isOH) => UpdateMetadata(x => x.IsOH = isOH);
+
+        /// <summary>Sets the production note (does not affect economy/calculation). Returns true if the value changed.</summary>
+        public bool SetProductionNote(string? value)
+        {
+            var normalized = NormalizeOptional(value);
+            if (string.Equals(ProductionNote, normalized, StringComparison.Ordinal))
+                return false;
+            ProductionNote = normalized;
+            return true;
+        }
 
         public void SetQuantity(decimal? value)
         {

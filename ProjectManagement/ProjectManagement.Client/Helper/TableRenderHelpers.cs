@@ -109,6 +109,43 @@ namespace ProjectManagement.Client.Helper
             builder.CloseElement();
         }
 
+        // Production note cell: clickable, shows a note icon when a note exists, the (truncated)
+        // text, and the full text as a tooltip. Clicking opens the edit dialog (onEdit).
+        public static void RenderProductionNoteTd(RenderTreeBuilder builder, string? note, Func<Task>? onEdit)
+        {
+            int seq = 0;
+            var hasNote = !string.IsNullOrWhiteSpace(note);
+
+            builder.OpenElement(seq++, "td");
+            builder.AddAttribute(seq++, "class", "calc-prodnote-cell");
+
+            builder.OpenElement(seq++, "button");
+            builder.AddAttribute(seq++, "type", "button");
+            builder.AddAttribute(seq++, "title", hasNote ? note : "Lägg till produktionsanteckning");
+            builder.AddAttribute(seq++, "class", hasNote ? "calc-prodnote-btn has-note" : "calc-prodnote-btn");
+
+            if (onEdit is not null)
+            {
+                builder.AddAttribute(seq++, "onclick", onEdit);
+                builder.AddEventStopPropagationAttribute(seq++, "onclick", true);
+            }
+
+            builder.OpenElement(seq++, "i");
+            builder.AddAttribute(seq++, "class", hasNote ? "fa-solid fa-note-sticky" : "fa-regular fa-pen-to-square");
+            builder.CloseElement();
+
+            if (hasNote)
+            {
+                builder.OpenElement(seq++, "span");
+                builder.AddAttribute(seq++, "class", "calc-prodnote-text");
+                builder.AddContent(seq++, note);
+                builder.CloseElement();
+            }
+
+            builder.CloseElement();
+            builder.CloseElement();
+        }
+
         public static void RenderStatusTd(RenderTreeBuilder builder, string color, string status)
         {
             int seq = 0;

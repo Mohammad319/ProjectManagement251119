@@ -1,4 +1,7 @@
-﻿using ProjectManagement.Client.Services.Folder;
+﻿using BlazorMHD.UI.Core.Services;
+using Microsoft.AspNetCore.Components;
+using ProjectManagement.Client.Pages.Calculation.Table;
+using ProjectManagement.Client.Services.Folder;
 using ProjectManagement.Client.Shared.Calculation;
 using ProjectManagement.Client.Shared.Mapping;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
@@ -8,6 +11,7 @@ using ProjectManagement.Client.Shared.ViewModel;
 using ProjectManagement.Shared.Constants;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Offer;
+using ProjectManagement.Shared.Enums;
 
 namespace ProjectManagement.Client.Services.Calculation
 {
@@ -26,6 +30,32 @@ namespace ProjectManagement.Client.Services.Calculation
         public event Action? ResourceVariablesVisibilityChanged;
         public event Action? GridViewMaterialized;
         public event Action<bool>? ResourceDetailsExpandChanged;
+
+        // Opens the production-note editor for a calculation row (task/resource). Saving goes through
+        // a dedicated, separately-authorized endpoint, so it works even on a locked calculation and
+        // never touches the row's economy. applyLocal updates the in-memory row after a successful save.
+        public void EditProductionNote(CalculationItemType itemType, int itemId, string? currentNote, Action<string?> applyLocal)
+        {
+            mhdServices.Modal.ShowComponent<ProductionNoteDialog>(
+                "Produktionsanteckning",
+                new Dictionary<string, object>
+                {
+                    [nameof(ProductionNoteDialog.InitialText)] = currentNote ?? string.Empty,
+                    [nameof(ProductionNoteDialog.OnSave)] = EventCallback.Factory.Create<string?>(this, async text =>
+                    {
+                        var ok = await calcRepo.SaveProductionNoteAsync(new ProductionNoteSaveDTO
+                        {
+                            ItemType = itemType,
+                            ItemId = itemId,
+                            Text = text
+                        });
+                        mhdServices.Notifications(ToastType.Update, ok);
+                        if (ok)
+                            applyLocal(text);
+                    })
+                },
+                MhdDialogSize.Medium);
+        }
 
         public bool ShowComments
         {

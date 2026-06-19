@@ -57,6 +57,8 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public int? ResourceTypeId { get; set; }
         public string? ResName { get; set; }
         public string? Sort { get; set; }
+        // Production note – a standalone scalar field (not in Data/Metadata). Edited separately, does not affect economy.
+        public string? ProductionNote { get; set; }
         [JsonIgnore] public decimal DisplayCapWaste => Computed.EffectiveCapWaste ?? Data.CapWaste;
 
         [JsonIgnore]

@@ -5,6 +5,7 @@ using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.General;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.Calculation.Template;
+using ProjectManagement.Shared.DTO.Transfer;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -33,6 +34,13 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation
         Task<bool> UpdateAsync(List<QuanityListDTO> model, int id);
         Task<bool> UpdateSortAsync(int id, SortConfig sort);
         Task<bool> UpdateDisplayPresetsAsync(int id, DisplayOptionsPresetStore store);
+
+        // Save a per-row production note (task/resource). Independent of calc economy; allowed on locked calc.
+        Task<bool> SaveProductionNoteAsync(ProductionNoteSaveDTO dto);
+
+        // Extern kalkylkopia (ATACOST-paket)
+        Task<byte[]> ExportCopyAsync(int calcId, AtacostCalculationExportRequest request);
+        Task<int> ImportCopyAsync(Guid targetProjectId, byte[] fileBytes);
 
         Task<bool> DeleteAsync(int id);
     }

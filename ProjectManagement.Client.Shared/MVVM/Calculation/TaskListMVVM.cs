@@ -54,6 +54,8 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         }
 
         public string Note => Metadata.Note;
+        // Production note – a standalone scalar field (not in Metadata). Edited separately, does not affect economy.
+        public string? ProductionNote { get; set; }
         public List<string> UpperNote => Metadata.UpperNote;
         public string QuantityParam => Metadata.QuantityParam;
         public IReadOnlyList<TaskConversionParameter> ConversionParameters => Metadata.ConversionParameters;

@@ -1,6 +1,7 @@
 ﻿using ProjectManagement.Client.Shared.MVVM.Folder;
 using ProjectManagement.Shared.DTO.General;
 using ProjectManagement.Shared.DTO.Project;
+using ProjectManagement.Shared.DTO.Transfer;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -21,5 +22,10 @@ namespace ProjectManagement.Client.Shared.Repositories.Project
         Task<bool> MoveAsync(Guid id, Guid targetFolderId);
         Task<Guid> CopyAsync(Guid targetFolderId, Guid projectId, bool includeCalculations);
         Task<bool> DeleteAsync(Guid id);
+
+        // Extern projektkopia (ATACOST-paket)
+        Task<byte[]> ExportCopyAsync(Guid projectId, AtacostProjectExportRequest request);
+        Task<AtacostPackageInfoDTO> InspectCopyAsync(byte[] fileBytes);
+        Task<Guid> ImportCopyAsync(Guid targetFolderId, byte[] fileBytes);
     }
 }

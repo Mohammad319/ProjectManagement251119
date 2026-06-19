@@ -90,20 +90,22 @@
             "group",
             "grid grid-cols-[1rem_1.5rem_1fr] items-center gap-1.5 px-1.5 py-1 rounded-md cursor-pointer",
             "transition-all duration-150",
-            "bg-white dark:bg-slate-900/70",
-            "hover:bg-slate-100/80 dark:hover:bg-slate-800/70",
             "active:scale-95",
             TreeRowFocusClass
         };
 
+        if (isFolderSelected)
+            folderClasses.Add(TreeSelectedRowClass);
+        else if (folder.ShowProjects)
+            folderClasses.Add(TreeExpandedRowClass);
+        else
+            folderClasses.Add(TreeNormalRowClass);
+
         if (isFolderArchived)
-            folderClasses.Add("border border-slate-200 bg-slate-100/80 text-slate-500 grayscale dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-400");
+            folderClasses.Add("text-slate-500 grayscale dark:text-slate-400");
 
         if (folder.IsDragOver)
             folderClasses.Add("ring-1 ring-sky-500 bg-sky-50 dark:bg-sky-950/40");
-
-        if (isFolderSelected)
-            folderClasses.Add(TreeSelectedRowClass);
 
         <div @key="folder.Id"
              @oncontextmenu:preventDefault
@@ -117,6 +119,7 @@
              @onclick="async () => await SeFolder(folder)"
              role="button"
              tabindex="0"
+             title="@GetFolderTitle(folder)"
              class="@string.Join(" ", folderClasses)">
 
             <!-- Expand folder – chevron only when the folder actually has children -->
@@ -148,8 +151,7 @@
             }
 
             <!-- Folder / ort -->
-            <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md @(isFolderArchived ? TreeIconArchivedClass : isFolderSelected ? TreeIconSelectedClass : TreeIconIdleClass)"
-                  title="@ResourceLoc.folder">
+            <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md @(isFolderSelected ? TreeIconSelectedClass : isFolderArchived ? TreeIconArchivedClass : TreeIconIdleClass)">
                 @if (folder.ShowProjects)
                 {
                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -172,9 +174,11 @@
                         <button type="button" class="@ManualOrderButtonClass" disabled="@(!CanMoveDown(sortedFolders, folder))" title="@AppLoc["moveDown"]" @onclick:stopPropagation="true" @onclick="() => MoveFolder(folder, 1)">↓</button>
                     </span>
                 }
-                <span title="@GetFolderTitle(folder)"
-                      class="truncate text-[13px] font-semibold leading-5 @(isFolderArchived ? "text-slate-500 dark:text-slate-400" : "text-slate-800 group-hover:text-slate-900 dark:text-slate-100 dark:group-hover:text-slate-100") @(isFolderSelected ? "text-sky-900 dark:text-sky-100" : "")">
+                <span class="truncate text-[13px] font-semibold leading-5 @(isFolderArchived ? "text-slate-500 dark:text-slate-400" : "text-slate-800 group-hover:text-slate-900 dark:text-slate-100 dark:group-hover:text-slate-100") @(isFolderSelected ? "text-sky-900 dark:text-sky-100" : "")">
                     @folder.Name
+                </span>
+                <span class="shrink-0 text-[11px] font-medium text-slate-400 dark:text-slate-500" aria-label="@GetFolderProjectCountLabel(folder)">
+                    (@GetFolderProjectCount(folder))
                 </span>
             </span>
 
@@ -201,20 +205,22 @@
                         "group relative",
                         "grid grid-cols-[1rem_1.5rem_1fr] items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-md cursor-pointer",
                         "transition-all duration-150",
-                        "hover:bg-slate-100/80 dark:hover:bg-slate-800/70",
                         "active:scale-95",
-                        TreeRowFocusClass,
-                        isProjectOpen ? ProjectRowOpenClass : ProjectRowClosedClass
+                        TreeRowFocusClass
                     };
-
-                    if (isProjectArchived)
-                        projectClasses.Add("border border-slate-200 bg-slate-100/80 text-slate-500 grayscale dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-400");
-
-                    if (project.IsDragOver)
-                        projectClasses.Add("ring-1 ring-sky-500 bg-sky-50 dark:bg-sky-950/40");
 
                     if (isProjectSelected)
                         projectClasses.Add(TreeSelectedRowClass);
+                    else if (isProjectOpen)
+                        projectClasses.Add(TreeExpandedRowClass);
+                    else
+                        projectClasses.Add(TreeNormalRowClass);
+
+                    if (isProjectArchived)
+                        projectClasses.Add("text-slate-500 grayscale dark:text-slate-400");
+
+                    if (project.IsDragOver)
+                        projectClasses.Add("ring-1 ring-sky-500 bg-sky-50 dark:bg-sky-950/40");
 
                     <div @key="project.Id"
                          @oncontextmenu:preventDefault
@@ -227,6 +233,7 @@
                          @onclick="async () => await SetProject(folder, project)"
                          role="button"
                          tabindex="0"
+                         title="@GetProjectTitle(project)"
                          class="@string.Join(" ", projectClasses)">
 
                         <!-- Project status (alternative 3: thin colored left line) -->
@@ -263,8 +270,7 @@
                         }
 
                         <!-- Project Icon -->
-                        <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md @(isProjectArchived ? TreeIconArchivedClass : isProjectSelected ? TreeIconSelectedClass : TreeProjectIconIdleClass)"
-                              title="@CalcResource.project">
+                        <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md @(isProjectSelected ? TreeIconSelectedClass : isProjectArchived ? TreeIconArchivedClass : TreeProjectIconIdleClass)">
                             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4.5 5.5h15v13h-15z" />
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 9h8M8 13h3M14 13h2M8 16h8" />
@@ -280,9 +286,11 @@
                                     <button type="button" class="@ManualOrderButtonClass" disabled="@(!CanMoveDown(sortedProjects, project))" title="@AppLoc["moveDown"]" @onclick:stopPropagation="true" @onclick="() => MoveProject(folder.Projects, project, 1)">↓</button>
                                 </span>
                             }
-                            <span title="@GetProjectTitle(project)"
-                                  class="truncate text-[13px] font-medium leading-5 @(isProjectArchived ? "text-slate-500 dark:text-slate-400" : "text-slate-700 group-hover:text-slate-900 dark:text-slate-200 dark:group-hover:text-slate-100") @(isProjectSelected ? "text-sky-900 dark:text-sky-100 font-semibold" : "")">
+                            <span class="truncate text-[13px] leading-5 @(isProjectArchived ? "text-slate-500 dark:text-slate-400" : "text-slate-700 group-hover:text-slate-900 dark:text-slate-200 dark:group-hover:text-slate-100") @(isProjectSelected ? "font-semibold text-sky-900 dark:text-sky-100" : isProjectOpen ? "font-semibold text-slate-800 dark:text-slate-100" : "font-medium")">
                                 @project.Name
+                            </span>
+                            <span class="shrink-0 text-[11px] font-medium text-slate-400 dark:text-slate-500" aria-label="@GetProjectCalculationCountLabel(project)">
+                                (@GetProjectCalculationCount(project))
                             </span>
                         </span>
 

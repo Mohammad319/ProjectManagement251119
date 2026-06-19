@@ -59,6 +59,7 @@ namespace Persistence.Service.CalculationItems.Calculation
             public int SortOrder { get; set; }
             public int? OpportunityId { get; set; }
             public string Note { get; set; } = string.Empty;
+            public string? ProductionNote { get; set; }
             public string Unit { get; set; } = string.Empty;
             public decimal? Quantity { get; set; }
             public string Opportunity { get; set; } = string.Empty;
@@ -161,6 +162,7 @@ namespace Persistence.Service.CalculationItems.Calculation
                         t.IsActive,
                         t.Type,
                         t.IsOH),
+                    ProductionNote = t.ProductionNote,
                 })
                 .ToListAsync(ct);
 
@@ -192,6 +194,7 @@ namespace Persistence.Service.CalculationItems.Calculation
                     SortOrder = r.SortOrder,
                     OpportunityId = r.OpportunityId,
                     Note = r.Note ?? string.Empty,
+                    ProductionNote = r.ProductionNote,
                     Unit = r.Unit ?? string.Empty,
                     Quantity = r.Quantity,
 
@@ -333,6 +336,7 @@ namespace Persistence.Service.CalculationItems.Calculation
                 Data = CalculationItemMetadataMapper.BuildResourceMetadata(
                     row.Metadata,
                     row.Note),
+                ProductionNote = row.ProductionNote,
                 Quantity = row.Quantity,
                 Unit = row.Unit,
                 Offers = []

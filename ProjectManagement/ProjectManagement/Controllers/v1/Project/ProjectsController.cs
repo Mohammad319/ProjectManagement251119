@@ -1,6 +1,8 @@
 ﻿using Application.Feature.Project.Project.Commands;
 using Application.Feature.Project.Project.Queries;
 using Application.Feature.Project.Type.Queries;
+using Application.Feature.Transfer.Commands;
+using ProjectManagement.Shared.DTO.Transfer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProjectManagement.Shared.Constant;
@@ -92,6 +94,39 @@ namespace ProjectManagement.Server.Controllers.v1
         public async Task<IActionResult> Delete(Guid id)
         {
             return Ok(await MicroBus.Send(new DeleteProjectCommand( id, GetUserId(),  GetDepartmentId() )));
+        }
+
+        // ─────────── External project copy (ATACOST package) ───────────
+
+        /// <summary>Creates a project copy (.atacost) with the selected calculations. Private calculations are excluded in the backend.</summary>
+        [Authorize(Roles = Tenant.Users)]
+        [HttpPost(URLConst.Project.ExportCopy + "/{id}")]
+        public async Task<IActionResult> ExportCopy(Guid id, [FromBody] AtacostProjectExportRequest request)
+        {
+            var bytes = await MicroBus.Send(new BuildProjectPackageCommand(
+                id, request ?? new(), GetUserId(), GetDepartmentId(), IsViewer()));
+
+            if (bytes is null)
+                return Forbid();
+
+            return Ok(bytes);
+        }
+
+        /// <summary>Reads metadata from an uploaded .atacost package without importing.</summary>
+        [Authorize(Roles = Tenant.Users)]
+        [HttpPost(URLConst.Project.InspectCopy)]
+        public async Task<IActionResult> InspectCopy([FromBody] byte[] fileBytes)
+        {
+            return Ok(await MicroBus.Send(new InspectPackageCommand(fileBytes)));
+        }
+
+        /// <summary>Imports a project copy into a target folder and always creates a new project.</summary>
+        [Authorize(Roles = Tenant.AdminManger)]
+        [HttpPost(URLConst.Project.ImportCopy + "/{targetFolderId}")]
+        public async Task<IActionResult> ImportCopy(Guid targetFolderId, [FromBody] byte[] fileBytes)
+        {
+            return Ok(await MicroBus.Send(new ImportProjectPackageCommand(
+                fileBytes, targetFolderId, GetUserId(), GetDepartmentId(), CanUseTargetDepartmentAccessAcrossDepartments())));
         }
 
         private bool CanUseTargetDepartmentAccessAcrossDepartments() =>

@@ -36,7 +36,7 @@ namespace Domain.Entities.Project
         /// <summary>Tilldelad. I ramavtal kan flera anbudsgivare vara tilldelade.</summary>
         public bool IsAwarded { get; private set; }
 
-        /// <summary>Placering för tilldelade anbudsgivare (positivt heltal).</summary>
+        /// <summary>Manuell placering. Null innebär att placeringen beräknas automatiskt.</summary>
         public int? Placement { get; private set; }
 
         /// <summary>Anbudsstatus: Giltigt eller Förkastat.</summary>
@@ -87,20 +87,24 @@ namespace Domain.Entities.Project
             RejectionReason = status == BidStatus.Rejected ? NormalizeOptional(rejectionReason) : null;
 
             if (status == BidStatus.Rejected)
+            {
                 SetAwarded(false, null);
+                SetManualPlacement(null);
+            }
         }
 
         /// <summary>
-        /// Sätter tilldelning och placering. Placering behålls bara när anbudet
-        /// är tilldelat och ett giltigt positivt heltal angetts. IsWinner hålls
-        /// synkad för bakåtkompatibilitet.
+        /// Sätter tilldelning. Placering hanteras separat av <see cref="SetManualPlacement"/>.
+        /// IsWinner hålls synkad för bakåtkompatibilitet.
         /// </summary>
         public void SetAwarded(bool isAwarded, int? placement)
         {
             IsAwarded = isAwarded;
             IsWinner = isAwarded;
-            Placement = isAwarded && placement is > 0 ? placement : null;
         }
+
+        public void SetManualPlacement(int? placement) =>
+            Placement = placement is > 0 ? placement : null;
 
         private static string Normalize(string value) =>
             string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();

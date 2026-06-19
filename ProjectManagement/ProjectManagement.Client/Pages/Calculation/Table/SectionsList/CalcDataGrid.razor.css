@@ -185,3 +185,32 @@
         .divNetCalc ::deep .resizing {
             border-right: 2px solid #aba8a6;
         }
+
+    /* Production note cell: clickable, icon + truncated text, tooltip on hover */
+    .divNetCalc ::deep .calc-prodnote-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        max-width: 100%;
+        padding: 0 4px;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        color: #94a3b8;
+        font: inherit;
+        text-align: left;
+    }
+
+        .divNetCalc ::deep .calc-prodnote-btn.has-note {
+            color: #0284c7;
+        }
+
+        .divNetCalc ::deep .calc-prodnote-btn .calc-prodnote-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .divNetCalc ::deep .calc-prodnote-btn:hover {
+            color: #0369a1;
+        }

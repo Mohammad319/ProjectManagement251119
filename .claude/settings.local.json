@@ -166,7 +166,12 @@
       "Bash(git --no-pager diff Persistence/Service/Project/ProjectService.cs)",
       "Bash(git --no-pager diff Persistence/Context/ShardingSingleDbContextDataset.cs)",
       "Bash(git --no-pager diff ProjectManagement/ProjectManagement/Controllers/BaseApiController.cs ProjectManagement/ProjectManagement/Controllers/v1/Project/ProjectsController.cs ProjectManagement/ProjectManagement/Controllers/v1/Project/CalculationsController.cs)",
-      "Bash(git --no-pager diff ProjectManagement.Shared/Constant/ConstRoles.cs)"
+      "Bash(git --no-pager diff ProjectManagement.Shared/Constant/ConstRoles.cs)",
+      "Bash(rg -n \"_resourceCells|_taskCells|RenderResourceCells|RenderTaskCells|onToggleActive|ToggleActive\" ProjectManagement/ProjectManagement.Client/Pages/Calculation/Table/SectionsList/Rows/*.cs)",
+      "Bash(rg -rn \"public string\\\\? Note|string Note\" ProjectManagement.Client.Shared/MVVM/Calculation/ ProjectManagement.Shared/DTO/Calculation/)",
+      "Bash(rg -rn \"class CalculationPageResourceRow\" --type cs)",
+      "Bash(rg -rn \"public.*ShowComponent\" Library/)",
+      "Bash(rg -rn \"ShowComponent<\" ProjectManagement/ProjectManagement.Client --include=*.razor -l)"
     ]
   }
 }

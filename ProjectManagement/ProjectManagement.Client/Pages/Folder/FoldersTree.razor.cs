@@ -832,7 +832,13 @@ namespace ProjectManagement.Client.Pages.Folder
         // Unified selection style for every node type (Hela avdelningen, folder, project, calculation).
         // Blue is the navigation/selected color; green is reserved for status meaning.
         private const string TreeSelectedRowClass =
-            "border-l-2 border-sky-500 bg-sky-50 shadow-sm ring-1 ring-sky-200/70 dark:bg-sky-950/30 dark:ring-sky-800/60";
+            "border-l-4 border-sky-500 bg-sky-100/80 shadow-sm ring-1 ring-sky-300/80 dark:bg-sky-950/45 dark:ring-sky-700/70";
+
+        private const string TreeExpandedRowClass =
+            "bg-slate-50 ring-1 ring-slate-200/70 hover:bg-slate-100 dark:bg-slate-900/65 dark:ring-slate-700/60 dark:hover:bg-slate-800/75";
+
+        private const string TreeNormalRowClass =
+            "bg-white hover:bg-slate-50 dark:bg-slate-900/50 dark:hover:bg-slate-800/60";
 
         private const string TreeRowFocusClass =
             "outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50";
@@ -888,14 +894,6 @@ namespace ProjectManagement.Client.Pages.Folder
         // Stays hoverable (no pointer-events-none) so the status tooltip works.
         private const string ProjectStatusLineClass =
             "absolute left-0 top-1 bottom-1 w-1 rounded-full ring-1 ring-inset ring-black/5 dark:ring-white/10";
-
-        // Open project: clearly active – faint blue background + marked blue frame.
-        private const string ProjectRowOpenClass =
-            "bg-sky-50/70 ring-1 ring-sky-200 dark:bg-sky-950/25 dark:ring-sky-800/60";
-
-        // Closed project: resting – neutral/white background, no strong frame.
-        private const string ProjectRowClosedClass =
-            "bg-white dark:bg-slate-900/50";
 
         // --- "Show all" links for many projects / calculations -------------------
 
@@ -953,21 +951,34 @@ namespace ProjectManagement.Client.Pages.Folder
         private string GetProjectMeta(ListProjectMVVM project) =>
             project.IsArchived ? AppLoc["archived"].Value : string.Empty;
 
-        private string GetFolderTitle(FolderMVVM folder)
+        private static int GetFolderProjectCount(FolderMVVM folder) =>
+            folder.ProjectsLoaded ? folder.Projects?.Count ?? 0 : folder.ProjectCount;
+
+        private static string GetFolderProjectCountLabel(FolderMVVM folder)
         {
-            var count = folder.ProjectsLoaded ? $" ({folder.Projects?.Count ?? 0})" : string.Empty;
-            var archived = !folder.IsVisible ? $" – {AppLoc["archived"]}" : string.Empty;
-            return $"{folder.Name}{count}{archived}";
+            var count = GetFolderProjectCount(folder);
+            return count == 1 ? "1 projekt" : $"{count} projekt";
+        }
+
+        private static string GetFolderTitle(FolderMVVM folder) =>
+            $"{folder.Name} · {GetFolderProjectCountLabel(folder)}";
+
+        private static int GetProjectCalculationCount(ListProjectMVVM project) =>
+            project.CalculationsLoaded
+                ? CalculationVersionSelector.CountCurrentVersions(project.Calculations)
+                : project.CalculationCount;
+
+        private static string GetProjectCalculationCountLabel(ListProjectMVVM project)
+        {
+            var count = GetProjectCalculationCount(project);
+            return count == 1 ? "1 kalkyl" : $"{count} kalkyler";
         }
 
         private string GetProjectTitle(ListProjectMVVM project)
         {
-            var calculationCount = project.CalculationsLoaded
-                ? CalculationVersionSelector.CountCurrentVersions(project.Calculations)
-                : project.CalculationCount;
-            var count = $" ({calculationCount})";
-            var archived = project.IsArchived ? $" – {AppLoc["archived"]}" : string.Empty;
-            return $"{project.Name}{count}{archived}";
+            var parts = new[] { project.Code, project.Name, GetProjectCalculationCountLabel(project) }
+                .Where(x => !string.IsNullOrWhiteSpace(x));
+            return string.Join(" · ", parts);
         }
 
         private bool IsManualOrderMode => IsReorderMode;

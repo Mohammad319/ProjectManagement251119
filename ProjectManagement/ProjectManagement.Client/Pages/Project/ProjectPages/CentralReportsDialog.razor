@@ -8,6 +8,7 @@
 @using ProjectManagement.Shared.Enums
 @using ProjectManagement.Shared.Helper
 @inject IJSRuntime JS
+@inject AuthenticationStateProvider AuthProvider
 @inherits AppComponentBase
 
 <div class="flex max-h-[calc(100dvh-10rem)] flex-col gap-3 text-slate-800 dark:text-slate-100">
@@ -32,7 +33,17 @@
     {
         @if (_activeView != ReportView.HitRate && _activeView != ReportView.Projects && _activeView != ReportView.Calculations && _activeView != ReportView.BidComparison)
         {
-        <div class="grid grid-cols-2 gap-2 rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-950 md:grid-cols-4 xl:grid-cols-6">
+        @if (_activeView == ReportView.Income)
+        {
+            <button type="button"
+                    class="flex w-full items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs shadow-sm transition hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900"
+                    aria-expanded="@_incomeFiltersExpanded"
+                    @onclick="() => _incomeFiltersExpanded = !_incomeFiltersExpanded">
+                <span><strong>Filter</strong><span class="ml-2 text-slate-500 dark:text-slate-400">@IncomeFilterSummary</span></span>
+                <span class="font-semibold text-sky-600 dark:text-sky-400">@(_incomeFiltersExpanded ? "Dölj" : "Visa")</span>
+            </button>
+        }
+        <div class="@(_activeView == ReportView.Income && !_incomeFiltersExpanded ? "hidden" : "grid") grid-cols-2 gap-2 rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-950 md:grid-cols-4 xl:grid-cols-6">
 
                 @* Kalkyltyp – bara Intäktsöversikt och Kalkyllista *@
             @if (_activeView is ReportView.Income or ReportView.Calculations)
@@ -224,16 +235,23 @@
         @if (_activeView == ReportView.Income)
         {
             @SelectionBox("Urval", _incomeSelectionLine, _incomeSelectionFilters, null, "Stäng rapporten och ändra listans filter om du vill ändra urvalet.")
-            @if (!string.IsNullOrWhiteSpace(AppLoc["reportCurrentVersionRule"].Value))
-            {
-                <p class="text-xs text-slate-500 dark:text-slate-400">@AppLoc["reportCurrentVersionRule"]</p>
-            }
             <div class="flex flex-nowrap items-center justify-between gap-2">
                 <div class="grid min-w-0 grid-cols-2 gap-2 md:grid-cols-4">
                     <div class="@TotalCardClass"><span>@AppLoc["revenue"]</span><strong>@FormatMoney(IncludedFilteredIncomeRows.Sum(r => r.Amount))</strong></div>
                     <div class="@TotalCardClass"><span>@AppLoc["forecast"]</span><strong>@FormatMoney(IncludedFilteredIncomeRows.Sum(r => r.Forecast))</strong></div>
                     <div class="@TotalCardClass"><span>Projekt</span><strong>@IncludedFilteredIncomeRows.Select(r => r.Entry.Project.Id).Distinct().Count()</strong></div>
-                    <div class="@TotalCardClass"><span>Kalkyler</span><strong>@IncludedFilteredIncomeRows.Select(r => r.Entry.Calculation.Id).Distinct().Count()</strong></div>
+                    <div class="@TotalCardClass">
+                        <span class="inline-flex items-center gap-1">
+                            Kalkyler
+                            @if (IncomeVersionInfoRelevant)
+                            {
+                                <button type="button" class="inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-300 text-[10px] font-bold text-slate-500 hover:border-sky-400 hover:text-sky-600 dark:border-slate-600 dark:text-slate-400"
+                                        title="Aktuell version används per kalkylfamilj. Intäkt räknas en gång per kalkylkedja."
+                                        aria-label="Information om versioner och kalkylkedjor">i</button>
+                            }
+                        </span>
+                        <strong>@IncludedFilteredIncomeRows.Select(r => r.Entry.Calculation.Id).Distinct().Count()</strong>
+                    </div>
                 </div>
                 <div class="flex flex-nowrap items-center gap-1.5 shrink-0">
                     <button type="button"
@@ -674,7 +692,7 @@
     public static bool IsReportEnabled(ReportHost host, string view) =>
         GetReportAvailability(host).FirstOrDefault(a => a.View == view)?.Enabled ?? false;
 
-    private enum IncomeTableRowKind { Data, ProjectHeader, ProjectSum, GrandTotal, SubTypeTotal }
+    private enum IncomeTableRowKind { Data, ProjectHeader, ProjectSum, GrandTotal, SubTypeTotal, YearTotal }
 
     private enum CalcReportColumn
     {
@@ -694,7 +712,10 @@
         ProcurementProcedure, Compensation, ProcurementNumber,
         Developer, PublicationDate, DecisionDate, CreatedAt, UpdatedAt,
         // Appended last to keep existing stored column-pref indices stable.
-        RowNumber
+        RowNumber,
+        // "Delat" – Ja/Nej whether the project is internally shared. Appended after RowNumber
+        // so existing stored column-pref indices stay stable.
+        Shared
     }
 
     private static readonly CalcReportColumn[] CalcAllColumns = Enum.GetValues<CalcReportColumn>();
@@ -932,6 +953,7 @@
     private string _selectedIncomeSource = "auto";
     private string _selectedSubType = string.Empty;
     private bool _showQuarters;
+    private bool _incomeFiltersExpanded = true;
     private string _projectSearch = string.Empty;
     private bool _showProjectDropdown;
     private readonly HashSet<string> _excludedRowKeys = new(StringComparer.Ordinal);
@@ -988,6 +1010,34 @@
     private string _ownCompanyName = string.Empty;
     private bool _showOwnCompanyDropdown;
     private List<ProjectBidComparisonRowDTO> _bidRowsRaw = [];
+
+    private string IncomeFilterSummary
+    {
+        get
+        {
+            var parts = new List<string>();
+            if (!string.IsNullOrWhiteSpace(_selectedYear)) parts.Add($"År {_selectedYear}");
+            if (_selectedQuarter > 0) parts.Add($"Q{_selectedQuarter}");
+            if (!string.IsNullOrWhiteSpace(_selectedCalculationType)) parts.Add("Kalkyltyp");
+            if (!string.IsNullOrWhiteSpace(_selectedCalculationRole)) parts.Add("Kalkylroll");
+            if (_selectedStatuses.Count > 0) parts.Add("Kalkylstatus");
+            if (_selectedResponsibles.Count > 0) parts.Add("Kalkylansvarig");
+            if (_selectedInspectors.Count > 0) parts.Add("Granskare");
+            if (_selectedArchiveMode != "active") parts.Add("Arkiverade");
+            if (_selectedIncomeSource != "auto") parts.Add("Intäktskälla");
+            if (!string.IsNullOrWhiteSpace(_selectedSubType)) parts.Add("Deltyp");
+            return parts.Count switch
+            {
+                0 => "Standard",
+                <= 2 => string.Join(" · ", parts),
+                _ => $"{parts.Count} aktiva filter"
+            };
+        }
+    }
+
+    private bool IncomeVersionInfoRelevant =>
+        _allVersions.Any(e => e.Calculation.SourceCalculationId.HasValue) ||
+        _allVersions.GroupBy(e => $"{e.Project.Id}:{e.ChainKey}").Any(g => g.Count() > 1);
 
     private bool _prefsLoaded;
 
@@ -1334,9 +1384,22 @@
         if (Host is ReportHost host)
         {
             var availability = GetReportAvailability(host);
-            _availability = availability.ToDictionary(a => a.View);
+            var availabilityMap = availability.ToDictionary(a => a.View);
+
+            // Viewer (Visare) must not see bid data: disable the Anbudsjämförelse tab. Its backend
+            // endpoint is editor-gated anyway, so leaving it enabled would only yield an empty/403 tab.
+            var authState = await AuthProvider.GetAuthenticationStateAsync();
+            if (authState.User.IsInRole(PMRolesConst.Tenant.Viewer)
+                && availabilityMap.TryGetValue(ReportView.BidComparison, out var bidAvail) && bidAvail.Enabled)
+            {
+                availabilityMap[ReportView.BidComparison] =
+                    bidAvail with { Enabled = false, DisabledReason = "Du saknar behörighet till anbudsjämförelse." };
+            }
+
+            _availability = availabilityMap;
+
             // Om vald flik inte är tillgänglig: välj första tillgängliga rapportflik.
-            _activeView = IsViewEnabled(InitialView) ? InitialView : availability.First(a => a.Enabled).View;
+            _activeView = IsViewEnabled(InitialView) ? InitialView : availability.First(a => IsViewEnabled(a.View)).View;
         }
         else
         {
@@ -1668,7 +1731,12 @@
         BidReportColumn.Organisation => r.Project?.Organisation ?? "",
         BidReportColumn.Developer => r.Project?.Developer ?? "",
         BidReportColumn.TenderDeadline => r.Project is null ? "" : FormatDate(r.Project.TenderDeadline),
-        BidReportColumn.EvaluationModel => r.Row.EvaluationModel == BidEvaluationModel.HighestPoints ? "Högsta poäng" : "Lägsta jämförelsesumma",
+        BidReportColumn.EvaluationModel => r.Row.EvaluationModel switch
+        {
+            BidEvaluationModel.HighestPoints => "Högsta poäng",
+            BidEvaluationModel.LowestTotalCost => "Lägsta total kostnad",
+            _ => "Lägsta jämförelsesumma"
+        },
         BidReportColumn.TotalPoints => r.Row.TotalPoints.HasValue ? r.Row.TotalPoints.Value.ToString("0.##") : "-",
         BidReportColumn.Note => r.Row.Note ?? "",
         BidReportColumn.CreatedAt => r.Row.CreatedAt == default ? "" : r.Row.CreatedAt.ToString("yyyy-MM-dd"),
@@ -1906,6 +1974,10 @@
             if (string.IsNullOrEmpty(_selectedSubType) && incl.Select(r => r.SubType).Distinct().Count() > 1)
                 foreach (var sg in incl.GroupBy(r => r.SubType).OrderBy(g => g.Key))
                     result.Add(new IncomeTableRow { Kind = IncomeTableRowKind.SubTypeTotal, SummaryLabel = $"Summa {SubTypeLabel(sg.Key)}", Q1 = sg.Sum(r => r.Q1), Q2 = sg.Sum(r => r.Q2), Q3 = sg.Sum(r => r.Q3), Q4 = sg.Sum(r => r.Q4), Amount = sg.Sum(r => r.Amount), Forecast = sg.Sum(r => r.Forecast) });
+
+            if (incl.Select(r => r.Year).Distinct().Count() > 1)
+                foreach (var yg in incl.GroupBy(r => r.Year).OrderBy(g => g.Key))
+                    result.Add(new IncomeTableRow { Kind = IncomeTableRowKind.YearTotal, SummaryLabel = $"Summa {yg.Key}", Year = yg.Key, Q1 = yg.Sum(r => r.Q1), Q2 = yg.Sum(r => r.Q2), Q3 = yg.Sum(r => r.Q3), Q4 = yg.Sum(r => r.Q4), Amount = yg.Sum(r => r.Amount), Forecast = yg.Sum(r => r.Forecast) });
         }
         return result;
     }
@@ -1914,6 +1986,7 @@
     {
         IncomeTableRowKind.GrandTotal => "border-t-2 border-slate-400 bg-white font-bold text-slate-900 dark:border-slate-500 dark:bg-slate-950 dark:text-slate-100",
         IncomeTableRowKind.SubTypeTotal => "bg-slate-50 text-xs italic text-slate-500 dark:bg-slate-900/40 dark:text-slate-400",
+        IncomeTableRowKind.YearTotal => "bg-sky-50/60 text-xs font-semibold text-sky-800 dark:bg-sky-950/25 dark:text-sky-200",
         _ => "bg-slate-50 font-semibold italic text-slate-600 dark:bg-slate-900/60 dark:text-slate-300"
     };
 
@@ -2301,6 +2374,7 @@
         ProjReportColumn.Organisation => "Beställare",
         ProjReportColumn.ProcurementName => "Upphandlingsform",
         ProjReportColumn.Archived => "Arkiverad",
+        ProjReportColumn.Shared => "Delat",
         ProjReportColumn.ProcurementProcedure => "Upphandlingsförfarande",
         ProjReportColumn.Compensation => "Ersättningsform",
         ProjReportColumn.ProcurementNumber => "Upphandlingsnummer",
@@ -2338,6 +2412,7 @@
         ProjReportColumn.Organisation => e.Project.Organisation,
         ProjReportColumn.ProcurementName => e.Project.ProcurementName,
         ProjReportColumn.Archived => !e.Project.IsArchived ? "" : L("archived"),
+        ProjReportColumn.Shared => e.Project.IsShared ? "Ja" : "Nej",
         ProjReportColumn.ProcurementProcedure => e.Project.ProcurementProcedure,
         ProjReportColumn.Compensation => e.Project.Compensation,
         ProjReportColumn.ProcurementNumber => e.Project.ProcurementNumber,
@@ -2502,14 +2577,32 @@
             new("Rapportfilter:", [BuildIncomeReportFilterLine()])
         };
         var included = IncludedFilteredIncomeRows.ToList();
+        var exportRows = BuildIncomeExportRowsDynamic(cols).ToList();
+        var sourceRows = BuildIncomeTableRows()
+            .Where(r => r.Kind != IncomeTableRowKind.Data || !_excludedRowKeys.Contains(r.RowKey)).ToList();
+        var dataIndexes = sourceRows.Select((row, index) => (row, index))
+            .Where(x => x.row.Kind == IncomeTableRowKind.Data).Select(x => x.index).ToList();
+        var exportIndexes = new Dictionary<IncomeReportColumn, int>();
+        var exportIndex = 0;
+        foreach (var col in cols)
+        {
+            exportIndexes[col] = exportIndex++;
+            if (col == IncomeReportColumn.Year && _showQuarters) exportIndex += 4;
+        }
+        string? IncomeSumFormula(IncomeReportColumn col) =>
+            dataIndexes.Count > 0 && exportIndexes.TryGetValue(col, out var ci)
+                ? $"SUM({ExcelRange(ci, dataIndexes[0], dataIndexes[^1])})"
+                : null;
         var kpis = new List<ReportExportKpi>
         {
-            new(L("revenue"), FormatMoney(included.Sum(r => r.Amount))),
-            new(L("forecast"), FormatMoney(included.Sum(r => r.Forecast))),
+            new(L("revenue"), included.Sum(r => r.Amount), IncomeSumFormula(IncomeReportColumn.Amount), "money"),
+            new(L("forecast"), included.Sum(r => r.Forecast), IncomeSumFormula(IncomeReportColumn.Forecast), "money"),
             new("Projekt", included.Select(r => r.Entry.Project.Id).Distinct().Count().ToString()),
-            new("Kalkyler", included.Select(r => r.Entry.Calculation.Id).Distinct().Count().ToString())
+            // The grouped export contains project header rows between calculations;
+            // keep this distinct count static rather than emitting an unsafe COUNTA formula.
+            new("Kalkyler", included.Select(r => r.Entry.Calculation.Id).Distinct().Count(), null, "integer")
         };
-        return new(L("incomeOverview"), headers.ToArray(), BuildIncomeExportRowsDynamic(cols), sections, kpis);
+        return new(L("incomeOverview"), headers.ToArray(), exportRows, sections, kpis);
     }
 
     private string BuildIncomeReportFilterLine()
@@ -2541,19 +2634,61 @@
 
     private IEnumerable<IEnumerable<object?>> BuildIncomeExportRowsDynamic(List<IncomeReportColumn> cols)
     {
-        foreach (var row in BuildIncomeTableRows())
+        var sourceRows = BuildIncomeTableRows()
+            .Where(r => r.Kind != IncomeTableRowKind.Data || !_excludedRowKeys.Contains(r.RowKey))
+            .ToList();
+        var dataIndexes = sourceRows.Select((row, index) => (row, index))
+            .Where(x => x.row.Kind == IncomeTableRowKind.Data).Select(x => x.index).ToList();
+        var firstData = dataIndexes.Count > 0 ? dataIndexes[0] : -1;
+        var lastData = dataIndexes.Count > 0 ? dataIndexes[^1] : -1;
+
+        var columnIndexes = new Dictionary<IncomeReportColumn, int>();
+        var quarterIndexes = new Dictionary<int, int>();
+        var exportColumn = 0;
+        foreach (var col in cols)
         {
-            // Excluded ("Ta med" unchecked) data rows are left out of the export.
-            if (row.Kind == IncomeTableRowKind.Data && _excludedRowKeys.Contains(row.RowKey))
-                continue;
+            columnIndexes[col] = exportColumn++;
+            if (col == IncomeReportColumn.Year && _showQuarters)
+                for (var quarter = 1; quarter <= 4; quarter++) quarterIndexes[quarter] = exportColumn++;
+        }
+
+        for (var rowIndex = 0; rowIndex < sourceRows.Count; rowIndex++)
+        {
+            var row = sourceRows[rowIndex];
             var cells = new List<object?>();
             if (row.Kind == IncomeTableRowKind.Data)
             {
                 foreach (var c in cols)
                 {
-                    cells.Add(GetIncomeDataCellValue(row, c));
+                    if (c == IncomeReportColumn.Amount)
+                    {
+                        var formula = quarterIndexes.Count == 4
+                            ? $"SUM({ExcelCell(quarterIndexes[1], rowIndex)}:{ExcelCell(quarterIndexes[4], rowIndex)})"
+                            : null;
+                        cells.Add(new ReportExcelCell(row.Amount, formula, "money"));
+                    }
+                    else if (c == IncomeReportColumn.Probability)
+                    {
+                        cells.Add(new ReportExcelCell(row.Probability / 100m, null, "percent"));
+                    }
+                    else if (c == IncomeReportColumn.Forecast &&
+                             columnIndexes.TryGetValue(IncomeReportColumn.Amount, out var amountCol) &&
+                             columnIndexes.TryGetValue(IncomeReportColumn.Probability, out var probabilityCol))
+                    {
+                        cells.Add(new ReportExcelCell(row.Forecast,
+                            $"{ExcelCell(amountCol, rowIndex)}*{ExcelCell(probabilityCol, rowIndex)}", "money"));
+                    }
+                    else
+                    {
+                        cells.Add(GetIncomeDataCellValue(row, c));
+                    }
                     if (c == IncomeReportColumn.Year && _showQuarters)
-                    { cells.Add(row.Q1); cells.Add(row.Q2); cells.Add(row.Q3); cells.Add(row.Q4); }
+                    {
+                        cells.Add(new ReportExcelCell(row.Q1, null, "money"));
+                        cells.Add(new ReportExcelCell(row.Q2, null, "money"));
+                        cells.Add(new ReportExcelCell(row.Q3, null, "money"));
+                        cells.Add(new ReportExcelCell(row.Q4, null, "money"));
+                    }
                 }
             }
             else if (row.Kind == IncomeTableRowKind.ProjectHeader)
@@ -2578,35 +2713,100 @@
                 foreach (var c in cols)
                 {
                     if (first) { cells.Add(row.SummaryLabel); first = false; }
-                    else if (c == IncomeReportColumn.Amount) cells.Add(row.Amount);
-                    else if (c == IncomeReportColumn.Forecast) cells.Add(row.Forecast);
+                    else if (c == IncomeReportColumn.Amount)
+                        cells.Add(BuildIncomeSummaryFormulaCell(row, c, row.Amount, columnIndexes, firstData, lastData));
+                    else if (c == IncomeReportColumn.Forecast)
+                        cells.Add(BuildIncomeSummaryFormulaCell(row, c, row.Forecast, columnIndexes, firstData, lastData));
                     else cells.Add("");
                     if (c == IncomeReportColumn.Year && _showQuarters)
-                    { cells.Add(row.Q1); cells.Add(row.Q2); cells.Add(row.Q3); cells.Add(row.Q4); }
+                    {
+                        cells.Add(BuildIncomeSummaryFormulaCell(row, null, row.Q1, columnIndexes, firstData, lastData, quarterIndexes.GetValueOrDefault(1)));
+                        cells.Add(BuildIncomeSummaryFormulaCell(row, null, row.Q2, columnIndexes, firstData, lastData, quarterIndexes.GetValueOrDefault(2)));
+                        cells.Add(BuildIncomeSummaryFormulaCell(row, null, row.Q3, columnIndexes, firstData, lastData, quarterIndexes.GetValueOrDefault(3)));
+                        cells.Add(BuildIncomeSummaryFormulaCell(row, null, row.Q4, columnIndexes, firstData, lastData, quarterIndexes.GetValueOrDefault(4)));
+                    }
                 }
             }
             yield return cells;
         }
     }
 
+    private static ReportExcelCell BuildIncomeSummaryFormulaCell(
+        IncomeTableRow row,
+        IncomeReportColumn? valueColumn,
+        decimal value,
+        IReadOnlyDictionary<IncomeReportColumn, int> columns,
+        int firstData,
+        int lastData,
+        int? explicitValueColumn = null)
+    {
+        if (firstData < 0 || lastData < firstData)
+            return new(value, null, "money");
+
+        var valueIndex = explicitValueColumn ?? (valueColumn.HasValue && columns.TryGetValue(valueColumn.Value, out var ci) ? ci : -1);
+        if (valueIndex < 0)
+            return new(value, null, "money");
+
+        var valueRange = ExcelRange(valueIndex, firstData, lastData);
+        string? formula = row.Kind switch
+        {
+            IncomeTableRowKind.GrandTotal => $"SUM({valueRange})",
+            IncomeTableRowKind.SubTypeTotal when columns.TryGetValue(IncomeReportColumn.SubType, out var subtypeIndex) =>
+                $"SUMIF({ExcelRange(subtypeIndex, firstData, lastData)},\"{ExcelFormulaText(row.SummaryLabel.Replace("Summa ", ""))}\",{valueRange})",
+            IncomeTableRowKind.YearTotal when columns.TryGetValue(IncomeReportColumn.Year, out var yearIndex) =>
+                $"SUMIF({ExcelRange(yearIndex, firstData, lastData)},{row.Year},{valueRange})",
+            _ => null
+        };
+        return new(value, formula, "money");
+    }
+
+    private static string ExcelCell(int zeroBasedColumn, int exportRowIndex) =>
+        $"{ExcelColumnName(zeroBasedColumn)}{{row:{exportRowIndex}}}";
+
+    private static string ExcelRange(int zeroBasedColumn, int firstExportRow, int lastExportRow) =>
+        $"{ExcelCell(zeroBasedColumn, firstExportRow)}:{ExcelCell(zeroBasedColumn, lastExportRow)}";
+
+    private static string ExcelColumnName(int zeroBasedColumn)
+    {
+        var value = zeroBasedColumn + 1;
+        var name = string.Empty;
+        while (value > 0)
+        {
+            value--;
+            name = (char)('A' + value % 26) + name;
+            value /= 26;
+        }
+        return name;
+    }
+
+    private static string ExcelFormulaText(string value) => value.Replace("\"", "\"\"");
+
     private ExportModel BuildHitRateExport()
     {
         var dataCols = HitRateAllColumns.Where(c => c != HitRateReportColumn.RowNumber && _visibleHitRateColumns.Contains(c)).ToList();
-        string[] headers = dataCols.Select(GetHitRateColumnLabel).ToArray();
+        string[] headers = [.. dataCols.Select(GetHitRateColumnLabel), "Utfall"];
         var sections = new List<ReportExportSection>
         {
             new("Projekturval:", [_hitRateSelectionLine, _hitRateSelectionFilters, ExportIncludeNote]),
             new("Beräkning:", [HitRateBasisLine])
         };
+        var included = HitRateTableProjects.Where(e => RowIncluded(HitRateRowKey(e))).ToList();
+        var outcomeColumn = dataCols.Count;
+        var outcomeRange = included.Count > 0 ? ExcelRange(outcomeColumn, 0, included.Count - 1) : null;
+        var wonLabel = HitRateResultLabel(BidHitRateResult.Won);
+        var lostLabel = HitRateResultLabel(BidHitRateResult.Lost);
+        var wonFormula = outcomeRange is null ? null : $"COUNTIF({outcomeRange},\"{ExcelFormulaText(wonLabel)}\")";
+        var lostFormula = outcomeRange is null ? null : $"COUNTIF({outcomeRange},\"{ExcelFormulaText(lostLabel)}\")";
         var kpis = new List<ReportExportKpi>
         {
-            new("Vunna", WonCount.ToString()),
-            new("Förlorade", LostCount.ToString()),
-            new("Hit rate / träffsäkerhet", HitRateDisplay)
+            new("Vunna", WonCount, wonFormula, "integer"),
+            new("Förlorade", LostCount, lostFormula, "integer"),
+            new("Hit rate / träffsäkerhet", DecidedCount == 0 ? null : HitRate / 100m,
+                wonFormula is null ? null : $"IFERROR(({wonFormula})/(({wonFormula})+({lostFormula})),\"\")", "percent")
         };
-        var rows = HitRateTableProjects
-            .Where(e => RowIncluded(HitRateRowKey(e)))
-            .Select(e => dataCols.Select(c => (object?)GetHitRateCellValue(e, c)));
+        var rows = included.Select(e =>
+            dataCols.Select(c => (object?)GetHitRateCellValue(e, c))
+                .Append(HitRateResultLabel(e.Result)));
         return new(L("hitRate"), headers, rows, sections, kpis);
     }
 
@@ -2618,9 +2818,17 @@
         {
             new("Kalkylurval:", [_calcReportSelectionLine, _calcReportSelectionFilters, ExportIncludeNote])
         };
-        var rows = IncludedCalcReportList
+        var data = IncludedCalcReportList;
+        var rows = data
             .Select(e => cols.Select(c => (object?)GetCalcCellValue(e, c)));
-        return new(L("calculationListReport"), headers, rows, sections, null);
+        var kpis = new List<ReportExportKpi>();
+        if (cols.IndexOf(CalcReportColumn.Calculation) is var nameIndex and >= 0)
+            kpis.Add(new("Antal kalkyler", data.Count, data.Count == 0 ? null : $"COUNTA({ExcelRange(nameIndex, 0, data.Count - 1)})", "integer"));
+        if (cols.IndexOf(CalcReportColumn.Archived) is var archivedIndex and >= 0)
+            kpis.Add(new("Antal arkiverade", data.Count(e => e.Calculation.IsArchived), data.Count == 0 ? null : $"COUNTIF({ExcelRange(archivedIndex, 0, data.Count - 1)},\"{ExcelFormulaText(L("archived"))}\")", "integer"));
+        if (cols.IndexOf(CalcReportColumn.Private) is var privateIndex and >= 0)
+            kpis.Add(new("Antal privata", data.Count(e => e.Calculation.IsPrivate), data.Count == 0 ? null : $"COUNTIF({ExcelRange(privateIndex, 0, data.Count - 1)},\"Privat\")", "integer"));
+        return new(L("calculationListReport"), headers, rows, sections, kpis);
     }
 
     private ExportModel BuildProjExport()
@@ -2631,9 +2839,17 @@
         {
             new("Projekturval:", [_projReportSelectionLine, _projReportSelectionFilters, ExportIncludeNote])
         };
-        var rows = IncludedProjReportProjects
+        var data = IncludedProjReportProjects;
+        var rows = data
             .Select(e => cols.Select(c => (object?)GetProjCellValue(e, c)));
-        return new(L("projectListReport"), headers, rows, sections, null);
+        var kpis = new List<ReportExportKpi>();
+        if (cols.IndexOf(ProjReportColumn.Project) is var nameIndex and >= 0)
+            kpis.Add(new("Antal projekt", data.Count, data.Count == 0 ? null : $"COUNTA({ExcelRange(nameIndex, 0, data.Count - 1)})", "integer"));
+        if (cols.IndexOf(ProjReportColumn.Archived) is var archivedIndex and >= 0)
+            kpis.Add(new("Antal arkiverade", data.Count(e => e.Project.IsArchived), data.Count == 0 ? null : $"COUNTIF({ExcelRange(archivedIndex, 0, data.Count - 1)},\"{ExcelFormulaText(L("archived"))}\")", "integer"));
+        if (cols.IndexOf(ProjReportColumn.Shared) is var sharedIndex and >= 0)
+            kpis.Add(new("Antal delade", data.Count(e => e.Project.IsShared), data.Count == 0 ? null : $"COUNTIF({ExcelRange(sharedIndex, 0, data.Count - 1)},\"Ja\")", "integer"));
+        return new(L("projectListReport"), headers, rows, sections, kpis);
     }
 
     private ExportModel BuildBidExport()
@@ -2647,14 +2863,43 @@
             new("Projekturval:", [_bidReportSelectionLine, _bidReportSelectionFilters, ExportIncludeNote]),
             new("Anbudsfilter:", [BuildBidReportFilterLine()])
         };
+        var projectIndex = cols.IndexOf(BidReportColumn.Project);
+        var bidderIndex = cols.IndexOf(BidReportColumn.Bidder);
+        var awardedIndex = cols.IndexOf(BidReportColumn.Awarded);
+        var rejectedIndex = cols.IndexOf(BidReportColumn.Rejected);
+        var amountIndex = cols.IndexOf(BidReportColumn.Amount);
+        var deductionIndex = cols.IndexOf(BidReportColumn.Deduction);
+        var comparisonIndex = cols.IndexOf(BidReportColumn.Comparison);
+        var deviationIndex = cols.IndexOf(BidReportColumn.Deviation);
         var kpis = new List<ReportExportKpi>
         {
             new("Projekt med anbud", BidProjectsWithBids.ToString()),
-            new("Antal anbud", BidCount.ToString()),
+            new("Antal anbud", BidCount, bidderIndex < 0 || data.Count == 0 ? null : $"COUNTA({ExcelRange(bidderIndex, 0, data.Count - 1)})", "integer"),
             new("Antal anbudsgivare", BidderCount.ToString()),
-            new("Tilldelade anbud", AwardedCount.ToString())
+            new("Tilldelade anbud", AwardedCount, awardedIndex < 0 || data.Count == 0 ? null : $"COUNTIF({ExcelRange(awardedIndex, 0, data.Count - 1)},\"Ja\")", "integer"),
+            new("Förkastade anbud", data.Count(r => r.Row.Status == BidStatus.Rejected), rejectedIndex < 0 || data.Count == 0 ? null : $"COUNTIF({ExcelRange(rejectedIndex, 0, data.Count - 1)},\"Ja\")", "integer")
         };
-        var exportRows = data.Select(r => cols.Select(c => (object?)GetBidCellValue(r, c)));
+        var exportRows = data.Select((r, rowIndex) => cols.Select(c =>
+        {
+            if (c == BidReportColumn.Deduction)
+                return (object?)new ReportExcelCell((r.Row.DeductionPercent ?? 0) / 100m, null, "percent");
+            if (c == BidReportColumn.Amount)
+                return new ReportExcelCell(r.Row.Amount, null, "money");
+            if (c == BidReportColumn.Comparison && amountIndex >= 0 && deductionIndex >= 0)
+                return new ReportExcelCell(r.Row.ComparisonAmount,
+                    $"{ExcelCell(amountIndex, rowIndex)}*(1-{ExcelCell(deductionIndex, rowIndex)})", "money");
+            if (c == BidReportColumn.Deviation && comparisonIndex >= 0 && projectIndex >= 0 && data.Count > 0)
+            {
+                var comparisonRange = ExcelRange(comparisonIndex, 0, data.Count - 1);
+                var projectRange = ExcelRange(projectIndex, 0, data.Count - 1);
+                var best = HasOwnCompany && bidderIndex >= 0
+                    ? $"MINIFS({comparisonRange},{projectRange},{ExcelCell(projectIndex, rowIndex)},{ExcelRange(bidderIndex, 0, data.Count - 1)},\"{ExcelFormulaText(_ownCompanyName)}\")"
+                    : $"MINIFS({comparisonRange},{projectRange},{ExcelCell(projectIndex, rowIndex)})";
+                return new ReportExcelCell(BidDeviationValue(r) / 100m,
+                    $"IFERROR(({ExcelCell(comparisonIndex, rowIndex)}-{best})/{best},\"\")", "percent");
+            }
+            return (object?)GetBidCellValue(r, c);
+        }));
         return new("Anbudsjämförelse", headers, exportRows, sections, kpis);
     }
 

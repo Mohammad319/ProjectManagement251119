@@ -1,5 +1,8 @@
 ﻿using Application.Feature.Calculation.Calculation.Commands;
 using Application.Feature.Calculation.Calculation.Queries;
+using Application.Feature.Calculation.ProductionNote.Commands;
+using Application.Feature.Transfer.Commands;
+using ProjectManagement.Shared.DTO.Transfer;
 using Application.Feature.Project.Type.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -107,6 +110,15 @@ namespace ProjectManagement.Server.Controllers.v1.Project
         {
             return Ok(await MicroBus.Send(new GetCalculationPostQuery(id, GetUserId(), GetDepartmentId(), IsViewer())));
         }
+
+        // Save a per-row production note. Allowed for Viewer (Visare) and even on a locked
+        // calculation; access (incl. the private-calc rule) is enforced in the service.
+        [Authorize(Roles = Tenant.UsersAndViewer)]
+        [HttpPut("productionnote")]
+        public async Task<IActionResult> SaveProductionNote([FromBody] ProductionNoteSaveDTO dto)
+        {
+            return Ok(await MicroBus.Send(new SaveProductionNoteCommand(dto, GetUserId(), GetDepartmentId(), IsViewer())));
+        }
         [Authorize(Roles = Tenant.AdminManger)]
         [HttpPost(URLConst.Calculation.Create + "/{ProjectId}")]
         public async Task<IActionResult> Post(Guid ProjectId, CalculationPostDTO Dto)
@@ -158,6 +170,31 @@ namespace ProjectManagement.Server.Controllers.v1.Project
         public async Task<IActionResult> UpdateDisplayPresets(int id, DisplayOptionsPresetStore store)
         {
             return Ok(await MicroBus.Send(new UpdateDisplayPresetsCommand(store, id, GetDepartmentId())));
+        }
+
+        // ─────────── External calculation copy (ATACOST package) ───────────
+
+        /// <summary>Creates a calculation copy (.atacost). Private calculations cannot be exported externally.</summary>
+        [Authorize(Roles = Tenant.Users)]
+        [HttpPost(URLConst.Calculation.ExportCopy + "/{calcId}")]
+        public async Task<IActionResult> ExportCopy(int calcId, [FromBody] AtacostCalculationExportRequest request)
+        {
+            var bytes = await MicroBus.Send(new BuildCalculationPackageCommand(
+                calcId, request ?? new(), GetUserId(), GetDepartmentId(), IsViewer()));
+
+            if (bytes is null)
+                return Forbid();
+
+            return Ok(bytes);
+        }
+
+        /// <summary>Imports a calculation copy into a target project and always creates a new calculation.</summary>
+        [Authorize(Roles = Tenant.AdminManger)]
+        [HttpPost(URLConst.Calculation.ImportCopy + "/{targetProjectId}")]
+        public async Task<IActionResult> ImportCopy(Guid targetProjectId, [FromBody] byte[] fileBytes)
+        {
+            return Ok(await MicroBus.Send(new ImportCalculationPackageCommand(
+                fileBytes, targetProjectId, GetUserId(), GetDepartmentId(), CanUseTargetDepartmentAccessAcrossDepartments())));
         }
 
         private bool CanUseTargetDepartmentAccessAcrossDepartments() =>

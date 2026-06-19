@@ -219,6 +219,9 @@
   <data name="note" xml:space="preserve">
     <value>Anteckning</value>
   </data>
+  <data name="productionNote" xml:space="preserve">
+    <value>Prod. anteckning</value>
+  </data>
   <data name="opportunity" xml:space="preserve">
     <value>Möjlighet</value>
   </data>

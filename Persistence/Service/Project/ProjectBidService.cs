@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Persistence.Factory;
 using ProjectManagement.Shared.DTO.Project;
 using ProjectManagement.Shared.Enums;
+using ProjectManagement.Shared.Helper;
 using System.Text.Json;
 
 namespace Persistence.Service.Project
@@ -69,7 +70,7 @@ namespace Persistence.Service.Project
             var isPointsModel = evaluationModel == BidEvaluationModel.HighestPoints;
             var hasColumns = columns.Count > 0;
 
-            return new ProjectBidsViewDTO
+            var result = new ProjectBidsViewDTO
             {
                 EvaluationModel = evaluationModel,
                 PriceColumns = columns,
@@ -91,7 +92,8 @@ namespace Persistence.Service.Project
                         DeductionPercent = x.DeductionPercent,
                         Note = x.Note,
                         IsAwarded = x.IsAwarded,
-                        Placement = x.Placement,
+                        ManualPlacement = x.Placement,
+                        IsPlacementManuallyOverridden = x.Placement.HasValue,
                         Status = x.Status,
                         RejectionReason = x.RejectionReason,
                         TotalPoints = isPointsModel ? (hasParts ? partsSum : x.Amount) : null,
@@ -99,6 +101,9 @@ namespace Persistence.Service.Project
                     };
                 }).ToList()
             };
+
+            ProjectBidPlacementCalculator.Apply(result.Bids, evaluationModel);
+            return result;
         }
 
         public async Task<List<ProjectBidComparisonRowDTO>> GetComparisonAsync(
@@ -160,7 +165,7 @@ namespace Persistence.Service.Project
                 })
                 .ToListAsync(ct);
 
-            return bids.Select(x =>
+            var result = bids.Select(x =>
             {
                 var model = modelByProject.TryGetValue(x.ProjectId, out var m) ? m : BidEvaluationModel.LowestComparison;
                 var isPointsModel = model == BidEvaluationModel.HighestPoints;
@@ -187,7 +192,8 @@ namespace Persistence.Service.Project
                     ComparisonAmount = comparison,
                     TotalPoints = totalPoints,
                     IsAwarded = x.IsAwarded,
-                    Placement = x.Placement,
+                    ManualPlacement = x.Placement,
+                    IsPlacementManuallyOverridden = x.Placement.HasValue,
                     Status = x.Status,
                     RejectionReason = x.RejectionReason,
                     Note = x.Note,
@@ -196,6 +202,9 @@ namespace Persistence.Service.Project
                     UpdatedAt = x.UpdatedAt
                 };
             }).ToList();
+
+            ProjectBidPlacementCalculator.Apply(result);
+            return result;
         }
 
         public async Task<int> CreateAsync(
@@ -235,6 +244,7 @@ namespace Persistence.Service.Project
             bid.SetDeductionPercent(NormalizeDeduction(dto.DeductionPercent));
             bid.SetStatus(status, rejectionReason);
             bid.SetAwarded(isAwarded && status == BidStatus.Valid, placement);
+            bid.SetManualPlacement(placement);
 
             context.ProjectBids.Add(bid);
             await context.SaveChangesAsync(ct);
@@ -268,6 +278,7 @@ namespace Persistence.Service.Project
             bid.SetPrices(pricesJson, amount);
             bid.SetDeductionPercent(NormalizeDeduction(dto.DeductionPercent));
             bid.SetStatus(status, rejectionReason);
+            bid.SetManualPlacement(placement);
 
             await context.SaveChangesAsync(ct);
             return true;
@@ -493,21 +504,24 @@ namespace Persistence.Service.Project
                 return false;
             if (dto.DeductionPercent is < 0 or > 100)
                 return false;
-            if (dto.Placement is < 1)
+            if (dto.IsPlacementManuallyOverridden == true && dto.Placement is not > 0)
+                return false;
+            if (dto.IsPlacementManuallyOverridden is null && dto.Placement is < 1)
                 return false;
             return true;
         }
 
         /// <summary>
-        /// Förkastade anbud kan inte vara tilldelade. Tilldelning kräver giltigt anbud
-        /// och placering behålls bara för tilldelade anbud.
+        /// Förkastade anbud kan inte vara tilldelade. Placering är separat från tilldelning.
         /// </summary>
         private static (bool IsAwarded, int? Placement, BidStatus Status, string? RejectionReason) NormalizeAward(ProjectBidPostDTO dto)
         {
             var status = dto.Status;
             var rejectionReason = status == BidStatus.Rejected ? dto.RejectionReason : null;
             var isAwarded = dto.IsAwarded && status == BidStatus.Valid;
-            var placement = isAwarded && dto.Placement is > 0 ? dto.Placement : null;
+            var placement = status == BidStatus.Rejected || dto.IsPlacementManuallyOverridden == false
+                ? null
+                : dto.Placement is > 0 ? dto.Placement : null;
             return (isAwarded, placement, status, rejectionReason);
         }
 

@@ -4,6 +4,7 @@ using ProjectManagement.Client.Shared.MVVM.Folder;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.General;
 using ProjectManagement.Shared.DTO.Project;
+using ProjectManagement.Shared.DTO.Transfer;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -70,6 +71,24 @@ namespace ProjectManagement.Client.Shared.Repositories.Project.Implement
         public async Task<bool> DeleteAsync(Guid id)
         {
             return await _httpRepository.DeleteAsync(ProjectsURLBase + id.ToString());
+        }
+
+        public async Task<byte[]> ExportCopyAsync(Guid projectId, AtacostProjectExportRequest request)
+        {
+            return await _httpRepository.PostAsync<byte[], AtacostProjectExportRequest>(
+                request, ProjectsURLBase + URLConst.Project.ExportCopy + "/" + projectId);
+        }
+
+        public async Task<AtacostPackageInfoDTO> InspectCopyAsync(byte[] fileBytes)
+        {
+            return await _httpRepository.PostAsync<AtacostPackageInfoDTO, byte[]>(
+                fileBytes, ProjectsURLBase + URLConst.Project.InspectCopy);
+        }
+
+        public async Task<Guid> ImportCopyAsync(Guid targetFolderId, byte[] fileBytes)
+        {
+            return await _httpRepository.PostAsync<Guid, byte[]>(
+                fileBytes, ProjectsURLBase + URLConst.Project.ImportCopy + "/" + targetFolderId);
         }
     }
 }

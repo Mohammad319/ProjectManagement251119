@@ -170,6 +170,8 @@ public ResourceTypesEnum ResType { get; set; }
         public int? ResourceTypeId { get; set; }
         public string ResName { get; set; } = string.Empty;
         public string Sort { get; set; } = string.Empty;
+        // Production note – a standalone scalar field (not in Data/Metadata), does not affect economy.
+        public string? ProductionNote { get; set; }
         public List<ListOfferDTO> Offers { get; set; } = [];
     }
 }

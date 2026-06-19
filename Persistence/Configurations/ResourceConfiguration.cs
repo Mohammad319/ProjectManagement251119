@@ -113,6 +113,11 @@ internal sealed class ResourceConfiguration : IEntityTypeConfiguration<ResourceE
                 CalculationMetadataComputedColumns.JsonString(nameof(ResourceEntity.Note), FieldLengths.Comment),
                 stored: true);
 
+        // Production note – a standalone scalar column (not computed), can be updated in isolation
+        // without touching the economic metadata or its history.
+        builder.Property(x => x.ProductionNote)
+            .HasMaxLength(FieldLengths.Comment);
+
         builder.Property(x => x.Unit)
             .HasMaxLength(FieldLengths.Unit);
 
@@ -194,6 +199,10 @@ internal sealed class TaskConfiguration : IEntityTypeConfiguration<TaskEntity>
             .HasComputedColumnSql(
                 CalculationMetadataComputedColumns.JsonString(nameof(TaskEntity.Note), FieldLengths.Comment),
                 stored: true);
+
+        // Production note – a standalone scalar column (not computed), can be updated in isolation.
+        builder.Property(x => x.ProductionNote)
+            .HasMaxLength(FieldLengths.Comment);
 
         builder.Property(x => x.Unit)
             .HasMaxLength(FieldLengths.Unit);

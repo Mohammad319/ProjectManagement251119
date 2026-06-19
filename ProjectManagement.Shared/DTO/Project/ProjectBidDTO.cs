@@ -24,8 +24,14 @@ namespace ProjectManagement.Shared.DTO.Project
         /// <summary>Tilldelad. Flera anbudsgivare kan vara tilldelade (ramavtal).</summary>
         public bool IsAwarded { get; set; }
 
-        /// <summary>Placering för tilldelade anbudsgivare (positivt heltal).</summary>
+        /// <summary>Slutlig placering. Används som manuell placering när överskrivning är aktiv.</summary>
         public int? Placement { get; set; }
+
+        /// <summary>
+        /// Null ger bakåtkompatibilitet med äldre klienter (angiven placering tolkas manuellt).
+        /// False återställer automatisk placering.
+        /// </summary>
+        public bool? IsPlacementManuallyOverridden { get; set; }
 
         /// <summary>Anbudsstatus: Giltigt eller Förkastat.</summary>
         public BidStatus Status { get; set; } = BidStatus.Valid;
@@ -53,8 +59,12 @@ namespace ProjectManagement.Shared.DTO.Project
         /// <summary>Tilldelad.</summary>
         public bool IsAwarded { get; set; }
 
-        /// <summary>Placering för tilldelade anbudsgivare.</summary>
+        /// <summary>Slutlig placering som visas i UI och export.</summary>
         public int? Placement { get; set; }
+
+        public int? AutoPlacement { get; set; }
+        public int? ManualPlacement { get; set; }
+        public bool IsPlacementManuallyOverridden { get; set; }
 
         /// <summary>Anbudsstatus: Giltigt eller Förkastat.</summary>
         public BidStatus Status { get; set; } = BidStatus.Valid;
@@ -125,6 +135,9 @@ namespace ProjectManagement.Shared.DTO.Project
 
         public bool IsAwarded { get; set; }
         public int? Placement { get; set; }
+        public int? AutoPlacement { get; set; }
+        public int? ManualPlacement { get; set; }
+        public bool IsPlacementManuallyOverridden { get; set; }
         public BidStatus Status { get; set; } = BidStatus.Valid;
         public string? RejectionReason { get; set; }
         public string? Note { get; set; }

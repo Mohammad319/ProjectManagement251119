@@ -1,0 +1,149 @@
+@using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Shared.DTO.Transfer
+@using ProjectManagement.Shared.Helper
+@using Microsoft.AspNetCore.Authorization
+@inherits AppComponentBase
+@attribute [Authorize(Roles = PMRolesConst.Tenant.Users)]
+@inject IJSRuntime JS
+
+<div class="space-y-4 text-slate-800 dark:text-slate-100">
+
+    <div class="text-sm text-slate-600 dark:text-slate-300">
+        <span class="font-semibold text-slate-800 dark:text-slate-100">Projekt:</span> @ProjectName
+    </div>
+
+    @* ── Select calculations to include ───────────────────────── *@
+    <div>
+        <div class="mb-1 flex items-center justify-between">
+            <label class="text-xs font-medium text-slate-600 dark:text-slate-300">Välj kalkyler som ska ingå i kopian</label>
+            <button type="button"
+                    class="text-[11px] font-semibold text-sky-700 hover:text-sky-900 disabled:opacity-40 dark:text-sky-300"
+                    disabled="@(!_calcs.Any(c => !c.IsPrivate))"
+                    @onclick="SelectAllShareable">Välj alla delbara</button>
+        </div>
+
+        @if (_calcs.Count == 0)
+        {
+            <p class="rounded border border-dashed border-slate-300 px-2 py-3 text-center text-xs text-slate-400 dark:border-slate-700">
+                Det finns inga kalkyler i projektet.
+            </p>
+        }
+        else
+        {
+            <div class="max-h-56 space-y-1 overflow-y-auto rounded border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-950">
+                @foreach (var c in _calcs)
+                {
+                    var calc = c;
+                    <label class="flex items-center gap-2 rounded px-1.5 py-1 text-sm @(calc.IsPrivate ? "opacity-60" : "hover:bg-slate-50 dark:hover:bg-slate-800")">
+                        <input type="checkbox"
+                               class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 disabled:cursor-not-allowed dark:border-slate-600 dark:bg-slate-800"
+                               checked="@_selectedCalcIds.Contains(calc.Id)"
+                               disabled="@calc.IsPrivate"
+                               @onchange="e => ToggleCalc(calc.Id, e.Value is bool b && b)" />
+                        <span class="font-mono text-[11px] text-slate-400">V.@(calc.VersionNumber.ToString("D2"))</span>
+                        <span class="min-w-0 flex-1 truncate text-slate-700 dark:text-slate-200">@calc.Name</span>
+                        @if (calc.IsPrivate)
+                        {
+                            <span class="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">Privat</span>
+                        }
+                    </label>
+                }
+            </div>
+        }
+    </div>
+
+    @* ── Message to the recipient ─────────────────────────────── *@
+    <div>
+        <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Meddelande till mottagare</label>
+        <textarea rows="3"
+                  class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
+                  placeholder="Skriv ett meddelande som följer med projektkopian..."
+                  @bind="_message"></textarea>
+    </div>
+
+    <div class="flex items-center justify-end gap-2">
+        <button type="button"
+                class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                @onclick="Modal.CloseAsync">Avbryt</button>
+        <button type="button"
+                class="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
+                disabled="@(_selectedCalcIds.Count == 0 || _busy)"
+                @onclick="DownloadAsync">
+            Ladda ner projektkopia
+        </button>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public Guid ProjectId { get; set; }
+    [Parameter] public string ProjectName { get; set; } = string.Empty;
+
+    private List<ListCalculationMVVM> _calcs = [];
+    private readonly HashSet<int> _selectedCalcIds = [];
+    private string _message = string.Empty;
+    private bool _busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var all = await Repo.Calculation.GetAsync(ProjectId) ?? [];
+        _calcs = CalculationVersionSelector.SelectCurrentVersions(all)
+            .OrderByDescending(c => c.Order)
+            .ToList();
+    }
+
+    private void ToggleCalc(int id, bool on)
+    {
+        if (on) _selectedCalcIds.Add(id);
+        else _selectedCalcIds.Remove(id);
+    }
+
+    private void SelectAllShareable()
+    {
+        foreach (var c in _calcs.Where(c => !c.IsPrivate))
+            _selectedCalcIds.Add(c.Id);
+    }
+
+    private async Task DownloadAsync()
+    {
+        if (_busy || _selectedCalcIds.Count == 0) return;
+        _busy = true;
+        try
+        {
+            var request = new AtacostProjectExportRequest
+            {
+                // Private calculations can never be exported - filter defensively here too.
+                CalculationIds = _selectedCalcIds.Where(id => _calcs.Any(c => c.Id == id && !c.IsPrivate)).ToList(),
+                Message = string.IsNullOrWhiteSpace(_message) ? null : _message.Trim()
+            };
+
+            var bytes = await Repo.Project.ExportCopyAsync(ProjectId, request);
+            if (bytes is null || bytes.Length == 0)
+            {
+                MHD.Notifications(ToastType.Add, false);
+                return;
+            }
+
+            var fileName = $"ATACOST_Projekt_{SafeName(ProjectName)}_{DateTime.Now:yyyy-MM-dd}.atacost";
+            await JS.InvokeVoidAsync("atacostTransfer.download", fileName, Convert.ToBase64String(bytes));
+
+            MHD.Notifications(ToastType.Add, true);
+            await Modal.CloseAsync();
+        }
+        catch (Exception ex)
+        {
+            await ClientLog.ErrorAsync("Project copy export failed", ex: ex);
+            MHD.Notifications(ToastType.Add, false);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private static string SafeName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "projekt";
+        var cleaned = new string(name.Where(ch => !Path.GetInvalidFileNameChars().Contains(ch) && ch != ' ').ToArray());
+        return string.IsNullOrWhiteSpace(cleaned) ? "projekt" : cleaned;
+    }
+}

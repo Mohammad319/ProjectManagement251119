@@ -698,6 +698,10 @@ namespace Persistence.Migrations
                     b.Property<int?>("PrimaryOfferId")
                         .HasColumnType("int");
 
+                    b.Property<string>("ProductionNote")
+                        .HasMaxLength(3000)
+                        .HasColumnType("nvarchar(3000)");
+
                     b.Property<decimal?>("Quantity")
                         .HasColumnType("decimal(18,3)");
 
@@ -1064,6 +1068,10 @@ namespace Persistence.Migrations
 
                     b.Property<int?>("ParentTaskId")
                         .HasColumnType("int");
+
+                    b.Property<string>("ProductionNote")
+                        .HasMaxLength(3000)
+                        .HasColumnType("nvarchar(3000)");
 
                     b.Property<decimal?>("Quantity")
                         .HasColumnType("decimal(18,3)");
@@ -1851,7 +1859,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "ImportJobId", "Status");
 
-                    b.ToTable("PriceImportCandidates", null, t =>
+                    b.ToTable("PriceImportCandidates", t =>
                         {
                             t.HasCheckConstraint("CK_PriceImportCandidates_BasePrice_NonNegative", "[BasePrice] IS NULL OR [BasePrice] >= 0");
 
@@ -1929,7 +1937,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "SupplierName");
 
-                    b.ToTable("PriceImportJobs", null, t =>
+                    b.ToTable("PriceImportJobs", t =>
                         {
                             t.HasCheckConstraint("CK_PriceImportJobs_Counts_NonNegative", "[TotalCandidates] >= 0 AND [ReadyCount] >= 0 AND [ReviewCount] >= 0 AND [ErrorCount] >= 0 AND [ApprovedCount] >= 0");
 
@@ -1975,7 +1983,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "SupplierName", "ExternalColumnName");
 
-                    b.ToTable("PriceImportMappings", null, t =>
+                    b.ToTable("PriceImportMappings", t =>
                         {
                             t.HasCheckConstraint("CK_PriceImportMappings_ExternalColumnName_NotEmpty", "LEN(LTRIM(RTRIM([ExternalColumnName]))) > 0");
 
@@ -2043,7 +2051,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "SupplierName");
 
-                    b.ToTable("PriceLists", null, t =>
+                    b.ToTable("PriceLists", t =>
                         {
                             t.HasCheckConstraint("CK_PriceLists_DateRange", "[ValidTo] IS NULL OR [ValidFrom] IS NULL OR [ValidTo] >= [ValidFrom]");
 
@@ -2164,7 +2172,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "PriceListId", "ArticleNumber");
 
-                    b.ToTable("PriceListItems", null, t =>
+                    b.ToTable("PriceListItems", t =>
                         {
                             t.HasCheckConstraint("CK_PriceListItems_BasePrice_NonNegative", "[BasePrice] IS NULL OR [BasePrice] >= 0");
 
@@ -2728,6 +2736,110 @@ namespace Persistence.Migrations
                             t.HasCheckConstraint("CK_Projects_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
 
                             t.HasCheckConstraint("CK_Projects_SortOrder_NonNegative", "[SortOrder] >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("Domain.Entities.Project.ProjectShareCalculationEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CalculationId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProjectShareId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CalculationId");
+
+                    b.HasIndex("ProjectShareId");
+
+                    b.HasIndex("TenantId", "ProjectShareId", "CalculationId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_ProjectShareCalculations_Share_Calc");
+
+                    b.ToTable("ProjectShareCalculations", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.Project.ProjectShareEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("DepartmentId")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int?>("SharedWithUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("DepartmentId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("SharedWithUserId");
+
+                    b.HasIndex("UpdatedBy");
+
+                    b.HasIndex("TenantId", "ProjectId")
+                        .HasDatabaseName("IX_ProjectShares_Tenant_Project");
+
+                    b.HasIndex("TenantId", "ProjectId", "DepartmentId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_ProjectShares_Project_Department")
+                        .HasFilter("[DepartmentId] IS NOT NULL");
+
+                    b.HasIndex("TenantId", "ProjectId", "SharedWithUserId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_ProjectShares_Project_User")
+                        .HasFilter("[SharedWithUserId] IS NOT NULL");
+
+                    b.ToTable("ProjectShares", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_ProjectShares_OneRecipient", "([SharedWithUserId] IS NOT NULL AND [DepartmentId] IS NULL) OR ([SharedWithUserId] IS NULL AND [DepartmentId] IS NOT NULL)");
                         });
                 });
 
@@ -4259,6 +4371,64 @@ namespace Persistence.Migrations
                     b.Navigation("UpdatedByUser");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Project.ProjectShareCalculationEntity", b =>
+                {
+                    b.HasOne("Domain.Entities.Calculation.CalculationEntity", "Calculation")
+                        .WithMany()
+                        .HasForeignKey("CalculationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Project.ProjectShareEntity", "ProjectShare")
+                        .WithMany("Calculations")
+                        .HasForeignKey("ProjectShareId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Calculation");
+
+                    b.Navigation("ProjectShare");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Project.ProjectShareEntity", b =>
+                {
+                    b.HasOne("Domain.Entities.Users.UserEntity", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Entities.Users.DepartmentEntity", "Department")
+                        .WithMany()
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Entities.Project.ProjectEntity", "Project")
+                        .WithMany("Shares")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Users.UserEntity", "SharedWithUser")
+                        .WithMany()
+                        .HasForeignKey("SharedWithUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Entities.Users.UserEntity", "UpdatedByUser")
+                        .WithMany()
+                        .HasForeignKey("UpdatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("Department");
+
+                    b.Navigation("Project");
+
+                    b.Navigation("SharedWithUser");
+
+                    b.Navigation("UpdatedByUser");
+                });
+
             modelBuilder.Entity("Domain.Entities.Project.ProjectStatusEntity", b =>
                 {
                     b.HasOne("Domain.Entities.Users.UserEntity", "CreatedByUser")
@@ -4568,6 +4738,13 @@ namespace Persistence.Migrations
                 {
                     b.Navigation("Bids");
 
+                    b.Navigation("Calculations");
+
+                    b.Navigation("Shares");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Project.ProjectShareEntity", b =>
+                {
                     b.Navigation("Calculations");
                 });
 

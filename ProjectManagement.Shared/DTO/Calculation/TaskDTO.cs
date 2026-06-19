@@ -158,6 +158,9 @@ public int? ParentTaskId { get; set; }
         public string Opportunity { get; set; } = string.Empty;
         public int? OpportunityId { get; set; }
 
+        // Production note – a standalone scalar field (not in Metadata), does not affect economy.
+        public string? ProductionNote { get; set; }
+
         public List<ResourceListDTO> Resources { get; set; } = [];
     }
 }

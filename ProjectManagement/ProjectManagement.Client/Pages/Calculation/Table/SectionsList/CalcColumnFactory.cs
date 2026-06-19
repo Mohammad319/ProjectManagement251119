@@ -302,6 +302,13 @@ public static class CalcColumnFactory
                 TaskRender = (b, t) => TableRenderHelpers.RenderTextTd(b, t.Note),
                 ResRender = (b, r) => TableRenderHelpers.RenderTextTd(b, r.Data.Note)
             },
+            // Read-only fallback render (e.g. print). The interactive/editable version is
+            // special-cased in CalculationRowCellRenderer where the edit callback is available.
+            [NetColumnId.ProductionNote] = new()
+            {
+                TaskRender = (b, t) => TableRenderHelpers.RenderTextTd(b, t.ProductionNote),
+                ResRender = (b, r) => TableRenderHelpers.RenderTextTd(b, r.ProductionNote)
+            },
         };
 
         foreach (var pair in columns)

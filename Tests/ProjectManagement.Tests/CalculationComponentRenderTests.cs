@@ -1303,6 +1303,9 @@ public class CalculationComponentRenderTests : BunitContext
         public Task<bool> UpdateAsync(List<QuanityListDTO> model, int id) => Task.FromResult(true);
         public Task<bool> UpdateSortAsync(int id, SortConfig sort) => Task.FromResult(true);
         public Task<bool> UpdateDisplayPresetsAsync(int id, DisplayOptionsPresetStore store) => Task.FromResult(true);
+        public Task<bool> SaveProductionNoteAsync(ProductionNoteSaveDTO dto) => Task.FromResult(true);
+        public Task<byte[]> ExportCopyAsync(int calcId, ProjectManagement.Shared.DTO.Transfer.AtacostCalculationExportRequest request) => Task.FromResult(Array.Empty<byte>());
+        public Task<int> ImportCopyAsync(Guid targetProjectId, byte[] fileBytes) => Task.FromResult(0);
         public Task<bool> DeleteAsync(int id) => Task.FromResult(true);
     }
 }

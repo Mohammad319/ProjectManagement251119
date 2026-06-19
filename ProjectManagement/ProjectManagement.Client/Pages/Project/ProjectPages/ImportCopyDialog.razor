@@ -1,0 +1,255 @@
+@using ProjectManagement.Client.Shared.MVVM.Folder
+@using ProjectManagement.Client.Shared.SharedComponent
+@using ProjectManagement.Shared.DTO.Transfer
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Authorization
+@inherits AppComponentBase
+@attribute [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
+
+<div class="space-y-4 text-slate-800 dark:text-slate-100">
+
+    @* ── Select file ──────────────────────────────────────────── *@
+    <div>
+        <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Välj ATACOST-paket (.atacost)</label>
+        <InputFile OnChange="OnFileSelectedAsync" accept=".atacost" disabled="@_busy"
+                   class="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-sky-600 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-white hover:file:bg-sky-700 dark:text-slate-300" />
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(_error))
+    {
+        <div class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
+            @_error
+        </div>
+    }
+
+    @* ── Package info ─────────────────────────────────────────── *@
+    @if (_info is { IsValid: true })
+    {
+        <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm dark:border-slate-800 dark:bg-slate-950">
+            <div class="text-slate-600 dark:text-slate-300">
+                <span class="text-slate-400 dark:text-slate-500">@(IsProject ? "Projekt:" : "Kalkyl:")</span>
+                <span class="font-semibold">@_info.DisplayName</span>
+            </div>
+            @if (IsProject)
+            {
+                <div class="mt-0.5 text-slate-600 dark:text-slate-300">
+                    <span class="text-slate-400 dark:text-slate-500">Valda kalkyler:</span> @_info.CalculationCount
+                </div>
+            }
+            @if (!string.IsNullOrWhiteSpace(_info.SenderCompany))
+            {
+                <div class="mt-0.5 text-slate-600 dark:text-slate-300">
+                    <span class="text-slate-400 dark:text-slate-500">Från:</span> @_info.SenderCompany
+                </div>
+            }
+            @if (!string.IsNullOrWhiteSpace(_info.Message))
+            {
+                <div class="mt-2 rounded border border-slate-200 bg-white p-2 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                    <span class="text-slate-400 dark:text-slate-500">Meddelande:</span> @_info.Message
+                </div>
+            }
+        </div>
+
+        @* ── Select target ────────────────────────────────────── *@
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div>
+                <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Avdelning</label>
+                <MhdFormSelect TValue="string"
+                               Value="_departmentValue"
+                               ValueChanged="OnDepartmentChanged"
+                               Options="DepartmentOptions"
+                               Placeholder="Välj avdelning..." />
+            </div>
+            <div>
+                <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Mapp <span class="text-amber-500">*</span></label>
+                <MhdFormSelect TValue="string"
+                               Value="_folderValue"
+                               ValueChanged="OnFolderChanged"
+                               Options="FolderOptions"
+                               Placeholder="Välj mapp..."
+                               Disabled="@(!_folders.Any())" />
+            </div>
+            @if (!IsProject)
+            {
+                <div class="sm:col-span-2">
+                    <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Projekt <span class="text-amber-500">*</span></label>
+                    <MhdFormSelect TValue="string"
+                                   Value="_projectValue"
+                                   ValueChanged="OnProjectChanged"
+                                   Options="ProjectOptions"
+                                   Placeholder="Välj projekt..."
+                                   Disabled="@(!_projects.Any())" />
+                </div>
+            }
+        </div>
+    }
+
+    <div class="flex items-center justify-end gap-2">
+        <button type="button"
+                class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                @onclick="Modal.CloseAsync">Avbryt</button>
+        <button type="button"
+                class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                disabled="@IsImportDisabled"
+                @onclick="ImportAsync">
+            @(IsProject ? "Importera projekt" : "Importera")
+        </button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Kind { get; set; } = AtacostPackageDTO.KindProject;
+    [Parameter] public EventCallback OnCompleted { get; set; }
+
+    private bool IsProject => Kind == AtacostPackageDTO.KindProject;
+
+    private byte[]? _fileBytes;
+    private AtacostPackageInfoDTO? _info;
+    private string _error = string.Empty;
+    private bool _busy;
+
+    private string _departmentValue = string.Empty;
+    private string _folderValue = string.Empty;
+    private string _projectValue = string.Empty;
+    private List<FolderMVVM> _folders = [];
+    private List<ProjectManagement.Client.Shared.MVVM.Folder.ListProjectMVVM> _projects = [];
+
+    private IEnumerable<MhdSelectItem<string>> DepartmentOptions =>
+        Folder.State.Departments.Select(d => new MhdSelectItem<string> { Value = d.Id.ToString(), Label = d.Name });
+
+    private IEnumerable<MhdSelectItem<string>> FolderOptions =>
+        _folders.Select(f => new MhdSelectItem<string> { Value = f.Id.ToString(), Label = f.Name });
+
+    private IEnumerable<MhdSelectItem<string>> ProjectOptions =>
+        _projects.Select(p => new MhdSelectItem<string> { Value = p.Id.ToString(), Label = p.Name });
+
+    private bool IsImportDisabled =>
+        _busy ||
+        _info is not { IsValid: true } ||
+        string.IsNullOrEmpty(_folderValue) ||
+        (!IsProject && string.IsNullOrEmpty(_projectValue));
+
+    protected override async Task OnInitializedAsync()
+    {
+        _departmentValue = (Folder.State.SelectedDepartmentId
+            ?? Folder.State.Departments.FirstOrDefault()?.Id)?.ToString() ?? string.Empty;
+        await LoadFoldersAsync();
+
+        if (Folder.State.FolderSelected is not null && _folders.Any(f => f.Id == Folder.State.FolderSelected.Id))
+        {
+            _folderValue = Folder.State.FolderSelected.Id.ToString();
+            await LoadProjectsAsync();
+        }
+    }
+
+    private async Task OnFileSelectedAsync(InputFileChangeEventArgs e)
+    {
+        _error = string.Empty;
+        _info = null;
+        _fileBytes = null;
+
+        try
+        {
+            var file = e.File;
+            using var ms = new MemoryStream();
+            await file.OpenReadStream(maxAllowedSize: 64 * 1024 * 1024).CopyToAsync(ms);
+            _fileBytes = ms.ToArray();
+
+            _info = await Repo.Project.InspectCopyAsync(_fileBytes);
+
+            if (_info is null || !_info.IsValid)
+            {
+                _error = "Filen är inte ett giltigt ATACOST-paket.";
+                _info = null;
+            }
+            else if (_info.Kind != Kind)
+            {
+                _error = IsProject
+                    ? "Filen innehåller en kalkylkopia, inte en projektkopia."
+                    : "Filen innehåller en projektkopia, inte en kalkylkopia.";
+                _info = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            await ClientLog.ErrorAsync("Atacost inspect failed", ex: ex);
+            _error = "Filen kunde inte läsas. Kontrollera att filen är giltig.";
+        }
+    }
+
+    private async Task OnDepartmentChanged(string? value)
+    {
+        _departmentValue = value ?? string.Empty;
+        _folderValue = string.Empty;
+        _projectValue = string.Empty;
+        _projects = [];
+        await LoadFoldersAsync();
+    }
+
+    private async Task OnFolderChanged(string? value)
+    {
+        _folderValue = value ?? string.Empty;
+        _projectValue = string.Empty;
+        await LoadProjectsAsync();
+    }
+
+    private void OnProjectChanged(string? value) => _projectValue = value ?? string.Empty;
+
+    private async Task LoadFoldersAsync()
+    {
+        _folders = [];
+        if (int.TryParse(_departmentValue, out var departmentId) && departmentId > 0)
+            _folders = await Repo.Folder.GetByDepartmentAsync(departmentId, includeArchived: true);
+    }
+
+    private async Task LoadProjectsAsync()
+    {
+        _projects = [];
+        if (!IsProject && Guid.TryParse(_folderValue, out var folderId) && folderId != Guid.Empty)
+            _projects = await Repo.Project.GetByFolderIdAsync(folderId, includeArchived: true);
+    }
+
+    private async Task ImportAsync()
+    {
+        if (IsImportDisabled || _fileBytes is null) return;
+        _busy = true;
+        _error = string.Empty;
+        try
+        {
+            bool ok;
+            if (IsProject)
+            {
+                Guid.TryParse(_folderValue, out var folderId);
+                var newId = await Repo.Project.ImportCopyAsync(folderId, _fileBytes);
+                ok = newId != Guid.Empty;
+            }
+            else
+            {
+                Guid.TryParse(_projectValue, out var projectId);
+                var newId = await Repo.Calculation.ImportCopyAsync(projectId, _fileBytes);
+                ok = newId > 0;
+            }
+
+            MHD.Notifications(ToastType.Add, ok);
+            if (ok)
+            {
+                if (OnCompleted.HasDelegate)
+                    await OnCompleted.InvokeAsync();
+                await Modal.CloseAsync();
+            }
+            else
+            {
+                _error = "Kopian kunde inte importeras. Kontrollera att filen är giltig.";
+            }
+        }
+        catch (Exception ex)
+        {
+            await ClientLog.ErrorAsync("Atacost import failed", ex: ex);
+            _error = "Kopian kunde inte importeras. Kontrollera att filen är giltig.";
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

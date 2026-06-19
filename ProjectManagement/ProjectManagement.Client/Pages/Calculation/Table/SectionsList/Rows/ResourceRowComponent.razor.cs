@@ -87,9 +87,19 @@ public partial class ResourceRowComponent : CalculationSelectableRowComponentBas
     }
 
     private void RenderResourceCells(RenderTreeBuilder builder)
-        => CalculationRowCellRenderer.RenderResourceCells(builder, Colmuns, Resource, Left, ShowActiveToggle, ToggleActive, TaskBranchActive);
+        => CalculationRowCellRenderer.RenderResourceCells(builder, Colmuns, Resource, Left, ShowActiveToggle, ToggleActive, TaskBranchActive, EditProductionNote);
 
     private Task ToggleActive() => OnToggleActive.InvokeAsync();
+
+    private Task EditProductionNote()
+    {
+        CalcService.EditProductionNote(
+            CalculationItemType.resource,
+            Resource.Id,
+            Resource.ProductionNote,
+            v => { Resource.ProductionNote = v; InvokeAsync(StateHasChanged); });
+        return Task.CompletedTask;
+    }
 
     public override void Dispose()
     {

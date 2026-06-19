@@ -6,6 +6,7 @@ using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Calculation.Template;
 using ProjectManagement.Shared.DTO.General;
+using ProjectManagement.Shared.DTO.Transfer;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -127,6 +128,23 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
         public async Task<bool> UpdateDisplayPresetsAsync(int id, DisplayOptionsPresetStore store)
         {
             return await _httpRepository.PutAsync(store, CalcURLBase + URLConst.Calculation.DisplayPresets + "/" + id);
+        }
+
+        public async Task<bool> SaveProductionNoteAsync(ProductionNoteSaveDTO dto)
+        {
+            return await _httpRepository.PutAsync(dto, CalcURLBase + "productionnote");
+        }
+
+        public async Task<byte[]> ExportCopyAsync(int calcId, AtacostCalculationExportRequest request)
+        {
+            return await _httpRepository.PostAsync<byte[], AtacostCalculationExportRequest>(
+                request, CalcURLBase + URLConst.Calculation.ExportCopy + "/" + calcId);
+        }
+
+        public async Task<int> ImportCopyAsync(Guid targetProjectId, byte[] fileBytes)
+        {
+            return await _httpRepository.PostAsync<int, byte[]>(
+                fileBytes, CalcURLBase + URLConst.Calculation.ImportCopy + "/" + targetProjectId);
         }
     }
 }

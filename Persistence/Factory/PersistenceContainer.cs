@@ -63,6 +63,8 @@ namespace Persistence.Factory
             services.AddScoped<IResourceQueryService, ResourceQueryService>();
             services.AddScoped<IShareCalcService, ShareCalcCommandService>();
             services.AddScoped<Application.Feature.Project.ProjectShare.IProjectShareService, Persistence.Service.Project.ProjectShareService>();
+            services.AddScoped<Application.Feature.Calculation.ProductionNote.IProductionNoteService, Persistence.Service.CalculationItems.ProductionNote.ProductionNoteService>();
+            services.AddScoped<Application.Feature.Transfer.IAtacostTransferService, Persistence.Service.Transfer.AtacostTransferService>();
             services.AddScoped<IStorageCommandService, StorageCommandService>();
             services.AddScoped<IStorageQueryService, StorageQueryService>();
             services.AddScoped<ITaskQueryService, TaskQueryService>();

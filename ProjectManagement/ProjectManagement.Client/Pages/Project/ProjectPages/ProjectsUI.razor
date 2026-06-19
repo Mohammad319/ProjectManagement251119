@@ -507,6 +507,19 @@
                         <span>@AppLoc["newCalculation"]</span>
                     </button>
                 }
+
+                @* Import a project copy (.atacost) - always creates a new project in the selected folder *@
+                @if (_contentMode == ContentModeProjects)
+                {
+                    <button type="button"
+                            class="inline-flex h-7 shrink-0 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                            disabled="@(IsDepartmentScope || Folder.State.OtherDepartment || Folder.State.FolderSelected is null)"
+                            title="Importera projektkopia (.atacost) till vald mapp"
+                            @onclick="OpenImportProjectCopyDialog">
+                        <span aria-hidden="true">@((MarkupString)Icons.ImportFromFile)</span>
+                        <span>Importera kopia</span>
+                    </button>
+                }
             </AuthorizeView>
         </div>
     </div>
@@ -1654,7 +1667,9 @@
             ["publicationDate"]   = false,
             ["decisionDate"]      = false,
             ["archived"]          = true,
-            ["shared"]            = false
+            ["shared"]            = false,
+            ["createdAt"]         = false,
+            ["updatedAt"]         = false
         };
 
     private readonly Dictionary<string, bool> _projectColumns = new(DefaultProjectColumns);
@@ -1688,7 +1703,9 @@
         new("publicationDate",   CalcResource.publicationDate),
         new("decisionDate",      CalcResource.decisionDate),
         new("archived",          AppLoc["archived"].Value),
-        new("shared",            "Delat")
+        new("shared",            "Delat"),
+        new("createdAt",         AppLoc["createdDate"].Value),
+        new("updatedAt",         AppLoc["lastModified"].Value)
     };
 
     private Dictionary<string, int> _columnWidths = new();
@@ -1841,11 +1858,12 @@
                 list.Add(new() { IconHtml = Icons.Restore, Label = AppLoc["restoreFromArchive"], OnClickAsync = async () => await ArchiveOrRestoreProjectAsync(item, archive: false) });
         }
 
-        // "Ta bort projekt" visas alltid längst ner med separator och destruktiv stil.
-        // Aktivt för tomma projekt; annars öppnas en informationsdialog som förklarar
-        // varför borttagning inte är tillåten (kalkyler, anbudsdata eller behörighet).
+        // "Skicka projektkopia..." and "Ta bort projekt" sit at the bottom, separated by a divider.
         if (list.Count > 0)
             list.Add(new() { IsSeparator = true });
+
+        if (canManage)
+            list.Add(new() { IconHtml = Icons.Tender, Label = "Skicka projektkopia...", OnClickAsync = () => { OpenSendProjectCopyDialog(item); return Task.CompletedTask; } });
 
         list.Add(new()
         {
@@ -1888,6 +1906,26 @@
                 [nameof(ProjectShareUI.OnCompleted)] = EventCallback.Factory.Create(this, ReloadAfterMoveCopyAsync)
             },
             BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
+
+    void OpenSendProjectCopyDialog(ListProjectMVVM project) =>
+        Modal.ShowComponent<SendProjectCopyDialog>(
+            "Skicka projektkopia",
+            new Dictionary<string, object>
+            {
+                [nameof(SendProjectCopyDialog.ProjectId)]   = project.Id,
+                [nameof(SendProjectCopyDialog.ProjectName)] = project.Name
+            },
+            BlazorMHD.UI.Core.Services.MhdDialogSize.Large);
+
+    void OpenImportProjectCopyDialog() =>
+        Modal.ShowComponent<ImportCopyDialog>(
+            "Importera projektkopia",
+            new Dictionary<string, object>
+            {
+                [nameof(ImportCopyDialog.Kind)]        = ProjectManagement.Shared.DTO.Transfer.AtacostPackageDTO.KindProject,
+                [nameof(ImportCopyDialog.OnCompleted)] = EventCallback.Factory.Create(this, ReloadAfterMoveCopyAsync)
+            },
+            BlazorMHD.UI.Core.Services.MhdDialogSize.Large);
 
     void OpenProjectBidsDialog(ListProjectMVVM project) =>
         Modal.ShowComponent<ProjectBidsDialog>(

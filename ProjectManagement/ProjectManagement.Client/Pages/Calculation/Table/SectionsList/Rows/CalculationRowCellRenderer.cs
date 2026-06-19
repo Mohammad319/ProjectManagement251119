@@ -14,13 +14,16 @@ public static class CalculationRowCellRenderer
         int namePaddingPx = 0,
         bool showActiveToggle = false,
         Func<Task>? onToggleActive = null,
-        bool parentActive = true) =>
+        bool parentActive = true,
+        Func<Task>? onEditProductionNote = null) =>
         RenderCells(builder, columns.Count, i =>
         {
             if (showActiveToggle && columns[i].Id == NetColumnId.Active)
                 TableRenderHelpers.RenderActiveToggleTd(builder, task.Active && parentActive, onToggleActive);
             else if (namePaddingPx > 0 && columns[i].Id == NetColumnId.Name)
                 TableRenderHelpers.RenderWithTitleIndented(builder, task.Name, namePaddingPx);
+            else if (columns[i].Id == NetColumnId.ProductionNote)
+                TableRenderHelpers.RenderProductionNoteTd(builder, task.ProductionNote, onEditProductionNote);
             else
                 columns[i].TaskRender(builder, task);
         });
@@ -32,13 +35,16 @@ public static class CalculationRowCellRenderer
         int namePaddingPx = 0,
         bool showActiveToggle = false,
         Func<Task>? onToggleActive = null,
-        bool parentActive = true) =>
+        bool parentActive = true,
+        Func<Task>? onEditProductionNote = null) =>
         RenderCells(builder, columns.Count, i =>
         {
             if (showActiveToggle && columns[i].Id == NetColumnId.Active)
                 TableRenderHelpers.RenderActiveToggleTd(builder, resource.Active && parentActive, onToggleActive);
             else if (namePaddingPx > 0 && columns[i].Id == NetColumnId.Name)
                 TableRenderHelpers.RenderWithTitleIndented(builder, resource.Name, namePaddingPx);
+            else if (columns[i].Id == NetColumnId.ProductionNote)
+                TableRenderHelpers.RenderProductionNoteTd(builder, resource.ProductionNote, onEditProductionNote);
             else
                 columns[i].ResRender(builder, resource);
         });

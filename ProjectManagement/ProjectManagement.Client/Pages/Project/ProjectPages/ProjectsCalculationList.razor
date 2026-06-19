@@ -486,6 +486,16 @@
                     </svg>
                     <span>@AppLoc["newCalculation"]</span>
                 </button>
+
+                @* Import a calculation copy (.atacost) into the selected project; always creates a new calculation. *@
+                <button type="button"
+                        class="inline-flex h-7 shrink-0 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                        disabled="@(FolderScopeMode || Folder.State.OtherDepartment || Folder.State.ProjectSelected is null)"
+                        title="Importera kalkylkopia (.atacost) till valt projekt"
+                        @onclick="OpenImportCalculationCopyDialog">
+                    <span aria-hidden="true">@((MarkupString)Icons.ImportFromFile)</span>
+                    <span>Importera kopia</span>
+                </button>
             </AuthorizeView>
         </div>
     </div>
@@ -708,15 +718,16 @@
                                         <span class="font-mono text-slate-600 dark:text-slate-300">@FormatVersion(calu.VersionNumber)</span>
                                         @if (calu.IsCurrentVersion)
                                         {
-                                            <span class="shrink-0 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">@AppLoc["current"]</span>
+                                            <span class="shrink-0 font-semibold text-emerald-600 dark:text-emerald-400" title="Aktuell version" aria-label="Aktuell version">✓</span>
                                         }
                                         @if (HasMultipleVersions(calu))
                                         {
                                             <button type="button"
                                                     class="shrink-0 rounded border border-slate-300 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 transition hover:border-slate-400 hover:text-slate-700 dark:border-slate-700 dark:text-slate-400 dark:hover:border-slate-500 dark:hover:text-slate-200"
+                                                    title="Visa alla versioner"
                                                     @onclick:stopPropagation="true"
                                                     @onclick="() => OpenVersionsDialog(calu)">
-                                                @AppLoc["showVersions"]
+                                                Versioner
                                             </button>
                                         }
                                     </div>
@@ -2079,7 +2090,7 @@
         {
             if (item.IsCurrentVersion)
                 list.Add(new() { IconHtml = Icons.Edit, Label = ResourceApp.edit, OnClickAsync = () => { UpdateForm(item); return Task.CompletedTask; } });
-            list.Add(new() { IconHtml = Icons.Copy, Label = "Versioner...", OnClickAsync = () => { OpenVersionsDialog(item); return Task.CompletedTask; } });
+            list.Add(new() { IconHtml = Icons.Copy, Label = "Versioner", OnClickAsync = () => { OpenVersionsDialog(item); return Task.CompletedTask; } });
             list.Add(new() { IconHtml = Icons.PermissionShield, Label = ResourceApp.share, OnClickAsync = () => { ShareForm(item); return Task.CompletedTask; } });
             list.Add(new() { IconHtml = Icons.Folder, Label = AppLoc["moveCalculation"], OnClickAsync = () => { OpenMoveCopyDialog(item, MoveCopyOperation.Move); return Task.CompletedTask; } });
             list.Add(new() { IconHtml = Icons.Copy, Label = AppLoc["copyCalculation"], OnClickAsync = () => { OpenMoveCopyDialog(item, MoveCopyOperation.Copy); return Task.CompletedTask; } });
@@ -2097,6 +2108,9 @@
 
         if (list.Count > 0)
             list.Add(new() { IsSeparator = true });
+
+        if (canManage)
+            list.Add(new() { IconHtml = Icons.Tender, Label = "Skicka kopia...", OnClickAsync = () => { OpenSendCalculationCopyDialog(item); return Task.CompletedTask; } });
 
         list.Add(new()
         {
@@ -2187,6 +2201,31 @@
             },
             BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
     }
+
+    // External calculation copy (ATACOST package): download a standalone .atacost file.
+    void OpenSendCalculationCopyDialog(ListCalculationMVVM calculation) =>
+        Modal.ShowComponent<SendCalculationCopyDialog>(
+            "Skicka kalkylkopia",
+            new Dictionary<string, object>
+            {
+                [nameof(SendCalculationCopyDialog.CalcId)]        = calculation.Id,
+                [nameof(SendCalculationCopyDialog.CalcName)]      = calculation.Name,
+                [nameof(SendCalculationCopyDialog.CalcTypeLabel)] = calculation.CalculationType.ToString(),
+                [nameof(SendCalculationCopyDialog.VersionNumber)] = calculation.VersionNumber,
+                [nameof(SendCalculationCopyDialog.IsPrivate)]     = calculation.IsPrivate
+            },
+            BlazorMHD.UI.Core.Services.MhdDialogSize.Large);
+
+    // Import a calculation copy (.atacost) into the currently selected project; always creates a new calculation.
+    void OpenImportCalculationCopyDialog() =>
+        Modal.ShowComponent<ImportCopyDialog>(
+            "Importera kalkylkopia",
+            new Dictionary<string, object>
+            {
+                [nameof(ImportCopyDialog.Kind)]        = ProjectManagement.Shared.DTO.Transfer.AtacostPackageDTO.KindCalculation,
+                [nameof(ImportCopyDialog.OnCompleted)] = EventCallback.Factory.Create(this, ReloadAfterMoveCopyAsync)
+            },
+            BlazorMHD.UI.Core.Services.MhdDialogSize.Large);
 
     private async Task ReloadAfterMoveCopyAsync()
     {
