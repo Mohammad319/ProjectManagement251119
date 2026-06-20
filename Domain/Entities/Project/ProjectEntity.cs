@@ -75,8 +75,11 @@ namespace Domain.Entities.Project
 
         public bool IsArchived { get; private set; } = false;
 
-        /// <summary>Utvärderingsmodell för projektets anbud (Anbud-fönstret).</summary>
+        /// <summary>Beräkningsmetod för projektets anbud (Anbud-fönstret).</summary>
         public BidEvaluationModel BidEvaluationModel { get; private set; } = BidEvaluationModel.LowestComparison;
+
+        /// <summary>Utvärderingsgrund för projektets anbud — styr vilka beräkningsmetoder som är tillgängliga.</summary>
+        public BidEvaluationBasis BidEvaluationBasis { get; private set; } = BidEvaluationBasis.Price;
 
         [JsonIgnore]
         public ICollection<CalculationEntity> Calculations { get; private set; } = [];
@@ -146,6 +149,22 @@ namespace Domain.Entities.Project
         public void UpdateOrder(int newOrder) => SortOrder = newOrder;
 
         public void SetBidEvaluationModel(BidEvaluationModel model) => BidEvaluationModel = model;
+
+        // Set evaluation basis + method together. The method is normalized to one that is
+        // valid for the chosen basis so the two can never drift out of sync.
+        public void SetBidEvaluation(BidEvaluationBasis basis, BidEvaluationModel method)
+        {
+            BidEvaluationBasis = basis;
+            BidEvaluationModel = basis switch
+            {
+                BidEvaluationBasis.Price => BidEvaluationModel.LowestComparison,
+                BidEvaluationBasis.Cost => BidEvaluationModel.LowestTotalCost,
+                BidEvaluationBasis.PriceQuality => method == BidEvaluationModel.HighestPoints
+                    ? BidEvaluationModel.HighestPoints
+                    : BidEvaluationModel.LowestComparison,
+                _ => method
+            };
+        }
 
         public void MoveToFolder(Guid folderId)
         {

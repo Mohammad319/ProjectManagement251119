@@ -1,0 +1,99 @@
+@using ProjectManagement.Shared.DTO.Calculation
+
+<div class="space-y-5 text-sm text-slate-700 dark:text-slate-200">
+    <div class="grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 sm:grid-cols-2 dark:border-slate-700 dark:bg-slate-950/50">
+        @foreach (var item in Summary)
+        {
+            <div>
+                <div class="text-[11px] text-slate-500 dark:text-slate-400">@item.Label</div>
+                <div class="font-medium text-slate-800 dark:text-slate-100">@(string.IsNullOrWhiteSpace(item.Value) ? "-" : item.Value)</div>
+            </div>
+        }
+    </div>
+
+    <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        @foreach (var metric in Metrics)
+        {
+            <div class="rounded-lg border p-3 @(metric.Warning ? "border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/30" : "border-slate-200 dark:border-slate-700")">
+                <div class="text-lg font-semibold">@metric.Value</div>
+                <div class="text-[11px] text-slate-500 dark:text-slate-400">@metric.Label</div>
+            </div>
+        }
+    </div>
+
+    @if (Info.MainMappings.Count > 0)
+    {
+        <section>
+            <h3 class="mb-2 font-semibold text-slate-900 dark:text-slate-100">Mappade huvudvärden</h3>
+            <div class="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-100 dark:bg-slate-800"><tr><th class="px-3 py-2">Fält</th><th class="px-3 py-2">Ursprungligt värde</th><th class="px-3 py-2">Mappat till</th></tr></thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                        @foreach (var mapping in Info.MainMappings)
+                        {
+                            <tr><td class="px-3 py-2 font-medium">@mapping.Field</td><td class="px-3 py-2">@mapping.OriginalValue</td><td class="px-3 py-2">@mapping.MappedValue</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    }
+
+    @foreach (var section in IssueSections)
+    {
+        @if (section.Items.Count > 0)
+        {
+            <section>
+                <h3 class="mb-2 font-semibold text-slate-900 dark:text-slate-100">@section.Title</h3>
+                @foreach (var issue in section.Items)
+                {
+                    <div class="mb-2 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+                        <div class="font-semibold">@issue.ProblemType</div>
+                        <div class="mt-1 text-xs">@issue.OriginalValue</div>
+                        <div class="mt-1 text-xs text-slate-500 dark:text-slate-400">Berör: @issue.AffectedRows kalkylrader · Vald åtgärd: @issue.Action</div>
+                        @if (issue.RowNames.Count > 0)
+                        {
+                            <details class="mt-2 text-xs">
+                                <summary class="cursor-pointer font-semibold text-sky-700 dark:text-sky-300">Visa berörda rader</summary>
+                                <ul class="mt-2 space-y-1 pl-4">
+                                    @foreach (var rowName in issue.RowNames)
+                                    {
+                                        <li>@rowName</li>
+                                    }
+                                </ul>
+                            </details>
+                        }
+                    </div>
+                }
+            </section>
+        }
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public CalculationImportInfoDTO Info { get; set; } = new();
+
+    private IEnumerable<(string Label, string Value)> Summary =>
+    [
+        ("Importerad från", Info.ImportedFrom),
+        ("Filnamn", Info.SourceFileName),
+        ("Importerad av", Info.ImportedBy),
+        ("Importerad datum", Info.ImportedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")),
+        ("Målprojekt", Info.TargetProject)
+    ];
+
+    private IEnumerable<(string Label, int Value, bool Warning)> Metrics =>
+    [
+        ("Importerade", Info.ImportedRows, false),
+        ("Importerade med avvikelser", Info.ImportedRowsWithIssues, Info.ImportedRowsWithIssues > 0),
+        ("Rader som inte importerades", Info.NotImportedRows, Info.NotImportedRows > 0),
+        ("Automatiskt mappade värden", Info.AutomaticallyMappedValues, false),
+        ("Manuellt valda värden", Info.ManuallyMappedValues, false)
+    ];
+
+    private IEnumerable<(string Title, List<CalculationImportIssueDTO> Items)> IssueSections =>
+    [
+        ("Importerade med avvikelser", Info.Issues),
+        ("Rader som inte importerades", Info.NotImported)
+    ];
+}

@@ -151,11 +151,26 @@ namespace Persistence.Service.CalculationItems.Calculation
                 return false;
             }
 
-            // A current version may only be deleted when it is the sole version in its family.
-            // Multi-version families must keep their head and use the version handling instead.
-            if (calculation.IsCurrentVersion && await HasOtherVersionsAsync(db, calculation, cancellationToken))
+            // When the current (head) version of a multi-version family is deleted, promote
+            // the latest remaining version to current first. Otherwise the family would be
+            // left without a head and the list/tree could not resolve a current version.
+            // The reassignment and the soft-delete share one SaveChanges call, so they are
+            // applied atomically (a single transaction) — either both succeed or neither does.
+            if (calculation.IsCurrentVersion && calculation.VersionGroupId != Guid.Empty)
             {
-                return false;
+                var replacement = await db.Calculations
+                    .Where(other => !other.IsDeleted &&
+                        other.Id != calculation.Id &&
+                        other.ProjectId == calculation.ProjectId &&
+                        other.VersionGroupId == calculation.VersionGroupId)
+                    .OrderByDescending(other => other.VersionNumber)
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                if (replacement is not null)
+                {
+                    calculation.MarkAsNotCurrentVersion();
+                    replacement.MarkAsCurrentVersion();
+                }
             }
 
             calculation.IsDeleted = true;
@@ -721,26 +736,6 @@ namespace Persistence.Service.CalculationItems.Calculation
                 .AnyAsync(
                     calculation => !calculation.IsDeleted &&
                         calculation.SourceCalculationId == sourceCalculationId,
-                    cancellationToken);
-        }
-
-        // True when the calculation belongs to a version family that has more than one
-        // (non-deleted) version. A legacy calculation without a version group is always "sole".
-        private static Task<bool> HasOtherVersionsAsync(
-            ShardingSingleDbContext db,
-            CalculationEntity calculation,
-            CancellationToken cancellationToken)
-        {
-            if (calculation.VersionGroupId == Guid.Empty)
-                return System.Threading.Tasks.Task.FromResult(false);
-
-            return db.Calculations
-                .AsNoTracking()
-                .AnyAsync(
-                    other => !other.IsDeleted &&
-                        other.Id != calculation.Id &&
-                        other.ProjectId == calculation.ProjectId &&
-                        other.VersionGroupId == calculation.VersionGroupId,
                     cancellationToken);
         }
 

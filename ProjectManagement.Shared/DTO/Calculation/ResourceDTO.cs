@@ -56,6 +56,13 @@ public ResourceTypesEnum ResType { get; set; }
         public int? ResourceTypeId { get; set; }
         public int? OpportunityId { get; set; }
 
+        // Transfer-only: source-tenant display names captured at export so a cross-tenant
+        // import can match by name against the receiving tenant's own values. Null in normal use.
+        public string? SourceAccountCode { get; set; }
+        public string? SourceAccountName { get; set; }
+        public string? SourceResourceTypeName { get; set; }
+        public string? SourceResourceSortName { get; set; }
+
         public int SortOrder { get; set; }
 
         [MaxLength(FieldLengths.Comment)]

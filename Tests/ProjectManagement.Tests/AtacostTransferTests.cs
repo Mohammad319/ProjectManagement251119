@@ -163,6 +163,10 @@ public sealed class AtacostTransferTests
         var resource = Assert.Single(task.Resources);
         Assert.Equal(500m, resource.GetMetadataSnapshot().Cost); // economy preserved
         Assert.Null(resource.AccountId);                          // tenant-specific reference cleared
+        Assert.True(calc.GetMetadataSnapshot().ImportInfo?.IsImportedCopy);
+        Assert.Contains(calc.GetMetadataSnapshot().ImportInfo!.Issues, issue =>
+            issue.ProblemType.Contains("Konto", StringComparison.Ordinal));
+        Assert.Contains("Originalkonto", resource.GetMetadataSnapshot().ImportInfo);
 
         // The new calculation has a brand-new id, not the original one.
         Assert.NotEqual(sharedCalcId, calc.Id);
@@ -217,6 +221,8 @@ public sealed class AtacostTransferTests
         var task = Assert.Single(imported.Tasks);
         var resource = Assert.Single(task.Resources);
         Assert.Equal(250m, resource.GetMetadataSnapshot().Cost);
+        Assert.True(imported.GetMetadataSnapshot().ImportInfo?.IsImportedCopy);
+        Assert.Equal("Mål", imported.GetMetadataSnapshot().ImportInfo!.TargetProject);
     }
 
     [Fact]

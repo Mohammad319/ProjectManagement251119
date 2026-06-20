@@ -186,7 +186,8 @@ namespace Persistence.Service.CalculationItems.Calculation
             FolderName = x.Project?.Folder?.Name ?? string.Empty,
             AddressText = FormatAddress(x.Metadata.Address.FirstOrDefault()),
             Priority = x.Metadata.Priority,
-            TimeMonth = x.Metadata.TimeMonth
+            TimeMonth = x.Metadata.TimeMonth,
+            ImportInfo = x.Metadata.ImportInfo
         };
 
         private static string FormatAddress(ProjectManagement.Shared.DTO.App.AddressDTO? address)

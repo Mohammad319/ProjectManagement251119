@@ -188,6 +188,14 @@ namespace ProjectManagement.Server.Controllers.v1.Project
             return Ok(bytes);
         }
 
+        /// <summary>Dry-run of a calculation import: shows the import preview (matched values, deviations, target) without writing anything.</summary>
+        [Authorize(Roles = Tenant.AdminManger)]
+        [HttpPost(URLConst.Calculation.PreviewCopy + "/{targetProjectId}")]
+        public async Task<IActionResult> PreviewCopy(Guid targetProjectId, [FromBody] byte[] fileBytes)
+        {
+            return Ok(await MicroBus.Send(new PreviewCalculationPackageCommand(fileBytes, targetProjectId, GetUserId())));
+        }
+
         /// <summary>Imports a calculation copy into a target project and always creates a new calculation.</summary>
         [Authorize(Roles = Tenant.AdminManger)]
         [HttpPost(URLConst.Calculation.ImportCopy + "/{targetProjectId}")]

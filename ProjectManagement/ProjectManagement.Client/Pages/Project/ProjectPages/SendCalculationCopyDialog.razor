@@ -37,8 +37,9 @@
         <button type="button"
                 class="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
                 disabled="@(IsPrivate || _busy)"
+                title="Ladda ner en kopia av kalkylen som kan skickas via e-post och importeras i en annan ATACOST-app."
                 @onclick="DownloadAsync">
-            Ladda ner kopia
+            Ladda ner kalkylkopia
         </button>
     </div>
 </div>
@@ -71,7 +72,7 @@
                 return;
             }
 
-            var fileName = $"ATACOST_Kalkyl_{SafeName(CalcName)}_{DateTime.Now:yyyy-MM-dd}.atacost";
+            var fileName = $"Kalkyl_{SafeName(CalcName)}_{DateTime.Now:yyyy-MM-dd}.atacost";
             await JS.InvokeVoidAsync("atacostTransfer.download", fileName, Convert.ToBase64String(bytes));
 
             MHD.Notifications(ToastType.Add, true);

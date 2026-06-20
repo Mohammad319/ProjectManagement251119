@@ -10,7 +10,7 @@ namespace Application.Feature.Project.ProjectBid
         Task<int> CreateAsync(Guid projectId, ProjectBidPostDTO dto, int? departmentId, CancellationToken ct = default);
         Task<bool> UpdateAsync(int id, Guid projectId, ProjectBidPostDTO dto, int? departmentId, CancellationToken ct = default);
         Task<bool> DeleteAsync(int id, Guid projectId, int? departmentId, CancellationToken ct = default);
-        Task<bool> SetEvaluationModelAsync(Guid projectId, BidEvaluationModel model, int? departmentId, CancellationToken ct = default);
+        Task<bool> SetEvaluationAsync(Guid projectId, BidEvaluationBasis basis, BidEvaluationModel method, int? departmentId, CancellationToken ct = default);
 
         Task<int> CreatePriceColumnAsync(Guid projectId, ProjectBidPriceColumnPostDTO dto, int? departmentId, CancellationToken ct = default);
         Task<bool> RenamePriceColumnAsync(int id, Guid projectId, ProjectBidPriceColumnPostDTO dto, int? departmentId, CancellationToken ct = default);

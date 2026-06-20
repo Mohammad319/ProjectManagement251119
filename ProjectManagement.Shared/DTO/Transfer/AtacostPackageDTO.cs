@@ -6,6 +6,34 @@ using ProjectManagement.Shared.DTO.Project;
 namespace ProjectManagement.Shared.DTO.Transfer
 {
     /// <summary>
+    /// Result of a dry-run import (no data written). Shows the user, before committing, what will
+    /// be matched automatically, what imports with deviations, and whether the import may proceed.
+    /// The deviation/mapping detail reuses the calculation import-info shape.
+    /// </summary>
+    public sealed class AtacostImportPreviewDTO
+    {
+        public bool IsValid { get; set; }
+
+        /// <summary>True when nothing blocks the import. Always true in the current model
+        /// (all dropdowns optional); reserved for a future required-field/manual-mapping phase.</summary>
+        public bool CanImport { get; set; } = true;
+
+        public string Kind { get; set; } = string.Empty;
+        public string DisplayName { get; set; } = string.Empty;
+
+        /// <summary>Read-only "Department / Folder" (or "… / Project") target summary.</summary>
+        public string TargetSummary { get; set; } = string.Empty;
+
+        public string? Message { get; set; }
+        public string? SenderCompany { get; set; }
+        public int CalculationCount { get; set; }
+
+        /// <summary>Import-info that would be stored on the project (summary, mapped main values,
+        /// grouped deviations, not-imported groups).</summary>
+        public CalculationImportInfoDTO Info { get; set; } = new();
+    }
+
+    /// <summary>
     /// External project/calculation copy (ATACOST package). This is a standalone copy, not live sharing.
     /// The package is serialized to JSON and zipped as .atacost. Import always creates a new
     /// project/calculation with fresh internal IDs and no link back to the original.

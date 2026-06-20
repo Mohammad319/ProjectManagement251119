@@ -326,6 +326,13 @@ namespace Domain.Entities.Calculation
             IsCurrentVersion = false;
         }
 
+        // Promote this version to the current/head version of its family. Used when the
+        // current version is deleted and an existing version must take its place.
+        public void MarkAsCurrentVersion()
+        {
+            IsCurrentVersion = true;
+        }
+
         public void SetCalculationType(CalculationVersionType calculationType)
         {
             CalculationType = calculationType;
@@ -506,6 +513,23 @@ namespace Domain.Entities.Calculation
                 Responsibles = metadata.Responsibles?.ToList() ?? [],
                 Contacts = metadata.Contacts?.Select(CloneContact).ToList() ?? [],
                 Income = metadata.Income?.Select(CloneIncome).ToList() ?? [],
+                ImportInfo = metadata.ImportInfo is null ? null : new CalculationImportInfoDTO
+                {
+                    IsImportedCopy = metadata.ImportInfo.IsImportedCopy,
+                    ImportedFrom = metadata.ImportInfo.ImportedFrom,
+                    SourceFileName = metadata.ImportInfo.SourceFileName,
+                    ImportedBy = metadata.ImportInfo.ImportedBy,
+                    ImportedAtUtc = metadata.ImportInfo.ImportedAtUtc,
+                    TargetProject = metadata.ImportInfo.TargetProject,
+                    ImportedRows = metadata.ImportInfo.ImportedRows,
+                    ImportedRowsWithIssues = metadata.ImportInfo.ImportedRowsWithIssues,
+                    NotImportedRows = metadata.ImportInfo.NotImportedRows,
+                    AutomaticallyMappedValues = metadata.ImportInfo.AutomaticallyMappedValues,
+                    ManuallyMappedValues = metadata.ImportInfo.ManuallyMappedValues,
+                    MainMappings = [.. metadata.ImportInfo.MainMappings.Select(x => new CalculationImportMappingDTO { Field = x.Field, OriginalValue = x.OriginalValue, MappedValue = x.MappedValue })],
+                    Issues = [.. metadata.ImportInfo.Issues.Select(CloneImportIssue)],
+                    NotImported = [.. metadata.ImportInfo.NotImported.Select(CloneImportIssue)]
+                },
                 Maps = metadata.Maps ?? string.Empty,
                 Developer = metadata.Developer ?? string.Empty,
                 ClientsManager = metadata.ClientsManager ?? string.Empty,
@@ -516,6 +540,15 @@ namespace Domain.Entities.Calculation
                 Inspector = metadata.Inspector ?? string.Empty
             };
         }
+
+        private static CalculationImportIssueDTO CloneImportIssue(CalculationImportIssueDTO value) => new()
+        {
+            ProblemType = value.ProblemType,
+            OriginalValue = value.OriginalValue,
+            AffectedRows = value.AffectedRows,
+            Action = value.Action,
+            RowNames = [.. value.RowNames]
+        };
 
         private static List<HourlyPriceListGroupDTO> CloneHourlyPrice(List<HourlyPriceListGroupDTO>? groups)
             => groups?.Select(CloneHourlyPriceGroup).ToList() ?? [];

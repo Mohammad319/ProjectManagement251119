@@ -171,7 +171,16 @@
       "Bash(rg -rn \"public string\\\\? Note|string Note\" ProjectManagement.Client.Shared/MVVM/Calculation/ ProjectManagement.Shared/DTO/Calculation/)",
       "Bash(rg -rn \"class CalculationPageResourceRow\" --type cs)",
       "Bash(rg -rn \"public.*ShowComponent\" Library/)",
-      "Bash(rg -rn \"ShowComponent<\" ProjectManagement/ProjectManagement.Client --include=*.razor -l)"
+      "Bash(rg -rn \"ShowComponent<\" ProjectManagement/ProjectManagement.Client --include=*.razor -l)",
+      "PowerShell($d=\"C:\\\\Users\\\\Administrator\\\\Desktop\\\\PM\\\\b07\\\\ProjectManagement251119\\\\.codex-build\\\\ProjectManagement.Client\\\\ContextMenuMHD.dll\"; $asm=[System.Reflection.Assembly]::LoadFile\\($d\\); $t=$asm.GetTypes\\(\\) | Where-Object { $_.Name -eq 'MhdContextMenuItem' }; if\\($t\\){ $t.GetProperties\\(\\) | Select-Object Name, @{n='Type';e={$_.PropertyType.Name}} | Format-Table -AutoSize | Out-String })",
+      "Bash(cd C:/Users/Administrator/Desktop/PM/b07/ProjectManagement251119/.codex-build/ProjectManagement.Client)",
+      "Bash(ls ContextMenuMHD.xml)",
+      "Bash(grep -oE 'name=\"P:[^\"]*MhdContextMenuItem[^\"]*\"' ContextMenuMHD.xml)",
+      "Bash(python3 -c ' *)",
+      "Bash(ls -la ProjectManagement/ProjectManagement.Client/Pages/Calculation/Form/)",
+      "Bash(wc -l ProjectManagement/ProjectManagement.Client/Pages/Calculation/Form/CalculationFormUI.razor*)",
+      "Bash(grep -rn \"ImportInfo\" --include=*.cs ProjectManagement.Client.Shared/MVVM/)",
+      "Bash(grep -rln \"class ListCalculationMVVM\" --include=*.cs .)"
     ]
   }
 }

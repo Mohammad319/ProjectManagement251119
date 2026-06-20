@@ -10,7 +10,7 @@ namespace ProjectManagement.Client.Shared.Repositories.Project
         Task<int> CreateAsync(Guid projectId, ProjectBidPostDTO dto);
         Task<bool> UpdateAsync(int id, Guid projectId, ProjectBidPostDTO dto);
         Task<bool> DeleteAsync(int id, Guid projectId);
-        Task<bool> SetEvaluationModelAsync(Guid projectId, BidEvaluationModel model);
+        Task<bool> SetEvaluationAsync(Guid projectId, BidEvaluationBasis basis, BidEvaluationModel method);
 
         Task<int> CreateColumnAsync(Guid projectId, ProjectBidPriceColumnPostDTO dto);
         Task<bool> RenameColumnAsync(int id, Guid projectId, ProjectBidPriceColumnPostDTO dto);

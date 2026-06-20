@@ -367,12 +367,19 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
 
     private void RefreshColumns()
     {
-        var templateColumns = Template?.NetCalc?.Columns;
+        IReadOnlyList<NetColumnState>? templateColumns = Template?.NetCalc?.Columns;
+        if (HasRowImportIssues() && (templateColumns is null || templateColumns.All(x => x.Id != NetColumnId.ImportInfo)))
+        {
+            templateColumns = [.. templateColumns ?? [], new NetColumnState { Id = NetColumnId.ImportInfo, Width = 70, Frozen = false }];
+        }
         var round = Template?.MathRound ?? 0;
         Columns = CalcColumnFactory.GetColumns(Calc.Tax, round, templateColumns);
         HeaderColumns = BuildHeaderColumns(Columns, templateColumns);
         _jsSyncPending = true;
     }
+
+    private bool HasRowImportIssues() =>
+        Calc.Tasks.Any(task => task.Resources?.Any(resource => !string.IsNullOrWhiteSpace(resource.Data.ImportInfo)) == true);
 
     private string GetHeaderCssClass(int index)
     {

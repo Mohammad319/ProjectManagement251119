@@ -203,6 +203,11 @@ namespace ProjectManagement.Client.Services.MHDBlazor
             ToastMessage(itemName, type, isSuccess ? MhdState.Success : MhdState.Danger);
         }
 
+        // Free-form toast for messages that don't fit the "{item} has been ..." pattern,
+        // e.g. "Projektkopian har importerats.".
+        public void ToastInfo(string message, string title = "", bool isSuccess = true) =>
+            ToasterService.Show(title, message, isSuccess ? MhdState.Success : MhdState.Danger);
+
         public void ToastMessage(string? itemName, ToastType type, MhdState state)
         {
 

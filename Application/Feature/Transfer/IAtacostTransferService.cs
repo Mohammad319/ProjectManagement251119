@@ -31,6 +31,13 @@ namespace Application.Feature.Transfer
         /// <summary>Reads metadata from an uploaded .atacost package without importing. Returns IsValid=false when the file is invalid.</summary>
         Task<AtacostPackageInfoDTO> InspectPackageAsync(byte[] fileBytes, CancellationToken ct = default);
 
+        /// <summary>Dry-run of a project import: runs name-matching against the receiving tenant without writing anything,
+        /// so the UI can show what matched, what imports with deviations, and the target before the user confirms.</summary>
+        Task<AtacostImportPreviewDTO> PreviewProjectPackageAsync(byte[] fileBytes, Guid targetFolderId, int userId, CancellationToken ct = default);
+
+        /// <summary>Dry-run of a calculation import into a target project. Same contract as the project preview.</summary>
+        Task<AtacostImportPreviewDTO> PreviewCalculationPackageAsync(byte[] fileBytes, Guid targetProjectId, int userId, CancellationToken ct = default);
+
         /// <summary>Imports a project package (.atacost byte[]) into the target folder and creates a new project. Returns the new project id or Guid.Empty.</summary>
         Task<Guid> ImportProjectPackageAsync(
             byte[] fileBytes,

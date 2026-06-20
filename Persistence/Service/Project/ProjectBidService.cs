@@ -20,11 +20,14 @@ namespace Persistence.Service.Project
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            var evaluationModel = await context.Projects
+            var evaluation = await context.Projects
                 .Where(x => x.Id == projectId &&
                     (!departmentId.HasValue || x.Folder.DepartmentId == departmentId.Value))
-                .Select(x => (BidEvaluationModel?)x.BidEvaluationModel)
-                .FirstOrDefaultAsync(ct) ?? BidEvaluationModel.LowestComparison;
+                .Select(x => new { x.BidEvaluationModel, x.BidEvaluationBasis })
+                .FirstOrDefaultAsync(ct);
+
+            var evaluationModel = evaluation?.BidEvaluationModel ?? BidEvaluationModel.LowestComparison;
+            var evaluationBasis = evaluation?.BidEvaluationBasis ?? BidEvaluationBasis.Price;
 
             var columns = await context.ProjectBidPriceColumns
                 .Where(x => x.ProjectId == projectId &&
@@ -73,6 +76,7 @@ namespace Persistence.Service.Project
             var result = new ProjectBidsViewDTO
             {
                 EvaluationModel = evaluationModel,
+                EvaluationBasis = evaluationBasis,
                 PriceColumns = columns,
                 Bids = bids.Select(x =>
                 {
@@ -121,10 +125,11 @@ namespace Persistence.Service.Project
             var models = await context.Projects
                 .Where(x => ids.Contains(x.Id) &&
                     (!departmentId.HasValue || x.Folder.DepartmentId == departmentId.Value))
-                .Select(x => new { x.Id, x.BidEvaluationModel })
+                .Select(x => new { x.Id, x.BidEvaluationModel, x.BidEvaluationBasis })
                 .ToListAsync(ct);
 
             var modelByProject = models.ToDictionary(x => x.Id, x => x.BidEvaluationModel);
+            var basisByProject = models.ToDictionary(x => x.Id, x => x.BidEvaluationBasis);
 
             // Alla utvärderingsdelar per projekt (en samlad query). Modellen avgör hur
             // delarna tolkas vid läsning, så vi behöver inte längre filtrera på typ.
@@ -185,6 +190,7 @@ namespace Persistence.Service.Project
                 {
                     ProjectId = x.ProjectId,
                     EvaluationModel = model,
+                    EvaluationBasis = basisByProject.TryGetValue(x.ProjectId, out var b) ? b : BidEvaluationBasis.Price,
                     BidId = x.Id,
                     BidderName = x.BidderName,
                     Amount = amount,
@@ -305,9 +311,10 @@ namespace Persistence.Service.Project
             return true;
         }
 
-        public async Task<bool> SetEvaluationModelAsync(
+        public async Task<bool> SetEvaluationAsync(
             Guid projectId,
-            BidEvaluationModel model,
+            BidEvaluationBasis basis,
+            BidEvaluationModel method,
             int? departmentId,
             CancellationToken ct = default)
         {
@@ -320,7 +327,7 @@ namespace Persistence.Service.Project
             if (project is null)
                 return false;
 
-            project.SetBidEvaluationModel(model);
+            project.SetBidEvaluation(basis, method);
             await context.SaveChangesAsync(ct);
             return true;
         }

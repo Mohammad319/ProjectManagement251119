@@ -140,7 +140,10 @@ namespace ProjectManagement.Shared.DTO.Calculation.Template
         PriceProduction = 42,
 
         [Display(Name = "productionNote")]
-        ProductionNote = 43
+        ProductionNote = 43,
+
+        [Display(Name = "Importinfo")]
+        ImportInfo = 44
     }
 
     public enum SummarySheetColumnId

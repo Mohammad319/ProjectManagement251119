@@ -120,6 +120,14 @@ namespace ProjectManagement.Server.Controllers.v1
             return Ok(await MicroBus.Send(new InspectPackageCommand(fileBytes)));
         }
 
+        /// <summary>Dry-run of a project import: shows the import preview (matched values, deviations, target) without writing anything.</summary>
+        [Authorize(Roles = Tenant.AdminManger)]
+        [HttpPost(URLConst.Project.PreviewCopy + "/{targetFolderId}")]
+        public async Task<IActionResult> PreviewCopy(Guid targetFolderId, [FromBody] byte[] fileBytes)
+        {
+            return Ok(await MicroBus.Send(new PreviewProjectPackageCommand(fileBytes, targetFolderId, GetUserId())));
+        }
+
         /// <summary>Imports a project copy into a target folder and always creates a new project.</summary>
         [Authorize(Roles = Tenant.AdminManger)]
         [HttpPost(URLConst.Project.ImportCopy + "/{targetFolderId}")]

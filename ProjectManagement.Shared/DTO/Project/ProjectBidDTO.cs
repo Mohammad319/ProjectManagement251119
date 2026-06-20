@@ -115,8 +115,11 @@ namespace ProjectManagement.Shared.DTO.Project
     {
         public Guid ProjectId { get; set; }
 
-        /// <summary>Projektets utvärderingsmodell (lägsta jämförelsesumma / högsta poäng).</summary>
+        /// <summary>Projektets beräkningsmetod (lägsta jämförelsesumma / högsta poäng / total kostnad).</summary>
         public BidEvaluationModel EvaluationModel { get; set; } = BidEvaluationModel.LowestComparison;
+
+        /// <summary>Projektets utvärderingsgrund (Pris / Kostnad / Pris och kvalitet).</summary>
+        public BidEvaluationBasis EvaluationBasis { get; set; } = BidEvaluationBasis.Price;
 
         public int BidId { get; set; }
         public string BidderName { get; set; } = string.Empty;
@@ -157,7 +160,10 @@ namespace ProjectManagement.Shared.DTO.Project
 
         public List<ProjectBidListDTO> Bids { get; set; } = [];
 
-        /// <summary>Utvärderingsmodell för projektet.</summary>
+        /// <summary>Beräkningsmetod för projektet.</summary>
         public BidEvaluationModel EvaluationModel { get; set; } = BidEvaluationModel.LowestComparison;
+
+        /// <summary>Utvärderingsgrund för projektet (Pris / Kostnad / Pris och kvalitet).</summary>
+        public BidEvaluationBasis EvaluationBasis { get; set; } = BidEvaluationBasis.Price;
     }
 }

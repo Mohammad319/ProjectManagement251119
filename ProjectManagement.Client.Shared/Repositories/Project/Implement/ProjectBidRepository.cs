@@ -23,8 +23,8 @@ namespace ProjectManagement.Client.Shared.Repositories.Project.Implement
         public Task<bool> DeleteAsync(int id, Guid projectId)
             => httpRepository.DeleteAsync<bool>(Base + $"{id}/{projectId}");
 
-        public Task<bool> SetEvaluationModelAsync(Guid projectId, BidEvaluationModel model)
-            => httpRepository.PutAsync(new { }, Base + $"{projectId}/evaluation-model/{(int)model}");
+        public Task<bool> SetEvaluationAsync(Guid projectId, BidEvaluationBasis basis, BidEvaluationModel method)
+            => httpRepository.PutAsync(new { }, Base + $"{projectId}/evaluation/{(int)basis}/{(int)method}");
 
         public Task<int> CreateColumnAsync(Guid projectId, ProjectBidPriceColumnPostDTO dto)
             => httpRepository.PostAsync<int, ProjectBidPriceColumnPostDTO>(dto, Base + $"column/{projectId}");

@@ -1305,6 +1305,7 @@ public class CalculationComponentRenderTests : BunitContext
         public Task<bool> UpdateDisplayPresetsAsync(int id, DisplayOptionsPresetStore store) => Task.FromResult(true);
         public Task<bool> SaveProductionNoteAsync(ProductionNoteSaveDTO dto) => Task.FromResult(true);
         public Task<byte[]> ExportCopyAsync(int calcId, ProjectManagement.Shared.DTO.Transfer.AtacostCalculationExportRequest request) => Task.FromResult(Array.Empty<byte>());
+        public Task<ProjectManagement.Shared.DTO.Transfer.AtacostImportPreviewDTO> PreviewCopyAsync(Guid targetProjectId, byte[] fileBytes) => Task.FromResult(new ProjectManagement.Shared.DTO.Transfer.AtacostImportPreviewDTO());
         public Task<int> ImportCopyAsync(Guid targetProjectId, byte[] fileBytes) => Task.FromResult(0);
         public Task<bool> DeleteAsync(int id) => Task.FromResult(true);
     }

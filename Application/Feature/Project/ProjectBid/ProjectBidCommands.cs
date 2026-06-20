@@ -47,18 +47,19 @@ namespace Application.Feature.Project.ProjectBid
             => service.DeleteAsync(request.Id, request.ProjectId, request.DepartmentId, cancellationToken);
     }
 
-    // ─── Evaluation model ─────────────────────────────────────────────────────
-    public sealed record SetProjectBidEvaluationModelCommand(
+    // ─── Evaluation basis + method ────────────────────────────────────────────
+    public sealed record SetProjectBidEvaluationCommand(
         Guid ProjectId,
-        BidEvaluationModel Model,
+        BidEvaluationBasis Basis,
+        BidEvaluationModel Method,
         int? DepartmentId
     ) : IRequest<bool>;
 
-    public sealed class SetProjectBidEvaluationModelCommandHandler(IProjectBidService service)
-        : IRequestHandler<SetProjectBidEvaluationModelCommand, bool>
+    public sealed class SetProjectBidEvaluationCommandHandler(IProjectBidService service)
+        : IRequestHandler<SetProjectBidEvaluationCommand, bool>
     {
-        public Task<bool> Handle(SetProjectBidEvaluationModelCommand request, CancellationToken cancellationToken)
-            => service.SetEvaluationModelAsync(request.ProjectId, request.Model, request.DepartmentId, cancellationToken);
+        public Task<bool> Handle(SetProjectBidEvaluationCommand request, CancellationToken cancellationToken)
+            => service.SetEvaluationAsync(request.ProjectId, request.Basis, request.Method, request.DepartmentId, cancellationToken);
     }
 
     // ─── Price columns ────────────────────────────────────────────────────────

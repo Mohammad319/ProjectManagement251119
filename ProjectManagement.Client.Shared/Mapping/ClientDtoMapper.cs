@@ -67,6 +67,7 @@ namespace ProjectManagement.Client.Shared.Mapping
                 AddressText = dto.AddressText ?? string.Empty,
                 Priority = dto.Priority,
                 TimeMonth = dto.TimeMonth,
+                ImportInfo = dto.ImportInfo,
             };
         }
 
@@ -360,6 +361,7 @@ namespace ProjectManagement.Client.Shared.Mapping
                 ClientsManager = dto.ClientsManager ?? string.Empty,
                 PublicationDate = dto.PublicationDate,
                 DecisionDate = dto.DecisionDate,
+                ImportInfo = dto.ImportInfo,
                 Calculations = [],
             };
         }

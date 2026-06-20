@@ -123,7 +123,7 @@
                 else
                 {
                     <div>
-                        <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Pris</label>
+                        <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@(IsTotalCostModel ? "Total kostnad" : "Pris")</label>
                         <input type="text"
                                inputmode="decimal"
                                class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-right text-sm text-slate-800 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
@@ -133,36 +133,50 @@
                     </div>
                 }
 
-                <div>
-                    <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Mervärdeavdrag %</label>
-                    <input type="text"
-                           inputmode="decimal"
-                           class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-right text-sm text-slate-800 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                           placeholder="0"
-                           value="@FormatPercent(_editItem.DeductionPercent)"
-                           @onchange="e => OnDeductionChanged(ParseAmount(e.Value?.ToString()))" />
-                </div>
+                @* Mervärdeavdrag + jämförelsesumma används endast för Pris och kvalitet med jämförelsesumma. *@
+                @if (UsesDeduction)
+                {
+                    <div>
+                        <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Mervärdeavdrag %</label>
+                        <input type="text"
+                               inputmode="decimal"
+                               class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-right text-sm text-slate-800 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                               placeholder="0"
+                               value="@FormatPercent(_editItem.DeductionPercent)"
+                               @onchange="e => OnDeductionChanged(ParseAmount(e.Value?.ToString()))" />
+                    </div>
 
-                <div>
-                    <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Jämförelsesumma</label>
-                    <input type="text"
-                           inputmode="decimal"
-                           class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-right text-sm text-slate-800 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                           placeholder="0"
-                           value="@FormatAmount(_editItem.ComparisonAmount)"
-                           @onchange="e => OnComparisonChanged(ParseAmount(e.Value?.ToString()))" />
-                </div>
+                    <div>
+                        <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Jämförelsesumma</label>
+                        <input type="text"
+                               inputmode="decimal"
+                               class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-right text-sm text-slate-800 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                               placeholder="0"
+                               value="@FormatAmount(_editItem.ComparisonAmount)"
+                               @onchange="e => OnComparisonChanged(ParseAmount(e.Value?.ToString()))" />
+                    </div>
+                }
 
                 @* ── Beräknade summor (read-only) ── *@
                 <div class="sm:col-span-2 flex flex-wrap items-center gap-x-6 gap-y-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs dark:border-slate-700 dark:bg-slate-900/60">
-                    <span class="text-slate-500 dark:text-slate-400">
-                        Anbudssumma:
-                        <span class="ml-1 font-mono font-semibold text-slate-800 dark:text-slate-100">@FormatSwedishAmount(FormTotal)</span>
-                    </span>
-                    <span class="text-slate-500 dark:text-slate-400">
-                        Jämförelsesumma:
-                        <span class="ml-1 font-mono font-semibold text-sky-700 dark:text-sky-300">@FormatSwedishAmount(_editItem.ComparisonAmount ?? FormTotal)</span>
-                    </span>
+                    @if (IsTotalCostModel)
+                    {
+                        <span class="text-slate-500 dark:text-slate-400">
+                            Total kostnad:
+                            <span class="ml-1 font-mono font-semibold text-sky-700 dark:text-sky-300">@FormatSwedishAmount(FormTotal)</span>
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="text-slate-500 dark:text-slate-400">
+                            Anbudssumma:
+                            <span class="ml-1 font-mono font-semibold text-slate-800 dark:text-slate-100">@FormatSwedishAmount(FormTotal)</span>
+                        </span>
+                        <span class="text-slate-500 dark:text-slate-400">
+                            Jämförelsesumma:
+                            <span class="ml-1 font-mono font-semibold text-sky-700 dark:text-sky-300">@FormatSwedishAmount(_editItem.ComparisonAmount ?? FormTotal)</span>
+                        </span>
+                    }
                 </div>
             }
 
@@ -249,39 +263,80 @@ else
         @* Utvärderingsmodell + toolbar *@
         <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
             <div class="space-y-2">
-                @* Utvärderingsmodell *@
+                @* Utvärderingsgrund *@
                 <div class="flex flex-wrap items-center gap-2">
-                    <span class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Utvärderingsmodell</span>
+                    <span class="w-32 shrink-0 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Utvärderingsgrund</span>
                     <div class="inline-flex overflow-hidden rounded-lg border border-slate-300 dark:border-slate-700">
                         <button type="button"
-                                class="@(IsLowestComparisonModel ? "bg-sky-600 px-2.5 py-1 text-xs font-semibold text-white" : "px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800")"
+                                class="@(IsPriceBasis ? "bg-sky-600 px-2.5 py-1 text-xs font-semibold text-white" : "px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800")"
                                 disabled="@_isModelSaving"
-                                @onclick="() => SetEvaluationModelAsync(BidEvaluationModel.LowestComparison)">
-                            Lägst jämförelsesumma
+                                @onclick="() => SetBasisAsync(BidEvaluationBasis.Price)">
+                            Pris
                         </button>
                         <button type="button"
-                                class="@(IsTotalCostModel ? "border-l border-sky-700 bg-sky-600 px-2.5 py-1 text-xs font-semibold text-white" : "border-l border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800")"
+                                class="@(IsCostBasis ? "border-l border-sky-700 bg-sky-600 px-2.5 py-1 text-xs font-semibold text-white" : "border-l border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800")"
                                 disabled="@_isModelSaving"
-                                @onclick="() => SetEvaluationModelAsync(BidEvaluationModel.LowestTotalCost)">
-                            Lägst total kostnad
+                                @onclick="() => SetBasisAsync(BidEvaluationBasis.Cost)">
+                            Kostnad
                         </button>
                         <button type="button"
-                                class="@(IsPointsModel ? "bg-sky-600 px-2.5 py-1 text-xs font-semibold text-white" : "border-l border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800")"
+                                class="@(IsPriceQualityBasis ? "border-l border-sky-700 bg-sky-600 px-2.5 py-1 text-xs font-semibold text-white" : "border-l border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800")"
                                 disabled="@_isModelSaving"
-                                @onclick="() => SetEvaluationModelAsync(BidEvaluationModel.HighestPoints)">
-                            Högst totalpoäng
+                                @onclick="() => SetBasisAsync(BidEvaluationBasis.PriceQuality)">
+                            Pris och kvalitet
                         </button>
                     </div>
                 </div>
 
-                @* Hjälptext beroende på vald modell *@
+                @* Hjälptext beroende på vald utvärderingsgrund *@
                 <p class="text-[11px] leading-snug text-slate-500 dark:text-slate-400">
-                    @(_evaluationModel switch
+                    @(_evaluationBasis switch
                     {
-                        BidEvaluationModel.HighestPoints => "Utvärderingsdelarna anges som poäng och summeras till totalpoäng. Högst totalpoäng får bäst placering.",
-                        BidEvaluationModel.LowestTotalCost => "Prisdelarna summeras till total kostnad. Lägst total kostnad får bäst placering.",
-                        _ => "Prisdelar summeras till anbudssumma. Eventuellt mervärdeavdrag räknas av. Lägst jämförelsesumma får bäst placering."
+                        BidEvaluationBasis.Cost => "Används när anbuden jämförs utifrån total kostnad, inte bara pris. Kostnadsdelar kan till exempel vara inköpspris, drift, service, underhåll eller livscykelkostnad. Lägst total kostnad får bäst placering.",
+                        BidEvaluationBasis.PriceQuality => "Används när både pris och kvalitet påverkar resultatet. Kvalitet kan hanteras genom mervärdeavdrag eller genom poäng. Används för bästa förhållande mellan pris och kvalitet.",
+                        _ => "Används när anbuden jämförs utifrån pris. Prisdelar summeras till anbudssumma och lägst jämförelsesumma får bäst placering."
                     })
+                </p>
+
+                @* Beräkningsmetod — beroende på vald utvärderingsgrund *@
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="w-32 shrink-0 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Beräkningsmetod</span>
+                    @if (IsPriceBasis)
+                    {
+                        <span class="inline-flex rounded-lg border border-sky-300 bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-300">Lägst jämförelsesumma</span>
+                    }
+                    else if (IsCostBasis)
+                    {
+                        <span class="inline-flex rounded-lg border border-sky-300 bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-300">Lägst total kostnad</span>
+                    }
+                    else
+                    {
+                        <div class="inline-flex overflow-hidden rounded-lg border border-slate-300 dark:border-slate-700">
+                            <button type="button"
+                                    class="@(IsLowestComparisonModel ? "bg-sky-600 px-2.5 py-1 text-xs font-semibold text-white" : "px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800")"
+                                    disabled="@_isModelSaving"
+                                    @onclick="() => SetMethodAsync(BidEvaluationModel.LowestComparison)">
+                                Lägst jämförelsesumma med mervärdeavdrag
+                            </button>
+                            <button type="button"
+                                    class="@(IsPointsModel ? "border-l border-sky-700 bg-sky-600 px-2.5 py-1 text-xs font-semibold text-white" : "border-l border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800")"
+                                    disabled="@_isModelSaving"
+                                    @onclick="() => SetMethodAsync(BidEvaluationModel.HighestPoints)">
+                                Högst totalpoäng
+                            </button>
+                        </div>
+                    }
+                </div>
+
+                @* Hjälptext beroende på vald beräkningsmetod *@
+                <p class="text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+                    @(IsCostBasis
+                        ? "Kostnadsdelar summeras till total kostnad. Lägst total kostnad får bäst placering."
+                        : IsPointsModel
+                            ? "Utvärderingsdelarna anges som poäng och summeras till totalpoäng. Högst totalpoäng får bäst placering. Används när pris och kvalitet omvandlas till poäng, till exempel Pris 30 poäng och Kvalitet 70 poäng."
+                            : UsesDeduction
+                                ? "Prisdelar summeras till anbudssumma. Eventuellt mervärdeavdrag räknas av från anbudssumman och ger en jämförelsesumma. Lägst jämförelsesumma får bäst placering. Exempel: Anbudssumma 1 000 000 kr med 30 % mervärdeavdrag ger jämförelsesumma 700 000 kr."
+                                : "Prisdelar summeras till anbudssumma. Om inga mervärdeavdrag används motsvarar jämförelsesumman anbudssumman. Lägst jämförelsesumma får bäst placering.")
                 </p>
 
                 @* Knappar *@
@@ -328,6 +383,19 @@ else
                 <p class="mb-2 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
                     Standard är att endast en del utvärderas. Lägg till utvärderingsdelar om anbudet
                     består av flera delar som ska summeras, till exempel Del 1, Del 2, Option 1 eller Option 2.
+                    @* Extra hjälptext beroende på vald utvärderingsgrund/beräkningsmetod. *@
+                    @if (IsCostBasis)
+                    {
+                        <span> För kostnadsutvärdering kan delarna till exempel vara inköpspris, drift, service, underhåll eller livscykelkostnad.</span>
+                    }
+                    else if (IsPointsModel)
+                    {
+                        <span> För poängutvärdering kan delarna till exempel vara Pris, Kvalitet, Miljö, Leveranstid eller Service.</span>
+                    }
+                    else if (UsesDeduction)
+                    {
+                        <span> Mervärdeavdrag kan användas för att räkna av kvalitet eller mervärde från anbudssumman.</span>
+                    }
                 </p>
 
                 @* Lägg-till-rad ligger fast högst upp i sektionen *@
@@ -422,6 +490,7 @@ else
 
                             @if (IsPointsModel)
                             {
+                                @* Pris och kvalitet + Högst totalpoäng: poängdelar + Totalpoäng. *@
                                 @if (HasColumns)
                                 {
                                     @foreach (var col in _columns)
@@ -431,8 +500,21 @@ else
                                 }
                                 <th class="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Totalpoäng</th>
                             }
+                            else if (IsTotalCostModel)
+                            {
+                                @* Kostnad + Lägst total kostnad: kostnadsdelar + Total kostnad (ingen anbudssumma/mervärdeavdrag/jämförelsesumma). *@
+                                @if (HasColumns)
+                                {
+                                    @foreach (var col in _columns)
+                                    {
+                                        <th class="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400" title="@col.Name">@col.Name</th>
+                                    }
+                                }
+                                <th class="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Total kostnad</th>
+                            }
                             else
                             {
+                                @* Pris / Pris och kvalitet + Lägst jämförelsesumma: prisdelar + Anbudssumma (+ Mervärdeavdrag) + Jämförelsesumma. *@
                                 @if (HasColumns)
                                 {
                                     @foreach (var col in _columns)
@@ -445,7 +527,10 @@ else
                                     <th class="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Pris</th>
                                 }
                                 <th class="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Anbudssumma</th>
-                                <th class="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400" title="Mervärdeavdrag i procent">Mervärdeavdrag %</th>
+                                @if (UsesDeduction)
+                                {
+                                    <th class="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400" title="Mervärdeavdrag i procent">Mervärdeavdrag %</th>
+                                }
                                 <th class="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400" title="Anbudssumma minus mervärdeavdrag">Jämförelsesumma</th>
                             }
 
@@ -496,6 +581,22 @@ else
                                         @(bid.TotalPoints.HasValue ? FormatPoints(bid.TotalPoints.Value) : "-")
                                     </td>
                                 }
+                                else if (IsTotalCostModel)
+                                {
+                                    @if (HasColumns)
+                                    {
+                                        @foreach (var col in _columns)
+                                        {
+                                            var value = GetBidPartValue(bid, col.Id);
+                                            <td class="px-3 py-2 text-right font-mono text-slate-600 dark:text-slate-300">
+                                                @(value.HasValue ? FormatSwedishAmount(value.Value) : "-")
+                                            </td>
+                                        }
+                                    }
+                                    <td class="px-3 py-2 text-right font-mono font-semibold @(isRejected ? "text-slate-400 dark:text-slate-500" : "text-sky-700 dark:text-sky-300")">
+                                        @(bid.Amount.HasValue ? FormatSwedishAmount(bid.Amount.Value) : "-")
+                                    </td>
+                                }
                                 else
                                 {
                                     @if (HasColumns)
@@ -517,9 +618,12 @@ else
                                     <td class="px-3 py-2 text-right font-mono font-semibold @(isRejected ? "text-slate-400 dark:text-slate-500" : "text-slate-800 dark:text-slate-100")">
                                         @(bid.Amount.HasValue ? FormatSwedishAmount(bid.Amount.Value) : "-")
                                     </td>
-                                    <td class="px-3 py-2 text-right font-mono text-slate-600 dark:text-slate-300">
-                                        @((bid.DeductionPercent ?? 0) > 0 ? $"{FormatPercent(bid.DeductionPercent)} %" : "-")
-                                    </td>
+                                    @if (UsesDeduction)
+                                    {
+                                        <td class="px-3 py-2 text-right font-mono text-slate-600 dark:text-slate-300">
+                                            @((bid.DeductionPercent ?? 0) > 0 ? $"{FormatPercent(bid.DeductionPercent)} %" : "-")
+                                        </td>
+                                    }
                                     <td class="px-3 py-2 text-right font-mono font-semibold @(isRejected ? "text-slate-400 dark:text-slate-500" : "text-sky-700 dark:text-sky-300")">
                                         @(bid.ComparisonAmount.HasValue ? FormatSwedishAmount(bid.ComparisonAmount.Value) : "-")
                                     </td>
@@ -587,22 +691,22 @@ else
                         <span class="ml-3">Lägsta totalpoäng: <span class="font-mono">@FormatPoints(scored.Min(b => b.TotalPoints!.Value))</span></span>
                     }
                 }
-                else
+                else if (IsTotalCostModel)
                 {
                     var valid = _bids.Where(b => b.IsValid && b.Amount.HasValue).ToList();
                     @if (valid.Any())
                     {
-                        var anyDeduction = valid.Any(b => (b.DeductionPercent ?? 0) > 0);
-                        @if (anyDeduction)
-                        {
-                            <span class="ml-3">Lägsta jämförelsesumma: <span class="font-mono font-semibold text-sky-700 dark:text-sky-300">@FormatSwedishAmount(valid.Min(b => b.ComparisonAmount!.Value))</span></span>
-                            <span class="ml-3">Högsta jämförelsesumma: <span class="font-mono">@FormatSwedishAmount(valid.Max(b => b.ComparisonAmount!.Value))</span></span>
-                        }
-                        else
-                        {
-                            <span class="ml-3">Lägsta anbudssumma: <span class="font-mono font-semibold">@FormatSwedishAmount(valid.Min(b => b.Amount!.Value))</span></span>
-                            <span class="ml-3">Högsta anbudssumma: <span class="font-mono">@FormatSwedishAmount(valid.Max(b => b.Amount!.Value))</span></span>
-                        }
+                        <span class="ml-3">Lägsta total kostnad: <span class="font-mono font-semibold text-sky-700 dark:text-sky-300">@FormatSwedishAmount(valid.Min(b => b.Amount!.Value))</span></span>
+                        <span class="ml-3">Högsta total kostnad: <span class="font-mono">@FormatSwedishAmount(valid.Max(b => b.Amount!.Value))</span></span>
+                    }
+                }
+                else
+                {
+                    var valid = _bids.Where(b => b.IsValid && b.ComparisonAmount.HasValue).ToList();
+                    @if (valid.Any())
+                    {
+                        <span class="ml-3">Lägsta jämförelsesumma: <span class="font-mono font-semibold text-sky-700 dark:text-sky-300">@FormatSwedishAmount(valid.Min(b => b.ComparisonAmount!.Value))</span></span>
+                        <span class="ml-3">Högsta jämförelsesumma: <span class="font-mono">@FormatSwedishAmount(valid.Max(b => b.ComparisonAmount!.Value))</span></span>
                     }
                 }
             </div>
@@ -635,6 +739,7 @@ else
     private List<ProjectBidListDTO> _bids = [];
     private List<ProjectBidPriceColumnDTO> _columns = [];
     private BidEvaluationModel _evaluationModel = BidEvaluationModel.LowestComparison;
+    private BidEvaluationBasis _evaluationBasis = BidEvaluationBasis.Price;
     private ProjectBidFormModel? _editItem;
     private bool _isSaving;
     private bool _isLoading;
@@ -655,6 +760,13 @@ else
     private bool IsLowestComparisonModel => _evaluationModel == BidEvaluationModel.LowestComparison;
     private bool IsTotalCostModel => _evaluationModel == BidEvaluationModel.LowestTotalCost;
 
+    private bool IsPriceBasis => _evaluationBasis == BidEvaluationBasis.Price;
+    private bool IsCostBasis => _evaluationBasis == BidEvaluationBasis.Cost;
+    private bool IsPriceQualityBasis => _evaluationBasis == BidEvaluationBasis.PriceQuality;
+
+    // Mervärdeavdrag only applies to "Pris och kvalitet" with the comparison-sum method.
+    private bool UsesDeduction => IsPriceQualityBasis && IsLowestComparisonModel;
+
     protected override async Task OnInitializedAsync()
     {
         await LoadAsync();
@@ -671,6 +783,7 @@ else
             _columns = view.PriceColumns;
             _bids = view.Bids;
             _evaluationModel = view.EvaluationModel;
+            _evaluationBasis = view.EvaluationBasis;
             _rejectedCount = _bids.Count(b => b.Status == BidStatus.Rejected);
             _columnNameEdits.Clear();
         }
@@ -688,15 +801,36 @@ else
         }
     }
 
-    private async Task SetEvaluationModelAsync(BidEvaluationModel model)
+    // Selecting an evaluation basis (Pris/Kostnad/Pris och kvalitet) picks a sensible
+    // default method for that basis. The method picker is only shown for Pris och kvalitet.
+    private async Task SetBasisAsync(BidEvaluationBasis basis)
     {
-        if (model == _evaluationModel || _isModelSaving)
+        var method = basis switch
+        {
+            BidEvaluationBasis.Price => BidEvaluationModel.LowestComparison,
+            BidEvaluationBasis.Cost => BidEvaluationModel.LowestTotalCost,
+            // Keep the current method if it is valid for Pris och kvalitet, otherwise default.
+            BidEvaluationBasis.PriceQuality => _evaluationModel == BidEvaluationModel.HighestPoints
+                ? BidEvaluationModel.HighestPoints
+                : BidEvaluationModel.LowestComparison,
+            _ => BidEvaluationModel.LowestComparison
+        };
+
+        await SetEvaluationAsync(basis, method);
+    }
+
+    private Task SetMethodAsync(BidEvaluationModel method) =>
+        SetEvaluationAsync(_evaluationBasis, method);
+
+    private async Task SetEvaluationAsync(BidEvaluationBasis basis, BidEvaluationModel method)
+    {
+        if ((basis == _evaluationBasis && method == _evaluationModel) || _isModelSaving)
             return;
 
         _isModelSaving = true;
         try
         {
-            var ok = await Repo.ProjectBid.SetEvaluationModelAsync(ProjectId, model);
+            var ok = await Repo.ProjectBid.SetEvaluationAsync(ProjectId, basis, method);
             if (ok)
             {
                 await LoadAsync();
@@ -709,7 +843,7 @@ else
         catch (Exception ex)
         {
             MHD.Notifications(ToastType.Update, false);
-            await ClientLog.ErrorAsync($"Failed to set bid evaluation model for project {ProjectId}.", ex: ex);
+            await ClientLog.ErrorAsync($"Failed to set bid evaluation for project {ProjectId}.", ex: ex);
         }
         finally
         {

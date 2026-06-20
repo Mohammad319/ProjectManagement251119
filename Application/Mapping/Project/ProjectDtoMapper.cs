@@ -109,7 +109,8 @@ namespace Application.Mapping.Project
                 ProcurementProcedure = entity.ProcurementProcedure?.Name ?? string.Empty,
                 ClientsManager = metadata.ClientsManager,
                 PublicationDate = metadata.PublicationDate,
-                DecisionDate = metadata.DecisionDate
+                DecisionDate = metadata.DecisionDate,
+                ImportInfo = metadata.ImportInfo
             };
         }
 

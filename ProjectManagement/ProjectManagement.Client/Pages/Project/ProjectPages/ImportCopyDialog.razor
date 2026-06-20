@@ -10,7 +10,7 @@
 
     @* ── Select file ──────────────────────────────────────────── *@
     <div>
-        <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Välj ATACOST-paket (.atacost)</label>
+        <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">@(IsProject ? "Välj projektkopia (.atacost)" : "Välj kalkylkopia (.atacost)")</label>
         <InputFile OnChange="OnFileSelectedAsync" accept=".atacost" disabled="@_busy"
                    class="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-sky-600 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-white hover:file:bg-sky-700 dark:text-slate-300" />
     </div>
@@ -51,37 +51,83 @@
         </div>
 
         @* ── Select target ────────────────────────────────────── *@
-        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
-                <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Avdelning</label>
-                <MhdFormSelect TValue="string"
-                               Value="_departmentValue"
-                               ValueChanged="OnDepartmentChanged"
-                               Options="DepartmentOptions"
-                               Placeholder="Välj avdelning..." />
+        @if (HasPresetTarget)
+        {
+            @* Fixed target (e.g. opened from the folder tree): show it read-only. *@
+            <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm dark:border-slate-800 dark:bg-slate-950">
+                <span class="text-slate-400 dark:text-slate-500">Importeras till:</span>
+                <span class="font-semibold">@TargetSummary</span>
             </div>
-            <div>
-                <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Mapp <span class="text-amber-500">*</span></label>
-                <MhdFormSelect TValue="string"
-                               Value="_folderValue"
-                               ValueChanged="OnFolderChanged"
-                               Options="FolderOptions"
-                               Placeholder="Välj mapp..."
-                               Disabled="@(!_folders.Any())" />
-            </div>
-            @if (!IsProject)
-            {
-                <div class="sm:col-span-2">
-                    <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Projekt <span class="text-amber-500">*</span></label>
+        }
+        else
+        {
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                    <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Avdelning</label>
                     <MhdFormSelect TValue="string"
-                                   Value="_projectValue"
-                                   ValueChanged="OnProjectChanged"
-                                   Options="ProjectOptions"
-                                   Placeholder="Välj projekt..."
-                                   Disabled="@(!_projects.Any())" />
+                                   Value="_departmentValue"
+                                   ValueChanged="OnDepartmentChanged"
+                                   Options="DepartmentOptions"
+                                   Placeholder="Välj avdelning..." />
                 </div>
-            }
-        </div>
+                <div>
+                    <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Mapp <span class="text-amber-500">*</span></label>
+                    <MhdFormSelect TValue="string"
+                                   Value="_folderValue"
+                                   ValueChanged="OnFolderChanged"
+                                   Options="FolderOptions"
+                                   Placeholder="Välj mapp..."
+                                   Disabled="@(!_folders.Any())" />
+                </div>
+                @if (!IsProject)
+                {
+                    <div class="sm:col-span-2">
+                        <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Projekt <span class="text-amber-500">*</span></label>
+                        <MhdFormSelect TValue="string"
+                                       Value="_projectValue"
+                                       ValueChanged="OnProjectChanged"
+                                       Options="ProjectOptions"
+                                       Placeholder="Välj projekt..."
+                                       Disabled="@(!_projects.Any())" />
+                    </div>
+                }
+            </div>
+        }
+
+        @* ── Folder required (project import) ─────────────────────── *@
+        @if (IsProject && !HasPresetTarget && string.IsNullOrEmpty(_folderValue))
+        {
+            <div class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300">
+                Välj en mapp först för att importera en projektkopia.
+            </div>
+        }
+
+        @* ── Import preview ───────────────────────────────────────── *@
+        @if (_previewBusy)
+        {
+            <div class="text-xs text-slate-500 dark:text-slate-400">Förhandsgranskar import…</div>
+        }
+        else if (_preview is { IsValid: true })
+        {
+            <div class="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
+                <h3 class="mb-2 text-sm font-semibold text-slate-900 dark:text-slate-100">Importförhandsgranskning</h3>
+
+                @* Read-only target summary. *@
+                <div class="mb-3 text-xs text-slate-600 dark:text-slate-300">
+                    <span class="text-slate-400 dark:text-slate-500">Importeras till:</span>
+                    <span class="font-semibold">@(_preview.TargetSummary)</span>
+                </div>
+
+                @if (!_preview.CanImport)
+                {
+                    <div class="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
+                        Importen är blockerad tills alla obligatoriska fält har giltiga lokala värden.
+                    </div>
+                }
+
+                <CalculationImportInfoDialog Info="_preview.Info" />
+            </div>
+        }
     }
 
     <div class="flex items-center justify-end gap-2">
@@ -101,12 +147,27 @@
     [Parameter] public string Kind { get; set; } = AtacostPackageDTO.KindProject;
     [Parameter] public EventCallback OnCompleted { get; set; }
 
+    // Optional preset target. When TargetSummary is set (e.g. opened from the
+    // folder tree) the dialog hides the department/folder/project pickers and
+    // imports to this fixed location instead.
+    [Parameter] public Guid? PresetFolderId { get; set; }
+    [Parameter] public Guid? PresetProjectId { get; set; }
+    [Parameter] public string? TargetSummary { get; set; }
+
     private bool IsProject => Kind == AtacostPackageDTO.KindProject;
+
+    private bool HasPresetTarget => !string.IsNullOrWhiteSpace(TargetSummary);
+
+    // Resolved import target: prefers a preset id, otherwise the picked value.
+    private Guid TargetFolderId => PresetFolderId ?? (Guid.TryParse(_folderValue, out var id) ? id : Guid.Empty);
+    private Guid TargetProjectId => PresetProjectId ?? (Guid.TryParse(_projectValue, out var id) ? id : Guid.Empty);
 
     private byte[]? _fileBytes;
     private AtacostPackageInfoDTO? _info;
+    private AtacostImportPreviewDTO? _preview;
     private string _error = string.Empty;
     private bool _busy;
+    private bool _previewBusy;
 
     private string _departmentValue = string.Empty;
     private string _folderValue = string.Empty;
@@ -125,12 +186,21 @@
 
     private bool IsImportDisabled =>
         _busy ||
+        _previewBusy ||
         _info is not { IsValid: true } ||
-        string.IsNullOrEmpty(_folderValue) ||
-        (!IsProject && string.IsNullOrEmpty(_projectValue));
+        // A valid, importable preview is required: this enforces that a target is selected and
+        // (in a future required-field phase) that all mandatory fields have local values.
+        _preview is not { IsValid: true, CanImport: true } ||
+        (HasPresetTarget
+            ? (IsProject ? TargetFolderId == Guid.Empty : TargetProjectId == Guid.Empty)
+            : (string.IsNullOrEmpty(_folderValue) || (!IsProject && string.IsNullOrEmpty(_projectValue))));
 
     protected override async Task OnInitializedAsync()
     {
+        // A preset target skips the pickers entirely; nothing to preload.
+        if (HasPresetTarget)
+            return;
+
         _departmentValue = (Folder.State.SelectedDepartmentId
             ?? Folder.State.Departments.FirstOrDefault()?.Id)?.ToString() ?? string.Empty;
         await LoadFoldersAsync();
@@ -142,10 +212,42 @@
         }
     }
 
+    // Runs the dry-run preview whenever both a valid file and a resolved target are available.
+    // Clears the preview when either is missing so a stale preview never enables the button.
+    private async Task TryLoadPreviewAsync()
+    {
+        _preview = null;
+
+        if (_fileBytes is null || _info is not { IsValid: true })
+            return;
+
+        var targetReady = IsProject ? TargetFolderId != Guid.Empty : TargetProjectId != Guid.Empty;
+        if (!targetReady)
+            return;
+
+        _previewBusy = true;
+        try
+        {
+            _preview = IsProject
+                ? await Repo.Project.PreviewCopyAsync(TargetFolderId, _fileBytes)
+                : await Repo.Calculation.PreviewCopyAsync(TargetProjectId, _fileBytes);
+        }
+        catch (Exception ex)
+        {
+            await ClientLog.ErrorAsync("Atacost preview failed", ex: ex);
+            _preview = null;
+        }
+        finally
+        {
+            _previewBusy = false;
+        }
+    }
+
     private async Task OnFileSelectedAsync(InputFileChangeEventArgs e)
     {
         _error = string.Empty;
         _info = null;
+        _preview = null;
         _fileBytes = null;
 
         try
@@ -159,7 +261,9 @@
 
             if (_info is null || !_info.IsValid)
             {
-                _error = "Filen är inte ett giltigt ATACOST-paket.";
+                _error = IsProject
+                    ? "Filen är inte en giltig projektkopia."
+                    : "Filen är inte en giltig kalkylkopia.";
                 _info = null;
             }
             else if (_info.Kind != Kind)
@@ -168,6 +272,10 @@
                     ? "Filen innehåller en kalkylkopia, inte en projektkopia."
                     : "Filen innehåller en projektkopia, inte en kalkylkopia.";
                 _info = null;
+            }
+            else
+            {
+                await TryLoadPreviewAsync();
             }
         }
         catch (Exception ex)
@@ -183,6 +291,7 @@
         _folderValue = string.Empty;
         _projectValue = string.Empty;
         _projects = [];
+        _preview = null;
         await LoadFoldersAsync();
     }
 
@@ -191,9 +300,17 @@
         _folderValue = value ?? string.Empty;
         _projectValue = string.Empty;
         await LoadProjectsAsync();
+        // For a project import the folder is the target, so refresh the preview now.
+        if (IsProject)
+            await TryLoadPreviewAsync();
     }
 
-    private void OnProjectChanged(string? value) => _projectValue = value ?? string.Empty;
+    private async Task OnProjectChanged(string? value)
+    {
+        _projectValue = value ?? string.Empty;
+        // For a calculation import the project is the target, so refresh the preview now.
+        await TryLoadPreviewAsync();
+    }
 
     private async Task LoadFoldersAsync()
     {
@@ -219,33 +336,38 @@
             bool ok;
             if (IsProject)
             {
-                Guid.TryParse(_folderValue, out var folderId);
-                var newId = await Repo.Project.ImportCopyAsync(folderId, _fileBytes);
+                var newId = await Repo.Project.ImportCopyAsync(TargetFolderId, _fileBytes);
                 ok = newId != Guid.Empty;
             }
             else
             {
-                Guid.TryParse(_projectValue, out var projectId);
-                var newId = await Repo.Calculation.ImportCopyAsync(projectId, _fileBytes);
+                var newId = await Repo.Calculation.ImportCopyAsync(TargetProjectId, _fileBytes);
                 ok = newId > 0;
             }
 
-            MHD.Notifications(ToastType.Add, ok);
             if (ok)
             {
+                // The file was valid and the import succeeded.
+                MHD.ToastInfo(IsProject ? "Projektkopian har importerats." : "Kalkylkopian har importerats.");
                 if (OnCompleted.HasDelegate)
                     await OnCompleted.InvokeAsync();
                 await Modal.CloseAsync();
             }
             else
             {
-                _error = "Kopian kunde inte importeras. Kontrollera att filen är giltig.";
+                // The file could be read but the import itself failed — keep it distinct
+                // from the "invalid file" message shown during file selection.
+                _error = IsProject
+                    ? "Projektkopian kunde läsas men kunde inte importeras. Kontrollera målplatsen och försök igen."
+                    : "Kalkylkopian kunde läsas men kunde inte importeras. Kontrollera målprojektet och försök igen.";
             }
         }
         catch (Exception ex)
         {
             await ClientLog.ErrorAsync("Atacost import failed", ex: ex);
-            _error = "Kopian kunde inte importeras. Kontrollera att filen är giltig.";
+            _error = IsProject
+                ? "Projektkopian kunde läsas men kunde inte importeras. Kontrollera målplatsen och försök igen."
+                : "Kalkylkopian kunde läsas men kunde inte importeras. Kontrollera målprojektet och försök igen.";
         }
         finally
         {

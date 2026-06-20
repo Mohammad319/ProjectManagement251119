@@ -7,6 +7,7 @@ using ProjectManagement.Client.Helper.DropDown;
 using ProjectManagement.Client.Pages.Folder.Component;
 using ProjectManagement.Client.Pages.Project.ProjectPages;
 using ProjectManagement.Client.Pages.Calculation.Form;
+using ProjectManagement.Client.Pages.Calculation.Share;
 using ProjectManagement.Client.Shared.Model.Project;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Client.Shared.MVVM.Folder;
@@ -1380,7 +1381,8 @@ namespace ProjectManagement.Client.Pages.Folder
             if (canManageFolder)
             {
                 list.Add(new() { IconHtml = Icons.Plus, Label = AppLoc[LocalizerConst.New, CalcResource.project], OnClickAsync = () => { CreateProjectFromFolderTree(item); return Task.CompletedTask; } });
-                list.Add(new() { IsSeparator = true });
+                // Import a project copy (.atacost) into this folder — creates a new project.
+                list.Add(new() { IconHtml = Icons.ImportFromFile, Label = "Importera projektkopia...", OnClickAsync = () => RequestImportProjectCopy(item, canManageFolder) });
                 list.Add(new() { IconHtml = Icons.Edit, Label = AppLoc["editFolder"], OnClickAsync = () => { UpdateForm(item); return Task.CompletedTask; } });
                 list.Add(new() { IconHtml = Icons.Folder, Label = AppLoc["moveFolder"], OnClickAsync = () => { OpenMoveCopyDialog(MoveCopyItemKind.Folder, MoveCopyOperation.Move, item); return Task.CompletedTask; } });
                 list.Add(new() { IconHtml = Icons.Copy, Label = AppLoc["copyFolder"], OnClickAsync = () => { OpenMoveCopyDialog(MoveCopyItemKind.Folder, MoveCopyOperation.Copy, item); return Task.CompletedTask; } });
@@ -1389,6 +1391,10 @@ namespace ProjectManagement.Client.Pages.Folder
                     list.Add(new() { IconHtml = Icons.Archive, Label = AppLoc["archiveFolder"], OnClickAsync = async () => await ArchiveOrRestoreFolderAsync(item, archive: true) });
                 else
                     list.Add(new() { IconHtml = Icons.Restore, Label = AppLoc["restoreFromArchive"], OnClickAsync = async () => await ArchiveOrRestoreFolderAsync(item, archive: false) });
+            }
+            else
+            {
+                list.Add(new() { IconHtml = Icons.ImportFromFile, Label = "Importera projektkopia...", OnClickAsync = () => RequestImportProjectCopy(item, canManageFolder) });
             }
 
             // "Ta bort mapp" visas alltid längst ner med separator och destruktiv stil.
@@ -1536,7 +1542,8 @@ namespace ProjectManagement.Client.Pages.Folder
             if (canManageProject)
             {
                 list.Add(new() { IconHtml = Icons.Plus, Label = AppLoc[LocalizerConst.New, CalcResource.calculation], OnClickAsync = async () => await CreateCalcFromProjectTreeAsync(folder, project) });
-                list.Add(new() { IsSeparator = true });
+                // Import a calculation copy (.atacost) into this project — creates a new calculation.
+                list.Add(new() { IconHtml = Icons.ImportFromFile, Label = "Importera kalkylkopia...", OnClickAsync = () => RequestImportCalcCopy(folder, project, canManageProject) });
                 list.Add(new() { IconHtml = Icons.Edit, Label = AppLoc["editProject"], OnClickAsync = () => { EditProjectFromTree(folder, project); return Task.CompletedTask; } });
                 list.Add(new() { IconHtml = Icons.Tender, Label = ResourceLoc.tender, OnClickAsync = () => { OpenProjectBidsFromTree(project); return Task.CompletedTask; } });
                 list.Add(new() { IconHtml = Icons.PermissionShield, Label = "Delning och behörighet", OnClickAsync = () => { OpenProjectShareFromTree(project); return Task.CompletedTask; } });
@@ -1548,12 +1555,19 @@ namespace ProjectManagement.Client.Pages.Folder
                 else
                     list.Add(new() { IconHtml = Icons.Restore, Label = AppLoc["restoreFromArchive"], OnClickAsync = async () => await ArchiveOrRestoreProjectAsync(project, archive: false) });
             }
+            else
+            {
+                list.Add(new() { IconHtml = Icons.ImportFromFile, Label = "Importera kalkylkopia...", OnClickAsync = () => RequestImportCalcCopy(folder, project, canManageProject) });
+            }
 
             // "Ta bort projekt" visas alltid längst ner med separator och destruktiv stil.
             // Aktivt för tomma projekt; annars öppnas en informationsdialog som förklarar
             // varför borttagning inte är tillåten (kalkyler, anbudsdata eller behörighet).
             if (list.Count > 0)
                 list.Add(new() { IsSeparator = true });
+
+            // Export the project as an .atacost copy — same dialog as the right-panel project list.
+            list.Add(new() { IconHtml = Icons.Tender, Label = "Exportera projektet...", OnClickAsync = () => RequestExportProjectCopy(project, canManageProject) });
 
             list.Add(new()
             {
@@ -1608,6 +1622,8 @@ namespace ProjectManagement.Client.Pages.Folder
             if (canManageCalc)
             {
                 list.Add(new() { IconHtml = Icons.Edit, Label = ResourceApp.edit, OnClickAsync = () => { EditCalculationFromTree(project, cal); return Task.CompletedTask; } });
+                list.Add(new() { IconHtml = Icons.Copy, Label = "Versioner", OnClickAsync = () => { OpenCalculationVersionsFromTree(project, cal); return Task.CompletedTask; } });
+                list.Add(new() { IconHtml = Icons.PermissionShield, Label = "Delning och behÃ¶righet", OnClickAsync = () => { OpenCalculationShareFromTree(cal); return Task.CompletedTask; } });
                 list.Add(new() { IconHtml = Icons.Folder, Label = AppLoc["moveCalculation"], OnClickAsync = () => { OpenMoveCopyCalcDialog(folder, project, cal, MoveCopyOperation.Move); return Task.CompletedTask; } });
                 list.Add(new() { IconHtml = Icons.Copy, Label = AppLoc["copyCalculation"], OnClickAsync = () => { OpenMoveCopyCalcDialog(folder, project, cal, MoveCopyOperation.Copy); return Task.CompletedTask; } });
                 list.Add(new() { IconHtml = Icons.Archive, Label = AppLoc["archiveCalculation"], OnClickAsync = async () => await ArchiveCalculationFromTreeAsync(project, cal) });
@@ -1618,6 +1634,10 @@ namespace ProjectManagement.Client.Pages.Folder
             var projectCalcs = project.Calculations ?? [];
 
             list.Add(new() { IsSeparator = true });
+
+            // Export the calculation as an .atacost copy — same dialog as the right-panel calculation list.
+            list.Add(new() { IconHtml = Icons.Tender, Label = "Exportera kalkyl...", OnClickAsync = () => RequestExportCalcCopy(cal, canManageCalc) });
+
             list.Add(new()
             {
                 IconHtml = Icons.Delete,
@@ -1827,6 +1847,32 @@ namespace ProjectManagement.Client.Pages.Folder
                 },
                 BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
 
+        private void OpenCalculationVersionsFromTree(ListProjectMVVM project, ListCalculationMVVM calculation) =>
+            Modal.ShowComponent<CalculationVersionsDialog>(
+                AppLoc["versions"].Value,
+                new Dictionary<string, object>
+                {
+                    [nameof(CalculationVersionsDialog.Calculation)] = calculation,
+                    [nameof(CalculationVersionsDialog.OnReloadRequired)] = EventCallback.Factory.Create(this,
+                        async () =>
+                        {
+                            project.CalculationsLoaded = false;
+                            await Folder.SetCalcsToProject(project);
+                            project.ShowCalculations = ProjectHasChildren(project);
+                            UoWService.Folder.State.Notify();
+                        })
+                },
+                BlazorMHD.UI.Core.Services.MhdDialogSize.Large);
+
+        private void OpenCalculationShareFromTree(ListCalculationMVVM calculation) =>
+            Modal.ShowComponent<ShareCalculationUI>(
+                "Delning och behÃ¶righet",
+                new Dictionary<string, object>
+                {
+                    [nameof(ShareCalculationUI.ListCalculation)] = calculation
+                },
+                BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
+
         private void OpenProjectBidsFromTree(ListProjectMVVM project) =>
             Modal.ShowComponent<ProjectBidsDialog>(
                 ResourceLoc.tender,
@@ -1880,6 +1926,142 @@ namespace ProjectManagement.Client.Pages.Folder
         {
             Folder.State.ClearSelection();
             await UoWService.Folder.LoadPrivateAndGroupFoldersAsync();
+        }
+
+        // ---- External copy (.atacost) export/import from the folder tree ---------
+        // These reuse the exact dialogs from the right-panel project/calculation
+        // lists so behaviour stays consistent between the tree and the right panel.
+
+        // Export a project copy (.atacost) — same dialog as the right-panel project list.
+        private void OpenExportProjectDialog(ListProjectMVVM project) =>
+            Modal.ShowComponent<SendProjectCopyDialog>(
+                "Exportera en kopia av projektet",
+                new Dictionary<string, object>
+                {
+                    [nameof(SendProjectCopyDialog.ProjectId)]   = project.Id,
+                    [nameof(SendProjectCopyDialog.ProjectName)] = project.Name
+                },
+                BlazorMHD.UI.Core.Services.MhdDialogSize.Large);
+
+        // Export a calculation copy (.atacost) — same dialog as the right-panel calculation list.
+        private void OpenExportCalcDialog(ListCalculationMVVM cal) =>
+            Modal.ShowComponent<SendCalculationCopyDialog>(
+                "Exportera en kopia av kalkylen",
+                new Dictionary<string, object>
+                {
+                    [nameof(SendCalculationCopyDialog.CalcId)]        = cal.Id,
+                    [nameof(SendCalculationCopyDialog.CalcName)]      = cal.Name,
+                    [nameof(SendCalculationCopyDialog.CalcTypeLabel)] = cal.CalculationType.ToString(),
+                    [nameof(SendCalculationCopyDialog.VersionNumber)] = cal.VersionNumber,
+                    [nameof(SendCalculationCopyDialog.IsPrivate)]     = cal.IsPrivate
+                },
+                BlazorMHD.UI.Core.Services.MhdDialogSize.Large);
+
+        // Import a project copy (.atacost) into the given folder — target shown read-only.
+        private void OpenImportProjectCopyDialog(FolderMVVM folder) =>
+            Modal.ShowComponent<ImportCopyDialog>(
+                "Importera projektkopia",
+                new Dictionary<string, object>
+                {
+                    [nameof(ImportCopyDialog.Kind)]           = ProjectManagement.Shared.DTO.Transfer.AtacostPackageDTO.KindProject,
+                    [nameof(ImportCopyDialog.PresetFolderId)] = folder.Id,
+                    [nameof(ImportCopyDialog.TargetSummary)]  = BuildFolderTargetSummary(folder),
+                    [nameof(ImportCopyDialog.OnCompleted)]    = EventCallback.Factory.Create(this, () => ReloadAfterImportAsync(folder, null))
+                },
+                BlazorMHD.UI.Core.Services.MhdDialogSize.Large);
+
+        // Import a calculation copy (.atacost) into the given project — target shown read-only.
+        private void OpenImportCalcCopyDialog(FolderMVVM folder, ListProjectMVVM project) =>
+            Modal.ShowComponent<ImportCopyDialog>(
+                "Importera kalkylkopia",
+                new Dictionary<string, object>
+                {
+                    [nameof(ImportCopyDialog.Kind)]            = ProjectManagement.Shared.DTO.Transfer.AtacostPackageDTO.KindCalculation,
+                    [nameof(ImportCopyDialog.PresetProjectId)] = project.Id,
+                    [nameof(ImportCopyDialog.TargetSummary)]   = BuildProjectTargetSummary(folder, project),
+                    [nameof(ImportCopyDialog.OnCompleted)]     = EventCallback.Factory.Create(this, () => ReloadAfterImportAsync(folder, project))
+                },
+                BlazorMHD.UI.Core.Services.MhdDialogSize.Large);
+
+        private Task RequestImportProjectCopy(FolderMVVM folder, bool hasPermission)
+        {
+            if (hasPermission)
+                OpenImportProjectCopyDialog(folder);
+            else
+                MHD.MessageOk("Importera projektkopia", "Du saknar behÃ¶righet att importera projektkopior.", BlazorMHD.UI.Core.DesignSystem.MhdState.Warning);
+
+            return Task.CompletedTask;
+        }
+
+        private Task RequestImportCalcCopy(FolderMVVM folder, ListProjectMVVM project, bool hasPermission)
+        {
+            if (hasPermission)
+                OpenImportCalcCopyDialog(folder, project);
+            else
+                MHD.MessageOk("Importera kalkylkopia", "Du saknar behÃ¶righet att importera kalkylkopior.", BlazorMHD.UI.Core.DesignSystem.MhdState.Warning);
+
+            return Task.CompletedTask;
+        }
+
+        private Task RequestExportProjectCopy(ListProjectMVVM project, bool hasPermission)
+        {
+            if (hasPermission)
+                OpenExportProjectDialog(project);
+            else
+                MHD.MessageOk("Exportera projektet", "Du saknar behÃ¶righet att exportera projektkopior.", BlazorMHD.UI.Core.DesignSystem.MhdState.Warning);
+
+            return Task.CompletedTask;
+        }
+
+        private Task RequestExportCalcCopy(ListCalculationMVVM calculation, bool hasPermission)
+        {
+            if (hasPermission)
+                OpenExportCalcDialog(calculation);
+            else
+                MHD.MessageOk("Exportera kalkyl", "Du saknar behÃ¶righet att exportera kalkylkopior.", BlazorMHD.UI.Core.DesignSystem.MhdState.Warning);
+
+            return Task.CompletedTask;
+        }
+
+        private string? GetSelectedDepartmentName() =>
+            Folder.State.Departments.FirstOrDefault(d => d.Id == Folder.State.SelectedDepartmentId)?.Name;
+
+        // "Department / Folder" — read-only target summary for a project import.
+        private string BuildFolderTargetSummary(FolderMVVM folder)
+        {
+            var parts = new[] { GetSelectedDepartmentName(), folder.Name }
+                .Where(p => !string.IsNullOrWhiteSpace(p));
+            return string.Join(" / ", parts);
+        }
+
+        // "Department / Folder / Project" — read-only target summary for a calculation import.
+        private string BuildProjectTargetSummary(FolderMVVM folder, ListProjectMVVM project)
+        {
+            var parts = new[] { GetSelectedDepartmentName(), folder.Name, project.Name }
+                .Where(p => !string.IsNullOrWhiteSpace(p));
+            return string.Join(" / ", parts);
+        }
+
+        // Refresh the tree (and right panel) after a successful import from the tree.
+        private async Task ReloadAfterImportAsync(FolderMVVM folder, ListProjectMVVM? project)
+        {
+            if (project is not null)
+            {
+                // Calculation imported into an existing project — reload its calculations.
+                project.CalculationsLoaded = false;
+                await Folder.SetCalcsToProject(project);
+                project.ShowCalculations = ProjectHasChildren(project);
+            }
+            else
+            {
+                // Project imported into a folder — reload the folder's projects.
+                folder.ProjectsLoaded = false;
+                await Folder.SetProjectsToFolder(folder);
+                folder.ShowProjects = FolderHasChildren(folder);
+            }
+
+            UoWService.Folder.State.Notify();
+            await InvokeAsync(StateHasChanged);
         }
     }
 }

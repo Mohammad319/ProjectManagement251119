@@ -141,6 +141,12 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
                 request, CalcURLBase + URLConst.Calculation.ExportCopy + "/" + calcId);
         }
 
+        public async Task<AtacostImportPreviewDTO> PreviewCopyAsync(Guid targetProjectId, byte[] fileBytes)
+        {
+            return await _httpRepository.PostAsync<AtacostImportPreviewDTO, byte[]>(
+                fileBytes, CalcURLBase + URLConst.Calculation.PreviewCopy + "/" + targetProjectId);
+        }
+
         public async Task<int> ImportCopyAsync(Guid targetProjectId, byte[] fileBytes)
         {
             return await _httpRepository.PostAsync<int, byte[]>(

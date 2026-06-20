@@ -40,6 +40,7 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation
 
         // Extern kalkylkopia (ATACOST-paket)
         Task<byte[]> ExportCopyAsync(int calcId, AtacostCalculationExportRequest request);
+        Task<AtacostImportPreviewDTO> PreviewCopyAsync(Guid targetProjectId, byte[] fileBytes);
         Task<int> ImportCopyAsync(Guid targetProjectId, byte[] fileBytes);
 
         Task<bool> DeleteAsync(int id);

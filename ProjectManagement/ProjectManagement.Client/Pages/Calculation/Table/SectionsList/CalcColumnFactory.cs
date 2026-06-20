@@ -89,6 +89,14 @@ public static class CalcColumnFactory
                 TaskRender = (b, t) => TableRenderHelpers.RenderWithTitle(b, t.Name),
                 ResRender = (b, r) => TableRenderHelpers.RenderWithTitle(b, r.Name)
             },
+            [NetColumnId.ImportInfo] = new()
+            {
+                TaskRender = static (b, _) => TableRenderHelpers.EmptyTd(b),
+                ResRender = static (b, r) => TableRenderHelpers.RenderTextTd(
+                    b,
+                    string.IsNullOrWhiteSpace(r.Data.ImportInfo) ? string.Empty : "⚠",
+                    r.Data.ImportInfo)
+            },
             [NetColumnId.Status] = new()
             {
                 TaskRender = (b, t) => TableRenderHelpers.RenderStatusTd(b, t.StatusColor, t.Status),

@@ -13,6 +13,74 @@ using System.Text.Json.Serialization;
 
 namespace ProjectManagement.Shared.DTO.Calculation
 {
+    public sealed class CalculationImportMappingDTO
+    {
+        public string Field { get; set; } = string.Empty;
+        public string OriginalValue { get; set; } = string.Empty;
+        public string MappedValue { get; set; } = string.Empty;
+
+        public CalculationImportMappingDTO Clone() => new()
+        {
+            Field = Field,
+            OriginalValue = OriginalValue,
+            MappedValue = MappedValue
+        };
+    }
+
+    public sealed class CalculationImportIssueDTO
+    {
+        public string ProblemType { get; set; } = string.Empty;
+        public string OriginalValue { get; set; } = string.Empty;
+        public int AffectedRows { get; set; }
+        public string Action { get; set; } = string.Empty;
+        public List<string> RowNames { get; set; } = [];
+
+        public CalculationImportIssueDTO Clone() => new()
+        {
+            ProblemType = ProblemType,
+            OriginalValue = OriginalValue,
+            AffectedRows = AffectedRows,
+            Action = Action,
+            RowNames = [.. RowNames]
+        };
+    }
+
+    public sealed class CalculationImportInfoDTO
+    {
+        public bool IsImportedCopy { get; set; }
+        public string ImportedFrom { get; set; } = string.Empty;
+        public string SourceFileName { get; set; } = string.Empty;
+        public string ImportedBy { get; set; } = string.Empty;
+        public DateTime ImportedAtUtc { get; set; }
+        public string TargetProject { get; set; } = string.Empty;
+        public int ImportedRows { get; set; }
+        public int ImportedRowsWithIssues { get; set; }
+        public int NotImportedRows { get; set; }
+        public int AutomaticallyMappedValues { get; set; }
+        public int ManuallyMappedValues { get; set; }
+        public List<CalculationImportMappingDTO> MainMappings { get; set; } = [];
+        public List<CalculationImportIssueDTO> Issues { get; set; } = [];
+        public List<CalculationImportIssueDTO> NotImported { get; set; } = [];
+
+        public CalculationImportInfoDTO Clone() => new()
+        {
+            IsImportedCopy = IsImportedCopy,
+            ImportedFrom = ImportedFrom,
+            SourceFileName = SourceFileName,
+            ImportedBy = ImportedBy,
+            ImportedAtUtc = ImportedAtUtc,
+            TargetProject = TargetProject,
+            ImportedRows = ImportedRows,
+            ImportedRowsWithIssues = ImportedRowsWithIssues,
+            NotImportedRows = NotImportedRows,
+            AutomaticallyMappedValues = AutomaticallyMappedValues,
+            ManuallyMappedValues = ManuallyMappedValues,
+            MainMappings = [.. MainMappings.Select(x => x.Clone())],
+            Issues = [.. Issues.Select(x => x.Clone())],
+            NotImported = [.. NotImported.Select(x => x.Clone())]
+        };
+    }
+
     public class CalculationHourlyPriceFactorData
     {
         public List<HourlyPriceListGroupDTO> HourlyPrice { get; set; } = [];
@@ -49,6 +117,7 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public List<string> Responsibles { get; set; } = [];
         public List<UnderContactOrganisationBase> Contacts { get; set; } = [];
         public List<IncomeBase> Income { get; set; } = [];
+        public CalculationImportInfoDTO? ImportInfo { get; set; }
 
         public string Maps { get; set; } = string.Empty;
         public string Developer { get; set; } = string.Empty;
@@ -83,6 +152,7 @@ namespace ProjectManagement.Shared.DTO.Calculation
                 Responsibles = MetadataCloneHelper.CloneStrings(Responsibles),
                 Contacts = MetadataCloneHelper.CloneContacts(Contacts),
                 Income = CalculationCloneHelper.CloneIncome(Income),
+                ImportInfo = CloneImportInfo(ImportInfo),
                 Maps = MetadataCloneHelper.CopyText(Maps),
                 Developer = MetadataCloneHelper.CopyText(Developer),
                 ClientsManager = MetadataCloneHelper.CopyText(ClientsManager),
@@ -93,6 +163,33 @@ namespace ProjectManagement.Shared.DTO.Calculation
                 Inspector = MetadataCloneHelper.CopyText(Inspector)
             };
         }
+
+        private static CalculationImportInfoDTO? CloneImportInfo(CalculationImportInfoDTO? value) => value is null ? null : new()
+        {
+            IsImportedCopy = value.IsImportedCopy,
+            ImportedFrom = value.ImportedFrom,
+            SourceFileName = value.SourceFileName,
+            ImportedBy = value.ImportedBy,
+            ImportedAtUtc = value.ImportedAtUtc,
+            TargetProject = value.TargetProject,
+            ImportedRows = value.ImportedRows,
+            ImportedRowsWithIssues = value.ImportedRowsWithIssues,
+            NotImportedRows = value.NotImportedRows,
+            AutomaticallyMappedValues = value.AutomaticallyMappedValues,
+            ManuallyMappedValues = value.ManuallyMappedValues,
+            MainMappings = [.. value.MainMappings.Select(x => new CalculationImportMappingDTO { Field = x.Field, OriginalValue = x.OriginalValue, MappedValue = x.MappedValue })],
+            Issues = [.. value.Issues.Select(CloneIssue)],
+            NotImported = [.. value.NotImported.Select(CloneIssue)]
+        };
+
+        private static CalculationImportIssueDTO CloneIssue(CalculationImportIssueDTO value) => new()
+        {
+            ProblemType = value.ProblemType,
+            OriginalValue = value.OriginalValue,
+            AffectedRows = value.AffectedRows,
+            Action = value.Action,
+            RowNames = [.. value.RowNames]
+        };
     }
 
     public class CalculationDataBase : CalculationBase
@@ -428,6 +525,17 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public int? ProcurementMethodsId { get; set; }
         public int? CompensationId { get; set; }
         public bool IsArchived { get; set; } = false;
+
+        // Transfer-only: source-tenant display names captured at export so a cross-tenant
+        // import can match each dropdown by name against the receiving tenant's own values.
+        // Null in normal use (omitted from JSON when null).
+        public string? SourceStatusName { get; set; }
+        public string? SourceTypeName { get; set; }
+        public string? SourceCompensationName { get; set; }
+        public string? SourceContractName { get; set; }
+        public string? SourceProcurementMethodName { get; set; }
+        public string? SourceOrganisationName { get; set; }
+        public string? SourceOrganisationNumber { get; set; }
     }
 
     public class CalculationDetailsDTO : CalculationDataBase
@@ -537,6 +645,7 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public string AddressText { get; set; } = string.Empty;
         public int Priority { get; set; }
         public decimal TimeMonth { get; set; }
+        public CalculationImportInfoDTO? ImportInfo { get; set; }
     }
 
     public class CalculationPageOtherDepartmentDTO : CalculationPageDTO

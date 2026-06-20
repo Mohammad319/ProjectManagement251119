@@ -74,6 +74,7 @@ namespace ProjectManagement.Shared.Base.Calculation
         public decimal Cost { get; set; }
         public decimal? BaseCost { get; set; }
         public double? CO2 { get; set; }
+        public string ImportInfo { get; set; } = string.Empty;
 
         /// <summary>
         /// توحيد القيم الرقمية لتفادي أرقام طويلة جدًا (خصوصًا بعد الصيغ) + منع قيم سالبة في المال.
@@ -264,6 +265,7 @@ namespace ProjectManagement.Shared.Base.Calculation
                 Cost = Cost,
                 BaseCost = BaseCost,
                 CO2 = CO2,
+                ImportInfo = ImportInfo ?? string.Empty,
             };
         }
     }

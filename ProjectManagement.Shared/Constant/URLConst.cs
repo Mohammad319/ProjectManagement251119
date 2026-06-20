@@ -52,6 +52,7 @@
             // External calculation copy (ATACOST package)
             public const string ExportCopy = "exportcopy";
             public const string ImportCopy = "importcopy";
+            public const string PreviewCopy = "previewcopy";
         }
 
         public static class ResourceType
@@ -124,6 +125,7 @@
             public const string ExportCopy = "exportcopy";
             public const string ImportCopy = "importcopy";
             public const string InspectCopy = "inspectcopy";
+            public const string PreviewCopy = "previewcopy";
         }
 
         public static class Auth

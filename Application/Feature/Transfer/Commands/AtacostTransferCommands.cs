@@ -40,6 +40,30 @@ namespace Application.Feature.Transfer.Commands
             => service.InspectPackageAsync(request.FileBytes, ct);
     }
 
+    public sealed record PreviewProjectPackageCommand(
+        byte[] FileBytes,
+        Guid TargetFolderId,
+        int UserId) : IRequest<AtacostImportPreviewDTO>;
+
+    public class PreviewProjectPackageCommandHandler(IAtacostTransferService service)
+        : IRequestHandler<PreviewProjectPackageCommand, AtacostImportPreviewDTO>
+    {
+        public Task<AtacostImportPreviewDTO> Handle(PreviewProjectPackageCommand request, CancellationToken ct)
+            => service.PreviewProjectPackageAsync(request.FileBytes, request.TargetFolderId, request.UserId, ct);
+    }
+
+    public sealed record PreviewCalculationPackageCommand(
+        byte[] FileBytes,
+        Guid TargetProjectId,
+        int UserId) : IRequest<AtacostImportPreviewDTO>;
+
+    public class PreviewCalculationPackageCommandHandler(IAtacostTransferService service)
+        : IRequestHandler<PreviewCalculationPackageCommand, AtacostImportPreviewDTO>
+    {
+        public Task<AtacostImportPreviewDTO> Handle(PreviewCalculationPackageCommand request, CancellationToken ct)
+            => service.PreviewCalculationPackageAsync(request.FileBytes, request.TargetProjectId, request.UserId, ct);
+    }
+
     public sealed record ImportProjectPackageCommand(
         byte[] FileBytes,
         Guid TargetFolderId,

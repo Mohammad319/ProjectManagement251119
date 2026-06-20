@@ -475,27 +475,52 @@
             <div class="h-4 w-px bg-slate-200 dark:bg-slate-700"></div>
 
             <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
-                @* Ny kalkyl *@
-                <button type="button"
-                        class="inline-flex h-7 shrink-0 items-center gap-1 rounded border border-emerald-400 bg-emerald-500 px-2 text-[11px] font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-40 dark:border-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700"
-                        disabled="@(FolderScopeMode || Folder.State.OtherDepartment || Folder.State.ProjectSelected is null)"
-                        title="@AppLoc["newCalculation"]"
-                        @onclick="() => UpdateForm(new ListCalculationMVVM())">
-                    <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
-                    <span>@AppLoc["newCalculation"]</span>
-                </button>
-
-                @* Import a calculation copy (.atacost) into the selected project; always creates a new calculation. *@
-                <button type="button"
-                        class="inline-flex h-7 shrink-0 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-                        disabled="@(FolderScopeMode || Folder.State.OtherDepartment || Folder.State.ProjectSelected is null)"
-                        title="Importera kalkylkopia (.atacost) till valt projekt"
-                        @onclick="OpenImportCalculationCopyDialog">
-                    <span aria-hidden="true">@((MarkupString)Icons.ImportFromFile)</span>
-                    <span>Importera kopia</span>
-                </button>
+                @{
+                    var noProjectContext = FolderScopeMode || Folder.State.OtherDepartment || Folder.State.ProjectSelected is null;
+                }
+                @* Split button: primary creates a new calculation, the caret opens import. *@
+                <div class="relative inline-flex">
+                    <button type="button"
+                            class="inline-flex h-7 shrink-0 items-center gap-1 rounded-l border border-emerald-400 bg-emerald-500 px-2 text-[11px] font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-40 dark:border-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700"
+                            disabled="@noProjectContext"
+                            title="@AppLoc["newCalculation"]"
+                            @onclick="() => UpdateForm(new ListCalculationMVVM())">
+                        <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        <span>@AppLoc["newCalculation"]</span>
+                    </button>
+                    <button type="button"
+                            class="inline-flex h-7 shrink-0 items-center justify-center rounded-r border border-l-0 border-emerald-400 bg-emerald-500 px-1 text-white transition hover:bg-emerald-600 dark:border-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700"
+                            title="Fler alternativ"
+                            aria-label="Fler alternativ"
+                            @onclick="() => _newCalcMenuOpen = !_newCalcMenuOpen">
+                        <svg class="h-2.5 w-2.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                    @if (_newCalcMenuOpen)
+                    {
+                        <div class="fixed inset-0 z-[70]" @onclick="() => _newCalcMenuOpen = false"></div>
+                        <div class="absolute left-0 top-full z-[90] mt-1 w-64 rounded-md border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+                            <button type="button"
+                                    class="flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-800"
+                                    disabled="@noProjectContext"
+                                    @onclick="() => { _newCalcMenuOpen = false; UpdateForm(new ListCalculationMVVM()); }">
+                                <span aria-hidden="true">@((MarkupString)Icons.Plus)</span>
+                                <span>@AppLoc["newCalculation"]</span>
+                            </button>
+                            <button type="button"
+                                    class="flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-800"
+                                    disabled="@noProjectContext"
+                                    title="@(noProjectContext ? "Välj ett projekt först för att importera en kalkylkopia." : "Importera en kalkylkopia (.atacost) till valt projekt.")"
+                                    @onclick="() => { _newCalcMenuOpen = false; OpenImportCalculationCopyDialog(); }">
+                                <span aria-hidden="true">@((MarkupString)Icons.ImportFromFile)</span>
+                                <span>Importera kalkylkopia...</span>
+                            </button>
+                        </div>
+                    }
+                </div>
             </AuthorizeView>
         </div>
     </div>
@@ -708,7 +733,19 @@
                             @if (IsCalculationColumnVisible("name"))
                             {
                                 <td class="sticky @NameStickyLeftClass z-[2] max-w-80 border-r border-slate-200 bg-white px-3 py-2 group-hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:group-hover:bg-slate-900/80 @(isSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
-                                    <span class="truncate font-semibold text-slate-800 dark:text-slate-100" title="@calu.Name">@calu.Name</span>
+                                    <div class="flex min-w-0 items-center gap-2">
+                                        <span class="truncate font-semibold text-slate-800 dark:text-slate-100" title="@calu.Name">@calu.Name</span>
+                                        @if (calu.ImportInfo?.IsImportedCopy == true)
+                                        {
+                                            <button type="button"
+                                                    class="shrink-0 rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[10px] font-semibold text-sky-700 transition hover:bg-sky-100 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-300"
+                                                    title="Visa importinformation"
+                                                    @onclick:stopPropagation="true"
+                                                    @onclick="() => OpenImportInfoDialog(calu)">
+                                                Importerad kopia
+                                            </button>
+                                        }
+                                    </div>
                                 </td>
                             }
                             @if (IsCalculationColumnVisible("version"))
@@ -1034,6 +1071,7 @@
 
     private bool _filterMenuOpen;
     private bool _reportMenuOpen;
+    private bool _newCalcMenuOpen;
 
     // Samma tillgänglighetslogik som rapportdialogens flikar (Kalkylvy).
     private static IReadOnlyList<CentralReportsDialog.ReportAvailability> CalcReportMenuItems =>
@@ -2110,7 +2148,7 @@
             list.Add(new() { IsSeparator = true });
 
         if (canManage)
-            list.Add(new() { IconHtml = Icons.Tender, Label = "Skicka kopia...", OnClickAsync = () => { OpenSendCalculationCopyDialog(item); return Task.CompletedTask; } });
+            list.Add(new() { IconHtml = Icons.Tender, Label = "Exportera kalkyl...", OnClickAsync = () => { OpenSendCalculationCopyDialog(item); return Task.CompletedTask; } });
 
         list.Add(new()
         {
@@ -2205,7 +2243,7 @@
     // External calculation copy (ATACOST package): download a standalone .atacost file.
     void OpenSendCalculationCopyDialog(ListCalculationMVVM calculation) =>
         Modal.ShowComponent<SendCalculationCopyDialog>(
-            "Skicka kalkylkopia",
+            "Exportera en kopia av kalkylen",
             new Dictionary<string, object>
             {
                 [nameof(SendCalculationCopyDialog.CalcId)]        = calculation.Id,
@@ -2216,16 +2254,52 @@
             },
             BlazorMHD.UI.Core.Services.MhdDialogSize.Large);
 
+    void OpenImportInfoDialog(ListCalculationMVVM calculation)
+    {
+        if (calculation.ImportInfo is null)
+            return;
+
+        Modal.ShowComponent<CalculationImportInfoDialog>(
+            "Importinformation",
+            new Dictionary<string, object>
+            {
+                [nameof(CalculationImportInfoDialog.Info)] = calculation.ImportInfo
+            },
+            BlazorMHD.UI.Core.Services.MhdDialogSize.Large);
+    }
+
     // Import a calculation copy (.atacost) into the currently selected project; always creates a new calculation.
-    void OpenImportCalculationCopyDialog() =>
+    void OpenImportCalculationCopyDialog()
+    {
+        var project = Folder.State.ProjectSelected;
+        if (project is null)
+        {
+            MHD.MessageOk("Importera kalkylkopia",
+                "Välj ett projekt först för att importera en kalkylkopia.",
+                BlazorMHD.UI.Core.DesignSystem.MhdState.Warning);
+            return;
+        }
+
         Modal.ShowComponent<ImportCopyDialog>(
             "Importera kalkylkopia",
             new Dictionary<string, object>
             {
-                [nameof(ImportCopyDialog.Kind)]        = ProjectManagement.Shared.DTO.Transfer.AtacostPackageDTO.KindCalculation,
-                [nameof(ImportCopyDialog.OnCompleted)] = EventCallback.Factory.Create(this, ReloadAfterMoveCopyAsync)
+                [nameof(ImportCopyDialog.Kind)]            = ProjectManagement.Shared.DTO.Transfer.AtacostPackageDTO.KindCalculation,
+                [nameof(ImportCopyDialog.PresetProjectId)] = project.Id,
+                [nameof(ImportCopyDialog.TargetSummary)]   = BuildProjectImportTargetSummary(project),
+                [nameof(ImportCopyDialog.OnCompleted)]     = EventCallback.Factory.Create(this, ReloadAfterMoveCopyAsync)
             },
             BlazorMHD.UI.Core.Services.MhdDialogSize.Large);
+    }
+
+    // "Department / Folder / Project" — read-only target summary for a calculation import.
+    string BuildProjectImportTargetSummary(ListProjectMVVM project)
+    {
+        var dept = Folder.State.Departments.FirstOrDefault(d => d.Id == Folder.State.SelectedDepartmentId)?.Name;
+        var folderName = Folder.State.FolderSelected?.Name;
+        var parts = new[] { dept, folderName, project.Name }.Where(p => !string.IsNullOrWhiteSpace(p));
+        return string.Join(" / ", parts);
+    }
 
     private async Task ReloadAfterMoveCopyAsync()
     {

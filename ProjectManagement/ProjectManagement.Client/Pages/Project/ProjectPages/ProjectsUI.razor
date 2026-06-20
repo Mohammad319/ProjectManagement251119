@@ -483,16 +483,51 @@
             <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
                 @if (_contentMode == ContentModeProjects)
                 {
-                    <button type="button"
-                            class="inline-flex h-7 shrink-0 items-center gap-1 rounded border border-emerald-400 bg-emerald-500 px-2 text-[11px] font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-40 dark:border-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700"
-                            disabled="@(IsDepartmentScope || Folder.State.OtherDepartment || Folder.State.FolderSelected is null)"
-                            title="@(IsDepartmentScope ? "Välj en mapp innan du skapar ett projekt" : AppLoc["newProject"].Value)"
-                            @onclick="() => UpdateForm(new ListProjectMVVM())">
-                        <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                        </svg>
-                        <span>@AppLoc["newProject"]</span>
-                    </button>
+                    var noFolderContext = IsDepartmentScope || Folder.State.OtherDepartment || Folder.State.FolderSelected is null;
+
+                    @* Split button: primary creates a new project, the caret opens import. *@
+                    <div class="relative inline-flex">
+                        <button type="button"
+                                class="inline-flex h-7 shrink-0 items-center gap-1 rounded-l border border-emerald-400 bg-emerald-500 px-2 text-[11px] font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-40 dark:border-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700"
+                                disabled="@noFolderContext"
+                                title="@(noFolderContext ? "Välj en mapp innan du skapar ett projekt" : AppLoc["newProject"].Value)"
+                                @onclick="() => UpdateForm(new ListProjectMVVM())">
+                            <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            <span>@AppLoc["newProject"]</span>
+                        </button>
+                        <button type="button"
+                                class="inline-flex h-7 shrink-0 items-center justify-center rounded-r border border-l-0 border-emerald-400 bg-emerald-500 px-1 text-white transition hover:bg-emerald-600 dark:border-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700"
+                                title="Fler alternativ"
+                                aria-label="Fler alternativ"
+                                @onclick="() => _newProjectMenuOpen = !_newProjectMenuOpen">
+                            <svg class="h-2.5 w-2.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        @if (_newProjectMenuOpen)
+                        {
+                            <div class="fixed inset-0 z-[70]" @onclick="() => _newProjectMenuOpen = false"></div>
+                            <div class="absolute left-0 top-full z-[90] mt-1 w-60 rounded-md border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+                                <button type="button"
+                                        class="flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-800"
+                                        disabled="@noFolderContext"
+                                        @onclick="() => { _newProjectMenuOpen = false; UpdateForm(new ListProjectMVVM()); }">
+                                    <span aria-hidden="true">@((MarkupString)Icons.Plus)</span>
+                                    <span>@AppLoc["newProject"]</span>
+                                </button>
+                                <button type="button"
+                                        class="flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-800"
+                                        disabled="@noFolderContext"
+                                        title="@(noFolderContext ? "Välj en mapp först för att importera en projektkopia." : "Importera en projektkopia (.atacost) till vald mapp.")"
+                                        @onclick="() => { _newProjectMenuOpen = false; OpenImportProjectCopyDialog(); }">
+                                    <span aria-hidden="true">@((MarkupString)Icons.ImportFromFile)</span>
+                                    <span>Importera projektkopia...</span>
+                                </button>
+                            </div>
+                        }
+                    </div>
                 }
                 else
                 {
@@ -505,19 +540,6 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                         </svg>
                         <span>@AppLoc["newCalculation"]</span>
-                    </button>
-                }
-
-                @* Import a project copy (.atacost) - always creates a new project in the selected folder *@
-                @if (_contentMode == ContentModeProjects)
-                {
-                    <button type="button"
-                            class="inline-flex h-7 shrink-0 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-                            disabled="@(IsDepartmentScope || Folder.State.OtherDepartment || Folder.State.FolderSelected is null)"
-                            title="Importera projektkopia (.atacost) till vald mapp"
-                            @onclick="OpenImportProjectCopyDialog">
-                        <span aria-hidden="true">@((MarkupString)Icons.ImportFromFile)</span>
-                        <span>Importera kopia</span>
                     </button>
                 }
             </AuthorizeView>
@@ -774,7 +796,19 @@
                             @if (IsProjectColumnVisible("name"))
                             {
                                 <td class="sticky @NameStickyLeftClass z-[2] max-w-80 border-r border-slate-200 bg-white px-3 py-2 group-hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:group-hover:bg-slate-900/80 @(isProjectSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
-                                    <span class="block truncate font-semibold text-slate-800 dark:text-slate-100" title="@project.Name">@project.Name</span>
+                                    <div class="flex min-w-0 items-center gap-2">
+                                        <span class="block truncate font-semibold text-slate-800 dark:text-slate-100" title="@project.Name">@project.Name</span>
+                                        @if (project.ImportInfo?.IsImportedCopy == true)
+                                        {
+                                            <button type="button"
+                                                    class="shrink-0 rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[10px] font-semibold text-sky-700 transition hover:bg-sky-100 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-300"
+                                                    title="Visa importinformation"
+                                                    @onclick:stopPropagation="true"
+                                                    @onclick="() => OpenImportInfoDialog(project)">
+                                                Importerad kopia
+                                            </button>
+                                        }
+                                    </div>
                                 </td>
                             }
                             @if (IsProjectColumnVisible("status"))
@@ -1005,6 +1039,7 @@
     private bool _viewMenuOpen;
     private bool _showColumnPanel;
     private bool _reportMenuOpen;
+    private bool _newProjectMenuOpen;
 
     // Samma tillgänglighetslogik som rapportdialogens flikar (Projektvy).
     private static IReadOnlyList<CentralReportsDialog.ReportAvailability> ProjectReportMenuItems =>
@@ -1858,12 +1893,12 @@
                 list.Add(new() { IconHtml = Icons.Restore, Label = AppLoc["restoreFromArchive"], OnClickAsync = async () => await ArchiveOrRestoreProjectAsync(item, archive: false) });
         }
 
-        // "Skicka projektkopia..." and "Ta bort projekt" sit at the bottom, separated by a divider.
+        // "Exportera projektet..." and "Ta bort projekt" sit at the bottom, separated by a divider.
         if (list.Count > 0)
             list.Add(new() { IsSeparator = true });
 
         if (canManage)
-            list.Add(new() { IconHtml = Icons.Tender, Label = "Skicka projektkopia...", OnClickAsync = () => { OpenSendProjectCopyDialog(item); return Task.CompletedTask; } });
+            list.Add(new() { IconHtml = Icons.Tender, Label = "Exportera projektet...", OnClickAsync = () => { OpenSendProjectCopyDialog(item); return Task.CompletedTask; } });
 
         list.Add(new()
         {
@@ -1909,7 +1944,7 @@
 
     void OpenSendProjectCopyDialog(ListProjectMVVM project) =>
         Modal.ShowComponent<SendProjectCopyDialog>(
-            "Skicka projektkopia",
+            "Exportera en kopia av projektet",
             new Dictionary<string, object>
             {
                 [nameof(SendProjectCopyDialog.ProjectId)]   = project.Id,
@@ -1917,15 +1952,52 @@
             },
             BlazorMHD.UI.Core.Services.MhdDialogSize.Large);
 
-    void OpenImportProjectCopyDialog() =>
+    void OpenImportProjectCopyDialog()
+    {
+        // Import always targets the folder the user is currently in.
+        var folder = Folder.State.FolderSelected;
+        if (folder is null)
+        {
+            MHD.MessageOk("Importera projektkopia",
+                "Välj en mapp först för att importera en projektkopia.",
+                BlazorMHD.UI.Core.DesignSystem.MhdState.Warning);
+            return;
+        }
+
         Modal.ShowComponent<ImportCopyDialog>(
             "Importera projektkopia",
             new Dictionary<string, object>
             {
-                [nameof(ImportCopyDialog.Kind)]        = ProjectManagement.Shared.DTO.Transfer.AtacostPackageDTO.KindProject,
-                [nameof(ImportCopyDialog.OnCompleted)] = EventCallback.Factory.Create(this, ReloadAfterMoveCopyAsync)
+                [nameof(ImportCopyDialog.Kind)]           = ProjectManagement.Shared.DTO.Transfer.AtacostPackageDTO.KindProject,
+                [nameof(ImportCopyDialog.PresetFolderId)] = folder.Id,
+                [nameof(ImportCopyDialog.TargetSummary)]  = BuildFolderImportTargetSummary(folder),
+                [nameof(ImportCopyDialog.OnCompleted)]    = EventCallback.Factory.Create(this, ReloadAfterMoveCopyAsync)
             },
             BlazorMHD.UI.Core.Services.MhdDialogSize.Large);
+    }
+
+    // Shows the stored import information for a project imported as an external copy (.atacost).
+    void OpenImportInfoDialog(ListProjectMVVM project)
+    {
+        if (project.ImportInfo is null)
+            return;
+
+        Modal.ShowComponent<CalculationImportInfoDialog>(
+            "Importinformation",
+            new Dictionary<string, object>
+            {
+                [nameof(CalculationImportInfoDialog.Info)] = project.ImportInfo
+            },
+            BlazorMHD.UI.Core.Services.MhdDialogSize.Large);
+    }
+
+    // "Department / Folder" — read-only target summary for a project import.
+    string BuildFolderImportTargetSummary(FolderMVVM folder)
+    {
+        var dept = Folder.State.Departments.FirstOrDefault(d => d.Id == Folder.State.SelectedDepartmentId)?.Name;
+        var parts = new[] { dept, folder.Name }.Where(p => !string.IsNullOrWhiteSpace(p));
+        return string.Join(" / ", parts);
+    }
 
     void OpenProjectBidsDialog(ListProjectMVVM project) =>
         Modal.ShowComponent<ProjectBidsDialog>(

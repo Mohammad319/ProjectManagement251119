@@ -39,9 +39,10 @@ namespace ProjectManagement.Server.Controllers.v1.Project
         // ─── Evaluation model (project-level) ────────────────────────────────
 
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
-        [HttpPut("{projectId}/evaluation-model/{model:int}")]
-        public async Task<IActionResult> SetEvaluationModel(Guid projectId, int model)
-            => Ok(await MicroBus.Send(new SetProjectBidEvaluationModelCommand(projectId, (BidEvaluationModel)model, GetDepartmentId())));
+        [HttpPut("{projectId}/evaluation/{basis:int}/{method:int}")]
+        public async Task<IActionResult> SetEvaluation(Guid projectId, int basis, int method)
+            => Ok(await MicroBus.Send(new SetProjectBidEvaluationCommand(
+                projectId, (BidEvaluationBasis)basis, (BidEvaluationModel)method, GetDepartmentId())));
 
         // ─── Price columns (project-specific) ────────────────────────────────
 

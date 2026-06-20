@@ -2,6 +2,7 @@ using ProjectManagement.Shared.Base.Organisation;
 using ProjectManagement.Shared.Base.Project;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.App;
+using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.Helper;
 using System;
 using System.Collections.Generic;
@@ -60,10 +61,13 @@ namespace ProjectManagement.Shared.DTO.Project
         public DateTime? PublicationDate { get; set; }
         public DateTime? DecisionDate { get; set; }
 
+        public CalculationImportInfoDTO? ImportInfo { get; set; }
+
         public ProjectData Clone()
         {
             return new ProjectData
             {
+                ImportInfo = ImportInfo?.Clone(),
                 Address = MetadataCloneHelper.CloneAddresses(Address),
                 Notes = MetadataCloneHelper.CloneStrings(Notes),
                 Responsibles = MetadataCloneHelper.CloneStrings(Responsibles),
@@ -250,6 +254,18 @@ namespace ProjectManagement.Shared.DTO.Project
         public int? CompensationId { get; set; }
         public int? ContractId { get; set; }
         public int? TypeId { get; set; }
+
+        // Transfer-only: source-tenant display names captured at export so a cross-tenant
+        // import can match each dropdown by name against the receiving tenant's own values.
+        // Null in normal use (omitted from JSON when null).
+        public string? SourceTypeName { get; set; }
+        public string? SourceStatusName { get; set; }
+        public string? SourceProcurementMethodName { get; set; }
+        public string? SourceProcurementProcedureName { get; set; }
+        public string? SourceCompensationName { get; set; }
+        public string? SourceContractName { get; set; }
+        public string? SourceOrganisationName { get; set; }
+        public string? SourceOrganisationNumber { get; set; }
     }
 
     public class ProjectDetailsDTO : ProjectBaseData
@@ -311,5 +327,6 @@ namespace ProjectManagement.Shared.DTO.Project
         public string ClientsManager { get; set; } = string.Empty;
         public DateTime? PublicationDate { get; set; }
         public DateTime? DecisionDate { get; set; }
+        public CalculationImportInfoDTO? ImportInfo { get; set; }
     }
 }

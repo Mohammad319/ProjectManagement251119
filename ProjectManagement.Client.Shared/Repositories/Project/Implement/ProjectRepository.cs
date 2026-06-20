@@ -85,6 +85,12 @@ namespace ProjectManagement.Client.Shared.Repositories.Project.Implement
                 fileBytes, ProjectsURLBase + URLConst.Project.InspectCopy);
         }
 
+        public async Task<AtacostImportPreviewDTO> PreviewCopyAsync(Guid targetFolderId, byte[] fileBytes)
+        {
+            return await _httpRepository.PostAsync<AtacostImportPreviewDTO, byte[]>(
+                fileBytes, ProjectsURLBase + URLConst.Project.PreviewCopy + "/" + targetFolderId);
+        }
+
         public async Task<Guid> ImportCopyAsync(Guid targetFolderId, byte[] fileBytes)
         {
             return await _httpRepository.PostAsync<Guid, byte[]>(

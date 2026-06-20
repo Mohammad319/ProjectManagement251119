@@ -10,6 +10,7 @@
 @using ProjectManagement.Shared.Policies
 @using BlazorMHD.UI.Core.DesignSystem
 @using ProjectManagement.Client.Shared.SharedComponent
+@using ProjectManagement.Client.Pages.Project.ProjectPages
 @using NavTabItem = BlazorMHD.UI.Core.Navigation.MhdTabItem
 
 @inherits AppComponentBase
@@ -44,7 +45,18 @@
 
                             @* Kalkyl — full bredd *@
                             <section class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                                <h3 class="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">@CalcResource.calculation</h3>
+                                <div class="mb-3 flex items-center justify-between gap-2">
+                                    <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100">@CalcResource.calculation</h3>
+                                    @if (CalculationUpdate.Metadata.ImportInfo?.IsImportedCopy == true)
+                                    {
+                                        <button type="button"
+                                                class="rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[10px] font-semibold text-sky-700 hover:bg-sky-100 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-300"
+                                                title="Visa importinformation"
+                                                @onclick="OpenImportInfoDialog">
+                                            Importerad kopia
+                                        </button>
+                                    }
+                                </div>
 
                                 @* Kod (smal) + Namn (bred) *@
                                 <div class="mb-3 grid grid-cols-4 gap-3">
@@ -1542,7 +1554,12 @@
 
         if (CalculationUpdate.IsLocked && !HasAllowedLockedStatusChange)
         {
-            MHD.Notifications(ToastType.Update, false);
+            // The calculation is locked and nothing changeable remains. Show a clear,
+            // specific reason instead of the generic "an unexpected error occurred" toast.
+            MHD.MessageOk(
+                CalcResource.calculation,
+                "Kalkylen är låst och kan inte ändras.",
+                BlazorMHD.UI.Core.DesignSystem.MhdState.Warning);
             return;
         }
 
@@ -1607,6 +1624,21 @@
         }
 
         await Callback.InvokeAsync(null);
+    }
+
+    private void OpenImportInfoDialog()
+    {
+        var info = CalculationUpdate.Metadata.ImportInfo;
+        if (info is null)
+            return;
+
+        Modal.ShowComponent<CalculationImportInfoDialog>(
+            "Importinformation",
+            new Dictionary<string, object>
+            {
+                [nameof(CalculationImportInfoDialog.Info)] = info
+            },
+            BlazorMHD.UI.Core.Services.MhdDialogSize.Large);
     }
 
     private void NormalizeResponsibilityFields()
