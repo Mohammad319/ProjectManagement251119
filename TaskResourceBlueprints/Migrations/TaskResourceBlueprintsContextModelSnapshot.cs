@@ -43,7 +43,7 @@ namespace TaskResourceBlueprints.Migrations
                     b.HasIndex("TaskDefinitionId", "TaskStateId")
                         .IsUnique();
 
-                    b.ToTable("TaskDefinitionStateLinks");
+                    b.ToTable("TaskDefinitionStateLinks", (string)null);
                 });
 
             modelBuilder.Entity("TaskResourceBlueprints.Entities.Lookups.TaskState", b =>
@@ -76,7 +76,7 @@ namespace TaskResourceBlueprints.Migrations
                         .IsUnique()
                         .HasDatabaseName("UX_TaskStates_Group_Name");
 
-                    b.ToTable("TaskStates", t =>
+                    b.ToTable("TaskStates", null, t =>
                         {
                             t.HasCheckConstraint("CK_TaskStates_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
 
@@ -109,7 +109,7 @@ namespace TaskResourceBlueprints.Migrations
                         .IsUnique()
                         .HasDatabaseName("UX_TaskStateGroups_Name");
 
-                    b.ToTable("TaskStateGroups", t =>
+                    b.ToTable("TaskStateGroups", null, t =>
                         {
                             t.HasCheckConstraint("CK_TaskStateGroups_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
 
@@ -178,7 +178,7 @@ namespace TaskResourceBlueprints.Migrations
 
                     b.HasIndex("IsActive", "IsVisible", "Unit");
 
-                    b.ToTable("Resources", t =>
+                    b.ToTable("Resources", null, t =>
                         {
                             t.HasCheckConstraint("CK_Resources_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
 
@@ -229,7 +229,7 @@ namespace TaskResourceBlueprints.Migrations
 
                     b.HasIndex("ParentCategoryId", "SortOrder", "DisplayName");
 
-                    b.ToTable("ResourceCategories", t =>
+                    b.ToTable("ResourceCategories", null, t =>
                         {
                             t.HasCheckConstraint("CK_ResourceCategories_Name_NotEmpty", "LEN(LTRIM(RTRIM([DisplayName]))) > 0");
 
@@ -287,7 +287,7 @@ namespace TaskResourceBlueprints.Migrations
                         .IsUnique()
                         .HasDatabaseName("UX_ResourceTenantLink_Tenant_Resource");
 
-                    b.ToTable("ResourceTenantLinks", t =>
+                    b.ToTable("ResourceTenantLinks", null, t =>
                         {
                             t.HasCheckConstraint("CK_ResourceTenantLinks_Cost_NonNegative", "[Cost] IS NULL OR [Cost] >= 0");
 
@@ -437,7 +437,7 @@ namespace TaskResourceBlueprints.Migrations
 
                     b.HasIndex("Status", "UsageCount", "Code");
 
-                    b.ToTable("Tasks", t =>
+                    b.ToTable("Tasks", null, t =>
                         {
                             t.HasCheckConstraint("CK_Tasks_ChangeFactors_Positive", "[ChangeFactor1] > 0 AND [ChangeFactor2] > 0");
 
@@ -498,7 +498,7 @@ namespace TaskResourceBlueprints.Migrations
                     b.HasIndex("TaskDefinitionId", "ResourceDefinitionId")
                         .IsUnique();
 
-                    b.ToTable("TaskDefinitionResourceLinks", t =>
+                    b.ToTable("TaskDefinitionResourceLinks", null, t =>
                         {
                             t.HasCheckConstraint("CK_TaskDefinitionResourceLinks_Quantity_Positive", "[Quantity] > 0");
 
@@ -592,7 +592,7 @@ namespace TaskResourceBlueprints.Migrations
                     b.HasIndex("TenantId", "TargetTaskId", "Source", "SourceTaskId")
                         .IsUnique();
 
-                    b.ToTable("TaskResourceSuggestionFeedbacks", t =>
+                    b.ToTable("TaskResourceSuggestionFeedbacks", null, t =>
                         {
                             t.HasCheckConstraint("CK_TaskResourceSuggestionFeedbacks_Score_NonNegative", "[Score] >= 0");
 

@@ -85,16 +85,18 @@ namespace ProjectManagement.Client.Shared.Repositories.Project.Implement
                 fileBytes, ProjectsURLBase + URLConst.Project.InspectCopy);
         }
 
-        public async Task<AtacostImportPreviewDTO> PreviewCopyAsync(Guid targetFolderId, byte[] fileBytes)
+        public async Task<AtacostImportPreviewDTO> PreviewCopyAsync(Guid targetFolderId, byte[] fileBytes, IReadOnlyList<AtacostManualMappingDTO>? overrides = null)
         {
-            return await _httpRepository.PostAsync<AtacostImportPreviewDTO, byte[]>(
-                fileBytes, ProjectsURLBase + URLConst.Project.PreviewCopy + "/" + targetFolderId);
+            var request = new AtacostImportRequest { FileBytes = fileBytes, Overrides = overrides?.ToList() ?? [] };
+            return await _httpRepository.PostAsync<AtacostImportPreviewDTO, AtacostImportRequest>(
+                request, ProjectsURLBase + URLConst.Project.PreviewCopy + "/" + targetFolderId);
         }
 
-        public async Task<Guid> ImportCopyAsync(Guid targetFolderId, byte[] fileBytes)
+        public async Task<AtacostImportResultDTO> ImportCopyAsync(Guid targetFolderId, byte[] fileBytes, IReadOnlyList<AtacostManualMappingDTO>? overrides = null)
         {
-            return await _httpRepository.PostAsync<Guid, byte[]>(
-                fileBytes, ProjectsURLBase + URLConst.Project.ImportCopy + "/" + targetFolderId);
+            var request = new AtacostImportRequest { FileBytes = fileBytes, Overrides = overrides?.ToList() ?? [] };
+            return await _httpRepository.PostAsync<AtacostImportResultDTO, AtacostImportRequest>(
+                request, ProjectsURLBase + URLConst.Project.ImportCopy + "/" + targetFolderId);
         }
     }
 }

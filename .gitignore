@@ -364,3 +364,6 @@ FodyWeavers.xsd
 
 # Runtime uploads
 ProjectManagement/ProjectManagement/App_Data/PriceImports/
+
+# Demo seed credentials (dev/test only — never commit)
+DemoSeed-Users.txt

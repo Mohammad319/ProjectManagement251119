@@ -125,6 +125,33 @@
                     </div>
                 }
 
+                @* ── Manual mapping of unmatched values ──────────────── *@
+                @if (_preview.MappableSlots is { Count: > 0 })
+                {
+                    <div class="mb-3 rounded-lg border border-amber-200 bg-amber-50/60 p-3 dark:border-amber-900/60 dark:bg-amber-950/20">
+                        <h4 class="mb-2 text-xs font-semibold text-amber-800 dark:text-amber-300">Värden som saknar motsvarighet</h4>
+                        <div class="space-y-2">
+                            @foreach (var slot in _preview.MappableSlots)
+                            {
+                                <div class="grid grid-cols-1 gap-1.5 sm:grid-cols-2 sm:items-center">
+                                    <div class="text-xs text-slate-600 dark:text-slate-300">
+                                        <span class="text-slate-400 dark:text-slate-500">@slot.Label:</span>
+                                        <span class="font-semibold">@slot.OriginalValue</span>
+                                        @if (slot.AffectedRows > 0)
+                                        {
+                                            <span class="text-slate-400 dark:text-slate-500"> (@slot.AffectedRows rader)</span>
+                                        }
+                                    </div>
+                                    <MhdFormSelect TValue="string"
+                                                   Value="CurrentSlotToken(slot)"
+                                                   ValueChanged="@(v => OnSlotChanged(slot, v))"
+                                                   Options="SlotOptions(slot)" />
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
                 <CalculationImportInfoDialog Info="_preview.Info" />
             </div>
         }
@@ -168,6 +195,10 @@
     private string _error = string.Empty;
     private bool _busy;
     private bool _previewBusy;
+
+    // User's manual mapping decisions, keyed by "{Type}|{OriginalKey}" so each unmatched source
+    // value carries a single decision that survives a preview refresh. Sent to preview and import.
+    private readonly Dictionary<string, AtacostManualMappingDTO> _overrides = new(StringComparer.Ordinal);
 
     private string _departmentValue = string.Empty;
     private string _folderValue = string.Empty;
@@ -228,9 +259,10 @@
         _previewBusy = true;
         try
         {
+            var overrides = _overrides.Values.ToList();
             _preview = IsProject
-                ? await Repo.Project.PreviewCopyAsync(TargetFolderId, _fileBytes)
-                : await Repo.Calculation.PreviewCopyAsync(TargetProjectId, _fileBytes);
+                ? await Repo.Project.PreviewCopyAsync(TargetFolderId, _fileBytes, overrides)
+                : await Repo.Calculation.PreviewCopyAsync(TargetProjectId, _fileBytes, overrides);
         }
         catch (Exception ex)
         {
@@ -249,6 +281,7 @@
         _info = null;
         _preview = null;
         _fileBytes = null;
+        _overrides.Clear();
 
         try
         {
@@ -333,19 +366,12 @@
         _error = string.Empty;
         try
         {
-            bool ok;
-            if (IsProject)
-            {
-                var newId = await Repo.Project.ImportCopyAsync(TargetFolderId, _fileBytes);
-                ok = newId != Guid.Empty;
-            }
-            else
-            {
-                var newId = await Repo.Calculation.ImportCopyAsync(TargetProjectId, _fileBytes);
-                ok = newId > 0;
-            }
+            var overrides = _overrides.Values.ToList();
+            var result = IsProject
+                ? await Repo.Project.ImportCopyAsync(TargetFolderId, _fileBytes, overrides)
+                : await Repo.Calculation.ImportCopyAsync(TargetProjectId, _fileBytes, overrides);
 
-            if (ok)
+            if (result is { Success: true })
             {
                 // The file was valid and the import succeeded.
                 MHD.ToastInfo(IsProject ? "Projektkopian har importerats." : "Kalkylkopian har importerats.");
@@ -355,11 +381,13 @@
             }
             else
             {
-                // The file could be read but the import itself failed — keep it distinct
-                // from the "invalid file" message shown during file selection.
-                _error = IsProject
-                    ? "Projektkopian kunde läsas men kunde inte importeras. Kontrollera målplatsen och försök igen."
-                    : "Kalkylkopian kunde läsas men kunde inte importeras. Kontrollera målprojektet och försök igen.";
+                // Show the precise, server-provided reason (target missing, no permission, required
+                // mapping, or a logged save error) instead of a single generic failure message.
+                _error = !string.IsNullOrWhiteSpace(result?.Message)
+                    ? result!.Message
+                    : (IsProject
+                        ? "Projektkopian kunde läsas men kunde inte importeras. Kontrollera målplatsen och försök igen."
+                        : "Kalkylkopian kunde läsas men kunde inte importeras. Kontrollera målprojektet och försök igen.");
             }
         }
         catch (Exception ex)
@@ -373,5 +401,68 @@
         {
             _busy = false;
         }
+    }
+
+    // ── Manual mapping ──────────────────────────────────────────────
+    // Each unmatched slot is resolved through a single dropdown whose value is a token:
+    //   ""          → import with deviation (no override)
+    //   "map:{id}"  → map to a local value
+    //   "exclude"   → exclude the affected rows (row-level slots only)
+
+    private static string SlotKey(AtacostMappableSlotDTO slot) => $"{slot.Type}|{slot.OriginalKey}";
+
+    private string CurrentSlotToken(AtacostMappableSlotDTO slot)
+    {
+        if (!_overrides.TryGetValue(SlotKey(slot), out var ov))
+            return string.Empty;
+        return ov.Action switch
+        {
+            "exclude" => "exclude",
+            "map" when ov.LocalId.HasValue => $"map:{ov.LocalId.Value}",
+            _ => string.Empty
+        };
+    }
+
+    private IEnumerable<MhdSelectItem<string>> SlotOptions(AtacostMappableSlotDTO slot)
+    {
+        yield return new MhdSelectItem<string> { Value = string.Empty, Label = "Importera med avvikelse" };
+        foreach (var opt in slot.Options)
+            yield return new MhdSelectItem<string> { Value = $"map:{opt.Id}", Label = opt.Name };
+        if (slot.IsRowLevel)
+            yield return new MhdSelectItem<string> { Value = "exclude", Label = "Uteslut rader" };
+    }
+
+    private async Task OnSlotChanged(AtacostMappableSlotDTO slot, string? token)
+    {
+        var key = SlotKey(slot);
+
+        if (string.IsNullOrEmpty(token))
+        {
+            // Back to the default — drop any stored decision.
+            _overrides.Remove(key);
+        }
+        else if (token == "exclude")
+        {
+            _overrides[key] = new AtacostManualMappingDTO
+            {
+                Type = slot.Type,
+                OriginalValue = slot.OriginalKey,
+                Action = "exclude"
+            };
+        }
+        else if (token.StartsWith("map:", StringComparison.Ordinal)
+            && int.TryParse(token.AsSpan(4), out var localId))
+        {
+            _overrides[key] = new AtacostManualMappingDTO
+            {
+                Type = slot.Type,
+                OriginalValue = slot.OriginalKey,
+                LocalId = localId,
+                Action = "map"
+            };
+        }
+
+        // Re-run the dry-run so matched/deviation counts and CanImport reflect the new decision.
+        await TryLoadPreviewAsync();
     }
 }

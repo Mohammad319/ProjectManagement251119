@@ -180,7 +180,19 @@
       "Bash(ls -la ProjectManagement/ProjectManagement.Client/Pages/Calculation/Form/)",
       "Bash(wc -l ProjectManagement/ProjectManagement.Client/Pages/Calculation/Form/CalculationFormUI.razor*)",
       "Bash(grep -rn \"ImportInfo\" --include=*.cs ProjectManagement.Client.Shared/MVVM/)",
-      "Bash(grep -rln \"class ListCalculationMVVM\" --include=*.cs .)"
+      "Bash(grep -rln \"class ListCalculationMVVM\" --include=*.cs .)",
+      "PowerShell(git *)",
+      "Bash(which chromium-cli *)",
+      "Bash(which playwright *)",
+      "Bash(which npx *)",
+      "Bash(ls \"/c/Program Files/Google/Chrome/Application/chrome.exe\")",
+      "Bash(ls \"/c/Program Files \\(x86\\)/Microsoft/Edge/Application/msedge.exe\")",
+      "Bash(echo \"launched pid $!\")",
+      "Bash(ls \"/c/Program Files/Microsoft SQL Server/Client SDK/ODBC/170/Tools/Binn/sqlcmd.exe\")",
+      "Bash(echo \"launched $!\")",
+      "Bash(taskkill //F //IM ProjectManagement.exe)",
+      "Bash(git check-ignore *)",
+      "Bash(perl -0pi -e 's/new AtacostTransferService\\\\\\(\\(factory|new FakeFactory\\\\\\(\"[^\"]+\"\\\\\\)\\)\\\\\\)/new AtacostTransferService\\($1, NullLogger<AtacostTransferService>.Instance\\)/g' Tests/ProjectManagement.Tests/AtacostTransferTests.cs)"
     ]
   }
 }

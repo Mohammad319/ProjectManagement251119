@@ -26,7 +26,7 @@ namespace ProjectManagement.Client.Shared.Repositories.Project
         // Extern projektkopia (ATACOST-paket)
         Task<byte[]> ExportCopyAsync(Guid projectId, AtacostProjectExportRequest request);
         Task<AtacostPackageInfoDTO> InspectCopyAsync(byte[] fileBytes);
-        Task<AtacostImportPreviewDTO> PreviewCopyAsync(Guid targetFolderId, byte[] fileBytes);
-        Task<Guid> ImportCopyAsync(Guid targetFolderId, byte[] fileBytes);
+        Task<AtacostImportPreviewDTO> PreviewCopyAsync(Guid targetFolderId, byte[] fileBytes, IReadOnlyList<AtacostManualMappingDTO>? overrides = null);
+        Task<AtacostImportResultDTO> ImportCopyAsync(Guid targetFolderId, byte[] fileBytes, IReadOnlyList<AtacostManualMappingDTO>? overrides = null);
     }
 }

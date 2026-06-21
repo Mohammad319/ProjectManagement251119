@@ -123,18 +123,18 @@ namespace ProjectManagement.Server.Controllers.v1
         /// <summary>Dry-run of a project import: shows the import preview (matched values, deviations, target) without writing anything.</summary>
         [Authorize(Roles = Tenant.AdminManger)]
         [HttpPost(URLConst.Project.PreviewCopy + "/{targetFolderId}")]
-        public async Task<IActionResult> PreviewCopy(Guid targetFolderId, [FromBody] byte[] fileBytes)
+        public async Task<IActionResult> PreviewCopy(Guid targetFolderId, [FromBody] AtacostImportRequest request)
         {
-            return Ok(await MicroBus.Send(new PreviewProjectPackageCommand(fileBytes, targetFolderId, GetUserId())));
+            return Ok(await MicroBus.Send(new PreviewProjectPackageCommand(request.FileBytes, targetFolderId, GetUserId(), request.Overrides)));
         }
 
         /// <summary>Imports a project copy into a target folder and always creates a new project.</summary>
         [Authorize(Roles = Tenant.AdminManger)]
         [HttpPost(URLConst.Project.ImportCopy + "/{targetFolderId}")]
-        public async Task<IActionResult> ImportCopy(Guid targetFolderId, [FromBody] byte[] fileBytes)
+        public async Task<IActionResult> ImportCopy(Guid targetFolderId, [FromBody] AtacostImportRequest request)
         {
             return Ok(await MicroBus.Send(new ImportProjectPackageCommand(
-                fileBytes, targetFolderId, GetUserId(), GetDepartmentId(), CanUseTargetDepartmentAccessAcrossDepartments())));
+                request.FileBytes, targetFolderId, GetUserId(), GetDepartmentId(), CanUseTargetDepartmentAccessAcrossDepartments(), request.Overrides)));
         }
 
         private bool CanUseTargetDepartmentAccessAcrossDepartments() =>

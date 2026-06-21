@@ -115,6 +115,11 @@ public ResourceTypesEnum ResType { get; set; }
         public decimal WorkedQ { get; set; } = 0;
 
         [JsonIgnore] public List<string> Formulas { get; set; } = [];
+
+        // Transfer-only: set during ATACOST import when the user chose to exclude rows that
+        // reference an unmatched value (account/resource-type/sort). Such resources are skipped.
+        [JsonIgnore] public bool ImportExcluded { get; set; }
+
         [JsonIgnore] public bool IsAdded { get; set; }
         [JsonIgnore] public int? GroupId { get; set; } = null;
         [JsonIgnore] public List<ResourcePropertyBindDto> Properties { get; set; } = [];

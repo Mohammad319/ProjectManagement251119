@@ -191,18 +191,18 @@ namespace ProjectManagement.Server.Controllers.v1.Project
         /// <summary>Dry-run of a calculation import: shows the import preview (matched values, deviations, target) without writing anything.</summary>
         [Authorize(Roles = Tenant.AdminManger)]
         [HttpPost(URLConst.Calculation.PreviewCopy + "/{targetProjectId}")]
-        public async Task<IActionResult> PreviewCopy(Guid targetProjectId, [FromBody] byte[] fileBytes)
+        public async Task<IActionResult> PreviewCopy(Guid targetProjectId, [FromBody] AtacostImportRequest request)
         {
-            return Ok(await MicroBus.Send(new PreviewCalculationPackageCommand(fileBytes, targetProjectId, GetUserId())));
+            return Ok(await MicroBus.Send(new PreviewCalculationPackageCommand(request.FileBytes, targetProjectId, GetUserId(), request.Overrides)));
         }
 
         /// <summary>Imports a calculation copy into a target project and always creates a new calculation.</summary>
         [Authorize(Roles = Tenant.AdminManger)]
         [HttpPost(URLConst.Calculation.ImportCopy + "/{targetProjectId}")]
-        public async Task<IActionResult> ImportCopy(Guid targetProjectId, [FromBody] byte[] fileBytes)
+        public async Task<IActionResult> ImportCopy(Guid targetProjectId, [FromBody] AtacostImportRequest request)
         {
             return Ok(await MicroBus.Send(new ImportCalculationPackageCommand(
-                fileBytes, targetProjectId, GetUserId(), GetDepartmentId(), CanUseTargetDepartmentAccessAcrossDepartments())));
+                request.FileBytes, targetProjectId, GetUserId(), GetDepartmentId(), CanUseTargetDepartmentAccessAcrossDepartments(), request.Overrides)));
         }
 
         private bool CanUseTargetDepartmentAccessAcrossDepartments() =>

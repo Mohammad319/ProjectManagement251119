@@ -31,29 +31,34 @@ namespace Application.Feature.Transfer
         /// <summary>Reads metadata from an uploaded .atacost package without importing. Returns IsValid=false when the file is invalid.</summary>
         Task<AtacostPackageInfoDTO> InspectPackageAsync(byte[] fileBytes, CancellationToken ct = default);
 
-        /// <summary>Dry-run of a project import: runs name-matching against the receiving tenant without writing anything,
-        /// so the UI can show what matched, what imports with deviations, and the target before the user confirms.</summary>
-        Task<AtacostImportPreviewDTO> PreviewProjectPackageAsync(byte[] fileBytes, Guid targetFolderId, int userId, CancellationToken ct = default);
+        /// <summary>Dry-run of a project import: runs name-matching (plus any manual overrides) against the receiving
+        /// tenant without writing anything, so the UI can show what matched, what still needs action, what imports
+        /// with deviations, and the target before the user confirms.</summary>
+        Task<AtacostImportPreviewDTO> PreviewProjectPackageAsync(byte[] fileBytes, Guid targetFolderId, int userId, IReadOnlyList<AtacostManualMappingDTO>? overrides = null, CancellationToken ct = default);
 
         /// <summary>Dry-run of a calculation import into a target project. Same contract as the project preview.</summary>
-        Task<AtacostImportPreviewDTO> PreviewCalculationPackageAsync(byte[] fileBytes, Guid targetProjectId, int userId, CancellationToken ct = default);
+        Task<AtacostImportPreviewDTO> PreviewCalculationPackageAsync(byte[] fileBytes, Guid targetProjectId, int userId, IReadOnlyList<AtacostManualMappingDTO>? overrides = null, CancellationToken ct = default);
 
-        /// <summary>Imports a project package (.atacost byte[]) into the target folder and creates a new project. Returns the new project id or Guid.Empty.</summary>
-        Task<Guid> ImportProjectPackageAsync(
+        /// <summary>Imports a project package into the target folder and creates a new project. Returns a
+        /// structured result with the new project id on success or a precise reason/message on failure.</summary>
+        Task<AtacostImportResultDTO> ImportProjectPackageAsync(
             byte[] fileBytes,
             Guid targetFolderId,
             int userId,
             int? departmentId,
             bool allowCrossDepartment,
+            IReadOnlyList<AtacostManualMappingDTO>? overrides = null,
             CancellationToken ct = default);
 
-        /// <summary>Imports a calculation package (.atacost byte[]) into the target project and creates a new calculation. Returns the new calculation id or 0.</summary>
-        Task<int> ImportCalculationPackageAsync(
+        /// <summary>Imports a calculation package into the target project and creates a new calculation. Returns a
+        /// structured result with the new calculation id on success or a precise reason/message on failure.</summary>
+        Task<AtacostImportResultDTO> ImportCalculationPackageAsync(
             byte[] fileBytes,
             Guid targetProjectId,
             int userId,
             int? departmentId,
             bool allowCrossDepartment,
+            IReadOnlyList<AtacostManualMappingDTO>? overrides = null,
             CancellationToken ct = default);
     }
 }

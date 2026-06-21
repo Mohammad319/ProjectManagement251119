@@ -18,6 +18,10 @@ public static class ProjectServicesRegistrationExtensions
         services.AddSingleton<ITenantConnectionStringStore, TenantConnectionStringStore>();
         services.AddHostedService<TenantPreloadHostedService>();
 
+        // Dev/test demo data generator (no-op unless DemoSeed:Enabled and non-Production).
+        services.AddScoped<ProjectManagement.Services.DemoSeed.DemoDataSeeder>();
+        services.AddHostedService<ProjectManagement.Services.DemoSeed.DemoSeedHostedService>();
+
         services.AddRazorComponents()
             .AddInteractiveServerComponents()
             .AddInteractiveWebAssemblyComponents()

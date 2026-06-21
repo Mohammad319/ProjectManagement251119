@@ -3,6 +3,7 @@ using Domain.Entities.Calculation;
 using Domain.Entities.Folder;
 using Domain.Entities.Project;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using Persistence.Context;
 using Persistence.Factory;
 using Persistence.Service.Transfer;
@@ -106,7 +107,7 @@ public sealed class AtacostTransferTests
     {
         const string dbName = "Atacost_Project_RoundTrip";
         var factory = new FakeFactory(dbName);
-        var service = new AtacostTransferService(factory);
+        var service = new AtacostTransferService(factory, NullLogger<AtacostTransferService>.Instance);
 
         Guid folderId;
         Guid sourceProjectId;
@@ -141,9 +142,11 @@ public sealed class AtacostTransferTests
         Assert.NotEmpty(bytes!);
 
         // Import into the same folder; a new standalone project is always created.
-        var newProjectId = await service.ImportProjectPackageAsync(
+        var result = await service.ImportProjectPackageAsync(
             bytes!, folderId, userId: Admin, departmentId: null, allowCrossDepartment: true);
 
+        Assert.True(result.Success);
+        var newProjectId = result.NewProjectId!.Value;
         Assert.NotEqual(Guid.Empty, newProjectId);
         Assert.NotEqual(sourceProjectId, newProjectId);
 
@@ -177,7 +180,7 @@ public sealed class AtacostTransferTests
     {
         const string dbName = "Atacost_Calc_RoundTrip";
         var factory = new FakeFactory(dbName);
-        var service = new AtacostTransferService(factory);
+        var service = new AtacostTransferService(factory, NullLogger<AtacostTransferService>.Instance);
 
         Guid targetProjectId;
         int sourceCalcId;
@@ -205,9 +208,11 @@ public sealed class AtacostTransferTests
 
         Assert.NotNull(bytes);
 
-        var newCalcId = await service.ImportCalculationPackageAsync(
+        var result = await service.ImportCalculationPackageAsync(
             bytes!, targetProjectId, userId: Admin, departmentId: null, allowCrossDepartment: true);
 
+        Assert.True(result.Success);
+        var newCalcId = result.NewCalculationId;
         Assert.True(newCalcId > 0);
         Assert.NotEqual(sourceCalcId, newCalcId);
 
@@ -230,7 +235,7 @@ public sealed class AtacostTransferTests
     {
         const string dbName = "Atacost_Private_Blocked";
         var factory = new FakeFactory(dbName);
-        var service = new AtacostTransferService(factory);
+        var service = new AtacostTransferService(factory, NullLogger<AtacostTransferService>.Instance);
 
         int privateCalcId;
         await using (var seed = Open(dbName))
@@ -254,7 +259,7 @@ public sealed class AtacostTransferTests
     [Fact]
     public async Task Inspect_returns_invalid_for_garbage_bytes()
     {
-        var service = new AtacostTransferService(new FakeFactory("Atacost_Inspect"));
+        var service = new AtacostTransferService(new FakeFactory("Atacost_Inspect"), NullLogger<AtacostTransferService>.Instance);
         var info = await service.InspectPackageAsync([1, 2, 3, 4]);
         Assert.False(info.IsValid);
     }

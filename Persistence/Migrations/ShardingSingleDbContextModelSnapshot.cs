@@ -1859,7 +1859,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "ImportJobId", "Status");
 
-                    b.ToTable("PriceImportCandidates", t =>
+                    b.ToTable("PriceImportCandidates", null, t =>
                         {
                             t.HasCheckConstraint("CK_PriceImportCandidates_BasePrice_NonNegative", "[BasePrice] IS NULL OR [BasePrice] >= 0");
 
@@ -1937,7 +1937,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "SupplierName");
 
-                    b.ToTable("PriceImportJobs", t =>
+                    b.ToTable("PriceImportJobs", null, t =>
                         {
                             t.HasCheckConstraint("CK_PriceImportJobs_Counts_NonNegative", "[TotalCandidates] >= 0 AND [ReadyCount] >= 0 AND [ReviewCount] >= 0 AND [ErrorCount] >= 0 AND [ApprovedCount] >= 0");
 
@@ -1983,7 +1983,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "SupplierName", "ExternalColumnName");
 
-                    b.ToTable("PriceImportMappings", t =>
+                    b.ToTable("PriceImportMappings", null, t =>
                         {
                             t.HasCheckConstraint("CK_PriceImportMappings_ExternalColumnName_NotEmpty", "LEN(LTRIM(RTRIM([ExternalColumnName]))) > 0");
 
@@ -2051,7 +2051,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "SupplierName");
 
-                    b.ToTable("PriceLists", t =>
+                    b.ToTable("PriceLists", null, t =>
                         {
                             t.HasCheckConstraint("CK_PriceLists_DateRange", "[ValidTo] IS NULL OR [ValidFrom] IS NULL OR [ValidTo] >= [ValidFrom]");
 
@@ -2172,7 +2172,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "PriceListId", "ArticleNumber");
 
-                    b.ToTable("PriceListItems", t =>
+                    b.ToTable("PriceListItems", null, t =>
                         {
                             t.HasCheckConstraint("CK_PriceListItems_BasePrice_NonNegative", "[BasePrice] IS NULL OR [BasePrice] >= 0");
 

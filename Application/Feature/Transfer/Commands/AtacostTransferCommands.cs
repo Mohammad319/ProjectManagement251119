@@ -43,25 +43,27 @@ namespace Application.Feature.Transfer.Commands
     public sealed record PreviewProjectPackageCommand(
         byte[] FileBytes,
         Guid TargetFolderId,
-        int UserId) : IRequest<AtacostImportPreviewDTO>;
+        int UserId,
+        IReadOnlyList<AtacostManualMappingDTO>? Overrides = null) : IRequest<AtacostImportPreviewDTO>;
 
     public class PreviewProjectPackageCommandHandler(IAtacostTransferService service)
         : IRequestHandler<PreviewProjectPackageCommand, AtacostImportPreviewDTO>
     {
         public Task<AtacostImportPreviewDTO> Handle(PreviewProjectPackageCommand request, CancellationToken ct)
-            => service.PreviewProjectPackageAsync(request.FileBytes, request.TargetFolderId, request.UserId, ct);
+            => service.PreviewProjectPackageAsync(request.FileBytes, request.TargetFolderId, request.UserId, request.Overrides, ct);
     }
 
     public sealed record PreviewCalculationPackageCommand(
         byte[] FileBytes,
         Guid TargetProjectId,
-        int UserId) : IRequest<AtacostImportPreviewDTO>;
+        int UserId,
+        IReadOnlyList<AtacostManualMappingDTO>? Overrides = null) : IRequest<AtacostImportPreviewDTO>;
 
     public class PreviewCalculationPackageCommandHandler(IAtacostTransferService service)
         : IRequestHandler<PreviewCalculationPackageCommand, AtacostImportPreviewDTO>
     {
         public Task<AtacostImportPreviewDTO> Handle(PreviewCalculationPackageCommand request, CancellationToken ct)
-            => service.PreviewCalculationPackageAsync(request.FileBytes, request.TargetProjectId, request.UserId, ct);
+            => service.PreviewCalculationPackageAsync(request.FileBytes, request.TargetProjectId, request.UserId, request.Overrides, ct);
     }
 
     public sealed record ImportProjectPackageCommand(
@@ -69,13 +71,14 @@ namespace Application.Feature.Transfer.Commands
         Guid TargetFolderId,
         int UserId,
         int? DepartmentId,
-        bool AllowCrossDepartment) : IRequest<Guid>;
+        bool AllowCrossDepartment,
+        IReadOnlyList<AtacostManualMappingDTO>? Overrides = null) : IRequest<AtacostImportResultDTO>;
 
     public class ImportProjectPackageCommandHandler(IAtacostTransferService service)
-        : IRequestHandler<ImportProjectPackageCommand, Guid>
+        : IRequestHandler<ImportProjectPackageCommand, AtacostImportResultDTO>
     {
-        public Task<Guid> Handle(ImportProjectPackageCommand request, CancellationToken ct)
-            => service.ImportProjectPackageAsync(request.FileBytes, request.TargetFolderId, request.UserId, request.DepartmentId, request.AllowCrossDepartment, ct);
+        public Task<AtacostImportResultDTO> Handle(ImportProjectPackageCommand request, CancellationToken ct)
+            => service.ImportProjectPackageAsync(request.FileBytes, request.TargetFolderId, request.UserId, request.DepartmentId, request.AllowCrossDepartment, request.Overrides, ct);
     }
 
     public sealed record ImportCalculationPackageCommand(
@@ -83,12 +86,13 @@ namespace Application.Feature.Transfer.Commands
         Guid TargetProjectId,
         int UserId,
         int? DepartmentId,
-        bool AllowCrossDepartment) : IRequest<int>;
+        bool AllowCrossDepartment,
+        IReadOnlyList<AtacostManualMappingDTO>? Overrides = null) : IRequest<AtacostImportResultDTO>;
 
     public class ImportCalculationPackageCommandHandler(IAtacostTransferService service)
-        : IRequestHandler<ImportCalculationPackageCommand, int>
+        : IRequestHandler<ImportCalculationPackageCommand, AtacostImportResultDTO>
     {
-        public Task<int> Handle(ImportCalculationPackageCommand request, CancellationToken ct)
-            => service.ImportCalculationPackageAsync(request.FileBytes, request.TargetProjectId, request.UserId, request.DepartmentId, request.AllowCrossDepartment, ct);
+        public Task<AtacostImportResultDTO> Handle(ImportCalculationPackageCommand request, CancellationToken ct)
+            => service.ImportCalculationPackageAsync(request.FileBytes, request.TargetProjectId, request.UserId, request.DepartmentId, request.AllowCrossDepartment, request.Overrides, ct);
     }
 }
