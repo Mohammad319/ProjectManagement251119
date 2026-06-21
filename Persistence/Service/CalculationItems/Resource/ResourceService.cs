@@ -20,6 +20,7 @@ namespace Persistence.Service.CalculationItems.Resource
             IReadOnlyList<ResourceTaskItemDTO> items,
             int parentTaskId,
             int sourceCalcId,
+            int userId,
             int? departmentId,
             CancellationToken ct = default)
         {
@@ -28,9 +29,7 @@ namespace Persistence.Service.CalculationItems.Resource
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var parent = await context.Tasks
-                .Where(x => x.Id == parentTaskId &&
-                    !x.Calculation.IsLocked &&
-                    (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value))
+                .Where(x => x.Id == parentTaskId && !x.Calculation.IsLocked)
                 .Select(x => new
                 {
                     MaxOrder = x.Resources.Max(r => (int?)r.SortOrder),
@@ -42,17 +41,20 @@ namespace Persistence.Service.CalculationItems.Resource
             if (parent is null) return false;
             if (!TaskTypeRules.CanHaveResources(parent.Type)) return false;
 
-            if (!await IsCalculationAllowedAsync(context, sourceCalcId, departmentId, ct))
+            // Edit access to the destination calc, and access to the source calc.
+            if (!await Access.CalculationAccessRules.CanEditCalcAsync(context.Calculations, parent.NewCalcID, userId, departmentId, ct))
+                return false;
+
+            if (!await IsCalculationAllowedAsync(context, sourceCalcId, userId, departmentId, ct))
                 return false;
 
             var ids = items.Select(x => x.Id).Distinct().ToList();
 
-            // ✅ تحميل مرة واحدة بدل استعلام لكل عنصر
+            // ✅ تحميل مرة واحدة بدل استعلام لكل عنصر (sourceCalcId is already access-checked above)
             var sourceResources = await context.Resources
                 .AsNoTracking()
                 .Where(r => ids.Contains(r.Id) &&
-                    r.Task.CalculationId == sourceCalcId &&
-                    (!departmentId.HasValue || r.Task.Calculation.DepartmentId == departmentId.Value))
+                    r.Task.CalculationId == sourceCalcId)
                 .ToListAsync(ct);
 
             var valueById = items.ToDictionary(x => x.Id, x => x.Value);
@@ -111,16 +113,14 @@ namespace Persistence.Service.CalculationItems.Resource
         // -----------------------------------------------------
         // Create
         // -----------------------------------------------------
-        public async Task<bool> CreateAsync(IReadOnlyList<ResourcePostDTO> items, int parentTaskId, int? departmentId, CancellationToken ct = default)
+        public async Task<bool> CreateAsync(IReadOnlyList<ResourcePostDTO> items, int parentTaskId, int userId, int? departmentId, CancellationToken ct = default)
         {
             if (items is null || items.Count == 0) return true;
 
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var parent = await context.Tasks
-                .Where(x => x.Id == parentTaskId &&
-                    !x.Calculation.IsLocked &&
-                    (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value))
+                .Where(x => x.Id == parentTaskId && !x.Calculation.IsLocked)
                 .Select(x => new
                 {
                     MaxOrder = x.Resources.Max(r => (int?)r.SortOrder),
@@ -131,6 +131,9 @@ namespace Persistence.Service.CalculationItems.Resource
 
             if (parent is null) return false;
             if (!TaskTypeRules.CanHaveResources(parent.Type)) return false;
+
+            if (!await Access.CalculationAccessRules.CanEditCalcAsync(context.Calculations, parent.CalID, userId, departmentId, ct))
+                return false;
 
             var entities = new List<ResourceEntity>(items.Count);
             int nextOrder = parent.MaxOrder.HasValue ? parent.MaxOrder.Value + 100 : 100;
@@ -175,16 +178,14 @@ namespace Persistence.Service.CalculationItems.Resource
         // -----------------------------------------------------
         // Cut (Move)
         // -----------------------------------------------------
-        public async Task<bool> CutAsync(int taskId, int sourceCalcId, IReadOnlyList<ResourceTaskItemDTO> items, int? departmentId, CancellationToken ct = default)
+        public async Task<bool> CutAsync(int taskId, int sourceCalcId, IReadOnlyList<ResourceTaskItemDTO> items, int userId, int? departmentId, CancellationToken ct = default)
         {
             if (items is null || items.Count == 0) return true;
 
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var parent = await context.Tasks
-                .Where(x => x.Id == taskId &&
-                    !x.Calculation.IsLocked &&
-                    (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value))
+                .Where(x => x.Id == taskId && !x.Calculation.IsLocked)
                 .Select(x => new
                 {
                     CalID = x.CalculationId,
@@ -196,16 +197,19 @@ namespace Persistence.Service.CalculationItems.Resource
             if (parent is null) return false;
             if (!TaskTypeRules.CanHaveResources(parent.Type)) return false;
 
-            if (!await IsCalculationAllowedAsync(context, sourceCalcId, departmentId, ct))
+            // Edit access to the destination calc, and access to the source calc.
+            if (!await Access.CalculationAccessRules.CanEditCalcAsync(context.Calculations, parent.CalID, userId, departmentId, ct))
+                return false;
+
+            if (!await IsCalculationAllowedAsync(context, sourceCalcId, userId, departmentId, ct))
                 return false;
 
             var ids = items.Select(x => x.Id).Distinct().ToList();
 
-            // ✅ تحميل مرة واحدة بدل FindAsync داخل loop
+            // ✅ تحميل مرة واحدة بدل FindAsync داخل loop (sourceCalcId is already access-checked above)
             var resources = await context.Resources
                 .Where(r => ids.Contains(r.Id) &&
-                    r.Task.CalculationId == sourceCalcId &&
-                    (!departmentId.HasValue || r.Task.Calculation.DepartmentId == departmentId.Value))
+                    r.Task.CalculationId == sourceCalcId)
                 .ToListAsync(ct);
 
             var moved = new List<ResourceEntity>(resources.Count);
@@ -268,12 +272,16 @@ namespace Persistence.Service.CalculationItems.Resource
         // -----------------------------------------------------
         // Delete
         // -----------------------------------------------------
-        public async Task<bool> DeleteAsync(IEnumerable<int> resourceIds, int calcId, int? departmentId, CancellationToken ct = default)
+        public async Task<bool> DeleteAsync(IEnumerable<int> resourceIds, int calcId, int userId, int? departmentId, CancellationToken ct = default)
         {
             var ids = resourceIds?.Where(id => id > 0).Distinct().ToList() ?? [];
             if (ids.Count == 0) return true;
 
             await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            // Edit access to the calc gates the whole batch delete.
+            if (!await Access.CalculationAccessRules.CanEditCalcAsync(context.Calculations, calcId, userId, departmentId, ct))
+                return false;
 
             const int batchSize = 1000;
             var anyDeleted = false;
@@ -285,8 +293,7 @@ namespace Persistence.Service.CalculationItems.Resource
                 var affected = await context.Resources
                     .Where(x => batch.Contains(x.Id) &&
                         x.Task.CalculationId == calcId &&
-                        !x.Task.Calculation.IsLocked &&
-                        (!departmentId.HasValue || x.Task.Calculation.DepartmentId == departmentId.Value))
+                        !x.Task.Calculation.IsLocked)
                     .ExecuteDeleteAsync(ct);
 
                 anyDeleted |= affected > 0;
@@ -308,18 +315,19 @@ namespace Persistence.Service.CalculationItems.Resource
         // -----------------------------------------------------
         // New Order
         // -----------------------------------------------------
-        public async Task<bool> NewOrderAsync(int id, int newOrder, int? departmentId, CancellationToken ct = default)
+        public async Task<bool> NewOrderAsync(int id, int newOrder, int userId, int? departmentId, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var resource = await context.Resources
-                .Where(x => x.Id == id &&
-                    !x.Task.Calculation.IsLocked &&
-                    (!departmentId.HasValue || x.Task.Calculation.DepartmentId == departmentId.Value))
+                .Where(x => x.Id == id && !x.Task.Calculation.IsLocked)
                 .Select(x => new { Res = x, CalID = x.Task.CalculationId })
                 .FirstOrDefaultAsync(ct);
 
             if (resource is null) return false;
+
+            if (!await Access.CalculationAccessRules.CanEditCalcAsync(context.Calculations, resource.CalID, userId, departmentId, ct))
+                return false;
 
             resource.Res.SetSortOrder(newOrder);
             await context.SaveChangesAsync(ct);
@@ -344,19 +352,21 @@ namespace Persistence.Service.CalculationItems.Resource
         // -----------------------------------------------------
         // Update
         // -----------------------------------------------------
-        public async Task<bool> UpdateAsync(int resourceId, ResourcePostDTO res, int? departmentId, CancellationToken ct = default)
+        public async Task<bool> UpdateAsync(int resourceId, ResourcePostDTO res, int userId, int? departmentId, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var entity = await context.Resources
                 .Include(x => x.Task)
                 .FirstOrDefaultAsync(x => x.Id == resourceId &&
-                    !x.Task.Calculation.IsLocked &&
-                    (!departmentId.HasValue || x.Task.Calculation.DepartmentId == departmentId.Value), ct);
+                    !x.Task.Calculation.IsLocked, ct);
 
             if (entity is null) return false;
 
             var calcId = entity.Task.CalculationId;
+
+            if (!await Access.CalculationAccessRules.CanEditCalcAsync(context.Calculations, calcId, userId, departmentId, ct))
+                return false;
 
             // optimistic concurrency: detect stale edits
             if (res.RowVersion is { Length: > 0 })
@@ -393,14 +403,14 @@ namespace Persistence.Service.CalculationItems.Resource
         private static Task<bool> IsCalculationAllowedAsync(
             Persistence.Context.ShardingSingleDbContext context,
             int calculationId,
+            int userId,
             int? departmentId,
             CancellationToken ct)
         {
             return context.Calculations
                 .AsNoTracking()
-                .AnyAsync(x => x.Id == calculationId &&
-                    !x.IsLocked &&
-                    (!departmentId.HasValue || x.DepartmentId == departmentId.Value), ct);
+                .Where(Access.CalculationAccessRules.CanEdit(userId, departmentId))
+                .AnyAsync(x => x.Id == calculationId && !x.IsLocked, ct);
         }
     }
 }

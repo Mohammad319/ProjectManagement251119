@@ -1843,7 +1843,8 @@ namespace ProjectManagement.Client.Pages.Folder
                 new Dictionary<string, object>
                 {
                     [nameof(ProjectShareUI.ProjectId)] = project.Id,
-                    [nameof(ProjectShareUI.ProjectName)] = project.Name
+                    [nameof(ProjectShareUI.ProjectName)] = project.Name,
+                    [nameof(ProjectShareUI.ProjectDepartmentId)] = project.DepartmentId
                 },
                 BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
 

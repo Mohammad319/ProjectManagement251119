@@ -24,7 +24,7 @@ namespace ProjectManagement.Server.Controllers.v1.SubCalculation
         [HttpGet(URLConst.ReOrder + "/{ResourceId}/{NewOrder}")]
         public async Task<IActionResult> ReOrder(int ResourceId, int NewOrder)
         {
-            var result = await MicroBus.Send(new NewOrderResourceCommand(ResourceId, NewOrder, GetDepartmentId()));
+            var result = await MicroBus.Send(new NewOrderResourceCommand(ResourceId, NewOrder, GetUserId(), GetDepartmentId()));
             TrySetETag(result);
             return Ok(result);
         }
@@ -33,7 +33,7 @@ namespace ProjectManagement.Server.Controllers.v1.SubCalculation
         [HttpPost("{id}")]
         public async Task<IActionResult> Post(int id, [FromBody] List<ResourcePostDTO> Items)
         {
-            var result = await MicroBus.Send(new CreateResourceCommand(Items, id, GetDepartmentId()));
+            var result = await MicroBus.Send(new CreateResourceCommand(Items, id, GetUserId(), GetDepartmentId()));
             TrySetETag(result);
             return Ok(result);
         }
@@ -95,7 +95,7 @@ namespace ProjectManagement.Server.Controllers.v1.SubCalculation
             // Allow If-Match / ETag based concurrency (optional) without breaking body-based RowVersion
             TrySetRowVersionFromIfMatch(dto);
 
-            var result = await MicroBus.Send(new UpdateResourceCommand(id, dto, GetDepartmentId()));
+            var result = await MicroBus.Send(new UpdateResourceCommand(id, dto, GetUserId(), GetDepartmentId()));
             TrySetETag(result);
             return Ok(result);
         }
@@ -104,7 +104,7 @@ namespace ProjectManagement.Server.Controllers.v1.SubCalculation
         [HttpDelete("{CalcID}")]
         public async Task<IActionResult> Delete(int CalcID, [FromBody] IEnumerable<int> items)
         {
-            var result = await MicroBus.Send(new DeleteResourceCommand(items, CalcID, GetDepartmentId()));
+            var result = await MicroBus.Send(new DeleteResourceCommand(items, CalcID, GetUserId(), GetDepartmentId()));
             TrySetETag(result);
             return Ok(result);
         }

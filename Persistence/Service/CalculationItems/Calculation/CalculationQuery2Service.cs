@@ -270,7 +270,14 @@ namespace Persistence.Service.CalculationItems.Calculation
                 resDto.Offers.Add(MapOfferRow(o));
             }
 
-            return BuildHeaderDto(header, taskDtos);
+            var pageDto = BuildHeaderDto(header, taskDtos);
+
+            // Effective edit permission: a Visare (system role or share-level) gets a read-only grid.
+            pageDto.CanEdit = !isViewer && await context.Calculations
+                .Where(Access.CalculationAccessRules.CanEdit(userId, departmentId))
+                .AnyAsync(c => c.Id == id, ct);
+
+            return pageDto;
         }
 
         private static CalculationPageDTO BuildHeaderDto(

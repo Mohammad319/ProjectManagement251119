@@ -28,6 +28,7 @@ namespace Persistence.Service.CalculationItems.Task
             int sourceCalcId,
             int targetCalcId,
             bool isOH,
+            int userId,
             bool deleteOriginal = false,
             int? departmentId = null,
             CancellationToken ct = default)
@@ -36,9 +37,9 @@ namespace Persistence.Service.CalculationItems.Task
                 return false;
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            if (!await IsCalculationAllowedAsync(context, sourceCalcId, departmentId, ct) ||
-                !await IsCalculationAllowedAsync(context, targetCalcId, departmentId, ct) ||
-                !await IsParentTaskAllowedAsync(context, parentTaskId, targetCalcId, departmentId, ct))
+            if (!await IsCalculationAllowedAsync(context, sourceCalcId, userId, departmentId, ct) ||
+                !await IsCalculationAllowedAsync(context, targetCalcId, userId, departmentId, ct) ||
+                !await IsParentTaskAllowedAsync(context, parentTaskId, targetCalcId, userId, departmentId, ct))
             {
                 return false;
             }
@@ -83,6 +84,7 @@ namespace Persistence.Service.CalculationItems.Task
         public async Task<List<TaskListDTO>> CreateAsync(
             IReadOnlyList<TaskPostDTO> tasks,
             int targetCalcId,
+            int userId,
             int? departmentId,
             CancellationToken ct = default)
         {
@@ -92,6 +94,10 @@ namespace Persistence.Service.CalculationItems.Task
             var safeTasks = tasks;
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
+            // Edit access (+ not locked) to the target calc gates the whole create.
+            if (!await IsCalculationAllowedAsync(context, targetCalcId, userId, departmentId, ct))
+                return [];
+
             int? parentTaskId = safeTasks.FirstOrDefault()?.ParentTaskId;
 
             if (parentTaskId.HasValue && parentTaskId > 0)
@@ -99,8 +105,7 @@ namespace Persistence.Service.CalculationItems.Task
                 var parentTask = await context.Tasks
                     .FirstOrDefaultAsync(x => x.Id == parentTaskId &&
                         x.CalculationId == targetCalcId &&
-                        !x.Calculation.IsLocked &&
-                        (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value), ct);
+                        !x.Calculation.IsLocked, ct);
 
                 if (parentTask == null)
                     return [];
@@ -112,16 +117,6 @@ namespace Persistence.Service.CalculationItems.Task
                 // توحيد IsOH بناء على Parent
                 foreach (var task in safeTasks)
                     task.IsOH = parentTask.IsOH;
-            }
-            else
-            {
-                bool calcExists = await context.Calculations
-                    .AnyAsync(x => x.Id == targetCalcId &&
-                        !x.IsLocked &&
-                        (!departmentId.HasValue || x.DepartmentId == departmentId.Value), ct);
-
-                if (!calcExists)
-                    return [];
             }
 
             var defaultStatusId = await context.TaskStatus
@@ -187,6 +182,7 @@ namespace Persistence.Service.CalculationItems.Task
             int targetCalcId,
             int? parentTaskId,
             IReadOnlyList<ResourceTaskItemDTO> items,
+            int userId,
             int order = 100,
             bool isOH = false,
             int? departmentId = null,
@@ -200,9 +196,9 @@ namespace Persistence.Service.CalculationItems.Task
                 parentTaskId = null;
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            if (!await IsCalculationAllowedAsync(context, sourceCalcId, departmentId, ct) ||
-                !await IsCalculationAllowedAsync(context, targetCalcId, departmentId, ct) ||
-                !await IsParentTaskAllowedAsync(context, parentTaskId, targetCalcId, departmentId, ct))
+            if (!await IsCalculationAllowedAsync(context, sourceCalcId, userId, departmentId, ct) ||
+                !await IsCalculationAllowedAsync(context, targetCalcId, userId, departmentId, ct) ||
+                !await IsParentTaskAllowedAsync(context, parentTaskId, targetCalcId, userId, departmentId, ct))
             {
                 return false;
             }
@@ -221,8 +217,7 @@ namespace Persistence.Service.CalculationItems.Task
                     .FirstOrDefaultAsync(
                         x => x.Id == parentTaskId &&
                             x.CalculationId == targetCalcId &&
-                            !x.Calculation.IsLocked &&
-                            (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value),
+                            !x.Calculation.IsLocked,
                         ct);
 
                 if (parent == null)
@@ -242,8 +237,7 @@ namespace Persistence.Service.CalculationItems.Task
                     .AsNoTracking()
                     .Include(c => c.Tasks)
                     .FirstOrDefaultAsync(x => x.Id == targetCalcId &&
-                        !x.IsLocked &&
-                        (!departmentId.HasValue || x.DepartmentId == departmentId.Value), ct);
+                        !x.IsLocked, ct);
 
                 if (calc == null)
                     return false;
@@ -280,8 +274,7 @@ namespace Persistence.Service.CalculationItems.Task
                             .FirstOrDefaultAsync(
                                 x => x.Id == item.Id &&
                                     x.CalculationId == sourceCalcId &&
-                                    !x.Calculation.IsLocked &&
-                                    (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value),
+                                    !x.Calculation.IsLocked,
                                 ct);
 
                         if (task == null)
@@ -323,8 +316,7 @@ namespace Persistence.Service.CalculationItems.Task
                         .FirstOrDefaultAsync(
                             x => x.Id == item.Id &&
                                 x.CalculationId == sourceCalcId &&
-                                !x.Calculation.IsLocked &&
-                                (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value),
+                                !x.Calculation.IsLocked,
                             ct);
 
                     if (originalRoot != null)
@@ -416,12 +408,13 @@ namespace Persistence.Service.CalculationItems.Task
         public async Task<bool> DeleteAsync(
             IEnumerable<int> taskIds,
             int calcId,
+            int userId,
             int? departmentId,
             CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            if (!await IsCalculationAllowedAsync(context, calcId, departmentId, ct))
+            if (!await IsCalculationAllowedAsync(context, calcId, userId, departmentId, ct))
                 return false;
 
             if (taskIds is null)
@@ -501,19 +494,21 @@ namespace Persistence.Service.CalculationItems.Task
         public async Task<bool> NewOrderAsync(
             int taskId,
             int newOrder,
+            int userId,
             int? departmentId,
             CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var taskWithCalcId = await context.Tasks
-                .Where(x => x.Id == taskId &&
-                    !x.Calculation.IsLocked &&
-                    (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value))
+                .Where(x => x.Id == taskId && !x.Calculation.IsLocked)
                 .Select(x => new { Task = x, CalcId = x.CalculationId })
                 .FirstOrDefaultAsync(ct);
 
             if (taskWithCalcId == null)
+                return false;
+
+            if (!await Access.CalculationAccessRules.CanEditCalcAsync(context.Calculations, taskWithCalcId.CalcId, userId, departmentId, ct))
                 return false;
 
             taskWithCalcId.Task.SetSortOrder(newOrder);
@@ -526,18 +521,20 @@ namespace Persistence.Service.CalculationItems.Task
         public async Task<bool> UpdateAsync(
             int taskId,
             TaskPostDTO dto,
+            int userId,
             int? departmentId,
             CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
             var taskWithCalcId = await context.Tasks
-                .Where(x => x.Id == taskId &&
-                    !x.Calculation.IsLocked &&
-                    (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value))
+                .Where(x => x.Id == taskId && !x.Calculation.IsLocked)
                 .Select(x => new { Task = x, CalcId = x.CalculationId })
                 .FirstOrDefaultAsync(ct);
 
             if (taskWithCalcId == null)
+                return false;
+
+            if (!await Access.CalculationAccessRules.CanEditCalcAsync(context.Calculations, taskWithCalcId.CalcId, userId, departmentId, ct))
                 return false;
 
             var task = taskWithCalcId.Task;
@@ -728,36 +725,40 @@ namespace Persistence.Service.CalculationItems.Task
             return tasks;
         }
 
+        // Access + not-locked gate, broadened to the shared effective-edit rule so a user the
+        // calc's project is shared with as "Användare" can edit its tasks.
         private static Task<bool> IsCalculationAllowedAsync(
             ShardingSingleDbContext context,
             int calculationId,
+            int userId,
             int? departmentId,
             CancellationToken ct)
         {
             return context.Calculations
                 .AsNoTracking()
-                .AnyAsync(x => x.Id == calculationId &&
-                    !x.IsLocked &&
-                    (!departmentId.HasValue || x.DepartmentId == departmentId.Value), ct);
+                .Where(Access.CalculationAccessRules.CanEdit(userId, departmentId))
+                .AnyAsync(x => x.Id == calculationId && !x.IsLocked, ct);
         }
 
         private static Task<bool> IsParentTaskAllowedAsync(
             ShardingSingleDbContext context,
             int? parentTaskId,
             int targetCalcId,
+            int userId,
             int? departmentId,
             CancellationToken ct)
         {
             if (!parentTaskId.HasValue || parentTaskId <= 0)
                 return System.Threading.Tasks.Task.FromResult(true);
 
+            // The destination calc's edit access is verified separately; here we only validate the
+            // parent task belongs to the target calc, is an allowed type, and isn't locked.
             return context.Tasks
                 .AsNoTracking()
                 .AnyAsync(x => x.Id == parentTaskId.Value &&
                     x.CalculationId == targetCalcId &&
                     x.Type != TaskType.FourBarCode &&
-                    !x.Calculation.IsLocked &&
-                    (!departmentId.HasValue || x.Calculation.DepartmentId == departmentId.Value), ct);
+                    !x.Calculation.IsLocked, ct);
         }
     }
 }

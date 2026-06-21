@@ -6,6 +6,8 @@
 @using ProjectManagement.Client.Helper
 @using ProjectManagement.Client.Services.Folder
 @using ProjectManagement.Client.Shared.Model.Project
+@using ProjectManagement.Shared.DTO.Project
+@using ProjectManagement.Shared.Helper
 @using ProjectManagement.Client.Shared.MVVM.Calculation
 @using ProjectManagement.Client.Shared.MVVM.Folder
 @using System.Globalization
@@ -677,6 +679,12 @@
                                 <span class="inline-flex items-center gap-1">@ResourceApp._private @((MarkupString)SortIndicatorHtml("privacy")) <TableColumnFilter FilterState='CF("privacy")' OnChanged="OnColumnFilterChanged" /></span>
                             </th>
                         }
+                        @if (IsCalculationColumnVisible("access"))
+                        {
+                            <th id="haccess" class="@SortableHeaderClass("access")" style="min-width:110px;" title="Hur kalkylen är tillgänglig och om den ingår i extra delning. Klicka på värdet för detaljer." @onclick='() => SortBy("access")'>
+                                <span class="inline-flex items-center gap-1">Åtkomst @((MarkupString)SortIndicatorHtml("access")) <TableColumnFilter FilterState='CF("access")' OnChanged="OnColumnFilterChanged" /></span>
+                            </th>
+                        }
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -863,6 +871,47 @@
                             @if (IsCalculationColumnVisible("privacy"))
                             {
                                 <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatYesNo(calu.IsPrivate)</td>
+                            }
+                            @if (IsCalculationColumnVisible("access"))
+                            {
+                                var calcShared = CalcAccessIsShared(calu);
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300" @onclick:stopPropagation="true">
+                                    <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger" Context="calcAccessAuth">
+                                        <Authorized>
+                                            <button type="button"
+                                                    class="@(calcShared ? "inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-left text-sky-700 transition hover:bg-sky-50 hover:underline dark:text-sky-300 dark:hover:bg-sky-950/40" : "inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-left text-slate-500 transition hover:bg-slate-100 hover:underline dark:text-slate-400 dark:hover:bg-slate-800")"
+                                                    title="@CalcAccessTooltip(calu)"
+                                                    @onclick="() => OpenCalcShareDialog(calu)">
+                                                @if (calcShared)
+                                                {
+                                                    <i class="fa-solid fa-share-nodes text-sky-500"></i>
+                                                }
+                                                else if (calu.IsPrivate)
+                                                {
+                                                    <i class="fa-solid fa-lock text-amber-500"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="fa-solid fa-diagram-project text-slate-400"></i>
+                                                }
+                                                <span>@CalcAccessSummaryText(calu)</span>
+                                            </button>
+                                        </Authorized>
+                                        <NotAuthorized>
+                                            <span class="inline-flex items-center gap-1" title="@CalcAccessTooltip(calu)">
+                                                @if (calcShared)
+                                                {
+                                                    <i class="fa-solid fa-share-nodes text-sky-500"></i>
+                                                }
+                                                else if (calu.IsPrivate)
+                                                {
+                                                    <i class="fa-solid fa-lock text-amber-500"></i>
+                                                }
+                                                <span>@CalcAccessSummaryText(calu)</span>
+                                            </span>
+                                        </NotAuthorized>
+                                    </AuthorizeView>
+                                </td>
                             }
                         </tr>
                     }
@@ -1101,6 +1150,8 @@
         ["tax"]             = new() { Type = ColumnFilterType.Number },
         ["archived"]        = new() { Type = ColumnFilterType.Boolean },
         ["privacy"]         = new() { Type = ColumnFilterType.Boolean },
+        // "Åtkomst" filtreras som flervalslista: åtkomsttyp, behörighet och mottagare.
+        ["access"]          = new() { Type = ColumnFilterType.Dropdown },
     };
 
     protected override async Task OnInitializedAsync()
@@ -1169,6 +1220,9 @@
                 break;
             case "inspector":
                 state.AvailableValues = GetCalcDropdownValues(c => c.Inspector);
+                break;
+            case "access":
+                state.AvailableValues = GetCalcAccessFilterValues();
                 break;
         }
         return state;
@@ -1666,7 +1720,8 @@
             ["timeMonth"] = false,
             ["tax"] = false,
             ["archived"] = true,
-            ["privacy"] = true
+            ["privacy"] = true,
+            ["access"] = true
         };
 
     private readonly Dictionary<string, bool> _calculationColumns = new(DefaultCalculationColumns);
@@ -1698,7 +1753,8 @@
         new("timeMonth", AppLoc["projectDurationMonths"].Value),
         new("tax", AppLoc["vatPercent"].Value),
         new("archived", AppLoc["archived"].Value),
-        new("privacy", ResourceApp._private)
+        new("privacy", ResourceApp._private),
+        new("access", "Åtkomst")
     };
 
     // Base list after version selection and Part scoping, before column filters.
@@ -1772,6 +1828,8 @@
                 list = list.Where(c => _calcColFilters["archived"].MatchesBool(c.IsArchived));
             if (_calcColFilters["privacy"].IsActive)
                 list = list.Where(c => _calcColFilters["privacy"].MatchesBool(c.IsPrivate));
+            if (_calcColFilters["access"].IsActive)
+                list = list.Where(c => CalcAccessTags(c).Any(t => _calcColFilters["access"].SelectedValues.Contains(t)));
 
             return list;
         }
@@ -1850,6 +1908,9 @@
                 "privacy" => _sortAscending
                     ? list.OrderBy(x => x.IsPrivate)
                     : list.OrderByDescending(x => x.IsPrivate),
+                "access" => _sortAscending
+                    ? list.OrderBy(CalcAccessSummaryText, StringComparer.CurrentCultureIgnoreCase)
+                    : list.OrderByDescending(CalcAccessSummaryText, StringComparer.CurrentCultureIgnoreCase),
                 _ => list
             };
         }
@@ -1914,6 +1975,87 @@
 
     private string? GetCalculationFolderName(ListCalculationMVVM calculation) =>
         GetScopeRow(calculation)?.Folder.Name ?? calculation.FolderName;
+
+    // ── "Åtkomst"-kolumn ──────────────────────────────────────────────────
+    // Ren formatering/klassificering bor i AccessSummaryFormatter (delas + enhetstestas).
+    private static bool CalcAccessIsShared(ListCalculationMVVM c) =>
+        AccessSummaryFormatter.CalcIsShared(c.Access);
+
+    private static string CalcAccessSummaryText(ListCalculationMVVM c) =>
+        AccessSummaryFormatter.CalcSummaryText(c.Access, c.IsPrivate);
+
+    private static IEnumerable<string> CalcAccessTags(ListCalculationMVVM c) =>
+        AccessSummaryFormatter.CalcTags(c.Access, c.IsPrivate);
+
+    private static string CalcAccessTooltip(ListCalculationMVVM c)
+    {
+        if (c.IsPrivate) return "Privat kalkyl – endast ägare/Admin kan se den.";
+        var a = c.Access;
+        if (a is null) return "Kalkylen är tillgänglig via projektets normala åtkomst.";
+
+        var lines = new List<string>();
+        if (a.ViaProject) lines.Add("Via projektets avdelning");
+        foreach (var r in a.Recipients)
+        {
+            var typ = r.Type == ProjectShareRecipientType.Department ? "avdelning" : "användare";
+            lines.Add($"{r.Name} · {AccessSummaryFormatter.RoleLabel(r.Role)} · {typ}");
+        }
+        if (lines.Count == 0) lines.Add("Ingen extra delning");
+        lines.Add("Klicka för detaljer.");
+        return string.Join("\n", lines);
+    }
+
+    private List<string> GetCalcAccessFilterValues()
+    {
+        var values = new List<string>
+        {
+            AccessSummaryFormatter.CalcTagViaProject,
+            AccessSummaryFormatter.CalcTagShared,
+            AccessSummaryFormatter.CalcTagPrivate,
+            AccessSummaryFormatter.CalcTagLimited,
+            AccessSummaryFormatter.PermManagerTag,
+            AccessSummaryFormatter.PermViewerTag
+        };
+        values.AddRange(BaseCalculations
+            .Where(c => c.Access is not null)
+            .SelectMany(c => c.Access!.Recipients)
+            .Select(AccessSummaryFormatter.RecipientFilterTag)
+            .Distinct()
+            .OrderBy(v => v, StringComparer.CurrentCultureIgnoreCase));
+        return values;
+    }
+
+    // Klick på "Åtkomst": öppna projektets delningsdialog (delning sker på projektnivå).
+    private void OpenCalcShareDialog(ListCalculationMVVM calculation)
+    {
+        var project = GetCalculationProject(calculation);
+        if (project is null) return;
+
+        Modal.ShowComponent<ProjectShareUI>(
+            "Delning och behörighet",
+            new Dictionary<string, object>
+            {
+                [nameof(ProjectShareUI.ProjectId)]           = project.Id,
+                [nameof(ProjectShareUI.ProjectName)]         = project.Name,
+                [nameof(ProjectShareUI.ProjectDepartmentId)] = project.DepartmentId,
+                [nameof(ProjectShareUI.OnCompleted)]         = EventCallback.Factory.Create(this, () => ReloadAfterShareChangeAsync(project))
+            },
+            BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
+    }
+
+    private async Task ReloadAfterShareChangeAsync(ListProjectMVVM project)
+    {
+        if (FolderScopeMode)
+        {
+            await LoadScopeCalculationsAsync(forceReload: true);
+        }
+        else
+        {
+            project.CalculationsLoaded = false;
+            await Folder.SetCalcsToProject(project);
+        }
+        StateHasChanged();
+    }
 
     private static string FormatText(string? value) =>
         string.IsNullOrWhiteSpace(value) ? "-" : value;
@@ -2394,6 +2536,7 @@
             "tax"             => AppLoc["vatPercent"].Value,
             "archived"        => "Arkiverad",
             "privacy"         => "Privat",
+            "access"          => "Åtkomst",
             _                 => key
         };
         return state.Type switch
@@ -2461,6 +2604,7 @@
         "version" => FormatVersion(calculation.VersionNumber),
         "archived" => FormatYesNo(calculation.IsArchived),
         "privacy" => FormatYesNo(calculation.IsPrivate),
+        "access" => CalcAccessSummaryText(calculation),
         _ => string.Empty
     };
 

@@ -68,6 +68,7 @@ namespace ProjectManagement.Client.Shared.Mapping
                 Priority = dto.Priority,
                 TimeMonth = dto.TimeMonth,
                 ImportInfo = dto.ImportInfo,
+                Access = dto.Access,
             };
         }
 
@@ -104,6 +105,7 @@ namespace ProjectManagement.Client.Shared.Mapping
                 VersionNumber = dto.VersionNumber,
                 CreatedFromCalculationId = dto.CreatedFromCalculationId,
                 IsCurrentVersion = dto.IsCurrentVersion,
+                CanEdit = dto.CanEdit,
                 Sort = dto.Sort?.Clone() ?? new SortConfig(),
                 QuanityList = dto.QuanityList is null ? [] : [.. dto.QuanityList],
                 Factors = dto.Factors?.Select(ToFactors).ToList() ?? [],
@@ -336,6 +338,8 @@ namespace ProjectManagement.Client.Shared.Mapping
                 TenderQA = dto.TenderQA,
                 IsArchived = dto.IsArchived,
                 IsShared = dto.IsShared,
+                Access = dto.Access,
+                DepartmentId = dto.DepartmentId,
                 CalculationCount = dto.CalculationCount,
                 StatusId = dto.StatusId,
                 StatusSortOrder = dto.StatusSortOrder,

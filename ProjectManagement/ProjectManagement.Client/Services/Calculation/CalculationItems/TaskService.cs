@@ -23,6 +23,17 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
         CalculationInteractionState interactionState,
         CalculationService calculationService)
     {
+        // Effective Visare permission ⇒ block grid mutations with a clear message.
+        private bool DenyIfReadOnly()
+        {
+            if (CalcContainer.Calculation is { CanEdit: false })
+            {
+                Mhd.MessageOk("Behörighet", "Du har visningsbehörighet och kan inte ändra den här kalkylen.", MhdState.Warning);
+                return true;
+            }
+            return false;
+        }
+
         private static bool TaskAffectsCalculation(TaskListMVVM oldT, TaskListMVVM newT)
         {
             if (oldT.Quantity != newT.Quantity) return true;
@@ -56,6 +67,9 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
 
         public async Task Duplicate(TaskListMVVM dusection)
         {
+            if (DenyIfReadOnly())
+                return;
+
             var calculation = CalcContainer.Calculation;
             if (calculation is null)
                 return;
@@ -92,6 +106,9 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
 
         public void Remove(TaskListMVVM task)
         {
+            if (DenyIfReadOnly())
+                return;
+
             if (!interactionState.IsSelected(CalculationItemType.task, task.Id))
             {
                 Mhd.DeleteMessage(task.Name ?? string.Empty, EventCallback.Factory.Create(this, () => ConfirmedRemoveAsync([task.Id])));

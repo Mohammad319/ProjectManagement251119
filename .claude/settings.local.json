@@ -192,7 +192,11 @@
       "Bash(echo \"launched $!\")",
       "Bash(taskkill //F //IM ProjectManagement.exe)",
       "Bash(git check-ignore *)",
-      "Bash(perl -0pi -e 's/new AtacostTransferService\\\\\\(\\(factory|new FakeFactory\\\\\\(\"[^\"]+\"\\\\\\)\\)\\\\\\)/new AtacostTransferService\\($1, NullLogger<AtacostTransferService>.Instance\\)/g' Tests/ProjectManagement.Tests/AtacostTransferTests.cs)"
+      "Bash(perl -0pi -e 's/new AtacostTransferService\\\\\\(\\(factory|new FakeFactory\\\\\\(\"[^\"]+\"\\\\\\)\\)\\\\\\)/new AtacostTransferService\\($1, NullLogger<AtacostTransferService>.Instance\\)/g' Tests/ProjectManagement.Tests/AtacostTransferTests.cs)",
+      "Bash(dotnet run *)",
+      "Bash(tee /tmp/pmrun.log)",
+      "Bash(curl -s -c /tmp/pmcookies.txt http://localhost:5286/Account/Login -o /tmp/login.html -w \"HTTP %{http_code}\\\\n\")",
+      "Bash(python -)"
     ]
   }
 }

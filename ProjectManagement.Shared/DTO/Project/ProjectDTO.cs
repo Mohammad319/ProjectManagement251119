@@ -266,6 +266,14 @@ namespace ProjectManagement.Shared.DTO.Project
         public string? SourceContractName { get; set; }
         public string? SourceOrganisationName { get; set; }
         public string? SourceOrganisationNumber { get; set; }
+
+        /// <summary>
+        /// Effective edit permission for the current user, computed by the backend (same rule as
+        /// <c>ProjectAccessRules.CanEdit</c>). False when the user only has Visare-level access to
+        /// this project, so the form shows read-only and never lets them edit fields that the
+        /// backend would refuse to save. Defaults to true for new projects.
+        /// </summary>
+        public bool CanEdit { get; set; } = true;
     }
 
     public class ProjectDetailsDTO : ProjectBaseData
@@ -307,6 +315,12 @@ namespace ProjectManagement.Shared.DTO.Project
         public DateTime TenderQA { get; set; } = DateTime.Now;
         public bool IsArchived { get; set; } = false;
         public bool IsShared { get; set; } = false;
+        // The project's owning department (via its folder). Used by the sharing dialog to mark
+        // recipients that already have access "via projektets avdelning".
+        public int? DepartmentId { get; set; }
+        // Compact access summary for the project list's "Åtkomst" column and its filter.
+        // Null when not computed (e.g. global search); the UI then falls back to IsShared.
+        public ProjectAccessSummaryDTO? Access { get; set; }
         public int CalculationCount { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }

@@ -4,8 +4,10 @@ namespace Persistence.Service.CalculationItems.Calculation
     using Domain.Entities.Calculation;
     using global::Application.Feature.Calculation.Calculation;
     using Microsoft.EntityFrameworkCore;
+    using Persistence.Context;
     using Persistence.Factory;
     using ProjectManagement.Shared.DTO.Calculation;
+    using ProjectManagement.Shared.DTO.Project;
     using ProjectManagement.Shared.Helper;
     using System;
     using System.Collections.Generic;
@@ -36,6 +38,7 @@ namespace Persistence.Service.CalculationItems.Calculation
                 .ToListAsync(ct);
 
             var calculations = calculationEntities.Select(ToListCalculationDto).ToList();
+            await AttachAccessSummariesAsync(context, projectId, calculationEntities, calculations, userId, departmentId, ct);
 
             var matchingFamilies = CalculationVersionSelector
                 .SelectCurrentVersions(calculations)
@@ -84,7 +87,72 @@ namespace Persistence.Service.CalculationItems.Calculation
                 .OrderBy(x => x.SortOrder)
                 .ToListAsync(ct);
 
-            return calculationEntities.Select(ToListCalculationDto).ToList();
+            var calculations = calculationEntities.Select(ToListCalculationDto).ToList();
+            await AttachAccessSummariesAsync(context, projectId, calculationEntities, calculations, userId, departmentId, ct);
+            return calculations;
+        }
+
+        // Per-kalkyl åtkomstsammanfattning för kalkyllistans "Åtkomst"-kolumn: normal projektåtkomst
+        // (ViaProject), privat (IsPrivate) och extra projektdelningar där just kalkylen ingår.
+        private static async Task AttachAccessSummariesAsync(
+            ShardingSingleDbContext context,
+            Guid projectId,
+            List<CalculationEntity> entities,
+            List<ListCalculationDTO> dtos,
+            int userId,
+            int? departmentId,
+            CancellationToken ct)
+        {
+            if (dtos.Count == 0)
+                return;
+
+            // Projektdelningar (användare/avdelning) med mottagare, behörighet och vilka kalkyler som ingår.
+            var shares = await context.ProjectShare
+                .AsNoTracking()
+                .Where(s => s.ProjectId == projectId)
+                .Select(s => new
+                {
+                    Type = s.SharedWithUserId != null
+                        ? ProjectShareRecipientType.User
+                        : ProjectShareRecipientType.Department,
+                    s.SharedWithUserId,
+                    s.DepartmentId,
+                    Name = s.SharedWithUserId != null
+                        ? (((s.SharedWithUser!.FirstName ?? "") + " " + (s.SharedWithUser!.LastName ?? "")).Trim() == ""
+                            ? s.SharedWithUser!.UserName
+                            : ((s.SharedWithUser!.FirstName ?? "") + " " + (s.SharedWithUser!.LastName ?? "")).Trim())
+                        : s.Department!.Name,
+                    s.Role,
+                    CalcIds = s.Calculations.Select(c => c.CalculationId).ToList()
+                })
+                .ToListAsync(ct);
+
+            // Normal projektåtkomst gäller hela projektet (samma för alla rader i denna query).
+            var project = entities.FirstOrDefault()?.Project;
+            bool viaProject = departmentId == null
+                || (project?.Folder != null && project.Folder.DepartmentId == departmentId)
+                || (project != null && project.CreatedBy == userId);
+
+            foreach (var dto in dtos)
+            {
+                dto.Access = new CalculationAccessSummaryDTO
+                {
+                    ViaProject = viaProject,
+                    IsPrivate = dto.IsPrivate,
+                    Recipients = shares
+                        .Where(s => s.CalcIds.Contains(dto.Id))
+                        .Select(s => new ProjectAccessRecipientDTO
+                        {
+                            Type = s.Type,
+                            UserId = s.SharedWithUserId,
+                            DepartmentId = s.DepartmentId,
+                            Name = s.Name ?? string.Empty,
+                            Role = s.Role ?? string.Empty,
+                            CalcCount = 1
+                        })
+                        .ToList()
+                };
+            }
         }
 
         public async Task<CalculationDetailsDTO?> GetDetailsAsync(
@@ -124,7 +192,15 @@ namespace Persistence.Service.CalculationItems.Calculation
                 .Where(Access.CalculationAccessRules.CanSee(userId, departmentId, isViewer))
                 .FirstOrDefaultAsync(ct);
 
-            return calculation?.ToPostDto();
+            var dto = calculation?.ToPostDto();
+            if (dto is not null)
+            {
+                // Effective edit permission: a Visare (system role or share-level) gets read-only.
+                dto.CanEdit = !isViewer && await context.Calculations
+                    .Where(Access.CalculationAccessRules.CanEdit(userId, departmentId))
+                    .AnyAsync(c => c.Id == id, ct);
+            }
+            return dto;
         }
 
         public async Task<List<HourlyPriceListGroupDTO>> GetHourlyPriceListAsync(

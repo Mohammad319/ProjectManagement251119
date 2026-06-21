@@ -53,14 +53,17 @@ namespace Persistence.Service.Project
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
+            // Use the shared effective-edit rule so a user the project is shared with as
+            // "Användare" can save it (previously only own-department/admin passed, which is
+            // why such users hit the generic "Ett oväntat fel uppstod" on save).
             var project = await context.Projects
-                .FirstOrDefaultAsync(x => x.Id == id &&
-                    (departmentId == null || x.Folder.DepartmentId == departmentId), ct);
+                .Where(Access.ProjectAccessRules.CanEdit(userId, departmentId))
+                .FirstOrDefaultAsync(x => x.Id == id, ct);
 
             if (project == null)
                 return false;
 
-            if (!await ValidateProjectReferencesAsync(context, dto, departmentId, id, ct))
+            if (!await ValidateProjectReferencesAsync(context, dto, departmentId, id, ct, project.FolderId))
                 return false;
 
             var normalizedCode = NormalizeCode(dto.Code);
@@ -364,7 +367,15 @@ namespace Persistence.Service.Project
                 .Where(Access.ProjectAccessRules.CanSee(userId, departmentId, isViewer))
                 .FirstOrDefaultAsync(ct);
 
-            return project?.ToPostDto();
+            var dto = project?.ToPostDto();
+            if (dto is not null)
+            {
+                // Effective edit permission: a Visare (system role or share-level) gets read-only.
+                dto.CanEdit = !isViewer && await context.Projects
+                    .Where(Access.ProjectAccessRules.CanEdit(userId, departmentId))
+                    .AnyAsync(p => p.Id == id, ct);
+            }
+            return dto;
         }
 
         public async Task<IEnumerable<ListProjectDTO>> GetByFolderAsync(Guid folderId, bool includeArchived, int userId, int? departmentId, CancellationToken ct, bool isViewer = false)
@@ -372,6 +383,7 @@ namespace Persistence.Service.Project
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var projects = await context.Projects.AsNoTracking()
+                .Include(x => x.Folder)
                 .Include(x => x.Organisation)
                 .Include(x => x.Contract)
                 .Include(x => x.Compensation)
@@ -387,13 +399,14 @@ namespace Persistence.Service.Project
 
             var statusSortOrders = await GetProjectStatusSortOrdersAsync(context, ct);
             var calculationCounts = await GetCalculationCountsAsync(context, projects.Select(x => x.Id), ct);
-            var sharedIds = await GetSharedProjectIdsAsync(context, projects.Select(x => x.Id), ct);
+            var accessSummaries = await GetAccessSummariesAsync(context, projects, userId, departmentId, ct);
             return projects.Select(x =>
             {
                 var metadata = x.GetMetadataSnapshot();
                 statusSortOrders.TryGetValue(x.ProjectStatusId ?? metadata.StatusId ?? 0, out var statusSortOrder);
                 calculationCounts.TryGetValue(x.Id, out var calculationCount);
-                return x.ToListDto(statusSortOrder, calculationCount, sharedIds.Contains(x.Id));
+                accessSummaries.TryGetValue(x.Id, out var access);
+                return x.ToListDto(statusSortOrder, calculationCount, access: access);
             }).ToList();
         }
 
@@ -402,6 +415,7 @@ namespace Persistence.Service.Project
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             IQueryable<ProjectEntity> baseQuery = context.Projects.AsNoTracking()
+                .Include(x => x.Folder)
                 .Include(x => x.Organisation)
                 .Include(x => x.Contract)
                 .Include(x => x.Compensation)
@@ -425,13 +439,14 @@ namespace Persistence.Service.Project
 
             var statusSortOrders = await GetProjectStatusSortOrdersAsync(context, ct);
             var calculationCounts = await GetCalculationCountsAsync(context, projects.Select(x => x.Id), ct);
-            var sharedIds = await GetSharedProjectIdsAsync(context, projects.Select(x => x.Id), ct);
+            var accessSummaries = await GetAccessSummariesAsync(context, projects, userId, departmentId, ct);
             return projects.Select(x =>
             {
                 var metadata = x.GetMetadataSnapshot();
                 statusSortOrders.TryGetValue(x.ProjectStatusId ?? metadata.StatusId ?? 0, out var statusSortOrder);
                 calculationCounts.TryGetValue(x.Id, out var calculationCount);
-                return x.ToListDto(statusSortOrder, calculationCount, sharedIds.Contains(x.Id));
+                accessSummaries.TryGetValue(x.Id, out var access);
+                return x.ToListDto(statusSortOrder, calculationCount, access: access);
             }).ToList();
         }
 
@@ -561,9 +576,75 @@ namespace Persistence.Service.Project
                         .Count());
         }
 
-        // Projekt-id:n som är delade med minst en användare eller avdelning via intern
-        // projektdelning (ProjectShare). Används för "Delat"-kolumnen i projektlistan.
-        private static async Task<HashSet<Guid>> GetSharedProjectIdsAsync(
+        // Kompakt åtkomstsammanfattning per projekt för projektlistans "Åtkomst"-kolumn.
+        // Skiljer normal avdelningsåtkomst (ViaDepartment) från extra delning (Recipients).
+        private static async Task<Dictionary<Guid, ProjectAccessSummaryDTO>> GetAccessSummariesAsync(
+            ShardingSingleDbContext context,
+            List<ProjectEntity> projects,
+            int userId,
+            int? departmentId,
+            CancellationToken ct)
+        {
+            var result = new Dictionary<Guid, ProjectAccessSummaryDTO>();
+            var ids = projects.Select(p => p.Id).Distinct().ToList();
+            if (ids.Count == 0)
+                return result;
+
+            // Extra delningar (användare/avdelning) med mottagarnamn, behörighet och antal kalkyler.
+            var shares = await context.ProjectShare
+                .AsNoTracking()
+                .Where(s => ids.Contains(s.ProjectId))
+                .Select(s => new
+                {
+                    s.ProjectId,
+                    Type = s.SharedWithUserId != null
+                        ? ProjectShareRecipientType.User
+                        : ProjectShareRecipientType.Department,
+                    s.SharedWithUserId,
+                    s.DepartmentId,
+                    Name = s.SharedWithUserId != null
+                        ? (((s.SharedWithUser!.FirstName ?? "") + " " + (s.SharedWithUser!.LastName ?? "")).Trim() == ""
+                            ? s.SharedWithUser!.UserName
+                            : ((s.SharedWithUser!.FirstName ?? "") + " " + (s.SharedWithUser!.LastName ?? "")).Trim())
+                        : s.Department!.Name,
+                    s.Role,
+                    CalcCount = s.Calculations.Count
+                })
+                .ToListAsync(ct);
+
+            var sharesByProject = shares.ToLookup(s => s.ProjectId);
+            var shareableCounts = await GetShareableCalcCountsAsync(context, ids, ct);
+
+            foreach (var p in projects)
+            {
+                result[p.Id] = new ProjectAccessSummaryDTO
+                {
+                    // Normal avdelningsåtkomst: admin (tenant-wide), egen avdelning eller skapare.
+                    ViaDepartment = departmentId == null
+                        || (p.Folder != null && p.Folder.DepartmentId == departmentId)
+                        || p.CreatedBy == userId,
+                    ShareableCalcCount = shareableCounts.TryGetValue(p.Id, out var sc) ? sc : 0,
+                    Recipients = sharesByProject[p.Id]
+                        .Select(s => new ProjectAccessRecipientDTO
+                        {
+                            Type = s.Type,
+                            UserId = s.SharedWithUserId,
+                            DepartmentId = s.DepartmentId,
+                            Name = s.Name ?? string.Empty,
+                            Role = s.Role ?? string.Empty,
+                            CalcCount = s.CalcCount
+                        })
+                        .ToList()
+                };
+            }
+
+            return result;
+        }
+
+        // Antal delbara kalkyler per projekt: aktuell version, ej arkiverad och ej privat.
+        // Speglar GetCalculationCountsAsync men exkluderar privata kalkyler – det är nämnaren
+        // i "3/5 kalkyler" och samma mängd som delningsdialogen erbjuder.
+        private static async Task<Dictionary<Guid, int>> GetShareableCalcCountsAsync(
             ShardingSingleDbContext context,
             IEnumerable<Guid> projectIds,
             CancellationToken ct)
@@ -572,14 +653,42 @@ namespace Persistence.Service.Project
             if (ids.Count == 0)
                 return [];
 
-            var sharedIds = await context.ProjectShare
+            var calculations = await context.Calculations
                 .AsNoTracking()
-                .Where(s => ids.Contains(s.ProjectId))
-                .Select(s => s.ProjectId)
-                .Distinct()
+                .Where(calculation => !calculation.IsDeleted && ids.Contains(calculation.ProjectId))
+                .Select(calculation => new
+                {
+                    calculation.Id,
+                    calculation.ProjectId,
+                    calculation.VersionGroupId,
+                    calculation.VersionNumber,
+                    calculation.IsCurrentVersion,
+                    calculation.IsArchived,
+                    calculation.IsPrivate,
+                    calculation.CreatedAt,
+                    calculation.UpdatedAt
+                })
                 .ToListAsync(ct);
 
-            return sharedIds.ToHashSet();
+            return calculations
+                .GroupBy(calculation => calculation.ProjectId)
+                .ToDictionary(
+                    group => group.Key,
+                    group => group
+                        .GroupBy(calculation => calculation.VersionGroupId == Guid.Empty
+                            ? $"legacy:{calculation.Id}"
+                            : calculation.VersionGroupId.ToString())
+                        .Select(family => family
+                            .OrderByDescending(calculation => calculation.IsCurrentVersion)
+                            .ThenByDescending(calculation => calculation.VersionNumber > 0
+                                ? calculation.VersionNumber
+                                : int.MinValue)
+                            .ThenByDescending(calculation => calculation.UpdatedAt ?? calculation.CreatedAt)
+                            .ThenByDescending(calculation => calculation.CreatedAt)
+                            .ThenByDescending(calculation => calculation.Id)
+                            .First())
+                        .Where(calculation => !calculation.IsArchived && !calculation.IsPrivate)
+                        .Count());
         }
 
         private static string EnsureUniqueName(string name, IEnumerable<string> existingNames)
@@ -612,14 +721,22 @@ namespace Persistence.Service.Project
             PostProjectDTO dto,
             int? departmentId,
             Guid? currentProjectId,
-            CancellationToken ct)
+            CancellationToken ct,
+            Guid? currentFolderId = null)
         {
             if (dto.FolderId == Guid.Empty)
                 return false;
 
+            // The target folder must be in the user's own department, OR be the project's
+            // current folder. The latter lets a cross-department editor (a user the project is
+            // shared with as "Användare") save without being forced to move the project out of
+            // its owning department's folder.
             var folderOk = await context.Folders
                 .AsNoTracking()
-                .AnyAsync(f => f.Id == dto.FolderId && (!departmentId.HasValue || f.DepartmentId == departmentId.Value), ct);
+                .AnyAsync(f => f.Id == dto.FolderId &&
+                    (!departmentId.HasValue
+                     || f.DepartmentId == departmentId.Value
+                     || (currentFolderId.HasValue && f.Id == currentFolderId.Value)), ct);
 
             if (!folderOk)
                 return false;

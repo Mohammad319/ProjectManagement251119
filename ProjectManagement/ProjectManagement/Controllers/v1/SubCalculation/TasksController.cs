@@ -15,7 +15,7 @@ namespace ProjectManagement.Server.Controllers.v1.SubCalculation
         [HttpGet(URLConst.ReOrder + "/{TaskId}/{NewOrder}")]
         public async Task<IActionResult> ReOrder(int TaskId, int NewOrder)
         {
-            var result = await MicroBus.Send(new NewOrderTaskCommand(TaskId, NewOrder, GetDepartmentId()));
+            var result = await MicroBus.Send(new NewOrderTaskCommand(TaskId, NewOrder, GetUserId(), GetDepartmentId()));
             TrySetETag(result);
             return Ok(result);
         }
@@ -33,7 +33,7 @@ namespace ProjectManagement.Server.Controllers.v1.SubCalculation
         [HttpPost("{id}")]
         public async Task<IActionResult> Create(int id, [FromBody] List<TaskPostDTO> Tasks)
         {
-            var result = await MicroBus.Send(new CreateTaskCommand(Tasks, id, GetDepartmentId()));
+            var result = await MicroBus.Send(new CreateTaskCommand(Tasks, id, GetUserId(), GetDepartmentId()));
             TrySetETag(result);
             return Ok(result);
         }
@@ -54,7 +54,7 @@ namespace ProjectManagement.Server.Controllers.v1.SubCalculation
             // Allow If-Match / ETag based concurrency (optional) without breaking body-based RowVersion
             TrySetRowVersionFromIfMatch(dto);
 
-            var result = await MicroBus.Send(new UpdateTaskCommand(id, dto, GetDepartmentId()));
+            var result = await MicroBus.Send(new UpdateTaskCommand(id, dto, GetUserId(), GetDepartmentId()));
             TrySetETag(result);
             return Ok(result);
         }
@@ -63,7 +63,7 @@ namespace ProjectManagement.Server.Controllers.v1.SubCalculation
         [HttpDelete("{calcID}")]
         public async Task<IActionResult> Delete(int calcID, [FromBody] IEnumerable<int> items)
         {
-            var result = await MicroBus.Send(new DeleteTaskCommand(items, calcID, GetDepartmentId()));
+            var result = await MicroBus.Send(new DeleteTaskCommand(items, calcID, GetUserId(), GetDepartmentId()));
             TrySetETag(result);
             return Ok(result);
         }

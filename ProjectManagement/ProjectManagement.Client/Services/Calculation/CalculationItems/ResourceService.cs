@@ -1,4 +1,5 @@
-﻿using BlazorMHD.UI.Core.Services;
+﻿using BlazorMHD.UI.Core.DesignSystem;
+using BlazorMHD.UI.Core.Services;
 using Microsoft.AspNetCore.Components;
 using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Services.Folder;
@@ -28,6 +29,17 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
         CalculationService calculationService) : IDisposable
     {
         public event Action<int>? OfferStateChanged;
+
+        // Effective Visare permission ⇒ block grid mutations with a clear message.
+        private bool DenyIfReadOnly()
+        {
+            if (_folderState.Calculation is { CanEdit: false })
+            {
+                Mhd.MessageOk("Behörighet", "Du har visningsbehörighet och kan inte ändra den här kalkylen.", MhdState.Warning);
+                return true;
+            }
+            return false;
+        }
 
         public static bool AffectsCalculation(ResourceListMVVM oldR, ResourceListMVVM newR)
         {
@@ -162,6 +174,9 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
 
         public async Task HandleOfferAsync(ResourceListMVVM res)
         {
+            if (DenyIfReadOnly())
+                return;
+
             if (res.HasOfferSelected())
                 await Offer.SetOfferToResourceAsync(res.Id, 0); // Minus
             else if (!res.HasOffer)
@@ -183,6 +198,9 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
 
         public async Task Duplicate(ResourceListMVVM dusection)
         {
+            if (DenyIfReadOnly())
+                return;
+
             var calc = _folderState.Calculation;
             if (calc == null) return;
 
@@ -416,6 +434,9 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
 
         public void Remove(ResourceListMVVM resource)
         {
+            if (DenyIfReadOnly())
+                return;
+
             if (!interactionState.IsSelected(CalculationItemType.resource, resource.Id))
                 Mhd.DeleteMessage(resource.Name, EventCallback.Factory.Create(this, () => ConfirmedRemoveAsync([resource.Id])));
             else

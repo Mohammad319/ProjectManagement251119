@@ -1,3 +1,4 @@
+using BlazorMHD.UI.Core.DesignSystem;
 using BlazorMHD.UI.Core.Services;
 using Microsoft.Extensions.Localization;
 using ProjectManagement.Client.Helper;
@@ -48,6 +49,18 @@ namespace ProjectManagement.Client.Services.Calculation
         IStringLocalizer<ResourceApp> appLoc) : ICalculationTableCoordinator
     {
         private CalculationMVVM? CurrentCalculation => folderState.Calculation;
+
+        // Effective Visare permission ⇒ block grid mutations with a clear message instead of
+        // letting the user open an editor the backend would refuse to save.
+        private bool DenyIfReadOnly()
+        {
+            if (CurrentCalculation is { CanEdit: false })
+            {
+                mhd.MessageOk("Behörighet", "Du har visningsbehörighet och kan inte ändra den här kalkylen.", MhdState.Warning);
+                return true;
+            }
+            return false;
+        }
 
         public bool CanPaste(CalculationItemType targetType)
         {
@@ -106,6 +119,9 @@ namespace ProjectManagement.Client.Services.Calculation
 
         public async Task PasteAsync(int taskId)
         {
+            if (DenyIfReadOnly())
+                return;
+
             var calculation = CurrentCalculation;
             if (calculation == null || interactionState.ClipboardMode is null || interactionState.ClipboardType is null)
                 return;
@@ -136,6 +152,9 @@ namespace ProjectManagement.Client.Services.Calculation
 
         public void ShowTaskForm(TaskListMVVM model)
         {
+            if (DenyIfReadOnly())
+                return;
+
             string title = model.Id == 0
                 ? appLoc[LocalizerConst.New, ResourceLoc.task]
                 : appLoc[LocalizerConst.Update, model.Name];
@@ -150,6 +169,9 @@ namespace ProjectManagement.Client.Services.Calculation
 
         public void ShowResourceForm(ResourceListMVVM model)
         {
+            if (DenyIfReadOnly())
+                return;
+
             string title = model.Id == 0
                 ? appLoc[LocalizerConst.New, ResourceLoc.resource]
                 : appLoc[LocalizerConst.Update, model.Name];
@@ -167,6 +189,9 @@ namespace ProjectManagement.Client.Services.Calculation
 
         public void ShowResourceSuggestions(TaskListMVVM task)
         {
+            if (DenyIfReadOnly())
+                return;
+
             if (!CanSuggestResourcesForTask(task))
                 return;
 
@@ -189,6 +214,9 @@ namespace ProjectManagement.Client.Services.Calculation
 
         public void ShowResourceSuggestions(IEnumerable<TaskListMVVM> tasks)
         {
+            if (DenyIfReadOnly())
+                return;
+
             var calculation = CurrentCalculation;
             if (calculation is null)
                 return;
@@ -243,10 +271,19 @@ namespace ProjectManagement.Client.Services.Calculation
             => TaskTypeRules.CanHaveResources(task.Metadata.Type)
                 && (task.Tasks == null || task.Tasks.Count == 0);
 
-        public void ShowImportDialog() =>
-            dialogService.ShowComponent<CSVUI>("Importera Excel-mängdförteckning", Icons.ImportFromFile, null, MhdDialogSize.FullScreen, closeOnOverlayClick: false);
+        public void ShowImportDialog()
+        {
+            if (DenyIfReadOnly())
+                return;
 
-        public void ShowTemplateDialog() =>
+            dialogService.ShowComponent<CSVUI>("Importera Excel-mängdförteckning", Icons.ImportFromFile, null, MhdDialogSize.FullScreen, closeOnOverlayClick: false);
+        }
+
+        public void ShowTemplateDialog()
+        {
+            if (DenyIfReadOnly())
+                return;
+
             dialogService.ShowComponent<Pages.Calculation.Template.TemplateSetDefaultUI>(
                 ResourceLoc.templates,
                 Icons.Template,
@@ -255,8 +292,13 @@ namespace ProjectManagement.Client.Services.Calculation
                     [nameof(Pages.Calculation.Template.TemplateSetDefaultUI.Tab)] = 1,
                 },
                 MhdDialogSize.ExtraLarge);
+        }
 
-        public void ShowTaskReorderDialog(TaskListMVVM? task = null) =>
+        public void ShowTaskReorderDialog(TaskListMVVM? task = null)
+        {
+            if (DenyIfReadOnly())
+                return;
+
             dialogService.ShowComponent<DragDropTaskUI>(
                 ResourceApp.reOrder,
                 Icons.ReorderRows,
@@ -265,14 +307,20 @@ namespace ProjectManagement.Client.Services.Calculation
                     [nameof(DragDropTaskUI.Task)] = task ?? new TaskListMVVM()
                 },
                 MhdDialogSize.ExtraLarge);
+        }
 
-        public void ShowQuantityDialog() =>
+        public void ShowQuantityDialog()
+        {
+            if (DenyIfReadOnly())
+                return;
+
             dialogService.ShowComponent<QuantityListUI>(
                 CalcResource.quantity,
                 Icons.ResetQuantity,
                 null,
                 MhdDialogSize.Medium,
                 DialogButtonsHelper.CreateSaveCancelButtons(QuantityListUI.DialogFormId));
+        }
 
         public void ShowSaveToStorage(object item) =>
             dialogService.ShowComponent<SaveStorargeUI>(
@@ -284,7 +332,11 @@ namespace ProjectManagement.Client.Services.Calculation
                 },
                 MhdDialogSize.ExtraLarge);
 
-        public void ShowGetFromStorage(int parentId, CalculationItemType type) =>
+        public void ShowGetFromStorage(int parentId, CalculationItemType type)
+        {
+            if (DenyIfReadOnly())
+                return;
+
             dialogService.ShowComponent<GetFromStorage>(
                 ResourceApp.import,
                 Icons.ImportFromCloud,
@@ -294,5 +346,6 @@ namespace ProjectManagement.Client.Services.Calculation
                     [nameof(GetFromStorage.CalcType)] = type
                 },
                 MhdDialogSize.ExtraLarge);
+        }
     }
 }

@@ -4,6 +4,7 @@ using ProjectManagement.Shared.Base.Project;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.App;
 using ProjectManagement.Shared.DTO.Calculation.Template;
+using ProjectManagement.Shared.DTO.Project;
 using ProjectManagement.Shared.Helper;
 using ProjectManagement.Shared.Enums;
 using System;
@@ -526,6 +527,13 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public int? CompensationId { get; set; }
         public bool IsArchived { get; set; } = false;
 
+        /// <summary>
+        /// Effective edit permission for the current user, computed by the backend (same rule as
+        /// <c>CalculationAccessRules.CanEdit</c>). False when the user only has Visare-level access
+        /// to this calculation's project, so the form is shown read-only. Defaults to true.
+        /// </summary>
+        public bool CanEdit { get; set; } = true;
+
         // Transfer-only: source-tenant display names captured at export so a cross-tenant
         // import can match each dropdown by name against the receiving tenant's own values.
         // Null in normal use (omitted from JSON when null).
@@ -594,6 +602,12 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public int VersionNumber { get; set; } = 1;
         public int? CreatedFromCalculationId { get; set; }
         public bool IsCurrentVersion { get; set; } = true;
+        /// <summary>
+        /// Effective edit permission for the current user (backend-computed, same rule as
+        /// <c>CalculationAccessRules.CanEdit</c>). False when the user only has Visare-level access,
+        /// so the net-calc grid is shown read-only. Defaults to true.
+        /// </summary>
+        public bool CanEdit { get; set; } = true;
         public SortConfig Sort { get; set; } = new();
         public decimal AdditionalCostEarnings { get; set; } = 10m;
         public DisplayOptionsPresetStore DisplayPresets { get; set; } = new();
@@ -646,6 +660,24 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public int Priority { get; set; }
         public decimal TimeMonth { get; set; }
         public CalculationImportInfoDTO? ImportInfo { get; set; }
+        // Compact access summary for the calculation list's "Åtkomst" column and filter.
+        // Null when not computed; the UI then falls back to IsPrivate.
+        public CalculationAccessSummaryDTO? Access { get; set; }
+    }
+
+    /// <summary>
+    /// Kompakt åtkomstsammanfattning per kalkyl för kalkyllistans "Åtkomst"-kolumn.
+    /// Skiljer normal projektåtkomst (<see cref="ViaProject"/>), privat (<see cref="IsPrivate"/>)
+    /// och extra delning (<see cref="Recipients"/> – projektdelningar där kalkylen ingår).
+    /// </summary>
+    public sealed class CalculationAccessSummaryDTO
+    {
+        /// <summary>Den aktuella användaren ser kalkylen via projektets normala åtkomst.</summary>
+        public bool ViaProject { get; set; }
+        /// <summary>Kalkylen är privat (skyddad, syns bara för ägare/Admin enligt privatlogiken).</summary>
+        public bool IsPrivate { get; set; }
+        /// <summary>Projektdelningar där just denna kalkyl ingår. Tom = ingen extra delning.</summary>
+        public List<ProjectAccessRecipientDTO> Recipients { get; set; } = [];
     }
 
     public class CalculationPageOtherDepartmentDTO : CalculationPageDTO

@@ -295,14 +295,14 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
 
     private async Task ToggleTaskActiveById(int taskId)
     {
-        if (_disposed || _observedCalculation is null) return;
+        if (_disposed || _observedCalculation is null || !Calc.CanEdit) return;
         Calc.ToggleTaskActiveInPreset(taskId, CalcService.ShowComments, CalcService.ShowResourceVariables);
         await RefreshAndSavePresetsAsync();
     }
 
     private async Task ToggleResourceActiveById(int resourceId)
     {
-        if (_disposed || _observedCalculation is null) return;
+        if (_disposed || _observedCalculation is null || !Calc.CanEdit) return;
         Calc.ToggleResourceActiveInPreset(resourceId, CalcService.ShowComments, CalcService.ShowResourceVariables);
         await RefreshAndSavePresetsAsync();
     }

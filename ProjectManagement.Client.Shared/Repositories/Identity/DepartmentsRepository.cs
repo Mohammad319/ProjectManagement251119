@@ -32,6 +32,16 @@ namespace ProjectManagement.Client.Shared.Repositories.Identity
                 .OrderBy(x => x.Name)];
         }
 
+        public async Task<List<UserAuthModel>> GetUsersAuthAsListAsync(int DepartmentId)
+        {
+            var users = await _httpRepository.GetAsync<List<UserAuthModel>>(DepartmentURLBase + URLConst.Department.GetUsers + $"/{DepartmentId}")
+                ?? [];
+
+            return [.. users
+                .Where(x => x.UserId is > 0)
+                .OrderBy(BuildDisplayName)];
+        }
+
         private static string BuildDisplayName(UserAuthModel user)
         {
             var fullName = user.FullName.Trim();

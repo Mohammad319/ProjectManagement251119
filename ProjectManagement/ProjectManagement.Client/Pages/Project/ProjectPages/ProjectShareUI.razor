@@ -2,6 +2,7 @@
 @using ProjectManagement.Shared.DTO.General
 @using ProjectManagement.Shared.DTO.Project
 @using ProjectManagement.Shared.Helper
+@using ProjectManagement.Shared.Models.Account
 @using Microsoft.AspNetCore.Authorization
 @inherits AppComponentBase
 @attribute [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
@@ -10,6 +11,66 @@
 
     <div class="text-sm text-slate-600 dark:text-slate-300">
         <span class="font-semibold text-slate-800 dark:text-slate-100">Projekt:</span> @ProjectName
+    </div>
+
+    @* ── Åtkomstöversikt (grupperad, skrivskyddad) ─────────────────── *@
+    <div class="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-950">
+        <button type="button"
+                class="flex w-full items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
+                @onclick="() => _overviewOpen = !_overviewOpen">
+            <span>Åtkomstöversikt</span>
+            <svg class="h-3 w-3 transition-transform @(_overviewOpen ? "rotate-180" : "")" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+        </button>
+        @if (_overviewOpen)
+        {
+            <div class="mt-2 space-y-3 text-sm">
+                @* Normal avdelningsåtkomst *@
+                <div>
+                    <div class="mb-0.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300">Normal åtkomst via projektets avdelning</div>
+                    @if (ProjectDepartmentName is { } depName)
+                    {
+                        <div class="text-slate-600 dark:text-slate-300">@depName · Användare · Alla tillgängliga kalkyler</div>
+                    }
+                    else
+                    {
+                        <div class="text-slate-400">Projektet saknar avdelning.</div>
+                    }
+                </div>
+
+                @* Direkt delade användare *@
+                @{ var userShares = _shares.Where(s => s.RecipientType == ProjectShareRecipientType.User).ToList(); }
+                @if (userShares.Count > 0)
+                {
+                    <div>
+                        <div class="mb-0.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300">Direkt delade</div>
+                        @foreach (var s in userShares)
+                        {
+                            <div class="text-slate-600 dark:text-slate-300" title="@CalcNamesTooltip(s)">@s.RecipientName · @RoleLabel(s.Role) · @OverviewCalcText(s)</div>
+                        }
+                    </div>
+                }
+
+                @* Delade avdelningar *@
+                @{ var deptShares = _shares.Where(s => s.RecipientType == ProjectShareRecipientType.Department).ToList(); }
+                @if (deptShares.Count > 0)
+                {
+                    <div>
+                        <div class="mb-0.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300">Via avdelning</div>
+                        @foreach (var s in deptShares)
+                        {
+                            <div class="text-slate-600 dark:text-slate-300" title="@CalcNamesTooltip(s)">@s.RecipientName · @RoleLabel(s.Role) · @OverviewCalcText(s)</div>
+                        }
+                    </div>
+                }
+
+                @if (userShares.Count == 0 && deptShares.Count == 0)
+                {
+                    <div class="text-[11px] text-slate-400">Ingen extra delning – projektet är bara tillgängligt via normal avdelningsåtkomst.</div>
+                }
+            </div>
+        }
     </div>
 
     @* ── Lägg till / redigera delning ─────────────────────────────── *@
@@ -22,7 +83,7 @@
 
             @* Mottagartyp *@
             <div>
-                <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Mottagare</label>
+                <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Mottagartyp</label>
                 <div class="inline-flex overflow-hidden rounded-lg border border-slate-300 dark:border-slate-600">
                     <button type="button"
                             class="@RecipientTabClass(ProjectShareRecipientType.User)"
@@ -33,38 +94,47 @@
                 </div>
             </div>
 
-            @* Roll *@
+            @* Behörighet i detta projekt *@
             <div>
-                <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Roll</label>
+                <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Behörighet i detta projekt</label>
                 <select class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
                         value="@_role" @onchange="e => _role = e.Value?.ToString() ?? PMRolesConst.Tenant.Viewer">
                     <option value="@PMRolesConst.Tenant.Viewer">Visare</option>
-                    <option value="@PMRolesConst.Tenant.Manger">Användare</option>
+                    <option value="@PMRolesConst.Tenant.Manger" disabled="@DisableMangerOption">Användare</option>
                 </select>
+                @if (DisableMangerOption)
+                {
+                    <p class="mt-1 text-[10px] leading-snug text-amber-600 dark:text-amber-400">
+                        Den här personen har systemrollen Visare och kan inte tilldelas Användare-behörighet.
+                    </p>
+                }
             </div>
 
             @if (_recipientType == ProjectShareRecipientType.User)
             {
                 <div>
-                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Avdelning</label>
+                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Filtrera användare efter avdelning</label>
                     <select class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
-                            value="@_userDeptId" @onchange="OnUserDeptChanged">
-                        <option value="">Välj avdelning...</option>
+                            value="@_userFilterDeptId" @onchange="OnUserFilterChanged">
+                        <option value="0">Alla avdelningar</option>
                         @foreach (var d in _departments)
                         {
                             <option value="@d.Id">@d.Name</option>
                         }
+                        <option value="-1">Utan avdelning</option>
                     </select>
                 </div>
                 <div>
-                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Användare</label>
+                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Person/användare</label>
                     <select class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm disabled:bg-slate-100 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100 dark:disabled:bg-slate-900"
-                            disabled="@(_usersInDept.Count == 0)"
-                            value="@_userId" @onchange="e => _userId = ParseNullableInt(e.Value)">
-                        <option value="">Välj användare...</option>
-                        @foreach (var u in _usersInDept)
+                            disabled="@(_userOptions.Count == 0)"
+                            value="@_userId" @onchange="OnUserChanged">
+                        <option value="">@(_userOptions.Count == 0 ? "Inga användare i urvalet" : "Välj användare...")</option>
+                        @foreach (var u in _userOptions)
                         {
-                            <option value="@u.Id">@u.Name</option>
+                            <option value="@u.Id" disabled="@(u.AlreadyDirect && _editingId is null)">
+                                @u.Name@(u.AccessNote is null ? "" : $" · {u.AccessNote}")
+                            </option>
                         }
                     </select>
                 </div>
@@ -72,18 +142,25 @@
             else
             {
                 <div class="md:col-span-2">
-                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Avdelning</label>
+                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Välj avdelning</label>
                     <select class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
                             value="@_departmentId" @onchange="e => _departmentId = ParseNullableInt(e.Value)">
                         <option value="">Välj avdelning...</option>
                         @foreach (var d in _departments)
                         {
-                            <option value="@d.Id">@d.Name</option>
+                            <option value="@d.Id" disabled="@(DeptOptionDisabled(d.Id))">@d.Name@(DeptOptionSuffix(d.Id))</option>
                         }
                     </select>
                 </div>
             }
         </div>
+
+        @if (DuplicateRecipient)
+        {
+            <p class="mt-2 rounded border border-amber-200 bg-amber-50 px-2 py-1.5 text-[11px] text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300">
+                Mottagaren har redan en delning för det här projektet. Använd <span class="font-semibold">Ändra</span> i tabellen nedan i stället.
+            </p>
+        }
 
         @* Kalkyler *@
         <div class="mt-3">
@@ -91,8 +168,9 @@
                 <label class="text-xs font-medium text-slate-600 dark:text-slate-300">Välj kalkyler som ska delas</label>
                 <button type="button"
                         class="text-[11px] font-semibold text-sky-700 hover:text-sky-900 disabled:opacity-40 dark:text-sky-300"
-                        disabled="@(!_calcs.Any(c => !c.IsPrivate))"
-                        @onclick="SelectAllShareable">Välj alla delbara</button>
+                        title="Väljer alla kalkyler som kan delas. Privata kalkyler ingår inte."
+                        disabled="@(!HasShareableCalcs)"
+                        @onclick="SelectAllShareable">Välj alla tillgängliga kalkyler</button>
             </div>
 
             @if (_calcs.Count == 0)
@@ -103,6 +181,12 @@
             }
             else
             {
+                @if (!HasShareableCalcs)
+                {
+                    <p class="mb-1 rounded border border-dashed border-slate-300 px-2 py-2 text-center text-[11px] text-slate-400 dark:border-slate-700">
+                        Inga tillgängliga kalkyler att dela.
+                    </p>
+                }
                 <div class="max-h-48 space-y-1 overflow-y-auto rounded border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-950">
                     @foreach (var c in _calcs)
                     {
@@ -159,9 +243,10 @@
                         <tr>
                             <th class="p-2 text-left font-medium text-slate-700 dark:text-slate-200">Mottagare</th>
                             <th class="p-2 text-left font-medium text-slate-700 dark:text-slate-200">Typ</th>
-                            <th class="p-2 text-left font-medium text-slate-700 dark:text-slate-200">Roll</th>
-                            <th class="p-2 text-right font-medium text-slate-700 dark:text-slate-200">Kalkyler</th>
-                            <th class="p-2"></th>
+                            <th class="p-2 text-left font-medium text-slate-700 dark:text-slate-200">Behörighet</th>
+                            <th class="p-2 text-left font-medium text-slate-700 dark:text-slate-200">Kalkyler</th>
+                            <th class="p-2 text-left font-medium text-slate-700 dark:text-slate-200">Källa</th>
+                            <th class="p-2 text-right font-medium text-slate-700 dark:text-slate-200">Åtgärder</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -172,12 +257,13 @@
                                 <td class="p-2 text-slate-800 dark:text-slate-200">@share.RecipientName</td>
                                 <td class="p-2 text-slate-500 dark:text-slate-400">@(share.RecipientType == ProjectShareRecipientType.User ? "Användare" : "Avdelning")</td>
                                 <td class="p-2 text-slate-500 dark:text-slate-400">@RoleLabel(share.Role)</td>
-                                <td class="p-2 text-right text-slate-500 dark:text-slate-400">@share.CalculationIds.Count</td>
+                                <td class="p-2 text-slate-600 dark:text-slate-300" title="@CalcNamesTooltip(share)">@CalcSummary(share)</td>
+                                <td class="p-2 text-slate-500 dark:text-slate-400">@SourceLabel(share)</td>
                                 <td class="p-2">
                                     <div class="flex items-center justify-end gap-1">
                                         <button type="button"
                                                 class="inline-flex h-7 items-center rounded border border-sky-600 px-2 text-xs text-sky-600 transition hover:bg-sky-600 hover:text-white dark:border-sky-400 dark:text-sky-300"
-                                                @onclick="() => EditShare(share)">Ändra</button>
+                                                @onclick="() => EditShareAsync(share)">Ändra</button>
                                         <button type="button"
                                                 class="inline-flex h-7 items-center rounded border border-red-600 px-2 text-xs text-red-600 transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-300"
                                                 @onclick="() => RemoveAsync(share)">Ta bort</button>
@@ -195,25 +281,58 @@
 @code {
     [Parameter, EditorRequired] public Guid ProjectId { get; set; }
     [Parameter] public string ProjectName { get; set; } = string.Empty;
+    // The project's owning department — recipients in it already have access "via projektets avdelning".
+    [Parameter] public int? ProjectDepartmentId { get; set; }
     [Parameter] public EventCallback OnCompleted { get; set; }
 
     private List<ProjectShareListItemDTO> _shares = [];
     private List<ListCalculationMVVM> _calcs = [];
     private List<ListDTO> _departments = [];
-    private List<ListDTO> _usersInDept = [];
+    private List<UserOption> _userOptions = [];
 
     // Form state
     private int? _editingId;
     private ProjectShareRecipientType _recipientType = ProjectShareRecipientType.User;
-    private int? _userDeptId;
+    private int _userFilterDeptId;          // 0 = alla, -1 = utan avdelning, >0 = avdelning
     private int? _userId;
     private int? _departmentId;
     private string _role = PMRolesConst.Tenant.Viewer;
     private readonly HashSet<int> _selectedCalcIds = [];
     private bool _saving;
+    private bool _overviewOpen = true;
+
+    // Projektets egen avdelning – recipients i den har redan normal åtkomst.
+    private string? ProjectDepartmentName =>
+        ProjectDepartmentId is int id ? _departments.FirstOrDefault(d => d.Id == id)?.Name : null;
+
+    private int ShareableCalcCount => _calcs.Count(c => !c.IsPrivate);
+
+    // Åtkomstöversiktens kalkyltext per delning: "Alla tillgängliga kalkyler" eller "n/total kalkyler".
+    private string OverviewCalcText(ProjectShareListItemDTO share)
+    {
+        var total = ShareableCalcCount;
+        var n = share.CalculationIds.Count;
+        if (total > 0 && n >= total) return "Alla tillgängliga kalkyler";
+        if (total > 0) return $"{n}/{total} kalkyler";
+        return n == 1 ? "1 kalkyl" : $"{n} kalkyler";
+    }
+
+    private UserOption? SelectedUser => _userId is > 0 ? _userOptions.FirstOrDefault(u => u.Id == _userId) : null;
+
+    // System Visare cannot be granted "Användare" — effective permission is capped at the system role.
+    private bool DisableMangerOption => _recipientType == ProjectShareRecipientType.User && SelectedUser?.IsViewer == true;
+
+    private bool HasShareableCalcs => _calcs.Any(c => !c.IsPrivate);
+
+    private bool DuplicateRecipient =>
+        _editingId is null &&
+        (_recipientType == ProjectShareRecipientType.User
+            ? _userId is > 0 && _shares.Any(s => s.RecipientType == ProjectShareRecipientType.User && s.UserId == _userId)
+            : _departmentId is > 0 && _shares.Any(s => s.RecipientType == ProjectShareRecipientType.Department && s.DepartmentId == _departmentId));
 
     private bool CanSave =>
         !string.IsNullOrWhiteSpace(_role) &&
+        !DuplicateRecipient &&
         (_recipientType == ProjectShareRecipientType.User ? _userId is > 0 : _departmentId is > 0);
 
     protected override async Task OnInitializedAsync()
@@ -224,6 +343,7 @@
             .OrderByDescending(c => c.Order)
             .ToList();
         await ReloadSharesAsync();
+        await ReloadUserOptionsAsync();
     }
 
     private async Task ReloadSharesAsync()
@@ -239,14 +359,108 @@
         _departmentId = null;
     }
 
-    private async Task OnUserDeptChanged(ChangeEventArgs e)
+    private async Task OnUserFilterChanged(ChangeEventArgs e)
     {
-        _userDeptId = ParseNullableInt(e.Value);
+        _userFilterDeptId = int.TryParse(e.Value?.ToString(), out var v) ? v : 0;
         _userId = null;
-        _usersInDept = _userDeptId is > 0
-            ? await Repo.Departments.GetUsersAsListAsync(_userDeptId.Value) ?? []
-            : [];
+        await ReloadUserOptionsAsync();
     }
+
+    private void OnUserChanged(ChangeEventArgs e)
+    {
+        _userId = ParseNullableInt(e.Value);
+        // Cap effective permission: a system Visare can never be assigned "Användare".
+        if (SelectedUser?.IsViewer == true)
+            _role = PMRolesConst.Tenant.Viewer;
+    }
+
+    private async Task ReloadUserOptionsAsync()
+    {
+        List<UserAuthModel> raw;
+
+        if (_userFilterDeptId > 0)
+        {
+            raw = await Repo.Departments.GetUsersAuthAsListAsync(_userFilterDeptId) ?? [];
+        }
+        else
+        {
+            // "Alla avdelningar": aggregate per department (each fetch is allowed for any admin).
+            var byId = new Dictionary<int, UserAuthModel>();
+            foreach (var d in _departments)
+            {
+                foreach (var u in await Repo.Departments.GetUsersAuthAsListAsync(d.Id) ?? [])
+                    if (u.UserId is > 0)
+                        byId.TryAdd(u.UserId.Value, u);
+            }
+
+            // "Utan avdelning": only tenant-wide admins can fetch the full set (did = 0); fold those
+            // users in and, for the "none" filter, keep only the department-less ones.
+            var unassigned = await Repo.Departments.GetUsersAuthAsListAsync(0) ?? [];
+            foreach (var u in unassigned)
+                if (u.UserId is > 0)
+                    byId.TryAdd(u.UserId.Value, u);
+
+            raw = byId.Values.ToList();
+
+            if (_userFilterDeptId == -1)
+                raw = raw.Where(u => u.DepartmentId is null).ToList();
+        }
+
+        _userOptions = raw
+            .Where(u => u.UserId is > 0)
+            .Select(BuildUserOption)
+            .OrderBy(u => u.Name)
+            .ToList();
+
+        StateHasChanged();
+    }
+
+    private UserOption BuildUserOption(UserAuthModel u)
+    {
+        var id = u.UserId!.Value;
+        var name = string.IsNullOrWhiteSpace(u.FullName.Trim())
+            ? (string.IsNullOrWhiteSpace(u.Email) ? u.Username : u.Email)
+            : u.FullName.Trim();
+
+        // Why the recipient already has access — shown inline so admins don't create duplicates.
+        string? note = null;
+        bool alreadyDirect = false;
+
+        var direct = _shares.FirstOrDefault(s => s.RecipientType == ProjectShareRecipientType.User && s.UserId == id);
+        if (direct is not null)
+        {
+            note = $"Redan delad som {RoleLabel(direct.Role)}";
+            alreadyDirect = true;
+        }
+        else if (u.DepartmentId is int own && ProjectDepartmentId.HasValue && own == ProjectDepartmentId.Value)
+        {
+            // In the project's own department — no separate share needed.
+            note = "Har redan åtkomst via projektets avdelning";
+        }
+        else if (u.DepartmentId is int dep &&
+                 _shares.Any(s => s.RecipientType == ProjectShareRecipientType.Department && s.DepartmentId == dep))
+        {
+            var depName = _departments.FirstOrDefault(d => d.Id == dep)?.Name ?? "avdelning";
+            note = $"Har redan åtkomst via avdelning {depName}";
+        }
+
+        return new UserOption { Id = id, Name = name, Role = u.Role ?? string.Empty, DepartmentId = u.DepartmentId, AccessNote = note, AlreadyDirect = alreadyDirect };
+    }
+
+    private bool DepartmentAlreadyShared(int deptId) =>
+        _shares.Any(s => s.RecipientType == ProjectShareRecipientType.Department && s.DepartmentId == deptId);
+
+    private bool IsProjectOwnDepartment(int deptId) =>
+        ProjectDepartmentId.HasValue && ProjectDepartmentId.Value == deptId;
+
+    // The project's own department and already-shared departments don't need a (new) share.
+    private bool DeptOptionDisabled(int deptId) =>
+        _editingId is null && (DepartmentAlreadyShared(deptId) || IsProjectOwnDepartment(deptId));
+
+    private string DeptOptionSuffix(int deptId) =>
+        IsProjectOwnDepartment(deptId) ? " · Har redan åtkomst via projektets avdelning"
+        : DepartmentAlreadyShared(deptId) ? " · Redan delad"
+        : string.Empty;
 
     private void ToggleCalc(int id, bool on)
     {
@@ -266,13 +480,16 @@
         _saving = true;
         try
         {
+            // Cap effective permission server-side intent: never persist "Användare" for a system Visare.
+            var role = DisableMangerOption ? PMRolesConst.Tenant.Viewer : _role;
+
             var dto = new ProjectShareUpsertDTO
             {
                 Id = _editingId,
                 RecipientType = _recipientType,
                 UserId = _recipientType == ProjectShareRecipientType.User ? _userId : null,
                 DepartmentId = _recipientType == ProjectShareRecipientType.Department ? _departmentId : null,
-                Role = _role,
+                Role = role,
                 // Privata kalkyler kan aldrig delas – filtrera bort dem defensivt.
                 CalculationIds = _selectedCalcIds.Where(id => _calcs.Any(c => c.Id == id && !c.IsPrivate)).ToList()
             };
@@ -283,6 +500,7 @@
             {
                 ResetForm();
                 await ReloadSharesAsync();
+                await ReloadUserOptionsAsync();
                 if (OnCompleted.HasDelegate)
                     await OnCompleted.InvokeAsync();
             }
@@ -294,7 +512,7 @@
         }
     }
 
-    private async Task EditShare(ProjectShareListItemDTO share)
+    private async Task EditShareAsync(ProjectShareListItemDTO share)
     {
         _editingId = share.Id;
         _recipientType = share.RecipientType;
@@ -306,12 +524,11 @@
         foreach (var cid in share.CalculationIds)
             _selectedCalcIds.Add(cid);
 
-        if (_recipientType == ProjectShareRecipientType.User && _userId is > 0)
+        if (_recipientType == ProjectShareRecipientType.User)
         {
-            // Försök fylla användarlistan utifrån mottagarens avdelning är inte känd här;
-            // ladda alla avdelningars användare först när admin väljer avdelning på nytt.
-            _usersInDept = [];
-            _userDeptId = null;
+            // Load across all departments so the shared user is present and stays preselected.
+            _userFilterDeptId = 0;
+            await ReloadUserOptionsAsync();
         }
         StateHasChanged();
     }
@@ -320,11 +537,10 @@
     {
         _editingId = null;
         _recipientType = ProjectShareRecipientType.User;
-        _userDeptId = null;
+        _userFilterDeptId = 0;
         _userId = null;
         _departmentId = null;
         _role = PMRolesConst.Tenant.Viewer;
-        _usersInDept = [];
         _selectedCalcIds.Clear();
     }
 
@@ -340,11 +556,40 @@
         {
             if (_editingId == share.Id) ResetForm();
             await ReloadSharesAsync();
+            await ReloadUserOptionsAsync();
             if (OnCompleted.HasDelegate)
                 await OnCompleted.InvokeAsync();
         }
         MHD.Notifications(ToastType.Delete, ok);
     }
+
+    // ── "Delat med" table helpers ────────────────────────────────────
+    private string CalcSummary(ProjectShareListItemDTO share)
+    {
+        var ids = share.CalculationIds;
+        if (ids.Count == 0) return "Inga";
+        if (ids.Count == 1)
+        {
+            var c = _calcs.FirstOrDefault(x => x.Id == ids[0]);
+            return c is null ? "1 kalkyl" : $"V.{c.VersionNumber:D2} {c.Name}";
+        }
+        return $"{ids.Count} kalkyler · Visa";
+    }
+
+    private string? CalcNamesTooltip(ProjectShareListItemDTO share)
+    {
+        if (share.CalculationIds.Count <= 1) return null;
+        var names = share.CalculationIds
+            .Select(id => _calcs.FirstOrDefault(c => c.Id == id))
+            .Where(c => c is not null)
+            .Select(c => $"V.{c!.VersionNumber:D2} {c.Name}");
+        return string.Join("\n", names);
+    }
+
+    private static string SourceLabel(ProjectShareListItemDTO share) =>
+        share.RecipientType == ProjectShareRecipientType.Department
+            ? $"Via avdelning {share.RecipientName}"
+            : "Direkt";
 
     private static int? ParseNullableInt(object? value)
         => int.TryParse(value?.ToString(), out var n) && n > 0 ? n : null;
@@ -361,4 +606,15 @@
         PMRolesConst.Tenant.Admin => "Admin",
         _ => string.IsNullOrWhiteSpace(role) ? "—" : role
     };
+
+    private sealed class UserOption
+    {
+        public int Id { get; init; }
+        public string Name { get; init; } = string.Empty;
+        public string Role { get; init; } = string.Empty;
+        public int? DepartmentId { get; init; }
+        public string? AccessNote { get; init; }
+        public bool AlreadyDirect { get; init; }
+        public bool IsViewer => Role == PMRolesConst.Tenant.Viewer;
+    }
 }

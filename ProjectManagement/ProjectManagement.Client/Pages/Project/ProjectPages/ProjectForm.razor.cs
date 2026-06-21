@@ -1,4 +1,5 @@
-﻿using BlazorMHD.UI.Core.Navigation;
+﻿using BlazorMHD.UI.Core.DesignSystem;
+using BlazorMHD.UI.Core.Navigation;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Forms;
@@ -23,6 +24,10 @@ namespace ProjectManagement.Client.Pages.Project.ProjectPages
         [Parameter] public Guid FolderId { get; set; }
 
         bool IsLoading = true;
+
+        // True when the current user's effective permission is Visare: the form is shown read-only
+        // and saving is blocked, so they never edit a field that cannot be persisted.
+        private bool IsReadOnly;
 
         PostProjectDTO ProjectUpdate = new();
         GetProjectCalcConfigDTO? Config;
@@ -92,10 +97,17 @@ namespace ProjectManagement.Client.Pages.Project.ProjectPages
             ProjectUpdate.FolderId = FolderId;
             ResetEditContext();
 
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            bool systemViewer = authState.User.IsInRole(PMRolesConst.Tenant.Viewer);
+
             if (Project.Id != Guid.Empty)
             {
                 ProjectUpdate = await Repo.Project.GetToPostAsync(Project.Id)?? new PostProjectDTO();
             }
+
+            // Read-only for a system Visare or anyone whose effective permission on this project
+            // is only Visare (backend-computed CanEdit), so we never let them edit unsavable fields.
+            IsReadOnly = systemViewer || !ProjectUpdate.CanEdit;
 
             ProjectUpdate.Notes ??= [];
             if (ProjectUpdate.Notes.Count == 0)
@@ -149,6 +161,14 @@ namespace ProjectManagement.Client.Pages.Project.ProjectPages
         {
             if (IsLoading)
                 return;
+
+            // Visare can read but not change grunddata — bail with a clear message instead of the
+            // generic save error.
+            if (IsReadOnly)
+            {
+                MHD.MessageOk("Behörighet", "Du har visningsbehörighet och kan inte ändra projektets grunddata.", MhdState.Warning);
+                return;
+            }
 
             IsLoading = true;
             SyncProjectStatusName();

@@ -11,6 +11,7 @@ namespace Application.Feature.Calculation.Task
             int sourceCalcId,
             int targetCalcId,
             bool isOH,
+            int userId,
             bool deleteOriginal = false,
             int? departmentId = null,
             CancellationToken cancellationToken = default);
@@ -18,6 +19,7 @@ namespace Application.Feature.Calculation.Task
         Task<List<TaskListDTO>> CreateAsync(
             IReadOnlyList<TaskPostDTO> tasks,
             int targetCalcId,
+            int userId,
             int? departmentId,
             CancellationToken cancellationToken = default);
 
@@ -26,6 +28,7 @@ namespace Application.Feature.Calculation.Task
             int targetCalcId,
             int? parentTaskId,
             IReadOnlyList<ResourceTaskItemDTO> items,
+            int userId,
             int order = 100,
             bool isOH = false,
             int? departmentId = null,
@@ -34,18 +37,21 @@ namespace Application.Feature.Calculation.Task
         Task<bool> DeleteAsync(
             IEnumerable<int> taskIds,
             int calcId,
+            int userId,
             int? departmentId,
             CancellationToken cancellationToken = default);
 
         Task<bool> NewOrderAsync(
             int taskId,
             int newOrder,
+            int userId,
             int? departmentId,
             CancellationToken cancellationToken = default);
 
         Task<bool> UpdateAsync(
             int taskId,
             TaskPostDTO dto,
+            int userId,
             int? departmentId,
             CancellationToken cancellationToken = default);
     }

@@ -89,6 +89,9 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public CalculationRole CalculationRole { get; set; } = CalculationRole.MainBid;
         public string CustomCalculationRoleName { get; set; } = string.Empty;
         public bool IsLocked { get; set; }
+        // Effective edit permission (backend-computed). False ⇒ the net-calc grid is read-only
+        // because the user only has Visare-level access to this calculation.
+        public bool CanEdit { get; set; } = true;
         public DateTime? LockedAtUtc { get; set; }
         public int? LockedByUserId { get; set; }
         public int? ApprovedByUserId { get; set; }

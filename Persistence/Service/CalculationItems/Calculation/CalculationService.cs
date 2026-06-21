@@ -78,10 +78,13 @@ namespace Persistence.Service.CalculationItems.Calculation
         {
             await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
 
+            // Use the shared effective-edit rule so a user the calc's project is shared with as
+            // "Användare" (for this calc) can save it — previously only own-department/admin
+            // passed, which is why such users hit the generic save error.
             var calculation = await db.Calculations
                 .Include(c => c.Status)
-                .FirstOrDefaultAsync(x => x.Id == id &&
-                    (!departmentId.HasValue || x.DepartmentId == departmentId.Value), cancellationToken);
+                .Where(Access.CalculationAccessRules.CanEdit(userId, departmentId))
+                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
             if (calculation is null)
                 return false;
 
@@ -100,7 +103,12 @@ namespace Persistence.Service.CalculationItems.Calculation
                 }
             }
 
-            var effectiveDepartmentId = departmentId ?? calculation.DepartmentId;
+            // Always keep the calc's owning department (matches the project's department). Using
+            // the editor's department here would re-home a cross-department shared editor's calc
+            // into their own department and would fail reference validation, which checks that the
+            // project belongs to this department. For same-department editors/admin this is the
+            // same value the previous "departmentId ?? calc.DepartmentId" produced.
+            var effectiveDepartmentId = calculation.DepartmentId;
             if (!await ValidateCalculationReferencesAsync(db, dto, calculation.ProjectId, effectiveDepartmentId, id, cancellationToken))
                 return false;
 

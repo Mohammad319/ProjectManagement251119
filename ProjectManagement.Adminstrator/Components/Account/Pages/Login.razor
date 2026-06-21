@@ -36,7 +36,7 @@
                 <p class="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">Use your administrator account to continue.</p>
             </div>
 
-            <EditForm Model="Input" Method="post" OnValidSubmit="LoginUser" FormName="login" class="space-y-4">
+            <EditForm Model="Input" Method="post" OnValidSubmit="LoginUser" FormName="login" Enhance="true" class="space-y-4">
                 <DataAnnotationsValidator />
                 <ValidationSummary class="text-sm text-red-600 dark:text-red-400" role="alert" />
 
@@ -97,10 +97,6 @@
                 </PasskeySubmit>
 
                 <div class="border-t border-slate-200 pt-3 text-center dark:border-slate-800">
-                    @if (!string.IsNullOrEmpty(errorMessage))
-                    {
-                        <p class="text-sm text-red-500">@errorMessage</p>
-                    }
                     <NavLink href="Account/ForgotPassword" class="inline-block text-sm text-blue-600 hover:underline dark:text-blue-400">
                         @ResourceIdentity.passwordForget
                     </NavLink>

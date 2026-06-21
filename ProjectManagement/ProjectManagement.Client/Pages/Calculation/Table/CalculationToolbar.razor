@@ -3,15 +3,19 @@
 @using ProjectManagement.Shared.DTO.Calculation.Template
 
 <div id="tit" class="flex flex-nowrap items-center gap-0.5 px-1 whitespace-nowrap shrink-0 text-[13px] leading-none">
-    <span class="inline-flex items-center rounded text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
-          @onclick="() => TableCoordinator.ShowTaskForm(new TaskListMVVM())"
-          title="@AppLoc[LocalizerConst.New, ResourceLoc.task]">
-        @Icons.Plus2
-    </span>
+    @if (Calc.CanEdit)
+    {
+        <span class="inline-flex items-center rounded text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
+              @onclick="() => TableCoordinator.ShowTaskForm(new TaskListMVVM())"
+              title="@AppLoc[LocalizerConst.New, ResourceLoc.task]">
+            @Icons.Plus2
+        </span>
+    }
 
     <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger" Context="authContext">
         <Authorized>
-            @if (Calc.Tap1)
+            @* Editing controls are hidden when the user's effective permission is only Visare. *@
+            @if (Calc.Tap1 && Calc.CanEdit)
             {
                 <span title="@ResourceApp.importFromFile"
                       class="inline-flex items-center rounded text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
@@ -108,7 +112,7 @@
                 </span>
             }
 
-            @if (CanPasteTasks)
+            @if (CanPasteTasks && Calc.CanEdit)
             {
                 <span class="inline-flex items-center rounded text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
                       @onclick="() => TableCoordinator.PasteAsync(0)"
@@ -138,9 +142,12 @@
         </select>
     </div>
 
-    <span class="inline-flex items-center rounded text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
-          title="@CalcResource.quantity"
-          @onclick="TableCoordinator.ShowQuantityDialog">
-        @((MarkupString)Icons.ResetQuantity)
-    </span>
+    @if (Calc.CanEdit)
+    {
+        <span class="inline-flex items-center rounded text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
+              title="@CalcResource.quantity"
+              @onclick="TableCoordinator.ShowQuantityDialog">
+            @((MarkupString)Icons.ResetQuantity)
+        </span>
+    }
 </div>

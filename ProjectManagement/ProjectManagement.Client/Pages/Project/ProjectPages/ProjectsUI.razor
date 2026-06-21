@@ -7,6 +7,7 @@
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize]
 @using ProjectManagement.Shared.DTO.Project
+@using ProjectManagement.Shared.Helper
 @using System.Net.Http
 @using BlazorMHD.UI.Core.Data
 @using BlazorMHD.UI.Core.DesignSystem
@@ -735,8 +736,8 @@
                         }
                         @if (IsProjectColumnVisible("shared"))
                         {
-                            <th id="hshared" class="@SortableHeaderClass("shared")" style="min-width:70px;" @onclick='() => SortBy("shared")'>
-                                <span class="inline-flex items-center gap-1">Delat @((MarkupString)SortIndicatorHtml("shared")) <TableColumnFilter FilterState='PF("shared")' OnChanged="OnProjectColumnFilterChanged" /></span>
+                            <th id="hshared" class="@SortableHeaderClass("shared")" style="min-width:110px;" title="Hur projektet är tillgängligt och om det finns extra delning. Klicka på värdet för detaljer." @onclick='() => SortBy("shared")'>
+                                <span class="inline-flex items-center gap-1">Åtkomst @((MarkupString)SortIndicatorHtml("shared")) <TableColumnFilter FilterState='PF("shared")' OnChanged="OnProjectColumnFilterChanged" /></span>
                             </th>
                         }
                     </tr>
@@ -934,17 +935,35 @@
                             }
                             @if (IsProjectColumnVisible("shared"))
                             {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">
-                                    @if (project.IsShared)
-                                    {
-                                        <span class="inline-flex items-center gap-1" title="Projektet är delat med andra användare eller avdelningar.">
-                                            <i class="fa-solid fa-share-nodes text-sky-500"></i> Ja
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span>Nej</span>
-                                    }
+                                var accessShared = AccessIsShared(project);
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300" @onclick:stopPropagation="true">
+                                    <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger" Context="accessAuth">
+                                        <Authorized>
+                                            <button type="button"
+                                                    class="@(accessShared ? "inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-left text-sky-700 transition hover:bg-sky-50 hover:underline dark:text-sky-300 dark:hover:bg-sky-950/40" : "inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-left text-slate-500 transition hover:bg-slate-100 hover:underline dark:text-slate-400 dark:hover:bg-slate-800")"
+                                                    title="@AccessTooltip(project)"
+                                                    @onclick="() => OpenShareDialog(project)">
+                                                @if (accessShared)
+                                                {
+                                                    <i class="fa-solid fa-share-nodes text-sky-500"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="fa-solid fa-building text-slate-400"></i>
+                                                }
+                                                <span>@AccessSummaryText(project)</span>
+                                            </button>
+                                        </Authorized>
+                                        <NotAuthorized>
+                                            <span class="inline-flex items-center gap-1" title="@AccessTooltip(project)">
+                                                @if (accessShared)
+                                                {
+                                                    <i class="fa-solid fa-share-nodes text-sky-500"></i>
+                                                }
+                                                <span>@AccessSummaryText(project)</span>
+                                            </span>
+                                        </NotAuthorized>
+                                    </AuthorizeView>
                                 </td>
                             }
                         </tr>
@@ -1091,7 +1110,8 @@
         ["createdAt"]            = new() { Type = ColumnFilterType.Date },
         ["updatedAt"]            = new() { Type = ColumnFilterType.Date },
         ["archived"]             = new() { Type = ColumnFilterType.Boolean },
-        ["shared"]               = new() { Type = ColumnFilterType.Boolean },
+        // "Åtkomst" filtreras som flervalslista: åtkomsttyp, behörighet och mottagare.
+        ["shared"]               = new() { Type = ColumnFilterType.Dropdown },
     };
 
     private bool HasActiveProjectFilters => _projColFilters.Values.Any(f => f.IsActive);
@@ -1462,6 +1482,9 @@
 
     private List<string> GetProjectDropdownValues(string key)
     {
+        if (key == "shared")
+            return GetAccessFilterValues();
+
         Func<ListProjectMVVM, string?> selector = key switch
         {
             "status"               => GetProjectStatusText,
@@ -1482,6 +1505,61 @@
             .Distinct()
             .OrderBy(v => v, StringComparer.CurrentCultureIgnoreCase)
             .ToList();
+    }
+
+    // ── "Åtkomst"-kolumn ──────────────────────────────────────────────────
+    // Ren formatering/klassificering bor i AccessSummaryFormatter (delas + enhetstestas).
+    private static bool AccessIsShared(ListProjectMVVM p) =>
+        AccessSummaryFormatter.ProjectIsShared(p.Access, p.IsShared);
+
+    private static string AccessSummaryText(ListProjectMVVM p) =>
+        AccessSummaryFormatter.ProjectSummaryText(p.Access, p.IsShared);
+
+    private static IEnumerable<string> ProjectAccessTags(ListProjectMVVM p) =>
+        AccessSummaryFormatter.ProjectTags(p.Access, p.IsShared);
+
+    private static string AccessTooltip(ListProjectMVVM p)
+    {
+        var a = p.Access;
+        if (a is null)
+            return p.IsShared ? "Projektet är extra delat." : "Endast via normal avdelningsåtkomst.";
+
+        var lines = new List<string>();
+        if (a.ViaDepartment)
+            lines.Add("Normal åtkomst via projektets avdelning");
+        foreach (var r in a.Recipients)
+        {
+            var typ = r.Type == ProjectShareRecipientType.Department ? "avdelning" : "användare";
+            var calc = a.ShareableCalcCount > 0 && r.CalcCount < a.ShareableCalcCount
+                ? $"{r.CalcCount}/{a.ShareableCalcCount} kalkyler"
+                : "alla tillgängliga kalkyler";
+            lines.Add($"{r.Name} · {AccessSummaryFormatter.RoleLabel(r.Role)} · {typ} · {calc}");
+        }
+        if (lines.Count == 0)
+            lines.Add("Ingen åtkomst");
+        lines.Add("Klicka för detaljer.");
+        return string.Join("\n", lines);
+    }
+
+    // Kuraterad lista med filtervärden: åtkomsttyper, behörigheter och faktiska mottagare.
+    private List<string> GetAccessFilterValues()
+    {
+        var values = new List<string>
+        {
+            AccessSummaryFormatter.ProjectTagViaDepartment,
+            AccessSummaryFormatter.ProjectTagShared,
+            AccessSummaryFormatter.ProjectTagLimited,
+            AccessSummaryFormatter.ProjectTagNotShared,
+            AccessSummaryFormatter.PermManagerTag,
+            AccessSummaryFormatter.PermViewerTag
+        };
+        values.AddRange(BaseProjects
+            .Where(p => p.Access is not null)
+            .SelectMany(p => p.Access!.Recipients)
+            .Select(AccessSummaryFormatter.RecipientFilterTag)
+            .Distinct()
+            .OrderBy(v => v, StringComparer.CurrentCultureIgnoreCase));
+        return values;
     }
 
     private IEnumerable<ListProjectMVVM> BaseProjects =>
@@ -1554,7 +1632,7 @@
                 projects = projects.Where(p => _projColFilters["archived"].MatchesBool(p.IsArchived));
 
             if (_projColFilters["shared"].IsActive)
-                projects = projects.Where(p => _projColFilters["shared"].MatchesBool(p.IsShared));
+                projects = projects.Where(p => ProjectAccessTags(p).Any(t => _projColFilters["shared"].SelectedValues.Contains(t)));
             return projects;
         }
     }
@@ -1738,7 +1816,7 @@
         new("publicationDate",   CalcResource.publicationDate),
         new("decisionDate",      CalcResource.decisionDate),
         new("archived",          AppLoc["archived"].Value),
-        new("shared",            "Delat"),
+        new("shared",            "Åtkomst"),
         new("createdAt",         AppLoc["createdDate"].Value),
         new("updatedAt",         AppLoc["lastModified"].Value)
     };
@@ -1938,6 +2016,7 @@
             {
                 [nameof(ProjectShareUI.ProjectId)]   = project.Id,
                 [nameof(ProjectShareUI.ProjectName)] = project.Name,
+                [nameof(ProjectShareUI.ProjectDepartmentId)] = project.DepartmentId,
                 [nameof(ProjectShareUI.OnCompleted)] = EventCallback.Factory.Create(this, ReloadAfterMoveCopyAsync)
             },
             BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
@@ -2102,7 +2181,7 @@
             "createdAt"            => "Skapad",
             "updatedAt"            => "Senast ändrad",
             "archived"             => AppLoc["archived"].Value,
-            "shared"               => "Delat",
+            "shared"               => "Åtkomst",
             _                      => key
         };
         return state.Type switch
@@ -2175,7 +2254,7 @@
         "createdAt"         => FormatDate(project.CreatedAt),
         "updatedAt"         => FormatDate(project.UpdatedAt),
         "archived"          => FormatYesNo(project.IsArchived),
-        "shared"            => FormatYesNo(project.IsShared),
+        "shared"            => AccessSummaryText(project),
         _                   => string.Empty
     };
 

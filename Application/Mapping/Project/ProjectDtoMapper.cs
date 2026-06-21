@@ -64,7 +64,8 @@ namespace Application.Mapping.Project
             this ProjectEntity entity,
             int? statusSortOrder = null,
             int calculationCount = 0,
-            bool isShared = false)
+            bool isShared = false,
+            ProjectAccessSummaryDTO? access = null)
         {
             ArgumentNullException.ThrowIfNull(entity);
 
@@ -81,7 +82,9 @@ namespace Application.Mapping.Project
                 TenderQA = entity.TenderQA,
                 Order = entity.SortOrder,
                 IsArchived = entity.IsArchived,
-                IsShared = isShared,
+                IsShared = access is not null ? access.Recipients.Count > 0 : isShared,
+                Access = access,
+                DepartmentId = entity.Folder?.DepartmentId,
                 CalculationCount = calculationCount,
                 Status = entity.ProjectStatus?.Name ?? metadata.StatusName,
                 StatusId = entity.ProjectStatusId ?? metadata.StatusId,

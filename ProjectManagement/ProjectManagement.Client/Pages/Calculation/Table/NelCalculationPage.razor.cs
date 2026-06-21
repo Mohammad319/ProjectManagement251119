@@ -43,6 +43,8 @@ public partial class NelCalculationPage : ComponentBase, IDisposable
     private TemplateMVVM? Template => Calc?.Template;
 
     private bool HasCalculation => Calc is not null;
+    // Effective Visare permission (backend-computed) ⇒ the grid is shown read-only.
+    private bool IsReadOnly => Calc is not null && !Calc.CanEdit;
     private int TaskCount => Calc?.Tasks.Count(task => task.Type != TaskType.CodeName) ?? 0;
     private int OnlyCodeTextTaskCount => Calc?.Tasks.Count(task => task.Type == TaskType.CodeName) ?? 0;
     private int TotalTaskCount => Calc?.Tasks.Count ?? 0;
