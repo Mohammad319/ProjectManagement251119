@@ -5,6 +5,7 @@
 @using Calculation.Tender
 @using ProjectManagement.Client.Helper
 @using ProjectManagement.Client.Services.Folder
+@using BlazorMHD.UI.Components.Data.Table
 @using ProjectManagement.Client.Shared.Model.Project
 @using ProjectManagement.Shared.DTO.Project
 @using ProjectManagement.Shared.Helper
@@ -389,180 +390,139 @@
     else if (BaseCalculations.Any())
     {
         <div class="divNetCalc flex-1 min-h-0 overflow-auto rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
-            <table id="resizeMe" class="w-max min-w-full table-auto text-left text-xs">
-                <thead class="sticky top-0 z-50 bg-slate-50 text-[11px] font-semibold text-slate-500 dark:bg-slate-900 dark:text-slate-400">
-                    <tr>
-                        @* Row number — visual helper column (not sortable/filterable/searchable) *@
-                        @if (IsCalculationColumnVisible("rowNumber"))
+            @{
+                // Per-page row numbers (1-based, page-offset) keyed by calculation id, so the
+                // RowTemplate can look up its number without a running counter.
+                var _calcRowNumbers = PagedCalculations
+                    .Select((c, i) => (c.Id, No: PageStart + i))
+                    .ToDictionary(x => x.Id, x => x.No);
+            }
+            <MhdTable TItem="ListCalculationMVVM"
+                      Items="PagedCalculations"
+                      id="resizeMe"
+                      TableClass="w-max min-w-full table-auto text-left text-xs"
+                      TheadClass="sticky top-0 z-50 bg-slate-50 text-[11px] font-semibold text-slate-500 dark:bg-slate-900 dark:text-slate-400"
+                      TbodyClass="divide-y divide-slate-100 dark:divide-slate-800"
+                      TableAriaLabel="Kalkyler">
+                <EmptyTemplate>
+                    <div class="flex flex-col items-center gap-2 text-slate-500 dark:text-slate-400">
+                        <span class="text-sm">@(HasActiveFilters ? "Inga kalkyler matchar valt filter." : CalcResource.noResultsFound)</span>
+                        @if (HasActiveFilters)
                         {
-                            <th id="hrowNumber" data-pm-frozen="true" class="sticky left-0 z-[60] w-12 select-none whitespace-nowrap bg-slate-50 px-2 py-2 text-right font-semibold text-slate-400 dark:bg-slate-900 dark:text-slate-500" style="min-width:44px;" title="Radnummer i aktuell vy">#</th>
+                            <button type="button"
+                                    class="inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                                    @onclick="ClearFilters">
+                                <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                <span>@AppLoc["clearAllFilters"]</span>
+                            </button>
                         }
-                        @if (IsCalculationColumnVisible("code"))
-                        {
-                            <th id="hcode" data-pm-frozen="true" class="@SortableHeaderClass("code") sticky @CodeStickyLeftClass z-[60] w-28 bg-slate-50 dark:bg-slate-900" style="min-width:70px;" @onclick='() => SortBy("code")'>
-                                <span class="inline-flex items-center gap-1">@CalcResource.code @((MarkupString)SortIndicatorHtml("code")) <TableColumnFilter FilterState='CF("code")' OnChanged="OnColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsCalculationColumnVisible("name"))
-                        {
-                            <th id="hname" data-pm-frozen="true" class="@SortableHeaderClass("name") sticky @NameStickyLeftClass z-[59] min-w-52 border-r border-slate-300 bg-slate-50 dark:border-slate-600 dark:bg-slate-900" style="min-width:160px;" @onclick='() => SortBy("name")'>
-                                <span class="inline-flex items-center gap-1">@AppLoc["calculationName"] @((MarkupString)SortIndicatorHtml("name")) <TableColumnFilter FilterState='CF("name")' OnChanged="OnColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsCalculationColumnVisible("version"))
-                        {
-                            <th id="hversion" class="@SortableHeaderClass("version")" style="min-width:80px;" @onclick='() => SortBy("version")'>
-                                <span class="inline-flex items-center gap-1">@AppLoc["version"] @((MarkupString)SortIndicatorHtml("version")) <TableColumnFilter FilterState='CF("version")' OnChanged="OnColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsCalculationColumnVisible("project"))
-                        {
-                            <th id="hproject" class="@SortableHeaderClass("project")" style="min-width:80px;" @onclick='() => SortBy("project")'>
-                                <span class="inline-flex items-center gap-1">@AppLoc["project"] @((MarkupString)SortIndicatorHtml("project")) <TableColumnFilter FilterState='CF("project")' OnChanged="OnColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsCalculationColumnVisible("folder"))
-                        {
-                            <th id="hfolder" class="@SortableHeaderClass("folder")" style="min-width:80px;" @onclick='() => SortBy("folder")'>
-                                <span class="inline-flex items-center gap-1">@AppLoc["folder"] @((MarkupString)SortIndicatorHtml("folder")) <TableColumnFilter FilterState='CF("folder")' OnChanged="OnColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsCalculationColumnVisible("calculationType"))
-                        {
-                            <th id="hcalculationType" class="@SortableHeaderClass("calculationType")" style="min-width:150px;" @onclick='() => SortBy("calculationType")'>
-                                <span class="inline-flex items-center gap-1">@AppLoc["calculationType"] @((MarkupString)SortIndicatorHtml("calculationType")) <TableColumnFilter FilterState='CF("calculationType")' OnChanged="OnColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsCalculationColumnVisible("status"))
-                        {
-                            <th id="hstatus" class="@SortableHeaderClass("status")" style="min-width:80px;" @onclick='() => SortBy("status")'>
-                                <span class="inline-flex items-center gap-1">Kalkylstatus @((MarkupString)SortIndicatorHtml("status")) <TableColumnFilter FilterState='CF("status")' OnChanged="OnColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsCalculationColumnVisible("calculationRole"))
-                        {
-                            <th id="hcalculationRole" class="@SortableHeaderClass("calculationRole")" style="min-width:150px;" @onclick='() => SortBy("calculationRole")'>
-                                <span class="inline-flex items-center gap-1">@AppLoc["calculationRole"] @((MarkupString)SortIndicatorHtml("calculationRole")) <TableColumnFilter FilterState='CF("calculationRole")' OnChanged="OnColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsCalculationColumnVisible("responsible"))
-                        {
-                            <th id="hresponsible" class="@SortableHeaderClass("responsible")" style="min-width:80px;" @onclick='() => SortBy("responsible")'>
-                                <span class="inline-flex items-center gap-1">@AppLoc["calculationResponsible"] @((MarkupString)SortIndicatorHtml("responsible")) <TableColumnFilter FilterState='CF("responsible")' OnChanged="OnColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsCalculationColumnVisible("inspector"))
-                        {
-                            <th id="hinspector" class="@SortableHeaderClass("inspector")" style="min-width:80px;" @onclick='() => SortBy("inspector")'>
-                                <span class="inline-flex items-center gap-1">@AppLoc["reviewer"] @((MarkupString)SortIndicatorHtml("inspector")) <TableColumnFilter FilterState='CF("inspector")' OnChanged="OnColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsCalculationColumnVisible("qa"))
-                        {
-                            <th id="hqa" class="@SortableHeaderClass("qa")" style="min-width:120px;" title="Sista dag för frågor och svar" @onclick='() => SortBy("qa")'>
-                                <span class="inline-flex items-center gap-1">Frågor/svar @((MarkupString)SortIndicatorHtml("qa")) <TableColumnFilter FilterState='CF("qa")' OnChanged="OnColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsCalculationColumnVisible("deadline"))
-                        {
-                            <th id="hdeadline" class="@SortableHeaderClass("deadline")" style="min-width:80px;" @onclick='() => SortBy("deadline")'>
-                                <span class="inline-flex items-center gap-1">@CalcResource.tenderDeadline @((MarkupString)SortIndicatorHtml("deadline")) <TableColumnFilter FilterState='CF("deadline")' OnChanged="OnColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsCalculationColumnVisible("priority"))
-                        {
-                            <th id="hpriority" class="@SortableHeaderClass("priority")" style="min-width:80px;" title="Sannolikhet att vinna" @onclick='() => SortBy("priority")'>
-                                <span class="inline-flex items-center gap-1">Vinstchans @((MarkupString)SortIndicatorHtml("priority")) <TableColumnFilter FilterState='CF("priority")' OnChanged="OnColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsCalculationColumnVisible("address"))
-                        {
-                            <th id="haddress" class="@SortableHeaderClass("address")" style="min-width:140px;" @onclick='() => SortBy("address")'>
-                                <span class="inline-flex items-center gap-1">Adress @((MarkupString)SortIndicatorHtml("address")) <TableColumnFilter FilterState='CF("address")' OnChanged="OnColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsCalculationColumnVisible("createdAt"))
-                        {
-                            <th id="hcreatedAt" class="@SortableHeaderClass("createdAt")" style="min-width:80px;" @onclick='() => SortBy("createdAt")'>
-                                <span class="inline-flex items-center gap-1">@AppLoc["createdDate"] @((MarkupString)SortIndicatorHtml("createdAt")) <TableColumnFilter FilterState='CF("createdAt")' OnChanged="OnColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsCalculationColumnVisible("updatedAt"))
-                        {
-                            <th id="hupdatedAt" class="@SortableHeaderClass("updatedAt")" style="min-width:80px;" @onclick='() => SortBy("updatedAt")'>
-                                <span class="inline-flex items-center gap-1">@AppLoc["lastModified"] @((MarkupString)SortIndicatorHtml("updatedAt")) <TableColumnFilter FilterState='CF("updatedAt")' OnChanged="OnColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsCalculationColumnVisible("start"))
-                        {
-                            <th id="hstart" class="@SortableHeaderClass("start")" style="min-width:80px;" @onclick='() => SortBy("start")'>
-                                <span class="inline-flex items-center gap-1">@CalcResource.startDate @((MarkupString)SortIndicatorHtml("start")) <TableColumnFilter FilterState='CF("start")' OnChanged="OnColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsCalculationColumnVisible("end"))
-                        {
-                            <th id="hend" class="@SortableHeaderClass("end")" style="min-width:80px;" @onclick='() => SortBy("end")'>
-                                <span class="inline-flex items-center gap-1">@CalcResource.endDate @((MarkupString)SortIndicatorHtml("end")) <TableColumnFilter FilterState='CF("end")' OnChanged="OnColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsCalculationColumnVisible("timeMonth"))
-                        {
-                            <th id="htimeMonth" class="@SortableHeaderClass("timeMonth")" style="min-width:80px;" @onclick='() => SortBy("timeMonth")'>
-                                <span class="inline-flex items-center gap-1">@AppLoc["projectDurationMonths"] @((MarkupString)SortIndicatorHtml("timeMonth")) <TableColumnFilter FilterState='CF("timeMonth")' OnChanged="OnColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsCalculationColumnVisible("tax"))
-                        {
-                            <th id="htax" class="@SortableHeaderClass("tax")" style="min-width:60px;" @onclick='() => SortBy("tax")'>
-                                <span class="inline-flex items-center gap-1">@AppLoc["vatPercent"] @((MarkupString)SortIndicatorHtml("tax")) <TableColumnFilter FilterState='CF("tax")' OnChanged="OnColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsCalculationColumnVisible("archived"))
-                        {
-                            <th id="harchived" class="@SortableHeaderClass("archived")" style="min-width:60px;" @onclick='() => SortBy("archived")'>
-                                <span class="inline-flex items-center gap-1">@AppLoc["archived"] @((MarkupString)SortIndicatorHtml("archived")) <TableColumnFilter FilterState='CF("archived")' OnChanged="OnColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsCalculationColumnVisible("privacy"))
-                        {
-                            <th id="hprivacy" class="@SortableHeaderClass("privacy")" style="min-width:60px;" @onclick='() => SortBy("privacy")'>
-                                <span class="inline-flex items-center gap-1">@ResourceApp._private @((MarkupString)SortIndicatorHtml("privacy")) <TableColumnFilter FilterState='CF("privacy")' OnChanged="OnColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsCalculationColumnVisible("access"))
-                        {
-                            <th id="haccess" class="@SortableHeaderClass("access")" style="min-width:110px;" title="Hur kalkylen är tillgänglig och om den ingår i extra delning. Klicka på värdet för detaljer." @onclick='() => SortBy("access")'>
-                                <span class="inline-flex items-center gap-1">Åtkomst @((MarkupString)SortIndicatorHtml("access")) <TableColumnFilter FilterState='CF("access")' OnChanged="OnColumnFilterChanged" /></span>
-                            </th>
-                        }
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                    @if (TotalFilteredCount == 0)
-                    {
-                        <tr>
-                            <td colspan="@VisibleCalculationColumnCount" class="px-3 py-8 text-center">
-                                <div class="flex flex-col items-center gap-2 text-slate-500 dark:text-slate-400">
-                                    <span class="text-sm">@(HasActiveFilters ? "Inga kalkyler matchar valt filter." : CalcResource.noResultsFound)</span>
-                                    @if (HasActiveFilters)
-                                    {
-                                        <button type="button"
-                                                class="inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-                                                @onclick="ClearFilters">
-                                            <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                                            <span>@AppLoc["clearAllFilters"]</span>
-                                        </button>
-                                    }
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                    @{ var _calcRowNo = PageStart; }
-                    @foreach (var calu in PagedCalculations)
-                    {
+                    </div>
+                </EmptyTemplate>
+                <ChildContent>
+                    @* Radnummer — visuell hjälpkolumn (ej sorterbar/filterbar/sökbar). Frozen-offset + sticky-left beräknas av JS-motorn via data-pm-frozen. *@
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("rowNumber")' ColumnKey="rowNumber" Frozen="true"
+                                    HeaderClass="w-12 select-none whitespace-nowrap bg-slate-50 px-2 py-2 text-right font-semibold text-slate-400 dark:bg-slate-900 dark:text-slate-500" HeaderStyle="min-width:44px;">
+                        <HeaderContent><span title="Radnummer i aktuell vy">#</span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("code")' ColumnKey="code" Frozen="true"
+                                    HeaderClass='@($"{SortableHeaderClass("code")} w-28 bg-slate-50 dark:bg-slate-900")' HeaderStyle="min-width:70px;" OnHeaderClick='() => SortBy("code")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.code @((MarkupString)SortIndicatorHtml("code")) <TableColumnFilter FilterState='CF("code")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("name")' ColumnKey="name" Frozen="true"
+                                    HeaderClass='@($"{SortableHeaderClass("name")} min-w-52 border-r border-slate-300 bg-slate-50 dark:border-slate-600 dark:bg-slate-900")' HeaderStyle="min-width:160px;" OnHeaderClick='() => SortBy("name")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["calculationName"] @((MarkupString)SortIndicatorHtml("name")) <TableColumnFilter FilterState='CF("name")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("version")' ColumnKey="version"
+                                    HeaderClass='@SortableHeaderClass("version")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("version")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["version"] @((MarkupString)SortIndicatorHtml("version")) <TableColumnFilter FilterState='CF("version")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("project")' ColumnKey="project"
+                                    HeaderClass='@SortableHeaderClass("project")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("project")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["project"] @((MarkupString)SortIndicatorHtml("project")) <TableColumnFilter FilterState='CF("project")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("folder")' ColumnKey="folder"
+                                    HeaderClass='@SortableHeaderClass("folder")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("folder")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["folder"] @((MarkupString)SortIndicatorHtml("folder")) <TableColumnFilter FilterState='CF("folder")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("calculationType")' ColumnKey="calculationType"
+                                    HeaderClass='@SortableHeaderClass("calculationType")' HeaderStyle="min-width:150px;" OnHeaderClick='() => SortBy("calculationType")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["calculationType"] @((MarkupString)SortIndicatorHtml("calculationType")) <TableColumnFilter FilterState='CF("calculationType")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("status")' ColumnKey="status"
+                                    HeaderClass='@SortableHeaderClass("status")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("status")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">Kalkylstatus @((MarkupString)SortIndicatorHtml("status")) <TableColumnFilter FilterState='CF("status")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("calculationRole")' ColumnKey="calculationRole"
+                                    HeaderClass='@SortableHeaderClass("calculationRole")' HeaderStyle="min-width:150px;" OnHeaderClick='() => SortBy("calculationRole")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["calculationRole"] @((MarkupString)SortIndicatorHtml("calculationRole")) <TableColumnFilter FilterState='CF("calculationRole")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("responsible")' ColumnKey="responsible"
+                                    HeaderClass='@SortableHeaderClass("responsible")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("responsible")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["calculationResponsible"] @((MarkupString)SortIndicatorHtml("responsible")) <TableColumnFilter FilterState='CF("responsible")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("inspector")' ColumnKey="inspector"
+                                    HeaderClass='@SortableHeaderClass("inspector")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("inspector")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["reviewer"] @((MarkupString)SortIndicatorHtml("inspector")) <TableColumnFilter FilterState='CF("inspector")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("qa")' ColumnKey="qa"
+                                    HeaderClass='@SortableHeaderClass("qa")' HeaderStyle="min-width:120px;" OnHeaderClick='() => SortBy("qa")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1" title="Sista dag för frågor och svar">Frågor/svar @((MarkupString)SortIndicatorHtml("qa")) <TableColumnFilter FilterState='CF("qa")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("deadline")' ColumnKey="deadline"
+                                    HeaderClass='@SortableHeaderClass("deadline")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("deadline")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.tenderDeadline @((MarkupString)SortIndicatorHtml("deadline")) <TableColumnFilter FilterState='CF("deadline")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("priority")' ColumnKey="priority"
+                                    HeaderClass='@SortableHeaderClass("priority")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("priority")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1" title="Sannolikhet att vinna">Vinstchans @((MarkupString)SortIndicatorHtml("priority")) <TableColumnFilter FilterState='CF("priority")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("address")' ColumnKey="address"
+                                    HeaderClass='@SortableHeaderClass("address")' HeaderStyle="min-width:140px;" OnHeaderClick='() => SortBy("address")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">Adress @((MarkupString)SortIndicatorHtml("address")) <TableColumnFilter FilterState='CF("address")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("createdAt")' ColumnKey="createdAt"
+                                    HeaderClass='@SortableHeaderClass("createdAt")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("createdAt")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["createdDate"] @((MarkupString)SortIndicatorHtml("createdAt")) <TableColumnFilter FilterState='CF("createdAt")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("updatedAt")' ColumnKey="updatedAt"
+                                    HeaderClass='@SortableHeaderClass("updatedAt")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("updatedAt")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["lastModified"] @((MarkupString)SortIndicatorHtml("updatedAt")) <TableColumnFilter FilterState='CF("updatedAt")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("start")' ColumnKey="start"
+                                    HeaderClass='@SortableHeaderClass("start")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("start")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.startDate @((MarkupString)SortIndicatorHtml("start")) <TableColumnFilter FilterState='CF("start")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("end")' ColumnKey="end"
+                                    HeaderClass='@SortableHeaderClass("end")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("end")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.endDate @((MarkupString)SortIndicatorHtml("end")) <TableColumnFilter FilterState='CF("end")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("timeMonth")' ColumnKey="timeMonth"
+                                    HeaderClass='@SortableHeaderClass("timeMonth")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("timeMonth")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["projectDurationMonths"] @((MarkupString)SortIndicatorHtml("timeMonth")) <TableColumnFilter FilterState='CF("timeMonth")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("tax")' ColumnKey="tax"
+                                    HeaderClass='@SortableHeaderClass("tax")' HeaderStyle="min-width:60px;" OnHeaderClick='() => SortBy("tax")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["vatPercent"] @((MarkupString)SortIndicatorHtml("tax")) <TableColumnFilter FilterState='CF("tax")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("archived")' ColumnKey="archived"
+                                    HeaderClass='@SortableHeaderClass("archived")' HeaderStyle="min-width:60px;" OnHeaderClick='() => SortBy("archived")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["archived"] @((MarkupString)SortIndicatorHtml("archived")) <TableColumnFilter FilterState='CF("archived")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("privacy")' ColumnKey="privacy"
+                                    HeaderClass='@SortableHeaderClass("privacy")' HeaderStyle="min-width:60px;" OnHeaderClick='() => SortBy("privacy")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@ResourceApp._private @((MarkupString)SortIndicatorHtml("privacy")) <TableColumnFilter FilterState='CF("privacy")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("access")' ColumnKey="access"
+                                    HeaderClass='@SortableHeaderClass("access")' HeaderStyle="min-width:110px;" OnHeaderClick='() => SortBy("access")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1" title="Hur kalkylen är tillgänglig och om den ingår i extra delning. Klicka på värdet för detaljer.">Åtkomst @((MarkupString)SortIndicatorHtml("access")) <TableColumnFilter FilterState='CF("access")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                </ChildContent>
+                <RowTemplate Context="calu">
+                    @{
                         var isSelected = Folder.State.Calculation?.Id == calu.Id;
                         var rowClasses = GetCalculationRowClass(calu, isSelected);
-                        var rowNumber = _calcRowNo++;
+                        var rowNumber = _calcRowNumbers.TryGetValue(calu.Id, out var _rn) ? _rn : 0;
+                    }
 
                         <tr @key="calu.Id"
                             class="@rowClasses"
@@ -764,9 +724,8 @@
                                 </td>
                             }
                         </tr>
-                    }
-                </tbody>
-            </table>
+                </RowTemplate>
+            </MhdTable>
         </div>
 
         @* ── Pagination bar ──────────────────────────────── *@
@@ -1630,9 +1589,6 @@
     // Shift the following frozen columns (code, name) right so they don't overlap it.
     private string CodeStickyLeftClass => IsCalculationColumnVisible("rowNumber") ? "left-12" : "left-0";
     private string NameStickyLeftClass => IsCalculationColumnVisible("rowNumber") ? "left-40" : "left-28";
-
-    private int VisibleCalculationColumnCount =>
-        Math.Max(1, _calculationColumns.Count(c => c.Value));
 
     private ScopeCalculationRow? GetScopeRow(ListCalculationMVVM calculation) =>
         FolderScopeMode && _scopeCalculationLookup.TryGetValue(calculation.Id, out var row)

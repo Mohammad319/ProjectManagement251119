@@ -2,6 +2,7 @@
 @using ProjectManagement.Client.Helper
 @using Microsoft.Extensions.Logging
 @using ProjectManagement.Client.Services.Folder
+@using BlazorMHD.UI.Components.Data.Table
 @using ProjectManagement.Client.Shared.MVVM.Folder
 @using ProjectManagement.Client.Shared.Model.Project
 @using Microsoft.AspNetCore.Authorization
@@ -406,225 +407,168 @@
     @if (BaseProjects.Any())
     {
         <div class="divNetCalc flex-1 min-h-0 overflow-auto rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
-            <table id="resizeMe" class="w-max min-w-full table-auto text-left text-xs">
-                <thead class="sticky top-0 z-50 bg-slate-50 text-[11px] font-semibold text-slate-500 dark:bg-slate-900 dark:text-slate-400">
-                    <tr>
-                        @* Radnummer — visuell hjälpkolumn (ej sorterbar/filterbar/sökbar) *@
-                        @if (IsProjectColumnVisible("rowNumber"))
+            @{
+                // Per-page row numbers (1-based, page-offset) keyed by project id, so the
+                // RowTemplate can look up its number without a running counter.
+                var _projectRowNumbers = PagedProjects
+                    .Select((p, i) => (p.Id, No: FirstProjectIndex + i))
+                    .ToDictionary(x => x.Id, x => x.No);
+            }
+            <MhdTable TItem="ListProjectMVVM"
+                      Items="PagedProjects"
+                      id="resizeMe"
+                      TableClass="w-max min-w-full table-auto text-left text-xs"
+                      TheadClass="sticky top-0 z-50 bg-slate-50 text-[11px] font-semibold text-slate-500 dark:bg-slate-900 dark:text-slate-400"
+                      TbodyClass="divide-y divide-slate-100 dark:divide-slate-800"
+                      TableAriaLabel="Projekt">
+                <EmptyTemplate>
+                    <div class="flex flex-col items-center gap-2 text-slate-500 dark:text-slate-400">
+                        <span class="text-sm">@(HasActiveProjectFilters ? "Inga projekt matchar valt filter." : CalcResource.noResultsFound)</span>
+                        @if (HasActiveProjectFilters)
                         {
-                            <th id="hrowNumber" data-pm-frozen="true" class="sticky left-0 z-[60] w-12 select-none whitespace-nowrap bg-slate-50 px-2 py-2 text-right font-semibold text-slate-400 dark:bg-slate-900 dark:text-slate-500" style="min-width:44px;">
-                                <HoverTooltip Text="Radnummer i aktuell vy" Class="justify-end">#</HoverTooltip>
-                            </th>
+                            <button type="button"
+                                    class="inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                                    @onclick="ClearProjectFilters">
+                                <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                <span>@AppLoc["clearAllFilters"]</span>
+                            </button>
                         }
-                        @if (IsProjectColumnVisible("code"))
-                        {
-                            <th id="hcode" data-pm-frozen="true" class="@SortableHeaderClass("code") sticky @CodeStickyLeftClass z-[60] w-28 bg-slate-50 dark:bg-slate-900" style="min-width:70px;" @onclick='() => SortBy("code")'>
-                                <span class="inline-flex items-center gap-1">@CalcResource.code @((MarkupString)SortIndicatorHtml("code")) <TableColumnFilter FilterState='PF("code")' OnChanged="OnProjectColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsProjectColumnVisible("name"))
-                        {
-                            <th id="hname" data-pm-frozen="true" class="@SortableHeaderClass("name") sticky @NameStickyLeftClass z-[59] min-w-52 border-r border-slate-300 bg-slate-50 dark:border-slate-600 dark:bg-slate-900" style="min-width:160px;" @onclick='() => SortBy("name")'>
-                                <span class="inline-flex items-center gap-1">@AppLoc["projectName"] @((MarkupString)SortIndicatorHtml("name")) <TableColumnFilter FilterState='PF("name")' OnChanged="OnProjectColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsProjectColumnVisible("status"))
-                        {
-                            <th id="hstatus" class="@SortableHeaderClass("status")" style="min-width:80px;" @onclick='() => SortBy("status")'>
-                                <span class="inline-flex items-center gap-1"><HoverTooltip Text="Projektstatus beskriver projektets övergripande läge och resultat, t.ex. förfrågan, inlämnat, vunnet eller förlorat." ShowInfoIcon="true" Focusable="true">Projektstatus</HoverTooltip> @((MarkupString)SortIndicatorHtml("status")) <TableColumnFilter FilterState='PF("status")' OnChanged="OnProjectColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsProjectColumnVisible("responsible"))
-                        {
-                            <th id="hresponsible" class="@SortableHeaderClass("responsible")" style="min-width:80px;" @onclick='() => SortBy("responsible")'>
-                                <span class="inline-flex items-center gap-1">@AppLoc["calculationResponsible"] @((MarkupString)SortIndicatorHtml("responsible")) <TableColumnFilter FilterState='PF("responsible")' OnChanged="OnProjectColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsProjectColumnVisible("start"))
-                        {
-                            <th id="hstart" class="@SortableHeaderClass("start")" style="min-width:80px;" @onclick='() => SortBy("start")'>
-                                <span class="inline-flex items-center gap-1">@CalcResource.startDate @((MarkupString)SortIndicatorHtml("start")) <TableColumnFilter FilterState='PF("start")' OnChanged="OnProjectColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsProjectColumnVisible("end"))
-                        {
-                            <th id="hend" class="@SortableHeaderClass("end")" style="min-width:80px;" @onclick='() => SortBy("end")'>
-                                <span class="inline-flex items-center gap-1">@CalcResource.endDate @((MarkupString)SortIndicatorHtml("end")) <TableColumnFilter FilterState='PF("end")' OnChanged="OnProjectColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsProjectColumnVisible("deadline"))
-                        {
-                            <th id="hdeadline" class="@SortableHeaderClass("deadline")" style="min-width:80px;" @onclick='() => SortBy("deadline")'>
-                                <span class="inline-flex items-center gap-1">@CalcResource.tenderDeadline @((MarkupString)SortIndicatorHtml("deadline")) <TableColumnFilter FilterState='PF("deadline")' OnChanged="OnProjectColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsProjectColumnVisible("qa"))
-                        {
-                            <th id="hqa" class="@SortableHeaderClass("qa")" style="min-width:80px;" @onclick='() => SortBy("qa")'>
-                                <span class="inline-flex items-center gap-1"><HoverTooltip Text="Sista dag för frågor och svar" ShowInfoIcon="true" Focusable="true">Frågor/svar</HoverTooltip> @((MarkupString)SortIndicatorHtml("qa")) <TableColumnFilter FilterState='PF("qa")' OnChanged="OnProjectColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsProjectColumnVisible("calculations"))
-                        {
-                            <th id="hcalculations" class="@SortableHeaderClass("calculations") text-right" style="min-width:60px;" @onclick='() => SortBy("calculations")'>
-                                <span class="inline-flex items-center justify-end gap-1">@AppLoc["calculationCount"] @((MarkupString)SortIndicatorHtml("calculations")) <TableColumnFilter FilterState='PF("calculations")' OnChanged="OnProjectColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsProjectColumnVisible("byggherre"))
-                        {
-                            <th id="hbyggherre" class="@SortableHeaderClass("byggherre")" style="min-width:80px;" @onclick='() => SortBy("byggherre")'>
-                                <span class="inline-flex items-center gap-1">@CalcResource.developer @((MarkupString)SortIndicatorHtml("byggherre")) <TableColumnFilter FilterState='PF("byggherre")' OnChanged="OnProjectColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsProjectColumnVisible("organisation"))
-                        {
-                            <th id="horganisation" class="@SortableHeaderClass("organisation")" style="min-width:80px;" @onclick='() => SortBy("organisation")'>
-                                <span class="inline-flex items-center gap-1">Beställare @((MarkupString)SortIndicatorHtml("organisation")) <TableColumnFilter FilterState='PF("organisation")' OnChanged="OnProjectColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsProjectColumnVisible("procurementName"))
-                        {
-                            <th id="hprocurementName" class="@SortableHeaderClass("procurementName")" style="min-width:120px;" @onclick='() => SortBy("procurementName")'>
-                                <span class="inline-flex items-center gap-1">@AppLoc["procurementName"] @((MarkupString)SortIndicatorHtml("procurementName")) <TableColumnFilter FilterState='PF("procurementName")' OnChanged="OnProjectColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsProjectColumnVisible("procurementNumber"))
-                        {
-                            <th id="hprocurementNumber" class="@SortableHeaderClass("procurementNumber")" style="min-width:120px;" @onclick='() => SortBy("procurementNumber")'>
-                                <span class="inline-flex items-center gap-1">@AppLoc["procurementNumber"] @((MarkupString)SortIndicatorHtml("procurementNumber")) <TableColumnFilter FilterState='PF("procurementNumber")' OnChanged="OnProjectColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsProjectColumnVisible("customerReference"))
-                        {
-                            <th id="hcustomerReference" class="@SortableHeaderClass("customerReference")" style="min-width:120px;" @onclick='() => SortBy("customerReference")'>
-                                <span class="inline-flex items-center gap-1">@AppLoc["customerReference"] @((MarkupString)SortIndicatorHtml("customerReference")) <TableColumnFilter FilterState='PF("customerReference")' OnChanged="OnProjectColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsProjectColumnVisible("contract"))
-                        {
-                            <th id="hcontract" class="@SortableHeaderClass("contract")" style="min-width:80px;" @onclick='() => SortBy("contract")'>
-                                <span class="inline-flex items-center gap-1">@CalcResource.projectContract @((MarkupString)SortIndicatorHtml("contract")) <TableColumnFilter FilterState='PF("contract")' OnChanged="OnProjectColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsProjectColumnVisible("projectType"))
-                        {
-                            <th id="hprojectType" class="@SortableHeaderClass("projectType")" style="min-width:80px;" @onclick='() => SortBy("projectType")'>
-                                <span class="inline-flex items-center gap-1">@CalcResource.projectType @((MarkupString)SortIndicatorHtml("projectType")) <TableColumnFilter FilterState='PF("projectType")' OnChanged="OnProjectColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsProjectColumnVisible("inspector"))
-                        {
-                            <th id="hinspector" class="@SortableHeaderClass("inspector")" style="min-width:80px;" @onclick='() => SortBy("inspector")'>
-                                <span class="inline-flex items-center gap-1">@CalcResource.inspector @((MarkupString)SortIndicatorHtml("inspector")) <TableColumnFilter FilterState='PF("inspector")' OnChanged="OnProjectColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsProjectColumnVisible("designer"))
-                        {
-                            <th id="hdesigner" class="@SortableHeaderClass("designer")" style="min-width:110px;" @onclick='() => SortBy("designer")'>
-                                <span class="inline-flex items-center gap-1">Projektörer @((MarkupString)SortIndicatorHtml("designer")) <TableColumnFilter FilterState='PF("designer")' OnChanged="OnProjectColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsProjectColumnVisible("supervisor"))
-                        {
-                            <th id="hsupervisor" class="@SortableHeaderClass("supervisor")" style="min-width:180px;" @onclick='() => SortBy("supervisor")'>
-                                <span class="inline-flex items-center gap-1">Kundens kontaktperson under upphandlingstiden @((MarkupString)SortIndicatorHtml("supervisor")) <TableColumnFilter FilterState='PF("supervisor")' OnChanged="OnProjectColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsProjectColumnVisible("address"))
-                        {
-                            <th id="haddress" class="@SortableHeaderClass("address")" style="min-width:140px;" @onclick='() => SortBy("address")'>
-                                <span class="inline-flex items-center gap-1">Adress @((MarkupString)SortIndicatorHtml("address")) <TableColumnFilter FilterState='PF("address")' OnChanged="OnProjectColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsProjectColumnVisible("procurementMethods"))
-                        {
-                            <th id="hprocurementMethods" class="@SortableHeaderClass("procurementMethods")" style="min-width:110px;" @onclick='() => SortBy("procurementMethods")'>
-                                <span class="inline-flex items-center gap-1">@CalcResource.procurementMethods @((MarkupString)SortIndicatorHtml("procurementMethods")) <TableColumnFilter FilterState='PF("procurementMethods")' OnChanged="OnProjectColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsProjectColumnVisible("compensation"))
-                        {
-                            <th id="hcompensation" class="@SortableHeaderClass("compensation")" style="min-width:110px;" @onclick='() => SortBy("compensation")'>
-                                <span class="inline-flex items-center gap-1">@CalcResource.projectCompensation @((MarkupString)SortIndicatorHtml("compensation")) <TableColumnFilter FilterState='PF("compensation")' OnChanged="OnProjectColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsProjectColumnVisible("procurementProcedure"))
-                        {
-                            <th id="hprocurementProcedure" class="@SortableHeaderClass("procurementProcedure")" style="min-width:130px;" @onclick='() => SortBy("procurementProcedure")'>
-                                <span class="inline-flex items-center gap-1">Upphandlingsförfarande @((MarkupString)SortIndicatorHtml("procurementProcedure")) <TableColumnFilter FilterState='PF("procurementProcedure")' OnChanged="OnProjectColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsProjectColumnVisible("clientsManager"))
-                        {
-                            <th id="hclientsManager" class="@SortableHeaderClass("clientsManager")" style="min-width:120px;" @onclick='() => SortBy("clientsManager")'>
-                                <span class="inline-flex items-center gap-1">@ResourceLoc.clientsProjectmanager @((MarkupString)SortIndicatorHtml("clientsManager")) <TableColumnFilter FilterState='PF("clientsManager")' OnChanged="OnProjectColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsProjectColumnVisible("publicationDate"))
-                        {
-                            <th id="hpublicationDate" class="@SortableHeaderClass("publicationDate")" style="min-width:90px;" @onclick='() => SortBy("publicationDate")'>
-                                <span class="inline-flex items-center gap-1">@CalcResource.publicationDate @((MarkupString)SortIndicatorHtml("publicationDate")) <TableColumnFilter FilterState='PF("publicationDate")' OnChanged="OnProjectColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsProjectColumnVisible("decisionDate"))
-                        {
-                            <th id="hdecisionDate" class="@SortableHeaderClass("decisionDate")" style="min-width:90px;" @onclick='() => SortBy("decisionDate")'>
-                                <span class="inline-flex items-center gap-1">@CalcResource.decisionDate @((MarkupString)SortIndicatorHtml("decisionDate")) <TableColumnFilter FilterState='PF("decisionDate")' OnChanged="OnProjectColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsProjectColumnVisible("createdAt"))
-                        {
-                            <th id="hcreatedAt" class="@SortableHeaderClass("createdAt")" style="min-width:90px;" @onclick='() => SortBy("createdAt")'>
-                                <span class="inline-flex items-center gap-1">@AppLoc["createdDate"] @((MarkupString)SortIndicatorHtml("createdAt")) <TableColumnFilter FilterState='PF("createdAt")' OnChanged="OnProjectColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsProjectColumnVisible("updatedAt"))
-                        {
-                            <th id="hupdatedAt" class="@SortableHeaderClass("updatedAt")" style="min-width:90px;" @onclick='() => SortBy("updatedAt")'>
-                                <span class="inline-flex items-center gap-1">@AppLoc["lastModified"] @((MarkupString)SortIndicatorHtml("updatedAt")) <TableColumnFilter FilterState='PF("updatedAt")' OnChanged="OnProjectColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsProjectColumnVisible("archived"))
-                        {
-                            <th id="harchived" class="@SortableHeaderClass("archived")" style="min-width:80px;" @onclick='() => SortBy("archived")'>
-                                <span class="inline-flex items-center gap-1">@AppLoc["archived"] @((MarkupString)SortIndicatorHtml("archived")) <TableColumnFilter FilterState='PF("archived")' OnChanged="OnProjectColumnFilterChanged" /></span>
-                            </th>
-                        }
-                        @if (IsProjectColumnVisible("shared"))
-                        {
-                            <th id="hshared" class="@SortableHeaderClass("shared")" style="min-width:110px;" @onclick='() => SortBy("shared")'>
-                                <span class="inline-flex items-center gap-1"><HoverTooltip Text="Hur projektet är tillgängligt och om det är delat med andra. Klicka på värdet för detaljer." ShowInfoIcon="true" Focusable="true">Åtkomst</HoverTooltip> @((MarkupString)SortIndicatorHtml("shared")) <TableColumnFilter FilterState='PF("shared")' OnChanged="OnProjectColumnFilterChanged" /></span>
-                            </th>
-                        }
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                    @if (TotalProjectCount == 0)
-                    {
-                        <tr>
-                            <td colspan="@VisibleProjectColumnCount" class="px-3 py-8 text-center">
-                                <div class="flex flex-col items-center gap-2 text-slate-500 dark:text-slate-400">
-                                    <span class="text-sm">@(HasActiveProjectFilters ? "Inga projekt matchar valt filter." : CalcResource.noResultsFound)</span>
-                                    @if (HasActiveProjectFilters)
-                                    {
-                                        <button type="button"
-                                                class="inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-                                                @onclick="ClearProjectFilters">
-                                            <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                                            <span>@AppLoc["clearAllFilters"]</span>
-                                        </button>
-                                    }
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                    @{ var _projectRowNo = FirstProjectIndex; }
-                    @foreach (var project in PagedProjects)
-                    {
+                    </div>
+                </EmptyTemplate>
+                <ChildContent>
+                    @* Radnummer — visuell hjälpkolumn (ej sorterbar/filterbar/sökbar). Frozen-offset + sticky-left beräknas av JS-motorn via data-pm-frozen. *@
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("rowNumber")' ColumnKey="rowNumber" Frozen="true"
+                                    HeaderClass="w-12 select-none whitespace-nowrap bg-slate-50 px-2 py-2 text-right font-semibold text-slate-400 dark:bg-slate-900 dark:text-slate-500" HeaderStyle="min-width:44px;">
+                        <HeaderContent><HoverTooltip Text="Radnummer i aktuell vy" Class="justify-end">#</HoverTooltip></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("code")' ColumnKey="code" Frozen="true"
+                                    HeaderClass='@($"{SortableHeaderClass("code")} w-28 bg-slate-50 dark:bg-slate-900")' HeaderStyle="min-width:70px;" OnHeaderClick='() => SortBy("code")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.code @((MarkupString)SortIndicatorHtml("code")) <TableColumnFilter FilterState='PF("code")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("name")' ColumnKey="name" Frozen="true"
+                                    HeaderClass='@($"{SortableHeaderClass("name")} min-w-52 border-r border-slate-300 bg-slate-50 dark:border-slate-600 dark:bg-slate-900")' HeaderStyle="min-width:160px;" OnHeaderClick='() => SortBy("name")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["projectName"] @((MarkupString)SortIndicatorHtml("name")) <TableColumnFilter FilterState='PF("name")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("status")' ColumnKey="status"
+                                    HeaderClass='@SortableHeaderClass("status")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("status")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1"><HoverTooltip Text="Projektstatus beskriver projektets övergripande läge och resultat, t.ex. förfrågan, inlämnat, vunnet eller förlorat." ShowInfoIcon="true" Focusable="true">Projektstatus</HoverTooltip> @((MarkupString)SortIndicatorHtml("status")) <TableColumnFilter FilterState='PF("status")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("responsible")' ColumnKey="responsible"
+                                    HeaderClass='@SortableHeaderClass("responsible")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("responsible")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["calculationResponsible"] @((MarkupString)SortIndicatorHtml("responsible")) <TableColumnFilter FilterState='PF("responsible")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("start")' ColumnKey="start"
+                                    HeaderClass='@SortableHeaderClass("start")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("start")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.startDate @((MarkupString)SortIndicatorHtml("start")) <TableColumnFilter FilterState='PF("start")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("end")' ColumnKey="end"
+                                    HeaderClass='@SortableHeaderClass("end")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("end")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.endDate @((MarkupString)SortIndicatorHtml("end")) <TableColumnFilter FilterState='PF("end")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("deadline")' ColumnKey="deadline"
+                                    HeaderClass='@SortableHeaderClass("deadline")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("deadline")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.tenderDeadline @((MarkupString)SortIndicatorHtml("deadline")) <TableColumnFilter FilterState='PF("deadline")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("qa")' ColumnKey="qa"
+                                    HeaderClass='@SortableHeaderClass("qa")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("qa")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1"><HoverTooltip Text="Sista dag för frågor och svar" ShowInfoIcon="true" Focusable="true">Frågor/svar</HoverTooltip> @((MarkupString)SortIndicatorHtml("qa")) <TableColumnFilter FilterState='PF("qa")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("calculations")' ColumnKey="calculations"
+                                    HeaderClass='@($"{SortableHeaderClass("calculations")} text-right")' HeaderStyle="min-width:60px;" OnHeaderClick='() => SortBy("calculations")'>
+                        <HeaderContent><span class="inline-flex items-center justify-end gap-1">@AppLoc["calculationCount"] @((MarkupString)SortIndicatorHtml("calculations")) <TableColumnFilter FilterState='PF("calculations")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("byggherre")' ColumnKey="byggherre"
+                                    HeaderClass='@SortableHeaderClass("byggherre")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("byggherre")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.developer @((MarkupString)SortIndicatorHtml("byggherre")) <TableColumnFilter FilterState='PF("byggherre")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("organisation")' ColumnKey="organisation"
+                                    HeaderClass='@SortableHeaderClass("organisation")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("organisation")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">Beställare @((MarkupString)SortIndicatorHtml("organisation")) <TableColumnFilter FilterState='PF("organisation")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("procurementName")' ColumnKey="procurementName"
+                                    HeaderClass='@SortableHeaderClass("procurementName")' HeaderStyle="min-width:120px;" OnHeaderClick='() => SortBy("procurementName")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["procurementName"] @((MarkupString)SortIndicatorHtml("procurementName")) <TableColumnFilter FilterState='PF("procurementName")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("procurementNumber")' ColumnKey="procurementNumber"
+                                    HeaderClass='@SortableHeaderClass("procurementNumber")' HeaderStyle="min-width:120px;" OnHeaderClick='() => SortBy("procurementNumber")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["procurementNumber"] @((MarkupString)SortIndicatorHtml("procurementNumber")) <TableColumnFilter FilterState='PF("procurementNumber")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("customerReference")' ColumnKey="customerReference"
+                                    HeaderClass='@SortableHeaderClass("customerReference")' HeaderStyle="min-width:120px;" OnHeaderClick='() => SortBy("customerReference")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["customerReference"] @((MarkupString)SortIndicatorHtml("customerReference")) <TableColumnFilter FilterState='PF("customerReference")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("contract")' ColumnKey="contract"
+                                    HeaderClass='@SortableHeaderClass("contract")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("contract")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.projectContract @((MarkupString)SortIndicatorHtml("contract")) <TableColumnFilter FilterState='PF("contract")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("projectType")' ColumnKey="projectType"
+                                    HeaderClass='@SortableHeaderClass("projectType")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("projectType")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.projectType @((MarkupString)SortIndicatorHtml("projectType")) <TableColumnFilter FilterState='PF("projectType")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("inspector")' ColumnKey="inspector"
+                                    HeaderClass='@SortableHeaderClass("inspector")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("inspector")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.inspector @((MarkupString)SortIndicatorHtml("inspector")) <TableColumnFilter FilterState='PF("inspector")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("designer")' ColumnKey="designer"
+                                    HeaderClass='@SortableHeaderClass("designer")' HeaderStyle="min-width:110px;" OnHeaderClick='() => SortBy("designer")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">Projektörer @((MarkupString)SortIndicatorHtml("designer")) <TableColumnFilter FilterState='PF("designer")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("supervisor")' ColumnKey="supervisor"
+                                    HeaderClass='@SortableHeaderClass("supervisor")' HeaderStyle="min-width:180px;" OnHeaderClick='() => SortBy("supervisor")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">Kundens kontaktperson under upphandlingstiden @((MarkupString)SortIndicatorHtml("supervisor")) <TableColumnFilter FilterState='PF("supervisor")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("address")' ColumnKey="address"
+                                    HeaderClass='@SortableHeaderClass("address")' HeaderStyle="min-width:140px;" OnHeaderClick='() => SortBy("address")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">Adress @((MarkupString)SortIndicatorHtml("address")) <TableColumnFilter FilterState='PF("address")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("procurementMethods")' ColumnKey="procurementMethods"
+                                    HeaderClass='@SortableHeaderClass("procurementMethods")' HeaderStyle="min-width:110px;" OnHeaderClick='() => SortBy("procurementMethods")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.procurementMethods @((MarkupString)SortIndicatorHtml("procurementMethods")) <TableColumnFilter FilterState='PF("procurementMethods")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("compensation")' ColumnKey="compensation"
+                                    HeaderClass='@SortableHeaderClass("compensation")' HeaderStyle="min-width:110px;" OnHeaderClick='() => SortBy("compensation")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.projectCompensation @((MarkupString)SortIndicatorHtml("compensation")) <TableColumnFilter FilterState='PF("compensation")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("procurementProcedure")' ColumnKey="procurementProcedure"
+                                    HeaderClass='@SortableHeaderClass("procurementProcedure")' HeaderStyle="min-width:130px;" OnHeaderClick='() => SortBy("procurementProcedure")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">Upphandlingsförfarande @((MarkupString)SortIndicatorHtml("procurementProcedure")) <TableColumnFilter FilterState='PF("procurementProcedure")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("clientsManager")' ColumnKey="clientsManager"
+                                    HeaderClass='@SortableHeaderClass("clientsManager")' HeaderStyle="min-width:120px;" OnHeaderClick='() => SortBy("clientsManager")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@ResourceLoc.clientsProjectmanager @((MarkupString)SortIndicatorHtml("clientsManager")) <TableColumnFilter FilterState='PF("clientsManager")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("publicationDate")' ColumnKey="publicationDate"
+                                    HeaderClass='@SortableHeaderClass("publicationDate")' HeaderStyle="min-width:90px;" OnHeaderClick='() => SortBy("publicationDate")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.publicationDate @((MarkupString)SortIndicatorHtml("publicationDate")) <TableColumnFilter FilterState='PF("publicationDate")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("decisionDate")' ColumnKey="decisionDate"
+                                    HeaderClass='@SortableHeaderClass("decisionDate")' HeaderStyle="min-width:90px;" OnHeaderClick='() => SortBy("decisionDate")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.decisionDate @((MarkupString)SortIndicatorHtml("decisionDate")) <TableColumnFilter FilterState='PF("decisionDate")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("createdAt")' ColumnKey="createdAt"
+                                    HeaderClass='@SortableHeaderClass("createdAt")' HeaderStyle="min-width:90px;" OnHeaderClick='() => SortBy("createdAt")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["createdDate"] @((MarkupString)SortIndicatorHtml("createdAt")) <TableColumnFilter FilterState='PF("createdAt")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("updatedAt")' ColumnKey="updatedAt"
+                                    HeaderClass='@SortableHeaderClass("updatedAt")' HeaderStyle="min-width:90px;" OnHeaderClick='() => SortBy("updatedAt")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["lastModified"] @((MarkupString)SortIndicatorHtml("updatedAt")) <TableColumnFilter FilterState='PF("updatedAt")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("archived")' ColumnKey="archived"
+                                    HeaderClass='@SortableHeaderClass("archived")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("archived")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["archived"] @((MarkupString)SortIndicatorHtml("archived")) <TableColumnFilter FilterState='PF("archived")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("shared")' ColumnKey="shared"
+                                    HeaderClass='@SortableHeaderClass("shared")' HeaderStyle="min-width:110px;" OnHeaderClick='() => SortBy("shared")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1"><HoverTooltip Text="Hur projektet är tillgängligt och om det är delat med andra. Klicka på värdet för detaljer." ShowInfoIcon="true" Focusable="true">Åtkomst</HoverTooltip> @((MarkupString)SortIndicatorHtml("shared")) <TableColumnFilter FilterState='PF("shared")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                </ChildContent>
+                <RowTemplate Context="project">
+                    @{
                         var isProjectArchived = project.IsArchived;
                         var isProjectSelected = Folder.State.ProjectSelected?.Id == project.Id;
                         var rowClasses = GetProjectRowClass(project, isProjectSelected, isProjectArchived);
-                        var rowNumber = _projectRowNo++;
+                        var rowNumber = _projectRowNumbers.TryGetValue(project.Id, out var _rn) ? _rn : 0;
+                    }
 
                         <tr @key="project.Id"
                             class="@rowClasses"
@@ -828,9 +772,8 @@
                                 </td>
                             }
                         </tr>
-                    }
-                </tbody>
-            </table>
+                </RowTemplate>
+            </MhdTable>
         </div>
 
         @* ── Pagination bar ──────────────────────────────── *@
@@ -1624,9 +1567,6 @@
     // Shift the following frozen columns (code, name) right so they don't overlap it.
     private string CodeStickyLeftClass => IsProjectColumnVisible("rowNumber") ? "left-12" : "left-0";
     private string NameStickyLeftClass => IsProjectColumnVisible("rowNumber") ? "left-40" : "left-28";
-
-    private int VisibleProjectColumnCount =>
-        Math.Max(1, _projectColumns.Count(c => c.Value));
 
     private static string FormatText(string? value) =>
         string.IsNullOrWhiteSpace(value) ? "-" : value;
