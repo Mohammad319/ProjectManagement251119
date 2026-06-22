@@ -221,7 +221,15 @@
       "Bash(find . -maxdepth 2 -name \"AuthPermissions.csproj\")",
       "Bash(echo \"pid $!\")",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5286/health/ready)",
-      "Bash(curl -s -o /dev/null -w \"health=%{http_code}\\\\n\" http://localhost:5286/health/ready)"
+      "Bash(curl -s -o /dev/null -w \"health=%{http_code}\\\\n\" http://localhost:5286/health/ready)",
+      "Bash(node --check \"ProjectManagement/ProjectManagement/wwwroot/js/resizableTable.js\")",
+      "Bash(node --input-type=module --check)",
+      "Bash(ls -la .claude/skills/)",
+      "Bash(ls ProjectManagement/ProjectManagement/appsettings*.json)",
+      "Read(//c/Users/Administrator/AppData/Local/Temp/pmverify/**)",
+      "Bash(cp \"/c/Library/BlazorMHD/BlazorMHD.UI/wwwroot/js/BlazorMHDUI.js\" www/_content/BlazorMHD.UI/js/BlazorMHDUI.js)",
+      "Bash(cp \"/c/Users/Administrator/Desktop/PM/b07/ProjectManagement251119/ProjectManagement/ProjectManagement/wwwroot/js/resizableTable.js\" www/js/resizableTable.js)",
+      "Bash(node drive.mjs)"
     ]
   }
 }

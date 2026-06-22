@@ -1029,6 +1029,12 @@
   <data name="noDepartmentsHint" xml:space="preserve">
     <value>An admin in your company can add you to a department.</value>
   </data>
+  <data name="loadingWorkspace" xml:space="preserve">
+    <value>Loading workspace...</value>
+  </data>
+  <data name="sessionInitFailed" xml:space="preserve">
+    <value>Could not load your workspace. Please refresh the page.</value>
+  </data>
   <data name="groupByTooltip" xml:space="preserve">
     <value>Group items by a shared property such as year or status.</value>
   </data>

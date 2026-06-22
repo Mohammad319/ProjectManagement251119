@@ -173,7 +173,23 @@
                 </div>
 
                 <div class="min-h-0 flex-1 overflow-auto px-1 py-1.5">
-                    @if (!HasDepartmentAccess)
+                    @if (_initState != SessionInitState.Ready)
+                    {
+                        @if (_initState == SessionInitState.Failed)
+                        {
+                            <div class="rounded-xl border border-dashed border-rose-300 bg-rose-50 px-4 py-8 text-center dark:border-rose-800 dark:bg-rose-950/40">
+                                <p class="text-sm font-semibold text-rose-700 dark:text-rose-300">@AppLoc["sessionInitFailed"]</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="flex items-center gap-2 px-2 py-6 text-sm text-slate-500 dark:text-slate-400" role="status" aria-live="polite">
+                                <div class="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-slate-300 border-t-sky-500 dark:border-slate-700 dark:border-t-sky-400"></div>
+                                <span>@AppLoc["loadingWorkspace"]</span>
+                            </div>
+                        }
+                    }
+                    else if (!HasDepartmentAccess)
                     {
                         <div class="rounded-xl border border-dashed border-slate-300 bg-white px-4 py-8 text-center dark:border-slate-700 dark:bg-slate-900">
                             <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">@AppLoc["noDepartmentsTitle"]</p>
@@ -227,7 +243,25 @@
 
         <RightContent>
             <div class="h-full overflow-auto bg-white dark:bg-slate-900">
-                @if (Folder.State.Calculation != null)
+                @if (_initState != SessionInitState.Ready)
+                {
+                    <div class="flex h-full min-h-[60vh] items-center justify-center p-6">
+                        @if (_initState == SessionInitState.Failed)
+                        {
+                            <div class="max-w-xl rounded-2xl border border-dashed border-rose-300 bg-rose-50 px-6 py-10 text-center dark:border-rose-800 dark:bg-rose-950/40">
+                                <p class="text-sm font-semibold text-rose-700 dark:text-rose-300">@AppLoc["sessionInitFailed"]</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="flex items-center gap-3 text-sm text-slate-500 dark:text-slate-400" role="status" aria-live="polite">
+                                <div class="h-5 w-5 shrink-0 animate-spin rounded-full border-2 border-slate-300 border-t-sky-500 dark:border-slate-700 dark:border-t-sky-400"></div>
+                                <span>@AppLoc["loadingWorkspace"]</span>
+                            </div>
+                        }
+                    </div>
+                }
+                else if (Folder.State.Calculation != null)
                 {
                     <ProjectManagement.Client.Pages.Calculation.CalculationPageUI @key="Folder.State.Calculation.Id" />
                 }

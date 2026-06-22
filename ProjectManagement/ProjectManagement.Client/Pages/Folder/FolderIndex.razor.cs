@@ -10,6 +10,7 @@ using ProjectManagement.Client.Shared.MVVM.Folder;
 using ProjectManagement.Client.Shared.ResourceFiles;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.General;
+using ProjectManagement.Shared.Helper;
 using System.Globalization;
 using System.Security.Claims;
 
@@ -28,9 +29,15 @@ namespace ProjectManagement.Client.Pages.Folder
         private bool _isReorderMode;
         private bool _isTreeLoading;
 
+        // Tracks the post-login session/tenant bootstrap so the UI never shows the
+        // empty "Inga avdelningar" / "Välj en mapp" states before user + tenant context is ready.
+        private enum SessionInitState { NotStarted, Loading, Ready, Failed }
+        private SessionInitState _initState = SessionInitState.NotStarted;
+
         private MhdDropdownPanel? _filterPanel;
 
         [Inject] private IJSRuntime JS { get; set; } = default!;
+        [Inject] private NavigationManager Nav { get; set; } = default!;
 
         private const string TreeSortModeStorageKey = "ProjectTreeSortMode";
         private const string TreeGroupingModeStorageKey = "ProjectTree.TreeViewMode";
@@ -88,6 +95,7 @@ namespace ProjectManagement.Client.Pages.Folder
         public void Dispose()
         {
             UoWService.Folder.State.OnChange -= Refresh;
+            AuthenticationStateProvider.AuthenticationStateChanged -= OnAuthenticationStateChanged;
         }
 
         public void Refresh()
@@ -167,21 +175,109 @@ namespace ProjectManagement.Client.Pages.Folder
         protected override async Task OnInitializedAsync()
         {
             UoWService.Folder.State.OnChange += Refresh;
+            AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
 
-            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-            ClaimsPrincipal user = authState.User;
-
-            CurrentUserDepartmentId = GetUserDepartmentId(user);
-            CanChooseAllDepartments =
-                user.IsInRole(PMRolesConst.Tenant.Admin) ||
-                user.IsInRole(PMRolesConst.Tenant.Manger);
-
-            var departments = await GetAllowedDepartmentsAsync();
-            Folder.State.SetDepartments(departments);
-
-            SelectedDepartmentId = GetInitialDepartmentId(departments);
-            await LoadSelectedDepartmentAsync();
+            await InitializeSessionAsync();
         }
+
+        // Re-run the bootstrap when auth/tenant context becomes available after the first render
+        // (e.g. after a silent revalidation), so the tree and lists load without a manual refresh.
+        private void OnAuthenticationStateChanged(Task<AuthenticationState> authStateTask)
+        {
+            _ = InvokeAsync(async () =>
+            {
+                if (_initState is SessionInitState.Ready or SessionInitState.Loading)
+                    return;
+
+                await InitializeSessionAsync();
+            });
+        }
+
+        /// <summary>
+        /// Ordered post-login bootstrap: wait for authentication, read user + tenant context from the
+        /// claims, then load departments → tree → workspace. Data is never requested (and an empty
+        /// result is never committed as the final UI) before UserId and TenantId are known.
+        /// </summary>
+        private async Task InitializeSessionAsync()
+        {
+            _initState = SessionInitState.Loading;
+            await InvokeAsync(StateHasChanged);
+
+            try
+            {
+                var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+                ClaimsPrincipal user = authState.User;
+
+                if (user.Identity?.IsAuthenticated != true)
+                {
+                    // Not authenticated yet — the router/[Authorize] handles the redirect. Reset to
+                    // NotStarted (instead of caching an empty department list) so a later
+                    // AuthenticationStateChanged re-runs this bootstrap once the user is signed in.
+                    _initState = SessionInitState.NotStarted;
+                    await ClientLog.InfoAsync("FolderIndex.InitializeSession: not authenticated yet; awaiting auth state.");
+                    await InvokeAsync(StateHasChanged);
+                    return;
+                }
+
+                var tenantId = GetClaimInt(user, PMClaimsConst.Tenant);
+                var userId = GetClaimInt(user, PMClaimsConst.UserId);
+
+                // Authenticated, but the tenant/user claims are not present on the client principal yet.
+                // This is exactly the "only works after a manual F5" state: the session was not fully
+                // established for this render. Recover via /auth/refresh once (the same pattern the 401
+                // handler uses) instead of rendering an empty "Inga avdelningar" workspace. The retry
+                // flag guards against an infinite refresh loop.
+                if (tenantId is null || userId is null)
+                {
+                    var currentLocalUrl = GetCurrentLocalUrl();
+                    if (!AuthRecoveryPathHelper.HasRetryFlag(currentLocalUrl))
+                    {
+                        await ClientLog.InfoAsync(
+                            $"FolderIndex.InitializeSession: authenticated but tenant/user claims missing (tenant={tenantId}, user={userId}); refreshing session.");
+                        Nav.NavigateTo(AuthRecoveryPathHelper.BuildRefreshUrl(currentLocalUrl), forceLoad: true);
+                        return;
+                    }
+
+                    await ClientLog.ErrorAsync(
+                        $"FolderIndex.InitializeSession: tenant/user claims still missing after refresh (tenant={tenantId}, user={userId}).");
+                    _initState = SessionInitState.Failed;
+                    await InvokeAsync(StateHasChanged);
+                    return;
+                }
+
+                CurrentUserDepartmentId = GetUserDepartmentId(user);
+                CanChooseAllDepartments =
+                    user.IsInRole(PMRolesConst.Tenant.Admin) ||
+                    user.IsInRole(PMRolesConst.Tenant.Manger);
+
+                var departments = await GetAllowedDepartmentsAsync();
+                Folder.State.SetDepartments(departments);
+
+                SelectedDepartmentId = GetInitialDepartmentId(departments);
+
+                _initState = SessionInitState.Ready;
+                await LoadSelectedDepartmentAsync();
+
+                await ClientLog.InfoAsync(
+                    $"FolderIndex.InitializeSession: ready (tenant={tenantId}, user={userId}, departments={departments.Count}, " +
+                    $"selectedDepartment={SelectedDepartmentId}, canChooseAll={CanChooseAllDepartments}).");
+            }
+            catch (Exception ex)
+            {
+                _initState = SessionInitState.Failed;
+                await ClientLog.ErrorAsync("FolderIndex.InitializeSession failed", ex: ex);
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+
+        private string GetCurrentLocalUrl()
+        {
+            var uri = new Uri(Nav.Uri);
+            return AuthRecoveryPathHelper.NormalizeLocalUrl($"{uri.PathAndQuery}{uri.Fragment}");
+        }
+
+        private static int? GetClaimInt(ClaimsPrincipal user, string claimType) =>
+            int.TryParse(user.FindFirst(claimType)?.Value, out var value) && value > 0 ? value : null;
 
         private async Task<List<ListDTO>> GetAllowedDepartmentsAsync()
         {

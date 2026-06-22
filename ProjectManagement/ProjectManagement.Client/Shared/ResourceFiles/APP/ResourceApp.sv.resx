@@ -1029,6 +1029,12 @@
   <data name="noDepartmentsHint" xml:space="preserve">
     <value>Admin i ditt företag kan lägga till dig i en avdelning.</value>
   </data>
+  <data name="loadingWorkspace" xml:space="preserve">
+    <value>Laddar arbetsyta...</value>
+  </data>
+  <data name="sessionInitFailed" xml:space="preserve">
+    <value>Kunde inte ladda din arbetsyta. Uppdatera sidan.</value>
+  </data>
   <data name="groupByTooltip" xml:space="preserve">
     <value>Gruppera objekt efter en gemensam egenskap, t.ex. år eller status.</value>
   </data>
