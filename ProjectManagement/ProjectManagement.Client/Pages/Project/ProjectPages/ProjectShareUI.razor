@@ -7,16 +7,19 @@
 @inherits AppComponentBase
 @attribute [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
 
-<div class="space-y-4">
+<div class="flex max-h-[calc(100dvh-9rem)] flex-col text-slate-800 dark:text-slate-100">
 
-    <div class="text-sm text-slate-600 dark:text-slate-300">
-        <span class="font-semibold text-slate-800 dark:text-slate-100">Projekt:</span> @ProjectName
+    @* ── Sticky topp: projektinfo ligger kvar vid scroll ──────────────── *@
+    <div class="shrink-0 border-b border-slate-200 pb-2 dark:border-slate-700">
+        <div class="truncate text-sm text-slate-600 dark:text-slate-300" title="@ProjectName">
+            <span class="font-semibold text-slate-800 dark:text-slate-100">Projekt:</span> @ProjectName
+        </div>
     </div>
 
     @if (_loadFailed)
     {
         @* Hela dialogen kunde inte laddas – visa lokalt fel i stället för det globala felet. *@
-        <div class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-3 text-sm text-rose-700 dark:border-rose-900/70 dark:bg-rose-950/40 dark:text-rose-300">
+        <div class="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-3 text-sm text-rose-700 dark:border-rose-900/70 dark:bg-rose-950/40 dark:text-rose-300">
             <div class="font-semibold">Delning och behörighet kunde inte laddas. Försök igen.</div>
             <button type="button"
                     class="mt-2 inline-flex items-center rounded border border-rose-300 bg-white px-2.5 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-100 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-200"
@@ -25,378 +28,409 @@
     }
     else
     {
+    <div class="min-h-0 flex-1 space-y-3 overflow-y-auto pt-3 pr-0.5">
 
-    @* ── Åtkomstöversikt (grupperad, skrivskyddad) ─────────────────── *@
-    <div class="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-950">
-        <button type="button"
-                class="flex w-full items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
-                @onclick="() => _overviewOpen = !_overviewOpen">
-            <span>Åtkomstöversikt</span>
-            <svg class="h-3 w-3 transition-transform @(_overviewOpen ? "rotate-180" : "")" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-            </svg>
-        </button>
-        @if (_overviewOpen)
-        {
-            <div class="mt-2 space-y-3 text-sm">
+        @* ── Åtkomstöversikt (hopfällbar – kompakt som standard) ────────── *@
+        <div class="rounded-lg border border-slate-200 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-950">
+            <button type="button"
+                    class="flex w-full items-center justify-between gap-2 text-left"
+                    aria-expanded="@_overviewOpen"
+                    @onclick="() => _overviewOpen = !_overviewOpen">
+                <span class="shrink-0 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Åtkomstöversikt</span>
+                <span class="flex min-w-0 items-center gap-2">
+                    @if (!_overviewOpen)
+                    {
+                        <span class="truncate text-[11px] text-slate-400">@OverviewSummary()</span>
+                    }
+                    <svg class="h-3 w-3 shrink-0 text-slate-400 transition-transform @(_overviewOpen ? "rotate-180" : "")" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                </span>
+            </button>
+            @if (_overviewOpen)
+            {
+                <div class="mt-2 space-y-2.5 border-t border-slate-100 pt-2 text-sm dark:border-slate-800">
 
-                @if (_overviewPartial)
-                {
-                    <div class="rounded border border-amber-200 bg-amber-50 px-2 py-1.5 text-[11px] text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300">
-                        Åtkomstöversikten kunde inte laddas helt. Vissa avdelningar visas som blandad åtkomst.
-                    </div>
-                }
+                    @if (_overviewPartial)
+                    {
+                        <div class="rounded border border-amber-200 bg-amber-50 px-2 py-1.5 text-[11px] text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300">
+                            Åtkomstöversikten kunde inte laddas helt. Vissa avdelningar visas som blandad åtkomst.
+                        </div>
+                    }
 
-                @* Ägare / ansvariga *@
-                @if (HasOwnerResponsible)
-                {
-                    <div>
-                        <div class="mb-0.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300">Ägare / ansvariga</div>
-                        @if (!string.IsNullOrWhiteSpace(ProjectResponsible))
-                        {
+                    @* Ägare / ansvariga *@
+                    @if (HasOwnerResponsible)
+                    {
+                        <div>
+                            <div class="mb-0.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300">Ägare / ansvariga</div>
                             <div class="text-slate-600 dark:text-slate-300">@ProjectResponsible · Projektansvarig</div>
+                        </div>
+                    }
+
+                    @* Avdelningsåtkomst (projektets egen avdelning) *@
+                    <div>
+                        <div class="mb-0.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300">Avdelningsåtkomst</div>
+                        @if (ProjectDepartmentId is int ownDeptId && ProjectDepartmentName is { } depName)
+                        {
+                            <div class="text-slate-600 dark:text-slate-300">@DeptAccessLine(depName, ownDeptId, null, "Alla tillgängliga kalkyler")</div>
+                        }
+                        else
+                        {
+                            <div class="text-slate-400">Projektet saknar avdelning.</div>
                         }
                     </div>
-                }
 
-                @* Avdelningsåtkomst (projektets egen avdelning) *@
-                <div>
-                    <div class="mb-0.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300">Avdelningsåtkomst</div>
-                    @if (ProjectDepartmentId is int ownDeptId && ProjectDepartmentName is { } depName)
+                    @* Delade personer (grupperade efter åtkomstnivå) *@
+                    @{ var userShares = _shares.Where(s => s.RecipientType == ProjectShareRecipientType.User).ToList(); }
+                    @if (userShares.Count > 0)
                     {
-                        <div class="text-slate-600 dark:text-slate-300">@DeptAccessLine(depName, ownDeptId, null, "Alla tillgängliga kalkyler")</div>
+                        <div>
+                            <div class="mb-0.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300">Delade personer</div>
+                            @{
+                                var canEdit = userShares.Where(s => s.Role == PMRolesConst.Tenant.Manger).ToList();
+                                var canView = userShares.Where(s => s.Role != PMRolesConst.Tenant.Manger).ToList();
+                            }
+                            @if (canEdit.Count > 0)
+                            {
+                                <div class="ml-1 mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Kan ändra</div>
+                                @foreach (var s in canEdit)
+                                {
+                                    <div class="ml-2 text-slate-600 dark:text-slate-300" title="@CalcNamesTooltip(s)">@s.RecipientName · @OverviewCalcText(s)</div>
+                                }
+                            }
+                            @if (canView.Count > 0)
+                            {
+                                <div class="ml-1 mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Kan visa</div>
+                                @foreach (var s in canView)
+                                {
+                                    <div class="ml-2 text-slate-600 dark:text-slate-300" title="@CalcNamesTooltip(s)">@s.RecipientName · @OverviewCalcText(s)</div>
+                                }
+                            }
+                        </div>
+                    }
+
+                    @* Delade avdelningar *@
+                    @{ var deptShares = _shares.Where(s => s.RecipientType == ProjectShareRecipientType.Department).ToList(); }
+                    @if (deptShares.Count > 0)
+                    {
+                        <div>
+                            <div class="mb-0.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300">Delade avdelningar</div>
+                            @foreach (var s in deptShares)
+                            {
+                                <div class="text-slate-600 dark:text-slate-300" title="@CalcNamesTooltip(s)">@DeptAccessLine(s.RecipientName, s.DepartmentId, s.Role, OverviewCalcText(s))</div>
+                            }
+                        </div>
+                    }
+
+                    @if (userShares.Count == 0 && deptShares.Count == 0)
+                    {
+                        <div class="text-[11px] text-slate-400">Ingen extra delning – projektet är bara tillgängligt via avdelningsåtkomst.</div>
+                    }
+                </div>
+            }
+        </div>
+
+        @* ── Delat med (visas FÖRE formuläret "Dela med") ──────────────── *@
+        <div>
+            <div class="mb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Delat med</div>
+            @if (_shares.Count == 0)
+            {
+                <p class="rounded border border-dashed border-slate-300 px-2 py-3 text-center text-xs text-slate-400 dark:border-slate-700">
+                    Projektet är inte delat med någon ännu.
+                </p>
+            }
+            else
+            {
+                <div class="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
+                    <table class="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-700">
+                        <thead class="bg-slate-100 dark:bg-slate-800">
+                            <tr>
+                                <th class="px-2 py-1.5 text-left font-medium text-slate-700 dark:text-slate-200">Mottagare</th>
+                                <th class="px-2 py-1.5 text-left font-medium text-slate-700 dark:text-slate-200">Mottagartyp</th>
+                                <th class="px-2 py-1.5 text-left font-medium text-slate-700 dark:text-slate-200">Åtkomstnivå</th>
+                                <th class="px-2 py-1.5 text-left font-medium text-slate-700 dark:text-slate-200">Kalkyler</th>
+                                <th class="px-2 py-1.5 text-left font-medium text-slate-700 dark:text-slate-200">Källa</th>
+                                <th class="px-2 py-1.5 text-right font-medium text-slate-700 dark:text-slate-200">Åtgärder</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                            @foreach (var s in _shares)
+                            {
+                                var share = s;
+                                <tr class="align-top hover:bg-slate-50 dark:hover:bg-slate-800/60">
+                                    <td class="px-2 py-1.5 text-slate-800 dark:text-slate-200">@share.RecipientName</td>
+                                    <td class="px-2 py-1.5 text-slate-500 dark:text-slate-400">@(share.RecipientType == ProjectShareRecipientType.User ? "Person" : "Avdelning")</td>
+                                    <td class="px-2 py-1.5 text-slate-500 dark:text-slate-400">@AccessLevelLabel(share.Role)</td>
+                                    <td class="px-2 py-1.5 text-slate-600 dark:text-slate-300">
+                                        @if (ShowCalcExpander(share))
+                                        {
+                                            <div class="flex items-center gap-1.5">
+                                                <span>@share.CalculationIds.Count kalkyler</span>
+                                                <button type="button"
+                                                        class="text-[11px] font-semibold text-sky-700 hover:text-sky-900 dark:text-sky-300"
+                                                        @onclick="() => ToggleCalcExpand(share.Id)">
+                                                    @(_expandedCalcShareId == share.Id ? "Dölj" : "Visa")
+                                                </button>
+                                            </div>
+                                            @if (_expandedCalcShareId == share.Id)
+                                            {
+                                                <ul class="mt-1 space-y-0.5">
+                                                    @foreach (var name in CalcNames(share))
+                                                    {
+                                                        <li class="text-[11px] text-slate-500 dark:text-slate-400">@name</li>
+                                                    }
+                                                </ul>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span title="@CalcNamesTooltip(share)">@CalcSummary(share)</span>
+                                        }
+                                    </td>
+                                    <td class="px-2 py-1.5 text-slate-500 dark:text-slate-400">@SourceLabel(share)</td>
+                                    <td class="px-2 py-1.5">
+                                        <div class="flex items-center justify-end gap-1">
+                                            <button type="button"
+                                                    class="inline-flex h-7 items-center rounded border border-sky-600 px-2 text-xs text-sky-600 transition hover:bg-sky-600 hover:text-white dark:border-sky-400 dark:text-sky-300"
+                                                    @onclick="() => EditShareAsync(share)">Ändra</button>
+                                            <button type="button"
+                                                    class="inline-flex h-7 items-center rounded border border-red-600 px-2 text-xs text-red-600 transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-300"
+                                                    @onclick="() => RemoveAsync(share)">Ta bort</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+
+        @* ── Dela med / Ändra delning (tvåkolumnslayout på bred skärm) ──── *@
+        <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/60">
+            <div class="mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                @(_editingId.HasValue ? "Ändra delning" : "Dela med")
+            </div>
+
+            <div class="grid gap-4 md:grid-cols-2">
+
+                @* ── VÄNSTER: mottagare ──────────────────────────────────── *@
+                <div class="space-y-3">
+
+                    @* Mottagartyp *@
+                    <div>
+                        <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Mottagartyp</label>
+                        <div class="inline-flex overflow-hidden rounded-lg border border-slate-300 dark:border-slate-600">
+                            <button type="button"
+                                    disabled="@_editingId.HasValue"
+                                    class="@RecipientTabClass(ProjectShareRecipientType.User)"
+                                    @onclick="() => SetRecipientType(ProjectShareRecipientType.User)">Person</button>
+                            <button type="button"
+                                    disabled="@_editingId.HasValue"
+                                    class="@RecipientTabClass(ProjectShareRecipientType.Department)"
+                                    @onclick="() => SetRecipientType(ProjectShareRecipientType.Department)">Avdelning</button>
+                        </div>
+                    </div>
+
+                    @if (_recipientType == ProjectShareRecipientType.User)
+                    {
+                        @if (_editingId.HasValue)
+                        {
+                            @* Vid ändring är mottagaren låst – endast åtkomstnivå/kalkyler ändras. *@
+                            <div>
+                                <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Person</label>
+                                <div class="rounded-lg border border-slate-300 bg-slate-100 px-2 py-1.5 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200">
+                                    @EditingRecipientName
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div>
+                                <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Filtrera personer efter avdelning</label>
+                                <select class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
+                                        value="@_userFilterDeptId" @onchange="OnUserFilterChanged">
+                                    <option value="0">Alla avdelningar</option>
+                                    @foreach (var d in _departments)
+                                    {
+                                        <option value="@d.Id">@d.Name</option>
+                                    }
+                                    <option value="-1">Utan avdelning</option>
+                                </select>
+                            </div>
+                            <div>
+                                <div class="mb-1 flex items-center justify-between gap-2">
+                                    <label class="text-xs font-medium text-slate-600 dark:text-slate-300">Personer</label>
+                                    @if (_selectedUserIds.Count > 0)
+                                    {
+                                        <span class="text-[10px] font-semibold text-sky-700 dark:text-sky-300">Valda personer (@_selectedUserIds.Count)</span>
+                                    }
+                                </div>
+                                @if (_userOptions.Count == 0)
+                                {
+                                    <p class="rounded border border-dashed border-slate-300 px-2 py-2 text-center text-[11px] text-slate-400 dark:border-slate-700">
+                                        Inga personer i urvalet.
+                                    </p>
+                                }
+                                else
+                                {
+                                    <div class="max-h-40 space-y-0.5 overflow-y-auto rounded border border-slate-300 bg-white p-1 dark:border-slate-600 dark:bg-slate-950">
+                                        @foreach (var u in _userOptions)
+                                        {
+                                            var user = u;
+                                            var blockedAsViewer = _role == PMRolesConst.Tenant.Manger && user.IsViewer;
+                                            var disabled = user.AlreadyDirect || blockedAsViewer;
+                                            var tip = user.AlreadyDirect ? user.AccessNote
+                                                : blockedAsViewer ? "Personen har systemrollen Visare och kan bara få åtkomstnivån Kan visa."
+                                                : user.AccessNote;
+                                            <label class="flex items-center gap-2 rounded px-1.5 py-1 text-sm @(disabled ? "opacity-50" : "hover:bg-slate-50 dark:hover:bg-slate-800")"
+                                                   title="@tip">
+                                                <input type="checkbox"
+                                                       class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 disabled:cursor-not-allowed dark:border-slate-600 dark:bg-slate-800"
+                                                       checked="@_selectedUserIds.Contains(user.Id)"
+                                                       disabled="@disabled"
+                                                       @onchange="e => ToggleUser(user.Id, e.Value is bool b && b)" />
+                                                <span class="min-w-0 flex-1 truncate text-slate-700 dark:text-slate-200">@user.Name</span>
+                                                @if (user.IsViewer)
+                                                {
+                                                    <span class="shrink-0 cursor-help rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+                                                          title="Personen har systemrollen Visare och kan bara få åtkomstnivån Kan visa.">Visare</span>
+                                                }
+                                                @if (!string.IsNullOrWhiteSpace(user.ShortStatus))
+                                                {
+                                                    <span class="shrink-0 text-[10px] text-slate-400" title="@user.AccessNote">@user.ShortStatus</span>
+                                                }
+                                            </label>
+                                        }
+                                    </div>
+                                    @if (_selectedUserIds.Count > 0)
+                                    {
+                                        <div class="mt-1.5 flex max-h-16 flex-wrap gap-1 overflow-y-auto">
+                                            @foreach (var id in _selectedUserIds)
+                                            {
+                                                var pid = id;
+                                                <span class="inline-flex items-center gap-1 rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-medium text-sky-800 dark:bg-sky-950/60 dark:text-sky-200">
+                                                    <span class="max-w-[140px] truncate">@UserName(pid)</span>
+                                                    <button type="button" class="text-sky-600 hover:text-sky-900 dark:text-sky-300" @onclick="() => ToggleUser(pid, false)" aria-label="Ta bort">×</button>
+                                                </span>
+                                            }
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        }
                     }
                     else
                     {
-                        <div class="text-slate-400">Projektet saknar avdelning.</div>
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Välj avdelning</label>
+                            <select class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
+                                    disabled="@_editingId.HasValue"
+                                    value="@_departmentId" @onchange="e => _departmentId = ParseNullableInt(e.Value)">
+                                <option value="">Välj avdelning...</option>
+                                @foreach (var d in _departments)
+                                {
+                                    <option value="@d.Id" disabled="@(DeptOptionDisabled(d.Id))">@d.Name@(DeptOptionSuffix(d.Id))</option>
+                                }
+                            </select>
+                            @if (DuplicateDepartment)
+                            {
+                                <p class="mt-1.5 rounded border border-amber-200 bg-amber-50 px-2 py-1.5 text-[11px] text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300">
+                                    Avdelningen har redan en delning. Använd <span class="font-semibold">Ändra</span> i tabellen ovan.
+                                </p>
+                            }
+                        </div>
                     }
                 </div>
 
-                @* Delade personer (grupperade efter åtkomstnivå) *@
-                @{ var userShares = _shares.Where(s => s.RecipientType == ProjectShareRecipientType.User).ToList(); }
-                @if (userShares.Count > 0)
-                {
+                @* ── HÖGER: åtkomstnivå + kalkyler + åtgärd ───────────────── *@
+                <div class="flex flex-col gap-3">
+
+                    @* Åtkomstnivå i detta projekt *@
                     <div>
-                        <div class="mb-0.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300">Delade personer</div>
-                        @{
-                            var canEdit = userShares.Where(s => s.Role == PMRolesConst.Tenant.Manger).ToList();
-                            var canView = userShares.Where(s => s.Role != PMRolesConst.Tenant.Manger).ToList();
-                        }
-                        @if (canEdit.Count > 0)
-                        {
-                            <div class="ml-1 mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Kan ändra</div>
-                            @foreach (var s in canEdit)
-                            {
-                                <div class="ml-2 text-slate-600 dark:text-slate-300" title="@CalcNamesTooltip(s)">@s.RecipientName · @OverviewCalcText(s)</div>
-                            }
-                        }
-                        @if (canView.Count > 0)
-                        {
-                            <div class="ml-1 mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Kan visa</div>
-                            @foreach (var s in canView)
-                            {
-                                <div class="ml-2 text-slate-600 dark:text-slate-300" title="@CalcNamesTooltip(s)">@s.RecipientName · @OverviewCalcText(s)</div>
-                            }
-                        }
-                    </div>
-                }
-
-                @* Delade avdelningar *@
-                @{ var deptShares = _shares.Where(s => s.RecipientType == ProjectShareRecipientType.Department).ToList(); }
-                @if (deptShares.Count > 0)
-                {
-                    <div>
-                        <div class="mb-0.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300">Delade avdelningar</div>
-                        @foreach (var s in deptShares)
-                        {
-                            <div class="text-slate-600 dark:text-slate-300" title="@CalcNamesTooltip(s)">@DeptAccessLine(s.RecipientName, s.DepartmentId, s.Role, OverviewCalcText(s))</div>
-                        }
-                    </div>
-                }
-
-                @if (userShares.Count == 0 && deptShares.Count == 0)
-                {
-                    <div class="text-[11px] text-slate-400">Ingen extra delning – projektet är bara tillgängligt via avdelningsåtkomst.</div>
-                }
-            </div>
-        }
-    </div>
-
-    @* ── Lägg till / redigera delning ─────────────────────────────── *@
-    <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/60">
-        <div class="mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            @(_editingId.HasValue ? "Ändra delning" : "Dela med")
-        </div>
-
-        <div class="grid gap-3 md:grid-cols-2">
-
-            @* Mottagartyp *@
-            <div>
-                <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Mottagartyp</label>
-                <div class="inline-flex overflow-hidden rounded-lg border border-slate-300 dark:border-slate-600">
-                    <button type="button"
-                            disabled="@_editingId.HasValue"
-                            class="@RecipientTabClass(ProjectShareRecipientType.User)"
-                            @onclick="() => SetRecipientType(ProjectShareRecipientType.User)">Person</button>
-                    <button type="button"
-                            disabled="@_editingId.HasValue"
-                            class="@RecipientTabClass(ProjectShareRecipientType.Department)"
-                            @onclick="() => SetRecipientType(ProjectShareRecipientType.Department)">Avdelning</button>
-                </div>
-            </div>
-
-            @* Åtkomstnivå i detta projekt *@
-            <div>
-                <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Åtkomstnivå i detta projekt</label>
-                <select class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
-                        value="@_role" @onchange="OnRoleChanged">
-                    <option value="@PMRolesConst.Tenant.Viewer">Kan visa</option>
-                    <option value="@PMRolesConst.Tenant.Manger" disabled="@DisableEditOption">Kan ändra</option>
-                </select>
-                @if (DisableEditOption)
-                {
-                    <p class="mt-1 text-[10px] leading-snug text-amber-600 dark:text-amber-400">
-                        Den här personen har systemrollen Visare och kan inte tilldelas ändringsrätt.
-                    </p>
-                }
-                else if (_recipientType == ProjectShareRecipientType.User && !_editingId.HasValue && _role == PMRolesConst.Tenant.Manger && _userOptions.Any(u => u.IsViewer))
-                {
-                    <p class="mt-1 text-[10px] leading-snug text-amber-600 dark:text-amber-400">
-                        Personer med systemrollen Visare kan bara få åtkomstnivån Kan visa och går inte att välja här.
-                    </p>
-                }
-            </div>
-
-            @if (_recipientType == ProjectShareRecipientType.User)
-            {
-                @if (_editingId.HasValue)
-                {
-                    @* Vid ändring är mottagaren låst – endast åtkomstnivå/kalkyler ändras. *@
-                    <div class="md:col-span-2">
-                        <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Person</label>
-                        <div class="rounded-lg border border-slate-300 bg-slate-100 px-2 py-1.5 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200">
-                            @EditingRecipientName
-                        </div>
-                    </div>
-                }
-                else
-                {
-                    <div>
-                        <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Filtrera personer efter avdelning</label>
+                        <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Åtkomstnivå i detta projekt</label>
                         <select class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
-                                value="@_userFilterDeptId" @onchange="OnUserFilterChanged">
-                            <option value="0">Alla avdelningar</option>
-                            @foreach (var d in _departments)
-                            {
-                                <option value="@d.Id">@d.Name</option>
-                            }
-                            <option value="-1">Utan avdelning</option>
+                                value="@_role" @onchange="OnRoleChanged"
+                                title="@(DisableEditOption ? "Personen har systemrollen Visare och kan bara få åtkomstnivån Kan visa." : null)">
+                            <option value="@PMRolesConst.Tenant.Viewer">Kan visa</option>
+                            <option value="@PMRolesConst.Tenant.Manger" disabled="@DisableEditOption">Kan ändra</option>
                         </select>
                     </div>
+
+                    @* Kalkyler *@
                     <div>
-                        <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Personer</label>
-                        @if (_userOptions.Count == 0)
+                        <div class="mb-1 flex items-center justify-between gap-2">
+                            <label class="text-xs font-medium text-slate-600 dark:text-slate-300">Välj kalkyler som ska delas</label>
+                            <button type="button"
+                                    class="text-[11px] font-semibold text-sky-700 hover:text-sky-900 disabled:opacity-40 dark:text-sky-300"
+                                    title="Väljer alla kalkyler som kan delas. Privata kalkyler ingår inte."
+                                    disabled="@(!HasShareableCalcs)"
+                                    @onclick="SelectAllShareable">Välj alla tillgängliga kalkyler</button>
+                        </div>
+
+                        @if (_calcs.Count == 0)
                         {
-                            <p class="rounded border border-dashed border-slate-300 px-2 py-2 text-center text-[11px] text-slate-400 dark:border-slate-700">
-                                Inga personer i urvalet.
+                            <p class="rounded border border-dashed border-slate-300 px-2 py-3 text-center text-xs text-slate-400 dark:border-slate-700">
+                                Det finns inga kalkyler i projektet.
                             </p>
                         }
                         else
                         {
-                            <div class="max-h-40 space-y-0.5 overflow-y-auto rounded border border-slate-300 bg-white p-1 dark:border-slate-600 dark:bg-slate-950">
-                                @foreach (var u in _userOptions)
+                            @if (!HasShareableCalcs)
+                            {
+                                <p class="mb-1 rounded border border-dashed border-slate-300 px-2 py-2 text-center text-[11px] text-slate-400 dark:border-slate-700">
+                                    Inga tillgängliga kalkyler att dela.
+                                </p>
+                            }
+                            <div class="max-h-48 space-y-1 overflow-y-auto rounded border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-950">
+                                @foreach (var c in _calcs)
                                 {
-                                    var user = u;
-                                    var blockedAsViewer = _role == PMRolesConst.Tenant.Manger && user.IsViewer;
-                                    var disabled = user.AlreadyDirect || blockedAsViewer;
-                                    var tip = user.AlreadyDirect ? user.AccessNote
-                                        : blockedAsViewer ? "Den här personen har systemrollen Visare och kan bara få åtkomstnivån Kan visa."
-                                        : user.AccessNote;
-                                    <label class="flex items-center gap-2 rounded px-1.5 py-1 text-sm @(disabled ? "opacity-50" : "hover:bg-slate-50 dark:hover:bg-slate-800")"
-                                           title="@tip">
+                                    var calc = c;
+                                    <label class="flex items-center gap-2 rounded px-1.5 py-1 text-sm @(calc.IsPrivate ? "opacity-60" : "hover:bg-slate-50 dark:hover:bg-slate-800")">
                                         <input type="checkbox"
                                                class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 disabled:cursor-not-allowed dark:border-slate-600 dark:bg-slate-800"
-                                               checked="@_selectedUserIds.Contains(user.Id)"
-                                               disabled="@disabled"
-                                               @onchange="e => ToggleUser(user.Id, e.Value is bool b && b)" />
-                                        <span class="min-w-0 flex-1 truncate text-slate-700 dark:text-slate-200">@user.Name</span>
-                                        @if (user.IsViewer)
+                                               checked="@_selectedCalcIds.Contains(calc.Id)"
+                                               disabled="@calc.IsPrivate"
+                                               @onchange="e => ToggleCalc(calc.Id, e.Value is bool b && b)" />
+                                        <span class="font-mono text-[11px] text-slate-400">V.@(calc.VersionNumber.ToString("D2"))</span>
+                                        <span class="min-w-0 flex-1 truncate text-slate-700 dark:text-slate-200">@calc.Name</span>
+                                        @if (calc.IsPrivate)
                                         {
-                                            <span class="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-400">Visare</span>
-                                        }
-                                        @if (!string.IsNullOrWhiteSpace(user.AccessNote))
-                                        {
-                                            <span class="shrink-0 text-[10px] text-slate-400">@user.AccessNote</span>
+                                            <span class="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">Privat</span>
                                         }
                                     </label>
                                 }
                             </div>
-                            @if (_selectedUserIds.Count > 0)
-                            {
-                                <div class="mt-1.5">
-                                    <div class="mb-0.5 text-[10px] font-medium text-slate-500 dark:text-slate-400">Valda personer (@_selectedUserIds.Count)</div>
-                                    <div class="flex flex-wrap gap-1">
-                                        @foreach (var id in _selectedUserIds)
-                                        {
-                                            var pid = id;
-                                            <span class="inline-flex items-center gap-1 rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-medium text-sky-800 dark:bg-sky-950/60 dark:text-sky-200">
-                                                @UserName(pid)
-                                                <button type="button" class="text-sky-600 hover:text-sky-900 dark:text-sky-300" @onclick="() => ToggleUser(pid, false)" aria-label="Ta bort">×</button>
-                                            </span>
-                                        }
-                                    </div>
-                                </div>
-                            }
+                        }
+
+                        @if (HasShareableCalcs && SelectedShareableCalcCount == 0)
+                        {
+                            <p class="mt-1 text-[11px] text-amber-600 dark:text-amber-400">Välj minst en kalkyl.</p>
                         }
                     </div>
-                }
-            }
-            else
-            {
-                <div class="md:col-span-2">
-                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Välj avdelning</label>
-                    <select class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
-                            disabled="@_editingId.HasValue"
-                            value="@_departmentId" @onchange="e => _departmentId = ParseNullableInt(e.Value)">
-                        <option value="">Välj avdelning...</option>
-                        @foreach (var d in _departments)
+
+                    @* Åtgärd – längst ner till höger i formulärsektionen *@
+                    <div class="mt-auto flex items-center justify-end gap-2 pt-1">
+                        @if (_editingId.HasValue)
                         {
-                            <option value="@d.Id" disabled="@(DeptOptionDisabled(d.Id))">@d.Name@(DeptOptionSuffix(d.Id))</option>
+                            <button type="button"
+                                    class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+                                    @onclick="ResetForm">Avbryt</button>
                         }
-                    </select>
+                        <button type="button"
+                                class="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                disabled="@(!CanSave || _saving)"
+                                title="@(CanSave ? null : SaveDisabledReason)"
+                                @onclick="SaveAsync">
+                            <span aria-hidden="true">@((MarkupString)Icons.PermissionShield)</span>
+                            @(_editingId.HasValue ? "Spara delning" : "Lägg till delning")
+                        </button>
+                    </div>
                 </div>
-            }
-        </div>
-
-        @if (DuplicateDepartment)
-        {
-            <p class="mt-2 rounded border border-amber-200 bg-amber-50 px-2 py-1.5 text-[11px] text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300">
-                Avdelningen har redan en delning för det här projektet. Använd <span class="font-semibold">Ändra</span> i tabellen nedan i stället.
-            </p>
-        }
-
-        @* Kalkyler *@
-        <div class="mt-3">
-            <div class="mb-1 flex items-center justify-between">
-                <label class="text-xs font-medium text-slate-600 dark:text-slate-300">Välj kalkyler som ska delas</label>
-                <button type="button"
-                        class="text-[11px] font-semibold text-sky-700 hover:text-sky-900 disabled:opacity-40 dark:text-sky-300"
-                        title="Väljer alla kalkyler som kan delas. Privata kalkyler ingår inte."
-                        disabled="@(!HasShareableCalcs)"
-                        @onclick="SelectAllShareable">Välj alla tillgängliga kalkyler</button>
             </div>
-
-            @if (_calcs.Count == 0)
-            {
-                <p class="rounded border border-dashed border-slate-300 px-2 py-3 text-center text-xs text-slate-400 dark:border-slate-700">
-                    Det finns inga kalkyler i projektet.
-                </p>
-            }
-            else
-            {
-                @if (!HasShareableCalcs)
-                {
-                    <p class="mb-1 rounded border border-dashed border-slate-300 px-2 py-2 text-center text-[11px] text-slate-400 dark:border-slate-700">
-                        Inga tillgängliga kalkyler att dela.
-                    </p>
-                }
-                <div class="max-h-48 space-y-1 overflow-y-auto rounded border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-950">
-                    @foreach (var c in _calcs)
-                    {
-                        var calc = c;
-                        <label class="flex items-center gap-2 rounded px-1.5 py-1 text-sm @(calc.IsPrivate ? "opacity-60" : "hover:bg-slate-50 dark:hover:bg-slate-800")">
-                            <input type="checkbox"
-                                   class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 disabled:cursor-not-allowed dark:border-slate-600 dark:bg-slate-800"
-                                   checked="@_selectedCalcIds.Contains(calc.Id)"
-                                   disabled="@calc.IsPrivate"
-                                   @onchange="e => ToggleCalc(calc.Id, e.Value is bool b && b)" />
-                            <span class="font-mono text-[11px] text-slate-400">V.@(calc.VersionNumber.ToString("D2"))</span>
-                            <span class="min-w-0 flex-1 truncate text-slate-700 dark:text-slate-200">@calc.Name</span>
-                            @if (calc.IsPrivate)
-                            {
-                                <span class="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">Privat</span>
-                            }
-                        </label>
-                    }
-                </div>
-            }
-
-            @if (HasShareableCalcs && SelectedShareableCalcCount == 0)
-            {
-                <p class="mt-1.5 rounded border border-amber-200 bg-amber-50 px-2 py-1.5 text-[11px] text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300">
-                    Ingen kalkyl vald – välj minst en kalkyl att dela. En delning utan kalkyler sparas inte.
-                </p>
-            }
         </div>
 
-        <div class="mt-3 flex items-center justify-end gap-2">
-            @if (_editingId.HasValue)
-            {
-                <button type="button"
-                        class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
-                        @onclick="ResetForm">Avbryt</button>
-            }
-            <button type="button"
-                    class="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
-                    disabled="@(!CanSave || _saving)"
-                    @onclick="SaveAsync">
-                <span aria-hidden="true">@((MarkupString)Icons.PermissionShield)</span>
-                @(_editingId.HasValue ? "Spara delning" : "Lägg till delning")
-            </button>
-        </div>
     </div>
-
-    @* ── Befintliga delningar ─────────────────────────────────────── *@
-    <div>
-        <div class="mb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Delat med</div>
-        @if (_shares.Count == 0)
-        {
-            <p class="rounded border border-dashed border-slate-300 px-2 py-3 text-center text-xs text-slate-400 dark:border-slate-700">
-                Projektet är inte delat med någon ännu.
-            </p>
-        }
-        else
-        {
-            <div class="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
-                <table class="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-700">
-                    <thead class="bg-slate-100 dark:bg-slate-800">
-                        <tr>
-                            <th class="p-2 text-left font-medium text-slate-700 dark:text-slate-200">Mottagare</th>
-                            <th class="p-2 text-left font-medium text-slate-700 dark:text-slate-200">Mottagartyp</th>
-                            <th class="p-2 text-left font-medium text-slate-700 dark:text-slate-200">Åtkomstnivå</th>
-                            <th class="p-2 text-left font-medium text-slate-700 dark:text-slate-200">Kalkyler</th>
-                            <th class="p-2 text-left font-medium text-slate-700 dark:text-slate-200">Källa</th>
-                            <th class="p-2 text-right font-medium text-slate-700 dark:text-slate-200">Åtgärder</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                        @foreach (var s in _shares)
-                        {
-                            var share = s;
-                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60">
-                                <td class="p-2 text-slate-800 dark:text-slate-200">@share.RecipientName</td>
-                                <td class="p-2 text-slate-500 dark:text-slate-400">@(share.RecipientType == ProjectShareRecipientType.User ? "Person" : "Avdelning")</td>
-                                <td class="p-2 text-slate-500 dark:text-slate-400">@AccessLevelLabel(share.Role)</td>
-                                <td class="p-2 text-slate-600 dark:text-slate-300" title="@CalcNamesTooltip(share)">@CalcSummary(share)</td>
-                                <td class="p-2 text-slate-500 dark:text-slate-400">@SourceLabel(share)</td>
-                                <td class="p-2">
-                                    <div class="flex items-center justify-end gap-1">
-                                        <button type="button"
-                                                class="inline-flex h-7 items-center rounded border border-sky-600 px-2 text-xs text-sky-600 transition hover:bg-sky-600 hover:text-white dark:border-sky-400 dark:text-sky-300"
-                                                @onclick="() => EditShareAsync(share)">Ändra</button>
-                                        <button type="button"
-                                                class="inline-flex h-7 items-center rounded border border-red-600 px-2 text-xs text-red-600 transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-300"
-                                                @onclick="() => RemoveAsync(share)">Ta bort</button>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        }
-    </div>
-
     }
 </div>
 
@@ -429,7 +463,10 @@
     private string _role = PMRolesConst.Tenant.Viewer;
     private readonly HashSet<int> _selectedCalcIds = [];
     private bool _saving;
-    private bool _overviewOpen = true;
+    // Åtkomstöversikten är hopfälld som standard (kompakt) – sammanfattning visas i rubrikraden.
+    private bool _overviewOpen;
+    // Vilken delnings kalkyler som är expanderade i "Delat med"-tabellen (null = ingen).
+    private int? _expandedCalcShareId;
 
     // Loading/error state
     private bool _loadFailed;     // whole dialog couldn't load
@@ -442,6 +479,22 @@
         ProjectDepartmentId is int id ? _departments.FirstOrDefault(d => d.Id == id)?.Name : null;
 
     private int ShareableCalcCount => _calcs.Count(c => !c.IsPrivate);
+
+    // Kort sammanfattning för den hopfällda åtkomstöversikten.
+    private string OverviewSummary()
+    {
+        var parts = new List<string>();
+        if (ProjectDepartmentName is { } dn)
+            parts.Add(dn);
+
+        var users = _shares.Count(s => s.RecipientType == ProjectShareRecipientType.User);
+        var depts = _shares.Count(s => s.RecipientType == ProjectShareRecipientType.Department);
+        if (users > 0) parts.Add($"{users} delade personer");
+        if (depts > 0) parts.Add($"{depts} delade avdelningar");
+        if (users == 0 && depts == 0) parts.Add("Endast avdelningsåtkomst");
+
+        return string.Join(" · ", parts);
+    }
 
     // Åtkomstöversiktens kalkyltext per delning: "Alla tillgängliga kalkyler" eller "n/total kalkyler".
     private string OverviewCalcText(ProjectShareListItemDTO share)
@@ -484,6 +537,25 @@
         (_recipientType == ProjectShareRecipientType.User
             ? _selectedUserIds.Count > 0
             : _departmentId is > 0);
+
+    // Orsak till varför "Lägg till delning" är inaktiv – visas som tooltip på knappen.
+    private string? SaveDisabledReason
+    {
+        get
+        {
+            if (_recipientType == ProjectShareRecipientType.User && _selectedUserIds.Count == 0)
+                return "Välj minst en person.";
+            if (_recipientType == ProjectShareRecipientType.Department && _departmentId is not > 0)
+                return "Välj en avdelning.";
+            if (DuplicateDepartment)
+                return "Avdelningen har redan en delning. Använd Ändra i tabellen.";
+            if (SelectedShareableCalcCount == 0)
+                return "Välj minst en kalkyl.";
+            if (string.IsNullOrWhiteSpace(_role))
+                return "Välj åtkomstnivå.";
+            return null;
+        }
+    }
 
     private string UserName(int id) =>
         _userNameCache.TryGetValue(id, out var n) ? n : $"#{id}";
@@ -580,6 +652,9 @@
         else _selectedUserIds.Remove(id);
     }
 
+    private void ToggleCalcExpand(int shareId) =>
+        _expandedCalcShareId = _expandedCalcShareId == shareId ? null : shareId;
+
     private async Task ReloadUserOptionsAsync()
     {
         List<UserAuthModel> raw;
@@ -647,29 +722,34 @@
             ? (string.IsNullOrWhiteSpace(u.Email) ? u.Username : u.Email)
             : u.FullName.Trim();
 
-        // Why the recipient already has access — shown inline so admins don't create duplicates.
+        // Why the recipient already has access — short status badge + full text in tooltip so admins
+        // don't create duplicates. (UI text only; no permission logic here.)
         string? note = null;
+        string? shortStatus = null;
         bool alreadyDirect = false;
 
         var direct = _shares.FirstOrDefault(s => s.RecipientType == ProjectShareRecipientType.User && s.UserId == id);
         if (direct is not null)
         {
             note = $"Redan delad som {AccessLevelLabel(direct.Role)}";
+            shortStatus = "Redan delad";
             alreadyDirect = true;
         }
         else if (u.DepartmentId is int own && ProjectDepartmentId.HasValue && own == ProjectDepartmentId.Value)
         {
             // In the project's own department — no separate share needed.
             note = "Har redan avdelningsåtkomst";
+            shortStatus = "Avdelningsåtkomst";
         }
         else if (u.DepartmentId is int dep &&
                  _shares.Any(s => s.RecipientType == ProjectShareRecipientType.Department && s.DepartmentId == dep))
         {
             var depName = _departments.FirstOrDefault(d => d.Id == dep)?.Name ?? "avdelning";
             note = $"Har redan åtkomst via avdelning {depName}";
+            shortStatus = "Avdelningsåtkomst";
         }
 
-        return new UserOption { Id = id, Name = name, Role = u.Role ?? string.Empty, DepartmentId = u.DepartmentId, AccessNote = note, AlreadyDirect = alreadyDirect };
+        return new UserOption { Id = id, Name = name, Role = u.Role ?? string.Empty, DepartmentId = u.DepartmentId, AccessNote = note, ShortStatus = shortStatus, AlreadyDirect = alreadyDirect };
     }
 
     private bool DepartmentAlreadyShared(int deptId) =>
@@ -824,6 +904,21 @@
     }
 
     // ── "Delat med" table helpers ────────────────────────────────────
+    // Visa "n kalkyler · Visa" bara när det finns fler än en kalkyl och inte alla delbara ingår.
+    private bool ShowCalcExpander(ProjectShareListItemDTO share)
+    {
+        var n = share.CalculationIds.Count;
+        if (n <= 1) return false;
+        if (ShareableCalcCount > 0 && n >= ShareableCalcCount) return false; // "Alla tillgängliga kalkyler"
+        return true;
+    }
+
+    private IEnumerable<string> CalcNames(ProjectShareListItemDTO share) =>
+        share.CalculationIds
+            .Select(id => _calcs.FirstOrDefault(c => c.Id == id))
+            .Where(c => c is not null)
+            .Select(c => $"V.{c!.VersionNumber:D2} {c.Name}");
+
     private string CalcSummary(ProjectShareListItemDTO share)
     {
         var ids = share.CalculationIds;
@@ -841,11 +936,7 @@
     private string? CalcNamesTooltip(ProjectShareListItemDTO share)
     {
         if (share.CalculationIds.Count <= 1) return null;
-        var names = share.CalculationIds
-            .Select(id => _calcs.FirstOrDefault(c => c.Id == id))
-            .Where(c => c is not null)
-            .Select(c => $"V.{c!.VersionNumber:D2} {c.Name}");
-        return string.Join("\n", names);
+        return string.Join("\n", CalcNames(share));
     }
 
     // Avdelningsåtkomstrad med blandad åtkomst: "Namn · 5 kan ändra · 3 kan visa · <kalkyltext>".
@@ -900,6 +991,7 @@
         public string Role { get; init; } = string.Empty;
         public int? DepartmentId { get; init; }
         public string? AccessNote { get; init; }
+        public string? ShortStatus { get; init; }
         public bool AlreadyDirect { get; init; }
         public bool IsViewer => Role == PMRolesConst.Tenant.Viewer;
     }

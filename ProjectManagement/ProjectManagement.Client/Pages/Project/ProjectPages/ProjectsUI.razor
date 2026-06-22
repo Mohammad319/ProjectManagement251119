@@ -434,7 +434,7 @@
                                             <input type="checkbox"
                                                    class="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800"
                                                    checked="@IsProjectColumnVisible(colKey)"
-                                                   @onchange="async e => { _projectColumns[colKey] = e.Value is bool b && b; await ViewPreference.SaveColumnsAsync(_projectColumns); }" />
+                                                   @onchange="async e => await ToggleProjectColumnAsync(colKey, e.Value)" />
                                             <span>@col.Label</span>
                                         </label>
                                     }
@@ -1319,19 +1319,14 @@
 
     // ── Sparade kolumnvyer (personliga, endast projektlistans scope) ──
     // A column view = which columns are shown. It is completely separate from
-    // filters: applying a view never changes the filter, and applying a filter
-    // never changes the view.
-    private List<SavedColumnView> _savedColumnViews = [];
+    // filters. The logic now lives in the shared library (MhdColumnViewManager,
+    // see _columnView); the members below stay as thin pass-throughs so the markup
+    // is unchanged. Only the prompt UI state stays local to this component.
     private bool _saveViewPromptOpen;
     private string _saveViewName = string.Empty;
     private string? _saveViewError;
 
-    private const string StandardColumnViewName = "Standard";
-
-    // The column view the user last applied (Standard or a saved view's name). Kept
-    // even after manual column edits so we can show "<name> · ändrad". Session-only:
-    // after a reload the label falls back to signature detection. Null = never picked.
-    private string? _selectedColumnViewName;
+    private IReadOnlyList<MhdSavedColumnView> _savedColumnViews => _columnView.SavedViews;
 
     private void OpenSaveViewPrompt()
     {
@@ -1340,137 +1335,53 @@
         _saveViewError = null;
     }
 
-    // Signature of the columns visible right now, used for "is this view active?"
-    // and duplicate detection.
-    private string CurrentColumnSignature => SavedColumnView.BuildSignature(_projectColumns);
+    private bool IsStandardColumnViewActive => _columnView.IsStandardViewActive;
 
-    private bool IsStandardColumnViewActive =>
-        CurrentColumnSignature == SavedColumnView.BuildSignature(DefaultProjectColumns);
+    private bool IsColumnViewActive(MhdSavedColumnView view) => _columnView.IsViewActive(view);
 
-    private bool IsColumnViewActive(SavedColumnView view) =>
-        CurrentColumnSignature == view.ContentSignature();
+    private bool CanSaveCurrentColumnView => _columnView.CanSaveCurrentView;
 
-    // The first saved view whose visible columns match the current layout, or null.
-    private SavedColumnView? MatchingSavedColumnView
+    private string? SaveColumnViewDisabledReason => _columnView.SaveDisabledReason;
+
+    // Applying a view also closes the open menus/panel (UI concern kept local).
+    private void CloseColumnViewMenus()
     {
-        get
-        {
-            var signature = CurrentColumnSignature;
-            return _savedColumnViews.FirstOrDefault(v => v.ContentSignature() == signature);
-        }
-    }
-
-    // "Spara aktuell kolumnvy" is disabled when the current layout already matches
-    // a saved view OR the built-in Standard view (nothing new to save).
-    private bool CanSaveCurrentColumnView =>
-        MatchingSavedColumnView is null && !IsStandardColumnViewActive;
-
-    private string? SaveColumnViewDisabledReason =>
-        MatchingSavedColumnView is { } match ? $"Denna kolumnvy är redan sparad: {match.Name}"
-        : IsStandardColumnViewActive ? "Denna kolumnvy är redan sparad: Standard"
-        : null;
-
-    private async Task ApplyColumnLayoutAsync(IReadOnlyDictionary<string, bool> columns, string? viewName)
-    {
-        // Only touch known column keys; never add/remove columns the table doesn't know.
-        foreach (var key in _projectColumns.Keys.ToList())
-            _projectColumns[key] = columns.TryGetValue(key, out var visible) && visible;
-
-        _selectedColumnViewName = viewName;
-        await ViewPreference.SaveColumnsAsync(_projectColumns);
         _viewMenuOpen = false;
         _showColumnPanel = false;
         _saveViewPromptOpen = false;
     }
 
-    private Task ApplyStandardColumnViewAsync() => ApplyColumnLayoutAsync(DefaultProjectColumns, StandardColumnViewName);
-
-    private Task ApplySavedColumnViewAsync(SavedColumnView view) => ApplyColumnLayoutAsync(view.Columns, view.Name);
-
-    // The live layout no longer exactly matches the view the user picked → "<name> · ändrad".
-    private bool IsSelectedColumnViewModified
+    private async Task ApplyStandardColumnViewAsync()
     {
-        get
-        {
-            if (_selectedColumnViewName is null)
-                return false;
-            if (_selectedColumnViewName == StandardColumnViewName)
-                return !IsStandardColumnViewActive;
-            var view = _savedColumnViews.FirstOrDefault(v => v.Name == _selectedColumnViewName);
-            return view is not null && !IsColumnViewActive(view);
-        }
+        await _columnView.ApplyStandardViewAsync();
+        CloseColumnViewMenus();
     }
 
-    // What to show as the active column view: the picked view (with "· ändrad" when
-    // edited) or, when nothing is picked this session, a label derived purely from
-    // the current visible columns.
-    private string ActiveColumnViewLabel
+    private async Task ApplySavedColumnViewAsync(MhdSavedColumnView view)
     {
-        get
-        {
-            if (_selectedColumnViewName is { } name &&
-                (name == StandardColumnViewName || _savedColumnViews.Any(v => v.Name == name)))
-            {
-                return IsSelectedColumnViewModified ? $"{name} · ändrad" : name;
-            }
-            return SignatureColumnViewLabel;
-        }
+        await _columnView.ApplySavedViewAsync(view);
+        CloseColumnViewMenus();
     }
 
-    private string SignatureColumnViewLabel =>
-        IsStandardColumnViewActive ? StandardColumnViewName
-        : MatchingSavedColumnView?.Name ?? "Anpassad vy";
+    private bool IsSelectedColumnViewModified => _columnView.IsSelectedViewModified;
+
+    private string ActiveColumnViewLabel => _columnView.ActiveViewLabel;
 
     private async Task SaveCurrentColumnViewAsync()
     {
-        var name = _saveViewName.Trim();
-        if (name.Length == 0)
+        var error = await _columnView.SaveCurrentViewAsync(_saveViewName);
+        if (error is not null)
         {
-            _saveViewError = "Namn krävs.";
-            return;
-        }
-        if (string.Equals(name, StandardColumnViewName, StringComparison.CurrentCultureIgnoreCase))
-        {
-            _saveViewError = "Namnet Standard är reserverat. Välj ett annat namn.";
-            return;
-        }
-        if (_savedColumnViews.Any(v => string.Equals(v.Name, name, StringComparison.CurrentCultureIgnoreCase)))
-        {
-            _saveViewError = "En kolumnvy med detta namn finns redan. Välj ett annat namn.";
+            _saveViewError = error;
             return;
         }
 
-        var view = new SavedColumnView
-        {
-            Name = name,
-            Columns = new Dictionary<string, bool>(_projectColumns)
-        };
-        if (_savedColumnViews.Any(v => v.ContentSignature() == view.ContentSignature()))
-        {
-            _saveViewError = "Denna kolumnvy är redan sparad.";
-            return;
-        }
-
-        _savedColumnViews.Add(view);
-        _savedColumnViews = _savedColumnViews
-            .OrderBy(v => v.Name, StringComparer.CurrentCultureIgnoreCase)
-            .ToList();
-        await SavedColumnViewStorage.SaveAllAsync(ListSavedColumnViewStorage.ProjectListScope, _savedColumnViews);
-
-        // The just-saved layout is now the active view (clean, not modified).
-        _selectedColumnViewName = name;
         _saveViewPromptOpen = false;
         _saveViewName = string.Empty;
         _saveViewError = null;
     }
 
-    private async Task DeleteSavedColumnViewAsync(SavedColumnView view)
-    {
-        _savedColumnViews.Remove(view);
-        if (_selectedColumnViewName == view.Name)
-            _selectedColumnViewName = null;
-        await SavedColumnViewStorage.SaveAllAsync(ListSavedColumnViewStorage.ProjectListScope, _savedColumnViews);
-    }
+    private Task DeleteSavedColumnViewAsync(MhdSavedColumnView view) => _columnView.DeleteViewAsync(view);
 
     private ColumnFilterState PF(string key)
     {
@@ -1818,7 +1729,13 @@
             ["updatedAt"]         = false
         };
 
-    private readonly Dictionary<string, bool> _projectColumns = new(DefaultProjectColumns);
+    // Shared column-view manager: owns visible columns + saved views and persists
+    // through ProjectListColumnViewStore. Created in OnInitializedAsync.
+    private MhdColumnViewManager _columnView = default!;
+
+    // Live visible-column map, owned by the manager (same reference, so existing
+    // direct reads/writes keep working).
+    private Dictionary<string, bool> _projectColumns => _columnView.Columns;
 
     private List<MhdColumnPickerItem> ProjectColumnOptions => new()
     {
@@ -1893,19 +1810,22 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var saved = await ViewPreference.LoadColumnsAsync();
-        if (saved is not null)
-            foreach (var (k, v) in saved)
-                if (_projectColumns.ContainsKey(k))
-                    _projectColumns[k] = v;
-
-        // Radnummer visas alltid som standard (även om en äldre sparad vy saknar/döljer den).
-        _projectColumns["rowNumber"] = true;
+        // The manager loads persisted visible columns (known keys only) and saved
+        // views, and forces "rowNumber" on (radnummer visas alltid som standard).
+        _columnView = new MhdColumnViewManager(
+            new ProjectManagement.Client.Services.Folder.ListColumnViewStore(
+                ProjectManagement.Client.Services.Folder.ListSavedColumnViewStorage.ProjectListScope,
+                ViewPreference.LoadColumnsAsync,
+                ViewPreference.SaveColumnsAsync,
+                SavedColumnViewStorage),
+            DefaultProjectColumns,
+            ProjectManagement.Client.Services.Folder.ListColumnViewLabels.Swedish,
+            alwaysVisibleKeys: new[] { "rowNumber" });
+        await _columnView.InitializeAsync();
 
         _columnWidths = await ViewPreference.LoadColumnWidthsAsync() ?? new();
 
         _savedProjectFilters = await SavedFilterStorage.LoadAsync(ListSavedFilterStorage.ProjectListScope);
-        _savedColumnViews = await SavedColumnViewStorage.LoadAsync(ListSavedColumnViewStorage.ProjectListScope);
     }
 
     protected override void OnInitialized()
@@ -1921,8 +1841,12 @@
 
     private void ToastChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);
 
-    private bool IsProjectColumnVisible(string key) =>
-        _projectColumns.TryGetValue(key, out var visible) && visible;
+    private bool IsProjectColumnVisible(string key) => _columnView.IsColumnVisible(key);
+
+    // Toggle one column from the column-picker checkbox (persists; keeps the active
+    // view name so a manual edit shows as "<view> · ändrad").
+    private Task ToggleProjectColumnAsync(string key, object? value) =>
+        _columnView.SetColumnVisibleAsync(key, value is bool b && b);
 
     // The radnummer column (when shown) is the first frozen column at left-0 (w-12).
     // Shift the following frozen columns (code, name) right so they don't overlap it.
