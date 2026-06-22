@@ -22,6 +22,11 @@
 @inject ProjectManagement.Client.Services.Folder.ListSavedFilterStorage SavedFilterStorage
 @inject ProjectManagement.Client.Services.Folder.ListSavedColumnViewStorage SavedColumnViewStorage
 
+@{
+    // Reset the per-render filter+sort memo so SortedProjectsSnapshot is rebuilt exactly
+    // once this render (and never serves data left over from a previous render).
+    _sortedSnapshot = null;
+}
 <div class="flex h-full min-h-0 flex-col gap-1 overflow-hidden px-1 pb-1">
     @if (_contentMode == ContentModeCalculations)
     {
@@ -584,19 +589,19 @@
                             draggable="true">
                             @if (IsProjectColumnVisible("rowNumber"))
                             {
-                                <td class="sticky left-0 z-[2] w-12 whitespace-nowrap bg-white px-2 py-2 text-right font-mono text-[11px] text-slate-400 group-hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-500 dark:group-hover:bg-slate-900/80 @(isProjectSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
+                                <td class="w-12 whitespace-nowrap bg-white px-2 py-2 text-right font-mono text-[11px] text-slate-400 group-hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-500 dark:group-hover:bg-slate-900/80 @(isProjectSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
                                     @rowNumber
                                 </td>
                             }
                             @if (IsProjectColumnVisible("code"))
                             {
-                                <td class="sticky @CodeStickyLeftClass z-[2] w-28 whitespace-nowrap bg-white px-3 py-2 font-mono text-[11px] text-slate-500 group-hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-400 dark:group-hover:bg-slate-900/80 @(isProjectSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
+                                <td class="w-28 whitespace-nowrap bg-white px-3 py-2 font-mono text-[11px] text-slate-500 group-hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-400 dark:group-hover:bg-slate-900/80 @(isProjectSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
                                     @(string.IsNullOrWhiteSpace(project.Code) ? "-" : project.Code)
                                 </td>
                             }
                             @if (IsProjectColumnVisible("name"))
                             {
-                                <td class="sticky @NameStickyLeftClass z-[2] max-w-80 border-r border-slate-200 bg-white px-3 py-2 group-hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:group-hover:bg-slate-900/80 @(isProjectSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
+                                <td class="max-w-80 border-r border-slate-200 bg-white px-3 py-2 group-hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:group-hover:bg-slate-900/80 @(isProjectSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
                                     <div class="flex min-w-0 items-center gap-2">
                                         <HoverTooltip Text="@project.Name" Class="truncate font-semibold text-slate-800 dark:text-slate-100">
                                             <span class="truncate">@project.Name</span>
@@ -873,7 +878,7 @@
     private int _currentPage = 1;
     private const string ProjPaginationBtnCls = "inline-flex h-6 w-6 items-center justify-center rounded border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-35 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800";
 
-    private int ActiveProjectFilterCount => _projColFilters.Values.Count(f => f.IsActive);
+    private int ActiveProjectFilterCount => _filter.ActiveCount;
     private int ViewBadgeCount => _contentMode == ContentModeCalculations ? 1 : 0;
 
     private void FirstPage() => _currentPage = 1;
@@ -916,78 +921,35 @@
         ["shared"]               = new() { Type = ColumnFilterType.Dropdown },
     };
 
-    private bool HasActiveProjectFilters => _projColFilters.Values.Any(f => f.IsActive);
+    // Shared filter management (active/clear, hidden-column notice, saved filters).
+    // The _projColFilters dictionary above stays host-owned (the FilteredProjects switch
+    // and PF() read it directly); this layers the identical logic on top. See ListColumnFilterController.
+    private ListColumnFilterController _filter = default!;
 
-    private void ClearProjectFilters()
-    {
-        foreach (var f in _projColFilters.Values) f.Clear();
-        _currentPage = 1;
-    }
+    private bool HasActiveProjectFilters => _filter.HasActive;
 
-    private void ClearSingleProjectFilter(string key)
-    {
-        _projColFilters[key].Clear();
-        _currentPage = 1;
-    }
+    private void ClearProjectFilters() => _filter.Clear();
+
+    private void ClearSingleProjectFilter(string key) => _filter.ClearSingle(key);
 
     private void OnProjectColumnFilterChanged() => _currentPage = 1;
 
-    // ── Dolda filterkolumner ────────────────────────────────
-    // Filter keys map 1:1 to column keys, so an active filter on a hidden column
-    // still works but is invisible. We surface that and offer to reveal the columns
-    // WITHOUT touching the filter itself.
-    private IEnumerable<string> HiddenActiveFilterColumnKeys =>
-        _projColFilters
-            .Where(kv => kv.Value.IsActive && _projectColumns.ContainsKey(kv.Key) && !IsProjectColumnVisible(kv.Key))
-            .Select(kv => kv.Key);
+    private bool HasHiddenActiveFilterColumns => _filter.HasHiddenActiveColumns;
 
-    private bool HasHiddenActiveFilterColumns => HiddenActiveFilterColumnKeys.Any();
-
-    private string HiddenActiveFilterColumnsLabel =>
-        string.Join(", ", HiddenActiveFilterColumnKeys.Select(GetProjectColumnLabel));
+    private string HiddenActiveFilterColumnsLabel => _filter.HiddenColumnsLabel;
 
     private string GetProjectColumnLabel(string key) =>
         ProjectColumnOptions.FirstOrDefault(c => c.Key == key)?.Label ?? key;
 
-    // ── Flytande notice om dold filterkolumn ────────────────
-    // Signaturen är mängden dolda filterkolumner. När den ändras (annat filter,
-    // annan kolumnvy) skiljer den sig från den senast stängda och notisen visas
-    // igen automatiskt. X stänger bara notisen — filter och kolumnvy rörs inte.
-    private string? _dismissedHiddenFilterSignature;
+    private bool ShowHiddenFilterNotice => _filter.ShouldShowNotice(_filterMenuOpen);
 
-    private string HiddenFilterColumnSignature =>
-        string.Join("|", HiddenActiveFilterColumnKeys.OrderBy(k => k, StringComparer.Ordinal));
+    private string HiddenFilterColumnTitle => _filter.HiddenColumnsTitle;
 
-    private bool ShowHiddenFilterNotice =>
-        HasHiddenActiveFilterColumns && !_filterMenuOpen &&
-        _dismissedHiddenFilterSignature != HiddenFilterColumnSignature;
+    private string HiddenFilterColumnHelp => _filter.HiddenColumnsHelp;
 
-    private string HiddenFilterColumnTitle =>
-        HiddenActiveFilterColumnKeys.Count() > 1
-            ? $"Dolda filterkolumner: {HiddenActiveFilterColumnsLabel}"
-            : $"Dold filterkolumn: {HiddenActiveFilterColumnsLabel}";
+    private void DismissHiddenFilterNotice() => _filter.DismissNotice();
 
-    private string HiddenFilterColumnHelp =>
-        HiddenActiveFilterColumnKeys.Count() > 1
-            ? "Aktuellt filter använder dolda kolumner."
-            : "Aktuellt filter använder en dold kolumn.";
-
-    private void DismissHiddenFilterNotice() =>
-        _dismissedHiddenFilterSignature = HiddenFilterColumnSignature;
-
-    // Make the hidden columns used by active filters visible. Only the column layout
-    // changes (counts as a manual edit of the current view); the filter is untouched.
-    private async Task RevealFilterColumnsAsync()
-    {
-        foreach (var key in HiddenActiveFilterColumnKeys.ToList())
-            if (_projectColumns.ContainsKey(key))
-                _projectColumns[key] = true;
-
-        // Kolumnerna är synliga nu → notisen försvinner. Nollställ stängt-läget så
-        // att en framtida dold kolumn visar notisen igen.
-        _dismissedHiddenFilterSignature = null;
-        await ViewPreference.SaveColumnsAsync(_projectColumns);
-    }
+    private Task RevealFilterColumnsAsync() => _filter.RevealColumnsAsync();
 
     // ── Rubrik (en rad) ─────────────────────────────────────
     private string ProjectListPlaceName =>
@@ -999,7 +961,7 @@
         {
             var total = BaseProjects.Count();
             if (HasActiveProjectFilters)
-                return $" · filtrerat urval · {FilteredProjects.Count()} av {total} {CalcResource.project}";
+                return $" · filtrerat urval · {SortedProjectsSnapshot.Count} av {total} {CalcResource.project}";
 
             var wholeDepartment = IsDepartmentScope ? " · hela avdelningen" : string.Empty;
             return $"{wholeDepartment} · {total} {CalcResource.project}";
@@ -1009,7 +971,7 @@
     private string ProjectHeaderText => $"Projekt i {ProjectListPlaceName}{ProjectHeaderMeta}";
 
     // ── Sparade filter (personliga, endast projektlistans scope) ──
-    private List<SavedListFilter> _savedProjectFilters = [];
+    private List<SavedListFilter> _savedProjectFilters => _filter.Saved;
     private bool _saveFilterPromptOpen;
     private string _saveFilterName = string.Empty;
     private string? _saveFilterError;
@@ -1028,61 +990,19 @@
         _saveFilterError = null;
     }
 
-    // Snapshot of the current list state as a (still unnamed) saved filter. Shared by
-    // both the save action and the duplicate-detection so they compare identical data.
-    private SavedListFilter BuildCurrentProjectFilter(string name = "") => new()
-    {
-        Name = name,
-        SortColumn = string.IsNullOrEmpty(_sort.Column) ? null : _sort.Column,
-        SortAscending = _sort.Ascending,
-        Filters = _projColFilters
-            .Where(kv => kv.Value.IsActive)
-            .ToDictionary(kv => kv.Key, kv => SavedColumnFilter.FromState(kv.Value))
-    };
-
-    // The first saved filter whose definition matches the current list state, or null.
-    // Matching is by normalized content (not name), so a manually rebuilt filter is
-    // recognised too. If old data holds several identical filters, the first wins.
-    private SavedListFilter? MatchingSavedProjectFilter
-    {
-        get
-        {
-            if (!HasActiveProjectFilters) return null;
-            var signature = BuildCurrentProjectFilter().ContentSignature();
-            return _savedProjectFilters.FirstOrDefault(f => f.ContentSignature() == signature);
-        }
-    }
+    private SavedListFilter? MatchingSavedProjectFilter => _filter.Matching;
 
     // "Spara aktuellt filter" is only enabled for a non-empty filter that isn't already saved.
-    private bool CanSaveCurrentProjectFilter => HasActiveProjectFilters && MatchingSavedProjectFilter is null;
+    private bool CanSaveCurrentProjectFilter => _filter.CanSave;
 
     private async Task SaveCurrentProjectFilterAsync()
     {
-        var name = _saveFilterName.Trim();
-        if (name.Length == 0)
+        var error = await _filter.SaveAsync(_saveFilterName);
+        if (error is not null)
         {
-            _saveFilterError = "Namn krävs.";
+            _saveFilterError = error;
             return;
         }
-        if (_savedProjectFilters.Any(f => string.Equals(f.Name, name, StringComparison.CurrentCultureIgnoreCase)))
-        {
-            _saveFilterError = "Ett filter med detta namn finns redan. Välj ett annat namn.";
-            return;
-        }
-
-        var filter = BuildCurrentProjectFilter(name);
-        var signature = filter.ContentSignature();
-        if (_savedProjectFilters.Any(f => f.ContentSignature() == signature))
-        {
-            _saveFilterError = "Detta filter är redan sparat.";
-            return;
-        }
-
-        _savedProjectFilters.Add(filter);
-        _savedProjectFilters = _savedProjectFilters
-            .OrderBy(f => f.Name, StringComparer.CurrentCultureIgnoreCase)
-            .ToList();
-        await SavedFilterStorage.SaveAllAsync(ListSavedFilterStorage.ProjectListScope, _savedProjectFilters);
 
         _saveFilterPromptOpen = false;
         _saveFilterName = string.Empty;
@@ -1091,33 +1011,12 @@
 
     private Task ApplyProjectSavedFilterAsync(SavedListFilter saved)
     {
-        foreach (var f in _projColFilters.Values) f.Clear();
-
-        foreach (var (key, savedFilter) in saved.Filters)
-        {
-            if (_projColFilters.TryGetValue(key, out var state) && state.Type == savedFilter.Type)
-                savedFilter.ApplyTo(state);
-        }
-
-        if (!string.IsNullOrEmpty(saved.SortColumn))
-        {
-            _sort.Column = saved.SortColumn;
-            _sort.Ascending = saved.SortAscending;
-        }
-
-        _currentPage = 1;
-        // Ett nyss valt sparat filter ska alltid kunna visa dold-kolumn-notisen,
-        // även om samma kolumner var dolda och notisen tidigare stängdes.
-        _dismissedHiddenFilterSignature = null;
+        _filter.Apply(saved);
         CloseProjectFilterMenu();
         return Task.CompletedTask;
     }
 
-    private async Task DeleteProjectSavedFilterAsync(SavedListFilter saved)
-    {
-        _savedProjectFilters.Remove(saved);
-        await SavedFilterStorage.SaveAllAsync(ListSavedFilterStorage.ProjectListScope, _savedProjectFilters);
-    }
+    private Task DeleteProjectSavedFilterAsync(SavedListFilter saved) => _filter.DeleteAsync(saved);
 
     // ── Sparade kolumnvyer (personliga, endast projektlistans scope) ──
     // A column view = which columns are shown, separate from filters. The logic
@@ -1376,13 +1275,20 @@
         }
     }
 
+    // Materialized once per render (the memo is cleared at the top of the markup), so the
+    // filter+sort pipeline runs a single time even though several render-path consumers read
+    // it: the row-number map, the table's Items, the header count and the pager range. Event
+    // handlers that need the freshest data keep using the live SortedProjects instead.
+    private List<ListProjectMVVM>? _sortedSnapshot;
+    private List<ListProjectMVVM> SortedProjectsSnapshot => _sortedSnapshot ??= SortedProjects.ToList();
+
     private IEnumerable<ListProjectMVVM> PagedProjects
     {
         get
         {
-            var sorted = SortedProjects;
+            var sorted = SortedProjectsSnapshot;
             if (_pageSize == 0) return sorted;
-            var total = sorted.Count();
+            var total = sorted.Count;
             var maxPage = (int)Math.Ceiling((double)total / _pageSize);
             if (maxPage < 1) maxPage = 1;
             if (_currentPage > maxPage) _currentPage = maxPage;
@@ -1539,13 +1445,28 @@
             DefaultProjectColumns,
             ProjectManagement.Client.Services.Folder.ListColumnViewLabels.Swedish,
             alwaysVisibleKeys: new[] { "rowNumber" });
+
+        // Created before the first await so it is non-null on the first render (the
+        // markup reads HasActiveProjectFilters etc.). Saved filters load just below.
+        _filter = new ListColumnFilterController(
+            _projColFilters,
+            SavedFilterStorage,
+            ListSavedFilterStorage.ProjectListScope,
+            _sort,
+            columnExists: key => _projectColumns.ContainsKey(key),
+            isColumnVisible: IsProjectColumnVisible,
+            columnLabel: GetProjectColumnLabel,
+            revealColumn: key => _projectColumns[key] = true,
+            persistColumns: () => ViewPreference.SaveColumnsAsync(_projectColumns),
+            onChanged: () => _currentPage = 1);
+
         await _columnView.InitializeAsync();
 
         _columnWidths = new ListColumnWidthController(
             JS, ViewPreference.LoadColumnWidthsAsync, ViewPreference.SaveColumnWidthsAsync);
         await _columnWidths.LoadAsync();
 
-        _savedProjectFilters = await SavedFilterStorage.LoadAsync(ListSavedFilterStorage.ProjectListScope);
+        await _filter.LoadSavedAsync();
     }
 
     protected override void OnInitialized()
@@ -1588,7 +1509,7 @@
             ? CalculationVersionSelector.CountCurrentVersions(project.Calculations)
             : project.CalculationCount;
 
-    private int TotalProjectCount => SortedProjects.Count();
+    private int TotalProjectCount => SortedProjectsSnapshot.Count;
     private int TotalProjectPages => _pageSize == 0 ? 1 : (int)Math.Ceiling((double)TotalProjectCount / _pageSize);
     private int FirstProjectIndex => TotalProjectCount == 0 ? 0 : (_pageSize == 0 ? 1 : (_currentPage - 1) * _pageSize + 1);
     private int LastProjectIndex => _pageSize == 0 ? TotalProjectCount : Math.Min(_currentPage * _pageSize, TotalProjectCount);

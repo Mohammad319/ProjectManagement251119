@@ -27,6 +27,11 @@
 @inject ProjectManagement.Client.Services.Folder.ListSavedColumnViewStorage SavedColumnViewStorage
 @implements IDisposable
 
+@{
+    // Reset the per-render filter+sort memo so SortedCalculationsSnapshot is rebuilt exactly
+    // once this render (and never serves data left over from a previous render).
+    _sortedSnapshot = null;
+}
 <div class="flex h-full min-h-0 flex-col gap-1 overflow-hidden px-1 pb-1">
 
     @* ── Sticky header: toolbar + filters ──────────────── *@
@@ -891,15 +896,23 @@
     private const string ToolbarButtonClass = "inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800";
     private const string PaginationBtnCls = "inline-flex h-6 w-6 items-center justify-center rounded border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-35 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800";
 
-    private int TotalFilteredCount => FilteredCalculations.Count();
+    // Materialized once per render (the memo is cleared at the top of the markup) so the
+    // version-scope → filter → sort pipeline runs a single time even though several
+    // render-path consumers read it: the row-number map, the table's Items, the header
+    // count, the pager range and the version-column detection. Event handlers that need the
+    // freshest data keep using the live SortedCalculations/FilteredCalculations instead.
+    private List<ListCalculationMVVM>? _sortedSnapshot;
+    private List<ListCalculationMVVM> SortedCalculationsSnapshot => _sortedSnapshot ??= SortedCalculations.ToList();
+
+    private int TotalFilteredCount => SortedCalculationsSnapshot.Count;
     private int TotalPages => _pageSize <= 0 ? 1 : Math.Max(1, (int)Math.Ceiling((double)TotalFilteredCount / _pageSize));
     private int PageStart => TotalFilteredCount == 0 ? 0 : (_currentPage - 1) * _pageSize + 1;
     private int PageEnd => Math.Min(_currentPage * _pageSize, TotalFilteredCount);
 
     private IEnumerable<ListCalculationMVVM> PagedCalculations =>
         _pageSize <= 0
-            ? SortedCalculations
-            : SortedCalculations.Skip((_currentPage - 1) * _pageSize).Take(_pageSize);
+            ? SortedCalculationsSnapshot
+            : SortedCalculationsSnapshot.Skip((_currentPage - 1) * _pageSize).Take(_pageSize);
 
     private void ResetPage() => _currentPage = 1;
     private void FirstPage() => _currentPage = 1;
@@ -955,7 +968,6 @@
             .Select(GetCalculationRoleLabel)
             .ToList();
 
-        _savedCalcFilters = await SavedFilterStorage.LoadAsync(ListSavedFilterStorage.CalculationListScope);
         // Column layout + named views now come from the shared library manager.
         // It loads persisted visible columns (known keys only) and forces rowNumber
         // on — radnummer visas alltid som standard. Returns whether a persisted
@@ -969,6 +981,23 @@
             DefaultCalculationColumns,
             ListColumnViewLabels.Swedish,
             alwaysVisibleKeys: new[] { "rowNumber" });
+
+        // Created before the first await so it is non-null on the first render (the
+        // markup reads HasActiveFilters etc.). Saved filters load just below.
+        _filter = new ListColumnFilterController(
+            _calcColFilters,
+            SavedFilterStorage,
+            ListSavedFilterStorage.CalculationListScope,
+            _sort,
+            columnExists: key => _calculationColumns.ContainsKey(key),
+            isColumnVisible: IsCalculationColumnVisible,
+            columnLabel: GetCalculationColumnLabel,
+            revealColumn: key => _calculationColumns[key] = true,
+            persistColumns: () => ViewPreference.SaveColumnsAsync(_calculationColumns),
+            onChanged: () => _currentPage = 1,
+            getShowAllVersions: () => _showAllVersions,
+            setShowAllVersions: v => _showAllVersions = v);
+
         var hadPersistedColumns = await _columnView.InitializeAsync();
 
         // First run in a folder scope: show project/folder columns by default.
@@ -981,6 +1010,8 @@
         _columnWidths = new ListColumnWidthController(
             JS, ViewPreference.LoadColumnWidthsAsync, ViewPreference.SaveColumnWidthsAsync);
         await _columnWidths.LoadAsync();
+
+        await _filter.LoadSavedAsync();
     }
 
     protected override async Task OnParametersSetAsync()
@@ -1039,77 +1070,34 @@
             ? _scopeCalculationRows.Select(row => row.Calculation)
             : Folder.State.ProjectSelected?.Calculations ?? Enumerable.Empty<ListCalculationMVVM>();
 
-    private bool HasActiveFilters => _calcColFilters.Values.Any(f => f.IsActive);
-    private int ActiveFilterCount => _calcColFilters.Values.Count(f => f.IsActive);
+    // Shared filter management (active/clear, hidden-column notice, saved filters).
+    // The _calcColFilters dictionary stays host-owned (the FilteredCalculations switch
+    // and CF() read it directly); this layers the identical logic on top. See ListColumnFilterController.
+    private ListColumnFilterController _filter = default!;
 
-    // ── Dolda filterkolumner ────────────────────────────────
-    // Filter keys map 1:1 to column keys, so an active filter on a hidden column
-    // still works but is invisible. We surface that and offer to reveal the columns
-    // WITHOUT touching the filter itself.
-    private IEnumerable<string> HiddenActiveFilterColumnKeys =>
-        _calcColFilters
-            .Where(kv => kv.Value.IsActive && _calculationColumns.ContainsKey(kv.Key) && !IsCalculationColumnVisible(kv.Key))
-            .Select(kv => kv.Key);
+    private bool HasActiveFilters => _filter.HasActive;
+    private int ActiveFilterCount => _filter.ActiveCount;
 
-    private bool HasHiddenActiveFilterColumns => HiddenActiveFilterColumnKeys.Any();
+    private bool HasHiddenActiveFilterColumns => _filter.HasHiddenActiveColumns;
 
-    private string HiddenActiveFilterColumnsLabel =>
-        string.Join(", ", HiddenActiveFilterColumnKeys.Select(GetCalculationColumnLabel));
+    private string HiddenActiveFilterColumnsLabel => _filter.HiddenColumnsLabel;
 
     private string GetCalculationColumnLabel(string key) =>
         CalculationColumnOptions.FirstOrDefault(c => c.Key == key)?.Label ?? key;
 
-    // ── Flytande notice om dold filterkolumn ────────────────
-    // Signaturen är mängden dolda filterkolumner. När den ändras (annat filter,
-    // annan kolumnvy) skiljer den sig från den senast stängda och notisen visas
-    // igen automatiskt. X stänger bara notisen — filter och kolumnvy rörs inte.
-    private string? _dismissedHiddenFilterSignature;
+    private bool ShowHiddenFilterNotice => _filter.ShouldShowNotice(_filterMenuOpen);
 
-    private string HiddenFilterColumnSignature =>
-        string.Join("|", HiddenActiveFilterColumnKeys.OrderBy(k => k, StringComparer.Ordinal));
+    private string HiddenFilterColumnTitle => _filter.HiddenColumnsTitle;
 
-    private bool ShowHiddenFilterNotice =>
-        HasHiddenActiveFilterColumns && !_filterMenuOpen &&
-        _dismissedHiddenFilterSignature != HiddenFilterColumnSignature;
+    private string HiddenFilterColumnHelp => _filter.HiddenColumnsHelp;
 
-    private string HiddenFilterColumnTitle =>
-        HiddenActiveFilterColumnKeys.Count() > 1
-            ? $"Dolda filterkolumner: {HiddenActiveFilterColumnsLabel}"
-            : $"Dold filterkolumn: {HiddenActiveFilterColumnsLabel}";
+    private void DismissHiddenFilterNotice() => _filter.DismissNotice();
 
-    private string HiddenFilterColumnHelp =>
-        HiddenActiveFilterColumnKeys.Count() > 1
-            ? "Aktuellt filter använder dolda kolumner."
-            : "Aktuellt filter använder en dold kolumn.";
+    private Task RevealFilterColumnsAsync() => _filter.RevealColumnsAsync();
 
-    private void DismissHiddenFilterNotice() =>
-        _dismissedHiddenFilterSignature = HiddenFilterColumnSignature;
+    private void ClearFilters() => _filter.Clear();
 
-    // Make the hidden columns used by active filters visible. Only the column layout
-    // changes (counts as a manual edit of the current view); the filter is untouched.
-    private async Task RevealFilterColumnsAsync()
-    {
-        foreach (var key in HiddenActiveFilterColumnKeys.ToList())
-            if (_calculationColumns.ContainsKey(key))
-                _calculationColumns[key] = true;
-
-        // Kolumnerna är synliga nu → notisen försvinner. Nollställ stängt-läget så
-        // att en framtida dold kolumn visar notisen igen.
-        _dismissedHiddenFilterSignature = null;
-        await ViewPreference.SaveColumnsAsync(_calculationColumns);
-    }
-
-    private void ClearFilters()
-    {
-        foreach (var f in _calcColFilters.Values) f.Clear();
-        _currentPage = 1;
-    }
-
-    private void ClearSingleCalcFilter(string key)
-    {
-        _calcColFilters[key].Clear();
-        _currentPage = 1;
-    }
+    private void ClearSingleCalcFilter(string key) => _filter.ClearSingle(key);
 
     // ── Rubrik (en rad) ─────────────────────────────────────
     private string CalculationListPlaceName => FolderScopeMode
@@ -1122,7 +1110,7 @@
         {
             var total = VisibleBaseCalculations.Count();
             if (HasActiveFilters)
-                return $" · filtrerat urval · {FilteredCalculations.Count()} av {total} {CalcResource.calculation}";
+                return $" · filtrerat urval · {SortedCalculationsSnapshot.Count} av {total} {CalcResource.calculation}";
 
             var wholeDepartment = FolderScopeMode && IsDepartmentScope ? " · hela avdelningen" : string.Empty;
             return $"{wholeDepartment} · {total} {CalcResource.calculation}";
@@ -1132,7 +1120,7 @@
     private string CalculationHeaderText => $"Kalkyler i {CalculationListPlaceName}{CalculationHeaderMeta}";
 
     // ── Sparade filter (personliga, endast kalkyllistans scope) ──
-    private List<SavedListFilter> _savedCalcFilters = [];
+    private List<SavedListFilter> _savedCalcFilters => _filter.Saved;
     private bool _saveFilterPromptOpen;
     private string _saveFilterName = string.Empty;
     private string? _saveFilterError;
@@ -1151,62 +1139,19 @@
         _saveFilterError = null;
     }
 
-    // Snapshot of the current list state as a (still unnamed) saved filter. Shared by
-    // both the save action and the duplicate-detection so they compare identical data.
-    // ShowAllVersions is part of the definition because it changes which rows are selected.
-    private SavedListFilter BuildCurrentCalcFilter(string name = "") => new()
-    {
-        Name = name,
-        SortColumn = string.IsNullOrEmpty(_sort.Column) ? null : _sort.Column,
-        SortAscending = _sort.Ascending,
-        ShowAllVersions = _showAllVersions,
-        Filters = _calcColFilters
-            .Where(kv => kv.Value.IsActive)
-            .ToDictionary(kv => kv.Key, kv => SavedColumnFilter.FromState(kv.Value))
-    };
-
-    // The first saved calc filter whose definition matches the current list state, or null.
-    // Matching is by normalized content (not name) and only against calc-list filters.
-    private SavedListFilter? MatchingSavedCalcFilter
-    {
-        get
-        {
-            if (!HasActiveFilters) return null;
-            var signature = BuildCurrentCalcFilter().ContentSignature();
-            return _savedCalcFilters.FirstOrDefault(f => f.ContentSignature() == signature);
-        }
-    }
+    private SavedListFilter? MatchingSavedCalcFilter => _filter.Matching;
 
     // "Spara aktuellt filter" is only enabled for a non-empty filter that isn't already saved.
-    private bool CanSaveCurrentCalcFilter => HasActiveFilters && MatchingSavedCalcFilter is null;
+    private bool CanSaveCurrentCalcFilter => _filter.CanSave;
 
     private async Task SaveCurrentCalcFilterAsync()
     {
-        var name = _saveFilterName.Trim();
-        if (name.Length == 0)
+        var error = await _filter.SaveAsync(_saveFilterName);
+        if (error is not null)
         {
-            _saveFilterError = "Namn krävs.";
+            _saveFilterError = error;
             return;
         }
-        if (_savedCalcFilters.Any(f => string.Equals(f.Name, name, StringComparison.CurrentCultureIgnoreCase)))
-        {
-            _saveFilterError = "Ett filter med detta namn finns redan. Välj ett annat namn.";
-            return;
-        }
-
-        var filter = BuildCurrentCalcFilter(name);
-        var signature = filter.ContentSignature();
-        if (_savedCalcFilters.Any(f => f.ContentSignature() == signature))
-        {
-            _saveFilterError = "Detta filter är redan sparat.";
-            return;
-        }
-
-        _savedCalcFilters.Add(filter);
-        _savedCalcFilters = _savedCalcFilters
-            .OrderBy(f => f.Name, StringComparer.CurrentCultureIgnoreCase)
-            .ToList();
-        await SavedFilterStorage.SaveAllAsync(ListSavedFilterStorage.CalculationListScope, _savedCalcFilters);
 
         _saveFilterPromptOpen = false;
         _saveFilterName = string.Empty;
@@ -1215,36 +1160,12 @@
 
     private Task ApplyCalcSavedFilterAsync(SavedListFilter saved)
     {
-        foreach (var f in _calcColFilters.Values) f.Clear();
-
-        foreach (var (key, savedFilter) in saved.Filters)
-        {
-            if (_calcColFilters.TryGetValue(key, out var state) && state.Type == savedFilter.Type)
-                savedFilter.ApplyTo(state);
-        }
-
-        if (!string.IsNullOrEmpty(saved.SortColumn))
-        {
-            _sort.Column = saved.SortColumn;
-            _sort.Ascending = saved.SortAscending;
-        }
-
-        if (saved.ShowAllVersions.HasValue)
-            _showAllVersions = saved.ShowAllVersions.Value;
-
-        _currentPage = 1;
-        // Ett nyss valt sparat filter ska alltid kunna visa dold-kolumn-notisen,
-        // även om samma kolumner var dolda och notisen tidigare stängdes.
-        _dismissedHiddenFilterSignature = null;
+        _filter.Apply(saved);
         CloseCalcFilterMenu();
         return Task.CompletedTask;
     }
 
-    private async Task DeleteCalcSavedFilterAsync(SavedListFilter saved)
-    {
-        _savedCalcFilters.Remove(saved);
-        await SavedFilterStorage.SaveAllAsync(ListSavedFilterStorage.CalculationListScope, _savedCalcFilters);
-    }
+    private Task DeleteCalcSavedFilterAsync(SavedListFilter saved) => _filter.DeleteAsync(saved);
 
     // ── Sparade kolumnvyer (personliga, endast kalkyllistans scope) ──
     // A column view = which columns are shown, separate from filters. The logic
@@ -1788,7 +1709,7 @@
     {
         get
         {
-            return FilteredCalculations.Any(c => CalculationVersionSelector.HasMultipleVersions(GetProjectCalculationsFor(c), c));
+            return SortedCalculationsSnapshot.Any(c => CalculationVersionSelector.HasMultipleVersions(GetProjectCalculationsFor(c), c));
         }
     }
 
@@ -1796,7 +1717,7 @@
         (_showAllVersions && HasAnyMultipleVersionsInCurrentView ? 1 : 0);
 
     private bool ShowVersionColumn =>
-        _showAllVersions || FilteredCalculations.Any(c => HasMultipleVersions(c));
+        _showAllVersions || SortedCalculationsSnapshot.Any(c => HasMultipleVersions(c));
 
     private static string GetVersionBadgeClass(ListCalculationMVVM calculation) =>
         calculation.IsCurrentVersion
