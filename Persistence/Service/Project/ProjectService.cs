@@ -591,9 +591,10 @@ namespace Persistence.Service.Project
                 return result;
 
             // Extra delningar (användare/avdelning) med mottagarnamn, behörighet och antal kalkyler.
+            var today = DateTime.UtcNow.Date;
             var shares = await context.ProjectShare
                 .AsNoTracking()
-                .Where(s => ids.Contains(s.ProjectId))
+                .Where(s => ids.Contains(s.ProjectId) && (s.ValidUntil == null || s.ValidUntil >= today))
                 .Select(s => new
                 {
                     s.ProjectId,

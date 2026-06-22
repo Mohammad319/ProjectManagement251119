@@ -24,6 +24,9 @@ namespace Domain.Entities.Project
         /// <summary>Beviljad roll, t.ex. <c>PMRolesConst.Tenant.Viewer</c> eller <c>Manger</c>.</summary>
         public string Role { get; private set; } = string.Empty;
 
+        /// <summary>Delningen gäller till och med detta UTC-datum. <see langword="null"/> = tills vidare.</summary>
+        public DateTime? ValidUntil { get; private set; }
+
         public ICollection<ProjectShareCalculationEntity> Calculations { get; private set; }
             = new List<ProjectShareCalculationEntity>();
 
@@ -44,6 +47,8 @@ namespace Domain.Entities.Project
             => new(projectId, null, departmentId, role);
 
         public void SetRole(string role) => Role = role ?? string.Empty;
+
+        public void SetValidUntil(DateTime? validUntil) => ValidUntil = validUntil?.Date;
 
         /// <summary>Ersätter listan av valda kalkyler som ingår i delningen.</summary>
         public void ReplaceCalculations(IEnumerable<int>? calculationIds)

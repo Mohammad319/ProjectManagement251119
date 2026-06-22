@@ -25,10 +25,13 @@ namespace Persistence.Service.Access
     {
         public static Expression<Func<CalculationEntity, bool>> CanSee(int userId, int? departmentId, bool isViewerOnly = false)
         {
+            var today = DateTime.UtcNow.Date;
+
             if (isViewerOnly)
             {
                 // Visare: bara kalkyler som uttryckligen valts i en projektdelning – aldrig privata.
                 return c => !c.IsPrivate && c.Project.Shares.Any(s =>
+                    (s.ValidUntil == null || s.ValidUntil >= today) &&
                     (s.SharedWithUserId == userId || (departmentId != null && s.DepartmentId == departmentId)) &&
                     s.Calculations.Any(sc => sc.CalculationId == c.Id));
             }
@@ -39,8 +42,9 @@ namespace Persistence.Service.Access
                     c.Project.Folder.DepartmentId == departmentId ||
                     c.CreatedBy == userId ||
                     c.Project.Shares.Any(s =>
-                        s.SharedWithUserId == userId ||
-                        (departmentId != null && s.DepartmentId == departmentId))
+                        (s.ValidUntil == null || s.ValidUntil >= today) &&
+                        (s.SharedWithUserId == userId ||
+                         (departmentId != null && s.DepartmentId == departmentId)))
                 )
                 &&
                 (
@@ -64,6 +68,8 @@ namespace Persistence.Service.Access
         /// </summary>
         public static Expression<Func<CalculationEntity, bool>> CanEdit(int userId, int? departmentId)
         {
+            var today = DateTime.UtcNow.Date;
+
             if (departmentId == null)
                 return _ => true;
 
@@ -71,6 +77,7 @@ namespace Persistence.Service.Access
                 c.DepartmentId == departmentId ||
                 c.CreatedBy == userId ||
                 c.Project.Shares.Any(s =>
+                    (s.ValidUntil == null || s.ValidUntil >= today) &&
                     s.Role == PMRolesConst.Tenant.Manger &&
                     (s.SharedWithUserId == userId || s.DepartmentId == departmentId) &&
                     s.Calculations.Any(sc => sc.CalculationId == c.Id));

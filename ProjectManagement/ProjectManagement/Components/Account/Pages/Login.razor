@@ -28,7 +28,9 @@
             <h1 class="mb-1 text-center text-2xl font-semibold text-slate-900 dark:text-slate-100">@PMResourceIdentity.login</h1>
             <p class="mb-6 text-center text-sm text-slate-500 dark:text-slate-400">@PMWebResource.SettingsDescription</p>
 
-            <EditForm Model="Input" Method="post" OnValidSubmit="LoginUser" FormName="login" Enhance="true" class="space-y-6">
+            @* Authentication changes the server cookie. Use a full document navigation so the
+               WebAssembly authentication state is deserialized from the newly signed-in user. *@
+            <EditForm Model="Input" Method="post" OnValidSubmit="LoginUser" FormName="login" class="space-y-6">
 
                 <DataAnnotationsValidator />
                 <FormValidationSummary />

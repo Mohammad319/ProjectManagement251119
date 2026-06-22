@@ -1,0 +1,78 @@
+@namespace ProjectManagement.Client.Shared.Components
+
+@* Amber "filter använder dold kolumn" notice, shared by the project and calculation
+   right-panel lists. Filter keys map 1:1 to column keys, so an active filter on a
+   hidden column still works but is invisible — this surfaces that and offers to
+   reveal the columns without touching the filter.
+
+   Two presentations of the same warning:
+   - Inline:   compact box rendered inside the open filter dropdown.
+   - Floating: popup shown next to the filter button even when the menu is closed.
+
+   Purely presentational: the host owns the "should this show?" guard and the
+   reveal/dismiss logic (which differs per list); this only renders the markup. *@
+
+@if (Mode == HiddenFilterNoticeMode.Inline)
+{
+    <div class="mx-3 my-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-1.5 dark:border-amber-900/60 dark:bg-amber-950/30">
+        <div class="flex items-start gap-1.5">
+            <svg class="mt-0.5 h-3 w-3 shrink-0 text-amber-500 dark:text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5.07 19h13.86a2 2 0 001.74-2.99l-6.93-12a2 2 0 00-3.48 0l-6.93 12A2 2 0 005.07 19z" /></svg>
+            <span class="text-[10px] leading-snug text-amber-800 dark:text-amber-200">
+                Filtret använder dold kolumn: <span class="font-semibold">@Label</span>
+            </span>
+        </div>
+        <button type="button"
+                class="mt-1.5 inline-flex h-6 items-center gap-1 rounded border border-amber-300 bg-white px-2 text-[10px] font-semibold text-amber-700 transition hover:bg-amber-100 dark:border-amber-800 dark:bg-slate-900 dark:text-amber-300 dark:hover:bg-amber-950/40"
+                @onclick="OnReveal">
+            <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+            Visa filterkolumner
+        </button>
+    </div>
+}
+else
+{
+    <div class="absolute left-0 top-full z-[80] mt-1.5 w-72">
+        <div class="absolute -top-1 left-5 h-2 w-2 rotate-45 border-l border-t border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-950/80"></div>
+        <div class="relative rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-2 shadow-md dark:border-amber-700 dark:bg-amber-950/80">
+            <div class="flex items-start gap-1.5">
+                <svg class="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500 dark:text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5.07 19h13.86a2 2 0 001.74-2.99l-6.93-12a2 2 0 00-3.48 0l-6.93 12A2 2 0 005.07 19z" /></svg>
+                <div class="min-w-0 flex-1">
+                    <p class="text-[11px] font-semibold leading-snug text-amber-800 dark:text-amber-200">@Title</p>
+                    <p class="mt-0.5 text-[10px] leading-snug text-amber-700/90 dark:text-amber-300/90">@Help</p>
+                </div>
+                <button type="button"
+                        class="-mr-0.5 -mt-0.5 shrink-0 rounded p-0.5 text-amber-500 transition hover:bg-amber-100 hover:text-amber-700 dark:text-amber-400 dark:hover:bg-amber-900/40 dark:hover:text-amber-200"
+                        title="Stäng"
+                        @onclick="OnDismiss">
+                    <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            <button type="button"
+                    class="mt-1.5 inline-flex h-6 items-center gap-1 rounded border border-amber-300 bg-white px-2 text-[10px] font-semibold text-amber-700 transition hover:bg-amber-100 dark:border-amber-700 dark:bg-slate-900 dark:text-amber-300 dark:hover:bg-amber-950/40"
+                    @onclick="OnReveal">
+                <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                Visa filterkolumner
+            </button>
+        </div>
+    </div>
+}
+
+@code {
+    /// <summary>Inline (inside the open filter dropdown) or Floating (popup shown even when the menu is closed).</summary>
+    [Parameter] public HiddenFilterNoticeMode Mode { get; set; } = HiddenFilterNoticeMode.Inline;
+
+    /// <summary>Comma-separated labels of the hidden columns used by active filters. Inline mode.</summary>
+    [Parameter] public string? Label { get; set; }
+
+    /// <summary>Headline for the floating popup (e.g. "Dold filterkolumn: …").</summary>
+    [Parameter] public string? Title { get; set; }
+
+    /// <summary>Secondary help line for the floating popup.</summary>
+    [Parameter] public string? Help { get; set; }
+
+    /// <summary>Reveals the hidden filter columns (host changes the column layout, not the filter).</summary>
+    [Parameter] public EventCallback OnReveal { get; set; }
+
+    /// <summary>Dismisses the floating popup without changing the filter or columns.</summary>
+    [Parameter] public EventCallback OnDismiss { get; set; }
+}

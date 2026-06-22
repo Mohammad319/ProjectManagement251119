@@ -14,12 +14,21 @@ using ProjectManagement.Shared.DTO.General;
 using Microsoft.JSInterop;
 using ProjectManagement.Client.Shared.ResourceFiles.Identity;
 using ProjectManagement.Client.Shared.ResourceFiles.Calculation;
+using BlazorMHD.UI.Core.Data;
 
 namespace ProjectManagement.Components.ControlComponents.Department;
 
 public partial class UsersIndex : IAsyncDisposable
 {
     private const string FilterStorageKey = "DepartmentUsers.Filters";
+
+    // Proof-of-concept for MhdTable's resize/frozen-column engine. Widths live for the
+    // lifetime of this Server circuit (no DB backing here) and are fed back via
+    // ColumnWidths; the JS engine also keeps them across re-renders within the session.
+    private readonly Dictionary<string, int> _userColumnWidths = new();
+
+    private void OnUserColumnResized(MhdColumnWidthChange change)
+        => _userColumnWidths[change.ColumnKey] = change.Width;
 
     [Parameter] public int? DepartmentId { get; set; }
     [Parameter] public bool WithoutDepartmentOnly { get; set; }

@@ -11,6 +11,7 @@ internal sealed class ProjectShareConfiguration : IEntityTypeConfiguration<Proje
         builder.ToTable("ProjectShares");
 
         builder.Property(x => x.Role).HasMaxLength(64).IsRequired();
+        builder.Property(x => x.ValidUntil).HasColumnType("date");
 
         // Exakt en mottagare: användare ELLER avdelning.
         builder.ToTable(t => t.HasCheckConstraint(

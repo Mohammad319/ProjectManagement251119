@@ -231,7 +231,24 @@
       "Bash(cp \"/c/Users/Administrator/Desktop/PM/b07/ProjectManagement251119/ProjectManagement/ProjectManagement/wwwroot/js/resizableTable.js\" www/js/resizableTable.js)",
       "Bash(node drive.mjs)",
       "Bash(xargs -I{} basename {})",
-      "Bash(git diff *)"
+      "Bash(git diff *)",
+      "Bash(npm --version)",
+      "Read(//c/Users/Administrator/AppData/Local/ms-playwright/**)",
+      "Bash(node -e \"try{require.resolve\\('playwright'\\);console.log\\('playwright OK'\\)}catch\\(e\\){try{require.resolve\\('playwright-core'\\);console.log\\('playwright-core OK'\\)}catch\\(e2\\){console.log\\('NOT installed'\\)}}\")",
+      "Bash(npm ls *)",
+      "Bash(echo \"install exit $?\")",
+      "Bash(node -e \"console.log\\('pwc', require\\('playwright-core/package.json'\\).version\\)\")",
+      "Bash(node .codex-temp-build/pwverify.js)",
+      "Bash(node -e \"console.log\\('pwc', require\\('./node_modules/playwright-core/package.json'\\).version\\)\")",
+      "Bash(node pwverify.js)",
+      "Bash(node pwdiag.js)",
+      "Bash(node pwdiag2.js)",
+      "Bash(node pwnet.js)",
+      "Bash(node pwint.js)",
+      "Bash(awk '{print $2}')",
+      "Bash(xargs -I{} stat -c '%Y %n' {})",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:5286/Account/Login --max-time 5)",
+      "Bash(node pwdiag3.js)"
     ]
   }
 }

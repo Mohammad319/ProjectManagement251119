@@ -21,21 +21,25 @@ namespace Persistence.Service.Access
     {
         public static Expression<Func<ProjectEntity, bool>> CanSee(int userId, int? departmentId, bool isViewerOnly = false)
         {
+            var today = DateTime.UtcNow.Date;
+
             // Admin/tenant-wide ser allt (om inte rollen explicit begränsas till Visare).
             if (departmentId == null && !isViewerOnly)
                 return _ => true;
 
             if (isViewerOnly)
                 return p => p.Shares.Any(s =>
-                    s.SharedWithUserId == userId ||
-                    (departmentId != null && s.DepartmentId == departmentId));
+                    (s.ValidUntil == null || s.ValidUntil >= today) &&
+                    (s.SharedWithUserId == userId ||
+                     (departmentId != null && s.DepartmentId == departmentId)));
 
             return p =>
                 p.Folder.DepartmentId == departmentId ||
                 p.CreatedBy == userId ||
                 p.Shares.Any(s =>
-                    s.SharedWithUserId == userId ||
-                    (departmentId != null && s.DepartmentId == departmentId));
+                    (s.ValidUntil == null || s.ValidUntil >= today) &&
+                    (s.SharedWithUserId == userId ||
+                     (departmentId != null && s.DepartmentId == departmentId)));
         }
 
         /// <summary>
@@ -58,6 +62,8 @@ namespace Persistence.Service.Access
         /// </summary>
         public static Expression<Func<ProjectEntity, bool>> CanEdit(int userId, int? departmentId)
         {
+            var today = DateTime.UtcNow.Date;
+
             if (departmentId == null)
                 return _ => true;
 
@@ -65,6 +71,7 @@ namespace Persistence.Service.Access
                 p.Folder.DepartmentId == departmentId ||
                 p.CreatedBy == userId ||
                 p.Shares.Any(s =>
+                    (s.ValidUntil == null || s.ValidUntil >= today) &&
                     s.Role == PMRolesConst.Tenant.Manger &&
                     (s.SharedWithUserId == userId || s.DepartmentId == departmentId));
         }

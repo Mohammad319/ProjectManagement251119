@@ -81,7 +81,7 @@
                     </div>
 
                     @* Delade personer (grupperade efter åtkomstnivå) *@
-                    @{ var userShares = _shares.Where(s => s.RecipientType == ProjectShareRecipientType.User).ToList(); }
+                    @{ var userShares = _shares.Where(s => IsShareActive(s) && s.RecipientType == ProjectShareRecipientType.User).ToList(); }
                     @if (userShares.Count > 0)
                     {
                         <div>
@@ -110,7 +110,7 @@
                     }
 
                     @* Delade avdelningar *@
-                    @{ var deptShares = _shares.Where(s => s.RecipientType == ProjectShareRecipientType.Department).ToList(); }
+                    @{ var deptShares = _shares.Where(s => IsShareActive(s) && s.RecipientType == ProjectShareRecipientType.Department).ToList(); }
                     @if (deptShares.Count > 0)
                     {
                         <div>
@@ -149,7 +149,7 @@
                                 <th class="px-2 py-1.5 text-left font-medium text-slate-700 dark:text-slate-200">Mottagartyp</th>
                                 <th class="px-2 py-1.5 text-left font-medium text-slate-700 dark:text-slate-200">Åtkomstnivå</th>
                                 <th class="px-2 py-1.5 text-left font-medium text-slate-700 dark:text-slate-200">Kalkyler</th>
-                                <th class="px-2 py-1.5 text-left font-medium text-slate-700 dark:text-slate-200">Källa</th>
+                                <th class="px-2 py-1.5 text-left font-medium text-slate-700 dark:text-slate-200">Giltighet</th>
                                 <th class="px-2 py-1.5 text-right font-medium text-slate-700 dark:text-slate-200">Åtgärder</th>
                             </tr>
                         </thead>
@@ -187,7 +187,16 @@
                                             <span title="@CalcNamesTooltip(share)">@CalcSummary(share)</span>
                                         }
                                     </td>
-                                    <td class="px-2 py-1.5 text-slate-500 dark:text-slate-400">@SourceLabel(share)</td>
+                                    <td class="px-2 py-1.5 text-slate-500 dark:text-slate-400">
+                                        @if (IsShareExpired(share))
+                                        {
+                                            <span class="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">Utgången</span>
+                                        }
+                                        else
+                                        {
+                                            <span>@ValidityText(share)</span>
+                                        }
+                                    </td>
                                     <td class="px-2 py-1.5">
                                         <div class="flex items-center justify-end gap-1">
                                             <button type="button"
@@ -357,6 +366,45 @@
                         </select>
                     </div>
 
+                    @* Giltighet *@
+                    <div>
+                        <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Giltighet</label>
+                        <div class="space-y-1.5 rounded-lg border border-slate-200 bg-white px-2 py-2 text-sm dark:border-slate-700 dark:bg-slate-950">
+                            <label class="flex cursor-pointer items-center gap-2">
+                                <input type="radio"
+                                       name="project-share-validity"
+                                       class="h-4 w-4 border-slate-300 text-sky-600 focus:ring-sky-500"
+                                       checked="@(!_useEndDate)"
+                                       @onchange="() => SetUseEndDate(false)" />
+                                <span>Tills vidare</span>
+                            </label>
+                            <label class="flex cursor-pointer items-center gap-2">
+                                <input type="radio"
+                                       name="project-share-validity"
+                                       class="h-4 w-4 border-slate-300 text-sky-600 focus:ring-sky-500"
+                                       checked="@_useEndDate"
+                                       @onchange="() => SetUseEndDate(true)" />
+                                <span>Till datum</span>
+                            </label>
+                            @if (_useEndDate)
+                            {
+                                <input type="date"
+                                       class="mt-1 w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                                       min="@TodayInputValue"
+                                       value="@ValidUntilInputValue"
+                                       @onchange="OnValidUntilChanged" />
+                                @if (!_validUntil.HasValue)
+                                {
+                                    <p class="text-[11px] text-amber-600 dark:text-amber-400">Välj ett slutdatum.</p>
+                                }
+                                else if (_validUntil.Value.Date < DateTime.UtcNow.Date)
+                                {
+                                    <p class="text-[11px] text-rose-600 dark:text-rose-400">Slutdatum kan inte ligga bakåt i tiden.</p>
+                                }
+                            }
+                        </div>
+                    </div>
+
                     @* Kalkyler *@
                     <div>
                         <div class="mb-1 flex items-center justify-between gap-2">
@@ -461,6 +509,8 @@
     private readonly HashSet<int> _selectedUserIds = [];
     private int? _departmentId;
     private string _role = PMRolesConst.Tenant.Viewer;
+    private bool _useEndDate;
+    private DateTime? _validUntil;
     private readonly HashSet<int> _selectedCalcIds = [];
     private bool _saving;
     // Åtkomstöversikten är hopfälld som standard (kompakt) – sammanfattning visas i rubrikraden.
@@ -487,8 +537,8 @@
         if (ProjectDepartmentName is { } dn)
             parts.Add(dn);
 
-        var users = _shares.Count(s => s.RecipientType == ProjectShareRecipientType.User);
-        var depts = _shares.Count(s => s.RecipientType == ProjectShareRecipientType.Department);
+        var users = _shares.Count(s => IsShareActive(s) && s.RecipientType == ProjectShareRecipientType.User);
+        var depts = _shares.Count(s => IsShareActive(s) && s.RecipientType == ProjectShareRecipientType.Department);
         if (users > 0) parts.Add($"{users} delade personer");
         if (depts > 0) parts.Add($"{depts} delade avdelningar");
         if (users == 0 && depts == 0) parts.Add("Endast avdelningsåtkomst");
@@ -531,6 +581,7 @@
 
     private bool CanSave =>
         !string.IsNullOrWhiteSpace(_role) &&
+        HasValidValidity &&
         !DuplicateDepartment &&
         // En delning måste innehålla minst en kalkyl – annars ger den ingen faktisk åtkomst.
         SelectedShareableCalcCount > 0 &&
@@ -549,6 +600,10 @@
                 return "Välj en avdelning.";
             if (DuplicateDepartment)
                 return "Avdelningen har redan en delning. Använd Ändra i tabellen.";
+            if (_useEndDate && !_validUntil.HasValue)
+                return "Välj ett slutdatum.";
+            if (_useEndDate && _validUntil!.Value.Date < DateTime.UtcNow.Date)
+                return "Slutdatum kan inte ligga bakåt i tiden.";
             if (SelectedShareableCalcCount == 0)
                 return "Välj minst en kalkyl.";
             if (string.IsNullOrWhiteSpace(_role))
@@ -808,6 +863,7 @@
                         UserId = uid,
                         DepartmentId = null,
                         Role = role,
+                        ValidUntil = SelectedValidUntil,
                         CalculationIds = calcIds
                     });
                 }
@@ -841,6 +897,7 @@
             UserId = _recipientType == ProjectShareRecipientType.User ? _selectedUserIds.FirstOrDefault() : null,
             DepartmentId = _recipientType == ProjectShareRecipientType.Department ? _departmentId : null,
             Role = role,
+            ValidUntil = SelectedValidUntil,
             CalculationIds = calcIds
         };
     }
@@ -853,6 +910,8 @@
         _editingId = share.Id;
         _recipientType = share.RecipientType;
         _role = string.IsNullOrWhiteSpace(share.Role) ? PMRolesConst.Tenant.Viewer : share.Role;
+        _validUntil = share.ValidUntil?.Date;
+        _useEndDate = _validUntil.HasValue;
         _departmentId = share.RecipientType == ProjectShareRecipientType.Department ? share.DepartmentId : null;
 
         _selectedUserIds.Clear();
@@ -880,6 +939,8 @@
         _selectedUserIds.Clear();
         _departmentId = null;
         _role = PMRolesConst.Tenant.Viewer;
+        _useEndDate = false;
+        _validUntil = null;
         _selectedCalcIds.Clear();
     }
 
@@ -963,10 +1024,30 @@
         return $"{name} · Blandad åtkomst · {calcText}";
     }
 
-    private static string SourceLabel(ProjectShareListItemDTO share) =>
-        share.RecipientType == ProjectShareRecipientType.Department
-            ? "Delad avdelning"
-            : "Delad person";
+    private bool HasValidValidity =>
+        !_useEndDate || (_validUntil.HasValue && _validUntil.Value.Date >= DateTime.UtcNow.Date);
+
+    private DateTime? SelectedValidUntil => _useEndDate ? _validUntil?.Date : null;
+    private static string TodayInputValue => DateTime.UtcNow.Date.ToString("yyyy-MM-dd");
+    private string ValidUntilInputValue => _validUntil?.ToString("yyyy-MM-dd") ?? string.Empty;
+
+    private static bool IsShareExpired(ProjectShareListItemDTO share) =>
+        share.ValidUntil.HasValue && share.ValidUntil.Value.Date < DateTime.UtcNow.Date;
+
+    private static bool IsShareActive(ProjectShareListItemDTO share) => !IsShareExpired(share);
+
+    private static string ValidityText(ProjectShareListItemDTO share) =>
+        share.ValidUntil.HasValue ? $"Till {share.ValidUntil.Value:yyyy-MM-dd}" : "Tills vidare";
+
+    private void SetUseEndDate(bool useEndDate)
+    {
+        _useEndDate = useEndDate;
+        if (!useEndDate)
+            _validUntil = null;
+    }
+
+    private void OnValidUntilChanged(ChangeEventArgs e) =>
+        _validUntil = DateTime.TryParse(e.Value?.ToString(), out var value) ? value.Date : null;
 
     private static int? ParseNullableInt(object? value)
         => int.TryParse(value?.ToString(), out var n) && n > 0 ? n : null;

@@ -7,6 +7,7 @@ public sealed class FilterOption
 {
     public required string Value { get; init; }
     public required string Label { get; init; }
+    public string? Tooltip { get; init; }
 }
 
 /// <summary>A headed section of <see cref="FilterOption"/>s in a grouped dropdown filter.</summary>

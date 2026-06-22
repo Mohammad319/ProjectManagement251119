@@ -107,9 +107,10 @@ namespace Persistence.Service.CalculationItems.Calculation
                 return;
 
             // Projektdelningar (användare/avdelning) med mottagare, behörighet och vilka kalkyler som ingår.
+            var today = DateTime.UtcNow.Date;
             var shares = await context.ProjectShare
                 .AsNoTracking()
-                .Where(s => s.ProjectId == projectId)
+                .Where(s => s.ProjectId == projectId && (s.ValidUntil == null || s.ValidUntil >= today))
                 .Select(s => new
                 {
                     Type = s.SharedWithUserId != null

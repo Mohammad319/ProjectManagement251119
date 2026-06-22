@@ -153,11 +153,13 @@ namespace Persistence.Service.Folder
             // och räkna bara delade projekt. Övriga: befintlig avdelningsvy.
             if (isViewer)
             {
+                var today = DateTime.UtcNow.Date;
                 return await context.Folders
                     .AsNoTracking()
                     .Where(x => (includeArchived || x.IsVisible) &&
                         x.FolderProjects.Any(p => (includeArchived || !p.IsArchived) &&
-                            p.Shares.Any(s => s.SharedWithUserId == userId || (departmentId != null && s.DepartmentId == departmentId))))
+                            p.Shares.Any(s => (s.ValidUntil == null || s.ValidUntil >= today) &&
+                                (s.SharedWithUserId == userId || (departmentId != null && s.DepartmentId == departmentId)))))
                     .OrderBy(x => x.SortOrder)
                     .ThenBy(x => x.Name)
                     .Select(x => new ListFolderDTO
@@ -170,7 +172,8 @@ namespace Persistence.Service.Folder
                         CreatedAt = x.CreatedAt,
                         UpdatedAt = x.UpdatedAt,
                         ProjectCount = x.FolderProjects.Count(p => (includeArchived || !p.IsArchived) &&
-                            p.Shares.Any(s => s.SharedWithUserId == userId || (departmentId != null && s.DepartmentId == departmentId)))
+                            p.Shares.Any(s => (s.ValidUntil == null || s.ValidUntil >= today) &&
+                                (s.SharedWithUserId == userId || (departmentId != null && s.DepartmentId == departmentId))))
                     })
                     .ToListAsync(ct);
             }

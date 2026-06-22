@@ -30,6 +30,7 @@ namespace Persistence.Service.Project
                             : ((s.SharedWithUser!.FirstName ?? "") + " " + (s.SharedWithUser!.LastName ?? "")).Trim())
                         : s.Department!.Name,
                     Role = s.Role,
+                    ValidUntil = s.ValidUntil,
                     CalculationIds = s.Calculations.Select(c => c.CalculationId).ToList()
                 })
                 .ToListAsync(ct);
@@ -45,6 +46,10 @@ namespace Persistence.Service.Project
             bool validUser = dto.RecipientType == ProjectShareRecipientType.User && dto.UserId is > 0 && dto.DepartmentId is null;
             bool validDept = dto.RecipientType == ProjectShareRecipientType.Department && dto.DepartmentId is > 0 && dto.UserId is null;
             if (!validUser && !validDept)
+                return 0;
+
+            var validUntil = dto.ValidUntil?.Date;
+            if (validUntil.HasValue && validUntil.Value < DateTime.UtcNow.Date)
                 return 0;
 
             await using var ctx = await dbFactory.CreateDbContextAsync(ct);
@@ -65,11 +70,13 @@ namespace Persistence.Service.Project
                     ? ProjectShareEntity.ForUser(projectId, dto.UserId!.Value, dto.Role)
                     : ProjectShareEntity.ForDepartment(projectId, dto.DepartmentId!.Value, dto.Role);
                 entity.ReplaceCalculations(dto.CalculationIds);
+                entity.SetValidUntil(validUntil);
                 ctx.ProjectShare.Add(entity);
             }
             else
             {
                 entity.SetRole(dto.Role);
+                entity.SetValidUntil(validUntil);
                 entity.ReplaceCalculations(dto.CalculationIds);
             }
 

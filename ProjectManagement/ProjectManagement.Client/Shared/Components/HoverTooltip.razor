@@ -1,0 +1,36 @@
+@namespace ProjectManagement.Client.Shared.Components
+@inject IJSRuntime JS
+
+<span @ref="_anchor"
+      class="@CssClass"
+      tabindex="@(Focusable ? "0" : null)"
+      @onmouseenter="ShowAsync"
+      @onmouseleave="HideAsync"
+      @onfocus="ShowAsync"
+      @onblur="HideAsync"
+      @onclick="HideAsync">
+    @ChildContent
+    @if (ShowInfoIcon)
+    {
+        <span class="shrink-0 text-[10px] font-normal text-slate-400 dark:text-slate-500" aria-hidden="true">ⓘ</span>
+    }
+</span>
+
+@code {
+    [Parameter, EditorRequired] public string Text { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public RenderFragment ChildContent { get; set; } = default!;
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public bool ShowInfoIcon { get; set; }
+    [Parameter] public bool Focusable { get; set; }
+
+    private ElementReference _anchor;
+    private string CssClass => $"inline-flex min-w-0 items-center gap-1 {Class}";
+
+    private async Task ShowAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(Text))
+            await JS.InvokeVoidAsync("hoverTooltip.show", _anchor, Text);
+    }
+
+    private async Task HideAsync() => await JS.InvokeVoidAsync("hoverTooltip.dismiss");
+}

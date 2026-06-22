@@ -62,6 +62,28 @@ public sealed class AccessRulesCanEditTests
     }
 
     [Fact]
+    public void Project_with_expired_share_is_not_visible_or_editable()
+    {
+        var share = ProjectShareEntity.ForUser(System.Guid.Empty, UserId, PMRolesConst.Tenant.Manger);
+        share.SetValidUntil(System.DateTime.UtcNow.Date.AddDays(-1));
+        var project = BuildProject(folderDept: OtherDept, createdBy: OtherUserId, share);
+
+        Assert.False(CanSeeProject(project, UserId, OwnDept, isViewerOnly: true));
+        Assert.False(CanEditProject(project, UserId, OwnDept));
+    }
+
+    [Fact]
+    public void Project_share_valid_through_today_is_visible_and_editable()
+    {
+        var share = ProjectShareEntity.ForUser(System.Guid.Empty, UserId, PMRolesConst.Tenant.Manger);
+        share.SetValidUntil(System.DateTime.UtcNow.Date);
+        var project = BuildProject(folderDept: OtherDept, createdBy: OtherUserId, share);
+
+        Assert.True(CanSeeProject(project, UserId, OwnDept, isViewerOnly: true));
+        Assert.True(CanEditProject(project, UserId, OwnDept));
+    }
+
+    [Fact]
     public void Project_created_by_user_in_other_department_is_editable()
     {
         var project = BuildProject(folderDept: OtherDept, createdBy: UserId);
@@ -109,6 +131,17 @@ public sealed class AccessRulesCanEditTests
     }
 
     [Fact]
+    public void Calculation_in_expired_share_is_not_visible_or_editable()
+    {
+        var share = ShareWithCalcs(PMRolesConst.Tenant.Manger, UserId, 1);
+        share.SetValidUntil(System.DateTime.UtcNow.Date.AddDays(-1));
+        var calc = BuildCalculation(calcDept: OtherDept, createdBy: OtherUserId, calcId: 1, shares: new[] { share });
+
+        Assert.False(CanSeeCalculation(calc, UserId, OwnDept, isViewerOnly: true));
+        Assert.False(CanEditCalculation(calc, UserId, OwnDept));
+    }
+
+    [Fact]
     public void Calculation_is_editable_for_admin()
     {
         var calc = BuildCalculation(calcDept: OtherDept, createdBy: OtherUserId, shares: System.Array.Empty<ProjectShareEntity>());
@@ -120,8 +153,14 @@ public sealed class AccessRulesCanEditTests
     private static bool CanEditProject(ProjectEntity project, int userId, int? departmentId)
         => ProjectAccessRules.CanEdit(userId, departmentId).Compile()(project);
 
+    private static bool CanSeeProject(ProjectEntity project, int userId, int? departmentId, bool isViewerOnly)
+        => ProjectAccessRules.CanSee(userId, departmentId, isViewerOnly).Compile()(project);
+
     private static bool CanEditCalculation(CalculationEntity calc, int userId, int? departmentId)
         => CalculationAccessRules.CanEdit(userId, departmentId).Compile()(calc);
+
+    private static bool CanSeeCalculation(CalculationEntity calc, int userId, int? departmentId, bool isViewerOnly)
+        => CalculationAccessRules.CanSee(userId, departmentId, isViewerOnly).Compile()(calc);
 
     private static ProjectShareEntity ShareWithCalcs(string role, int userId, params int[] calcIds)
     {

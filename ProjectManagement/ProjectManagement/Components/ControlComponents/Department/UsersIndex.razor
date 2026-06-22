@@ -287,8 +287,13 @@
                       EnablePaging="true"
                       InitialPageSize="10"
                       PageSizes="@(new List<int> { 10, 25, 50 })"
-                      RowKeySelector="u => u.Id">
-                <MhdTableColumn Title="">
+                      RowKeySelector="u => u.Id"
+                      EnableColumnResize="true"
+                      ColumnWidths="_userColumnWidths"
+                      OnColumnResized="OnUserColumnResized">
+                <MhdTableColumn Title="" ColumnKey="select" Frozen="true"
+                                HeaderClass="bg-white dark:bg-slate-900"
+                                CellClass="mhd-table-cell bg-white dark:bg-slate-900">
                     <Template Context="user">
                         <input type="checkbox"
                                checked="@IsSelected(user.Id)"
@@ -297,7 +302,9 @@
                     </Template>
                 </MhdTableColumn>
 
-                <MhdTableColumn Title='@WebLoc["Actions"]'>
+                <MhdTableColumn Title='@WebLoc["Actions"]' ColumnKey="actions" Frozen="true"
+                                HeaderClass="bg-white dark:bg-slate-900"
+                                CellClass="mhd-table-cell bg-white dark:bg-slate-900">
                     <Template Context="user">
                         <div class="flex items-center gap-1.5">
                             <button class="inline-flex items-center justify-center rounded-md border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
@@ -415,10 +422,10 @@
                     </Template>
                 </MhdTableColumn>
 
-                <MhdTableColumn Title="@ResourceIdentity.email" ValueSelector="u => u.Email" Sortable="true" />
-                <MhdTableColumn Title="@CalcResource.name" ValueSelector="u => GetDisplayName(u)" Sortable="true" />
-                <MhdTableColumn Title='@WebLoc["Role"]' ValueSelector='u => GetRoleName(u)' />
-                <MhdTableColumn Title='@WebLoc["AuthStatus"]'>
+                <MhdTableColumn Title="@ResourceIdentity.email" ColumnKey="email" ValueSelector="u => u.Email" Sortable="true" />
+                <MhdTableColumn Title="@CalcResource.name" ColumnKey="name" ValueSelector="u => GetDisplayName(u)" Sortable="true" />
+                <MhdTableColumn Title='@WebLoc["Role"]' ColumnKey="role" ValueSelector='u => GetRoleName(u)' />
+                <MhdTableColumn Title='@WebLoc["AuthStatus"]' ColumnKey="authStatus">
                     <Template Context="user">
                         @if (!user.IsInAuth)
                         {
@@ -452,10 +459,10 @@
                         }
                     </Template>
                 </MhdTableColumn>
-                <MhdTableColumn Title='@WebLoc["LastLogin"]' ValueSelector='u => FormatDateTime(u.LastLoginAt)' />
-                <MhdTableColumn Title='@WebLoc["Lockout"]' ValueSelector='u => u.LockoutEnabled ? WebLoc["Enabled"].Value : WebLoc["Disabled"].Value' />
-                <MhdTableColumn Title='@WebLoc["LockoutStart"]' ValueSelector='u => FormatDate(u.LockoutStart)' />
-                <MhdTableColumn Title='@WebLoc["LockoutEnd"]' ValueSelector='u => FormatDate(u.LockoutEnd)' />
+                <MhdTableColumn Title='@WebLoc["LastLogin"]' ColumnKey="lastLogin" ValueSelector='u => FormatDateTime(u.LastLoginAt)' />
+                <MhdTableColumn Title='@WebLoc["Lockout"]' ColumnKey="lockout" ValueSelector='u => u.LockoutEnabled ? WebLoc["Enabled"].Value : WebLoc["Disabled"].Value' />
+                <MhdTableColumn Title='@WebLoc["LockoutStart"]' ColumnKey="lockoutStart" ValueSelector='u => FormatDate(u.LockoutStart)' />
+                <MhdTableColumn Title='@WebLoc["LockoutEnd"]' ColumnKey="lockoutEnd" ValueSelector='u => FormatDate(u.LockoutEnd)' />
             </MhdTable>
         </div>
         }

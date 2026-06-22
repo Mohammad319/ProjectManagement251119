@@ -18,6 +18,7 @@ namespace ProjectManagement.Shared.DTO.Project
         public int? DepartmentId { get; set; }
         public string RecipientName { get; set; } = string.Empty;
         public string Role { get; set; } = string.Empty;
+        public DateTime? ValidUntil { get; set; }
         public List<int> CalculationIds { get; set; } = [];
     }
 
@@ -61,6 +62,7 @@ namespace ProjectManagement.Shared.DTO.Project
         public int? UserId { get; set; }
         public int? DepartmentId { get; set; }
         public string Role { get; set; } = string.Empty;
+        public DateTime? ValidUntil { get; set; }
         public List<int> CalculationIds { get; set; } = [];
     }
 }

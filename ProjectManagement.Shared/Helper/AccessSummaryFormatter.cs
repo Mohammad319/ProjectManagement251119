@@ -24,10 +24,10 @@ namespace ProjectManagement.Shared.Helper
         public const string ProjectTypeDepartmentOnly = "Endast avdelningsåtkomst";
         /// <summary>Kalkyl: ingen extra delning, endast tillgänglig via projektet.</summary>
         public const string CalcTypeProjectOnly = "Endast projektåtkomst";
-        /// <summary>Projektet/kalkylen har extra delning till personer eller avdelningar.</summary>
-        public const string TypeShared = "Extra delad";
-        /// <summary>Delat men mottagaren har bara tillgång till vissa kalkyler.</summary>
-        public const string TypeLimited = "Begränsad kalkylåtkomst";
+        /// <summary>Projektet/kalkylen är delad med personer eller avdelningar utöver den normala åtkomsten.</summary>
+        public const string TypeShared = "Delad med andra";
+        /// <summary>Projektet är delat, men bara vissa kalkyler ingår i delningen.</summary>
+        public const string TypeLimited = "Delvis delad";
         /// <summary>Kalkyl: privat (syns bara för ägare/Admin).</summary>
         public const string CalcTypePrivate = "Privat";
 
@@ -92,13 +92,13 @@ namespace ProjectManagement.Shared.Helper
             access is not null ? access.Recipients.Count > 0 : fallbackIsShared;
 
         /// <summary>
-        /// Kompakt sammanfattning utan långa namn: "Avdelningsåtkomst", "Delad · 2 personer",
-        /// "Delad · Produktion", "Delad · 2 personer · 1 avdelning" eller "Begränsad · 3/5 kalkyler".
+        /// Kompakt sammanfattning utan långa namn: "Avdelningsåtkomst", "Delad med andra · 2 personer",
+        /// "Delad med andra · Produktion" eller "Delvis delad · 3/5 kalkyler".
         /// </summary>
         public static string ProjectSummaryText(ProjectAccessSummaryDTO? access, bool fallbackIsShared)
         {
             if (access is null)
-                return fallbackIsShared ? "Delad" : "Avdelningsåtkomst";
+                return fallbackIsShared ? TypeShared : "Avdelningsåtkomst";
 
             var recips = access.Recipients;
             if (recips.Count == 0)
@@ -109,10 +109,10 @@ namespace ProjectManagement.Shared.Helper
                 // Show the LEAST-covered recipient. When any recipient is limited this is always
                 // below the total, so the label never reads as a contradictory "n/n kalkyler".
                 int min = recips.Min(r => r.CalcCount);
-                return $"Begränsad · {min}/{access.ShareableCalcCount} kalkyler";
+                return $"{TypeLimited} · {min}/{access.ShareableCalcCount} kalkyler";
             }
 
-            return $"Delad · {RecipientCountText(recips)}";
+            return $"{TypeShared} · {RecipientCountText(recips)}";
         }
 
         /// <summary>Filtervärden raden matchar: åtkomsttyp, åtkomstnivå och mottagare.</summary>
@@ -139,7 +139,7 @@ namespace ProjectManagement.Shared.Helper
             access is not null && access.Recipients.Count > 0;
 
         /// <summary>
-        /// Kompakt sammanfattning: "Privat", "Via projekt", "Delad · 2 personer", "Delad · Produktion".
+        /// Kompakt sammanfattning: "Privat", "Via projekt", "Delad med andra · 2 personer".
         /// </summary>
         public static string CalcSummaryText(CalculationAccessSummaryDTO? access, bool isPrivate)
         {
@@ -150,9 +150,9 @@ namespace ProjectManagement.Shared.Helper
 
             var recips = access.Recipients;
             if (recips.Count == 0)
-                return access.ViaProject ? "Via projekt" : "Delad";
+                return access.ViaProject ? "Via projekt" : TypeShared;
 
-            return $"Delad · {RecipientCountText(recips)}";
+            return $"{TypeShared} · {RecipientCountText(recips)}";
         }
 
         /// <summary>Filtervärden raden matchar: åtkomsttyp, åtkomstnivå och mottagare.</summary>
