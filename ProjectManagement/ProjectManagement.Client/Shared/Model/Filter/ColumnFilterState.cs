@@ -1,6 +1,20 @@
 namespace ProjectManagement.Client.Shared.Model.Filter;
 
 public enum ColumnFilterType { Text, Date, Number, Dropdown, Boolean }
+
+/// <summary>One selectable option in a grouped dropdown filter (display label decoupled from match value).</summary>
+public sealed class FilterOption
+{
+    public required string Value { get; init; }
+    public required string Label { get; init; }
+}
+
+/// <summary>A headed section of <see cref="FilterOption"/>s in a grouped dropdown filter.</summary>
+public sealed class FilterOptionGroup
+{
+    public required string Header { get; init; }
+    public required List<FilterOption> Options { get; init; }
+}
 public enum TextFilterOp  { Contains, Equals, NotEquals, IsEmpty, StartsWith, EndsWith, Like, IsNotEmpty }
 public enum DateFilterOp  { On, Before, After, Between, IsEmpty, IsNotEmpty }
 public enum NumberFilterOp { Equals, GreaterThan, LessThan, Between, IsEmpty, NotEquals, IsNotEmpty }
@@ -24,6 +38,14 @@ public class ColumnFilterState
 
     public HashSet<string> SelectedValues { get; set; } = [];
     public List<string> AvailableValues { get; set; } = [];
+
+    /// <summary>
+    /// Optional grouped representation for a dropdown filter. When set (non-empty) the popup
+    /// renders headed sections with thin dividers instead of a single flat list. Each option's
+    /// <see cref="FilterOption.Value"/> is what ends up in <see cref="SelectedValues"/> and is
+    /// matched against the row tags; <see cref="FilterOption.Label"/> is what the user sees.
+    /// </summary>
+    public List<FilterOptionGroup>? AvailableGroups { get; set; }
 
     public bool IsActive => Type switch
     {

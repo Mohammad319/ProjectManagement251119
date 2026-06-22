@@ -2,6 +2,7 @@ using AuthPermissions.Context;
 using Domain.Repository.AuthPermissions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.Models.Account;
 
 namespace AuthPermissions.Services.Implement;
@@ -11,6 +12,16 @@ public class AuthRepository(
     UserManager<ApplicationUser> userManager,
     RoleManager<IdentityRole> roleManager) : IAuthRepository
 {
+    // Tenant-scope role names; used to pick a user's tenant role (ignoring any app-scope role)
+    // when projecting UserAuthModel.Role for the sharing/department UIs.
+    private static readonly string[] TenantRoleNames =
+    [
+        PMRolesConst.Tenant.Admin,
+        PMRolesConst.Tenant.Manger,
+        PMRolesConst.Tenant.User,
+        PMRolesConst.Tenant.Viewer
+    ];
+
     public static string[] GetRoles() => [.. IdentityUserSyncHelper.GetAllRoles()];
 
     public async Task<bool> Initialize(string email, string pass)
@@ -113,7 +124,14 @@ public class AuthRepository(
                 Id = user.Id,
                 LockoutEnabled = user.LockoutEnabled,
                 LockoutEnd = user.LockoutEnd,
-                NormalizedEmail = user.NormalizedEmail ?? string.Empty
+                NormalizedEmail = user.NormalizedEmail ?? string.Empty,
+                // The user's tenant role (e.g. "TenantUser"/"TenantViewer"). Needed by the project
+                // sharing dialog to cap system-Visare and to summarise department access. App-scope
+                // roles are intentionally excluded.
+                Role = (from ur in appContext.UserRoles
+                        join r in appContext.Roles on ur.RoleId equals r.Id
+                        where ur.UserId == user.Id && TenantRoleNames.Contains(r.Name)
+                        select r.Name).FirstOrDefault() ?? string.Empty
             })
             .ToListAsync();
     }

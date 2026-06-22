@@ -196,7 +196,32 @@
       "Bash(dotnet run *)",
       "Bash(tee /tmp/pmrun.log)",
       "Bash(curl -s -c /tmp/pmcookies.txt http://localhost:5286/Account/Login -o /tmp/login.html -w \"HTTP %{http_code}\\\\n\")",
-      "Bash(python -)"
+      "Bash(python -)",
+      "Bash(printenv)",
+      "Bash(export ASPNETCORE_ENVIRONMENT=Development)",
+      "Bash(export ASPNETCORE_URLS=\"http://localhost:5286\")",
+      "Bash(nohup dotnet run --project \"ProjectManagement/ProjectManagement/ProjectManagement.csproj\" --no-launch-profile)",
+      "Bash(echo \"started pid $!\")",
+      "Bash(mkdir -p /tmp/pwverify)",
+      "Bash(npm init *)",
+      "Bash(export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1)",
+      "Bash(npm i *)",
+      "Bash(node -e \"console.log\\(require\\('playwright-core/package.json'\\).version\\)\")",
+      "Bash(node recon.mjs)",
+      "Read(//c/tmp/pwverify/**)",
+      "Bash(sed -e \"s/nordbygg.admin@test.local/nordbygg.user01@test.local/\" -e \"s#/tmp/pwverify/state.json#/tmp/pwverify/state_user01.json#\" login.mjs)",
+      "Bash(node login_user01.mjs)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5286/health/ready)",
+      "Bash(sed -i \"s#await page.click\\('text=Demoprojekt'\\);#await page.waitForSelector\\('text=Demoprojekt', { timeout: 60000 }\\);\\\\nawait page.click\\('text=Demoprojekt'\\);#\" viewercap.mjs)",
+      "Bash(node viewercap.mjs)",
+      "Bash(taskkill //F //IM dotnet.exe //T)",
+      "Bash(echo \"relaunch pid $!\")",
+      "Bash(node peek.mjs)",
+      "Bash(ls -d AuthPermissions*)",
+      "Bash(find . -maxdepth 2 -name \"AuthPermissions.csproj\")",
+      "Bash(echo \"pid $!\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5286/health/ready)",
+      "Bash(curl -s -o /dev/null -w \"health=%{http_code}\\\\n\" http://localhost:5286/health/ready)"
     ]
   }
 }

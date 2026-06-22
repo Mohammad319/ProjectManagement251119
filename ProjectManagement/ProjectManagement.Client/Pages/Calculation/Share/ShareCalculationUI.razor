@@ -5,6 +5,15 @@
 @inherits AppComponentBase
 @attribute [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
 
+@*
+    DEPRECATED – kalkylspecifik delning (gamla modellen via Repo.ShareCalc).
+    Delning sker numera på PROJEKTNIVÅ via ProjectShareUI ("Delning och behörighet"),
+    där man väljer vilka kalkyler i projektet som ska ingå. Den här dialogen får INTE
+    längre öppnas från någon kalkylmeny eller från åtkomstkolumnen. Den lämnas kvar
+    enbart så att befintlig kalkyldelningsdata/-API inte bryts; den ska inte återanvändas
+    i nya UI-flöden. Migrera/ersätt helt i en senare version.
+*@
+
 <div class="space-y-3">
     @if (Form != null)
     {

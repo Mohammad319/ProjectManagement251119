@@ -879,35 +879,35 @@
                                     <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger" Context="calcAccessAuth">
                                         <Authorized>
                                             <button type="button"
-                                                    class="@(calcShared ? "inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-left text-sky-700 transition hover:bg-sky-50 hover:underline dark:text-sky-300 dark:hover:bg-sky-950/40" : "inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-left text-slate-500 transition hover:bg-slate-100 hover:underline dark:text-slate-400 dark:hover:bg-slate-800")"
+                                                    class="@(calcShared ? "inline-flex max-w-[200px] items-center gap-1 rounded px-1.5 py-0.5 text-left text-sky-700 transition hover:bg-sky-50 hover:underline dark:text-sky-300 dark:hover:bg-sky-950/40" : "inline-flex max-w-[200px] items-center gap-1 rounded px-1.5 py-0.5 text-left text-slate-500 transition hover:bg-slate-100 hover:underline dark:text-slate-400 dark:hover:bg-slate-800")"
                                                     title="@CalcAccessTooltip(calu)"
                                                     @onclick="() => OpenCalcShareDialog(calu)">
                                                 @if (calcShared)
                                                 {
-                                                    <i class="fa-solid fa-share-nodes text-sky-500"></i>
+                                                    <i class="fa-solid fa-share-nodes shrink-0 text-sky-500"></i>
                                                 }
                                                 else if (calu.IsPrivate)
                                                 {
-                                                    <i class="fa-solid fa-lock text-amber-500"></i>
+                                                    <i class="fa-solid fa-lock shrink-0 text-amber-500"></i>
                                                 }
                                                 else
                                                 {
-                                                    <i class="fa-solid fa-diagram-project text-slate-400"></i>
+                                                    <i class="fa-solid fa-diagram-project shrink-0 text-slate-400"></i>
                                                 }
-                                                <span>@CalcAccessSummaryText(calu)</span>
+                                                <span class="min-w-0 truncate">@CalcAccessSummaryText(calu)</span>
                                             </button>
                                         </Authorized>
                                         <NotAuthorized>
-                                            <span class="inline-flex items-center gap-1" title="@CalcAccessTooltip(calu)">
+                                            <span class="inline-flex max-w-[200px] items-center gap-1" title="@CalcAccessTooltip(calu)">
                                                 @if (calcShared)
                                                 {
-                                                    <i class="fa-solid fa-share-nodes text-sky-500"></i>
+                                                    <i class="fa-solid fa-share-nodes shrink-0 text-sky-500"></i>
                                                 }
                                                 else if (calu.IsPrivate)
                                                 {
-                                                    <i class="fa-solid fa-lock text-amber-500"></i>
+                                                    <i class="fa-solid fa-lock shrink-0 text-amber-500"></i>
                                                 }
-                                                <span>@CalcAccessSummaryText(calu)</span>
+                                                <span class="min-w-0 truncate">@CalcAccessSummaryText(calu)</span>
                                             </span>
                                         </NotAuthorized>
                                     </AuthorizeView>
@@ -1222,7 +1222,7 @@
                 state.AvailableValues = GetCalcDropdownValues(c => c.Inspector);
                 break;
             case "access":
-                state.AvailableValues = GetCalcAccessFilterValues();
+                state.AvailableGroups = GetCalcAccessFilterGroups();
                 break;
         }
         return state;
@@ -1989,41 +1989,76 @@
 
     private static string CalcAccessTooltip(ListCalculationMVVM c)
     {
-        if (c.IsPrivate) return "Privat kalkyl – endast ägare/Admin kan se den.";
+        // Delning sker på projektnivå: vägled användaren till projektets delningsdialog.
+        const string viaProjectHint = "Kalkyler delas via projektets delning. Klicka för att öppna projektets \"Delning och behörighet\" och välj vilka kalkyler som ska ingå.";
+        if (c.IsPrivate) return $"Privat kalkyl – endast ägare/Admin kan se den.\n{viaProjectHint}";
         var a = c.Access;
-        if (a is null) return "Kalkylen är tillgänglig via projektets normala åtkomst.";
+        if (a is null) return $"Kalkylen är tillgänglig via projektets normala åtkomst.\n{viaProjectHint}";
 
         var lines = new List<string>();
-        if (a.ViaProject) lines.Add("Via projektets avdelning");
+        if (a.ViaProject) lines.Add("Via projektåtkomst");
         foreach (var r in a.Recipients)
         {
-            var typ = r.Type == ProjectShareRecipientType.Department ? "avdelning" : "användare";
-            lines.Add($"{r.Name} · {AccessSummaryFormatter.RoleLabel(r.Role)} · {typ}");
+            var typ = r.Type == ProjectShareRecipientType.Department ? "avdelning" : "person";
+            lines.Add($"{r.Name} · {AccessSummaryFormatter.AccessLevelLabel(r.Role)} · {typ}");
         }
         if (lines.Count == 0) lines.Add("Ingen extra delning");
         lines.Add("Klicka för detaljer.");
         return string.Join("\n", lines);
     }
 
-    private List<string> GetCalcAccessFilterValues()
+    // Grupperade filtervärden: Åtkomsttyp, Åtkomstnivå, Personer, Avdelningar.
+    private List<FilterOptionGroup> GetCalcAccessFilterGroups()
     {
-        var values = new List<string>
+        static FilterOption Opt(string s) => new() { Value = s, Label = s };
+
+        var groups = new List<FilterOptionGroup>
         {
-            AccessSummaryFormatter.CalcTagViaProject,
-            AccessSummaryFormatter.CalcTagShared,
-            AccessSummaryFormatter.CalcTagPrivate,
-            AccessSummaryFormatter.CalcTagLimited,
-            AccessSummaryFormatter.PermManagerTag,
-            AccessSummaryFormatter.PermViewerTag
+            new()
+            {
+                Header = AccessSummaryFormatter.GroupAccessType,
+                Options =
+                [
+                    Opt(AccessSummaryFormatter.CalcTypeProjectOnly),
+                    Opt(AccessSummaryFormatter.TypeShared),
+                    Opt(AccessSummaryFormatter.TypeLimited),
+                    Opt(AccessSummaryFormatter.CalcTypePrivate),
+                ]
+            },
+            new()
+            {
+                Header = AccessSummaryFormatter.GroupAccessLevel,
+                Options =
+                [
+                    Opt(AccessSummaryFormatter.LevelEdit),
+                    Opt(AccessSummaryFormatter.LevelView),
+                ]
+            },
         };
-        values.AddRange(BaseCalculations
+
+        var recips = BaseCalculations
             .Where(c => c.Access is not null)
             .SelectMany(c => c.Access!.Recipients)
-            .Select(AccessSummaryFormatter.RecipientFilterTag)
-            .Distinct()
-            .OrderBy(v => v, StringComparer.CurrentCultureIgnoreCase));
-        return values;
+            .ToList();
+
+        var persons = CalcRecipientOptions(recips, ProjectShareRecipientType.User);
+        if (persons.Count > 0)
+            groups.Add(new() { Header = AccessSummaryFormatter.GroupPersons, Options = persons });
+
+        var depts = CalcRecipientOptions(recips, ProjectShareRecipientType.Department);
+        if (depts.Count > 0)
+            groups.Add(new() { Header = AccessSummaryFormatter.GroupDepartments, Options = depts });
+
+        return groups;
     }
+
+    private static List<FilterOption> CalcRecipientOptions(IEnumerable<ProjectAccessRecipientDTO> recips, ProjectShareRecipientType type) =>
+        recips.Where(r => r.Type == type)
+            .Select(r => new FilterOption { Value = AccessSummaryFormatter.RecipientFilterValue(r), Label = r.Name })
+            .GroupBy(o => o.Value)
+            .Select(g => g.First())
+            .OrderBy(o => o.Label, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
 
     // Klick på "Åtkomst": öppna projektets delningsdialog (delning sker på projektnivå).
     private void OpenCalcShareDialog(ListCalculationMVVM calculation)
@@ -2038,6 +2073,7 @@
                 [nameof(ProjectShareUI.ProjectId)]           = project.Id,
                 [nameof(ProjectShareUI.ProjectName)]         = project.Name,
                 [nameof(ProjectShareUI.ProjectDepartmentId)] = project.DepartmentId,
+                [nameof(ProjectShareUI.ProjectResponsible)]  = project.Responsible,
                 [nameof(ProjectShareUI.OnCompleted)]         = EventCallback.Factory.Create(this, () => ReloadAfterShareChangeAsync(project))
             },
             BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
@@ -2271,7 +2307,7 @@
             if (item.IsCurrentVersion)
                 list.Add(new() { IconHtml = Icons.Edit, Label = ResourceApp.edit, OnClickAsync = () => { UpdateForm(item); return Task.CompletedTask; } });
             list.Add(new() { IconHtml = Icons.Copy, Label = "Versioner", OnClickAsync = () => { OpenVersionsDialog(item); return Task.CompletedTask; } });
-            list.Add(new() { IconHtml = Icons.PermissionShield, Label = ResourceApp.share, OnClickAsync = () => { ShareForm(item); return Task.CompletedTask; } });
+            // Delning sker på projektnivå – ingen separat kalkyldelning i kalkylmenyn (se ProjectShareUI).
             list.Add(new() { IconHtml = Icons.Folder, Label = AppLoc["moveCalculation"], OnClickAsync = () => { OpenMoveCopyDialog(item, MoveCopyOperation.Move); return Task.CompletedTask; } });
             list.Add(new() { IconHtml = Icons.Copy, Label = AppLoc["copyCalculation"], OnClickAsync = () => { OpenMoveCopyDialog(item, MoveCopyOperation.Copy); return Task.CompletedTask; } });
 
@@ -2348,17 +2384,6 @@
             await ReloadCalculationsAsync();
         }
         MHD.Notifications(ToastType.Update, ok);
-    }
-
-    void ShareForm(ListCalculationMVVM model)
-    {
-        Modal.ShowComponent<ShareCalculationUI>(
-            AppLoc[LocalizerConst.New, ResourceApp.share],
-            new Dictionary<string, object>
-            {
-                [nameof(ShareCalculationUI.ListCalculation)] = model
-            },
-            BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
     }
 
     void OpenMoveCopyDialog(ListCalculationMVVM calculation, string operation)

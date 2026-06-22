@@ -1623,7 +1623,7 @@ namespace ProjectManagement.Client.Pages.Folder
             {
                 list.Add(new() { IconHtml = Icons.Edit, Label = ResourceApp.edit, OnClickAsync = () => { EditCalculationFromTree(project, cal); return Task.CompletedTask; } });
                 list.Add(new() { IconHtml = Icons.Copy, Label = "Versioner", OnClickAsync = () => { OpenCalculationVersionsFromTree(project, cal); return Task.CompletedTask; } });
-                list.Add(new() { IconHtml = Icons.PermissionShield, Label = "Delning och behÃ¶righet", OnClickAsync = () => { OpenCalculationShareFromTree(cal); return Task.CompletedTask; } });
+                // Delning sker på projektnivå – ingen separat kalkyldelning i kalkylmenyn (se ProjectShareUI).
                 list.Add(new() { IconHtml = Icons.Folder, Label = AppLoc["moveCalculation"], OnClickAsync = () => { OpenMoveCopyCalcDialog(folder, project, cal, MoveCopyOperation.Move); return Task.CompletedTask; } });
                 list.Add(new() { IconHtml = Icons.Copy, Label = AppLoc["copyCalculation"], OnClickAsync = () => { OpenMoveCopyCalcDialog(folder, project, cal, MoveCopyOperation.Copy); return Task.CompletedTask; } });
                 list.Add(new() { IconHtml = Icons.Archive, Label = AppLoc["archiveCalculation"], OnClickAsync = async () => await ArchiveCalculationFromTreeAsync(project, cal) });
@@ -1844,7 +1844,8 @@ namespace ProjectManagement.Client.Pages.Folder
                 {
                     [nameof(ProjectShareUI.ProjectId)] = project.Id,
                     [nameof(ProjectShareUI.ProjectName)] = project.Name,
-                    [nameof(ProjectShareUI.ProjectDepartmentId)] = project.DepartmentId
+                    [nameof(ProjectShareUI.ProjectDepartmentId)] = project.DepartmentId,
+                    [nameof(ProjectShareUI.ProjectResponsible)] = project.Responsible
                 },
                 BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
 
@@ -1864,15 +1865,6 @@ namespace ProjectManagement.Client.Pages.Folder
                         })
                 },
                 BlazorMHD.UI.Core.Services.MhdDialogSize.Large);
-
-        private void OpenCalculationShareFromTree(ListCalculationMVVM calculation) =>
-            Modal.ShowComponent<ShareCalculationUI>(
-                "Delning och behÃ¶righet",
-                new Dictionary<string, object>
-                {
-                    [nameof(ShareCalculationUI.ListCalculation)] = calculation
-                },
-                BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
 
         private void OpenProjectBidsFromTree(ListProjectMVVM project) =>
             Modal.ShowComponent<ProjectBidsDialog>(

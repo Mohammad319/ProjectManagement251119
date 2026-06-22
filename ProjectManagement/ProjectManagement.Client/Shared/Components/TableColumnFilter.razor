@@ -120,17 +120,44 @@
         }
         else if (FilterState.Type == ColumnFilterType.Dropdown)
         {
-            <div class="max-h-40 space-y-0.5 overflow-y-auto">
-                @foreach (var option in FilterState.AvailableValues)
-                {
-                    var isChecked = FilterState.SelectedValues.Contains(option);
-                    <label class="flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 text-[11px] hover:bg-slate-50 dark:hover:bg-slate-800">
-                        <input type="checkbox" class="h-3 w-3" checked="@isChecked"
-                               @onchange="e => { if ((bool)(e.Value ?? false)) FilterState.SelectedValues.Add(option); else FilterState.SelectedValues.Remove(option); _ = Notify(); }" />
-                        <span class="text-slate-700 dark:text-slate-200">@option</span>
-                    </label>
-                }
-            </div>
+            @if (FilterState.AvailableGroups is { Count: > 0 } groups)
+            {
+                @* Grouped: headed sections with thin dividers. *@
+                <div class="max-h-56 space-y-1 overflow-y-auto">
+                    @for (var gi = 0; gi < groups.Count; gi++)
+                    {
+                        var group = groups[gi];
+                        if (group.Options.Count == 0) { continue; }
+                        <div class="@(gi > 0 ? "border-t border-slate-100 pt-1 dark:border-slate-700" : "")">
+                            <div class="px-1 pb-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400">@group.Header</div>
+                            @foreach (var option in group.Options)
+                            {
+                                var value = option.Value;
+                                var isChecked = FilterState.SelectedValues.Contains(value);
+                                <label class="flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 text-[11px] hover:bg-slate-50 dark:hover:bg-slate-800">
+                                    <input type="checkbox" class="h-3 w-3" checked="@isChecked"
+                                           @onchange="e => { if ((bool)(e.Value ?? false)) FilterState.SelectedValues.Add(value); else FilterState.SelectedValues.Remove(value); _ = Notify(); }" />
+                                    <span class="truncate text-slate-700 dark:text-slate-200" title="@option.Label">@option.Label</span>
+                                </label>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="max-h-40 space-y-0.5 overflow-y-auto">
+                    @foreach (var option in FilterState.AvailableValues)
+                    {
+                        var isChecked = FilterState.SelectedValues.Contains(option);
+                        <label class="flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 text-[11px] hover:bg-slate-50 dark:hover:bg-slate-800">
+                            <input type="checkbox" class="h-3 w-3" checked="@isChecked"
+                                   @onchange="e => { if ((bool)(e.Value ?? false)) FilterState.SelectedValues.Add(option); else FilterState.SelectedValues.Remove(option); _ = Notify(); }" />
+                            <span class="text-slate-700 dark:text-slate-200">@option</span>
+                        </label>
+                    }
+                </div>
+            }
         }
 
         <div class="mt-2 flex items-center justify-between gap-1 border-t border-slate-100 pt-2 dark:border-slate-700">

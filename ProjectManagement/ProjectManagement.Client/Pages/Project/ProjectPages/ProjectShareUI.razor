@@ -13,6 +13,19 @@
         <span class="font-semibold text-slate-800 dark:text-slate-100">Projekt:</span> @ProjectName
     </div>
 
+    @if (_loadFailed)
+    {
+        @* Hela dialogen kunde inte laddas – visa lokalt fel i stället för det globala felet. *@
+        <div class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-3 text-sm text-rose-700 dark:border-rose-900/70 dark:bg-rose-950/40 dark:text-rose-300">
+            <div class="font-semibold">Delning och behörighet kunde inte laddas. Försök igen.</div>
+            <button type="button"
+                    class="mt-2 inline-flex items-center rounded border border-rose-300 bg-white px-2.5 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-100 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-200"
+                    @onclick="ReloadAllAsync">Försök igen</button>
+        </div>
+    }
+    else
+    {
+
     @* ── Åtkomstöversikt (grupperad, skrivskyddad) ─────────────────── *@
     <div class="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-950">
         <button type="button"
@@ -26,12 +39,32 @@
         @if (_overviewOpen)
         {
             <div class="mt-2 space-y-3 text-sm">
-                @* Normal avdelningsåtkomst *@
+
+                @if (_overviewPartial)
+                {
+                    <div class="rounded border border-amber-200 bg-amber-50 px-2 py-1.5 text-[11px] text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300">
+                        Åtkomstöversikten kunde inte laddas helt. Vissa avdelningar visas som blandad åtkomst.
+                    </div>
+                }
+
+                @* Ägare / ansvariga *@
+                @if (HasOwnerResponsible)
+                {
+                    <div>
+                        <div class="mb-0.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300">Ägare / ansvariga</div>
+                        @if (!string.IsNullOrWhiteSpace(ProjectResponsible))
+                        {
+                            <div class="text-slate-600 dark:text-slate-300">@ProjectResponsible · Projektansvarig</div>
+                        }
+                    </div>
+                }
+
+                @* Avdelningsåtkomst (projektets egen avdelning) *@
                 <div>
-                    <div class="mb-0.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300">Normal åtkomst via projektets avdelning</div>
-                    @if (ProjectDepartmentName is { } depName)
+                    <div class="mb-0.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300">Avdelningsåtkomst</div>
+                    @if (ProjectDepartmentId is int ownDeptId && ProjectDepartmentName is { } depName)
                     {
-                        <div class="text-slate-600 dark:text-slate-300">@depName · Användare · Alla tillgängliga kalkyler</div>
+                        <div class="text-slate-600 dark:text-slate-300">@DeptAccessLine(depName, ownDeptId, null, "Alla tillgängliga kalkyler")</div>
                     }
                     else
                     {
@@ -39,15 +72,31 @@
                     }
                 </div>
 
-                @* Direkt delade användare *@
+                @* Delade personer (grupperade efter åtkomstnivå) *@
                 @{ var userShares = _shares.Where(s => s.RecipientType == ProjectShareRecipientType.User).ToList(); }
                 @if (userShares.Count > 0)
                 {
                     <div>
-                        <div class="mb-0.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300">Direkt delade</div>
-                        @foreach (var s in userShares)
+                        <div class="mb-0.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300">Delade personer</div>
+                        @{
+                            var canEdit = userShares.Where(s => s.Role == PMRolesConst.Tenant.Manger).ToList();
+                            var canView = userShares.Where(s => s.Role != PMRolesConst.Tenant.Manger).ToList();
+                        }
+                        @if (canEdit.Count > 0)
                         {
-                            <div class="text-slate-600 dark:text-slate-300" title="@CalcNamesTooltip(s)">@s.RecipientName · @RoleLabel(s.Role) · @OverviewCalcText(s)</div>
+                            <div class="ml-1 mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Kan ändra</div>
+                            @foreach (var s in canEdit)
+                            {
+                                <div class="ml-2 text-slate-600 dark:text-slate-300" title="@CalcNamesTooltip(s)">@s.RecipientName · @OverviewCalcText(s)</div>
+                            }
+                        }
+                        @if (canView.Count > 0)
+                        {
+                            <div class="ml-1 mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Kan visa</div>
+                            @foreach (var s in canView)
+                            {
+                                <div class="ml-2 text-slate-600 dark:text-slate-300" title="@CalcNamesTooltip(s)">@s.RecipientName · @OverviewCalcText(s)</div>
+                            }
                         }
                     </div>
                 }
@@ -57,17 +106,17 @@
                 @if (deptShares.Count > 0)
                 {
                     <div>
-                        <div class="mb-0.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300">Via avdelning</div>
+                        <div class="mb-0.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300">Delade avdelningar</div>
                         @foreach (var s in deptShares)
                         {
-                            <div class="text-slate-600 dark:text-slate-300" title="@CalcNamesTooltip(s)">@s.RecipientName · @RoleLabel(s.Role) · @OverviewCalcText(s)</div>
+                            <div class="text-slate-600 dark:text-slate-300" title="@CalcNamesTooltip(s)">@DeptAccessLine(s.RecipientName, s.DepartmentId, s.Role, OverviewCalcText(s))</div>
                         }
                     </div>
                 }
 
                 @if (userShares.Count == 0 && deptShares.Count == 0)
                 {
-                    <div class="text-[11px] text-slate-400">Ingen extra delning – projektet är bara tillgängligt via normal avdelningsåtkomst.</div>
+                    <div class="text-[11px] text-slate-400">Ingen extra delning – projektet är bara tillgängligt via avdelningsåtkomst.</div>
                 }
             </div>
         }
@@ -86,64 +135,128 @@
                 <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Mottagartyp</label>
                 <div class="inline-flex overflow-hidden rounded-lg border border-slate-300 dark:border-slate-600">
                     <button type="button"
+                            disabled="@_editingId.HasValue"
                             class="@RecipientTabClass(ProjectShareRecipientType.User)"
-                            @onclick="() => SetRecipientType(ProjectShareRecipientType.User)">Användare</button>
+                            @onclick="() => SetRecipientType(ProjectShareRecipientType.User)">Person</button>
                     <button type="button"
+                            disabled="@_editingId.HasValue"
                             class="@RecipientTabClass(ProjectShareRecipientType.Department)"
                             @onclick="() => SetRecipientType(ProjectShareRecipientType.Department)">Avdelning</button>
                 </div>
             </div>
 
-            @* Behörighet i detta projekt *@
+            @* Åtkomstnivå i detta projekt *@
             <div>
-                <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Behörighet i detta projekt</label>
+                <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Åtkomstnivå i detta projekt</label>
                 <select class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
-                        value="@_role" @onchange="e => _role = e.Value?.ToString() ?? PMRolesConst.Tenant.Viewer">
-                    <option value="@PMRolesConst.Tenant.Viewer">Visare</option>
-                    <option value="@PMRolesConst.Tenant.Manger" disabled="@DisableMangerOption">Användare</option>
+                        value="@_role" @onchange="OnRoleChanged">
+                    <option value="@PMRolesConst.Tenant.Viewer">Kan visa</option>
+                    <option value="@PMRolesConst.Tenant.Manger" disabled="@DisableEditOption">Kan ändra</option>
                 </select>
-                @if (DisableMangerOption)
+                @if (DisableEditOption)
                 {
                     <p class="mt-1 text-[10px] leading-snug text-amber-600 dark:text-amber-400">
-                        Den här personen har systemrollen Visare och kan inte tilldelas Användare-behörighet.
+                        Den här personen har systemrollen Visare och kan inte tilldelas ändringsrätt.
+                    </p>
+                }
+                else if (_recipientType == ProjectShareRecipientType.User && !_editingId.HasValue && _role == PMRolesConst.Tenant.Manger && _userOptions.Any(u => u.IsViewer))
+                {
+                    <p class="mt-1 text-[10px] leading-snug text-amber-600 dark:text-amber-400">
+                        Personer med systemrollen Visare kan bara få åtkomstnivån Kan visa och går inte att välja här.
                     </p>
                 }
             </div>
 
             @if (_recipientType == ProjectShareRecipientType.User)
             {
-                <div>
-                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Filtrera användare efter avdelning</label>
-                    <select class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
-                            value="@_userFilterDeptId" @onchange="OnUserFilterChanged">
-                        <option value="0">Alla avdelningar</option>
-                        @foreach (var d in _departments)
+                @if (_editingId.HasValue)
+                {
+                    @* Vid ändring är mottagaren låst – endast åtkomstnivå/kalkyler ändras. *@
+                    <div class="md:col-span-2">
+                        <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Person</label>
+                        <div class="rounded-lg border border-slate-300 bg-slate-100 px-2 py-1.5 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200">
+                            @EditingRecipientName
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div>
+                        <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Filtrera personer efter avdelning</label>
+                        <select class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
+                                value="@_userFilterDeptId" @onchange="OnUserFilterChanged">
+                            <option value="0">Alla avdelningar</option>
+                            @foreach (var d in _departments)
+                            {
+                                <option value="@d.Id">@d.Name</option>
+                            }
+                            <option value="-1">Utan avdelning</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Personer</label>
+                        @if (_userOptions.Count == 0)
                         {
-                            <option value="@d.Id">@d.Name</option>
+                            <p class="rounded border border-dashed border-slate-300 px-2 py-2 text-center text-[11px] text-slate-400 dark:border-slate-700">
+                                Inga personer i urvalet.
+                            </p>
                         }
-                        <option value="-1">Utan avdelning</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Person/användare</label>
-                    <select class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm disabled:bg-slate-100 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100 dark:disabled:bg-slate-900"
-                            disabled="@(_userOptions.Count == 0)"
-                            value="@_userId" @onchange="OnUserChanged">
-                        <option value="">@(_userOptions.Count == 0 ? "Inga användare i urvalet" : "Välj användare...")</option>
-                        @foreach (var u in _userOptions)
+                        else
                         {
-                            <option value="@u.Id" disabled="@(u.AlreadyDirect && _editingId is null)">
-                                @u.Name@(u.AccessNote is null ? "" : $" · {u.AccessNote}")
-                            </option>
+                            <div class="max-h-40 space-y-0.5 overflow-y-auto rounded border border-slate-300 bg-white p-1 dark:border-slate-600 dark:bg-slate-950">
+                                @foreach (var u in _userOptions)
+                                {
+                                    var user = u;
+                                    var blockedAsViewer = _role == PMRolesConst.Tenant.Manger && user.IsViewer;
+                                    var disabled = user.AlreadyDirect || blockedAsViewer;
+                                    var tip = user.AlreadyDirect ? user.AccessNote
+                                        : blockedAsViewer ? "Den här personen har systemrollen Visare och kan bara få åtkomstnivån Kan visa."
+                                        : user.AccessNote;
+                                    <label class="flex items-center gap-2 rounded px-1.5 py-1 text-sm @(disabled ? "opacity-50" : "hover:bg-slate-50 dark:hover:bg-slate-800")"
+                                           title="@tip">
+                                        <input type="checkbox"
+                                               class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 disabled:cursor-not-allowed dark:border-slate-600 dark:bg-slate-800"
+                                               checked="@_selectedUserIds.Contains(user.Id)"
+                                               disabled="@disabled"
+                                               @onchange="e => ToggleUser(user.Id, e.Value is bool b && b)" />
+                                        <span class="min-w-0 flex-1 truncate text-slate-700 dark:text-slate-200">@user.Name</span>
+                                        @if (user.IsViewer)
+                                        {
+                                            <span class="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-400">Visare</span>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(user.AccessNote))
+                                        {
+                                            <span class="shrink-0 text-[10px] text-slate-400">@user.AccessNote</span>
+                                        }
+                                    </label>
+                                }
+                            </div>
+                            @if (_selectedUserIds.Count > 0)
+                            {
+                                <div class="mt-1.5">
+                                    <div class="mb-0.5 text-[10px] font-medium text-slate-500 dark:text-slate-400">Valda personer (@_selectedUserIds.Count)</div>
+                                    <div class="flex flex-wrap gap-1">
+                                        @foreach (var id in _selectedUserIds)
+                                        {
+                                            var pid = id;
+                                            <span class="inline-flex items-center gap-1 rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-medium text-sky-800 dark:bg-sky-950/60 dark:text-sky-200">
+                                                @UserName(pid)
+                                                <button type="button" class="text-sky-600 hover:text-sky-900 dark:text-sky-300" @onclick="() => ToggleUser(pid, false)" aria-label="Ta bort">×</button>
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
+                            }
                         }
-                    </select>
-                </div>
+                    </div>
+                }
             }
             else
             {
                 <div class="md:col-span-2">
                     <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Välj avdelning</label>
                     <select class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
+                            disabled="@_editingId.HasValue"
                             value="@_departmentId" @onchange="e => _departmentId = ParseNullableInt(e.Value)">
                         <option value="">Välj avdelning...</option>
                         @foreach (var d in _departments)
@@ -155,10 +268,10 @@
             }
         </div>
 
-        @if (DuplicateRecipient)
+        @if (DuplicateDepartment)
         {
             <p class="mt-2 rounded border border-amber-200 bg-amber-50 px-2 py-1.5 text-[11px] text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300">
-                Mottagaren har redan en delning för det här projektet. Använd <span class="font-semibold">Ändra</span> i tabellen nedan i stället.
+                Avdelningen har redan en delning för det här projektet. Använd <span class="font-semibold">Ändra</span> i tabellen nedan i stället.
             </p>
         }
 
@@ -207,6 +320,13 @@
                     }
                 </div>
             }
+
+            @if (HasShareableCalcs && SelectedShareableCalcCount == 0)
+            {
+                <p class="mt-1.5 rounded border border-amber-200 bg-amber-50 px-2 py-1.5 text-[11px] text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300">
+                    Ingen kalkyl vald – välj minst en kalkyl att dela. En delning utan kalkyler sparas inte.
+                </p>
+            }
         </div>
 
         <div class="mt-3 flex items-center justify-end gap-2">
@@ -242,8 +362,8 @@
                     <thead class="bg-slate-100 dark:bg-slate-800">
                         <tr>
                             <th class="p-2 text-left font-medium text-slate-700 dark:text-slate-200">Mottagare</th>
-                            <th class="p-2 text-left font-medium text-slate-700 dark:text-slate-200">Typ</th>
-                            <th class="p-2 text-left font-medium text-slate-700 dark:text-slate-200">Behörighet</th>
+                            <th class="p-2 text-left font-medium text-slate-700 dark:text-slate-200">Mottagartyp</th>
+                            <th class="p-2 text-left font-medium text-slate-700 dark:text-slate-200">Åtkomstnivå</th>
                             <th class="p-2 text-left font-medium text-slate-700 dark:text-slate-200">Kalkyler</th>
                             <th class="p-2 text-left font-medium text-slate-700 dark:text-slate-200">Källa</th>
                             <th class="p-2 text-right font-medium text-slate-700 dark:text-slate-200">Åtgärder</th>
@@ -255,8 +375,8 @@
                             var share = s;
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60">
                                 <td class="p-2 text-slate-800 dark:text-slate-200">@share.RecipientName</td>
-                                <td class="p-2 text-slate-500 dark:text-slate-400">@(share.RecipientType == ProjectShareRecipientType.User ? "Användare" : "Avdelning")</td>
-                                <td class="p-2 text-slate-500 dark:text-slate-400">@RoleLabel(share.Role)</td>
+                                <td class="p-2 text-slate-500 dark:text-slate-400">@(share.RecipientType == ProjectShareRecipientType.User ? "Person" : "Avdelning")</td>
+                                <td class="p-2 text-slate-500 dark:text-slate-400">@AccessLevelLabel(share.Role)</td>
                                 <td class="p-2 text-slate-600 dark:text-slate-300" title="@CalcNamesTooltip(share)">@CalcSummary(share)</td>
                                 <td class="p-2 text-slate-500 dark:text-slate-400">@SourceLabel(share)</td>
                                 <td class="p-2">
@@ -276,32 +396,48 @@
             </div>
         }
     </div>
+
+    }
 </div>
 
 @code {
     [Parameter, EditorRequired] public Guid ProjectId { get; set; }
     [Parameter] public string ProjectName { get; set; } = string.Empty;
-    // The project's owning department — recipients in it already have access "via projektets avdelning".
+    // The project's owning department — recipients in it already have access "via avdelningsåtkomst".
     [Parameter] public int? ProjectDepartmentId { get; set; }
+    // Optional: project responsible (shown under "Ägare / ansvariga" when present). No new data model.
+    [Parameter] public string? ProjectResponsible { get; set; }
     [Parameter] public EventCallback OnCompleted { get; set; }
 
     private List<ProjectShareListItemDTO> _shares = [];
     private List<ListCalculationMVVM> _calcs = [];
     private List<ListDTO> _departments = [];
     private List<UserOption> _userOptions = [];
+    // Department member composition: deptId → (editors = system Användare, viewers = rest). Missing ⇒ "Blandad åtkomst".
+    private readonly Dictionary<int, (int Editors, int Viewers)> _deptComposition = [];
+    // Names for selected-person chips that may not be in the current filtered list.
+    private readonly Dictionary<int, string> _userNameCache = [];
+    // System-role lookup so the Visare cap holds even for persons selected under another filter.
+    private readonly Dictionary<int, bool> _userIsViewerCache = [];
 
     // Form state
     private int? _editingId;
     private ProjectShareRecipientType _recipientType = ProjectShareRecipientType.User;
     private int _userFilterDeptId;          // 0 = alla, -1 = utan avdelning, >0 = avdelning
-    private int? _userId;
+    private readonly HashSet<int> _selectedUserIds = [];
     private int? _departmentId;
     private string _role = PMRolesConst.Tenant.Viewer;
     private readonly HashSet<int> _selectedCalcIds = [];
     private bool _saving;
     private bool _overviewOpen = true;
 
-    // Projektets egen avdelning – recipients i den har redan normal åtkomst.
+    // Loading/error state
+    private bool _loadFailed;     // whole dialog couldn't load
+    private bool _overviewPartial; // overview couldn't be computed fully (some dept fetches failed)
+
+    private bool HasOwnerResponsible => !string.IsNullOrWhiteSpace(ProjectResponsible);
+
+    // Projektets egen avdelning – recipients i den har redan avdelningsåtkomst.
     private string? ProjectDepartmentName =>
         ProjectDepartmentId is int id ? _departments.FirstOrDefault(d => d.Id == id)?.Name : null;
 
@@ -312,38 +448,70 @@
     {
         var total = ShareableCalcCount;
         var n = share.CalculationIds.Count;
+        if (n == 0) return "Saknar kalkyler";
         if (total > 0 && n >= total) return "Alla tillgängliga kalkyler";
         if (total > 0) return $"{n}/{total} kalkyler";
         return n == 1 ? "1 kalkyl" : $"{n} kalkyler";
     }
 
-    private UserOption? SelectedUser => _userId is > 0 ? _userOptions.FirstOrDefault(u => u.Id == _userId) : null;
+    private string EditingRecipientName =>
+        _editingId is int id ? _shares.FirstOrDefault(s => s.Id == id)?.RecipientName ?? "—" : "—";
 
-    // System Visare cannot be granted "Användare" — effective permission is capped at the system role.
-    private bool DisableMangerOption => _recipientType == ProjectShareRecipientType.User && SelectedUser?.IsViewer == true;
+    private UserOption? EditingUser =>
+        _editingId is not null && _selectedUserIds.Count == 1
+            ? _userOptions.FirstOrDefault(u => u.Id == _selectedUserIds.First())
+            : null;
+
+    // "Kan ändra" is disabled only while editing a single system Visare (multiselect handles the rest per person).
+    private bool DisableEditOption => _editingId is not null && EditingUser?.IsViewer == true;
 
     private bool HasShareableCalcs => _calcs.Any(c => !c.IsPrivate);
 
-    private bool DuplicateRecipient =>
+    // Antal valda kalkyler som faktiskt går att dela (privata räknas aldrig).
+    private int SelectedShareableCalcCount => _selectedCalcIds.Count(id => _calcs.Any(c => c.Id == id && !c.IsPrivate));
+
+    private bool DuplicateDepartment =>
         _editingId is null &&
-        (_recipientType == ProjectShareRecipientType.User
-            ? _userId is > 0 && _shares.Any(s => s.RecipientType == ProjectShareRecipientType.User && s.UserId == _userId)
-            : _departmentId is > 0 && _shares.Any(s => s.RecipientType == ProjectShareRecipientType.Department && s.DepartmentId == _departmentId));
+        _recipientType == ProjectShareRecipientType.Department &&
+        _departmentId is > 0 &&
+        _shares.Any(s => s.RecipientType == ProjectShareRecipientType.Department && s.DepartmentId == _departmentId);
 
     private bool CanSave =>
         !string.IsNullOrWhiteSpace(_role) &&
-        !DuplicateRecipient &&
-        (_recipientType == ProjectShareRecipientType.User ? _userId is > 0 : _departmentId is > 0);
+        !DuplicateDepartment &&
+        // En delning måste innehålla minst en kalkyl – annars ger den ingen faktisk åtkomst.
+        SelectedShareableCalcCount > 0 &&
+        (_recipientType == ProjectShareRecipientType.User
+            ? _selectedUserIds.Count > 0
+            : _departmentId is > 0);
 
-    protected override async Task OnInitializedAsync()
+    private string UserName(int id) =>
+        _userNameCache.TryGetValue(id, out var n) ? n : $"#{id}";
+
+    protected override Task OnInitializedAsync() => ReloadAllAsync();
+
+    private async Task ReloadAllAsync()
     {
-        _departments = await Repo.Departments.GetDepartmentsAsListAsync() ?? [];
-        var all = await Repo.Calculation.GetAsync(ProjectId) ?? [];
-        _calcs = CalculationVersionSelector.SelectCurrentVersions(all)
-            .OrderByDescending(c => c.Order)
-            .ToList();
-        await ReloadSharesAsync();
-        await ReloadUserOptionsAsync();
+        _loadFailed = false;
+        _overviewPartial = false;
+        try
+        {
+            _departments = await Repo.Departments.GetDepartmentsAsListAsync() ?? [];
+            var all = await Repo.Calculation.GetAsync(ProjectId) ?? [];
+            _calcs = CalculationVersionSelector.SelectCurrentVersions(all)
+                .OrderByDescending(c => c.Order)
+                .ToList();
+            await ReloadSharesAsync();
+            await LoadDeptCompositionAsync();
+            await ReloadUserOptionsAsync();
+        }
+        catch (Exception ex)
+        {
+            // Whole dialog couldn't load — show a local error instead of the global blazor-error-ui.
+            _loadFailed = true;
+            await ClientLog.ErrorAsync("ProjectShareUI failed to load.", ProjectId.ToString(), ex);
+        }
+        StateHasChanged();
     }
 
     private async Task ReloadSharesAsync()
@@ -352,26 +520,64 @@
         StateHasChanged();
     }
 
+    // Build per-department member composition for the access overview. Individual department fetch
+    // failures are tolerated (e.g. a non-tenant-wide admin): the dept is shown as "Blandad åtkomst".
+    private async Task LoadDeptCompositionAsync()
+    {
+        _deptComposition.Clear();
+        var anyFailed = false;
+
+        // Only the departments that the overview actually needs lines for.
+        var neededIds = new HashSet<int>();
+        if (ProjectDepartmentId is int own) neededIds.Add(own);
+        foreach (var s in _shares.Where(s => s.RecipientType == ProjectShareRecipientType.Department && s.DepartmentId is > 0))
+            neededIds.Add(s.DepartmentId!.Value);
+
+        foreach (var deptId in neededIds)
+        {
+            try
+            {
+                var users = await Repo.Departments.GetUsersAuthAsListAsync(deptId) ?? [];
+                int editors = users.Count(u => u.Role == PMRolesConst.Tenant.Manger);
+                int total = users.Count;
+                _deptComposition[deptId] = (editors, total - editors);
+            }
+            catch (Exception ex)
+            {
+                anyFailed = true;
+                await ClientLog.ErrorAsync($"ProjectShareUI: could not load members for department {deptId}.", ProjectId.ToString(), ex);
+            }
+        }
+
+        _overviewPartial = anyFailed;
+    }
+
+    private void OnRoleChanged(ChangeEventArgs e)
+    {
+        _role = e.Value?.ToString() ?? PMRolesConst.Tenant.Viewer;
+        // A system Visare can never be granted "Kan ändra": drop any selected viewers when switching.
+        if (_role == PMRolesConst.Tenant.Manger)
+            _selectedUserIds.RemoveWhere(id => _userIsViewerCache.GetValueOrDefault(id));
+    }
+
     private void SetRecipientType(ProjectShareRecipientType type)
     {
+        if (_editingId.HasValue) return;
         _recipientType = type;
-        _userId = null;
+        _selectedUserIds.Clear();
         _departmentId = null;
     }
 
     private async Task OnUserFilterChanged(ChangeEventArgs e)
     {
         _userFilterDeptId = int.TryParse(e.Value?.ToString(), out var v) ? v : 0;
-        _userId = null;
         await ReloadUserOptionsAsync();
     }
 
-    private void OnUserChanged(ChangeEventArgs e)
+    private void ToggleUser(int id, bool on)
     {
-        _userId = ParseNullableInt(e.Value);
-        // Cap effective permission: a system Visare can never be assigned "Användare".
-        if (SelectedUser?.IsViewer == true)
-            _role = PMRolesConst.Tenant.Viewer;
+        if (on) _selectedUserIds.Add(id);
+        else _selectedUserIds.Remove(id);
     }
 
     private async Task ReloadUserOptionsAsync()
@@ -380,7 +586,7 @@
 
         if (_userFilterDeptId > 0)
         {
-            raw = await Repo.Departments.GetUsersAuthAsListAsync(_userFilterDeptId) ?? [];
+            raw = await SafeGetUsersAsync(_userFilterDeptId);
         }
         else
         {
@@ -388,15 +594,14 @@
             var byId = new Dictionary<int, UserAuthModel>();
             foreach (var d in _departments)
             {
-                foreach (var u in await Repo.Departments.GetUsersAuthAsListAsync(d.Id) ?? [])
+                foreach (var u in await SafeGetUsersAsync(d.Id))
                     if (u.UserId is > 0)
                         byId.TryAdd(u.UserId.Value, u);
             }
 
             // "Utan avdelning": only tenant-wide admins can fetch the full set (did = 0); fold those
             // users in and, for the "none" filter, keep only the department-less ones.
-            var unassigned = await Repo.Departments.GetUsersAuthAsListAsync(0) ?? [];
-            foreach (var u in unassigned)
+            foreach (var u in await SafeGetUsersAsync(0))
                 if (u.UserId is > 0)
                     byId.TryAdd(u.UserId.Value, u);
 
@@ -412,7 +617,27 @@
             .OrderBy(u => u.Name)
             .ToList();
 
+        foreach (var o in _userOptions)
+        {
+            _userNameCache[o.Id] = o.Name;
+            _userIsViewerCache[o.Id] = o.IsViewer;
+        }
+
         StateHasChanged();
+    }
+
+    // Department-member fetch that never throws — a failure just yields no users for that department.
+    private async Task<List<UserAuthModel>> SafeGetUsersAsync(int departmentId)
+    {
+        try
+        {
+            return await Repo.Departments.GetUsersAuthAsListAsync(departmentId) ?? [];
+        }
+        catch (Exception ex)
+        {
+            await ClientLog.ErrorAsync($"ProjectShareUI: could not load users for filter {departmentId}.", ProjectId.ToString(), ex);
+            return [];
+        }
     }
 
     private UserOption BuildUserOption(UserAuthModel u)
@@ -429,13 +654,13 @@
         var direct = _shares.FirstOrDefault(s => s.RecipientType == ProjectShareRecipientType.User && s.UserId == id);
         if (direct is not null)
         {
-            note = $"Redan delad som {RoleLabel(direct.Role)}";
+            note = $"Redan delad som {AccessLevelLabel(direct.Role)}";
             alreadyDirect = true;
         }
         else if (u.DepartmentId is int own && ProjectDepartmentId.HasValue && own == ProjectDepartmentId.Value)
         {
             // In the project's own department — no separate share needed.
-            note = "Har redan åtkomst via projektets avdelning";
+            note = "Har redan avdelningsåtkomst";
         }
         else if (u.DepartmentId is int dep &&
                  _shares.Any(s => s.RecipientType == ProjectShareRecipientType.Department && s.DepartmentId == dep))
@@ -458,7 +683,7 @@
         _editingId is null && (DepartmentAlreadyShared(deptId) || IsProjectOwnDepartment(deptId));
 
     private string DeptOptionSuffix(int deptId) =>
-        IsProjectOwnDepartment(deptId) ? " · Har redan åtkomst via projektets avdelning"
+        IsProjectOwnDepartment(deptId) ? " · Har redan avdelningsåtkomst"
         : DepartmentAlreadyShared(deptId) ? " · Redan delad"
         : string.Empty;
 
@@ -480,26 +705,39 @@
         _saving = true;
         try
         {
-            // Cap effective permission server-side intent: never persist "Användare" for a system Visare.
-            var role = DisableMangerOption ? PMRolesConst.Tenant.Viewer : _role;
+            // Privata kalkyler kan aldrig delas – filtrera bort dem defensivt.
+            var calcIds = _selectedCalcIds.Where(id => _calcs.Any(c => c.Id == id && !c.IsPrivate)).ToList();
 
-            var dto = new ProjectShareUpsertDTO
+            bool ok;
+            if (_recipientType == ProjectShareRecipientType.Department || _editingId is not null)
             {
-                Id = _editingId,
-                RecipientType = _recipientType,
-                UserId = _recipientType == ProjectShareRecipientType.User ? _userId : null,
-                DepartmentId = _recipientType == ProjectShareRecipientType.Department ? _departmentId : null,
-                Role = role,
-                // Privata kalkyler kan aldrig delas – filtrera bort dem defensivt.
-                CalculationIds = _selectedCalcIds.Where(id => _calcs.Any(c => c.Id == id && !c.IsPrivate)).ToList()
-            };
+                ok = await UpsertOneAsync(BuildDto(_editingId, calcIds));
+            }
+            else
+            {
+                // Multiselect: one share per selected person, same access level + calcs.
+                ok = true;
+                foreach (var uid in _selectedUserIds.ToList())
+                {
+                    // Cap effective permission: a system Visare can never be assigned "Kan ändra".
+                    var role = _userIsViewerCache.GetValueOrDefault(uid) ? PMRolesConst.Tenant.Viewer : _role;
+                    ok &= await UpsertOneAsync(new ProjectShareUpsertDTO
+                    {
+                        Id = null,
+                        RecipientType = ProjectShareRecipientType.User,
+                        UserId = uid,
+                        DepartmentId = null,
+                        Role = role,
+                        CalculationIds = calcIds
+                    });
+                }
+            }
 
-            int id = await Repo.ProjectShare.UpsertAsync(ProjectId, dto);
-            bool ok = id > 0;
             if (ok)
             {
                 ResetForm();
                 await ReloadSharesAsync();
+                await LoadDeptCompositionAsync();
                 await ReloadUserOptionsAsync();
                 if (OnCompleted.HasDelegate)
                     await OnCompleted.InvokeAsync();
@@ -512,13 +750,34 @@
         }
     }
 
+    private ProjectShareUpsertDTO BuildDto(int? id, List<int> calcIds)
+    {
+        // Cap effective permission for the edited single user too.
+        var role = DisableEditOption ? PMRolesConst.Tenant.Viewer : _role;
+        return new ProjectShareUpsertDTO
+        {
+            Id = id,
+            RecipientType = _recipientType,
+            UserId = _recipientType == ProjectShareRecipientType.User ? _selectedUserIds.FirstOrDefault() : null,
+            DepartmentId = _recipientType == ProjectShareRecipientType.Department ? _departmentId : null,
+            Role = role,
+            CalculationIds = calcIds
+        };
+    }
+
+    private async Task<bool> UpsertOneAsync(ProjectShareUpsertDTO dto)
+        => await Repo.ProjectShare.UpsertAsync(ProjectId, dto) > 0;
+
     private async Task EditShareAsync(ProjectShareListItemDTO share)
     {
         _editingId = share.Id;
         _recipientType = share.RecipientType;
         _role = string.IsNullOrWhiteSpace(share.Role) ? PMRolesConst.Tenant.Viewer : share.Role;
         _departmentId = share.RecipientType == ProjectShareRecipientType.Department ? share.DepartmentId : null;
-        _userId = share.RecipientType == ProjectShareRecipientType.User ? share.UserId : null;
+
+        _selectedUserIds.Clear();
+        if (share.RecipientType == ProjectShareRecipientType.User && share.UserId is int uid)
+            _selectedUserIds.Add(uid);
 
         _selectedCalcIds.Clear();
         foreach (var cid in share.CalculationIds)
@@ -526,7 +785,7 @@
 
         if (_recipientType == ProjectShareRecipientType.User)
         {
-            // Load across all departments so the shared user is present and stays preselected.
+            // Load across all departments so the shared user is present (for the system-role cap).
             _userFilterDeptId = 0;
             await ReloadUserOptionsAsync();
         }
@@ -538,7 +797,7 @@
         _editingId = null;
         _recipientType = ProjectShareRecipientType.User;
         _userFilterDeptId = 0;
-        _userId = null;
+        _selectedUserIds.Clear();
         _departmentId = null;
         _role = PMRolesConst.Tenant.Viewer;
         _selectedCalcIds.Clear();
@@ -556,6 +815,7 @@
         {
             if (_editingId == share.Id) ResetForm();
             await ReloadSharesAsync();
+            await LoadDeptCompositionAsync();
             await ReloadUserOptionsAsync();
             if (OnCompleted.HasDelegate)
                 await OnCompleted.InvokeAsync();
@@ -567,13 +827,15 @@
     private string CalcSummary(ProjectShareListItemDTO share)
     {
         var ids = share.CalculationIds;
-        if (ids.Count == 0) return "Inga";
+        if (ids.Count == 0) return "Saknar kalkyler";
         if (ids.Count == 1)
         {
             var c = _calcs.FirstOrDefault(x => x.Id == ids[0]);
             return c is null ? "1 kalkyl" : $"V.{c.VersionNumber:D2} {c.Name}";
         }
-        return $"{ids.Count} kalkyler · Visa";
+        // "Alla tillgängliga kalkyler" när allt delbart ingår.
+        if (ShareableCalcCount > 0 && ids.Count >= ShareableCalcCount) return "Alla tillgängliga kalkyler";
+        return $"{ids.Count} kalkyler";
     }
 
     private string? CalcNamesTooltip(ProjectShareListItemDTO share)
@@ -586,25 +848,49 @@
         return string.Join("\n", names);
     }
 
+    // Avdelningsåtkomstrad med blandad åtkomst: "Namn · 5 kan ändra · 3 kan visa · <kalkyltext>".
+    // shareRole == null ⇒ projektets egen avdelning (normal avdelningsåtkomst).
+    private string DeptAccessLine(string name, int? deptId, string? shareRole, string calcText)
+    {
+        if (deptId is int id && _deptComposition.TryGetValue(id, out var comp))
+        {
+            int editors, viewers;
+            if (shareRole == PMRolesConst.Tenant.Viewer)
+            {
+                // Hela avdelningen delas som Kan visa ⇒ ingen kan ändra.
+                editors = 0;
+                viewers = comp.Editors + comp.Viewers;
+            }
+            else
+            {
+                // Egen avdelning eller delad som Kan ändra ⇒ maxregeln gäller per systemroll.
+                editors = comp.Editors;
+                viewers = comp.Viewers;
+            }
+            return $"{name} · {editors} kan ändra · {viewers} kan visa · {calcText}";
+        }
+        return $"{name} · Blandad åtkomst · {calcText}";
+    }
+
     private static string SourceLabel(ProjectShareListItemDTO share) =>
         share.RecipientType == ProjectShareRecipientType.Department
-            ? $"Via avdelning {share.RecipientName}"
-            : "Direkt";
+            ? "Delad avdelning"
+            : "Delad person";
 
     private static int? ParseNullableInt(object? value)
         => int.TryParse(value?.ToString(), out var n) && n > 0 ? n : null;
 
     private string RecipientTabClass(ProjectShareRecipientType type) =>
         _recipientType == type
-            ? "px-3 py-1.5 text-xs font-semibold bg-sky-600 text-white"
-            : "px-3 py-1.5 text-xs font-medium bg-white text-slate-600 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-300";
+            ? "px-3 py-1.5 text-xs font-semibold bg-sky-600 text-white disabled:opacity-60"
+            : "px-3 py-1.5 text-xs font-medium bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-60 dark:bg-slate-900 dark:text-slate-300";
 
-    private static string RoleLabel(string role) => role switch
+    // UI-etikett för åtkomstnivån i detta projekt. Internt återanvänds systemrolls-enumvärdena.
+    private static string AccessLevelLabel(string role) => role switch
     {
-        PMRolesConst.Tenant.Viewer => "Visare",
-        PMRolesConst.Tenant.Manger => "Användare",
-        PMRolesConst.Tenant.Admin => "Admin",
-        _ => string.IsNullOrWhiteSpace(role) ? "—" : role
+        PMRolesConst.Tenant.Manger => "Kan ändra",
+        PMRolesConst.Tenant.Admin => "Kan ändra",
+        _ => "Kan visa"
     };
 
     private sealed class UserOption
