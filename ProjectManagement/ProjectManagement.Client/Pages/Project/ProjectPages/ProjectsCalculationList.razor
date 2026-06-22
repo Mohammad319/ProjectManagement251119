@@ -887,7 +887,11 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await _columnWidths.AttachAsync();
+        // _columnWidths is created in OnInitializedAsync *after* an await, so the
+        // first OnAfterRenderAsync can fire before it exists. Once set the component
+        // re-renders and AttachAsync runs (it is idempotent).
+        if (_columnWidths is not null)
+            await _columnWidths.AttachAsync();
 
         var scopeKey = CurrentViewKey;
         if (_prevProjectId != scopeKey)
@@ -902,7 +906,7 @@
         }
     }
 
-    public void Dispose() => _columnWidths.Dispose();
+    public void Dispose() => _columnWidths?.Dispose();
 
     private const string ContentModeCalculations = "calculations";
     private const string ContentModeProjects = "projects";
@@ -920,8 +924,8 @@
     private List<ScopeCalculationRow> _scopeCalculationRows = [];
     private Dictionary<int, ScopeCalculationRow> _scopeCalculationLookup = [];
 
-    private string _sortColumn = "";
-    private bool _sortAscending = true;
+    // Shared sort state + header chrome (toggle, header CSS, indicator SVG) — see ListSortController.
+    private readonly ListSortController _sort = new();
 
     private int _pageSize = 25;
     private int _currentPage = 1;
@@ -1194,8 +1198,8 @@
     private SavedListFilter BuildCurrentCalcFilter(string name = "") => new()
     {
         Name = name,
-        SortColumn = string.IsNullOrEmpty(_sortColumn) ? null : _sortColumn,
-        SortAscending = _sortAscending,
+        SortColumn = string.IsNullOrEmpty(_sort.Column) ? null : _sort.Column,
+        SortAscending = _sort.Ascending,
         ShowAllVersions = _showAllVersions,
         Filters = _calcColFilters
             .Where(kv => kv.Value.IsActive)
@@ -1262,8 +1266,8 @@
 
         if (!string.IsNullOrEmpty(saved.SortColumn))
         {
-            _sortColumn = saved.SortColumn;
-            _sortAscending = saved.SortAscending;
+            _sort.Column = saved.SortColumn;
+            _sort.Ascending = saved.SortAscending;
         }
 
         if (saved.ShowAllVersions.HasValue)
@@ -1531,6 +1535,9 @@
         get
         {
             var list = FilteredCalculations;
+            // Snapshot the shared sort state so the domain-specific switch below stays untouched.
+            var _sortColumn = _sort.Column;
+            var _sortAscending = _sort.Ascending;
             return _sortColumn switch
             {
                 "code" => _sortAscending
@@ -1609,32 +1616,13 @@
 
     private void SortBy(string column)
     {
-        if (_sortColumn == column)
-            _sortAscending = !_sortAscending;
-        else
-        {
-            _sortColumn = column;
-            _sortAscending = true;
-        }
+        _sort.Toggle(column);
         _currentPage = 1;
     }
 
-    private string SortableHeaderClass(string column)
-    {
-        var active = _sortColumn == column;
-        return "cursor-pointer select-none whitespace-nowrap px-3 py-2 transition " +
-               (active ? "text-slate-800 dark:text-slate-200" : "hover:text-slate-700 dark:hover:text-slate-200");
-    }
+    private string SortableHeaderClass(string column) => _sort.HeaderClass(column);
 
-    private string SortIndicatorHtml(string column)
-    {
-        if (_sortColumn != column)
-            return "<svg class=\"h-3 w-3 opacity-30\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4\"/></svg>";
-
-        return _sortAscending
-            ? "<svg class=\"h-3 w-3\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M5 15l7-7 7 7\"/></svg>"
-            : "<svg class=\"h-3 w-3\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M19 9l-7 7-7-7\"/></svg>";
-    }
+    private string SortIndicatorHtml(string column) => _sort.IndicatorHtml(column);
 
     private bool IsCalculationColumnVisible(string key) => _columnView.IsColumnVisible(key);
 

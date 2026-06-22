@@ -248,7 +248,15 @@
       "Bash(awk '{print $2}')",
       "Bash(xargs -I{} stat -c '%Y %n' {})",
       "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:5286/Account/Login --max-time 5)",
-      "Bash(node pwdiag3.js)"
+      "Bash(node pwdiag3.js)",
+      "Bash(powershell -NoProfile -Command \"Get-NetTCPConnection -LocalPort 5286 -State Listen -ErrorAction SilentlyContinue | Select-Object -First 3 LocalAddress,LocalPort,OwningProcess\")",
+      "Bash(powershell -NoProfile -Command \"Get-Process -Id 2980 -ErrorAction SilentlyContinue | Select-Object Id,ProcessName,StartTime\")",
+      "Bash(cd \"C:/Users/Administrator/Desktop/PM/b07/ProjectManagement251119\")",
+      "Bash(ASPNETCORE_ENVIRONMENT=Development dotnet run --project \"ProjectManagement/ProjectManagement/ProjectManagement.csproj\" --no-build)",
+      "Bash(node pwcolview.js)",
+      "Bash(node pwcolview2.js)",
+      "Bash(node pwtree.js)",
+      "Bash(grep -v \"_sortAscending$\")"
     ]
   }
 }
