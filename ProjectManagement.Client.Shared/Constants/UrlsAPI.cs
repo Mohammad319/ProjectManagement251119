@@ -41,6 +41,7 @@
         public static string Departments => ApiV1 + "Departments/";
         public static string ItemCalcCategory => ApiV1 + "ItemCalcCategory/";
         public static string UserListSettings => ApiV1 + "UserListSettings/";
+        public static string Notifications => ApiV1 + "notifications/";
         public static string Details => "details/";
 
     }

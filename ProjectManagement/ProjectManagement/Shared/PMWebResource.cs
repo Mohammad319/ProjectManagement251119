@@ -134,6 +134,47 @@ public class PMWebResource
     public static string SupportReferenceNumber => GetString(nameof(SupportReferenceNumber), "Reference number");
     public static string SupportContextInfo => GetString(nameof(SupportContextInfo), "This information is automatically included to help us investigate the problem.");
 
+    // ── Notifications (bell + panel chrome) ──────────────────────────────
+    public static string NotificationsTitle => GetString(nameof(NotificationsTitle), "Notifications");
+    public static string NotificationsMarkAllRead => GetString(nameof(NotificationsMarkAllRead), "Mark all as read");
+    public static string NotificationsMarkRead => GetString(nameof(NotificationsMarkRead), "Mark as read");
+    public static string NotificationsOpenProject => GetString(nameof(NotificationsOpenProject), "Open project");
+    public static string NotificationsOpenCalculation => GetString(nameof(NotificationsOpenCalculation), "Open calculation");
+    public static string NotificationsClearRead => GetString(nameof(NotificationsClearRead), "Clear read");
+    public static string NotificationsRemove => GetString(nameof(NotificationsRemove), "Remove notification");
+    public static string NotificationsEmpty => GetString(nameof(NotificationsEmpty), "No notifications");
+    public static string NotificationsLoading => GetString(nameof(NotificationsLoading), "Loading…");
+    public static string NotificationsNoAccess => GetString(nameof(NotificationsNoAccess), "You no longer have access to this project.");
+    public static string NotificationsNoAccessCalculation => GetString(nameof(NotificationsNoAccessCalculation), "You no longer have access to this calculation.");
+    public static string NotificationsUnreadAria => GetString(nameof(NotificationsUnreadAria), "{0} unread notifications");
+
+    // ── Notification titles (per type) ───────────────────────────────────
+    public static string NotificationTitleSharedWithUser => GetString(nameof(NotificationTitleSharedWithUser), "Project shared with you");
+    public static string NotificationTitleSharedWithDepartment => GetString(nameof(NotificationTitleSharedWithDepartment), "Project shared with your department");
+    public static string NotificationTitleAccessChanged => GetString(nameof(NotificationTitleAccessChanged), "Your access has been updated");
+    public static string NotificationTitleAccessRemoved => GetString(nameof(NotificationTitleAccessRemoved), "Access removed");
+    public static string NotificationTitleValidityChanged => GetString(nameof(NotificationTitleValidityChanged), "Share validity changed");
+    public static string NotificationTitleCalculationsChanged => GetString(nameof(NotificationTitleCalculationsChanged), "Calculation selection changed");
+
+    // ── Notification messages (templates with placeholders) ──────────────
+    public static string NotificationMsgSharedWithUser => GetString(nameof(NotificationMsgSharedWithUser), "{0} shared the project \"{1}\" with you.");
+    public static string NotificationMsgSharedWithDepartment => GetString(nameof(NotificationMsgSharedWithDepartment), "The project \"{0}\" was shared with your department {1}.");
+    public static string NotificationMsgAccessChanged => GetString(nameof(NotificationMsgAccessChanged), "Your access to the project \"{0}\" has been updated.");
+    public static string NotificationMsgAccessRemoved => GetString(nameof(NotificationMsgAccessRemoved), "Your access to \"{0}\" has been removed.");
+    public static string NotificationMsgValidityChanged => GetString(nameof(NotificationMsgValidityChanged), "The validity of your share of \"{0}\" has changed.");
+    public static string NotificationMsgCalculationsChanged => GetString(nameof(NotificationMsgCalculationsChanged), "The calculation selection for your share of \"{0}\" has changed.");
+
+    // ── Notification sentences / labels ──────────────────────────────────
+    public static string NotificationSentenceCanEdit => GetString(nameof(NotificationSentenceCanEdit), "You can edit the project and the selected calculations according to your permissions.");
+    public static string NotificationSentenceCanView => GetString(nameof(NotificationSentenceCanView), "You can view the project and the selected calculations.");
+    public static string NotificationValidityUntil => GetString(nameof(NotificationValidityUntil), "Valid until {0}");
+    public static string NotificationValidityIndefinite => GetString(nameof(NotificationValidityIndefinite), "Valid until further notice");
+    public static string NotificationLevelView => GetString(nameof(NotificationLevelView), "Can view");
+    public static string NotificationLevelEdit => GetString(nameof(NotificationLevelEdit), "Can edit");
+    public static string NotificationCalcAll => GetString(nameof(NotificationCalcAll), "All available calculations");
+    public static string NotificationCalcOne => GetString(nameof(NotificationCalcOne), "1 calculation");
+    public static string NotificationCalcMany => GetString(nameof(NotificationCalcMany), "{0} calculations");
+
     private static string GetString(string name, string fallback)
         => ResourceManager.GetString(name, Culture) ?? fallback;
 }

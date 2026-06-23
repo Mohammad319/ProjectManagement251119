@@ -8,6 +8,8 @@ using ProjectManagement.Client.Shared.Repositories.Calculation;
 using ProjectManagement.Client.Shared.Repositories.Calculation.Implement;
 using ProjectManagement.Client.Shared.Repositories.Folder;
 using ProjectManagement.Client.Shared.Repositories.Identity;
+using ProjectManagement.Client.Shared.Repositories.Notification;
+using ProjectManagement.Client.Shared.Repositories.Notification.Implement;
 using ProjectManagement.Client.Shared.Repositories.Offer;
 using ProjectManagement.Client.Shared.Repositories.Organisation;
 using ProjectManagement.Client.Shared.Repositories.Organisation.Implement;
@@ -43,6 +45,7 @@ namespace ProjectManagement.Client.DependencyInjection
             services.AddScoped<ITenderRepository, TenderRepository>();
             services.AddScoped<IProjectBidRepository, ProjectBidRepository>();
             services.AddScoped<IProjectShareRepository, ProjectShareRepository>();
+            services.AddScoped<INotificationRepository, NotificationRepository>();
             services.AddScoped<IItemCalcCategoryRepository, ItemCalcCategoryRepository>();
             services.AddScoped<UserListSettingsRepository>();
             services.AddScoped<IUnitOfWorkRepository, UnitOfWorkRepository>();

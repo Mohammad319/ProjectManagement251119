@@ -177,6 +177,10 @@ namespace ProjectManagement.Client.Pages.Folder
             UoWService.Folder.State.OnChange += Refresh;
             AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
 
+            // Arriving via a notification deep-link: tell the tree not to restore its last localStorage
+            // selection, so it can't override the explicit project/calculation this navigation will select.
+            Folder.State.SuppressLastSelectionRestore = ReadOpenProjectId(Nav.Uri) is not null;
+
             await InitializeSessionAsync();
         }
 
@@ -258,6 +262,9 @@ namespace ProjectManagement.Client.Pages.Folder
                 _initState = SessionInitState.Ready;
                 await LoadSelectedDepartmentAsync();
 
+                // Deep-link from a notification's "Open project": select the project in the tree.
+                await TryOpenProjectFromQueryAsync();
+
                 await ClientLog.InfoAsync(
                     $"FolderIndex.InitializeSession: ready (tenant={tenantId}, user={userId}, departments={departments.Count}, " +
                     $"selectedDepartment={SelectedDepartmentId}, canChooseAll={CanChooseAllDepartments}).");
@@ -274,6 +281,151 @@ namespace ProjectManagement.Client.Pages.Folder
         {
             var uri = new Uri(Nav.Uri);
             return AuthRecoveryPathHelper.NormalizeLocalUrl($"{uri.PathAndQuery}{uri.Fragment}");
+        }
+
+        /// <summary>
+        /// Handles the <c>?openProject={id}</c> deep-link produced by a notification's "Open project".
+        /// Re-checks access on the server, switches to the project's department (when selectable), expands
+        /// its folder and selects the project. Best-effort and fully guarded: if anything is missing
+        /// (e.g. a shared project outside the user's selectable departments) the user simply lands on the
+        /// workspace without a forced selection.
+        /// </summary>
+        private async Task TryOpenProjectFromQueryAsync()
+        {
+            Guid projectId;
+            int? calculationId;
+            try
+            {
+                var id = ReadOpenProjectId(Nav.Uri);
+                if (id is null)
+                {
+                    Folder.State.SuppressLastSelectionRestore = false;
+                    return;
+                }
+                projectId = id.Value;
+                calculationId = ReadOpenCalcId(Nav.Uri);
+            }
+            catch
+            {
+                Folder.State.SuppressLastSelectionRestore = false;
+                return;
+            }
+
+            try
+            {
+                var info = await Repo.Notification.GetOpenInfoAsync(projectId);
+                if (info is null || !info.CanOpen || info.FolderId is null)
+                {
+                    await StripOpenProjectParamAsync();
+                    return;
+                }
+
+                // Switch to the project's department only when the user may select it.
+                if (info.DepartmentId.HasValue
+                    && info.DepartmentId != SelectedDepartmentId
+                    && Folder.State.Departments.Any(d => d.Id == info.DepartmentId.Value))
+                {
+                    SelectedDepartmentId = info.DepartmentId;
+                    await LoadSelectedDepartmentAsync();
+                }
+
+                var folder = Folder.State.FoldersList.FirstOrDefault(f => f.Id == info.FolderId.Value);
+                if (folder is not null)
+                {
+                    await Folder.SetProjectsToFolder(folder);
+                    folder.ShowProjects = true;
+
+                    var project = folder.Projects?.FirstOrDefault(p => p.Id == projectId);
+                    if (project is not null)
+                    {
+                        // Always select the project explicitly first (never the folder's first project).
+                        Folder.State.SelectProject(folder, project);
+
+                        // Calculation notification: expand the project and open the exact calculation when
+                        // it is still accessible (loaded into the shared list). Otherwise the project stays
+                        // selected — the bell already re-checks access before navigating here.
+                        if (calculationId is { } calcId)
+                        {
+                            await Folder.SetCalcsToProject(project);
+                            var calc = project.Calculations?.FirstOrDefault(c => c.Id == calcId);
+                            if (calc is not null)
+                            {
+                                project.ShowCalculations = true;
+                                await CalcService.SetCalc(calc.Id, project, folder);
+                            }
+                        }
+                    }
+                }
+
+                await StripOpenProjectParamAsync();
+                await InvokeAsync(StateHasChanged);
+            }
+            catch (Exception ex)
+            {
+                await ClientLog.ErrorAsync("Opening project from notification deep-link failed", ex: ex);
+            }
+            finally
+            {
+                // The explicit selection is applied; let the tree restore selections normally again.
+                Folder.State.SuppressLastSelectionRestore = false;
+            }
+        }
+
+        private static int? ReadOpenCalcId(string url)
+        {
+            var query = new Uri(url).Query;
+            if (string.IsNullOrEmpty(query))
+                return null;
+
+            foreach (var part in query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries))
+            {
+                var pair = part.Split('=', 2);
+                if (pair.Length == 2
+                    && pair[0].Equals("openCalc", StringComparison.OrdinalIgnoreCase)
+                    && int.TryParse(Uri.UnescapeDataString(pair[1]), out var id)
+                    && id > 0)
+                {
+                    return id;
+                }
+            }
+
+            return null;
+        }
+
+        private static Guid? ReadOpenProjectId(string url)
+        {
+            var query = new Uri(url).Query;
+            if (string.IsNullOrEmpty(query))
+                return null;
+
+            foreach (var part in query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries))
+            {
+                var pair = part.Split('=', 2);
+                if (pair.Length == 2
+                    && pair[0].Equals("openProject", StringComparison.OrdinalIgnoreCase)
+                    && Guid.TryParse(Uri.UnescapeDataString(pair[1]), out var id))
+                {
+                    return id;
+                }
+            }
+
+            return null;
+        }
+
+        private Task StripOpenProjectParamAsync()
+        {
+            try
+            {
+                var uri = new Uri(Nav.Uri);
+                if (!string.IsNullOrEmpty(uri.Query))
+                    Nav.NavigateTo(uri.GetLeftPart(UriPartial.Path), replace: true);
+            }
+            catch
+            {
+                // Non-critical: leaving the query param only means a refresh re-opens the project.
+            }
+
+            return Task.CompletedTask;
         }
 
         private static int? GetClaimInt(ClaimsPrincipal user, string claimType) =>

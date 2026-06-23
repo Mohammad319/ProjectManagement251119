@@ -1,6 +1,7 @@
 ﻿using Domain.Entities.Application;
 using Domain.Entities.Calculation;
 using Domain.Entities.Folder;
+using Domain.Entities.Notifications;
 using Domain.Entities.Organisation;
 using Domain.Entities.PriceLists;
 using Domain.Entities.Project;
@@ -52,6 +53,7 @@ public partial class ShardingSingleDbContext
     public DbSet<UserEntity> User { get; set; } = default!;
     public DbSet<UserListSettingEntity> UserListSettings { get; set; } = default!;
     public DbSet<UserManagementAuditEntity> UserManagementAuditLogs { get; set; } = default!;
+    public DbSet<NotificationEntity> Notifications { get; set; } = default!;
     public DbSet<TenderAttributeDefinitionEntity> AttributeNameTender { get; set; } = default!;
     public DbSet<TenderAttributeBindEntity> TenderAttributeBind { get; set; } = default!;
     public DbSet<PriceList> PriceLists => Set<PriceList>();

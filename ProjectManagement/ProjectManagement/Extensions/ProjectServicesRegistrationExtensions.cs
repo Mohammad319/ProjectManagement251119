@@ -59,6 +59,9 @@ public static class ProjectServicesRegistrationExtensions
         services.AddScoped<IDbContextFactoryTenant, DbContextFactory>();
 
         services.AddScoped<INotificationHub, SendHubNotification>();
+        services.AddSingleton<IUserNotificationNotifier, UserNotificationNotifier>();
+        services.AddScoped<INotificationPublisher, NotificationPublisher>();
+        services.AddScoped<IUserSystemRoleProvider, UserSystemRoleProvider>();
         services.AddScoped<ITenantUserService, TenantUserService>();
         services.AddScoped<IUserManagementAuditService, UserManagementAuditService>();
 

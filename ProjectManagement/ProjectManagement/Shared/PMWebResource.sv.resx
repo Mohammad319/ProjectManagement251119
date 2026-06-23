@@ -215,4 +215,37 @@
   <data name="AuditUserUnlocked" xml:space="preserve"><value>Användare upplåst</value></data>
   <data name="AuditDepartmentChanged" xml:space="preserve"><value>Avdelning ändrad</value></data>
   <data name="AuditRoleChanged" xml:space="preserve"><value>Roll ändrad</value></data>
+  <data name="NotificationsTitle" xml:space="preserve"><value>Notiser</value></data>
+  <data name="NotificationsMarkAllRead" xml:space="preserve"><value>Markera alla som lästa</value></data>
+  <data name="NotificationsMarkRead" xml:space="preserve"><value>Markera som läst</value></data>
+  <data name="NotificationsOpenProject" xml:space="preserve"><value>Öppna projekt</value></data>
+  <data name="NotificationsOpenCalculation" xml:space="preserve"><value>Öppna kalkyl</value></data>
+  <data name="NotificationsClearRead" xml:space="preserve"><value>Rensa lästa</value></data>
+  <data name="NotificationsRemove" xml:space="preserve"><value>Ta bort notis</value></data>
+  <data name="NotificationsEmpty" xml:space="preserve"><value>Inga notiser</value></data>
+  <data name="NotificationsLoading" xml:space="preserve"><value>Laddar…</value></data>
+  <data name="NotificationsNoAccess" xml:space="preserve"><value>Du har inte längre åtkomst till detta projekt.</value></data>
+  <data name="NotificationsNoAccessCalculation" xml:space="preserve"><value>Du har inte längre åtkomst till denna kalkyl.</value></data>
+  <data name="NotificationsUnreadAria" xml:space="preserve"><value>{0} olästa notiser</value></data>
+  <data name="NotificationTitleSharedWithUser" xml:space="preserve"><value>Projekt delat med dig</value></data>
+  <data name="NotificationTitleSharedWithDepartment" xml:space="preserve"><value>Projekt delat med din avdelning</value></data>
+  <data name="NotificationTitleAccessChanged" xml:space="preserve"><value>Din åtkomst har uppdaterats</value></data>
+  <data name="NotificationTitleAccessRemoved" xml:space="preserve"><value>Åtkomst borttagen</value></data>
+  <data name="NotificationTitleValidityChanged" xml:space="preserve"><value>Delningens giltighet ändrad</value></data>
+  <data name="NotificationTitleCalculationsChanged" xml:space="preserve"><value>Kalkylurval ändrat</value></data>
+  <data name="NotificationMsgSharedWithUser" xml:space="preserve"><value>{0} delade projektet "{1}" med dig.</value></data>
+  <data name="NotificationMsgSharedWithDepartment" xml:space="preserve"><value>Projektet "{0}" delades med din avdelning {1}.</value></data>
+  <data name="NotificationMsgAccessChanged" xml:space="preserve"><value>Din åtkomst till projektet "{0}" har uppdaterats.</value></data>
+  <data name="NotificationMsgAccessRemoved" xml:space="preserve"><value>Din åtkomst till "{0}" har tagits bort.</value></data>
+  <data name="NotificationMsgValidityChanged" xml:space="preserve"><value>Giltigheten för din delning av "{0}" har ändrats.</value></data>
+  <data name="NotificationMsgCalculationsChanged" xml:space="preserve"><value>Kalkylurvalet för din delning av "{0}" har ändrats.</value></data>
+  <data name="NotificationSentenceCanEdit" xml:space="preserve"><value>Du kan ändra projektet och de valda kalkylerna enligt dina behörigheter.</value></data>
+  <data name="NotificationSentenceCanView" xml:space="preserve"><value>Du kan visa projektet och de valda kalkylerna.</value></data>
+  <data name="NotificationValidityUntil" xml:space="preserve"><value>Gäller till {0}</value></data>
+  <data name="NotificationValidityIndefinite" xml:space="preserve"><value>Gäller tills vidare</value></data>
+  <data name="NotificationLevelView" xml:space="preserve"><value>Kan visa</value></data>
+  <data name="NotificationLevelEdit" xml:space="preserve"><value>Kan ändra</value></data>
+  <data name="NotificationCalcAll" xml:space="preserve"><value>Alla tillgängliga kalkyler</value></data>
+  <data name="NotificationCalcOne" xml:space="preserve"><value>1 kalkyl</value></data>
+  <data name="NotificationCalcMany" xml:space="preserve"><value>{0} kalkyler</value></data>
 </root>

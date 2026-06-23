@@ -24,12 +24,21 @@ namespace ProjectManagement.SignalR
     [Authorize]
     public class NotificationHub(ILogger<NotificationHub> logger) : Hub
     {
-        public override Task OnConnectedAsync()
+        /// <summary>SignalR group that receives a connected user's personal notification events.</summary>
+        public static string UserGroup(int userId) => $"notif-user-{userId}";
+
+        public override async Task OnConnectedAsync()
         {
             var isAuth = Context.User?.Identity?.IsAuthenticated == true;
             var tenant = Context.User?.FindFirst(PMClaimsConst.Tenant)?.Value;
             logger.LogInformation("[Hub] Connected. IsAuth={IsAuth}, TenantClaim={TenantClaim}", isAuth, tenant ?? "null");
-            return base.OnConnectedAsync();
+
+            // Auto-join the user's personal notification channel based on the authenticated claim
+            // (never a client-supplied id) so notification pushes reach exactly this user.
+            if (int.TryParse(Context.User?.FindFirst(PMClaimsConst.UserId)?.Value, out var userId) && userId > 0)
+                await Groups.AddToGroupAsync(Context.ConnectionId, UserGroup(userId));
+
+            await base.OnConnectedAsync();
         }
 
         [HubMethodName("AddToGroup")]

@@ -308,7 +308,13 @@
       "Bash(curl -s -m 10 -I \"http://localhost:5000/js/hoverTooltip.lrrvxguyyr.js\")",
       "Bash(curl -s -m 10 -I \"http://localhost:5000/css/custom.css\")",
       "Bash(curl -s -m 10 -I \"http://localhost:5000/js/hoverTooltip.js\")",
-      "Bash(node bids.js)"
+      "Bash(node bids.js)",
+      "Bash(tee __TRACKED_VAR__/app_run.log)",
+      "Bash(curl -s -o /dev/null -w '%{http_code}' http://localhost:5286/health/live)",
+      "Bash(echo \"live: $\\(curl -s -o /dev/null -w '%{http_code}' http://localhost:5286/health/live 2>/dev/null\\)\")",
+      "Bash(curl -s -o /dev/null -w '%{http_code}' http://localhost:5286/health/ready)",
+      "Bash(echo \"ready: $\\(curl -s -o /dev/null -w '%{http_code}' http://localhost:5286/health/ready 2>/dev/null\\)\")",
+      "Bash(curl -s -o /dev/null -w '%{http_code}' http://localhost:5286/)"
     ]
   }
 }

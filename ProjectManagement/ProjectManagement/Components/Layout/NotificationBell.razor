@@ -1,0 +1,361 @@
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Web
+@using Application.Interfaces
+@using Application.Feature.Notification.Commands
+@using Application.Feature.Notification.Queries
+@using Microsoft.AspNetCore.Components.Authorization
+@using ProjectManagement.Shared
+@using ProjectManagement.Shared.Constant
+@using ProjectManagement.Shared.DTO.Notification
+@using ProjectManagement.Services.UI
+@implements IDisposable
+@inject ICommandDispatcher Dispatcher
+@inject IUserNotificationNotifier Notifier
+@inject NavigationManager Navigation
+
+<div class="relative inline-block text-left">
+    <button type="button"
+            class="btn nav-link relative"
+            @onclick="TogglePanelAsync"
+            title="@PMWebResource.NotificationsTitle"
+            aria-label="@PMWebResource.NotificationsTitle"
+            aria-haspopup="true"
+            aria-expanded="@_open">
+        <span aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+        </span>
+        @if (_unreadCount > 0)
+        {
+            <span class="absolute -top-1 -right-1 inline-flex min-w-[1.1rem] items-center justify-center rounded-full bg-rose-600 px-1 text-[0.65rem] font-semibold leading-tight text-white ring-2 ring-white dark:ring-gray-800"
+                  aria-label="@string.Format(PMWebResource.NotificationsUnreadAria, _unreadCount)">
+                @BadgeText
+            </span>
+        }
+    </button>
+
+    @if (_open)
+    {
+        <div class="fixed inset-0 z-[990]" @onclick="ClosePanel"></div>
+        <div class="absolute right-0 z-[1000] mt-2 w-80 max-w-[90vw] origin-top-right rounded-xl border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
+             role="menu" tabindex="-1" @onkeydown="OnPanelKeyDownAsync">
+            <div class="flex items-center justify-between gap-2 border-b border-gray-100 px-4 py-2 dark:border-gray-700">
+                <span class="text-sm font-semibold text-gray-800 dark:text-gray-100">@PMWebResource.NotificationsTitle</span>
+                <div class="flex items-center gap-3">
+                    @if (_unreadCount > 0)
+                    {
+                        <button type="button" class="text-xs text-indigo-600 hover:underline dark:text-indigo-400"
+                                @onclick="MarkAllReadAsync">
+                            @PMWebResource.NotificationsMarkAllRead
+                        </button>
+                    }
+                    @if (HasReadItems)
+                    {
+                        <button type="button" class="text-xs text-gray-500 hover:underline dark:text-gray-400"
+                                @onclick="ClearReadAsync">
+                            @PMWebResource.NotificationsClearRead
+                        </button>
+                    }
+                </div>
+            </div>
+
+            <div class="max-h-96 overflow-y-auto">
+                @if (_loading)
+                {
+                    <div class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">@PMWebResource.NotificationsLoading</div>
+                }
+                else if (_summary is null || _summary.Items.Count == 0)
+                {
+                    <div class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">@PMWebResource.NotificationsEmpty</div>
+                }
+                else
+                {
+                    @foreach (var item in _summary.Items)
+                    {
+                        <div class="@ItemClass(item)">
+                            <div class="flex items-start gap-2">
+                                @if (!item.IsRead)
+                                {
+                                    <span class="mt-1.5 h-2 w-2 flex-none rounded-full bg-rose-500" aria-hidden="true"></span>
+                                }
+                                <div class="min-w-0 flex-1">
+                                    @{
+                                        var accessLevel = NotificationPresenter.AccessLevelLabel(item);
+                                        var calcInfo = NotificationPresenter.CalculationsInfo(item);
+                                    }
+                                    <p class="truncate text-sm font-medium text-gray-900 dark:text-gray-100">@NotificationPresenter.Title(item)</p>
+                                    <p class="mt-0.5 whitespace-pre-line text-xs text-gray-600 dark:text-gray-300">@NotificationPresenter.Message(item)</p>
+
+                                    @if (!string.IsNullOrWhiteSpace(accessLevel) || !string.IsNullOrWhiteSpace(calcInfo))
+                                    {
+                                        <div class="mt-1 flex flex-wrap gap-1">
+                                            @if (!string.IsNullOrWhiteSpace(accessLevel))
+                                            {
+                                                <span class="rounded bg-gray-100 px-1.5 py-0.5 text-[0.65rem] text-gray-700 dark:bg-gray-700 dark:text-gray-200">@accessLevel</span>
+                                            }
+                                            @if (!string.IsNullOrWhiteSpace(calcInfo))
+                                            {
+                                                <span class="rounded bg-gray-100 px-1.5 py-0.5 text-[0.65rem] text-gray-700 dark:bg-gray-700 dark:text-gray-200">@calcInfo</span>
+                                            }
+                                        </div>
+                                    }
+
+                                    <div class="mt-1.5 flex items-center justify-between gap-2">
+                                        <span class="text-[0.65rem] text-gray-400">@FormatDate(item.CreatedAt)</span>
+                                        <div class="flex items-center gap-2">
+                                            @if (!item.IsRead)
+                                            {
+                                                <button type="button" class="text-[0.65rem] text-gray-500 hover:underline dark:text-gray-400"
+                                                        @onclick="() => MarkReadAsync(item)">
+                                                    @PMWebResource.NotificationsMarkRead
+                                                </button>
+                                            }
+                                            @if (item.ProjectId.HasValue)
+                                            {
+                                                <button type="button" class="text-[0.65rem] font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+                                                        @onclick="() => OpenProjectAsync(item)">
+                                                    @(item.CalculationId.HasValue ? PMWebResource.NotificationsOpenCalculation : PMWebResource.NotificationsOpenProject)
+                                                </button>
+                                            }
+                                        </div>
+                                    </div>
+
+                                    @if (_unavailableNotificationId == item.Id)
+                                    {
+                                        <p class="mt-1 text-[0.65rem] text-rose-600 dark:text-rose-400">
+                                            @(item.CalculationId.HasValue ? PMWebResource.NotificationsNoAccessCalculation : PMWebResource.NotificationsNoAccess)
+                                        </p>
+                                    }
+                                </div>
+
+                                <button type="button"
+                                        class="mt-0.5 flex-none rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+                                        title="@PMWebResource.NotificationsRemove"
+                                        aria-label="@PMWebResource.NotificationsRemove"
+                                        @onclick="() => RemoveAsync(item)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <line x1="18" y1="6" x2="6" y2="18" />
+                                        <line x1="6" y1="6" x2="18" y2="18" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState>? AuthStateTask { get; set; }
+
+    private int _userId;
+    private int? _departmentId;
+    private bool _isViewer;
+
+    private int _unreadCount;
+    private bool _open;
+    private bool _loading;
+    private NotificationSummaryDTO? _summary;
+    private int? _unavailableNotificationId;
+
+    private IDisposable? _subscription;
+
+    private string BadgeText => _unreadCount > 99 ? "99+" : _unreadCount.ToString();
+
+    private bool HasReadItems => _summary?.Items.Any(i => i.IsRead) == true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ResolveCurrentUserAsync();
+
+        if (_userId <= 0)
+            return;
+
+        await RefreshCountAsync();
+
+        // Realtime: refresh when a notification is created/updated for this user (same server instance).
+        _subscription = Notifier.Subscribe(_userId, OnNotifiedAsync);
+    }
+
+    private async Task OnNotifiedAsync()
+    {
+        await RefreshCountAsync();
+        if (_open)
+            await LoadSummaryAsync();
+    }
+
+    private async Task ResolveCurrentUserAsync()
+    {
+        if (AuthStateTask is null)
+            return;
+
+        var user = (await AuthStateTask).User;
+        if (user?.Identity?.IsAuthenticated != true)
+            return;
+
+        if (int.TryParse(user.FindFirst(PMClaimsConst.UserId)?.Value, out var uid))
+            _userId = uid;
+
+        if (int.TryParse(user.FindFirst(PMClaimsConst.DepartmentId)?.Value, out var did) && did > 0)
+            _departmentId = did;
+
+        _isViewer = user.IsInRole(PMRolesConst.Tenant.Viewer);
+    }
+
+    private async Task RefreshCountAsync()
+    {
+        try
+        {
+            _unreadCount = await Dispatcher.Send(new GetUnreadNotificationCountQuery(_userId));
+        }
+        catch
+        {
+            // Ignore transient read failures; the badge simply won't update this cycle.
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task TogglePanelAsync()
+    {
+        _open = !_open;
+        _unavailableNotificationId = null;
+
+        if (_open)
+            await LoadSummaryAsync();
+    }
+
+    private void ClosePanel()
+    {
+        _open = false;
+        _unavailableNotificationId = null;
+    }
+
+    private Task OnPanelKeyDownAsync(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+            ClosePanel();
+
+        return Task.CompletedTask;
+    }
+
+    private async Task LoadSummaryAsync()
+    {
+        _loading = true;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            _summary = await Dispatcher.Send(new GetNotificationSummaryQuery(_userId, 15));
+            _unreadCount = _summary.UnreadCount;
+        }
+        catch
+        {
+            _summary = new NotificationSummaryDTO();
+        }
+        finally
+        {
+            _loading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task MarkReadAsync(NotificationListItemDTO item)
+    {
+        if (item.IsRead)
+            return;
+
+        var ok = await Dispatcher.Send(new MarkNotificationReadCommand(item.Id, _userId));
+        if (ok)
+        {
+            item.ReadAt = DateTime.UtcNow;
+            _unreadCount = Math.Max(0, _unreadCount - 1);
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task MarkAllReadAsync()
+    {
+        await Dispatcher.Send(new MarkAllNotificationsReadCommand(_userId));
+        if (_summary is not null)
+        {
+            var now = DateTime.UtcNow;
+            foreach (var n in _summary.Items.Where(n => !n.IsRead))
+                n.ReadAt = now;
+        }
+        _unreadCount = 0;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task RemoveAsync(NotificationListItemDTO item)
+    {
+        var ok = await Dispatcher.Send(new DeleteNotificationCommand(item.Id, _userId));
+        if (!ok)
+            return;
+
+        // A removed notification leaves the list; if it was unread, the badge must drop too.
+        if (!item.IsRead)
+            _unreadCount = Math.Max(0, _unreadCount - 1);
+
+        _summary?.Items.Remove(item);
+        if (_unavailableNotificationId == item.Id)
+            _unavailableNotificationId = null;
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ClearReadAsync()
+    {
+        await Dispatcher.Send(new ClearReadNotificationsCommand(_userId));
+        if (_summary is not null)
+            _summary.Items.RemoveAll(i => i.IsRead);
+
+        _unavailableNotificationId = null;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OpenProjectAsync(NotificationListItemDTO item)
+    {
+        if (item.ProjectId is not { } projectId)
+            return;
+
+        // The notification grants no access on its own – always re-check the live access.
+        var info = await Dispatcher.Send(
+            new GetProjectOpenInfoQuery(projectId, _userId, _departmentId, _isViewer));
+
+        if (info is null || !info.CanOpen)
+        {
+            _unavailableNotificationId = item.Id;
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
+
+        await MarkReadAsync(item);
+        _open = false;
+
+        // Deep-link straight to the exact project (and calculation, when the notification has one) so the
+        // SPA selects it explicitly instead of falling back to the first project in the folder.
+        var url = $"/?openProject={projectId}";
+        if (item.CalculationId is { } calcId)
+            url += $"&openCalc={calcId}";
+
+        Navigation.NavigateTo(url, forceLoad: true);
+    }
+
+    private static string ItemClass(NotificationListItemDTO item) =>
+        item.IsRead
+            ? "border-b border-gray-100 px-4 py-3 dark:border-gray-700"
+            : "border-b border-gray-100 bg-indigo-50/40 px-4 py-3 dark:border-gray-700 dark:bg-indigo-500/10";
+
+    private static string FormatDate(DateTime utc) =>
+        utc.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
+
+    public void Dispose()
+    {
+        _subscription?.Dispose();
+    }
+}

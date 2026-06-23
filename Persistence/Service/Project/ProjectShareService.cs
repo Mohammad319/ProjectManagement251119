@@ -1,12 +1,20 @@
 using Application.Feature.Project.ProjectShare;
+using Application.Interfaces;
+using Domain.Entities.Notifications;
 using Domain.Entities.Project;
 using Microsoft.EntityFrameworkCore;
+using Persistence.Context;
 using Persistence.Factory;
+using Persistence.Service.Notification;
+using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Project;
 
 namespace Persistence.Service.Project
 {
-    public sealed class ProjectShareService(IDbContextFactoryTenant dbFactory) : IProjectShareService
+    public sealed class ProjectShareService(
+        IDbContextFactoryTenant dbFactory,
+        INotificationPublisher? publisher = null,
+        IUserSystemRoleProvider? roleProvider = null) : IProjectShareService
     {
         public async Task<IReadOnlyList<ProjectShareListItemDTO>> GetByProjectAsync(
             Guid projectId, int? departmentId, int userId, CancellationToken ct = default)
@@ -42,7 +50,7 @@ namespace Persistence.Service.Project
             if (dto is null)
                 return 0;
 
-            // Exakt en mottagare måste anges enligt vald typ.
+            // Exactly one recipient must be set according to the selected type.
             bool validUser = dto.RecipientType == ProjectShareRecipientType.User && dto.UserId is > 0 && dto.DepartmentId is null;
             bool validDept = dto.RecipientType == ProjectShareRecipientType.Department && dto.DepartmentId is > 0 && dto.UserId is null;
             if (!validUser && !validDept)
@@ -54,8 +62,12 @@ namespace Persistence.Service.Project
 
             await using var ctx = await dbFactory.CreateDbContextAsync(ct);
 
-            // Projektet måste finnas inom aktuell tenant (global query filter).
-            if (!await ctx.Projects.AnyAsync(p => p.Id == projectId, ct))
+            // The project must exist within the current tenant (global query filter).
+            var projectName = await ctx.Projects
+                .Where(p => p.Id == projectId)
+                .Select(p => p.Name)
+                .FirstOrDefaultAsync(ct);
+            if (projectName is null)
                 return 0;
 
             ProjectShareEntity? entity = dto.Id is > 0
@@ -63,6 +75,13 @@ namespace Persistence.Service.Project
                     .Include(s => s.Calculations)
                     .FirstOrDefaultAsync(s => s.Id == dto.Id && s.ProjectId == projectId, ct)
                 : null;
+
+            bool isNew = entity is null;
+
+            // Capture the previous state before mutating, so we can classify the change for notifications.
+            string? oldRole = entity?.Role;
+            DateTime? oldValid = entity?.ValidUntil;
+            var oldCalcIds = entity?.Calculations.Select(c => c.CalculationId).ToList() ?? [];
 
             if (entity is null)
             {
@@ -80,7 +99,16 @@ namespace Persistence.Service.Project
                 entity.ReplaceCalculations(dto.CalculationIds);
             }
 
+            var notifications = await BuildUpsertNotificationsAsync(
+                ctx, projectId, projectName, dto, validUser, validUntil, isNew, oldRole, oldValid, oldCalcIds, userId, ct);
+
+            foreach (var n in notifications)
+                ctx.Notifications.Add(n);
+
             await ctx.SaveChangesAsync(ct);
+
+            await PublishAsync(notifications.Select(n => n.UserId), ct);
+
             return entity.Id;
         }
 
@@ -92,9 +120,209 @@ namespace Persistence.Service.Project
             if (entity is null)
                 return false;
 
+            var projectId = entity.ProjectId;
+            var projectName = await ctx.Projects
+                .Where(p => p.Id == projectId)
+                .Select(p => p.Name)
+                .FirstOrDefaultAsync(ct) ?? string.Empty;
+
+            // Determine who loses access BEFORE removing the row.
+            var affected = await ResolveRemovalRecipientsAsync(ctx, entity, projectId, userId, ct);
+
             ctx.ProjectShare.Remove(entity);
+
+            foreach (var uid in affected)
+                ctx.Notifications.Add(ProjectShareNotificationFactory.AccessRemoved(uid, projectId, projectName));
+
             await ctx.SaveChangesAsync(ct);
+
+            await PublishAsync(affected, ct);
+
             return true;
+        }
+
+        // ── Notification helpers ─────────────────────────────────────────────
+
+        private async Task<List<NotificationEntity>> BuildUpsertNotificationsAsync(
+            ShardingSingleDbContext ctx, Guid projectId, string projectName, ProjectShareUpsertDTO dto,
+            bool validUser, DateTime? newValid, bool isNew, string? oldRole, DateTime? oldValid,
+            List<int> oldCalcIds, int actorId, CancellationToken ct)
+        {
+            var result = new List<NotificationEntity>();
+
+            var newRole = dto.Role;
+            var newCalcIds = (dto.CalculationIds ?? []).Distinct().ToList();
+            int calcCount = newCalcIds.Count;
+
+            var totalCalcs = await ctx.Calculations.CountAsync(c => c.ProjectId == projectId, ct);
+            bool calcAll = calcCount > 0 && totalCalcs > 0 && calcCount >= totalCalcs;
+
+            // Change classification (only relevant for updates).
+            bool roleChanged = !string.Equals(oldRole, newRole, StringComparison.Ordinal);
+            bool validChanged = oldValid != newValid;
+            bool calcsChanged = !oldCalcIds.ToHashSet().SetEquals(newCalcIds);
+
+            NotificationEntity? UpdateNotif(int uid, string role)
+            {
+                int changes = (roleChanged ? 1 : 0) + (validChanged ? 1 : 0) + (calcsChanged ? 1 : 0);
+                if (changes == 0)
+                    return null;
+
+                // Several changes at once → a single aggregated notification (avoid notification spam).
+                if (changes > 1 || roleChanged)
+                    return ProjectShareNotificationFactory.AccessChanged(uid, projectId, projectName, role, calcCount, calcAll, newValid);
+                if (validChanged)
+                    return ProjectShareNotificationFactory.ValidityChanged(uid, projectId, projectName, role, calcCount, calcAll, newValid);
+                return ProjectShareNotificationFactory.CalculationsChanged(uid, projectId, projectName, role, calcCount, calcAll, newValid);
+            }
+
+            if (validUser)
+            {
+                int recipientId = dto.UserId!.Value;
+                if (recipientId == actorId)
+                    return result; // never notify yourself
+
+                // System Visare can only ever "view", even if shared as edit.
+                var viewers = await ResolveViewerUserIdsAsync(ctx, [recipientId], ct);
+                var effRole = viewers.Contains(recipientId) ? PMRolesConst.Tenant.Viewer : newRole;
+
+                if (isNew)
+                {
+                    var actorName = await GetUserDisplayNameAsync(ctx, actorId, ct);
+                    result.Add(ProjectShareNotificationFactory.Shared(
+                        recipientId, projectId, projectName, actorName, null, effRole, calcCount, calcAll, newValid, viaDepartment: false));
+                }
+                else if (UpdateNotif(recipientId, effRole) is { } notif)
+                {
+                    result.Add(notif);
+                }
+
+                return result;
+            }
+
+            // Department share → fan out to active members who gain/keep access through this share.
+            int deptId = dto.DepartmentId!.Value;
+            var deptName = await ctx.Department
+                .Where(d => d.Id == deptId)
+                .Select(d => d.Name)
+                .FirstOrDefaultAsync(ct) ?? string.Empty;
+
+            var deptUserIds = await ctx.User
+                .Where(u => u.DepartmentId == deptId)
+                .Select(u => u.Id)
+                .ToListAsync(ct);
+
+            // Skip users who already have an equal/stronger DIRECT share for this project (no duplicate notice).
+            int newRank = ProjectShareNotificationFactory.RoleRank(newRole);
+            var directShares = await ctx.ProjectShare
+                .Where(s => s.ProjectId == projectId && s.SharedWithUserId != null)
+                .Select(s => new { UserId = s.SharedWithUserId!.Value, s.Role })
+                .ToListAsync(ct);
+            var strongerDirect = directShares
+                .Where(d => ProjectShareNotificationFactory.RoleRank(d.Role) >= newRank)
+                .Select(d => d.UserId)
+                .ToHashSet();
+
+            var candidates = deptUserIds.Where(uid => uid != actorId && !strongerDirect.Contains(uid)).ToList();
+            var viewerIds = await ResolveViewerUserIdsAsync(ctx, candidates, ct);
+
+            foreach (var uid in candidates)
+            {
+                var effRole = viewerIds.Contains(uid) ? PMRolesConst.Tenant.Viewer : newRole;
+
+                if (isNew)
+                    result.Add(ProjectShareNotificationFactory.Shared(
+                        uid, projectId, projectName, null, deptName, effRole, calcCount, calcAll, newValid, viaDepartment: true));
+                else if (UpdateNotif(uid, effRole) is { } notif)
+                    result.Add(notif);
+            }
+
+            return result;
+        }
+
+        /// <summary>Of the given users, those who are system Visare (Viewer). Empty when no role provider is wired.</summary>
+        private async Task<HashSet<int>> ResolveViewerUserIdsAsync(ShardingSingleDbContext ctx, IEnumerable<int> userIds, CancellationToken ct)
+        {
+            if (roleProvider is null)
+                return [];
+
+            var ids = userIds.Distinct().ToList();
+            if (ids.Count == 0)
+                return [];
+
+            var map = await ctx.User
+                .Where(u => ids.Contains(u.Id) && u.ExternalAuthId != "")
+                .Select(u => new { u.Id, u.ExternalAuthId })
+                .ToListAsync(ct);
+
+            var idByAuth = map.ToDictionary(m => m.ExternalAuthId, m => m.Id, StringComparer.Ordinal);
+            if (idByAuth.Count == 0)
+                return [];
+
+            var viewerAuthIds = await roleProvider.GetViewerAuthIdsAsync(idByAuth.Keys, ct);
+            return viewerAuthIds.Where(idByAuth.ContainsKey).Select(a => idByAuth[a]).ToHashSet();
+        }
+
+        private static async Task<List<int>> ResolveRemovalRecipientsAsync(
+            ShardingSingleDbContext ctx, ProjectShareEntity entity, Guid projectId, int actorId, CancellationToken ct)
+        {
+            List<int> affected;
+
+            if (entity.SharedWithUserId is { } directUser)
+            {
+                affected = [directUser];
+            }
+            else
+            {
+                int deptId = entity.DepartmentId!.Value;
+                var deptUsers = await ctx.User
+                    .Where(u => u.DepartmentId == deptId)
+                    .Select(u => u.Id)
+                    .ToListAsync(ct);
+
+                // Members who still hold a direct share keep access and should not be told it was removed.
+                var directUserIds = (await ctx.ProjectShare
+                    .Where(s => s.ProjectId == projectId && s.SharedWithUserId != null && s.Id != entity.Id)
+                    .Select(s => s.SharedWithUserId!.Value)
+                    .ToListAsync(ct)).ToHashSet();
+
+                affected = deptUsers.Where(u => !directUserIds.Contains(u)).ToList();
+            }
+
+            return affected.Where(u => u != actorId).Distinct().ToList();
+        }
+
+        private static async Task<string> GetUserDisplayNameAsync(ShardingSingleDbContext ctx, int userId, CancellationToken ct)
+        {
+            var u = await ctx.User
+                .Where(x => x.Id == userId)
+                .Select(x => new { x.FirstName, x.LastName, x.UserName })
+                .FirstOrDefaultAsync(ct);
+
+            if (u is null)
+                return string.Empty;
+
+            var full = $"{u.FirstName} {u.LastName}".Trim();
+            return string.IsNullOrWhiteSpace(full) ? u.UserName : full;
+        }
+
+        private async Task PublishAsync(IEnumerable<int> userIds, CancellationToken ct)
+        {
+            if (publisher is null)
+                return;
+
+            var ids = userIds.Where(id => id > 0).Distinct().ToList();
+            if (ids.Count == 0)
+                return;
+
+            try
+            {
+                await publisher.PublishUnreadChangedAsync(ids, ct);
+            }
+            catch
+            {
+                // Realtime push is best-effort; failure must not affect the share operation.
+            }
         }
     }
 }

@@ -4,6 +4,7 @@
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize]
 @inherits AppComponentBase
+@inject IJSRuntime JS
 
 @if (_editItem is not null)
 {
@@ -266,74 +267,100 @@ else
         @* Utvärderingsmodell + toolbar *@
         <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
             <div class="space-y-2">
-                @* Utvärderingsgrund *@
-                <div class="flex flex-wrap items-center gap-2">
-                    <span class="w-32 shrink-0 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Utvärderingsgrund</span>
-                    <div class="inline-flex overflow-hidden rounded-lg border border-slate-300 dark:border-slate-700">
+                @* Utvärderingsgrund + Beräkningsmetod ligger på samma rad på desktop och
+                   bryts till ny rad på mindre skärmar. Hjälptexter visas som tooltip med
+                   fördröjning i stället för långa synliga textblock. *@
+                <div class="flex flex-col gap-x-8 gap-y-2 lg:flex-row lg:flex-wrap lg:items-center">
+                    @* Utvärderingsgrund *@
+                    <div class="flex items-center gap-1.5">
+                        <span class="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Utvärderingsgrund</span>
+                        <div class="inline-flex overflow-hidden rounded-lg border border-slate-300 dark:border-slate-700">
+                            <button type="button"
+                                    class="@(IsPriceQualityBasis ? "bg-sky-600 px-2.5 py-1 text-xs font-semibold text-white" : "px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800")"
+                                    disabled="@_isModelSaving"
+                                    @onmouseenter="e => ShowTipAsync(e, TipBasisPriceQuality)"
+                                    @onmouseleave="HideTipAsync"
+                                    @onclick="() => SetBasisAsync(BidEvaluationBasis.PriceQuality)">
+                                Pris och kvalitet
+                            </button>
+                            <button type="button"
+                                    class="@(IsPriceBasis ? "border-l border-sky-700 bg-sky-600 px-2.5 py-1 text-xs font-semibold text-white" : "border-l border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800")"
+                                    disabled="@_isModelSaving"
+                                    @onmouseenter="e => ShowTipAsync(e, TipBasisPrice)"
+                                    @onmouseleave="HideTipAsync"
+                                    @onclick="() => SetBasisAsync(BidEvaluationBasis.Price)">
+                                Pris
+                            </button>
+                            <button type="button"
+                                    class="@(IsCostBasis ? "border-l border-sky-700 bg-sky-600 px-2.5 py-1 text-xs font-semibold text-white" : "border-l border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800")"
+                                    disabled="@_isModelSaving"
+                                    @onmouseenter="e => ShowTipAsync(e, TipBasisCost)"
+                                    @onmouseleave="HideTipAsync"
+                                    @onclick="() => SetBasisAsync(BidEvaluationBasis.Cost)">
+                                Kostnad
+                            </button>
+                        </div>
+                        @* Info-ikon: visar förklaring för vald grund (även vid klick på touch). *@
                         <button type="button"
-                                class="@(IsPriceQualityBasis ? "bg-sky-600 px-2.5 py-1 text-xs font-semibold text-white" : "px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800")"
-                                disabled="@_isModelSaving"
-                                @onclick="() => SetBasisAsync(BidEvaluationBasis.PriceQuality)">
-                            Pris och kvalitet
-                        </button>
+                                class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] text-slate-400 transition hover:text-sky-600 dark:text-slate-500 dark:hover:text-sky-400"
+                                aria-label="Om utvärderingsgrund"
+                                @onmouseenter="e => ShowTipAsync(e, CurrentBasisTip)"
+                                @onmouseleave="HideTipAsync"
+                                @onclick="e => ShowTipNowAsync(e, CurrentBasisTip)">ⓘ</button>
+                    </div>
+
+                    @* Beräkningsmetod — beroende på vald utvärderingsgrund *@
+                    <div class="flex items-center gap-1.5">
+                        <span class="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Beräkningsmetod</span>
+                        @if (IsPriceBasis)
+                        {
+                            <span class="inline-flex rounded-lg border border-sky-300 bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-300"
+                                  @onmouseenter="e => ShowTipAsync(e, TipMethodLowestBid)"
+                                  @onmouseleave="HideTipAsync">Lägst anbudssumma</span>
+                        }
+                        else if (IsCostBasis)
+                        {
+                            <span class="inline-flex rounded-lg border border-sky-300 bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-300"
+                                  @onmouseenter="e => ShowTipAsync(e, TipMethodTotalCost)"
+                                  @onmouseleave="HideTipAsync">Lägst total kostnad</span>
+                        }
+                        else
+                        {
+                            <div class="inline-flex overflow-hidden rounded-lg border border-slate-300 dark:border-slate-700">
+                                <button type="button"
+                                        class="@(IsLowestComparisonModel ? "bg-sky-600 px-2.5 py-1 text-xs font-semibold text-white" : "px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800")"
+                                        disabled="@_isModelSaving"
+                                        @onmouseenter="e => ShowTipAsync(e, TipMethodComparison)"
+                                        @onmouseleave="HideTipAsync"
+                                        @onclick="() => SetMethodAsync(BidEvaluationModel.LowestComparison)">
+                                    Lägst jämförelsesumma med mervärdeavdrag
+                                </button>
+                                <button type="button"
+                                        class="@(IsPointsModel ? "border-l border-sky-700 bg-sky-600 px-2.5 py-1 text-xs font-semibold text-white" : "border-l border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800")"
+                                        disabled="@_isModelSaving"
+                                        @onmouseenter="e => ShowTipAsync(e, TipMethodPoints)"
+                                        @onmouseleave="HideTipAsync"
+                                        @onclick="() => SetMethodAsync(BidEvaluationModel.HighestPoints)">
+                                    Högst totalpoäng
+                                </button>
+                            </div>
+                        }
+                        @* Info-ikon: visar förklaring för vald metod (även vid klick på touch). *@
                         <button type="button"
-                                class="@(IsPriceBasis ? "border-l border-sky-700 bg-sky-600 px-2.5 py-1 text-xs font-semibold text-white" : "border-l border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800")"
-                                disabled="@_isModelSaving"
-                                @onclick="() => SetBasisAsync(BidEvaluationBasis.Price)">
-                            Pris
-                        </button>
-                        <button type="button"
-                                class="@(IsCostBasis ? "border-l border-sky-700 bg-sky-600 px-2.5 py-1 text-xs font-semibold text-white" : "border-l border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800")"
-                                disabled="@_isModelSaving"
-                                @onclick="() => SetBasisAsync(BidEvaluationBasis.Cost)">
-                            Kostnad
-                        </button>
+                                class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] text-slate-400 transition hover:text-sky-600 dark:text-slate-500 dark:hover:text-sky-400"
+                                aria-label="Om beräkningsmetod"
+                                @onmouseenter="e => ShowTipAsync(e, CurrentMethodTip)"
+                                @onmouseleave="HideTipAsync"
+                                @onclick="e => ShowTipNowAsync(e, CurrentMethodTip)">ⓘ</button>
                     </div>
                 </div>
 
-                @* Hjälptext: kort synlig text + info-ikon med längre förklaring *@
-                <div class="text-[11px] leading-snug text-slate-500 dark:text-slate-400">
-                    <HoverTooltip Text="@BasisLongHelp" ShowInfoIcon="true" Focusable="true">
-                        <span>@BasisShortHelp</span>
-                    </HoverTooltip>
-                </div>
-
-                @* Beräkningsmetod — beroende på vald utvärderingsgrund *@
-                <div class="flex flex-wrap items-center gap-2">
-                    <span class="w-32 shrink-0 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Beräkningsmetod</span>
-                    @if (IsPriceBasis)
-                    {
-                        <span class="inline-flex rounded-lg border border-sky-300 bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-300">Lägst anbudssumma</span>
-                    }
-                    else if (IsCostBasis)
-                    {
-                        <span class="inline-flex rounded-lg border border-sky-300 bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-300">Lägst total kostnad</span>
-                    }
-                    else
-                    {
-                        <div class="inline-flex overflow-hidden rounded-lg border border-slate-300 dark:border-slate-700">
-                            <button type="button"
-                                    class="@(IsLowestComparisonModel ? "bg-sky-600 px-2.5 py-1 text-xs font-semibold text-white" : "px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800")"
-                                    disabled="@_isModelSaving"
-                                    @onclick="() => SetMethodAsync(BidEvaluationModel.LowestComparison)">
-                                Lägst jämförelsesumma med mervärdeavdrag
-                            </button>
-                            <button type="button"
-                                    class="@(IsPointsModel ? "border-l border-sky-700 bg-sky-600 px-2.5 py-1 text-xs font-semibold text-white" : "border-l border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800")"
-                                    disabled="@_isModelSaving"
-                                    @onclick="() => SetMethodAsync(BidEvaluationModel.HighestPoints)">
-                                Högst totalpoäng
-                            </button>
-                        </div>
-                    }
-                </div>
-
-                @* Hjälptext: kort synlig text + info-ikon med längre förklaring *@
-                <div class="text-[11px] leading-snug text-slate-500 dark:text-slate-400">
-                    <HoverTooltip Text="@MethodLongHelp" ShowInfoIcon="true" Focusable="true">
-                        <span>@MethodShortHelp</span>
-                    </HoverTooltip>
-                </div>
+                @if (!string.IsNullOrWhiteSpace(_modelError))
+                {
+                    <div class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-[11px] text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300">
+                        @_modelError
+                    </div>
+                }
 
                 @* Knappar *@
                 <div class="flex items-center justify-between">
@@ -748,9 +775,43 @@ else
     private bool _manageColumnsOpen;
     private bool _isColumnSaving;
     private bool _isModelSaving;
+    private string _modelError = string.Empty;
     private string _newColumnName = string.Empty;
     private string _columnError = string.Empty;
     private readonly Dictionary<int, string> _columnNameEdits = new();
+
+    // ── Tooltip-texter ──────────────────────────────────────
+    // Visas via fördröjd tooltip (hover/info-ikon) i stället för långa synliga textblock.
+    private const int TooltipDelayMs = 600;
+
+    private const string TipBasisPriceQuality =
+        "Används när både pris och kvalitet påverkar resultatet. Kvalitet kan hanteras genom mervärdeavdrag eller poäng.";
+    private const string TipBasisPrice =
+        "Används när anbuden jämförs utifrån pris. Prisdelar summeras till anbudssumma och lägst anbudssumma får bäst placering.";
+    private const string TipBasisCost =
+        "Används när anbuden jämförs utifrån total kostnad, inte bara pris. Kostnadsdelar kan till exempel vara inköpspris, drift, service, underhåll eller livscykelkostnad.";
+
+    private const string TipMethodComparison =
+        "Prisdelar summeras till anbudssumma. Mervärdeavdrag räknas av och ger en jämförelsesumma. Lägst jämförelsesumma får bäst placering. Exempel: 1 000 000 kr med 30 % mervärdeavdrag ger 700 000 kr i jämförelsesumma.";
+    private const string TipMethodPoints =
+        "Poängdelar summeras till totalpoäng. Högst totalpoäng får bäst placering.";
+    private const string TipMethodLowestBid =
+        "Prisdelar summeras till anbudssumma. Lägst anbudssumma får bäst placering.";
+    private const string TipMethodTotalCost =
+        "Kostnadsdelar summeras till total kostnad. Lägst total kostnad får bäst placering.";
+
+    private string CurrentBasisTip => _evaluationBasis switch
+    {
+        BidEvaluationBasis.PriceQuality => TipBasisPriceQuality,
+        BidEvaluationBasis.Cost => TipBasisCost,
+        _ => TipBasisPrice
+    };
+
+    private string CurrentMethodTip =>
+        IsCostBasis ? TipMethodTotalCost
+        : IsPriceBasis ? TipMethodLowestBid
+        : IsPointsModel ? TipMethodPoints
+        : TipMethodComparison;
 
     private bool HasColumns => _columns.Count > 0;
     private bool IsPointsModel => _evaluationModel == BidEvaluationModel.HighestPoints;
@@ -772,33 +833,6 @@ else
     private string PartsNoun => IsPointsModel ? "poängdel" : IsCostBasis ? "kostnadsdel" : "prisdel";
     private string PartsLabelPlural => IsPointsModel ? "Poängdelar" : IsCostBasis ? "Kostnadsdelar" : "Prisdelar";
     private string AddPartLabel => IsPointsModel ? "Lägg till poängdel" : IsCostBasis ? "Lägg till kostnadsdel" : "Lägg till prisdel";
-
-    // Hjälptexter: kort synlig text + längre förklaring (visas via info-ikon/tooltip).
-    private string BasisShortHelp => _evaluationBasis switch
-    {
-        BidEvaluationBasis.PriceQuality => "Både pris och kvalitet påverkar resultatet.",
-        BidEvaluationBasis.Cost => "Anbuden jämförs utifrån total kostnad.",
-        _ => "Anbuden jämförs utifrån pris."
-    };
-
-    private string BasisLongHelp => _evaluationBasis switch
-    {
-        BidEvaluationBasis.PriceQuality => "Används när anbuden bedöms utifrån bästa förhållandet mellan pris och kvalitet. Kvalitet kan hanteras genom mervärdeavdrag eller poäng.",
-        BidEvaluationBasis.Cost => "Används när anbuden jämförs utifrån total kostnad, inte bara pris. Kostnadsdelar kan till exempel vara inköpspris, drift, service, underhåll eller livscykelkostnad. Lägst total kostnad får bäst placering.",
-        _ => "Används när anbuden jämförs utifrån pris. Prisdelar summeras till anbudssumma och lägst anbudssumma får bäst placering."
-    };
-
-    private string MethodShortHelp =>
-        IsCostBasis ? "Kostnadsdelar summeras."
-        : IsPointsModel ? "Poängdelar summeras till totalpoäng."
-        : UsesDeduction ? "Mervärde räknas av från anbudssumman."
-        : "Prisdelar summeras.";
-
-    private string MethodLongHelp =>
-        IsCostBasis ? "Alla kostnadsdelar summeras till total kostnad. Lägst total kostnad får bäst placering."
-        : IsPointsModel ? "Används när pris och kvalitet omvandlas till poäng, till exempel Pris 30 poäng och Kvalitet 70 poäng. Högst totalpoäng får bäst placering."
-        : UsesDeduction ? "Prisdelar summeras till anbudssumma. Mervärdeavdrag räknas av och ger en jämförelsesumma. Lägst jämförelsesumma får bäst placering. Exempel: 1 000 000 kr med 30 % mervärdeavdrag ger 700 000 kr i jämförelsesumma."
-        : "Alla prisdelar summeras till anbudssumma. Lägst anbudssumma får bäst placering.";
 
     // Anpassad hjälptext för "hantera utvärderingsdelar" beroende på vald grund/metod.
     private string PartsHelpText =>
@@ -841,53 +875,113 @@ else
         }
     }
 
-    // Selecting an evaluation basis (Pris/Kostnad/Pris och kvalitet) picks a sensible
-    // default method for that basis. The method picker is only shown for Pris och kvalitet.
-    private async Task SetBasisAsync(BidEvaluationBasis basis)
-    {
-        var method = basis switch
+    // Selecting an evaluation basis (Pris/Kostnad/Pris och kvalitet). The method is
+    // normalized to one that is valid for the chosen basis (see NormalizeMethod), so the
+    // current method can safely be carried over — it can never drift out of sync.
+    private Task SetBasisAsync(BidEvaluationBasis basis) =>
+        SetEvaluationAsync(basis, _evaluationModel);
+
+    private Task SetMethodAsync(BidEvaluationModel method) =>
+        SetEvaluationAsync(_evaluationBasis, method);
+
+    // Guarantees EvaluationMethod is always valid for the chosen basis: Pris ⇒ Lägst
+    // anbudssumma, Kostnad ⇒ Lägst total kostnad, Pris och kvalitet ⇒ behåll Högst
+    // totalpoäng om vald, annars Lägst jämförelsesumma.
+    private static BidEvaluationModel NormalizeMethod(BidEvaluationBasis basis, BidEvaluationModel method) =>
+        basis switch
         {
             BidEvaluationBasis.Price => BidEvaluationModel.LowestComparison,
             BidEvaluationBasis.Cost => BidEvaluationModel.LowestTotalCost,
-            // Keep the current method if it is valid for Pris och kvalitet, otherwise default.
-            BidEvaluationBasis.PriceQuality => _evaluationModel == BidEvaluationModel.HighestPoints
+            BidEvaluationBasis.PriceQuality => method == BidEvaluationModel.HighestPoints
                 ? BidEvaluationModel.HighestPoints
                 : BidEvaluationModel.LowestComparison,
             _ => BidEvaluationModel.LowestComparison
         };
 
-        await SetEvaluationAsync(basis, method);
-    }
-
-    private Task SetMethodAsync(BidEvaluationModel method) =>
-        SetEvaluationAsync(_evaluationBasis, method);
-
     private async Task SetEvaluationAsync(BidEvaluationBasis basis, BidEvaluationModel method)
     {
+        method = NormalizeMethod(basis, method);
+
         if ((basis == _evaluationBasis && method == _evaluationModel) || _isModelSaving)
             return;
 
         _isModelSaving = true;
+        _modelError = string.Empty;
         try
         {
             var ok = await Repo.ProjectBid.SetEvaluationAsync(ProjectId, basis, method);
             if (ok)
             {
+                // Servern räknar om härledda fält (anbudssumma/jämförelsesumma/totalpoäng)
+                // utifrån den nya modellen, så vi laddar om för att visa korrekta värden.
                 await LoadAsync();
             }
             else
             {
-                MHD.Notifications(ToastType.Update, false);
+                // Enkelt state-problem (t.ex. projektet hittas inte i aktuell avdelningskontext):
+                // visa diskret meddelande och återställ säkert till sparat läge i stället för
+                // ett generiskt felmeddelande.
+                _modelError = "Utvärderingsgrunden kunde inte sparas. Inga ändringar gjordes.";
+                await ClientLog.ErrorAsync(
+                    $"SetEvaluation returned false for project {ProjectId}. " +
+                    $"Requested Basis={basis}, Method={method}; " +
+                    $"Current Basis={_evaluationBasis}, Method={_evaluationModel}; " +
+                    $"Parts={_columns.Count}, Bids={_bids.Count}.");
+                await LoadAsync();
             }
         }
         catch (Exception ex)
         {
-            MHD.Notifications(ToastType.Update, false);
-            await ClientLog.ErrorAsync($"Failed to set bid evaluation for project {ProjectId}.", ex: ex);
+            _modelError = "Utvärderingsgrunden kunde inte sparas just nu. Försök igen om en stund.";
+            await ClientLog.ErrorAsync(
+                $"Failed to set bid evaluation for project {ProjectId}. " +
+                $"Requested Basis={basis}, Method={method}; " +
+                $"Current Basis={_evaluationBasis}, Method={_evaluationModel}; " +
+                $"Parts={_columns.Count}, Bids={_bids.Count}.", ex: ex);
+            // LoadAsync har egen felhantering och kraschar inte komponenten.
+            await LoadAsync();
         }
         finally
         {
             _isModelSaving = false;
+            StateHasChanged();
+        }
+    }
+
+    // ── Tooltips (fördröjd visning via JS) ──────────────────
+    // Visas vid cursorn så att knappar i segmentkontroller inte behöver brytas upp.
+    private async Task ShowTipAsync(MouseEventArgs e, string text)
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("hoverTooltip.showAt", e.ClientX, e.ClientY, text, TooltipDelayMs);
+        }
+        catch
+        {
+            // JS kan vara otillgängligt (t.ex. under prerender) – tooltip är icke-kritisk.
+        }
+    }
+
+    // Touch: visa direkt vid klick på info-ikonen, utan fördröjning.
+    private async Task ShowTipNowAsync(MouseEventArgs e, string text)
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("hoverTooltip.showAt", e.ClientX, e.ClientY, text, 0);
+        }
+        catch
+        {
+        }
+    }
+
+    private async Task HideTipAsync()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("hoverTooltip.dismiss");
+        }
+        catch
+        {
         }
     }
 

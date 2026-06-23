@@ -3,6 +3,7 @@ using ProjectManagement.Client.Shared.Repositories.Application;
 using ProjectManagement.Client.Shared.Repositories.Calculation;
 using ProjectManagement.Client.Shared.Repositories.Folder;
 using ProjectManagement.Client.Shared.Repositories.Identity;
+using ProjectManagement.Client.Shared.Repositories.Notification;
 using ProjectManagement.Client.Shared.Repositories.Offer;
 using ProjectManagement.Client.Shared.Repositories.Organisation;
 using ProjectManagement.Client.Shared.Repositories.Project;
@@ -30,6 +31,7 @@ namespace ProjectManagement.Client.Shared.Repositories
         IProjectRepository Project { get; }
         IProjectBidRepository ProjectBid { get; }
         IProjectShareRepository ProjectShare { get; }
+        INotificationRepository Notification { get; }
     }
 
     public class UnitOfWorkRepository(
@@ -50,7 +52,8 @@ namespace ProjectManagement.Client.Shared.Repositories
         IOrganisationRepository organisationrepository,
         IProjectRepository projectrepository,
         IProjectBidRepository projectbidrepository,
-        IProjectShareRepository projectsharerepository
+        IProjectShareRepository projectsharerepository,
+        INotificationRepository notificationrepository
         ) : IUnitOfWorkRepository
     {
         public IItemCalcCategoryRepository ItemCalcCategory { get; } = itemcalccategoryrepository;
@@ -71,6 +74,7 @@ namespace ProjectManagement.Client.Shared.Repositories
         public IProjectRepository Project { get; } = projectrepository;
         public IProjectBidRepository ProjectBid { get; } = projectbidrepository;
         public IProjectShareRepository ProjectShare { get; } = projectsharerepository;
+        public INotificationRepository Notification { get; } = notificationrepository;
     }
 
 }

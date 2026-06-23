@@ -215,4 +215,37 @@
   <data name="AuditUserUnlocked" xml:space="preserve"><value>User unlocked</value></data>
   <data name="AuditDepartmentChanged" xml:space="preserve"><value>Department changed</value></data>
   <data name="AuditRoleChanged" xml:space="preserve"><value>Role changed</value></data>
+  <data name="NotificationsTitle" xml:space="preserve"><value>Notifications</value></data>
+  <data name="NotificationsMarkAllRead" xml:space="preserve"><value>Mark all as read</value></data>
+  <data name="NotificationsMarkRead" xml:space="preserve"><value>Mark as read</value></data>
+  <data name="NotificationsOpenProject" xml:space="preserve"><value>Open project</value></data>
+  <data name="NotificationsOpenCalculation" xml:space="preserve"><value>Open calculation</value></data>
+  <data name="NotificationsClearRead" xml:space="preserve"><value>Clear read</value></data>
+  <data name="NotificationsRemove" xml:space="preserve"><value>Remove notification</value></data>
+  <data name="NotificationsEmpty" xml:space="preserve"><value>No notifications</value></data>
+  <data name="NotificationsLoading" xml:space="preserve"><value>Loading…</value></data>
+  <data name="NotificationsNoAccess" xml:space="preserve"><value>You no longer have access to this project.</value></data>
+  <data name="NotificationsNoAccessCalculation" xml:space="preserve"><value>You no longer have access to this calculation.</value></data>
+  <data name="NotificationsUnreadAria" xml:space="preserve"><value>{0} unread notifications</value></data>
+  <data name="NotificationTitleSharedWithUser" xml:space="preserve"><value>Project shared with you</value></data>
+  <data name="NotificationTitleSharedWithDepartment" xml:space="preserve"><value>Project shared with your department</value></data>
+  <data name="NotificationTitleAccessChanged" xml:space="preserve"><value>Your access has been updated</value></data>
+  <data name="NotificationTitleAccessRemoved" xml:space="preserve"><value>Access removed</value></data>
+  <data name="NotificationTitleValidityChanged" xml:space="preserve"><value>Share validity changed</value></data>
+  <data name="NotificationTitleCalculationsChanged" xml:space="preserve"><value>Calculation selection changed</value></data>
+  <data name="NotificationMsgSharedWithUser" xml:space="preserve"><value>{0} shared the project "{1}" with you.</value></data>
+  <data name="NotificationMsgSharedWithDepartment" xml:space="preserve"><value>The project "{0}" was shared with your department {1}.</value></data>
+  <data name="NotificationMsgAccessChanged" xml:space="preserve"><value>Your access to the project "{0}" has been updated.</value></data>
+  <data name="NotificationMsgAccessRemoved" xml:space="preserve"><value>Your access to "{0}" has been removed.</value></data>
+  <data name="NotificationMsgValidityChanged" xml:space="preserve"><value>The validity of your share of "{0}" has changed.</value></data>
+  <data name="NotificationMsgCalculationsChanged" xml:space="preserve"><value>The calculation selection for your share of "{0}" has changed.</value></data>
+  <data name="NotificationSentenceCanEdit" xml:space="preserve"><value>You can edit the project and the selected calculations according to your permissions.</value></data>
+  <data name="NotificationSentenceCanView" xml:space="preserve"><value>You can view the project and the selected calculations.</value></data>
+  <data name="NotificationValidityUntil" xml:space="preserve"><value>Valid until {0}</value></data>
+  <data name="NotificationValidityIndefinite" xml:space="preserve"><value>Valid until further notice</value></data>
+  <data name="NotificationLevelView" xml:space="preserve"><value>Can view</value></data>
+  <data name="NotificationLevelEdit" xml:space="preserve"><value>Can edit</value></data>
+  <data name="NotificationCalcAll" xml:space="preserve"><value>All available calculations</value></data>
+  <data name="NotificationCalcOne" xml:space="preserve"><value>1 calculation</value></data>
+  <data name="NotificationCalcMany" xml:space="preserve"><value>{0} calculations</value></data>
 </root>

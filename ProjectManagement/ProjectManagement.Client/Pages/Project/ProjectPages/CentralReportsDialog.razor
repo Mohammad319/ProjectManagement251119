@@ -42,8 +42,8 @@
                         class="flex w-full items-center justify-between px-3 py-2 text-left text-xs transition hover:bg-slate-50 dark:hover:bg-slate-900 @(_incomeFiltersExpanded ? "rounded-t-lg border-b border-slate-200 dark:border-slate-800" : "rounded-lg")"
                         aria-expanded="@_incomeFiltersExpanded"
                         @onclick="() => _incomeFiltersExpanded = !_incomeFiltersExpanded">
-                    <span><strong>Filter</strong><span class="ml-2 text-slate-500 dark:text-slate-400">@IncomeFilterSummary</span></span>
-                    <span class="font-semibold text-sky-600 dark:text-sky-400">@(_incomeFiltersExpanded ? "Dölj" : "Visa")</span>
+                    <span class="min-w-0 truncate" title="@IncomeFilterDetailText"><strong>Filter</strong><span class="ml-2 text-slate-500 dark:text-slate-400">· @IncomeFilterSummary</span></span>
+                    <span class="ml-2 shrink-0 font-semibold text-sky-600 dark:text-sky-400">@(_incomeFiltersExpanded ? "Dölj" : "Visa")</span>
                 </button>
                 <div class="@(_incomeFiltersExpanded ? "grid" : "hidden") grid-cols-2 gap-2 p-3 md:grid-cols-4 xl:grid-cols-6">
 
@@ -1010,29 +1010,90 @@
     private bool _showOwnCompanyDropdown;
     private List<ProjectBidComparisonRowDTO> _bidRowsRaw = [];
 
+    // Tydlig sammanfattning av faktiska filtervärden för rapportrubriken. Året visas
+    // alltid (specifikt år eller "Alla år"); övriga filter visas bara när de avviker
+    // från standard. Blir raden för lång ersätts den med "X aktiva filter" och hela
+    // listan finns i tooltip (IncomeFilterDetailText). Ingen filterlogik ändras här –
+    // endast den textmässiga sammanfattningen. "Standard" används aldrig som beskrivning.
     private string IncomeFilterSummary
     {
         get
         {
-            var parts = new List<string>();
-            if (!string.IsNullOrWhiteSpace(_selectedYear)) parts.Add($"År {_selectedYear}");
-            if (_selectedQuarter > 0) parts.Add($"Q{_selectedQuarter}");
-            if (!string.IsNullOrWhiteSpace(_selectedCalculationType)) parts.Add("Kalkyltyp");
-            if (!string.IsNullOrWhiteSpace(_selectedCalculationRole)) parts.Add("Kalkylroll");
-            if (_selectedStatuses.Count > 0) parts.Add("Kalkylstatus");
-            if (_selectedResponsibles.Count > 0) parts.Add("Kalkylansvarig");
-            if (_selectedInspectors.Count > 0) parts.Add("Granskare");
-            if (_selectedArchiveMode != "active") parts.Add("Arkiverade");
-            if (_selectedIncomeSource != "auto") parts.Add("Intäktskälla");
-            if (!string.IsNullOrWhiteSpace(_selectedSubType)) parts.Add("Deltyp");
-            return parts.Count switch
-            {
-                0 => "Standard",
-                <= 2 => string.Join(" · ", parts),
-                _ => $"{parts.Count} aktiva filter"
-            };
+            var specificYear = !string.IsNullOrWhiteSpace(_selectedYear);
+            var yearText = specificYear ? $"År {_selectedYear}" : "Alla år";
+
+            var chips = IncomeActiveFilterChips;
+            if (chips.Count == 0)
+                return yearText;
+
+            var inline = string.Join(" · ", chips.Prepend(yearText));
+            if (chips.Count <= 2 && inline.Length <= 52)
+                return inline;
+
+            // För lång rad → kompakt antal, hela listan finns i tooltip.
+            var activeCount = chips.Count + (specificYear ? 1 : 0);
+            return $"{activeCount} aktiva filter";
         }
     }
+
+    // Korta etiketter för de filter som avviker från standard (året hanteras separat).
+    private List<string> IncomeActiveFilterChips
+    {
+        get
+        {
+            var chips = new List<string>();
+            if (_selectedQuarter > 0)
+                chips.Add($"Q{_selectedQuarter}");
+            if (Enum.TryParse<CalculationVersionType>(_selectedCalculationType, out var ct))
+                chips.Add(TypeLabel(ct));
+            if (Enum.TryParse<CalculationRole>(_selectedCalculationRole, out var role))
+                chips.Add(GetCalculationRoleLabel(role));
+            if (_selectedStatuses.Count > 0)
+                chips.Add(_selectedStatuses.Count == 1 ? _selectedStatuses.First() : $"{_selectedStatuses.Count} statusar");
+            if (_selectedResponsibles.Count > 0)
+                chips.Add($"{_selectedResponsibles.Count} ansvariga");
+            if (_selectedInspectors.Count > 0)
+                chips.Add($"{_selectedInspectors.Count} granskare");
+            if (_selectedArchiveMode != "active")
+                chips.Add(ArchiveModeLabel(_selectedArchiveMode));
+            if (_selectedIncomeSource != "auto" && Enum.TryParse<CalculationVersionType>(_selectedIncomeSource, out var src))
+                chips.Add(TypeLabel(src));
+            if (int.TryParse(_selectedSubType, out var stp))
+                chips.Add(SubTypeLabel((IncomeSubType)stp));
+            return chips;
+        }
+    }
+
+    // Full filterinformation som visas som tooltip på rubriken (en rad per filter).
+    private string IncomeFilterDetailText
+    {
+        get
+        {
+            var lines = new List<string>
+            {
+                $"År: {(string.IsNullOrWhiteSpace(_selectedYear) ? "Alla år" : _selectedYear)}",
+                $"Kvartal: {(_selectedQuarter > 0 ? $"Q{_selectedQuarter}" : L("allQuarters"))}",
+                $"Kalkyltyp: {(Enum.TryParse<CalculationVersionType>(_selectedCalculationType, out var ct) ? TypeLabel(ct) : L("allCalculationTypes"))}",
+                $"Kalkylstatus: {(_selectedStatuses.Count == 0 ? L("allStatuses") : string.Join(", ", _selectedStatuses))}",
+                $"Kalkylroll: {(Enum.TryParse<CalculationRole>(_selectedCalculationRole, out var role) ? GetCalculationRoleLabel(role) : L("allItems"))}",
+                $"Kalkylansvarig: {(_selectedResponsibles.Count == 0 ? L("allItems") : string.Join(", ", _selectedResponsibles.Select(PersonValueLabel)))}",
+                $"Granskare: {(_selectedInspectors.Count == 0 ? L("allItems") : string.Join(", ", _selectedInspectors.Select(PersonValueLabel)))}",
+                $"Arkiverade: {ArchiveModeLabel(_selectedArchiveMode)}",
+                $"Intäktskälla: {(Enum.TryParse<CalculationVersionType>(_selectedIncomeSource, out var src) ? TypeLabel(src) : L("automatic"))}",
+                $"Deltyp: {(int.TryParse(_selectedSubType, out var stp) ? SubTypeLabel((IncomeSubType)stp) : L("allItems"))}",
+            };
+            return string.Join("\n", lines);
+        }
+    }
+
+    private string ArchiveModeLabel(string mode) => mode switch
+    {
+        "archived" => L("archivedOnly"),
+        "all" => L("allItems"),
+        _ => L("notArchived")
+    };
+
+    private string PersonValueLabel(string value) => value == MissingPersonValue ? "Saknas" : value;
 
     private bool IncomeVersionInfoRelevant =>
         _allVersions.Any(e => e.Calculation.SourceCalculationId.HasValue) ||

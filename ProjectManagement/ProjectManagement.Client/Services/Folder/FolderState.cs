@@ -14,6 +14,13 @@ namespace ProjectManagement.Client.Services.Folder
         public CalculationMVVM? Calculation { get; private set; }
         public bool OtherDepartment { get; private set; }
 
+        /// <summary>
+        /// Set while a notification deep-link ("Open project/calculation") is choosing the target explicitly,
+        /// so the folder tree does NOT override it by restoring the last localStorage selection (which would
+        /// otherwise select the previously-opened/first project instead of the one from the notification).
+        /// </summary>
+        public bool SuppressLastSelectionRestore { get; set; }
+
         public event Action? OnChange;
 
         public Type? Control { get; private set; }

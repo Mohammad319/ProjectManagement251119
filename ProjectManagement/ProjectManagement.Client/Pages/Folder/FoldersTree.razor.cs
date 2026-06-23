@@ -332,6 +332,12 @@ namespace ProjectManagement.Client.Pages.Folder
             if (!_jsReady || _restoreCompleted || _restoreInProgress)
                 return;
 
+            // A notification deep-link ("Open project/calculation") is picking the target explicitly.
+            // Skip restoring the last localStorage selection so it can't override that choice; once the
+            // deep-link applies its selection, HasActiveSelection() below ends the restore for this load.
+            if (Folder.State.SuppressLastSelectionRestore)
+                return;
+
             if (HasActiveSelection())
             {
                 _restoreCompleted = true;
