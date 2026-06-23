@@ -31,19 +31,21 @@
     }
     else
     {
-        @if (_activeView != ReportView.HitRate && _activeView != ReportView.Projects && _activeView != ReportView.Calculations && _activeView != ReportView.BidComparison)
-        {
         @if (_activeView == ReportView.Income)
         {
-            <button type="button"
-                    class="flex w-full items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs shadow-sm transition hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900"
-                    aria-expanded="@_incomeFiltersExpanded"
-                    @onclick="() => _incomeFiltersExpanded = !_incomeFiltersExpanded">
-                <span><strong>Filter</strong><span class="ml-2 text-slate-500 dark:text-slate-400">@IncomeFilterSummary</span></span>
-                <span class="font-semibold text-sky-600 dark:text-sky-400">@(_incomeFiltersExpanded ? "Dölj" : "Visa")</span>
-            </button>
-        }
-        <div class="@(_activeView == ReportView.Income && !_incomeFiltersExpanded ? "hidden" : "grid") grid-cols-2 gap-2 rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-950 md:grid-cols-4 xl:grid-cols-6">
+            @* ── Urval visas före filter ── *@
+            @SelectionBox("Urval", _incomeSelectionLine, _incomeSelectionFilters, null, "Stäng rapporten och ändra listans filter om du vill ändra urvalet.")
+
+            @* ── Filter: rubrik och fält i samma sammanhängande kort ── *@
+            <div class="rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
+                <button type="button"
+                        class="flex w-full items-center justify-between px-3 py-2 text-left text-xs transition hover:bg-slate-50 dark:hover:bg-slate-900 @(_incomeFiltersExpanded ? "rounded-t-lg border-b border-slate-200 dark:border-slate-800" : "rounded-lg")"
+                        aria-expanded="@_incomeFiltersExpanded"
+                        @onclick="() => _incomeFiltersExpanded = !_incomeFiltersExpanded">
+                    <span><strong>Filter</strong><span class="ml-2 text-slate-500 dark:text-slate-400">@IncomeFilterSummary</span></span>
+                    <span class="font-semibold text-sky-600 dark:text-sky-400">@(_incomeFiltersExpanded ? "Dölj" : "Visa")</span>
+                </button>
+                <div class="@(_incomeFiltersExpanded ? "grid" : "hidden") grid-cols-2 gap-2 p-3 md:grid-cols-4 xl:grid-cols-6">
 
                 @* Kalkyltyp – bara Intäktsöversikt och Kalkyllista *@
             @if (_activeView is ReportView.Income or ReportView.Calculations)
@@ -228,13 +230,10 @@
                     </select>
                 </div>
             }
-        </div>
-        } @* end @if (_activeView != HitRate && != Projects && != Calculations) *@
+                </div>
+            </div>
 
-        @* ═══ INTÄKTSÖVERSIKT ═══ *@
-        @if (_activeView == ReportView.Income)
-        {
-            @SelectionBox("Urval", _incomeSelectionLine, _incomeSelectionFilters, null, "Stäng rapporten och ändra listans filter om du vill ändra urvalet.")
+            @* ═══ INTÄKTSÖVERSIKT ═══ *@
             <div class="flex flex-nowrap items-center justify-between gap-2">
                 <div class="grid min-w-0 grid-cols-2 gap-2 md:grid-cols-4">
                     <div class="@TotalCardClass"><span>@AppLoc["revenue"]</span><strong>@FormatMoney(IncludedFilteredIncomeRows.Sum(r => r.Amount))</strong></div>

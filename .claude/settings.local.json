@@ -283,7 +283,32 @@
       "Bash(git -C \"C:/Library/BlazorMHD\" rev-parse --abbrev-ref HEAD)",
       "Bash(git -C \"C:/Library/BlazorMHD\" status --short)",
       "Bash(find . -maxdepth 2 -iname \"CHANGELOG*\" -not -path \"*/node_modules/*\")",
-      "Bash(ls *.md)"
+      "Bash(ls *.md)",
+      "Bash(cd \"C:/Users/Administrator/Desktop/PM/InvoiceCraft/InvoiceCraft/InvoiceCraft\")",
+      "Bash(find . -name \"*.csproj\" -not -path \"*/bin/*\" -not -path \"*/obj/*\")",
+      "Bash(ls .claude/skills)",
+      "Bash(ls ProjectManagement/ProjectManagement/Properties/launchSettings.json)",
+      "Bash(powershell.exe -NoProfile -Command \"Get-Process -Id 2320 -ErrorAction SilentlyContinue | Select-Object Id,ProcessName,Path | Format-List\")",
+      "Bash(npx --no-install playwright --version)",
+      "Bash(curl -sk -o /dev/null -w \"HTTP %{http_code} -> %{redirect_url}\\\\n\" --max-time 10 http://localhost:5076/)",
+      "Bash(curl -sk -o /dev/null -w \"HTTP %{http_code} -> %{redirect_url}\\\\n\" --max-time 10 http://localhost:5076/customers)",
+      "Bash(timeout 120 node ic_verify.js)",
+      "Bash(curl -s -m 10 -o /dev/null -w \"live: %{http_code}\\\\n\" http://localhost:5000/health/live)",
+      "Bash(curl -s -m 10 -o /dev/null -w \"ready: %{http_code}\\\\n\" http://localhost:5000/health/ready)",
+      "Bash(curl -s -m 10 -o /dev/null -w \"root: %{http_code}\\\\n\" http://localhost:5000/)",
+      "Read(//c/Program Files \\(x86\\)/Microsoft/Edge/Application/**)",
+      "Bash(where chrome *)",
+      "Bash(where msedge *)",
+      "Bash(powershell.exe -NoProfile -Command 'Get-Process dotnet,InvoiceCraft -ErrorAction SilentlyContinue | Where-Object { $_.Path -like '\\\\''*InvoiceCraft*'\\\\'' } | ForEach-Object { Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue; Write-Output \\('\\\\''stopped '\\\\'' + $_.Id\\) }')",
+      "Bash(curl -s -m 10 -L http://localhost:5000/ -c /tmp/pmcookies.txt -o /tmp/pmlogin.html -w \"final_code: %{http_code}\\\\nurl: %{url_effective}\\\\n\")",
+      "Bash(npm config *)",
+      "Bash(echo \"npm_cache: $\\(npm config get cache 2>/dev/null\\)\")",
+      "Bash(node shot.js)",
+      "Bash(curl -s -m 10 -I \"http://localhost:5000/css/app.kr008vx5vp.css\")",
+      "Bash(curl -s -m 10 -I \"http://localhost:5000/js/hoverTooltip.lrrvxguyyr.js\")",
+      "Bash(curl -s -m 10 -I \"http://localhost:5000/css/custom.css\")",
+      "Bash(curl -s -m 10 -I \"http://localhost:5000/js/hoverTooltip.js\")",
+      "Bash(node bids.js)"
     ]
   }
 }

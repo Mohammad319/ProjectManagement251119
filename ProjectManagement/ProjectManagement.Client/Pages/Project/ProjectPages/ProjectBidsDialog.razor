@@ -172,10 +172,13 @@
                             Anbudssumma:
                             <span class="ml-1 font-mono font-semibold text-slate-800 dark:text-slate-100">@FormatSwedishAmount(FormTotal)</span>
                         </span>
-                        <span class="text-slate-500 dark:text-slate-400">
-                            Jämförelsesumma:
-                            <span class="ml-1 font-mono font-semibold text-sky-700 dark:text-sky-300">@FormatSwedishAmount(_editItem.ComparisonAmount ?? FormTotal)</span>
-                        </span>
+                        @if (ShowComparison)
+                        {
+                            <span class="text-slate-500 dark:text-slate-400">
+                                Jämförelsesumma:
+                                <span class="ml-1 font-mono font-semibold text-sky-700 dark:text-sky-300">@FormatSwedishAmount(_editItem.ComparisonAmount ?? FormTotal)</span>
+                            </span>
+                        }
                     }
                 </div>
             }
@@ -268,7 +271,13 @@ else
                     <span class="w-32 shrink-0 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Utvärderingsgrund</span>
                     <div class="inline-flex overflow-hidden rounded-lg border border-slate-300 dark:border-slate-700">
                         <button type="button"
-                                class="@(IsPriceBasis ? "bg-sky-600 px-2.5 py-1 text-xs font-semibold text-white" : "px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800")"
+                                class="@(IsPriceQualityBasis ? "bg-sky-600 px-2.5 py-1 text-xs font-semibold text-white" : "px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800")"
+                                disabled="@_isModelSaving"
+                                @onclick="() => SetBasisAsync(BidEvaluationBasis.PriceQuality)">
+                            Pris och kvalitet
+                        </button>
+                        <button type="button"
+                                class="@(IsPriceBasis ? "border-l border-sky-700 bg-sky-600 px-2.5 py-1 text-xs font-semibold text-white" : "border-l border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800")"
                                 disabled="@_isModelSaving"
                                 @onclick="() => SetBasisAsync(BidEvaluationBasis.Price)">
                             Pris
@@ -279,31 +288,22 @@ else
                                 @onclick="() => SetBasisAsync(BidEvaluationBasis.Cost)">
                             Kostnad
                         </button>
-                        <button type="button"
-                                class="@(IsPriceQualityBasis ? "border-l border-sky-700 bg-sky-600 px-2.5 py-1 text-xs font-semibold text-white" : "border-l border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800")"
-                                disabled="@_isModelSaving"
-                                @onclick="() => SetBasisAsync(BidEvaluationBasis.PriceQuality)">
-                            Pris och kvalitet
-                        </button>
                     </div>
                 </div>
 
-                @* Hjälptext beroende på vald utvärderingsgrund *@
-                <p class="text-[11px] leading-snug text-slate-500 dark:text-slate-400">
-                    @(_evaluationBasis switch
-                    {
-                        BidEvaluationBasis.Cost => "Används när anbuden jämförs utifrån total kostnad, inte bara pris. Kostnadsdelar kan till exempel vara inköpspris, drift, service, underhåll eller livscykelkostnad. Lägst total kostnad får bäst placering.",
-                        BidEvaluationBasis.PriceQuality => "Används när både pris och kvalitet påverkar resultatet. Kvalitet kan hanteras genom mervärdeavdrag eller genom poäng. Används för bästa förhållande mellan pris och kvalitet.",
-                        _ => "Används när anbuden jämförs utifrån pris. Prisdelar summeras till anbudssumma och lägst jämförelsesumma får bäst placering."
-                    })
-                </p>
+                @* Hjälptext: kort synlig text + info-ikon med längre förklaring *@
+                <div class="text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+                    <HoverTooltip Text="@BasisLongHelp" ShowInfoIcon="true" Focusable="true">
+                        <span>@BasisShortHelp</span>
+                    </HoverTooltip>
+                </div>
 
                 @* Beräkningsmetod — beroende på vald utvärderingsgrund *@
                 <div class="flex flex-wrap items-center gap-2">
                     <span class="w-32 shrink-0 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Beräkningsmetod</span>
                     @if (IsPriceBasis)
                     {
-                        <span class="inline-flex rounded-lg border border-sky-300 bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-300">Lägst jämförelsesumma</span>
+                        <span class="inline-flex rounded-lg border border-sky-300 bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-300">Lägst anbudssumma</span>
                     }
                     else if (IsCostBasis)
                     {
@@ -328,16 +328,12 @@ else
                     }
                 </div>
 
-                @* Hjälptext beroende på vald beräkningsmetod *@
-                <p class="text-[11px] leading-snug text-slate-500 dark:text-slate-400">
-                    @(IsCostBasis
-                        ? "Kostnadsdelar summeras till total kostnad. Lägst total kostnad får bäst placering."
-                        : IsPointsModel
-                            ? "Utvärderingsdelarna anges som poäng och summeras till totalpoäng. Högst totalpoäng får bäst placering. Används när pris och kvalitet omvandlas till poäng, till exempel Pris 30 poäng och Kvalitet 70 poäng."
-                            : UsesDeduction
-                                ? "Prisdelar summeras till anbudssumma. Eventuellt mervärdeavdrag räknas av från anbudssumman och ger en jämförelsesumma. Lägst jämförelsesumma får bäst placering. Exempel: Anbudssumma 1 000 000 kr med 30 % mervärdeavdrag ger jämförelsesumma 700 000 kr."
-                                : "Prisdelar summeras till anbudssumma. Om inga mervärdeavdrag används motsvarar jämförelsesumman anbudssumman. Lägst jämförelsesumma får bäst placering.")
-                </p>
+                @* Hjälptext: kort synlig text + info-ikon med längre förklaring *@
+                <div class="text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+                    <HoverTooltip Text="@MethodLongHelp" ShowInfoIcon="true" Focusable="true">
+                        <span>@MethodShortHelp</span>
+                    </HoverTooltip>
+                </div>
 
                 @* Knappar *@
                 <div class="flex items-center justify-between">
@@ -348,7 +344,7 @@ else
                         <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
                         </svg>
-                        <span>Utvärderingsdelar</span>
+                        <span>@PartsLabelPlural</span>
                         @if (HasColumns)
                         {
                             <span class="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-sky-600 px-1 text-[10px] font-bold leading-none text-white">@_columns.Count</span>
@@ -371,7 +367,7 @@ else
         {
             <div class="rounded-xl border border-sky-200 bg-sky-50/50 p-3 dark:border-sky-900/60 dark:bg-sky-950/20">
                 <div class="mb-2 flex items-center justify-between">
-                    <h4 class="text-xs font-semibold text-slate-700 dark:text-slate-200">Utvärderingsdelar för detta projekt</h4>
+                    <h4 class="text-xs font-semibold text-slate-700 dark:text-slate-200">@PartsLabelPlural för detta projekt</h4>
                     <button type="button"
                             class="flex h-5 w-5 items-center justify-center rounded text-slate-400 hover:bg-slate-200/60 hover:text-slate-600 dark:hover:bg-slate-800"
                             title="Stäng"
@@ -381,35 +377,21 @@ else
                 </div>
 
                 <p class="mb-2 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
-                    Standard är att endast en del utvärderas. Lägg till utvärderingsdelar om anbudet
-                    består av flera delar som ska summeras, till exempel Del 1, Del 2, Option 1 eller Option 2.
-                    @* Extra hjälptext beroende på vald utvärderingsgrund/beräkningsmetod. *@
-                    @if (IsCostBasis)
-                    {
-                        <span> För kostnadsutvärdering kan delarna till exempel vara inköpspris, drift, service, underhåll eller livscykelkostnad.</span>
-                    }
-                    else if (IsPointsModel)
-                    {
-                        <span> För poängutvärdering kan delarna till exempel vara Pris, Kvalitet, Miljö, Leveranstid eller Service.</span>
-                    }
-                    else if (UsesDeduction)
-                    {
-                        <span> Mervärdeavdrag kan användas för att räkna av kvalitet eller mervärde från anbudssumman.</span>
-                    }
+                    @PartsHelpText
                 </p>
 
                 @* Lägg-till-rad ligger fast högst upp i sektionen *@
                 <div class="mb-2 flex items-center gap-1.5">
                     <input type="text"
                            class="h-7 flex-1 rounded-lg border border-slate-300 bg-white px-2 text-xs text-slate-800 outline-none transition focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                           placeholder="Ny utvärderingsdel, t.ex. Del 1, Option 1..."
+                           placeholder="@($"Ny {PartsNoun}, t.ex. Del 1, Option 1...")"
                            @bind="_newColumnName"
                            @bind:event="oninput" />
                     <button type="button"
                             class="inline-flex h-7 items-center gap-1 rounded-lg border border-emerald-300 bg-emerald-50 px-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
                             disabled="@(_isColumnSaving || string.IsNullOrWhiteSpace(_newColumnName))"
                             @onclick="CreateColumnAsync">
-                        Lägg till
+                        @AddPartLabel
                     </button>
                 </div>
 
@@ -531,7 +513,10 @@ else
                                 {
                                     <th class="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400" title="Mervärdeavdrag i procent">Mervärdeavdrag %</th>
                                 }
-                                <th class="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400" title="Anbudssumma minus mervärdeavdrag">Jämförelsesumma</th>
+                                @if (ShowComparison)
+                                {
+                                    <th class="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400" title="Anbudssumma minus mervärdeavdrag">Jämförelsesumma</th>
+                                }
                             }
 
                             <th class="px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Tilldelad</th>
@@ -624,9 +609,12 @@ else
                                             @((bid.DeductionPercent ?? 0) > 0 ? $"{FormatPercent(bid.DeductionPercent)} %" : "-")
                                         </td>
                                     }
-                                    <td class="px-3 py-2 text-right font-mono font-semibold @(isRejected ? "text-slate-400 dark:text-slate-500" : "text-sky-700 dark:text-sky-300")">
-                                        @(bid.ComparisonAmount.HasValue ? FormatSwedishAmount(bid.ComparisonAmount.Value) : "-")
-                                    </td>
+                                    @if (ShowComparison)
+                                    {
+                                        <td class="px-3 py-2 text-right font-mono font-semibold @(isRejected ? "text-slate-400 dark:text-slate-500" : "text-sky-700 dark:text-sky-300")">
+                                            @(bid.ComparisonAmount.HasValue ? FormatSwedishAmount(bid.ComparisonAmount.Value) : "-")
+                                        </td>
+                                    }
                                 }
 
                                 <td class="px-3 py-2 text-center">
@@ -700,13 +688,22 @@ else
                         <span class="ml-3">Högsta total kostnad: <span class="font-mono">@FormatSwedishAmount(valid.Max(b => b.Amount!.Value))</span></span>
                     }
                 }
-                else
+                else if (ShowComparison)
                 {
                     var valid = _bids.Where(b => b.IsValid && b.ComparisonAmount.HasValue).ToList();
                     @if (valid.Any())
                     {
                         <span class="ml-3">Lägsta jämförelsesumma: <span class="font-mono font-semibold text-sky-700 dark:text-sky-300">@FormatSwedishAmount(valid.Min(b => b.ComparisonAmount!.Value))</span></span>
                         <span class="ml-3">Högsta jämförelsesumma: <span class="font-mono">@FormatSwedishAmount(valid.Max(b => b.ComparisonAmount!.Value))</span></span>
+                    }
+                }
+                else
+                {
+                    var valid = _bids.Where(b => b.IsValid && b.Amount.HasValue).ToList();
+                    @if (valid.Any())
+                    {
+                        <span class="ml-3">Lägsta anbudssumma: <span class="font-mono font-semibold text-sky-700 dark:text-sky-300">@FormatSwedishAmount(valid.Min(b => b.Amount!.Value))</span></span>
+                        <span class="ml-3">Högsta anbudssumma: <span class="font-mono">@FormatSwedishAmount(valid.Max(b => b.Amount!.Value))</span></span>
                     }
                 }
             </div>
@@ -766,6 +763,49 @@ else
 
     // Mervärdeavdrag only applies to "Pris och kvalitet" with the comparison-sum method.
     private bool UsesDeduction => IsPriceQualityBasis && IsLowestComparisonModel;
+
+    // Ren prismodell (utvärderingsgrund Pris) visar bara anbudssumma — jämförelsesumma och
+    // mervärdeavdrag hör till "Pris och kvalitet". Sant endast när jämförelsesumman är relevant.
+    private bool ShowComparison => UsesDeduction;
+
+    // Dynamiskt namn på utvärderingsdelar beroende på vald grund/metod.
+    private string PartsNoun => IsPointsModel ? "poängdel" : IsCostBasis ? "kostnadsdel" : "prisdel";
+    private string PartsLabelPlural => IsPointsModel ? "Poängdelar" : IsCostBasis ? "Kostnadsdelar" : "Prisdelar";
+    private string AddPartLabel => IsPointsModel ? "Lägg till poängdel" : IsCostBasis ? "Lägg till kostnadsdel" : "Lägg till prisdel";
+
+    // Hjälptexter: kort synlig text + längre förklaring (visas via info-ikon/tooltip).
+    private string BasisShortHelp => _evaluationBasis switch
+    {
+        BidEvaluationBasis.PriceQuality => "Både pris och kvalitet påverkar resultatet.",
+        BidEvaluationBasis.Cost => "Anbuden jämförs utifrån total kostnad.",
+        _ => "Anbuden jämförs utifrån pris."
+    };
+
+    private string BasisLongHelp => _evaluationBasis switch
+    {
+        BidEvaluationBasis.PriceQuality => "Används när anbuden bedöms utifrån bästa förhållandet mellan pris och kvalitet. Kvalitet kan hanteras genom mervärdeavdrag eller poäng.",
+        BidEvaluationBasis.Cost => "Används när anbuden jämförs utifrån total kostnad, inte bara pris. Kostnadsdelar kan till exempel vara inköpspris, drift, service, underhåll eller livscykelkostnad. Lägst total kostnad får bäst placering.",
+        _ => "Används när anbuden jämförs utifrån pris. Prisdelar summeras till anbudssumma och lägst anbudssumma får bäst placering."
+    };
+
+    private string MethodShortHelp =>
+        IsCostBasis ? "Kostnadsdelar summeras."
+        : IsPointsModel ? "Poängdelar summeras till totalpoäng."
+        : UsesDeduction ? "Mervärde räknas av från anbudssumman."
+        : "Prisdelar summeras.";
+
+    private string MethodLongHelp =>
+        IsCostBasis ? "Alla kostnadsdelar summeras till total kostnad. Lägst total kostnad får bäst placering."
+        : IsPointsModel ? "Används när pris och kvalitet omvandlas till poäng, till exempel Pris 30 poäng och Kvalitet 70 poäng. Högst totalpoäng får bäst placering."
+        : UsesDeduction ? "Prisdelar summeras till anbudssumma. Mervärdeavdrag räknas av och ger en jämförelsesumma. Lägst jämförelsesumma får bäst placering. Exempel: 1 000 000 kr med 30 % mervärdeavdrag ger 700 000 kr i jämförelsesumma."
+        : "Alla prisdelar summeras till anbudssumma. Lägst anbudssumma får bäst placering.";
+
+    // Anpassad hjälptext för "hantera utvärderingsdelar" beroende på vald grund/metod.
+    private string PartsHelpText =>
+        IsCostBasis ? "Standard är att endast en kostnadsdel utvärderas. Lägg till kostnadsdelar om anbudet består av flera kostnader som ska summeras, till exempel inköpspris, drift, service, underhåll eller livscykelkostnad."
+        : IsPointsModel ? "Standard är att endast en poängdel utvärderas. Lägg till poängdelar om anbudet ska bedömas i flera delar, till exempel Pris, Kvalitet, Miljö, Leveranstid eller Service."
+        : UsesDeduction ? "Standard är att endast en prisdel utvärderas. Lägg till prisdelar om anbudet består av flera delar som ska summeras. Mervärdeavdrag kan sedan räknas av från anbudssumman."
+        : "Standard är att endast en prisdel utvärderas. Lägg till prisdelar om anbudet består av flera delar som ska summeras, till exempel Del 1, Del 2, Option 1 eller Option 2.";
 
     protected override async Task OnInitializedAsync()
     {

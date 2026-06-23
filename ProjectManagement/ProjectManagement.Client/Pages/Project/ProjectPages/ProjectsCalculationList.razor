@@ -84,7 +84,9 @@
                                 {
                                     var filterKey = kv.Key;
                                     <span class="inline-flex max-w-full items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
-                                        <span class="truncate" title="@GetCalcFilterLabel(filterKey, kv.Value)">@GetCalcFilterLabel(filterKey, kv.Value)</span>
+                                        <HoverTooltip Text="@GetCalcFilterLabel(filterKey, kv.Value)" Class="truncate">
+                                            <span class="truncate">@GetCalcFilterLabel(filterKey, kv.Value)</span>
+                                        </HoverTooltip>
                                         <button type="button"
                                                 class="shrink-0 text-blue-400 hover:text-blue-700 dark:hover:text-blue-200"
                                                 title="@AppLoc["clearAllFilters"]"
@@ -427,7 +429,7 @@
                     @* Radnummer — visuell hjälpkolumn (ej sorterbar/filterbar/sökbar). Frozen-offset + sticky-left beräknas av JS-motorn via data-pm-frozen. *@
                     <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("rowNumber")' ColumnKey="rowNumber" Frozen="true"
                                     HeaderClass="w-12 select-none whitespace-nowrap bg-slate-50 px-2 py-2 text-right font-semibold text-slate-400 dark:bg-slate-900 dark:text-slate-500" HeaderStyle="min-width:44px;">
-                        <HeaderContent><span title="Radnummer i aktuell vy">#</span></HeaderContent>
+                        <HeaderContent><HoverTooltip Text="Radnummer i aktuell vy" Class="justify-end">#</HoverTooltip></HeaderContent>
                     </MhdTableColumn>
                     <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("code")' ColumnKey="code" Frozen="true"
                                     HeaderClass='@($"{SortableHeaderClass("code")} w-28 bg-slate-50 dark:bg-slate-900")' HeaderStyle="min-width:70px;" OnHeaderClick='() => SortBy("code")'>
@@ -471,7 +473,7 @@
                     </MhdTableColumn>
                     <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("qa")' ColumnKey="qa"
                                     HeaderClass='@SortableHeaderClass("qa")' HeaderStyle="min-width:120px;" OnHeaderClick='() => SortBy("qa")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1" title="Sista dag för frågor och svar">Frågor/svar @((MarkupString)SortIndicatorHtml("qa")) <TableColumnFilter FilterState='CF("qa")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                        <HeaderContent><span class="inline-flex items-center gap-1"><HoverTooltip Text="Sista dag för frågor och svar" ShowInfoIcon="true" Focusable="true">Frågor/svar</HoverTooltip> @((MarkupString)SortIndicatorHtml("qa")) <TableColumnFilter FilterState='CF("qa")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
                     </MhdTableColumn>
                     <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("deadline")' ColumnKey="deadline"
                                     HeaderClass='@SortableHeaderClass("deadline")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("deadline")'>
@@ -479,7 +481,7 @@
                     </MhdTableColumn>
                     <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("priority")' ColumnKey="priority"
                                     HeaderClass='@SortableHeaderClass("priority")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("priority")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1" title="Sannolikhet att vinna">Vinstchans @((MarkupString)SortIndicatorHtml("priority")) <TableColumnFilter FilterState='CF("priority")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                        <HeaderContent><span class="inline-flex items-center gap-1"><HoverTooltip Text="Sannolikhet att vinna" ShowInfoIcon="true" Focusable="true">Vinstchans</HoverTooltip> @((MarkupString)SortIndicatorHtml("priority")) <TableColumnFilter FilterState='CF("priority")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
                     </MhdTableColumn>
                     <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("address")' ColumnKey="address"
                                     HeaderClass='@SortableHeaderClass("address")' HeaderStyle="min-width:140px;" OnHeaderClick='() => SortBy("address")'>
@@ -519,7 +521,7 @@
                     </MhdTableColumn>
                     <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("access")' ColumnKey="access"
                                     HeaderClass='@SortableHeaderClass("access")' HeaderStyle="min-width:110px;" OnHeaderClick='() => SortBy("access")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1" title="Hur kalkylen är tillgänglig och om den ingår i extra delning. Klicka på värdet för detaljer.">Åtkomst @((MarkupString)SortIndicatorHtml("access")) <TableColumnFilter FilterState='CF("access")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                        <HeaderContent><span class="inline-flex items-center gap-1"><HoverTooltip Text="Hur kalkylen är tillgänglig och om den ingår i extra delning. Klicka på värdet för detaljer." ShowInfoIcon="true" Focusable="true">Åtkomst</HoverTooltip> @((MarkupString)SortIndicatorHtml("access")) <TableColumnFilter FilterState='CF("access")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
                     </MhdTableColumn>
                 </ChildContent>
                 <RowTemplate Context="calu">
@@ -557,7 +559,9 @@
                             {
                                 <td class="sticky @NameStickyLeftClass z-[2] max-w-80 border-r border-slate-200 bg-white px-3 py-2 group-hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:group-hover:bg-slate-900/80 @(isSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
                                     <div class="flex min-w-0 items-center gap-2">
-                                        <span class="truncate font-semibold text-slate-800 dark:text-slate-100" title="@calu.Name">@calu.Name</span>
+                                        <HoverTooltip Text="@calu.Name" Class="truncate font-semibold text-slate-800 dark:text-slate-100">
+                                            <span class="truncate">@calu.Name</span>
+                                        </HoverTooltip>
                                         @if (calu.ImportInfo?.IsImportedCopy == true)
                                         {
                                             <button type="button"
@@ -695,7 +699,6 @@
                                         <Authorized>
                                             <button type="button"
                                                     class="@(calcShared ? "inline-flex max-w-[200px] items-center gap-1 rounded px-1.5 py-0.5 text-left text-sky-700 transition hover:bg-sky-50 hover:underline dark:text-sky-300 dark:hover:bg-sky-950/40" : "inline-flex max-w-[200px] items-center gap-1 rounded px-1.5 py-0.5 text-left text-slate-500 transition hover:bg-slate-100 hover:underline dark:text-slate-400 dark:hover:bg-slate-800")"
-                                                    title="@CalcAccessTooltip(calu)"
                                                     @onclick="() => OpenCalcShareDialog(calu)">
                                                 @if (calcShared)
                                                 {
@@ -709,11 +712,13 @@
                                                 {
                                                     <i class="fa-solid fa-diagram-project shrink-0 text-slate-400"></i>
                                                 }
-                                                <span class="min-w-0 truncate">@CalcAccessSummaryText(calu)</span>
+                                                <HoverTooltip Text="@CalcAccessTooltip(calu)" Class="truncate">
+                                                    <span class="min-w-0 truncate">@CalcAccessSummaryText(calu)</span>
+                                                </HoverTooltip>
                                             </button>
                                         </Authorized>
                                         <NotAuthorized>
-                                            <span class="inline-flex max-w-[200px] items-center gap-1" title="@CalcAccessTooltip(calu)">
+                                            <span class="inline-flex max-w-[200px] items-center gap-1">
                                                 @if (calcShared)
                                                 {
                                                     <i class="fa-solid fa-share-nodes shrink-0 text-sky-500"></i>
@@ -722,7 +727,9 @@
                                                 {
                                                     <i class="fa-solid fa-lock shrink-0 text-amber-500"></i>
                                                 }
-                                                <span class="min-w-0 truncate">@CalcAccessSummaryText(calu)</span>
+                                                <HoverTooltip Text="@CalcAccessTooltip(calu)" Class="truncate">
+                                                    <span class="min-w-0 truncate">@CalcAccessSummaryText(calu)</span>
+                                                </HoverTooltip>
                                             </span>
                                         </NotAuthorized>
                                     </AuthorizeView>
@@ -1565,7 +1572,8 @@
     // Grupperade filtervärden: Åtkomsttyp, Åtkomstnivå, Personer, Avdelningar.
     private List<FilterOptionGroup> GetCalcAccessFilterGroups()
     {
-        static FilterOption Opt(string s) => new() { Value = s, Label = s };
+        static FilterOption Opt(string s, string? tooltip = null) =>
+            new() { Value = s, Label = s, Tooltip = tooltip };
 
         var groups = new List<FilterOptionGroup>
         {
@@ -1574,10 +1582,18 @@
                 Header = AccessSummaryFormatter.GroupAccessType,
                 Options =
                 [
-                    Opt(AccessSummaryFormatter.CalcTypeProjectOnly),
-                    Opt(AccessSummaryFormatter.TypeShared),
-                    Opt(AccessSummaryFormatter.TypeLimited),
-                    Opt(AccessSummaryFormatter.CalcTypePrivate),
+                    Opt(
+                        AccessSummaryFormatter.CalcTypeProjectOnly,
+                        "Kalkylen är tillgänglig via projektet och dess avdelning."),
+                    Opt(
+                        AccessSummaryFormatter.TypeShared,
+                        "Kalkylen är delad med personer eller avdelningar utöver projektets egen avdelning."),
+                    Opt(
+                        AccessSummaryFormatter.TypeLimited,
+                        "Kalkylen ingår i en delning där bara vissa kalkyler delas."),
+                    Opt(
+                        AccessSummaryFormatter.CalcTypePrivate,
+                        "Kalkylen är privat och endast tillgänglig för dig."),
                 ]
             },
             new()
