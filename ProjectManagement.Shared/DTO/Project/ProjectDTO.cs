@@ -309,10 +309,10 @@ namespace ProjectManagement.Shared.DTO.Project
         public bool CountsAsWonBid { get; set; }
         public bool CountsAsLostBid { get; set; }
         public string Responsible { get; set; } = string.Empty;
-        public DateTime StartDate { get; set; } = DateTime.Now;
-        public DateTime EndDate { get; set; } = DateTime.Now.AddMonths(2);
-        public DateTime TenderDeadline { get; set; } = DateTime.Now;
-        public DateTime TenderQA { get; set; } = DateTime.Now;
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public DateTime? TenderDeadline { get; set; }
+        public DateTime? TenderQA { get; set; }
         public bool IsArchived { get; set; } = false;
         public bool IsShared { get; set; } = false;
         // The project's owning department (via its folder). Used by the sharing dialog to mark

@@ -65,6 +65,9 @@ public sealed class TaskResourceSuggestionService(
         var feedbackStatsBySuggestion = sharedFeedbackStats
             ?? await GetFeedbackStatsMapAsync(tenantId, cancellationToken);
 
+        // CA2025: tenantTask/blueprintTask are awaited via Task.WhenAll below, before the
+        // 'await using' tenantDb is disposed at method exit — so tenantDb stays alive throughout.
+#pragma warning disable CA2025
         var tenantTask = GetTenantTaskSuggestionsAsync(
             tenantDb,
             target.Id,
@@ -97,6 +100,7 @@ public sealed class TaskResourceSuggestionService(
             targetParentNormalized: targetSuggestionContext.ParentNormalizedText);
 
         await System.Threading.Tasks.Task.WhenAll(tenantTask, blueprintTask);
+#pragma warning restore CA2025
 
         return (await tenantTask)
             .Concat(await blueprintTask)

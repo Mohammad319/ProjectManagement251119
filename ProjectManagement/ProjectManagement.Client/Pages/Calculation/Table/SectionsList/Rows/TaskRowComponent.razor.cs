@@ -54,7 +54,7 @@ public partial class TaskRowComponent : CalculationSelectableRowComponentBase
     private System.Threading.Tasks.Task ToggleCollapse() => OnCollapseToggle.InvokeAsync(Task);
 
     private void RenderTaskCells(RenderTreeBuilder builder)
-        => CalculationRowCellRenderer.RenderTaskCells(builder, Colmuns, Task, Left, ShowActiveToggle, ToggleActive, ActiveParent, EditProductionNote);
+        => CalculationRowCellRenderer.RenderTaskCells(builder, Colmuns, Task, Left, ShowActiveToggle, ToggleActive, ActiveParent, EditProductionNote, EditReviewerComment);
 
     private Task ToggleActive() => OnToggleActive.InvokeAsync();
 
@@ -65,6 +65,16 @@ public partial class TaskRowComponent : CalculationSelectableRowComponentBase
             Task.Id,
             Task.ProductionNote,
             v => { Task.ProductionNote = v; InvokeAsync(StateHasChanged); });
+        return System.Threading.Tasks.Task.CompletedTask;
+    }
+
+    private Task EditReviewerComment()
+    {
+        CalcService.EditReviewerComment(
+            CalculationItemType.task,
+            Task.Id,
+            Task.ReviewerComment,
+            v => { Task.ReviewerComment = v; InvokeAsync(StateHasChanged); });
         return System.Threading.Tasks.Task.CompletedTask;
     }
 }

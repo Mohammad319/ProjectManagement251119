@@ -38,6 +38,10 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation
         // Save a per-row production note (task/resource). Independent of calc economy; allowed on locked calc.
         Task<bool> SaveProductionNoteAsync(ProductionNoteSaveDTO dto);
 
+        // Save a per-row reviewer comment (Granskarkommentar). Independent of calc economy; allowed on locked calc
+        // and by an authorized reviewer (incl. Viewer).
+        Task<bool> SaveReviewerCommentAsync(ReviewerCommentSaveDTO dto);
+
         // Extern kalkylkopia (ATACOST-paket)
         Task<byte[]> ExportCopyAsync(int calcId, AtacostCalculationExportRequest request);
         Task<AtacostImportPreviewDTO> PreviewCopyAsync(Guid targetProjectId, byte[] fileBytes, IReadOnlyList<AtacostManualMappingDTO>? overrides = null);

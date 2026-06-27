@@ -143,10 +143,26 @@ public class PMWebResource
     public static string NotificationsClearRead => GetString(nameof(NotificationsClearRead), "Clear read");
     public static string NotificationsRemove => GetString(nameof(NotificationsRemove), "Remove notification");
     public static string NotificationsEmpty => GetString(nameof(NotificationsEmpty), "No notifications");
+    public static string NotificationsEmptyHint => GetString(nameof(NotificationsEmptyHint), "You have no new notifications right now.");
     public static string NotificationsLoading => GetString(nameof(NotificationsLoading), "Loading…");
     public static string NotificationsNoAccess => GetString(nameof(NotificationsNoAccess), "You no longer have access to this project.");
     public static string NotificationsNoAccessCalculation => GetString(nameof(NotificationsNoAccessCalculation), "You no longer have access to this calculation.");
     public static string NotificationsUnreadAria => GetString(nameof(NotificationsUnreadAria), "{0} unread notifications");
+    public static string NotificationsUnreadCount => GetString(nameof(NotificationsUnreadCount), "{0} unread");
+    public static string NotificationsUnreadCountOne => GetString(nameof(NotificationsUnreadCountOne), "{0} unread");
+
+    // ── Notification details (expanded view) ─────────────────────────────
+    public static string NotificationsShowDetails => GetString(nameof(NotificationsShowDetails), "Show details");
+    public static string NotificationsHideDetails => GetString(nameof(NotificationsHideDetails), "Hide details");
+    public static string NotificationsProjectUnavailable => GetString(nameof(NotificationsProjectUnavailable), "The project is no longer available.");
+    public static string NotificationDetailProject => GetString(nameof(NotificationDetailProject), "Project");
+    public static string NotificationDetailSharedBy => GetString(nameof(NotificationDetailSharedBy), "Shared by");
+    public static string NotificationDetailAccessLevel => GetString(nameof(NotificationDetailAccessLevel), "Access level");
+    public static string NotificationDetailCalculations => GetString(nameof(NotificationDetailCalculations), "Calculations");
+    public static string NotificationDetailValidity => GetString(nameof(NotificationDetailValidity), "Validity");
+    public static string NotificationDetailStatus => GetString(nameof(NotificationDetailStatus), "Status");
+    public static string NotificationDetailTime => GetString(nameof(NotificationDetailTime), "Time");
+    public static string NotificationAccessRemovedDetail => GetString(nameof(NotificationAccessRemovedDetail), "You no longer have access to this project. It is no longer shown in your project list.");
 
     // ── Notification titles (per type) ───────────────────────────────────
     public static string NotificationTitleSharedWithUser => GetString(nameof(NotificationTitleSharedWithUser), "Project shared with you");

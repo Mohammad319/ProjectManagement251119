@@ -27,10 +27,12 @@ namespace Domain.Entities.Project
         [MaxLength(FieldLengths.Code)]
         public string? Code { get; private set; }
 
-        public DateTime StartDate { get; private set; } = DateTime.UtcNow;
-        public DateTime EndDate { get; private set; } = DateTime.UtcNow.AddMonths(2);
-        public DateTime TenderDeadline { get; private set; } = DateTime.UtcNow;
-        public DateTime TenderQA { get; private set; } = DateTime.UtcNow;
+        // Nullable so a project can have no schedule/tender dates (new projects start empty
+        // instead of auto-filling today's date).
+        public DateTime? StartDate { get; private set; }
+        public DateTime? EndDate { get; private set; }
+        public DateTime? TenderDeadline { get; private set; }
+        public DateTime? TenderQA { get; private set; }
 
         public int SortOrder { get; private set; }
 
@@ -78,8 +80,9 @@ namespace Domain.Entities.Project
         /// <summary>Beräkningsmetod för projektets anbud (Anbud-fönstret).</summary>
         public BidEvaluationModel BidEvaluationModel { get; private set; } = BidEvaluationModel.LowestComparison;
 
-        /// <summary>Utvärderingsgrund för projektets anbud — styr vilka beräkningsmetoder som är tillgängliga.</summary>
-        public BidEvaluationBasis BidEvaluationBasis { get; private set; } = BidEvaluationBasis.Price;
+        /// <summary>Utvärderingsgrund för projektets anbud — styr vilka beräkningsmetoder som är tillgängliga.
+        /// Standard för nya projekt är Pris och kvalitet (med Lägst jämförelsesumma med mervärdeavdrag).</summary>
+        public BidEvaluationBasis BidEvaluationBasis { get; private set; } = BidEvaluationBasis.PriceQuality;
 
         [JsonIgnore]
         public ICollection<CalculationEntity> Calculations { get; private set; } = [];
@@ -199,9 +202,10 @@ namespace Domain.Entities.Project
             DeletedBy = null;
         }
 
-        private void SetDates(DateTime startDate, DateTime endDate)
+        private void SetDates(DateTime? startDate, DateTime? endDate)
         {
-            if (endDate < startDate)
+            // Only enforce ordering when both dates are present; either may be empty now.
+            if (startDate.HasValue && endDate.HasValue && endDate.Value < startDate.Value)
                 throw new ValidationException("EndDate cannot be before StartDate.");
 
             StartDate = startDate;

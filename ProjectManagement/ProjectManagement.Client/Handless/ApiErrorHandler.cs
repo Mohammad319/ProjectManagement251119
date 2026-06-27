@@ -60,6 +60,11 @@ public class ApiErrorHandler(
         if (response.StatusCode == HttpStatusCode.Unauthorized)
             return response;
 
+        // The caller opted to handle this failure itself (e.g. a form showing the error inside its
+        // own dialog). Skip the page-level dialog for the generic failures below, but keep logging
+        // and keep the special 401/403 recovery handling intact.
+        var suppressDialog = request.Options.TryGetValue(ApiRequestOptions.SuppressGlobalErrorDialog, out var suppress) && suppress;
+
         if (response.StatusCode == HttpStatusCode.Forbidden)
         {
             var currentLocalUrl = GetCurrentLocalUrl();
@@ -90,7 +95,8 @@ public class ApiErrorHandler(
             var detail = BuildSafeDialogMessage(problemDetails?.Detail, errLoc["requestFailedMessage"]);
             var traceId = problemDetails?.TraceId;
 
-            ShowOnce(title, detail, traceId);
+            if (!suppressDialog)
+                ShowOnce(title, detail, traceId);
             logger.LogWarning(
                 "API ProblemDetails from {RequestUri}. StatusCode: {StatusCode}. TraceId: {TraceId}",
                 request.RequestUri,
@@ -103,14 +109,16 @@ public class ApiErrorHandler(
 
         if (LooksLikeHtml(body))
         {
-            ShowOnce(errLoc["serverErrorTitle"], errLoc["serverErrorMessage"]);
+            if (!suppressDialog)
+                ShowOnce(errLoc["serverErrorTitle"], errLoc["serverErrorMessage"]);
             logger.LogWarning("API returned HTML error page from {RequestUri}. StatusCode: {StatusCode}", request.RequestUri, (int)response.StatusCode);
             _ = clientLogger.ErrorAsync("API returned HTML error page", traceId: null, ex: BuildBodyException(body));
             return response;
         }
 
         var message = BuildSafeDialogMessage(body, errLoc["requestFailedMessage"]);
-        ShowOnce(errLoc["requestFailedTitle"], message);
+        if (!suppressDialog)
+            ShowOnce(errLoc["requestFailedTitle"], message);
         logger.LogWarning("API returned non-success response from {RequestUri}. StatusCode: {StatusCode}", request.RequestUri, (int)response.StatusCode);
         _ = clientLogger.ErrorAsync("API returned non-success response", traceId: null, ex: BuildBodyException(body));
 
@@ -163,7 +171,7 @@ public class ApiErrorHandler(
     }
 
     private static Exception? BuildBodyException(string body)
-        => string.IsNullOrWhiteSpace(body) ? null : new Exception(Trim(body, MaxLogBodyLength));
+        => string.IsNullOrWhiteSpace(body) ? null : new InvalidOperationException(Trim(body, MaxLogBodyLength));
 
     private static string Trim(string value, int max)
         => value.Length <= max ? value : value[..max];

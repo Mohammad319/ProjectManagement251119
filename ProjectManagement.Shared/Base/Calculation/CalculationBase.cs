@@ -38,10 +38,11 @@ namespace ProjectManagement.Shared.Base.Calculation
 
         public BidRole BidRole { get; set; } = BidRole.MainBid;
 
-        public DateTime TenderDeadline { get; set; } = DateTime.Now;
-        public DateTime TenderQA { get; set; } = DateTime.Now;
-        public DateTime StartDate { get; set; } = DateTime.Now;
-        public DateTime EndDate { get; set; } = DateTime.Now.AddMonths(2);
+        // Nullable: empty dates allowed; new calculations don't auto-fill (possibly passed) dates.
+        public DateTime? TenderDeadline { get; set; }
+        public DateTime? TenderQA { get; set; }
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
         public int Order { get; set; }
         public DateTime? PublicationDate { get; set; } = DateTime.Now;
         public DateTime? DecisionDate { get; set; } = DateTime.Now;

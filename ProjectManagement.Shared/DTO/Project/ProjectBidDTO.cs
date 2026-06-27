@@ -165,5 +165,13 @@ namespace ProjectManagement.Shared.DTO.Project
 
         /// <summary>Utvärderingsgrund för projektet (Pris / Kostnad / Pris och kvalitet).</summary>
         public BidEvaluationBasis EvaluationBasis { get; set; } = BidEvaluationBasis.Price;
+
+        /// <summary>
+        /// Effektiv ändringsrätt för aktuell användare (backend-beräknad, samma regel som
+        /// <c>ProjectAccessRules.CanEdit</c>). False ger läsläge: en användare med endast
+        /// visningsåtkomst (Kan visa via delning eller Visare) kan öppna och läsa men inte ändra.
+        /// Anbudsutvärdering är arbetsdata – detta är INTE projektets hanteringsrätt.
+        /// </summary>
+        public bool CanEdit { get; set; } = true;
     }
 }

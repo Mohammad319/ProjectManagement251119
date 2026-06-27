@@ -1236,7 +1236,7 @@ public sealed class TenantMlTrainingService(
             TasksWithoutResources = tasks.Count(x => !x.Resources.Any(r => r.IsActive)),
             TotalResources = resources.Count,
             MissingUnitResources = resources.Count(x => string.IsNullOrWhiteSpace(x.Unit)),
-            UnknownTypeResources = resources.Count(x => !Enum.IsDefined(typeof(ResourceTypesEnum), x.ResType)),
+            UnknownTypeResources = resources.Count(x => !Enum.IsDefined(x.ResType)),
             ResourceTypes = resources
                 .GroupBy(x => x.ResType.ToString())
                 .OrderByDescending(x => x.Count())

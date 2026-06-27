@@ -294,10 +294,10 @@ public partial class ResourceDetailRows
         if (!int.TryParse(value[..2], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out r))
             return false;
 
-        if (!int.TryParse(value.Substring(2, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out g))
+        if (!int.TryParse(value.AsSpan(2, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out g))
             return false;
 
-        if (!int.TryParse(value.Substring(4, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out b))
+        if (!int.TryParse(value.AsSpan(4, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out b))
             return false;
 
         return true;

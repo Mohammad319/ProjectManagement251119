@@ -22,6 +22,7 @@ public sealed class ProjectListViewPreference(
     private const string Scope = "ProjectList";
     private const string VisibleColumnsKind = "VisibleColumns";
     private const string ColumnWidthsKind = "ColumnWidths";
+    private const string ColumnOrderKind = "ColumnOrder";
 
     // ── visible columns ────────────────────────────────────────────────────
 
@@ -30,6 +31,14 @@ public sealed class ProjectListViewPreference(
 
     public Task SaveColumnsAsync(Dictionary<string, bool> columns)
         => SaveAsync(VisibleColumnsKind, columns);
+
+    // ── column order ───────────────────────────────────────────────────────
+
+    public Task<List<string>?> LoadColumnOrderAsync()
+        => LoadAsync<List<string>>(ColumnOrderKind);
+
+    public Task SaveColumnOrderAsync(IReadOnlyList<string> order)
+        => SaveAsync(ColumnOrderKind, order);
 
     // ── column widths ──────────────────────────────────────────────────────
 

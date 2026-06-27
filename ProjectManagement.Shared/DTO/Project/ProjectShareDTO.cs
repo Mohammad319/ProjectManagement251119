@@ -20,6 +20,16 @@ namespace ProjectManagement.Shared.DTO.Project
         public string Role { get; set; } = string.Empty;
         public DateTime? ValidUntil { get; set; }
         public List<int> CalculationIds { get; set; } = [];
+
+        // ── Metadata: vem som skapade/ändrade delningen ("Delad av" + tooltip) ──
+        /// <summary>Visningsnamn för den som skapade delningen (visas i kolumnen "Delad av").</summary>
+        public string? CreatedByName { get; set; }
+        /// <summary>När delningen skapades (UTC) – visas i tooltip/detaljvy.</summary>
+        public DateTime? CreatedAt { get; set; }
+        /// <summary>Visningsnamn för den som senast ändrade delningen, om någon (tooltip).</summary>
+        public string? UpdatedByName { get; set; }
+        /// <summary>När delningen senast ändrades (UTC), om någon (tooltip).</summary>
+        public DateTime? UpdatedAt { get; set; }
     }
 
     /// <summary>

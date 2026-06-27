@@ -1,4 +1,5 @@
 @using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Client.Shared.SharedComponent
 @using ProjectManagement.Shared.Base.Calculation
 @using ProjectManagement.Shared.DTO.Calculation
 @using ProjectManagement.Shared.Enums
@@ -71,13 +72,12 @@
                                        class="@InputBase w-full min-w-0" />
                             </td>
                             <td class="px-1 py-0.5">
-                                <select value="@((int)income.SubType)" @onchange="e => SetSubType(income, e.Value)"
-                                        disabled="@ReadOnly"
-                                        class="@InputBase w-full min-w-0">
-                                    <option value="0">Grunddel</option>
-                                    <option value="1">Option</option>
-                                    <option value="2">ÄTA</option>
-                                </select>
+                                <MhdFormSelect TValue="IncomeSubType"
+                                               Value="income.SubType"
+                                               ValueChanged="@(v => SetSubType(income, v))"
+                                               Options="SubTypeItems"
+                                               Disabled="ReadOnly"
+                                               FixedPopup="true" />
                             </td>
                             <td style="width: 4.2rem; min-width: 4.2rem; max-width: 4.2rem;" class="border-l border-slate-100 px-1 py-0.5 dark:border-slate-800">
                                 <input type="number" value="@DisplayQ(income, income.Q1)"
@@ -191,11 +191,15 @@
         income.Year = MinYear.HasValue && year < MinYear.Value ? MinYear.Value : year;
     }
 
-    void SetSubType(IncomeBase income, object? value)
+    // Deltyp options for the custom dropdown — same values/labels as the old <select>.
+    static readonly IReadOnlyList<MhdSelectItem<IncomeSubType>> SubTypeItems = new[]
     {
-        if (int.TryParse(value?.ToString(), out var v) && Enum.IsDefined(typeof(IncomeSubType), v))
-            income.SubType = (IncomeSubType)v;
-    }
+        new MhdSelectItem<IncomeSubType> { Value = IncomeSubType.Grunddel, Label = "Grunddel" },
+        new MhdSelectItem<IncomeSubType> { Value = IncomeSubType.Option, Label = "Option" },
+        new MhdSelectItem<IncomeSubType> { Value = IncomeSubType.ATA, Label = "ÄTA" },
+    };
+
+    void SetSubType(IncomeBase income, IncomeSubType value) => income.SubType = value;
 
     void OnQChanged(IncomeBase income, int quarter, object? value)
     {

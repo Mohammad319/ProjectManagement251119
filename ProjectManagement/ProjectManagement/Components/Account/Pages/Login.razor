@@ -30,7 +30,7 @@
 
             @* Authentication changes the server cookie. Use a full document navigation so the
                WebAssembly authentication state is deserialized from the newly signed-in user. *@
-            <EditForm Model="Input" Method="post" OnValidSubmit="LoginUser" FormName="login" class="space-y-6">
+            <EditForm Model="Input" Method="post" OnValidSubmit="LoginUser" FormName="login" id="pm-login-form" class="space-y-6">
 
                 <DataAnnotationsValidator />
                 <FormValidationSummary />
@@ -120,6 +120,21 @@
     </div>
 </main>
 
+@* Double-submit guard: the first submit disables the button and shows progress; a second click is
+   ignored. The page reloads on POST so the state resets naturally on the next render. *@
+<script>
+    (function () {
+        var form = document.getElementById('pm-login-form');
+        if (!form) return;
+        form.addEventListener('submit', function () {
+            if (form.dataset.submitting) return;
+            form.dataset.submitting = '1';
+            var b = form.querySelector('button[type="submit"]');
+            if (b) { b.disabled = true; b.classList.add('opacity-70', 'cursor-not-allowed'); b.textContent = 'Loggar in...'; }
+        });
+    })();
+</script>
+
 @code {
     private string? errorMessage;
 
@@ -169,6 +184,7 @@
             {
                 Logger.LogWarning("Invalid login attempt for unknown email {Email}.", Input.Email);
                 errorMessage = PMResourceIdentity.Error_InvalidLoginAttempt;
+                Input.Password = "";
                 return;
             }
 
@@ -204,6 +220,8 @@
         {
             Logger.LogWarning("Invalid login attempt for {Email}.", Input.Email);
             errorMessage = PMResourceIdentity.Error_InvalidLoginAttempt;
+            // Keep the email so the user only has to re-enter the password.
+            Input.Password = "";
         }
     }
 

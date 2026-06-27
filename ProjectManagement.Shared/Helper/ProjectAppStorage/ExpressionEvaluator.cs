@@ -170,7 +170,7 @@ namespace ProjectManagement.Shared.Helper.ProjectAppStorage
                     continue;
                 }
 
-                if ("+-*/()".IndexOf(ch) >= 0) { tokens.Add(ch.ToString()); i++; continue; }
+                if ("+-*/()".Contains(ch)) { tokens.Add(ch.ToString()); i++; continue; }
 
                 throw new InvalidOperationException($"Unexpected char '{ch}'");
             }

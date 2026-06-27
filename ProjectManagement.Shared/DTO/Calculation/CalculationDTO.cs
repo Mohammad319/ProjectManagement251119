@@ -383,10 +383,10 @@ namespace ProjectManagement.Shared.DTO.Calculation
         [Range(0, 100, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public int Tax { get; set; } = 25;
 
-        public DateTime TenderDeadline { get; set; } = DateTime.Now;
-        public DateTime TenderQA { get; set; } = DateTime.Now;
-        public DateTime StartDate { get; set; } = DateTime.Now;
-        public DateTime EndDate { get; set; } = DateTime.Now.AddMonths(2);
+        public DateTime? TenderDeadline { get; set; }
+        public DateTime? TenderQA { get; set; }
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
         public int Order { get; set; }
         public DateTime? PublicationDate { get; set; } = DateTime.Now;
         public DateTime? DecisionDate { get; set; } = DateTime.Now;
@@ -645,10 +645,10 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public int VersionNumber { get; set; } = 1;
         public int? CreatedFromCalculationId { get; set; }
         public bool IsCurrentVersion { get; set; } = true;
-        public DateTime StartDate { get; set; } = DateTime.Now;
-        public DateTime EndDate { get; set; } = DateTime.Now.AddMonths(1);
-        public DateTime TenderDeadline { get; set; }
-        public DateTime TenderQA { get; set; }
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public DateTime? TenderDeadline { get; set; }
+        public DateTime? TenderQA { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public int Tax { get; set; }

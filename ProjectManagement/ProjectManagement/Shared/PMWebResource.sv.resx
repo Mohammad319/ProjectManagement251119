@@ -223,10 +223,24 @@
   <data name="NotificationsClearRead" xml:space="preserve"><value>Rensa lästa</value></data>
   <data name="NotificationsRemove" xml:space="preserve"><value>Ta bort notis</value></data>
   <data name="NotificationsEmpty" xml:space="preserve"><value>Inga notiser</value></data>
+  <data name="NotificationsEmptyHint" xml:space="preserve"><value>Du har inga nya notiser just nu.</value></data>
   <data name="NotificationsLoading" xml:space="preserve"><value>Laddar…</value></data>
   <data name="NotificationsNoAccess" xml:space="preserve"><value>Du har inte längre åtkomst till detta projekt.</value></data>
   <data name="NotificationsNoAccessCalculation" xml:space="preserve"><value>Du har inte längre åtkomst till denna kalkyl.</value></data>
   <data name="NotificationsUnreadAria" xml:space="preserve"><value>{0} olästa notiser</value></data>
+  <data name="NotificationsUnreadCount" xml:space="preserve"><value>{0} olästa</value></data>
+  <data name="NotificationsUnreadCountOne" xml:space="preserve"><value>{0} oläst</value></data>
+  <data name="NotificationsShowDetails" xml:space="preserve"><value>Visa detaljer</value></data>
+  <data name="NotificationsHideDetails" xml:space="preserve"><value>Dölj detaljer</value></data>
+  <data name="NotificationsProjectUnavailable" xml:space="preserve"><value>Projektet är inte längre tillgängligt.</value></data>
+  <data name="NotificationDetailProject" xml:space="preserve"><value>Projekt</value></data>
+  <data name="NotificationDetailSharedBy" xml:space="preserve"><value>Delat av</value></data>
+  <data name="NotificationDetailAccessLevel" xml:space="preserve"><value>Åtkomstnivå</value></data>
+  <data name="NotificationDetailCalculations" xml:space="preserve"><value>Kalkyler</value></data>
+  <data name="NotificationDetailValidity" xml:space="preserve"><value>Giltighet</value></data>
+  <data name="NotificationDetailStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="NotificationDetailTime" xml:space="preserve"><value>Tidpunkt</value></data>
+  <data name="NotificationAccessRemovedDetail" xml:space="preserve"><value>Du har inte längre åtkomst till detta projekt. Projektet visas inte längre i din projektlista.</value></data>
   <data name="NotificationTitleSharedWithUser" xml:space="preserve"><value>Projekt delat med dig</value></data>
   <data name="NotificationTitleSharedWithDepartment" xml:space="preserve"><value>Projekt delat med din avdelning</value></data>
   <data name="NotificationTitleAccessChanged" xml:space="preserve"><value>Din åtkomst har uppdaterats</value></data>

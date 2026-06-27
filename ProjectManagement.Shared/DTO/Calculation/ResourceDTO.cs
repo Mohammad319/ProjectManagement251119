@@ -184,6 +184,8 @@ public ResourceTypesEnum ResType { get; set; }
         public string Sort { get; set; } = string.Empty;
         // Production note – a standalone scalar field (not in Data/Metadata), does not affect economy.
         public string? ProductionNote { get; set; }
+        // Reviewer comment (Granskarkommentar) – standalone scalar field, does not affect economy.
+        public string? ReviewerComment { get; set; }
         public List<ListOfferDTO> Offers { get; set; } = [];
     }
 }

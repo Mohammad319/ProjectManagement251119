@@ -244,7 +244,7 @@
 
                         @* Innehåll *@
                         <div class="px-3 pt-1.5 pb-0.5">
-                            <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Innehåll</span>
+                            <span class="text-[10px] font-semibold tracking-wide text-slate-400 dark:text-slate-500">Innehåll</span>
                         </div>
                         <button type="button"
                                 class="@(_contentMode == ContentModeProjects ? "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-blue-700 dark:text-blue-300" : "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800")"
@@ -442,151 +442,156 @@
                 </EmptyTemplate>
                 <ChildContent>
                     @* Radnummer — visuell hjälpkolumn (ej sorterbar/filterbar/sökbar). Frozen-offset + sticky-left beräknas av JS-motorn via data-pm-frozen. *@
-                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("rowNumber")' ColumnKey="rowNumber" Frozen="true"
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("rowNumber")' ColumnKey="rowNumber" Order='@_columnView.OrderIndex("rowNumber")' Frozen="true"
                                     HeaderClass="w-12 select-none whitespace-nowrap bg-slate-50 px-2 py-2 text-right font-semibold text-slate-400 dark:bg-slate-900 dark:text-slate-500" HeaderStyle="min-width:44px;">
                         <HeaderContent><HoverTooltip Text="Radnummer i aktuell vy" Class="justify-end">#</HoverTooltip></HeaderContent>
                     </MhdTableColumn>
-                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("code")' ColumnKey="code" Frozen="true"
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("code")' ColumnKey="code" Order='@_columnView.OrderIndex("code")' Frozen="true"
                                     HeaderClass='@($"{SortableHeaderClass("code")} w-28 bg-slate-50 dark:bg-slate-900")' HeaderStyle="min-width:70px;" OnHeaderClick='() => SortBy("code")'>
                         <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.code @((MarkupString)SortIndicatorHtml("code")) <TableColumnFilter FilterState='PF("code")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
                     </MhdTableColumn>
-                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("name")' ColumnKey="name" Frozen="true"
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("name")' ColumnKey="name" Order='@_columnView.OrderIndex("name")' Frozen="true"
                                     HeaderClass='@($"{SortableHeaderClass("name")} min-w-52 border-r border-slate-300 bg-slate-50 dark:border-slate-600 dark:bg-slate-900")' HeaderStyle="min-width:160px;" OnHeaderClick='() => SortBy("name")'>
                         <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["projectName"] @((MarkupString)SortIndicatorHtml("name")) <TableColumnFilter FilterState='PF("name")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
                     </MhdTableColumn>
-                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("status")' ColumnKey="status"
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("status")' ColumnKey="status" Order='@_columnView.OrderIndex("status")'
                                     HeaderClass='@SortableHeaderClass("status")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("status")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1"><HoverTooltip Text="Projektstatus beskriver projektets övergripande läge och resultat, t.ex. förfrågan, inlämnat, vunnet eller förlorat." ShowInfoIcon="true" Focusable="true">Projektstatus</HoverTooltip> @((MarkupString)SortIndicatorHtml("status")) <TableColumnFilter FilterState='PF("status")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                        <HeaderContent><span class="inline-flex items-center gap-1"><HoverTooltip Text="Projektstatus beskriver projektets övergripande läge och resultat, t.ex. förfrågan, inlämnat, vunnet eller förlorat." Focusable="true">Projektstatus</HoverTooltip> @((MarkupString)SortIndicatorHtml("status")) <TableColumnFilter FilterState='PF("status")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
                     </MhdTableColumn>
-                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("responsible")' ColumnKey="responsible"
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("responsible")' ColumnKey="responsible" Order='@_columnView.OrderIndex("responsible")'
                                     HeaderClass='@SortableHeaderClass("responsible")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("responsible")'>
                         <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["calculationResponsible"] @((MarkupString)SortIndicatorHtml("responsible")) <TableColumnFilter FilterState='PF("responsible")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
                     </MhdTableColumn>
-                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("start")' ColumnKey="start"
-                                    HeaderClass='@SortableHeaderClass("start")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("start")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.startDate @((MarkupString)SortIndicatorHtml("start")) <TableColumnFilter FilterState='PF("start")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
-                    </MhdTableColumn>
-                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("end")' ColumnKey="end"
-                                    HeaderClass='@SortableHeaderClass("end")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("end")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.endDate @((MarkupString)SortIndicatorHtml("end")) <TableColumnFilter FilterState='PF("end")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
-                    </MhdTableColumn>
-                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("deadline")' ColumnKey="deadline"
-                                    HeaderClass='@SortableHeaderClass("deadline")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("deadline")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.tenderDeadline @((MarkupString)SortIndicatorHtml("deadline")) <TableColumnFilter FilterState='PF("deadline")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
-                    </MhdTableColumn>
-                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("qa")' ColumnKey="qa"
-                                    HeaderClass='@SortableHeaderClass("qa")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("qa")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1"><HoverTooltip Text="Sista dag för frågor och svar" ShowInfoIcon="true" Focusable="true">Frågor/svar</HoverTooltip> @((MarkupString)SortIndicatorHtml("qa")) <TableColumnFilter FilterState='PF("qa")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
-                    </MhdTableColumn>
-                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("calculations")' ColumnKey="calculations"
-                                    HeaderClass='@($"{SortableHeaderClass("calculations")} text-right")' HeaderStyle="min-width:60px;" OnHeaderClick='() => SortBy("calculations")'>
-                        <HeaderContent><span class="inline-flex items-center justify-end gap-1">@AppLoc["calculationCount"] @((MarkupString)SortIndicatorHtml("calculations")) <TableColumnFilter FilterState='PF("calculations")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
-                    </MhdTableColumn>
-                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("byggherre")' ColumnKey="byggherre"
-                                    HeaderClass='@SortableHeaderClass("byggherre")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("byggherre")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.developer @((MarkupString)SortIndicatorHtml("byggherre")) <TableColumnFilter FilterState='PF("byggherre")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
-                    </MhdTableColumn>
-                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("organisation")' ColumnKey="organisation"
-                                    HeaderClass='@SortableHeaderClass("organisation")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("organisation")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1">Beställare @((MarkupString)SortIndicatorHtml("organisation")) <TableColumnFilter FilterState='PF("organisation")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
-                    </MhdTableColumn>
-                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("procurementName")' ColumnKey="procurementName"
-                                    HeaderClass='@SortableHeaderClass("procurementName")' HeaderStyle="min-width:120px;" OnHeaderClick='() => SortBy("procurementName")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["procurementName"] @((MarkupString)SortIndicatorHtml("procurementName")) <TableColumnFilter FilterState='PF("procurementName")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
-                    </MhdTableColumn>
-                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("procurementNumber")' ColumnKey="procurementNumber"
-                                    HeaderClass='@SortableHeaderClass("procurementNumber")' HeaderStyle="min-width:120px;" OnHeaderClick='() => SortBy("procurementNumber")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["procurementNumber"] @((MarkupString)SortIndicatorHtml("procurementNumber")) <TableColumnFilter FilterState='PF("procurementNumber")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
-                    </MhdTableColumn>
-                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("customerReference")' ColumnKey="customerReference"
-                                    HeaderClass='@SortableHeaderClass("customerReference")' HeaderStyle="min-width:120px;" OnHeaderClick='() => SortBy("customerReference")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["customerReference"] @((MarkupString)SortIndicatorHtml("customerReference")) <TableColumnFilter FilterState='PF("customerReference")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
-                    </MhdTableColumn>
-                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("contract")' ColumnKey="contract"
-                                    HeaderClass='@SortableHeaderClass("contract")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("contract")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.projectContract @((MarkupString)SortIndicatorHtml("contract")) <TableColumnFilter FilterState='PF("contract")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
-                    </MhdTableColumn>
-                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("projectType")' ColumnKey="projectType"
-                                    HeaderClass='@SortableHeaderClass("projectType")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("projectType")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.projectType @((MarkupString)SortIndicatorHtml("projectType")) <TableColumnFilter FilterState='PF("projectType")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
-                    </MhdTableColumn>
-                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("inspector")' ColumnKey="inspector"
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("inspector")' ColumnKey="inspector" Order='@_columnView.OrderIndex("inspector")'
                                     HeaderClass='@SortableHeaderClass("inspector")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("inspector")'>
                         <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.inspector @((MarkupString)SortIndicatorHtml("inspector")) <TableColumnFilter FilterState='PF("inspector")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
                     </MhdTableColumn>
-                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("designer")' ColumnKey="designer"
-                                    HeaderClass='@SortableHeaderClass("designer")' HeaderStyle="min-width:110px;" OnHeaderClick='() => SortBy("designer")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1">Projektörer @((MarkupString)SortIndicatorHtml("designer")) <TableColumnFilter FilterState='PF("designer")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("deadline")' ColumnKey="deadline" Order='@_columnView.OrderIndex("deadline")'
+                                    HeaderClass='@SortableHeaderClass("deadline")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("deadline")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.tenderDeadline @((MarkupString)SortIndicatorHtml("deadline")) <TableColumnFilter FilterState='PF("deadline")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
                     </MhdTableColumn>
-                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("supervisor")' ColumnKey="supervisor"
-                                    HeaderClass='@SortableHeaderClass("supervisor")' HeaderStyle="min-width:180px;" OnHeaderClick='() => SortBy("supervisor")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1">Kundens kontaktperson under upphandlingstiden @((MarkupString)SortIndicatorHtml("supervisor")) <TableColumnFilter FilterState='PF("supervisor")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("organisation")' ColumnKey="organisation" Order='@_columnView.OrderIndex("organisation")'
+                                    HeaderClass='@SortableHeaderClass("organisation")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("organisation")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">Beställare @((MarkupString)SortIndicatorHtml("organisation")) <TableColumnFilter FilterState='PF("organisation")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
                     </MhdTableColumn>
-                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("address")' ColumnKey="address"
-                                    HeaderClass='@SortableHeaderClass("address")' HeaderStyle="min-width:140px;" OnHeaderClick='() => SortBy("address")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1">Adress @((MarkupString)SortIndicatorHtml("address")) <TableColumnFilter FilterState='PF("address")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("projectType")' ColumnKey="projectType" Order='@_columnView.OrderIndex("projectType")'
+                                    HeaderClass='@SortableHeaderClass("projectType")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("projectType")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.projectType @((MarkupString)SortIndicatorHtml("projectType")) <TableColumnFilter FilterState='PF("projectType")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
                     </MhdTableColumn>
-                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("procurementMethods")' ColumnKey="procurementMethods"
-                                    HeaderClass='@SortableHeaderClass("procurementMethods")' HeaderStyle="min-width:110px;" OnHeaderClick='() => SortBy("procurementMethods")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.procurementMethods @((MarkupString)SortIndicatorHtml("procurementMethods")) <TableColumnFilter FilterState='PF("procurementMethods")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
-                    </MhdTableColumn>
-                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("compensation")' ColumnKey="compensation"
-                                    HeaderClass='@SortableHeaderClass("compensation")' HeaderStyle="min-width:110px;" OnHeaderClick='() => SortBy("compensation")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.projectCompensation @((MarkupString)SortIndicatorHtml("compensation")) <TableColumnFilter FilterState='PF("compensation")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
-                    </MhdTableColumn>
-                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("procurementProcedure")' ColumnKey="procurementProcedure"
-                                    HeaderClass='@SortableHeaderClass("procurementProcedure")' HeaderStyle="min-width:130px;" OnHeaderClick='() => SortBy("procurementProcedure")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1">Upphandlingsförfarande @((MarkupString)SortIndicatorHtml("procurementProcedure")) <TableColumnFilter FilterState='PF("procurementProcedure")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
-                    </MhdTableColumn>
-                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("clientsManager")' ColumnKey="clientsManager"
-                                    HeaderClass='@SortableHeaderClass("clientsManager")' HeaderStyle="min-width:120px;" OnHeaderClick='() => SortBy("clientsManager")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1">@ResourceLoc.clientsProjectmanager @((MarkupString)SortIndicatorHtml("clientsManager")) <TableColumnFilter FilterState='PF("clientsManager")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
-                    </MhdTableColumn>
-                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("publicationDate")' ColumnKey="publicationDate"
-                                    HeaderClass='@SortableHeaderClass("publicationDate")' HeaderStyle="min-width:90px;" OnHeaderClick='() => SortBy("publicationDate")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.publicationDate @((MarkupString)SortIndicatorHtml("publicationDate")) <TableColumnFilter FilterState='PF("publicationDate")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
-                    </MhdTableColumn>
-                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("decisionDate")' ColumnKey="decisionDate"
-                                    HeaderClass='@SortableHeaderClass("decisionDate")' HeaderStyle="min-width:90px;" OnHeaderClick='() => SortBy("decisionDate")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.decisionDate @((MarkupString)SortIndicatorHtml("decisionDate")) <TableColumnFilter FilterState='PF("decisionDate")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
-                    </MhdTableColumn>
-                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("createdAt")' ColumnKey="createdAt"
-                                    HeaderClass='@SortableHeaderClass("createdAt")' HeaderStyle="min-width:90px;" OnHeaderClick='() => SortBy("createdAt")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["createdDate"] @((MarkupString)SortIndicatorHtml("createdAt")) <TableColumnFilter FilterState='PF("createdAt")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
-                    </MhdTableColumn>
-                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("updatedAt")' ColumnKey="updatedAt"
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("updatedAt")' ColumnKey="updatedAt" Order='@_columnView.OrderIndex("updatedAt")'
                                     HeaderClass='@SortableHeaderClass("updatedAt")' HeaderStyle="min-width:90px;" OnHeaderClick='() => SortBy("updatedAt")'>
                         <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["lastModified"] @((MarkupString)SortIndicatorHtml("updatedAt")) <TableColumnFilter FilterState='PF("updatedAt")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
                     </MhdTableColumn>
-                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("archived")' ColumnKey="archived"
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("archived")' ColumnKey="archived" Order='@_columnView.OrderIndex("archived")'
                                     HeaderClass='@SortableHeaderClass("archived")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("archived")'>
                         <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["archived"] @((MarkupString)SortIndicatorHtml("archived")) <TableColumnFilter FilterState='PF("archived")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
                     </MhdTableColumn>
-                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("shared")' ColumnKey="shared"
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("shared")' ColumnKey="shared" Order='@_columnView.OrderIndex("shared")'
                                     HeaderClass='@SortableHeaderClass("shared")' HeaderStyle="min-width:110px;" OnHeaderClick='() => SortBy("shared")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1"><HoverTooltip Text="Hur projektet är tillgängligt och om det är delat med andra. Klicka på värdet för detaljer." ShowInfoIcon="true" Focusable="true">Åtkomst</HoverTooltip> @((MarkupString)SortIndicatorHtml("shared")) <TableColumnFilter FilterState='PF("shared")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                        <HeaderContent><span class="inline-flex items-center gap-1"><HoverTooltip Text="Hur projektet är tillgängligt och om det är delat med andra. Klicka på värdet för detaljer." Focusable="true">Åtkomst</HoverTooltip> @((MarkupString)SortIndicatorHtml("shared")) <TableColumnFilter FilterState='PF("shared")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("procurementNumber")' ColumnKey="procurementNumber" Order='@_columnView.OrderIndex("procurementNumber")'
+                                    HeaderClass='@SortableHeaderClass("procurementNumber")' HeaderStyle="min-width:120px;" OnHeaderClick='() => SortBy("procurementNumber")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["procurementNumber"] @((MarkupString)SortIndicatorHtml("procurementNumber")) <TableColumnFilter FilterState='PF("procurementNumber")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("customerReference")' ColumnKey="customerReference" Order='@_columnView.OrderIndex("customerReference")'
+                                    HeaderClass='@SortableHeaderClass("customerReference")' HeaderStyle="min-width:120px;" OnHeaderClick='() => SortBy("customerReference")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["customerReference"] @((MarkupString)SortIndicatorHtml("customerReference")) <TableColumnFilter FilterState='PF("customerReference")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("procurementName")' ColumnKey="procurementName" Order='@_columnView.OrderIndex("procurementName")'
+                                    HeaderClass='@SortableHeaderClass("procurementName")' HeaderStyle="min-width:120px;" OnHeaderClick='() => SortBy("procurementName")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["procurementName"] @((MarkupString)SortIndicatorHtml("procurementName")) <TableColumnFilter FilterState='PF("procurementName")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("procurementMethods")' ColumnKey="procurementMethods" Order='@_columnView.OrderIndex("procurementMethods")'
+                                    HeaderClass='@SortableHeaderClass("procurementMethods")' HeaderStyle="min-width:110px;" OnHeaderClick='() => SortBy("procurementMethods")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.procurementMethods @((MarkupString)SortIndicatorHtml("procurementMethods")) <TableColumnFilter FilterState='PF("procurementMethods")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("contract")' ColumnKey="contract" Order='@_columnView.OrderIndex("contract")'
+                                    HeaderClass='@SortableHeaderClass("contract")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("contract")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.projectContract @((MarkupString)SortIndicatorHtml("contract")) <TableColumnFilter FilterState='PF("contract")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("compensation")' ColumnKey="compensation" Order='@_columnView.OrderIndex("compensation")'
+                                    HeaderClass='@SortableHeaderClass("compensation")' HeaderStyle="min-width:110px;" OnHeaderClick='() => SortBy("compensation")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.projectCompensation @((MarkupString)SortIndicatorHtml("compensation")) <TableColumnFilter FilterState='PF("compensation")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("procurementProcedure")' ColumnKey="procurementProcedure" Order='@_columnView.OrderIndex("procurementProcedure")'
+                                    HeaderClass='@SortableHeaderClass("procurementProcedure")' HeaderStyle="min-width:130px;" OnHeaderClick='() => SortBy("procurementProcedure")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">Upphandlingsförfarande @((MarkupString)SortIndicatorHtml("procurementProcedure")) <TableColumnFilter FilterState='PF("procurementProcedure")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("publicationDate")' ColumnKey="publicationDate" Order='@_columnView.OrderIndex("publicationDate")'
+                                    HeaderClass='@SortableHeaderClass("publicationDate")' HeaderStyle="min-width:90px;" OnHeaderClick='() => SortBy("publicationDate")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.publicationDate @((MarkupString)SortIndicatorHtml("publicationDate")) <TableColumnFilter FilterState='PF("publicationDate")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("decisionDate")' ColumnKey="decisionDate" Order='@_columnView.OrderIndex("decisionDate")'
+                                    HeaderClass='@SortableHeaderClass("decisionDate")' HeaderStyle="min-width:90px;" OnHeaderClick='() => SortBy("decisionDate")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.decisionDate @((MarkupString)SortIndicatorHtml("decisionDate")) <TableColumnFilter FilterState='PF("decisionDate")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("start")' ColumnKey="start" Order='@_columnView.OrderIndex("start")'
+                                    HeaderClass='@SortableHeaderClass("start")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("start")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.startDate @((MarkupString)SortIndicatorHtml("start")) <TableColumnFilter FilterState='PF("start")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("end")' ColumnKey="end" Order='@_columnView.OrderIndex("end")'
+                                    HeaderClass='@SortableHeaderClass("end")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("end")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.endDate @((MarkupString)SortIndicatorHtml("end")) <TableColumnFilter FilterState='PF("end")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("byggherre")' ColumnKey="byggherre" Order='@_columnView.OrderIndex("byggherre")'
+                                    HeaderClass='@SortableHeaderClass("byggherre")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("byggherre")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.developer @((MarkupString)SortIndicatorHtml("byggherre")) <TableColumnFilter FilterState='PF("byggherre")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("clientsManager")' ColumnKey="clientsManager" Order='@_columnView.OrderIndex("clientsManager")'
+                                    HeaderClass='@SortableHeaderClass("clientsManager")' HeaderStyle="min-width:120px;" OnHeaderClick='() => SortBy("clientsManager")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@ResourceLoc.clientsProjectmanager @((MarkupString)SortIndicatorHtml("clientsManager")) <TableColumnFilter FilterState='PF("clientsManager")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("designer")' ColumnKey="designer" Order='@_columnView.OrderIndex("designer")'
+                                    HeaderClass='@SortableHeaderClass("designer")' HeaderStyle="min-width:110px;" OnHeaderClick='() => SortBy("designer")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">Projektörer @((MarkupString)SortIndicatorHtml("designer")) <TableColumnFilter FilterState='PF("designer")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("address")' ColumnKey="address" Order='@_columnView.OrderIndex("address")'
+                                    HeaderClass='@SortableHeaderClass("address")' HeaderStyle="min-width:140px;" OnHeaderClick='() => SortBy("address")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">Adress @((MarkupString)SortIndicatorHtml("address")) <TableColumnFilter FilterState='PF("address")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("qa")' ColumnKey="qa" Order='@_columnView.OrderIndex("qa")'
+                                    HeaderClass='@SortableHeaderClass("qa")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("qa")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1"><HoverTooltip Text="Sista dag för frågor och svar" ShowInfoIcon="true" Focusable="true">Frågor/svar</HoverTooltip> @((MarkupString)SortIndicatorHtml("qa")) <TableColumnFilter FilterState='PF("qa")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("supervisor")' ColumnKey="supervisor" Order='@_columnView.OrderIndex("supervisor")'
+                                    HeaderClass='@SortableHeaderClass("supervisor")' HeaderStyle="min-width:180px;" OnHeaderClick='() => SortBy("supervisor")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">Kundens kontaktperson under upphandlingstiden @((MarkupString)SortIndicatorHtml("supervisor")) <TableColumnFilter FilterState='PF("supervisor")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    @* "Skapad datum" är sista kolumnen i totalordningen. *@
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("createdAt")' ColumnKey="createdAt" Order='@_columnView.OrderIndex("createdAt")'
+                                    HeaderClass='@SortableHeaderClass("createdAt")' HeaderStyle="min-width:90px;" OnHeaderClick='() => SortBy("createdAt")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["createdDate"] @((MarkupString)SortIndicatorHtml("createdAt")) <TableColumnFilter FilterState='PF("createdAt")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    @* Legacy-kolumn (Kalkyler-antal) – inte med i kolumnväljaren och visas aldrig; behålls sist för kompatibilitet. *@
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("calculations")' ColumnKey="calculations" Order='@_columnView.OrderIndex("calculations")'
+                                    HeaderClass='@($"{SortableHeaderClass("calculations")} text-right")' HeaderStyle="min-width:60px;" OnHeaderClick='() => SortBy("calculations")'>
+                        <HeaderContent><span class="inline-flex items-center justify-end gap-1">@AppLoc["calculationCount"] @((MarkupString)SortIndicatorHtml("calculations")) <TableColumnFilter FilterState='PF("calculations")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
                     </MhdTableColumn>
                 </ChildContent>
                 <RowTemplate Context="project">
                     @{
                         var isProjectArchived = project.IsArchived;
                         var isProjectSelected = Folder.State.ProjectSelected?.Id == project.Id;
-                        var rowClasses = GetProjectRowClass(project, isProjectSelected, isProjectArchived);
+                        var rowClasses = GetProjectRowClass(project, isProjectSelected, isProjectArchived, CanReorderProjects);
                         var rowNumber = _projectRowNumbers.TryGetValue(project.Id, out var _rn) ? _rn : 0;
+                        var canReorder = CanReorderProjects;
+                        var draggableValue = canReorder ? "true" : "false";
                     }
 
                         <tr @key="project.Id"
                             class="@rowClasses"
+                            title="@(canReorder ? null : "Ändra ordning är bara tillgängligt vid manuell sortering.")"
                             @oncontextmenu:preventDefault
                             @oncontextmenu="() => Context(project)"
                             @onclick="async () => await SetProject(project)"
                             @ondrop="async _ => await HandleDrop(project)"
                             @ondragleave="() => project.IsDragOver = false"
                             @ondragover:preventDefault="true"
-                            @ondragover="() => project.IsDragOver = draggingProject is not null"
-                            @ondragstart="() => draggingProject = project"
+                            @ondragover="() => project.IsDragOver = CanReorderProjects && draggingProject is not null"
+                            @ondragstart="() => OnProjectDragStart(project)"
                             @ondragend="() => draggingProject = null"
-                            draggable="true">
+                            draggable="@draggableValue">
                             @if (IsProjectColumnVisible("rowNumber"))
                             {
                                 <td class="w-12 whitespace-nowrap bg-white px-2 py-2 text-right font-mono text-[11px] text-slate-400 group-hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-500 dark:group-hover:bg-slate-900/80 @(isProjectSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
@@ -603,7 +608,7 @@
                             {
                                 <td class="max-w-80 border-r border-slate-200 bg-white px-3 py-2 group-hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:group-hover:bg-slate-900/80 @(isProjectSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
                                     <div class="flex min-w-0 items-center gap-2">
-                                        <HoverTooltip Text="@project.Name" Class="truncate font-semibold text-slate-800 dark:text-slate-100">
+                                        <HoverTooltip Text="@project.Name" OnlyWhenTruncated="true" Class="truncate font-semibold text-slate-800 dark:text-slate-100">
                                             <span class="truncate">@project.Name</span>
                                         </HoverTooltip>
                                         @if (project.ImportInfo?.IsImportedCopy == true)
@@ -632,105 +637,21 @@
                             {
                                 <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Responsible)</td>
                             }
-                            @if (IsProjectColumnVisible("start"))
+                            @if (IsProjectColumnVisible("inspector"))
                             {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.StartDate)</td>
-                            }
-                            @if (IsProjectColumnVisible("end"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.EndDate)</td>
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Inspector)</td>
                             }
                             @if (IsProjectColumnVisible("deadline"))
                             {
                                 <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.TenderDeadline)</td>
                             }
-                            @if (IsProjectColumnVisible("qa"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.TenderQA)</td>
-                            }
-                            @if (IsProjectColumnVisible("calculations"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-right">
-                                    <button type="button"
-                                            class="inline-flex min-w-[2rem] items-center justify-center rounded-md px-1.5 py-0.5 text-xs font-semibold text-slate-600 transition hover:bg-sky-100 hover:text-sky-700 dark:text-slate-300 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
-                                            title="@AppLoc["showCalculations"]"
-                                            @onclick:stopPropagation
-                                            @onclick="async () => await SetProject(project)">
-                                        @FormatCalculationCount(project)
-                                    </button>
-                                </td>
-                            }
-                            @if (IsProjectColumnVisible("byggherre"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Developer)</td>
-                            }
                             @if (IsProjectColumnVisible("organisation"))
                             {
                                 <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Organisation)</td>
                             }
-                            @if (IsProjectColumnVisible("procurementName"))
-                            {
-                                <td class="px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.ProcurementName)</td>
-                            }
-                            @if (IsProjectColumnVisible("procurementNumber"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.ProcurementNumber)</td>
-                            }
-                            @if (IsProjectColumnVisible("customerReference"))
-                            {
-                                <td class="px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.CustomerReference)</td>
-                            }
-                            @if (IsProjectColumnVisible("contract"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Contract)</td>
-                            }
                             @if (IsProjectColumnVisible("projectType"))
                             {
                                 <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Type)</td>
-                            }
-                            @if (IsProjectColumnVisible("inspector"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Inspector)</td>
-                            }
-                            @if (IsProjectColumnVisible("designer"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Designer)</td>
-                            }
-                            @if (IsProjectColumnVisible("supervisor"))
-                            {
-                                <td class="px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Supervisor)</td>
-                            }
-                            @if (IsProjectColumnVisible("address"))
-                            {
-                                <td class="px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.AddressText)</td>
-                            }
-                            @if (IsProjectColumnVisible("procurementMethods"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.ProcurementMethods)</td>
-                            }
-                            @if (IsProjectColumnVisible("compensation"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Compensation)</td>
-                            }
-                            @if (IsProjectColumnVisible("procurementProcedure"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.ProcurementProcedure)</td>
-                            }
-                            @if (IsProjectColumnVisible("clientsManager"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.ClientsManager)</td>
-                            }
-                            @if (IsProjectColumnVisible("publicationDate"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.PublicationDate)</td>
-                            }
-                            @if (IsProjectColumnVisible("decisionDate"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.DecisionDate)</td>
-                            }
-                            @if (IsProjectColumnVisible("createdAt"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.CreatedAt)</td>
                             }
                             @if (IsProjectColumnVisible("updatedAt"))
                             {
@@ -748,7 +669,7 @@
                                         <Authorized>
                                             <button type="button"
                                                     class="@(accessShared ? "inline-flex max-w-[200px] items-center gap-1 rounded px-1.5 py-0.5 text-left text-sky-700 transition hover:bg-sky-50 hover:underline dark:text-sky-300 dark:hover:bg-sky-950/40" : "inline-flex max-w-[200px] items-center gap-1 rounded px-1.5 py-0.5 text-left text-slate-500 transition hover:bg-slate-100 hover:underline dark:text-slate-400 dark:hover:bg-slate-800")"
-                                                    @onclick="() => OpenShareDialog(project)">
+                                                    @onclick="() => OpenShareFromCellAsync(project)">
                                                 @if (accessShared)
                                                 {
                                                     <i class="fa-solid fa-share-nodes shrink-0 text-sky-500"></i>
@@ -774,6 +695,92 @@
                                             </span>
                                         </NotAuthorized>
                                     </AuthorizeView>
+                                </td>
+                            }
+                            @* Extra kolumner (samma ordning som rubriker och kolumnväljaren). *@
+                            @if (IsProjectColumnVisible("procurementNumber"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.ProcurementNumber)</td>
+                            }
+                            @if (IsProjectColumnVisible("customerReference"))
+                            {
+                                <td class="px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.CustomerReference)</td>
+                            }
+                            @if (IsProjectColumnVisible("procurementName"))
+                            {
+                                <td class="px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.ProcurementName)</td>
+                            }
+                            @if (IsProjectColumnVisible("procurementMethods"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.ProcurementMethods)</td>
+                            }
+                            @if (IsProjectColumnVisible("contract"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Contract)</td>
+                            }
+                            @if (IsProjectColumnVisible("compensation"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Compensation)</td>
+                            }
+                            @if (IsProjectColumnVisible("procurementProcedure"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.ProcurementProcedure)</td>
+                            }
+                            @if (IsProjectColumnVisible("publicationDate"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.PublicationDate)</td>
+                            }
+                            @if (IsProjectColumnVisible("decisionDate"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.DecisionDate)</td>
+                            }
+                            @if (IsProjectColumnVisible("start"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.StartDate)</td>
+                            }
+                            @if (IsProjectColumnVisible("end"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.EndDate)</td>
+                            }
+                            @if (IsProjectColumnVisible("byggherre"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Developer)</td>
+                            }
+                            @if (IsProjectColumnVisible("clientsManager"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.ClientsManager)</td>
+                            }
+                            @if (IsProjectColumnVisible("designer"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Designer)</td>
+                            }
+                            @if (IsProjectColumnVisible("address"))
+                            {
+                                <td class="px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.AddressText)</td>
+                            }
+                            @if (IsProjectColumnVisible("qa"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.TenderQA)</td>
+                            }
+                            @if (IsProjectColumnVisible("supervisor"))
+                            {
+                                <td class="px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Supervisor)</td>
+                            }
+                            @* "Skapad datum" sist i totalordningen. *@
+                            @if (IsProjectColumnVisible("createdAt"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.CreatedAt)</td>
+                            }
+                            @if (IsProjectColumnVisible("calculations"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-right">
+                                    <button type="button"
+                                            class="inline-flex min-w-[2rem] items-center justify-center rounded-md px-1.5 py-0.5 text-xs font-semibold text-slate-600 transition hover:bg-sky-100 hover:text-sky-700 dark:text-slate-300 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
+                                            title="@AppLoc["showCalculations"]"
+                                            @onclick:stopPropagation
+                                            @onclick="async () => await SetProject(project)">
+                                        @FormatCalculationCount(project)
+                                    </button>
                                 </td>
                             }
                         </tr>
@@ -1070,90 +1077,47 @@
     private static string AccessSummaryText(ListProjectMVVM p) =>
         AccessSummaryFormatter.ProjectSummaryText(p.Access, p.IsShared);
 
-    private static IEnumerable<string> ProjectAccessTags(ListProjectMVVM p) =>
-        AccessSummaryFormatter.ProjectTags(p.Access, p.IsShared);
-
-    private static string AccessTooltip(ListProjectMVVM p)
+    // Grupperad tooltip för Åtkomst-kolumnen: visar bara VEM som har åtkomst
+    // (Avdelningsåtkomst, Delade personer, Delade avdelningar) – var för sig på egna rader.
+    // OBS: kalkylomfattning ("x/y kalkyler", "Alla tillgängliga kalkyler") och åtkomstnivå
+    // hör hemma i dialogen "Delning och behörighet", inte i denna snabba tooltip.
+    private string AccessTooltip(ListProjectMVVM p)
     {
         var a = p.Access;
         if (a is null)
             return p.IsShared ? "Projektet är delat med andra." : "Endast via normal avdelningsåtkomst.";
 
         var lines = new List<string>();
+
+        // Avdelningsåtkomst via projektets egen avdelning.
         if (a.ViaDepartment)
             lines.Add("Avdelningsåtkomst");
-        foreach (var r in a.Recipients)
+
+        var persons = a.Recipients.Where(r => r.Type == ProjectShareRecipientType.User).ToList();
+        if (persons.Count > 0)
         {
-            var typ = r.Type == ProjectShareRecipientType.Department ? "avdelning" : "person";
-            var calc = a.ShareableCalcCount > 0 && r.CalcCount < a.ShareableCalcCount
-                ? $"{r.CalcCount}/{a.ShareableCalcCount} kalkyler"
-                : "alla tillgängliga kalkyler";
-            lines.Add($"{r.Name} · {AccessSummaryFormatter.AccessLevelLabel(r.Role)} · {typ} · {calc}");
+            lines.Add("Delade personer");
+            AccessSummaryFormatter.AppendRecipientLines(lines, persons, r => r.Name);
         }
+
+        var depts = a.Recipients.Where(r => r.Type == ProjectShareRecipientType.Department).ToList();
+        if (depts.Count > 0)
+        {
+            lines.Add("Delade avdelningar");
+            AccessSummaryFormatter.AppendRecipientLines(lines, depts, r => r.Name);
+        }
+
         if (lines.Count == 0)
             lines.Add("Ingen åtkomst");
         lines.Add("Klicka för detaljer.");
         return string.Join("\n", lines);
     }
 
-    // Grupperade filtervärden: Åtkomsttyp, Åtkomstnivå, Personer, Avdelningar.
-    private List<FilterOptionGroup> GetAccessFilterGroups()
-    {
-        static FilterOption Opt(string s, string? tooltip = null) =>
-            new() { Value = s, Label = s, Tooltip = tooltip };
-
-        var groups = new List<FilterOptionGroup>
-        {
-            new()
-            {
-                Header = AccessSummaryFormatter.GroupAccessType,
-                Options =
-                [
-                    Opt(
-                        AccessSummaryFormatter.ProjectTypeDepartmentOnly,
-                        "Projektet är endast tillgängligt via projektets egen avdelning."),
-                    Opt(
-                        AccessSummaryFormatter.TypeShared,
-                        "Projektet är delat med personer eller avdelningar utöver projektets egen avdelning."),
-                    Opt(
-                        AccessSummaryFormatter.TypeLimited,
-                        "Projektet är delat, men bara vissa kalkyler ingår i delningen."),
-                ]
-            },
-            new()
-            {
-                Header = AccessSummaryFormatter.GroupAccessLevel,
-                Options =
-                [
-                    Opt(AccessSummaryFormatter.LevelEdit),
-                    Opt(AccessSummaryFormatter.LevelView),
-                ]
-            },
-        };
-
-        var recips = BaseProjects
-            .Where(p => p.Access is not null)
-            .SelectMany(p => p.Access!.Recipients)
-            .ToList();
-
-        var persons = RecipientOptions(recips, ProjectShareRecipientType.User);
-        if (persons.Count > 0)
-            groups.Add(new() { Header = AccessSummaryFormatter.GroupPersons, Options = persons });
-
-        var depts = RecipientOptions(recips, ProjectShareRecipientType.Department);
-        if (depts.Count > 0)
-            groups.Add(new() { Header = AccessSummaryFormatter.GroupDepartments, Options = depts });
-
-        return groups;
-    }
-
-    private static List<FilterOption> RecipientOptions(IEnumerable<ProjectAccessRecipientDTO> recips, ProjectShareRecipientType type) =>
-        recips.Where(r => r.Type == type)
-            .Select(r => new FilterOption { Value = AccessSummaryFormatter.RecipientFilterValue(r), Label = r.Name })
-            .GroupBy(o => o.Value)
-            .Select(g => g.First())
-            .OrderBy(o => o.Label, StringComparer.CurrentCultureIgnoreCase)
-            .ToList();
+    // Projektlistans Åtkomst-KOLUMN visar bara huvudstatus (Avdelningsåtkomst, Delat, Delvis delat),
+    // men FILTRET är mer detaljerat: Åtkomsttyp, Åtkomstnivå, Personer och Avdelningar. Logiken bor i
+    // ProjectAccessFilter (ren + enhetstestad); här byggs bara grupperna från listans projekt.
+    private List<FilterOptionGroup> GetAccessFilterGroups() =>
+        ProjectAccessFilter.BuildGroups(BaseProjects);
 
     private IEnumerable<ListProjectMVVM> BaseProjects =>
         IsDepartmentScope
@@ -1225,7 +1189,13 @@
                 projects = projects.Where(p => _projColFilters["archived"].MatchesBool(p.IsArchived));
 
             if (_projColFilters["shared"].IsActive)
-                projects = projects.Where(p => ProjectAccessTags(p).Any(t => _projColFilters["shared"].SelectedValues.Contains(t)));
+            {
+                // Faceted match (OR within a group, AND across groups). Groups are built from the full
+                // base set so the selected values map to the same options the dropdown offered.
+                var groups = ProjectAccessFilter.BuildGroups(BaseProjects);
+                var selected = _projColFilters["shared"].SelectedValues;
+                projects = projects.Where(p => ProjectAccessFilter.Matches(p, groups, selected));
+            }
             return projects;
         }
     }
@@ -1334,39 +1304,48 @@
 
     // The built-in "Standard" column view. Used as the default layout and as the
     // signature behind the always-available Standard kolumnvy.
+    // Canonical total column order for the project list. The table, the "View > Choose columns"
+    // menu and this default set all follow this exact order so an enabled extra column lands in its
+    // place instead of at the end. The first block is the standard (checked) view; the rest are extra
+    // (unchecked) columns. ("calculations" is a legacy, never-shown column and is intentionally not
+    // listed here nor in the picker.)
     private static readonly IReadOnlyDictionary<string, bool> DefaultProjectColumns =
         new Dictionary<string, bool>
         {
-            ["rowNumber"]         = true,
-            ["code"]              = true,
-            ["name"]              = true,
-            ["procurementNumber"] = false,
-            ["customerReference"] = false,
-            ["procurementName"]   = false,
-            ["projectType"]       = true,
-            ["qa"]                = false,
-            ["deadline"]          = true,
-            ["status"]            = true,
-            ["responsible"]       = true,
-            ["inspector"]         = true,
-            ["start"]             = false,
-            ["end"]               = false,
-            ["byggherre"]         = false,
-            ["organisation"]      = true,
-            ["designer"]          = false,
-            ["supervisor"]        = false,
-            ["address"]           = false,
-            ["procurementMethods"] = false,
-            ["contract"]          = false,
-            ["compensation"]      = false,
+            // ── Standardvy (ikryssade) ──
+            ["rowNumber"]            = true,
+            ["code"]                 = true,
+            ["name"]                 = true,
+            ["status"]               = true,
+            ["responsible"]          = true,
+            ["inspector"]            = true,
+            ["deadline"]             = true,
+            ["organisation"]         = true,
+            ["projectType"]          = true,
+            ["updatedAt"]            = true,
+            ["archived"]             = true,
+            ["shared"]               = true,
+            // ── Extra kolumner (avkryssade) ──
+            ["procurementNumber"]    = false,
+            ["customerReference"]    = false,
+            ["procurementName"]      = false,
+            ["procurementMethods"]   = false,
+            ["contract"]             = false,
+            ["compensation"]         = false,
             ["procurementProcedure"] = false,
-            ["clientsManager"]    = false,
-            ["publicationDate"]   = false,
-            ["decisionDate"]      = false,
-            ["archived"]          = true,
-            ["shared"]            = false,
-            ["createdAt"]         = false,
-            ["updatedAt"]         = false
+            ["publicationDate"]      = false,
+            ["decisionDate"]         = false,
+            ["start"]                = false,
+            ["end"]                  = false,
+            ["byggherre"]            = false,
+            ["clientsManager"]       = false,
+            ["designer"]             = false,
+            ["address"]              = false,
+            // ── Övriga befintliga valbara kolumner (avkryssade) ──
+            ["qa"]                   = false,
+            ["supervisor"]           = false,
+            // "Skapad datum" är sista kolumnen i totalordningen.
+            ["createdAt"]            = false
         };
 
     // Shared column-view manager: owns visible columns + saved views and persists
@@ -1377,38 +1356,43 @@
     // direct reads/writes keep working).
     private Dictionary<string, bool> _projectColumns => _columnView.Columns;
 
+    // Must mirror the table's column order exactly (see DefaultProjectColumns).
     private List<MhdColumnPickerItem> ProjectColumnOptions => new()
     {
+        // ── Standardvy ──
         new("rowNumber",         "Radnummer"),
         new("code",              CalcResource.code),
         new("name",              AppLoc["projectName"].Value),
-        new("procurementNumber", AppLoc["procurementNumber"].Value),
-        new("customerReference", AppLoc["customerReference"].Value),
-        new("procurementName",   AppLoc["procurementName"].Value),
-        new("projectType",       CalcResource.projectType),
-        new("qa",                "Frågor/svar"),
-        new("deadline",          CalcResource.tenderDeadline),
         new("status",            "Projektstatus"),
         new("responsible",       AppLoc["calculationResponsible"].Value),
         new("inspector",         CalcResource.inspector),
-        new("start",             CalcResource.startDate),
-        new("end",               CalcResource.endDate),
-        new("byggherre",         CalcResource.developer),
+        new("deadline",          CalcResource.tenderDeadline),
         new("organisation",      "Beställare"),
-        new("designer",          "Projektörer"),
-        new("supervisor",        "Kundens kontaktperson under upphandlingstiden"),
-        new("address",           "Adress"),
+        new("projectType",       CalcResource.projectType),
+        new("updatedAt",         AppLoc["lastModified"].Value),
+        new("archived",          AppLoc["archived"].Value),
+        new("shared",            "Åtkomst"),
+        // ── Extra kolumner ──
+        new("procurementNumber", AppLoc["procurementNumber"].Value),
+        new("customerReference", AppLoc["customerReference"].Value),
+        new("procurementName",   AppLoc["procurementName"].Value),
         new("procurementMethods", CalcResource.procurementMethods),
         new("contract",          CalcResource.projectContract),
         new("compensation",      CalcResource.projectCompensation),
         new("procurementProcedure", "Upphandlingsförfarande"),
-        new("clientsManager",    ResourceLoc.clientsProjectmanager),
         new("publicationDate",   CalcResource.publicationDate),
         new("decisionDate",      CalcResource.decisionDate),
-        new("archived",          AppLoc["archived"].Value),
-        new("shared",            "Åtkomst"),
-        new("createdAt",         AppLoc["createdDate"].Value),
-        new("updatedAt",         AppLoc["lastModified"].Value)
+        new("start",             CalcResource.startDate),
+        new("end",               CalcResource.endDate),
+        new("byggherre",         CalcResource.developer),
+        new("clientsManager",    ResourceLoc.clientsProjectmanager),
+        new("designer",          "Projektörer"),
+        new("address",           "Adress"),
+        // ── Övriga befintliga valbara kolumner ──
+        new("qa",                "Frågor/svar"),
+        new("supervisor",        "Kundens kontaktperson under upphandlingstiden"),
+        // "Skapad datum" sist i totalordningen.
+        new("createdAt",         AppLoc["createdDate"].Value)
     };
 
     // Resizable-column width persistence + JS interop (shared with ProjectsCalculationList).
@@ -1422,6 +1406,12 @@
         // calc-column resizes to this component under the wrong scope).
         if (_contentMode != ContentModeProjects)
             return;
+
+        // Force a "move" cursor while dragging rows to reorder (no "copy"/plus indicator).
+        // Blazor's drag events can't set dataTransfer, so a tiny JS helper does it. Idempotent.
+        try { await JS.InvokeVoidAsync("dragMoveEffect.attach", "resizeMe"); }
+        catch (JSException) { }
+        catch (InvalidOperationException) { }
 
         // _columnWidths is created in OnInitializedAsync *after* an await, so the
         // first OnAfterRenderAsync can fire before it exists. Once it is set the
@@ -1441,10 +1431,14 @@
                 ProjectManagement.Client.Services.Folder.ListSavedColumnViewStorage.ProjectListScope,
                 ViewPreference.LoadColumnsAsync,
                 ViewPreference.SaveColumnsAsync,
-                SavedColumnViewStorage),
+                SavedColumnViewStorage,
+                ViewPreference.LoadColumnOrderAsync,
+                ViewPreference.SaveColumnOrderAsync),
             DefaultProjectColumns,
             ProjectManagement.Client.Services.Folder.ListColumnViewLabels.Swedish,
-            alwaysVisibleKeys: new[] { "rowNumber" });
+            alwaysVisibleKeys: new[] { "rowNumber" },
+            // Radnummer, Kod och Projektnamn är frysta och kan aldrig flyttas.
+            lockedOrderKeys: new[] { "rowNumber", "code", "name" });
 
         // Created before the first await so it is non-null on the first render (the
         // markup reads HasActiveProjectFilters etc.). Saved filters load just below.
@@ -1524,16 +1518,18 @@
     private static string GetProjectStatusColor(ListProjectMVVM project)
         => ProjectStatusColor.Resolve(project);
 
-    private static string GetProjectRowClass(ListProjectMVVM project, bool selected, bool archived)
+    private static string GetProjectRowClass(ListProjectMVVM project, bool selected, bool archived, bool canReorder)
     {
         var classes = new List<string>
         {
-            "cursor-pointer transition-colors",
+            // Grab/grabbing feel when manual reorder is available, otherwise the normal click cursor.
+            canReorder ? "cursor-grab active:cursor-grabbing transition-colors" : "cursor-pointer transition-colors",
             "group",
             "hover:bg-slate-50 dark:hover:bg-slate-900/80"
         };
         if (selected)  classes.Add("bg-sky-50 dark:bg-sky-950/30");
-        if (project.IsDragOver) classes.Add("ring-2 ring-blue-400");
+        // Full-row drop line across all cells incl. frozen left columns (see .pm-drop-row in custom.css).
+        if (project.IsDragOver) classes.Add("pm-drop-row");
         if (archived)  classes.Add("text-slate-500 opacity-75 grayscale dark:text-slate-400");
         return string.Join(" ", classes);
     }
@@ -1543,15 +1539,32 @@
         var list = new List<MhdContextMenuItem>();
 
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-        bool isInAnyRole = PMRolesConst.Tenant.AdminManger.Split(',').Any(r => user.IsInRole(r));
-        bool canManage = !Folder.State.OtherDepartment && user.Identity?.IsAuthenticated == true && isInAnyRole;
+        var access = ContextMenuAccessPolicy.ForProject(authState.User, item.Access, Folder.State.OtherDepartment);
 
-        if (canManage)
+        // Same grouped order as the left tree's project menu, separated by dividers:
+        // [skapa/importera] · [arbeta med projekt] · [livscykel] · [export] · [ta bort].
+        // (This list menu has no create/import items, so group 1 is simply absent here.)
+        if (access.CanView)
         {
-            list.Add(new() { IconHtml = Icons.Edit, Label = ResourceApp.edit, OnClickAsync = () => { UpdateForm(item); return Task.CompletedTask; } });
+            list.Add(new()
+            {
+                IconHtml = access.CanEditWork ? Icons.Edit : Icons.Details,
+                Label = access.CanEditWork ? ResourceApp.edit : "Visa projekt",
+                OnClickAsync = () => { UpdateForm(item, access.CanEditWork); return Task.CompletedTask; }
+            });
             list.Add(new() { IconHtml = Icons.Tender, Label = ResourceLoc.tender, OnClickAsync = () => { OpenProjectBidsDialog(item); return Task.CompletedTask; } });
-            list.Add(new() { IconHtml = Icons.PermissionShield, Label = "Delning och behörighet", OnClickAsync = () => { OpenShareDialog(item); return Task.CompletedTask; } });
+            list.Add(new()
+            {
+                IconHtml = Icons.PermissionShield,
+                Label = access.CanManageSharing ? "Delning och behörighet" : "Visa delning och behörighet",
+                OnClickAsync = () => { OpenShareDialog(item, readOnly: !access.CanManageSharing); return Task.CompletedTask; }
+            });
+        }
+
+        if (access.CanManageLifecycle)
+        {
+            // Grupp 3 — projektlivscykel
+            list.Add(new() { IsSeparator = true });
             list.Add(new() { IconHtml = Icons.Folder, Label = AppLoc["moveProject"], OnClickAsync = () => { OpenMoveCopyDialog(item, MoveCopyOperation.Move); return Task.CompletedTask; } });
             list.Add(new() { IconHtml = Icons.Copy, Label = AppLoc["copyProject"], OnClickAsync = () => { OpenMoveCopyDialog(item, MoveCopyOperation.Copy); return Task.CompletedTask; } });
 
@@ -1559,24 +1572,27 @@
                 list.Add(new() { IconHtml = Icons.Archive, Label = AppLoc["archiveProject"], OnClickAsync = async () => await ArchiveOrRestoreProjectAsync(item, archive: true) });
             else
                 list.Add(new() { IconHtml = Icons.Restore, Label = AppLoc["restoreFromArchive"], OnClickAsync = async () => await ArchiveOrRestoreProjectAsync(item, archive: false) });
+
+            // Grupp 4 — export
+            list.Add(new() { IsSeparator = true });
+            list.Add(new() { IconHtml = Icons.Tender, Label = "Exportera projektet...", OnClickAsync = () => { OpenSendProjectCopyDialog(item); return Task.CompletedTask; } });
         }
 
-        // "Exportera projektet..." and "Ta bort projekt" sit at the bottom, separated by a divider.
-        if (list.Count > 0)
+        // Grupp 5 — destruktiv åtgärd: "Ta bort projekt" ligger alltid sist, med separator före.
+        if (access.CanManageLifecycle)
+        {
             list.Add(new() { IsSeparator = true });
 
-        if (canManage)
-            list.Add(new() { IconHtml = Icons.Tender, Label = "Exportera projektet...", OnClickAsync = () => { OpenSendProjectCopyDialog(item); return Task.CompletedTask; } });
-
-        list.Add(new()
-        {
-            IconHtml = Icons.Delete,
-            Label = ProjectDeleteHelper.DeleteLabel,
-            CssClass = ProjectDeleteHelper.DeleteCssClass,
-            OnClickAsync = () => ProjectDeleteHelper.RequestDeleteAsync(
-                this, Repo, MHD, ClientLog, item, canManage,
-                () => DeleteProjectConfirmedAsync(item))
-        });
+            list.Add(new()
+            {
+                IconHtml = Icons.Delete,
+                Label = ProjectDeleteHelper.DeleteLabel,
+                CssClass = ProjectDeleteHelper.DeleteCssClass,
+                OnClickAsync = () => ProjectDeleteHelper.RequestDeleteAsync(
+                    this, Repo, MHD, ClientLog, item, access.CanManageLifecycle,
+                    () => DeleteProjectConfirmedAsync(item))
+            });
+        }
 
         await ContextService.ShowMenuAsync(list);
     }
@@ -1599,15 +1615,25 @@
         MHD.Notifications(ToastType.Update, ok);
     }
 
-    void OpenShareDialog(ListProjectMVVM project) =>
+    // "Åtkomst"-cellen: öppna delningsdialogen, men gör den skrivskyddad för den som inte får hantera delning
+    // (samma regel som projektets snabbmeny). Backend blockerar ändå obehörig hantering.
+    async Task OpenShareFromCellAsync(ListProjectMVVM project)
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var access = ContextMenuAccessPolicy.ForProject(authState.User, project.Access, Folder.State.OtherDepartment);
+        OpenShareDialog(project, readOnly: !access.CanManageSharing);
+    }
+
+    void OpenShareDialog(ListProjectMVVM project, bool readOnly = false) =>
         Modal.ShowComponent<ProjectShareUI>(
-            "Delning och behörighet",
+            readOnly ? "Visa delning och behörighet" : "Delning och behörighet",
             new Dictionary<string, object>
             {
                 [nameof(ProjectShareUI.ProjectId)]   = project.Id,
                 [nameof(ProjectShareUI.ProjectName)] = project.Name,
-                [nameof(ProjectShareUI.ProjectDepartmentId)] = project.DepartmentId,
+                [nameof(ProjectShareUI.ProjectDepartmentId)] = project.DepartmentId!,
                 [nameof(ProjectShareUI.ProjectResponsible)] = project.Responsible,
+                [nameof(ProjectShareUI.ReadOnly)] = readOnly,
                 [nameof(ProjectShareUI.OnCompleted)] = EventCallback.Factory.Create(this, ReloadAfterMoveCopyAsync)
             },
             BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
@@ -1849,17 +1875,35 @@
         _                   => string.Empty
     };
 
-    void UpdateForm(ListProjectMVVM model)
+    void UpdateForm(ListProjectMVVM model, bool canEdit = true)
     {
         UpdateProject = model.Id;
+        var readOnly = model.Id != Guid.Empty && !canEdit;
+        var parameters = new Dictionary<string, object>
+        {
+            [nameof(ProjectForm.Project)]   = model,
+            [nameof(ProjectForm.FolderId)]  = Folder.State.FolderSelected!.Id,
+            [nameof(ProjectForm.Callback)]  = EventCallback.Factory.Create<Tuple<bool, ListProjectMVVM>>(this, AddProjectAsync)
+        };
+
+        var title = model.Id == Guid.Empty
+            ? AppLoc[LocalizerConst.New, CalcResource.project]
+            : readOnly
+                ? "Visa projekt"
+                : AppLoc[LocalizerConst.Update, model.Name];
+
+        if (readOnly)
+        {
+            Modal.ShowComponent<ProjectForm>(
+                title,
+                parameters,
+                BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
+            return;
+        }
+
         Modal.ShowComponent<ProjectForm>(
-            model.Id == Guid.Empty ? AppLoc[LocalizerConst.New, CalcResource.project] : AppLoc[LocalizerConst.Update, model.Name],
-            new Dictionary<string, object>
-            {
-                [nameof(ProjectForm.Project)]   = model,
-                [nameof(ProjectForm.FolderId)]  = Folder.State.FolderSelected!.Id,
-                [nameof(ProjectForm.Callback)]  = EventCallback.Factory.Create<Tuple<bool, ListProjectMVVM>>(this, AddProjectAsync)
-            },
+            title,
+            parameters,
             BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge,
             DialogButtonsHelper.CreateSaveCancelButtons(ProjectForm.DialogFormId));
     }
@@ -1950,32 +1994,90 @@
         StateHasChanged();
     }
 
-    private async Task HandleDrop(ListProjectMVVM project)
+    // Manual drag-reorder is only meaningful in the default (manual) order, within a single
+    // folder scope, and when no column sort or filter is rearranging/hiding the rows.
+    private bool CanReorderProjects =>
+        _contentMode == ContentModeProjects
+        && string.IsNullOrEmpty(_sort.Column)
+        && !HasActiveProjectFilters
+        && !IsDepartmentScope
+        && Folder.State.FolderSelected?.Projects is not null;
+
+    private void OnProjectDragStart(ListProjectMVVM project)
     {
-        if (draggingProject is null || Folder.State.FolderSelected?.Projects is null)
+        if (CanReorderProjects)
+            draggingProject = project;
+    }
+
+    // Robust, id-based reorder: remove the dragged project, re-insert it relative to the drop
+    // target (after it when moving down, before it when moving up — so the last row is reachable),
+    // then renumber the whole scope with stable gaps. No-ops when the order is unchanged.
+    private async Task HandleDrop(ListProjectMVVM target)
+    {
+        var dragged = draggingProject;
+        draggingProject = null;
+
+        if (dragged is not null) dragged.IsDragOver = false;
+        if (target is not null) target.IsDragOver = false;
+
+        if (dragged is null || target is null || !CanReorderProjects || ReferenceEquals(dragged, target))
+        {
+            StateHasChanged();
+            return;
+        }
+
+        var projects = Folder.State.FolderSelected?.Projects;
+        if (projects is null)
             return;
 
-        draggingProject.IsDragOver = false;
-        project.IsDragOver = false;
+        // Display order = top→bottom (highest Order first), matching how both this list and the
+        // left tree render. Working by Id keeps the move independent of fragile UI row indexes.
+        var ordered = projects
+            .OrderByDescending(p => p.Order)
+            .ThenBy(p => p.Name, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
 
-        var list = Folder.State.FolderSelected.Projects;
-        int index = list.IndexOf(project);
+        var fromIndex = ordered.FindIndex(p => p.Id == dragged.Id);
+        var toIndex = ordered.FindIndex(p => p.Id == target.Id);
+        if (fromIndex < 0 || toIndex < 0)
+            return;
 
-        if (index == 0)
-            draggingProject.Order = project.Order + 100;
-        else if (draggingProject.Order < project.Order)
-            draggingProject.Order = (project.Order + list[index - 1].Order) / 2;
-        else if (draggingProject.Order > project.Order && (index + 1) < list.Count)
-            draggingProject.Order = (list[index + 1].Order + project.Order) / 2;
-        else
-            draggingProject.Order = project.Order - 100;
+        var originalIds = ordered.Select(p => p.Id).ToList();
 
-        Folder.State.FolderSelected.Projects =
-            list.OrderByDescending(x => x.Order).ToList();
+        ordered.RemoveAt(fromIndex);
+        var targetAfterRemoval = ordered.FindIndex(p => p.Id == target.Id);
+        // Moving down (dragged was above target) drops after the target; moving up drops before.
+        var insertIndex = fromIndex < toIndex ? targetAfterRemoval + 1 : targetAfterRemoval;
+        insertIndex = Math.Clamp(insertIndex, 0, ordered.Count);
+        ordered.Insert(insertIndex, dragged);
 
-        await Repo.Project.ReOrderAsync(draggingProject.Id, draggingProject.Order);
+        // Dropped back on the same effective position → save nothing, change nothing.
+        if (ordered.Select(p => p.Id).SequenceEqual(originalIds))
+        {
+            StateHasChanged();
+            return;
+        }
 
-        draggingProject = null;
+        // Renumber the whole scope so Order stays stable and collision-free (top = highest).
+        // Only persist the rows whose Order actually changed (backend sets SortOrder absolutely).
+        const int step = 100;
+        var changed = new List<ListProjectMVVM>();
+        for (var i = 0; i < ordered.Count; i++)
+        {
+            var newOrder = (ordered.Count - i) * step;
+            if (ordered[i].Order != newOrder)
+            {
+                ordered[i].Order = newOrder;
+                changed.Add(ordered[i]);
+            }
+        }
+
+        // Both this list and the left tree render by Order over the same project objects, so
+        // mutating Order above already aligns them; Notify() makes the tree re-render now.
+        Folder.State.Notify();
         StateHasChanged();
+
+        foreach (var p in changed)
+            await Repo.Project.ReOrderAsync(p.Id, p.Order);
     }
 }

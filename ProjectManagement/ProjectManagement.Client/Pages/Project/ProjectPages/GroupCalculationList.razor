@@ -230,6 +230,9 @@
     private static string FormatDate(DateTime value) =>
         value == default ? "-" : value.ToString(ConstValues.DateFormat);
 
+    private static string FormatDate(DateTime? value) =>
+        value is { } v ? FormatDate(v) : "-";
+
     private string GetCalculationTypeLabel(CalculationVersionType type) => type switch
     {
         CalculationVersionType.Production => AppLoc["productionCalculation"].Value,

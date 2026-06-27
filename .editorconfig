@@ -40,7 +40,11 @@ dotnet_diagnostic.CA1816.severity = none   # استدعاء GC.SuppressFinalize
 
 # --- اقتراحات: ذات قيمة لكن نخفّفها الآن ---
 dotnet_diagnostic.CA1307.severity = suggestion   # StringComparison
+dotnet_diagnostic.CA1862.severity = suggestion   # StringComparison بدل ToLower (لا يُترجَم داخل استعلامات EF)
+dotnet_diagnostic.CA1311.severity = suggestion   # ToUpperInvariant/ثقافة (ToLower مطلوب لترجمة EF إلى SQL)
 dotnet_diagnostic.CA1305.severity = suggestion   # IFormatProvider
+dotnet_diagnostic.CA1309.severity = suggestion   # مقارنة ordinal (تغييرها يؤثر على نصوص سويدية å/ä/ö)
+dotnet_diagnostic.CA1820.severity = suggestion   # اختبار سلسلة فارغة (داخل إسقاط EF — تغييره محفوف)
 dotnet_diagnostic.CA1308.severity = suggestion   # ToUpperInvariant بدل ToLower
 dotnet_diagnostic.CA1304.severity = suggestion   # CultureInfo
 dotnet_diagnostic.CA1310.severity = suggestion   # StringComparison في Compare
@@ -48,11 +52,43 @@ dotnet_diagnostic.CA1861.severity = suggestion   # مصفوفات ثابتة
 dotnet_diagnostic.CA1031.severity = suggestion   # التقاط Exception عام
 dotnet_diagnostic.CA1805.severity = suggestion   # تهيئة بالقيمة الافتراضية
 dotnet_diagnostic.CA1859.severity = suggestion   # استخدام أنواع concrete للأداء
+dotnet_diagnostic.CA1863.severity = suggestion   # تخزين CompositeFormat (سلاسل التنسيق مُترجَمة/تعتمد الثقافة)
 dotnet_diagnostic.CA1822.severity = suggestion   # أعضاء يمكن جعلها static
 # CA1873: تقييم وسيط log قد يكون مكلفًا — نفس عائلة CA1848 (أداء التسجيل).
 # معظم الحالات boxing لقيم int/long عند Information؛ نُبقيها كاقتراح ليظهر
 # المكلِّف فعليًا (مثل await داخل وسيط log) دون ضجيج في البناء.
 dotnet_diagnostic.CA1873.severity = suggestion
+
+# --- إيقاف: قواعد تصميمية/تسمية تتطلّب تغيير واجهات عامة أو أسماء أنواع ---
+# تغييرها يكسر تواقيع عامة أو يعيد تسمية أنواع مستخدمة على نطاق واسع؛ قيمتها محدودة
+# مقابل خطر الكسر، لذا نُعطّلها بدل تعديل عشرات الواجهات.
+dotnet_diagnostic.CA1819.severity = none   # خصائص تُعيد مصفوفات
+dotnet_diagnostic.CA1054.severity = none   # معامل URI كـ string
+dotnet_diagnostic.CA1055.severity = none   # قيمة إرجاع URI كـ string
+dotnet_diagnostic.CA1056.severity = none   # خاصية URI كـ string
+dotnet_diagnostic.CA2234.severity = none   # تمرير System.Uri بدل string لـ HttpClient
+dotnet_diagnostic.CA1724.severity = none   # تعارض اسم النوع مع مساحة أسماء
+dotnet_diagnostic.CA1711.severity = none   # لاحقة محجوزة في اسم النوع (EventArgs/Collection…)
+dotnet_diagnostic.CA1720.severity = none   # اسم النوع داخل معرّف
+dotnet_diagnostic.CA1721.severity = none   # تشابه اسم خاصية مع Get-method
+dotnet_diagnostic.CA1715.severity = none   # بادئة I للواجهات / T لمعاملات النوع
+dotnet_diagnostic.CA1008.severity = none   # قيمة Zero في enum (تغيير القيم محفوف بالخطر)
+dotnet_diagnostic.CA1003.severity = none   # نمط EventHandler<T> بدل Action
+dotnet_diagnostic.CA1068.severity = none   # CancellationToken كآخر معامل (يعيد ترتيب واجهات)
+dotnet_diagnostic.CA1032.severity = none   # مُنشئات الاستثناء القياسية
+dotnet_diagnostic.CA1814.severity = none   # مصفوفة متعددة الأبعاد بدل jagged
+dotnet_diagnostic.CA1040.severity = none   # واجهة فارغة (marker interface مقصودة)
+
+# --- اقتراحات: ذات قيمة تصميمية لكن نخفّفها لتجنّب ضجيج البناء ---
+dotnet_diagnostic.CA1052.severity = suggestion   # نوع static holder
+dotnet_diagnostic.CA1024.severity = suggestion   # استخدام خاصية بدل method
+dotnet_diagnostic.CA1050.severity = suggestion   # تعريف الأنواع داخل مساحات أسماء
+dotnet_diagnostic.CA2211.severity = suggestion   # حقول static غير ثابتة
+dotnet_diagnostic.CA1852.severity = suggestion   # ختم الأنواع internal
+dotnet_diagnostic.CA1851.severity = suggestion   # تعداد متعدد لـ IEnumerable
+dotnet_diagnostic.CA1064.severity = suggestion   # جعل الاستثناءات public
+dotnet_diagnostic.CA1044.severity = suggestion   # خاصية للكتابة فقط
+dotnet_diagnostic.CA5394.severity = suggestion   # عشوائية غير آمنة تشفيريًا (استخدام غير تشفيري)
 
 # --- قواعد التنسيق (IDE) كاقتراحات لتجنّب الضجيج ---
 dotnet_diagnostic.IDE0005.severity = warning     # usings غير مستخدمة (مفيدة وآمنة)

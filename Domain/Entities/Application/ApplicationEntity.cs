@@ -62,7 +62,7 @@ namespace Domain.Entities.Application
 
         public void UpdateFrom(ApplicationEntity source)
         {
-            if (source is null) throw new ArgumentNullException(nameof(source));
+            ArgumentNullException.ThrowIfNull(source);
 
             DepartmentId = source.DepartmentId;
             IsVisible = source.IsVisible;

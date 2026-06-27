@@ -158,7 +158,9 @@ html.dark {
     font-weight: 400;
     line-height: 1rem;
     text-align: left;
-    white-space: normal;
+    /* pre-line bevarar radbrytningar (\n) i grupperade tooltips, t.ex. Åtkomst-kolumnen,
+       men beter sig som normal för enradiga tooltips (inga \n ⇒ ingen skillnad). */
+    white-space: pre-line;
     overflow-wrap: anywhere;
     box-shadow: 0 4px 12px rgb(15 23 42 / 0.22);
     pointer-events: none;
@@ -168,4 +170,16 @@ html.dark {
     border: 1px solid rgb(71 85 105);
     background: rgb(15 23 42 / 0.98);
     color: rgb(226 232 240);
+}
+
+/* Drag-and-drop drop indicator: a single blue line across the WHOLE dragged-over row.
+   Painted as an inset box-shadow on every cell (including sticky/frozen left columns) so the
+   line is continuous from the frozen part to the scrollable part and never breaks at the sticky
+   boundary. Using a shadow (not a border) avoids any 2px layout shift while dragging. */
+tr.pm-drop-row > td {
+    box-shadow: inset 0 2px 0 0 #0ea5e9; /* sky-500 */
+}
+
+.dark tr.pm-drop-row > td {
+    box-shadow: inset 0 2px 0 0 #38bdf8; /* sky-400 – något ljusare i mörkt läge */
 }

@@ -23,14 +23,12 @@ namespace ProjectManagement.Shared.DTO.Calculation
 
         public void ToggleTask(int taskId)
         {
-            if (InactiveTaskIds.Contains(taskId)) InactiveTaskIds.Remove(taskId);
-            else InactiveTaskIds.Add(taskId);
+            if (!InactiveTaskIds.Remove(taskId)) InactiveTaskIds.Add(taskId);
         }
 
         public void ToggleResource(int resourceId)
         {
-            if (InactiveResourceIds.Contains(resourceId)) InactiveResourceIds.Remove(resourceId);
-            else InactiveResourceIds.Add(resourceId);
+            if (!InactiveResourceIds.Remove(resourceId)) InactiveResourceIds.Add(resourceId);
         }
 
         public DisplayOptionsPreset Clone() => new()

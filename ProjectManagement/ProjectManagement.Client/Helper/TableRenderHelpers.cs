@@ -111,7 +111,24 @@ namespace ProjectManagement.Client.Helper
 
         // Production note cell: clickable, shows a note icon when a note exists, the (truncated)
         // text, and the full text as a tooltip. Clicking opens the edit dialog (onEdit).
-        public static void RenderProductionNoteTd(RenderTreeBuilder builder, string? note, Func<Task>? onEdit)
+        public static void RenderProductionNoteTd(RenderTreeBuilder builder, string? note, Func<Task>? onEdit) =>
+            RenderNoteCellTd(builder, note, onEdit,
+                emptyTitle: "Lägg till produktionsanteckning",
+                hasNoteIcon: "fa-solid fa-note-sticky",
+                emptyIcon: "fa-regular fa-pen-to-square");
+
+        // Reviewer comment cell (Granskarkommentar): same look/behaviour as the production-note cell,
+        // distinct icon. Clickable for an authorized reviewer even when the calculation is locked;
+        // saving goes through a separate endpoint and never touches the row economy.
+        public static void RenderReviewerCommentTd(RenderTreeBuilder builder, string? comment, Func<Task>? onEdit) =>
+            RenderNoteCellTd(builder, comment, onEdit,
+                emptyTitle: "Lägg till granskarkommentar",
+                hasNoteIcon: "fa-solid fa-comment-dots",
+                emptyIcon: "fa-regular fa-comment");
+
+        // Shared rendering for a per-row comment cell (production note / reviewer comment).
+        private static void RenderNoteCellTd(RenderTreeBuilder builder, string? note, Func<Task>? onEdit,
+            string emptyTitle, string hasNoteIcon, string emptyIcon)
         {
             int seq = 0;
             var hasNote = !string.IsNullOrWhiteSpace(note);
@@ -121,7 +138,7 @@ namespace ProjectManagement.Client.Helper
 
             builder.OpenElement(seq++, "button");
             builder.AddAttribute(seq++, "type", "button");
-            builder.AddAttribute(seq++, "title", hasNote ? note : "Lägg till produktionsanteckning");
+            builder.AddAttribute(seq++, "title", hasNote ? note : emptyTitle);
             builder.AddAttribute(seq++, "class", hasNote ? "calc-prodnote-btn has-note" : "calc-prodnote-btn");
 
             if (onEdit is not null)
@@ -131,7 +148,7 @@ namespace ProjectManagement.Client.Helper
             }
 
             builder.OpenElement(seq++, "i");
-            builder.AddAttribute(seq++, "class", hasNote ? "fa-solid fa-note-sticky" : "fa-regular fa-pen-to-square");
+            builder.AddAttribute(seq++, "class", hasNote ? hasNoteIcon : emptyIcon);
             builder.CloseElement();
 
             if (hasNote)

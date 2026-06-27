@@ -10,6 +10,7 @@ using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Calculation.Template;
 using ProjectManagement.Shared.Enums;
+using ProjectManagement.Shared.Exceptions;
 using ProjectManagement.Shared.Policies;
 
 namespace Persistence.Service.CalculationItems.Calculation
@@ -88,6 +89,16 @@ namespace Persistence.Service.CalculationItems.Calculation
             if (calculation is null)
                 return false;
 
+            // Archiving/restoring is an administrative lifecycle action, not a content edit. A user who
+            // only reaches this calc via an extra project share (CanEdit can be true for "Kan ändra")
+            // must not be able to toggle archive — only Admin/own-department may. Other field edits stay
+            // allowed for shared editors.
+            if (dto.IsArchived != calculation.IsArchived &&
+                !(departmentId == null || calculation.DepartmentId == departmentId))
+            {
+                throw new ForbiddenActionException(Access.CalculationAccessRules.LifecycleForbiddenMessage);
+            }
+
             if (calculation.IsLocked)
                 return await TryUpdateLockedCalculationStatusAsync(db, calculation, dto.StatusId, userId, cancellationToken);
 
@@ -153,8 +164,15 @@ namespace Persistence.Service.CalculationItems.Calculation
             await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
 
             var calculation = await GetUnlockedCalculationAsync(db, id, departmentId, cancellationToken);
-            if (calculation is null ||
-                await HasDerivedCalculationsAsync(db, calculation.Id, cancellationToken))
+            if (calculation is null)
+            {
+                if (await db.Calculations.AsNoTracking().AnyAsync(x => x.Id == id, cancellationToken))
+                    throw new ForbiddenActionException(Access.CalculationAccessRules.LifecycleForbiddenMessage);
+
+                return false;
+            }
+
+            if (await HasDerivedCalculationsAsync(db, calculation.Id, cancellationToken))
             {
                 return false;
             }
@@ -203,10 +221,17 @@ namespace Persistence.Service.CalculationItems.Calculation
                 .AsNoTracking()
                 .Include(c => c.Tasks)
                     .ThenInclude(t => t.Resources)
-                .FirstOrDefaultAsync(x => x.Id == id && (!departmentId.HasValue || x.DepartmentId == departmentId.Value), cancellationToken);
+                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
             if (original is null)
                 return 0;
+
+            if (!await db.Calculations
+                    .Where(Access.CalculationAccessRules.CanManageLifecycle(departmentId))
+                    .AnyAsync(x => x.Id == id, cancellationToken))
+            {
+                throw new ForbiddenActionException(Access.CalculationAccessRules.LifecycleForbiddenMessage);
+            }
 
             var targetProjectDepartmentId = await db.Projects
                 .AsNoTracking()
@@ -264,11 +289,19 @@ namespace Persistence.Service.CalculationItems.Calculation
                 .Include(c => c.Status)
                 .Include(c => c.Tasks)
                     .ThenInclude(t => t.Resources)
-                .FirstOrDefaultAsync(x => x.Id == id &&
-                    (!departmentId.HasValue || x.DepartmentId == departmentId.Value), cancellationToken);
+                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
-            if (original is null ||
-                !original.IsCurrentVersion ||
+            if (original is null)
+                return 0;
+
+            if (!await db.Calculations
+                    .Where(Access.CalculationAccessRules.CanManageLifecycle(departmentId))
+                    .AnyAsync(x => x.Id == id, cancellationToken))
+            {
+                throw new ForbiddenActionException(Access.CalculationAccessRules.LifecycleForbiddenMessage);
+            }
+
+            if (!original.IsCurrentVersion ||
                 !original.IsLocked ||
                 (original.CalculationType != CalculationVersionType.Tender &&
                  original.CalculationType != CalculationVersionType.Contract) ||
@@ -336,11 +369,19 @@ namespace Persistence.Service.CalculationItems.Calculation
                 .Include(c => c.Status)
                 .Include(c => c.Tasks)
                     .ThenInclude(t => t.Resources)
-                .FirstOrDefaultAsync(x => x.Id == id &&
-                    (!departmentId.HasValue || x.DepartmentId == departmentId.Value), cancellationToken);
+                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
-            if (original is null ||
-                !original.IsCurrentVersion ||
+            if (original is null)
+                return 0;
+
+            if (!await db.Calculations
+                    .Where(Access.CalculationAccessRules.CanManageLifecycle(departmentId))
+                    .AnyAsync(x => x.Id == id, cancellationToken))
+            {
+                throw new ForbiddenActionException(Access.CalculationAccessRules.LifecycleForbiddenMessage);
+            }
+
+            if (!original.IsCurrentVersion ||
                 !original.IsLocked ||
                 original.CalculationType != CalculationVersionType.Tender ||
                 !CalculationStatusPolicy.CanCreateContractCalculation(
@@ -406,12 +447,17 @@ namespace Persistence.Service.CalculationItems.Calculation
             var original = await db.Calculations
                 .Include(c => c.Tasks)
                     .ThenInclude(t => t.Resources)
-                .FirstOrDefaultAsync(x => x.Id == id &&
-                    !x.IsDeleted &&
-                    (!departmentId.HasValue || x.DepartmentId == departmentId.Value), cancellationToken);
+                .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, cancellationToken);
 
             if (original is null)
                 return 0;
+
+            if (!await db.Calculations
+                    .Where(Access.CalculationAccessRules.CanManageLifecycle(departmentId))
+                    .AnyAsync(x => x.Id == id, cancellationToken))
+            {
+                throw new ForbiddenActionException(Access.CalculationAccessRules.LifecycleForbiddenMessage);
+            }
 
             original.InitializeVersionGroup();
 
@@ -473,7 +519,12 @@ namespace Persistence.Service.CalculationItems.Calculation
 
             var calculation = await GetEditableCalculationAsync(db, id, departmentId, cancellationToken);
             if (calculation is null)
+            {
+                if (await db.Calculations.AsNoTracking().AnyAsync(x => x.Id == id, cancellationToken))
+                    throw new ForbiddenActionException(Access.CalculationAccessRules.LifecycleForbiddenMessage);
+
                 return false;
+            }
 
             var targetProjectDepartmentId = await db.Projects
                 .AsNoTracking()

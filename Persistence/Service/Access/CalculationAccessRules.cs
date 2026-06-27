@@ -23,6 +23,37 @@ namespace Persistence.Service.Access
     /// </summary>
     public static class CalculationAccessRules
     {
+        /// <summary>User-facing error text when a lifecycle action is blocked (UI also hides it).</summary>
+        public const string LifecycleForbiddenMessage = "Du saknar behörighet att utföra denna kalkylåtgärd.";
+
+        /// <summary>
+        /// Reusable rule for who may perform ADMINISTRATIVE LIFECYCLE actions on a calculation —
+        /// move, copy, archive, export, delete and version management. This is intentionally stricter
+        /// than <see cref="CanSee"/>/<see cref="CanEdit"/>: access gained via an EXTRA project share
+        /// (even "Kan ändra") grants work access to the calc's content but never lifecycle management.
+        /// <para>
+        /// Allowed for Admin (tenant-wide, <paramref name="departmentId"/> == null) and for users with
+        /// NORMAL access to the calc's own department (<c>c.DepartmentId == departmentId</c>) — the same
+        /// predicate the move/copy/delete/version services already apply, extracted here so archive and
+        /// export enforce it too.
+        /// </para>
+        /// </summary>
+        public static Expression<Func<CalculationEntity, bool>> CanManageLifecycle(int? departmentId)
+        {
+            if (departmentId == null)
+                return _ => true;
+
+            return c => c.DepartmentId == departmentId;
+        }
+
+        /// <summary>True when the user may perform lifecycle actions on calculation <paramref name="calcId"/>.</summary>
+        public static Task<bool> CanManageLifecycleAsync(
+            IQueryable<CalculationEntity> calculations,
+            int calcId,
+            int? departmentId,
+            CancellationToken ct = default)
+            => calculations.Where(CanManageLifecycle(departmentId)).AnyAsync(c => c.Id == calcId, ct);
+
         public static Expression<Func<CalculationEntity, bool>> CanSee(int userId, int? departmentId, bool isViewerOnly = false)
         {
             var today = DateTime.UtcNow.Date;
@@ -44,7 +75,8 @@ namespace Persistence.Service.Access
                     c.Project.Shares.Any(s =>
                         (s.ValidUntil == null || s.ValidUntil >= today) &&
                         (s.SharedWithUserId == userId ||
-                         (departmentId != null && s.DepartmentId == departmentId)))
+                         (departmentId != null && s.DepartmentId == departmentId)) &&
+                        s.Calculations.Any(sc => sc.CalculationId == c.Id))
                 )
                 &&
                 (

@@ -8,6 +8,7 @@ using System.Net;
 
 public class UnauthorizedRedirectHandler(
     NavigationManager nav,
+    AuthRedirectState redirectState,
     IClientLogger clientLogger) : DelegatingHandler
 {
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
@@ -16,21 +17,28 @@ public class UnauthorizedRedirectHandler(
 
         if (response.StatusCode == HttpStatusCode.Unauthorized)
         {
-            var currentLocalUrl = GetCurrentLocalUrl();
-
-            if (!AuthRecoveryPathHelper.HasRetryFlag(currentLocalUrl))
+            // The workspace fires many calls at once; a bad session 401s them all. Only the first one
+            // performs the single full-page recovery navigation — the rest stand down so we never emit
+            // a burst of /auth/refresh requests (which the server answers with 429) or flicker the UI.
+            if (redirectState.TryBeginRedirect())
             {
-                _ = clientLogger.ErrorAsync($"Unauthorized (401) recovered via refresh for {request.RequestUri}");
-                nav.NavigateTo(AuthRecoveryPathHelper.BuildRefreshUrl(currentLocalUrl), forceLoad: true);
-            }
-            else
-            {
-                _ = clientLogger.ErrorAsync($"Unauthorized (401) redirected to login for {request.RequestUri}");
-                nav.NavigateTo(AuthRecoveryPathHelper.BuildLoginUrl(currentLocalUrl), forceLoad: true);
+                var currentLocalUrl = GetCurrentLocalUrl();
+
+                if (!AuthRecoveryPathHelper.HasRetryFlag(currentLocalUrl))
+                {
+                    _ = clientLogger.ErrorAsync($"Unauthorized (401) recovered via refresh for {request.RequestUri}");
+                    nav.NavigateTo(AuthRecoveryPathHelper.BuildRefreshUrl(currentLocalUrl), forceLoad: true);
+                }
+                else
+                {
+                    _ = clientLogger.ErrorAsync($"Unauthorized (401) redirected to login for {request.RequestUri}");
+                    nav.NavigateTo(AuthRecoveryPathHelper.BuildLoginUrl(currentLocalUrl), forceLoad: true);
+                }
             }
 
-            // Block until the page navigation cancels all pending requests.
-            // This prevents callers from processing the 401 response and showing error states.
+            // Block until the page navigation cancels all pending requests (whether this call started
+            // the redirect or another concurrent 401 already did). This prevents callers from processing
+            // the 401 response and showing error states.
             using var safetyCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
             safetyCts.CancelAfter(TimeSpan.FromSeconds(8));
             try { await Task.Delay(Timeout.Infinite, safetyCts.Token); }

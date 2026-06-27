@@ -434,7 +434,7 @@ public class CalculationComponentRenderTests : BunitContext
                 new CalcColmunDefinition<TaskListMVVM, ResourceListMVVM> { Id = NetColumnId.TotalCo2 }
             ]));
 
-        var baseQuantityRow = cut.FindAll("tr").First();
+        var baseQuantityRow = cut.FindAll("tr")[0];
         var expectedCo2 = NumericFormatHelper.Format(0.5d, NumericFormatHelper.DefaultMaxFractionDigits, CultureInfo.CurrentCulture);
 
         Assert.Contains("100", baseQuantityRow.TextContent);
@@ -1304,6 +1304,7 @@ public class CalculationComponentRenderTests : BunitContext
         public Task<bool> UpdateSortAsync(int id, SortConfig sort) => Task.FromResult(true);
         public Task<bool> UpdateDisplayPresetsAsync(int id, DisplayOptionsPresetStore store) => Task.FromResult(true);
         public Task<bool> SaveProductionNoteAsync(ProductionNoteSaveDTO dto) => Task.FromResult(true);
+        public Task<bool> SaveReviewerCommentAsync(ReviewerCommentSaveDTO dto) => Task.FromResult(true);
         public Task<byte[]> ExportCopyAsync(int calcId, ProjectManagement.Shared.DTO.Transfer.AtacostCalculationExportRequest request) => Task.FromResult(Array.Empty<byte>());
         public Task<ProjectManagement.Shared.DTO.Transfer.AtacostImportPreviewDTO> PreviewCopyAsync(Guid targetProjectId, byte[] fileBytes, IReadOnlyList<ProjectManagement.Shared.DTO.Transfer.AtacostManualMappingDTO>? overrides = null) => Task.FromResult(new ProjectManagement.Shared.DTO.Transfer.AtacostImportPreviewDTO());
         public Task<ProjectManagement.Shared.DTO.Transfer.AtacostImportResultDTO> ImportCopyAsync(Guid targetProjectId, byte[] fileBytes, IReadOnlyList<ProjectManagement.Shared.DTO.Transfer.AtacostManualMappingDTO>? overrides = null) => Task.FromResult(ProjectManagement.Shared.DTO.Transfer.AtacostImportResultDTO.Ok(0));

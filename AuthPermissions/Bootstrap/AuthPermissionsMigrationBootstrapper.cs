@@ -100,6 +100,9 @@ internal static class AuthPermissionsMigrationBootstrapper
                 parameterNames.Add(parameter.ParameterName);
             }
 
+            // CA2100: the interpolation injects only generated parameter placeholders (@p0, @p1, …);
+            // the actual table values are bound as SQL parameters above, so this is not injectable.
+#pragma warning disable CA2100
             command.CommandText = $"""
                 SELECT t.name
                 FROM sys.tables AS t
@@ -107,6 +110,7 @@ internal static class AuthPermissionsMigrationBootstrapper
                 WHERE s.name = N'dbo'
                   AND t.name IN ({string.Join(", ", parameterNames)})
                 """;
+#pragma warning restore CA2100
 
             var existingTables = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 

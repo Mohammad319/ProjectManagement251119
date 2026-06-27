@@ -15,6 +15,13 @@ namespace ProjectManagement.Client.Services.Folder
         public bool OtherDepartment { get; private set; }
 
         /// <summary>
+        /// True when the special "Alla tillgängliga" scope is selected: the tree spans every
+        /// department the user can reach and is grouped by department. Folders from departments the
+        /// user has no normal access to are read-only visual groups (see <c>FolderMVVM.IsReadOnlyGroup</c>).
+        /// </summary>
+        public bool AllAvailable { get; private set; }
+
+        /// <summary>
         /// Set while a notification deep-link ("Open project/calculation") is choosing the target explicitly,
         /// so the folder tree does NOT override it by restoring the last localStorage selection (which would
         /// otherwise select the previously-opened/first project instead of the one from the notification).
@@ -97,6 +104,12 @@ namespace ProjectManagement.Client.Services.Folder
         public void SetOtherDepartment(bool value)
         {
             OtherDepartment = value;
+            Notify();
+        }
+
+        public void SetAllAvailable(bool value)
+        {
+            AllAvailable = value;
             Notify();
         }
 

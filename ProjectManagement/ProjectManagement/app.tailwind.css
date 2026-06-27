@@ -118,6 +118,38 @@
         @apply inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800;
     }
 
+    /* Clickable text actions: any text that acts as a button/link. They always show the hand
+       cursor, give a discreet hover (darker color + underline) and a keyboard focus ring, in both
+       light and dark mode. Use the disabled variant for inactive actions so they lose the pointer.
+       Size (text-xs / text-[0.65rem]) is left to the call site. */
+    .pm-text-action-primary {
+        @apply cursor-pointer rounded font-medium text-indigo-600 underline-offset-2 outline-none transition-colors hover:text-indigo-700 hover:underline focus-visible:ring-2 focus-visible:ring-indigo-500/50 dark:text-indigo-400 dark:hover:text-indigo-300;
+    }
+
+    .pm-text-action-secondary {
+        @apply cursor-pointer rounded text-gray-500 underline-offset-2 outline-none transition-colors hover:text-gray-700 hover:underline focus-visible:ring-2 focus-visible:ring-indigo-500/50 dark:text-gray-400 dark:hover:text-gray-200;
+    }
+
+    .pm-text-action-disabled {
+        @apply cursor-not-allowed text-gray-300 no-underline dark:text-gray-600;
+    }
+
+    /* Clickable icon button (e.g. close/remove): hand cursor, soft hover background, focus ring. */
+    .pm-icon-action {
+        @apply cursor-pointer rounded text-gray-400 outline-none transition-colors hover:bg-gray-100 hover:text-gray-600 focus-visible:ring-2 focus-visible:ring-indigo-500/50 dark:hover:bg-gray-700 dark:hover:text-gray-200;
+    }
+
+    /* Top-bar nav buttons (notification bell, settings, theme, language, …) carry this class but
+       had no rule of their own, so they showed the default arrow cursor. Give them the hand cursor
+       consistently; disabled ones still fall back to not-allowed. */
+    .nav-link {
+        @apply cursor-pointer;
+    }
+
+    .nav-link:disabled {
+        @apply cursor-not-allowed;
+    }
+
     .pm-table-wrap {
         @apply overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900;
     }

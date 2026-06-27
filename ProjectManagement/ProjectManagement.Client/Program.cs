@@ -17,6 +17,8 @@ builder.Logging.SetMinimumLevel(builder.HostEnvironment.IsDevelopment() ? LogLev
 builder.Services.Configure<ClientApiOptions>(builder.Configuration.GetSection(ClientApiOptions.SectionName));
 builder.Services.AddSingleton(apiOptions);
 
+// Per-user coordinator so the 401 auth-recovery redirect fires once, never as a 429-causing burst.
+builder.Services.AddScoped<AuthRedirectState>();
 builder.Services.AddScoped<CorrelationIdHandler>();
 builder.Services.AddScoped<UnauthorizedRedirectHandler>();
 builder.Services.AddScoped<ApiErrorHandler>();

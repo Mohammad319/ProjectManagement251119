@@ -329,7 +329,7 @@ namespace Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("EndDate")
+                    b.Property<DateTime?>("EndDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Factors")
@@ -398,7 +398,7 @@ namespace Persistence.Migrations
                     b.Property<int?>("SourceCalculationId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("StartDate")
+                    b.Property<DateTime?>("StartDate")
                         .HasColumnType("datetime2");
 
                     b.Property<int?>("StatusId")
@@ -416,10 +416,10 @@ namespace Persistence.Migrations
                     b.Property<int>("TenantId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("TenderDeadline")
+                    b.Property<DateTime?>("TenderDeadline")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("TenderQA")
+                    b.Property<DateTime?>("TenderQA")
                         .HasColumnType("datetime2");
 
                     b.Property<int?>("TypeId")
@@ -713,6 +713,10 @@ namespace Persistence.Migrations
 
                     b.Property<int?>("ResourceTypeId")
                         .HasColumnType("int");
+
+                    b.Property<string>("ReviewerComment")
+                        .HasMaxLength(3000)
+                        .HasColumnType("nvarchar(3000)");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -1075,6 +1079,10 @@ namespace Persistence.Migrations
 
                     b.Property<decimal?>("Quantity")
                         .HasColumnType("decimal(18,3)");
+
+                    b.Property<string>("ReviewerComment")
+                        .HasMaxLength(3000)
+                        .HasColumnType("nvarchar(3000)");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -2715,7 +2723,7 @@ namespace Persistence.Migrations
                     b.Property<int?>("DeletedBy")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("EndDate")
+                    b.Property<DateTime?>("EndDate")
                         .HasColumnType("datetime2");
 
                     b.Property<Guid>("FolderId")
@@ -2763,16 +2771,16 @@ namespace Persistence.Migrations
                     b.Property<int>("SortOrder")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("StartDate")
+                    b.Property<DateTime?>("StartDate")
                         .HasColumnType("datetime2");
 
                     b.Property<int>("TenantId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("TenderDeadline")
+                    b.Property<DateTime?>("TenderDeadline")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("TenderQA")
+                    b.Property<DateTime?>("TenderQA")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("UpdatedAt")

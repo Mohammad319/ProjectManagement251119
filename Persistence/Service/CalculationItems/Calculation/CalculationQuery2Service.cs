@@ -60,6 +60,7 @@ namespace Persistence.Service.CalculationItems.Calculation
             public int? OpportunityId { get; set; }
             public string Note { get; set; } = string.Empty;
             public string? ProductionNote { get; set; }
+            public string? ReviewerComment { get; set; }
             public string Unit { get; set; } = string.Empty;
             public decimal? Quantity { get; set; }
             public string Opportunity { get; set; } = string.Empty;
@@ -163,6 +164,7 @@ namespace Persistence.Service.CalculationItems.Calculation
                         t.Type,
                         t.IsOH),
                     ProductionNote = t.ProductionNote,
+                    ReviewerComment = t.ReviewerComment,
                 })
                 .ToListAsync(ct);
 
@@ -195,6 +197,7 @@ namespace Persistence.Service.CalculationItems.Calculation
                     OpportunityId = r.OpportunityId,
                     Note = r.Note ?? string.Empty,
                     ProductionNote = r.ProductionNote,
+                    ReviewerComment = r.ReviewerComment,
                     Unit = r.Unit ?? string.Empty,
                     Quantity = r.Quantity,
 
@@ -344,6 +347,7 @@ namespace Persistence.Service.CalculationItems.Calculation
                     row.Metadata,
                     row.Note),
                 ProductionNote = row.ProductionNote,
+                ReviewerComment = row.ReviewerComment,
                 Quantity = row.Quantity,
                 Unit = row.Unit,
                 Offers = []

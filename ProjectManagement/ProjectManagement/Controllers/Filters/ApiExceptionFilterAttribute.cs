@@ -42,6 +42,14 @@ namespace ProjectManagement.Server.Controllers.Filters
                     "The operation was cancelled."
                 ),
 
+                ForbiddenActionException fex => (
+                    StatusCodes.Status403Forbidden,
+                    "Forbidden",
+                    "https://httpstatuses.com/403",
+                    "forbidden_action",
+                    fex.Message
+                ),
+
                 ConcurrencyConflictException cex => (
                     StatusCodes.Status409Conflict,
                     "Concurrency conflict",

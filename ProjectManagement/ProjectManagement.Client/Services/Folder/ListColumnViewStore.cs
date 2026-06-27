@@ -19,13 +19,21 @@ public sealed class ListColumnViewStore(
     string scope,
     Func<Task<Dictionary<string, bool>?>> loadVisibleColumns,
     Func<Dictionary<string, bool>, Task> saveVisibleColumns,
-    ListSavedColumnViewStorage savedViewStorage) : IMhdColumnViewStore
+    ListSavedColumnViewStorage savedViewStorage,
+    Func<Task<List<string>?>> loadColumnOrder,
+    Func<IReadOnlyList<string>, Task> saveColumnOrder) : IMhdColumnViewStore
 {
     public Task<Dictionary<string, bool>?> LoadVisibleColumnsAsync()
         => loadVisibleColumns();
 
     public Task SaveVisibleColumnsAsync(Dictionary<string, bool> columns)
         => saveVisibleColumns(columns);
+
+    public Task<List<string>?> LoadColumnOrderAsync()
+        => loadColumnOrder();
+
+    public Task SaveColumnOrderAsync(IReadOnlyList<string> order)
+        => saveColumnOrder(order);
 
     public async Task<List<MhdSavedColumnView>> LoadSavedViewsAsync()
     {
@@ -41,6 +49,7 @@ public sealed class ListColumnViewStore(
         Name = v.Name,
         CreatedAt = v.CreatedAt,
         Columns = new Dictionary<string, bool>(v.Columns),
+        Order = new List<string>(v.Order),
     };
 
     private static SavedColumnView ToApp(MhdSavedColumnView v) => new()
@@ -48,5 +57,6 @@ public sealed class ListColumnViewStore(
         Name = v.Name,
         CreatedAt = v.CreatedAt,
         Columns = new Dictionary<string, bool>(v.Columns),
+        Order = new List<string>(v.Order),
     };
 }

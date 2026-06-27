@@ -1,0 +1,31 @@
+@namespace ProjectManagement.Client.Shared.Components
+
+@* Tiny, discreet date-status indicator shown next to a date label.
+   Empty date → nothing rendered (no dot). Red = today or passed, orange = within 3 days,
+   green = further away. Tooltip works on hover and keyboard focus, in light and dark mode. *@
+@if (Date is { } d)
+{
+    var (color, text) = Status(d);
+    <span class="group relative inline-flex leading-none">
+        <span tabindex="0" role="img" aria-label="@text"
+              class="inline-block h-[7px] w-[7px] shrink-0 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50 @color"></span>
+        <span role="tooltip"
+              class="pointer-events-none absolute left-1/2 top-full z-[90] mt-1 w-max max-w-[12rem] -translate-x-1/2 rounded-md bg-slate-800 px-2 py-1 text-[11px] font-normal leading-snug text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 dark:bg-slate-700">
+            @text
+        </span>
+    </span>
+}
+
+@code {
+    [Parameter, EditorRequired] public DateTime? Date { get; set; }
+
+    // Discreet status colours; tooltip text follows the spec's wording.
+    private static (string Color, string Text) Status(DateTime date)
+    {
+        var days = (date.Date - DateTime.Today).Days;
+        if (days < 0) return ("bg-rose-500", "Datumet är passerat.");
+        if (days == 0) return ("bg-rose-500", "Datumet är idag.");
+        if (days <= 3) return ("bg-amber-500", days == 1 ? "1 dag kvar." : $"{days} dagar kvar.");
+        return ("bg-emerald-500", $"{days} dagar kvar.");
+    }
+}

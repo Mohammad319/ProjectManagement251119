@@ -33,22 +33,16 @@
                     {
                         <div class="flex items-center gap-1.5">
 
-                            @* Department dropdown *@
-                            <select class="flex-1 min-w-0 rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm font-medium text-slate-800 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-default disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:disabled:bg-slate-900/60 dark:disabled:text-slate-400"
-                                    aria-label="@ResourceApp.department"
-                                    title="@ResourceApp.department"
-                                    value="@SelectedDepartmentValue"
-                                    disabled="@(Folder.State.Departments.Count == 1)"
-                                    @onchange="OnDepartmentChanged">
-                                @if (!SelectedDepartmentId.HasValue)
-                                {
-                                    <option value="" disabled>@AppLoc["selectDepartment"]</option>
-                                }
-                                @foreach (var department in Folder.State.Departments)
-                                {
-                                    <option value="@department.Id">@department.Name</option>
-                                }
-                            </select>
+                            @* Department dropdown (styled single-select) *@
+                            <div class="min-w-0 flex-1">
+                                <MhdFormSelect TValue="int?"
+                                               Value="SelectedDepartmentId"
+                                               ValueChanged="OnDepartmentSelected"
+                                               Options="DepartmentItems"
+                                               Placeholder="@AppLoc["selectDepartment"]"
+                                               Disabled="@IsDepartmentSelectDisabled"
+                                               Title="@ResourceApp.department" />
+                            </div>
 
                             @* Sök (ikon-only) *@
                             <button type="button"
@@ -93,13 +87,11 @@
                                             <label class="mb-1 block text-[11px] font-semibold text-slate-500 dark:text-slate-400">
                                                 Trädvy
                                             </label>
-                                            <select class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs font-medium text-slate-800 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-default disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:disabled:bg-slate-900/60 dark:disabled:text-slate-400"
-                                                    value="@TreeGroupingMode"
-                                                    disabled="@(!SelectedDepartmentId.HasValue || _isReorderMode)"
-                                                    @onchange="OnTreeGroupingModeChanged">
-                                                <option value="@ProjectTreeGroupingMode.FolderStructure">Mappstruktur</option>
-                                                <option value="@ProjectTreeGroupingMode.Projects">Projekt</option>
-                                            </select>
+                                            <MhdFormSelect TValue="string"
+                                                           Value="TreeGroupingMode"
+                                                           ValueChanged="OnTreeGroupingModeChanged"
+                                                           Options="TreeGroupingItems"
+                                                           Disabled="@(!SelectedDepartmentId.HasValue || _isReorderMode)" />
                                         </div>
 
                                         @* Sortera efter *@
@@ -108,21 +100,11 @@
                                                    title="@AppLoc["sortTooltip"]">
                                                 @AppLoc["sort"]
                                             </label>
-                                            <select class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs font-medium text-slate-800 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-default disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:disabled:bg-slate-900/60 dark:disabled:text-slate-400"
-                                                    value="@TreeSortMode"
-                                                    disabled="@(!SelectedDepartmentId.HasValue || _isReorderMode)"
-                                                    @onchange="OnTreeSortModeChanged">
-                                                @if (TreeGroupingMode == ProjectTreeGroupingMode.FolderStructure)
-                                                {
-                                                    <option value="@ProjectTreeSortMode.Manual">Manuell ordning</option>
-                                                }
-                                                <option value="@ProjectTreeSortMode.NameAscending">Namn A–Ö</option>
-                                                <option value="@ProjectTreeSortMode.NameDescending">Namn Ö–A</option>
-                                                <option value="@ProjectTreeSortMode.CreatedNewest">Skapad nyast först</option>
-                                                <option value="@ProjectTreeSortMode.CreatedOldest">Skapad äldst först</option>
-                                                <option value="@ProjectTreeSortMode.ModifiedNewest">Senast ändrad först</option>
-                                                <option value="@ProjectTreeSortMode.LastOpenedNewest">Senast öppnad först</option>
-                                            </select>
+                                            <MhdFormSelect TValue="string"
+                                                           Value="TreeSortMode"
+                                                           ValueChanged="OnTreeSortModeChanged"
+                                                           Options="TreeSortItems"
+                                                           Disabled="@(!SelectedDepartmentId.HasValue || _isReorderMode)" />
 
                                             @* Ändra ordning – visas vid Manuell ordning + Mappstruktur *@
                                             @if (TreeGroupingMode == ProjectTreeGroupingMode.FolderStructure &&
@@ -283,7 +265,7 @@
                     <div class="h-full min-h-0 overflow-hidden">
                         <ProjectsUI @key="_selectedGroupInfo.Key"
                                     IsDepartmentScope="true"
-                                    DepartmentName="@(Folder.State.Departments.FirstOrDefault(d => d.Id == SelectedDepartmentId)?.Name)"
+                                    DepartmentName="@SelectedScopeName"
                                     OnToggleArchived="ToggleArchivedAsync" />
                     </div>
                 }

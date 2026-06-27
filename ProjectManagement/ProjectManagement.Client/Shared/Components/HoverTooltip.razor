@@ -23,12 +23,20 @@
     [Parameter] public bool ShowInfoIcon { get; set; }
     [Parameter] public bool Focusable { get; set; }
 
+    /// <summary>Only show the tooltip when the text is actually clipped/ellipsed (scrollWidth &gt; clientWidth).
+    /// Use for truncating cells (e.g. project/calculation name) so a fully visible value shows no tooltip.</summary>
+    [Parameter] public bool OnlyWhenTruncated { get; set; }
+
     private ElementReference _anchor;
     private string CssClass => $"inline-flex min-w-0 items-center gap-1 {Class}";
 
     private async Task ShowAsync()
     {
-        if (!string.IsNullOrWhiteSpace(Text))
+        if (string.IsNullOrWhiteSpace(Text))
+            return;
+        if (OnlyWhenTruncated)
+            await JS.InvokeVoidAsync("hoverTooltip.showIfTruncated", _anchor, Text);
+        else
             await JS.InvokeVoidAsync("hoverTooltip.show", _anchor, Text);
     }
 

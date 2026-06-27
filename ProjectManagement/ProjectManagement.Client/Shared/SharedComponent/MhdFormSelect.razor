@@ -1,4 +1,8 @@
 @typeparam TValue
+@using System.Globalization
+@using BlazorMHD.UI.Core.Services
+@using Microsoft.JSInterop
+@inject MhdJsInterop MhdJs
 
 @* Custom dropdown shared by the project form (and reusable elsewhere) so every
    dropdown gets the same modern look as the calculation form: soft panel,
@@ -7,7 +11,9 @@
    the other form inputs. *@
 <div class="relative">
     <button type="button"
+            @ref="_buttonRef"
             @onclick="Toggle"
+            @onkeydown="OnKeyDown"
             disabled="@Disabled"
             title="@Title"
             class="flex w-full items-center gap-2 rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900">
@@ -25,49 +31,82 @@
 
     @if (_open && !Disabled)
     {
+        @* Shared panel body so the absolute (form) and fixed (in-table) variants stay identical. *@
+        RenderFragment panelBody =
+            @<text>
+                <div class="mhd-select-scroll max-h-[320px] overflow-y-auto py-1">
+                    @if (Placeholder is not null)
+                    {
+                        <button type="button" class="@OptionClass(!HasSelection)" @onclick="() => SelectValue(default!)">
+                            @if (ShowColorDot)
+                            {
+                                <span class="h-2.5 w-2.5 shrink-0 rounded-full bg-slate-300 dark:bg-slate-600"></span>
+                            }
+                            <span class="flex-1 truncate text-slate-400 dark:text-slate-500">@Placeholder</span>
+                            @if (!HasSelection)
+                            {
+                                <svg class="ml-auto h-3.5 w-3.5 shrink-0 text-sky-600 dark:text-sky-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
+                            }
+                        </button>
+                    }
+                    @foreach (var item in Options)
+                    {
+                        var isSelected = IsSelected(item.Value);
+                        @if (item.Disabled)
+                        {
+                            @* Not selectable: rendered as a muted row that still shows its tooltip. *@
+                            <div class="@DisabledOptionClass" title="@item.Title">
+                                @if (ShowColorDot)
+                                {
+                                    <span class="h-2.5 w-2.5 shrink-0 rounded-full bg-slate-300 dark:bg-slate-600"></span>
+                                }
+                                <span class="flex-1 truncate">@item.Label</span>
+                            </div>
+                        }
+                        else
+                        {
+                            <button type="button" class="@OptionClass(isSelected)" title="@item.Title" @onclick="() => SelectValue(item.Value)">
+                                @if (ShowColorDot)
+                                {
+                                    <span class="h-2.5 w-2.5 shrink-0 rounded-full ring-1 ring-inset ring-black/10 dark:ring-white/20"
+                                          style="background-color:@(string.IsNullOrWhiteSpace(item.Color) ? NeutralDot : item.Color)"></span>
+                                }
+                                <span class="flex-1 truncate">@item.Label</span>
+                                @if (isSelected)
+                                {
+                                    <svg class="ml-auto h-3.5 w-3.5 shrink-0 text-sky-600 dark:text-sky-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
+                                }
+                            </button>
+                        }
+                    }
+                </div>
+
+                @* Soft fade so it's obvious the list continues when it's scrollable. *@
+                @if (ShowFade)
+                {
+                    <div class="pointer-events-none absolute inset-x-0 bottom-0 h-6 rounded-b-xl bg-gradient-to-t from-slate-50 to-transparent dark:from-slate-900"></div>
+                }
+            </text>;
+
         @* Invisible overlay closes the panel on any outside click. *@
-        <div class="fixed inset-0 z-[70]" @onclick="Close"></div>
+        <div class="fixed inset-0 @(FixedPopup ? "z-[1000]" : "z-[70]")" @onclick="Close"></div>
 
-        <div class="absolute left-0 top-full z-[90] mt-1 w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-xl dark:border-slate-700 dark:bg-slate-900">
-            <div class="mhd-select-scroll max-h-[320px] overflow-y-auto py-1">
-                @if (Placeholder is not null)
-                {
-                    <button type="button" class="@OptionClass(!HasSelection)" @onclick="() => SelectValue(default!)">
-                        @if (ShowColorDot)
-                        {
-                            <span class="h-2.5 w-2.5 shrink-0 rounded-full bg-slate-300 dark:bg-slate-600"></span>
-                        }
-                        <span class="flex-1 truncate text-slate-400 dark:text-slate-500">@Placeholder</span>
-                        @if (!HasSelection)
-                        {
-                            <svg class="ml-auto h-3.5 w-3.5 shrink-0 text-sky-600 dark:text-sky-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
-                        }
-                    </button>
-                }
-                @foreach (var item in Options)
-                {
-                    var isSelected = IsSelected(item.Value);
-                    <button type="button" class="@OptionClass(isSelected)" @onclick="() => SelectValue(item.Value)">
-                        @if (ShowColorDot)
-                        {
-                            <span class="h-2.5 w-2.5 shrink-0 rounded-full ring-1 ring-inset ring-black/10 dark:ring-white/20"
-                                  style="background-color:@(string.IsNullOrWhiteSpace(item.Color) ? NeutralDot : item.Color)"></span>
-                        }
-                        <span class="flex-1 truncate">@item.Label</span>
-                        @if (isSelected)
-                        {
-                            <svg class="ml-auto h-3.5 w-3.5 shrink-0 text-sky-600 dark:text-sky-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
-                        }
-                    </button>
-                }
+        @if (FixedPopup)
+        {
+            @* Viewport-anchored to the trigger's bounding rect (measured via JS) so the popup opens
+               directly under the field and is never clipped by a scrollable/overflow table container.
+               Hidden until measured to avoid a one-frame flash at the wrong position. *@
+            <div class="fixed z-[1001] w-48 min-w-[11rem] overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-xl dark:border-slate-700 dark:bg-slate-900"
+                 style="@FixedPopupStyle()">
+                @panelBody
             </div>
-
-            @* Soft fade so it's obvious the list continues when it's scrollable. *@
-            @if (ShowFade)
-            {
-                <div class="pointer-events-none absolute inset-x-0 bottom-0 h-6 rounded-b-xl bg-gradient-to-t from-slate-50 to-transparent dark:from-slate-900"></div>
-            }
-        </div>
+        }
+        else
+        {
+            <div class="absolute left-0 top-full z-[90] mt-1 w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+                @panelBody
+            </div>
+        }
     }
 </div>
 
@@ -87,7 +126,41 @@
     /// <summary>Neutral gray used when a status has no configured color.</summary>
     [Parameter] public string NeutralDot { get; set; } = "#94a3b8";
 
+    /// <summary>
+    /// Render the popup as a viewport-fixed panel anchored at the click point instead of an
+    /// absolutely-positioned one. Use inside scrollable/overflow containers (e.g. tables) so the
+    /// popup is never clipped and always paints above other rows/cells.
+    /// </summary>
+    [Parameter] public bool FixedPopup { get; set; }
+
     private bool _open;
+
+    private ElementReference _buttonRef;
+
+    // Fixed-popup placement, measured from the trigger button's bounding rect (not the cursor),
+    // so the panel opens anchored to the field. Mirrors MhdDropdownPanel's approach.
+    private bool _fixedMeasured;
+    private bool _fixedAlignRight;
+    private double _fixedTop;
+    private double _fixedX;
+
+    // Reasonable width for the fixed (in-table) popup: matches the w-48 class so the JS alignment
+    // math knows the panel's width when deciding to right-align near the viewport edge.
+    private const int FixedPanelWidthPx = 192;
+
+    private sealed record FixedPosition(bool AlignRight, double Top, double X);
+
+    // Integer px keeps the inline style culture-invariant (sv-SE would otherwise use a decimal comma).
+    private string FixedPopupStyle()
+    {
+        if (!_fixedMeasured)
+            return "position:fixed; top:0; left:0; visibility:hidden;";
+
+        var top = ((int)_fixedTop).ToString(CultureInfo.InvariantCulture);
+        var x = ((int)_fixedX).ToString(CultureInfo.InvariantCulture);
+        var side = _fixedAlignRight ? $"right:{x}px" : $"left:{x}px";
+        return $"position:fixed; top:{top}px; {side};";
+    }
 
     private MhdSelectItem<TValue>? SelectedItem => Options.FirstOrDefault(o => IsSelected(o.Value));
     private bool HasSelection => SelectedItem is not null;
@@ -97,10 +170,40 @@
 
     private bool IsSelected(TValue value) => EqualityComparer<TValue>.Default.Equals(value, Value!);
 
-    private void Toggle()
+    private async Task Toggle()
     {
-        if (!Disabled)
-            _open = !_open;
+        if (Disabled) return;
+        _open = !_open;
+
+        // Anchor the fixed popup under the trigger field by measuring its bounding rect.
+        if (_open && FixedPopup)
+        {
+            _fixedMeasured = false;
+            await MeasureFixedAsync();
+        }
+    }
+
+    private async Task MeasureFixedAsync()
+    {
+        try
+        {
+            var pos = await MhdJs.InvokeAsync<FixedPosition>("dropdownPanel.getPosition", _buttonRef, FixedPanelWidthPx);
+            _fixedAlignRight = pos.AlignRight;
+            _fixedTop = pos.Top;
+            _fixedX = pos.X;
+            _fixedMeasured = true;
+            StateHasChanged();
+        }
+        catch (Exception ex) when (ex is JSDisconnectedException or JSException or InvalidOperationException or TaskCanceledException)
+        {
+            // JS unavailable (prerender) or circuit gone — leave the popup hidden rather than throwing.
+        }
+    }
+
+    private void OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+            _open = false;
     }
 
     private void Close() => _open = false;
@@ -115,4 +218,7 @@
     private static string OptionClass(bool selected) => selected
         ? "flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm font-medium text-sky-700 bg-sky-50 dark:bg-sky-950/40 dark:text-sky-300"
         : "flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800";
+
+    private const string DisabledOptionClass =
+        "flex w-full cursor-not-allowed items-center gap-2 px-3 py-1.5 text-left text-sm text-slate-400 dark:text-slate-600";
 }

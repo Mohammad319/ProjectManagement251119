@@ -65,6 +65,7 @@ namespace Persistence.Factory
             services.AddScoped<Application.Feature.Project.ProjectShare.IProjectShareService, Persistence.Service.Project.ProjectShareService>();
             services.AddScoped<Application.Feature.Notification.INotificationService, Persistence.Service.Notification.NotificationService>();
             services.AddScoped<Application.Feature.Calculation.ProductionNote.IProductionNoteService, Persistence.Service.CalculationItems.ProductionNote.ProductionNoteService>();
+            services.AddScoped<Application.Feature.Calculation.ReviewerComment.IReviewerCommentService, Persistence.Service.CalculationItems.ReviewerComment.ReviewerCommentService>();
             services.AddScoped<Application.Feature.Transfer.IAtacostTransferService, Persistence.Service.Transfer.AtacostTransferService>();
             services.AddScoped<IStorageCommandService, StorageCommandService>();
             services.AddScoped<IStorageQueryService, StorageQueryService>();

@@ -57,6 +57,33 @@ namespace ProjectManagement.Client.Services.Calculation
                 MhdDialogSize.Medium);
         }
 
+        // Opens the reviewer-comment (Granskarkommentar) editor for a calculation row (task/resource).
+        // Saving goes through a dedicated, separately-authorized endpoint, so an authorized reviewer
+        // (incl. Viewer) can write it even on a locked calculation and it never touches the row economy.
+        // applyLocal updates the in-memory row after a successful save.
+        public void EditReviewerComment(CalculationItemType itemType, int itemId, string? currentComment, Action<string?> applyLocal)
+        {
+            mhdServices.Modal.ShowComponent<ReviewerCommentDialog>(
+                "Granskarkommentar",
+                new Dictionary<string, object>
+                {
+                    [nameof(ReviewerCommentDialog.InitialText)] = currentComment ?? string.Empty,
+                    [nameof(ReviewerCommentDialog.OnSave)] = EventCallback.Factory.Create<string?>(this, async text =>
+                    {
+                        var ok = await calcRepo.SaveReviewerCommentAsync(new ReviewerCommentSaveDTO
+                        {
+                            ItemType = itemType,
+                            ItemId = itemId,
+                            Text = text
+                        });
+                        mhdServices.Notifications(ToastType.Update, ok);
+                        if (ok)
+                            applyLocal(text);
+                    })
+                },
+                MhdDialogSize.Medium);
+        }
+
         public bool ShowComments
         {
             get => showComments;

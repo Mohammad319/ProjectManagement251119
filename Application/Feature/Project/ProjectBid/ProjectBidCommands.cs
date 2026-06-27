@@ -8,6 +8,7 @@ namespace Application.Feature.Project.ProjectBid
     public sealed record CreateProjectBidCommand(
         Guid ProjectId,
         ProjectBidPostDTO Dto,
+        int UserId,
         int? DepartmentId
     ) : IRequest<int>;
 
@@ -15,7 +16,7 @@ namespace Application.Feature.Project.ProjectBid
         : IRequestHandler<CreateProjectBidCommand, int>
     {
         public Task<int> Handle(CreateProjectBidCommand request, CancellationToken cancellationToken)
-            => service.CreateAsync(request.ProjectId, request.Dto, request.DepartmentId, cancellationToken);
+            => service.CreateAsync(request.ProjectId, request.Dto, request.UserId, request.DepartmentId, cancellationToken);
     }
 
     // ─── Update ───────────────────────────────────────────────────────────────
@@ -23,6 +24,7 @@ namespace Application.Feature.Project.ProjectBid
         int Id,
         Guid ProjectId,
         ProjectBidPostDTO Dto,
+        int UserId,
         int? DepartmentId
     ) : IRequest<bool>;
 
@@ -30,13 +32,14 @@ namespace Application.Feature.Project.ProjectBid
         : IRequestHandler<UpdateProjectBidCommand, bool>
     {
         public Task<bool> Handle(UpdateProjectBidCommand request, CancellationToken cancellationToken)
-            => service.UpdateAsync(request.Id, request.ProjectId, request.Dto, request.DepartmentId, cancellationToken);
+            => service.UpdateAsync(request.Id, request.ProjectId, request.Dto, request.UserId, request.DepartmentId, cancellationToken);
     }
 
     // ─── Delete ───────────────────────────────────────────────────────────────
     public sealed record DeleteProjectBidCommand(
         int Id,
         Guid ProjectId,
+        int UserId,
         int? DepartmentId
     ) : IRequest<bool>;
 
@@ -44,7 +47,7 @@ namespace Application.Feature.Project.ProjectBid
         : IRequestHandler<DeleteProjectBidCommand, bool>
     {
         public Task<bool> Handle(DeleteProjectBidCommand request, CancellationToken cancellationToken)
-            => service.DeleteAsync(request.Id, request.ProjectId, request.DepartmentId, cancellationToken);
+            => service.DeleteAsync(request.Id, request.ProjectId, request.UserId, request.DepartmentId, cancellationToken);
     }
 
     // ─── Evaluation basis + method ────────────────────────────────────────────
@@ -52,6 +55,7 @@ namespace Application.Feature.Project.ProjectBid
         Guid ProjectId,
         BidEvaluationBasis Basis,
         BidEvaluationModel Method,
+        int UserId,
         int? DepartmentId
     ) : IRequest<bool>;
 
@@ -59,13 +63,14 @@ namespace Application.Feature.Project.ProjectBid
         : IRequestHandler<SetProjectBidEvaluationCommand, bool>
     {
         public Task<bool> Handle(SetProjectBidEvaluationCommand request, CancellationToken cancellationToken)
-            => service.SetEvaluationAsync(request.ProjectId, request.Basis, request.Method, request.DepartmentId, cancellationToken);
+            => service.SetEvaluationAsync(request.ProjectId, request.Basis, request.Method, request.UserId, request.DepartmentId, cancellationToken);
     }
 
     // ─── Price columns ────────────────────────────────────────────────────────
     public sealed record CreateProjectBidPriceColumnCommand(
         Guid ProjectId,
         ProjectBidPriceColumnPostDTO Dto,
+        int UserId,
         int? DepartmentId
     ) : IRequest<int>;
 
@@ -73,13 +78,14 @@ namespace Application.Feature.Project.ProjectBid
         : IRequestHandler<CreateProjectBidPriceColumnCommand, int>
     {
         public Task<int> Handle(CreateProjectBidPriceColumnCommand request, CancellationToken cancellationToken)
-            => service.CreatePriceColumnAsync(request.ProjectId, request.Dto, request.DepartmentId, cancellationToken);
+            => service.CreatePriceColumnAsync(request.ProjectId, request.Dto, request.UserId, request.DepartmentId, cancellationToken);
     }
 
     public sealed record RenameProjectBidPriceColumnCommand(
         int Id,
         Guid ProjectId,
         ProjectBidPriceColumnPostDTO Dto,
+        int UserId,
         int? DepartmentId
     ) : IRequest<bool>;
 
@@ -87,12 +93,13 @@ namespace Application.Feature.Project.ProjectBid
         : IRequestHandler<RenameProjectBidPriceColumnCommand, bool>
     {
         public Task<bool> Handle(RenameProjectBidPriceColumnCommand request, CancellationToken cancellationToken)
-            => service.RenamePriceColumnAsync(request.Id, request.ProjectId, request.Dto, request.DepartmentId, cancellationToken);
+            => service.RenamePriceColumnAsync(request.Id, request.ProjectId, request.Dto, request.UserId, request.DepartmentId, cancellationToken);
     }
 
     public sealed record DeleteProjectBidPriceColumnCommand(
         int Id,
         Guid ProjectId,
+        int UserId,
         int? DepartmentId
     ) : IRequest<bool>;
 
@@ -100,13 +107,14 @@ namespace Application.Feature.Project.ProjectBid
         : IRequestHandler<DeleteProjectBidPriceColumnCommand, bool>
     {
         public Task<bool> Handle(DeleteProjectBidPriceColumnCommand request, CancellationToken cancellationToken)
-            => service.DeletePriceColumnAsync(request.Id, request.ProjectId, request.DepartmentId, cancellationToken);
+            => service.DeletePriceColumnAsync(request.Id, request.ProjectId, request.UserId, request.DepartmentId, cancellationToken);
     }
 
     public sealed record MoveProjectBidPriceColumnCommand(
         int Id,
         Guid ProjectId,
         int Direction,
+        int UserId,
         int? DepartmentId
     ) : IRequest<bool>;
 
@@ -114,6 +122,6 @@ namespace Application.Feature.Project.ProjectBid
         : IRequestHandler<MoveProjectBidPriceColumnCommand, bool>
     {
         public Task<bool> Handle(MoveProjectBidPriceColumnCommand request, CancellationToken cancellationToken)
-            => service.MovePriceColumnAsync(request.Id, request.ProjectId, request.Direction, request.DepartmentId, cancellationToken);
+            => service.MovePriceColumnAsync(request.Id, request.ProjectId, request.Direction, request.UserId, request.DepartmentId, cancellationToken);
     }
 }

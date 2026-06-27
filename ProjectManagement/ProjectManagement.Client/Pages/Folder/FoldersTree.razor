@@ -39,7 +39,7 @@
                 </svg>
             </span>
             <span class="truncate text-[13px] font-semibold @(isWholeDeptSelectedFs ? "text-sky-900 dark:text-sky-100" : "text-slate-800 group-hover:text-slate-900 dark:text-slate-100 dark:group-hover:text-slate-100")">
-                Hela avdelningen
+                @TreeRootLabel
             </span>
         </div>
         <button type="button"
@@ -77,11 +77,34 @@
     </div>
 
     @{
-        var sortedFolders = GetSortedFolders(UoWService.Folder.State.FoldersList).ToList();
+        // In "Alla tillgängliga" the tree spans many departments — group by department (normal/editable
+        // departments first, then the shared 👥 ones), keeping the normal per-folder sort within each.
+        var sortedFolders = (Folder.State.AllAvailable
+                ? GetSortedFolders(UoWService.Folder.State.FoldersList)
+                    .OrderBy(f => f.IsReadOnlyGroup ? 1 : 0)
+                    .ThenBy(f => f.DepartmentName, StringComparer.CurrentCultureIgnoreCase)
+                : GetSortedFolders(UoWService.Folder.State.FoldersList))
+            .ToList();
+        int? renderedDeptId = null;
     }
 
     @foreach (var folder in sortedFolders)
     {
+        @if (Folder.State.AllAvailable && folder.DepartmentId != renderedDeptId)
+        {
+            renderedDeptId = folder.DepartmentId;
+            <div class="mt-2 first:mt-0 flex items-center gap-1.5 px-1.5 py-1 text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 21V7l9-4 9 4v14M3 21h18M9 21v-6h6v6" />
+                </svg>
+                <span class="truncate">@folder.DepartmentName</span>
+                @if (folder.IsReadOnlyGroup)
+                {
+                    <span title="Delade med mig" aria-label="Delade med mig">👥</span>
+                }
+            </div>
+        }
+
         var isFolderSelected = Folder.State.FolderSelected?.Id == folder.Id;
         var isFolderArchived = !folder.IsVisible;
 
@@ -115,7 +138,7 @@
              @ondragleave="() => OnDragLeaveFolder(folder)"
              @ondragover:preventDefault
              @ondragstart="() => CalcDraging = folder"
-             draggable="@(SortMode != ProjectTreeSortMode.Manual)"
+             draggable="@(SortMode != ProjectTreeSortMode.Manual && !IsFolderManageBlocked(folder))"
              @onclick="async () => await SeFolder(folder)"
              role="button"
              tabindex="0"
@@ -167,7 +190,7 @@
             </span>
 
             <span class="min-w-0 flex items-center gap-1.5">
-                @if (IsManualOrderMode)
+                @if (IsManualOrderMode && !IsFolderManageBlocked(folder))
                 {
                     <span class="flex shrink-0 items-center gap-0.5">
                         <button type="button" class="@ManualOrderButtonClass" disabled="@(!CanMoveUp(sortedFolders, folder))" title="@AppLoc["moveUp"]" @onclick:stopPropagation="true" @onclick="() => MoveFolder(folder, -1)">↑</button>
@@ -229,7 +252,7 @@
                          @ondragleave="() => project.IsDragOver = false"
                          @ondragover="() => project.IsDragOver = CalcDraging is ListProjectMVVM"
                          @ondragstart="() => CalcDraging = project"
-                         draggable="@(SortMode != ProjectTreeSortMode.Manual)"
+                         draggable="@(SortMode != ProjectTreeSortMode.Manual && !IsFolderManageBlocked(folder))"
                          @onclick="async () => await SetProject(folder, project)"
                          role="button"
                          tabindex="0"
@@ -279,7 +302,7 @@
                         </span>
 
                         <span class="min-w-0 flex items-center gap-1.5">
-                            @if (IsManualOrderMode)
+                            @if (IsManualOrderMode && !IsFolderManageBlocked(folder))
                             {
                                 <span class="flex shrink-0 items-center gap-0.5">
                                     <button type="button" class="@ManualOrderButtonClass" disabled="@(!CanMoveUp(sortedProjects, project))" title="@AppLoc["moveUp"]" @onclick:stopPropagation="true" @onclick="() => MoveProject(folder.Projects, project, -1)">↑</button>
@@ -289,9 +312,12 @@
                             <span class="truncate text-[13px] leading-5 @(isProjectArchived ? "text-slate-500 dark:text-slate-400" : "text-slate-700 group-hover:text-slate-900 dark:text-slate-200 dark:group-hover:text-slate-100") @(isProjectSelected ? "font-semibold text-sky-900 dark:text-sky-100" : isProjectOpen ? "font-semibold text-slate-800 dark:text-slate-100" : "font-medium")">
                                 @project.Name
                             </span>
-                            <span class="shrink-0 text-[11px] font-medium text-slate-400 dark:text-slate-500" aria-label="@GetProjectCalculationCountLabel(project)">
-                                (@GetProjectCalculationCount(project))
-                            </span>
+                            @if (ShouldShowProjectCalculationCount(project))
+                            {
+                                <span class="shrink-0 text-[11px] font-medium text-slate-400 dark:text-slate-500" aria-label="@GetProjectCalculationCountLabel(project)">
+                                    (@GetProjectCalculationCount(project))
+                                </span>
+                            }
                         </span>
 
                     </div>
@@ -341,7 +367,7 @@
                                         </span>
                                     }
                                     <span title="@cal.Name"
-                                          class="truncate text-[13px] font-normal leading-5 @GetCalculationTextClass(cal, calcSelected)">
+                                          class="truncate text-[12px] font-normal leading-5 @GetCalculationTextClass(cal, calcSelected)">
                                         @cal.Name
                                     </span>
                                 </span>
@@ -381,7 +407,7 @@
         <div class="rounded-xl border border-dashed border-slate-300 bg-white px-4 py-8 text-center dark:border-slate-700 dark:bg-slate-900">
             <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">Inga mappar hittades</p>
             <p class="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">Skapa en ny mapp för att börja arbeta.</p>
-            @if (OnCreateNewFolder.HasDelegate)
+            @if (OnCreateNewFolder.HasDelegate && !Folder.State.OtherDepartment && !Folder.State.AllAvailable)
             {
                 <button type="button"
                         class="mt-4 inline-flex h-8 items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 text-xs font-semibold text-emerald-700 shadow-sm transition hover:bg-emerald-100 hover:text-emerald-900 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-950/50"
@@ -411,7 +437,7 @@ else if (GroupingMode == ProjectTreeGroupingMode.Projects)
                     </svg>
                 </span>
                 <span class="truncate text-[13px] font-semibold @(isAllProjectsSelected ? "text-sky-900 dark:text-sky-100" : "text-slate-800 dark:text-slate-100")">
-                    Hela avdelningen
+                    @TreeRootLabel
                 </span>
             </div>
         </div>
@@ -606,7 +632,7 @@ else
                                                     <span class="@CalculationIndicatorBaseClass" style="background-color:@GetCalculationStatusColor(cal)" title="@GetCalculationStatusTitle(cal)"></span>
                                                 </span>
                                                 <span title="@cal.Name"
-                                                      class="truncate text-[13px] font-normal leading-5 @GetCalculationTextClass(cal, calcSelected)">
+                                                      class="truncate text-[12px] font-normal leading-5 @GetCalculationTextClass(cal, calcSelected)">
                                                     @cal.Name
                                                 </span>
                                             </div>
@@ -652,7 +678,7 @@ else
                                 if (calcSelected) calcClasses.Add(GetCalculationSelectedClass(cal));
                                 <div @key="@($"{group.Key}-f2-{f2.Id}-{cal.Id}")" @onclick="async () => await NewCalculations(entry.Folder, entry.Project, cal)" class="@string.Join(" ", calcClasses)">
                                     <span class="flex h-5 w-5 shrink-0 items-center justify-center" title="@($"{CalcResource.calculation}{(string.IsNullOrWhiteSpace(cal.Status) ? string.Empty : $": {cal.Status}")}")"><span class="@CalculationIndicatorBaseClass" style="background-color:@GetCalculationStatusColor(cal)" title="@GetCalculationStatusTitle(cal)"></span></span>
-                                    <span title="@cal.Name" class="truncate text-[13px] font-normal leading-5 @GetCalculationTextClass(cal, calcSelected)">@cal.Name</span>
+                                    <span title="@cal.Name" class="truncate text-[12px] font-normal leading-5 @GetCalculationTextClass(cal, calcSelected)">@cal.Name</span>
                                 </div>
                             }
                         </div>
@@ -692,7 +718,7 @@ else
                                 if (calcSelected) calcClasses.Add(GetCalculationSelectedClass(cal));
                                 <div @key="@($"{group.Key}-p3-{p3.Id}-{cal.Id}")" @onclick="async () => await NewCalculations(pg3.Folder, p3, cal)" class="@string.Join(" ", calcClasses)">
                                     <span class="flex h-5 w-5 shrink-0 items-center justify-center" title="@($"{CalcResource.calculation}{(string.IsNullOrWhiteSpace(cal.Status) ? string.Empty : $": {cal.Status}")}")"><span class="@CalculationIndicatorBaseClass" style="background-color:@GetCalculationStatusColor(cal)" title="@GetCalculationStatusTitle(cal)"></span></span>
-                                    <span title="@cal.Name" class="truncate text-[13px] font-normal leading-5 @GetCalculationTextClass(cal, calcSelected)">@cal.Name</span>
+                                    <span title="@cal.Name" class="truncate text-[12px] font-normal leading-5 @GetCalculationTextClass(cal, calcSelected)">@cal.Name</span>
                                 </div>
                             }
                         </div>
@@ -724,7 +750,7 @@ else
                             <span class="@CalculationIndicatorBaseClass" style="background-color:@GetCalculationStatusColor(cal)" title="@GetCalculationStatusTitle(cal)"></span>
                         </span>
                         <span title="@cal.Name"
-                              class="truncate text-[13px] font-normal leading-5 @GetCalculationTextClass(cal, calcSelected)">
+                              class="truncate text-[12px] font-normal leading-5 @GetCalculationTextClass(cal, calcSelected)">
                             @cal.Name
                         </span>
                     </div>

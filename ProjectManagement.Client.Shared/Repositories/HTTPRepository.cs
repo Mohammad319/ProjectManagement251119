@@ -8,6 +8,16 @@ using System.Threading.Tasks;
 
 namespace ProjectManagement.Client.Shared.Repositories
 {
+    /// <summary>
+    /// Well-known per-request options read by the API message handlers. Lets a caller opt a single
+    /// request out of the global error dialog so it can show the failure locally instead (e.g. a
+    /// form that displays the error inside its own dialog). Default behaviour is unchanged.
+    /// </summary>
+    public static class ApiRequestOptions
+    {
+        public static readonly HttpRequestOptionsKey<bool> SuppressGlobalErrorDialog = new("SuppressGlobalErrorDialog");
+    }
+
     public class HTTPRepository(IHttpClientFactory factory)
     {
         private readonly HttpClient _httpClient = factory.CreateClient("Api");
@@ -74,6 +84,39 @@ namespace ProjectManagement.Client.Shared.Repositories
 
         public Task<bool> PutAsync<T>(T data, string url, CancellationToken ct = default)
             => PutAsync<bool, T>(data, url, ct);
+
+        // Variants that let the caller handle the failure locally (e.g. show it inside a form
+        // dialog) by suppressing the global error dialog for this one request. The request still
+        // throws on a non-success status, so the caller's try/catch runs as usual.
+        public async Task<TResponse> PostAsync<TResponse, TRequest>(TRequest data, string url, bool suppressGlobalError, CancellationToken ct = default)
+        {
+            using var request = BuildJsonRequest(HttpMethod.Post, url, data, suppressGlobalError);
+            var response = await _httpClient.SendAsync(request, ct);
+            return await ReadAsync<TResponse>(response);
+        }
+
+        public async Task<TResponse> PutAsync<TResponse, TRequest>(TRequest data, string url, bool suppressGlobalError, CancellationToken ct = default)
+        {
+            using var request = BuildJsonRequest(HttpMethod.Put, url, data, suppressGlobalError);
+            var response = await _httpClient.SendAsync(request, ct);
+            return await ReadAsync<TResponse>(response);
+        }
+
+        public Task<bool> PutAsync<T>(T data, string url, bool suppressGlobalError, CancellationToken ct = default)
+            => PutAsync<bool, T>(data, url, suppressGlobalError, ct);
+
+        private static HttpRequestMessage BuildJsonRequest<TRequest>(HttpMethod method, string url, TRequest data, bool suppressGlobalError)
+        {
+            var request = new HttpRequestMessage(method, url)
+            {
+                Content = JsonContent.Create(data, options: JsonOptions)
+            };
+
+            if (suppressGlobalError)
+                request.Options.Set(ApiRequestOptions.SuppressGlobalErrorDialog, true);
+
+            return request;
+        }
 
         public async Task<T> DeleteAsync<T>(string url, CancellationToken ct = default)
         {

@@ -161,6 +161,9 @@ public int? ParentTaskId { get; set; }
         // Production note – a standalone scalar field (not in Metadata), does not affect economy.
         public string? ProductionNote { get; set; }
 
+        // Reviewer comment (Granskarkommentar) – standalone scalar field, does not affect economy.
+        public string? ReviewerComment { get; set; }
+
         public List<ResourceListDTO> Resources { get; set; } = [];
     }
 }

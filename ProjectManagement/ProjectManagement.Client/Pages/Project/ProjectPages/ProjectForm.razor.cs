@@ -3,6 +3,7 @@ using BlazorMHD.UI.Core.Navigation;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.JSInterop;
 using ProjectManagement.Client.Shared.Components;
 using ProjectManagement.Client.Shared.MVVM.Folder;
 using ProjectManagement.Client.Shared.SharedComponent;
@@ -35,6 +36,16 @@ namespace ProjectManagement.Client.Pages.Project.ProjectPages
         private AddressDTO MainAddress { get; set; } = new();
         private List<ListDTO> ResponsibilityUsers { get; set; } = [];
         [Inject] private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = default!;
+        [Inject] private IJSRuntime JS { get; set; } = default!;
+
+        // localStorage key for the per-user "don't show again" choice. Project-form only — the
+        // calculation form uses its own key so the two notices are independent.
+        private const string ReviewerInfoStorageKeyPrefix = "atacost.hideReviewerViewOnlyInfo.project";
+
+        // One-time view-only-reviewer notice state. _hideReviewerInfo is loaded once from localStorage.
+        private bool _hideReviewerInfo;
+        private bool _showReviewerInfoModal;
+        private bool _dontShowReviewerInfoAgain;
 
         private string ProjectResponsible
         {
@@ -83,6 +94,26 @@ namespace ProjectManagement.Client.Pages.Project.ProjectPages
 
         private List<MhdSelectItem<string>> UserItems =>
             ResponsibilityUserOptions
+                .Select(u => new MhdSelectItem<string> { Value = u, Label = u })
+                .ToList();
+
+        // Display names of users whose system role is Visare (view-only). Used to (a) keep them out of
+        // the Kalkylansvarig picker (a responsible must be able to change), and (b) show a discreet note
+        // when such a person is picked as Granskare (reviewer). Detection is best-effort by display name;
+        // when a name can't be resolved we simply don't restrict/notice (graceful degradation).
+        private readonly HashSet<string> _viewerUserNames = new(StringComparer.OrdinalIgnoreCase);
+
+        private bool IsViewerName(string? name) =>
+            !string.IsNullOrWhiteSpace(name) && _viewerUserNames.Contains(name.Trim());
+
+        // The selected reviewer (Granskare) only has view access → can read and comment, not change.
+        private bool SelectedReviewerIsViewerOnly => IsViewerName(ProjectUpdate.Inspector);
+
+        // Kalkylansvarig options exclude view-only users (rule unchanged: responsible must be able to
+        // change). The currently selected responsible is always kept so legacy values aren't dropped.
+        private List<MhdSelectItem<string>> ResponsibleUserItems =>
+            ResponsibilityUserOptions
+                .Where(u => !IsViewerName(u) || string.Equals(u, ProjectResponsible, StringComparison.OrdinalIgnoreCase))
                 .Select(u => new MhdSelectItem<string> { Value = u, Label = u })
                 .ToList();
 
@@ -264,18 +295,25 @@ namespace ProjectManagement.Client.Pages.Project.ProjectPages
                 if (!PMRolesConst.Tenant.AdminManger.Split(',').Any(user.IsInRole))
                     return;
 
-                var departments = Folder.State.Departments?.Any() == true
+                var departments = Folder.State.Departments?.Count > 0
                     ? Folder.State.Departments
                     : await Repo.Departments.GetDepartmentsAsListAsync() ?? [];
 
                 var usersByName = new Dictionary<string, ListDTO>(StringComparer.OrdinalIgnoreCase);
+                _viewerUserNames.Clear();
 
                 foreach (var department in departments)
                 {
-                    var users = await Repo.Departments.GetUsersAsListAsync(department.Id) ?? [];
+                    var users = await Repo.Departments.GetUsersAuthAsListAsync(department.Id) ?? [];
 
-                    foreach (var departmentUser in users.Where(x => !string.IsNullOrWhiteSpace(x.Name)))
-                        usersByName.TryAdd(departmentUser.Name.Trim(), departmentUser);
+                    foreach (var departmentUser in users.Where(x => !string.IsNullOrWhiteSpace(x.FullName)))
+                    {
+                        var name = departmentUser.FullName.Trim();
+                        usersByName.TryAdd(name, new ListDTO { Id = departmentUser.UserId ?? 0, Name = name });
+
+                        if (string.Equals(departmentUser.Role, PMRolesConst.Tenant.Viewer, StringComparison.OrdinalIgnoreCase))
+                            _viewerUserNames.Add(name);
+                    }
                 }
 
                 ResponsibilityUsers = [.. usersByName.Values.OrderBy(x => x.Name)];
@@ -305,6 +343,68 @@ namespace ProjectManagement.Client.Pages.Project.ProjectPages
             EnsureResponsibleSlot();
             ProjectResponsible = ProjectResponsible.Trim();
             ProjectUpdate.Inspector = ProjectUpdate.Inspector?.Trim() ?? string.Empty;
+        }
+
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (!firstRender)
+                return;
+
+            try
+            {
+                var key = await GetReviewerInfoStorageKeyAsync();
+                var stored = await JS.InvokeAsync<string?>("localStorage.getItem", key);
+                _hideReviewerInfo = string.Equals(stored, "true", StringComparison.OrdinalIgnoreCase);
+            }
+            catch (Exception ex) when (ex is JSException or JSDisconnectedException or InvalidOperationException or TaskCanceledException)
+            {
+                // JS unavailable (prerender/circuit gone): default to showing the notice.
+            }
+        }
+
+        // Granskare changed: keep the value, then show the one-time notice when the picked reviewer is
+        // view-only and the user hasn't opted out. Selecting a view-only reviewer never grants edit
+        // rights — this is purely informational.
+        private Task OnInspectorChanged(string? value)
+        {
+            ProjectUpdate.Inspector = value ?? string.Empty;
+
+            if (SelectedReviewerIsViewerOnly && !_hideReviewerInfo)
+            {
+                _dontShowReviewerInfoAgain = false;
+                _showReviewerInfoModal = true;
+            }
+
+            return Task.CompletedTask;
+        }
+
+        private async Task DismissReviewerInfoAsync()
+        {
+            _showReviewerInfoModal = false;
+
+            if (!_dontShowReviewerInfoAgain)
+                return;
+
+            _hideReviewerInfo = true;
+            try
+            {
+                var key = await GetReviewerInfoStorageKeyAsync();
+                await JS.InvokeVoidAsync("localStorage.setItem", key, "true");
+            }
+            catch (Exception ex) when (ex is JSException or JSDisconnectedException or InvalidOperationException or TaskCanceledException)
+            {
+                // Persisting the preference failed (JS unavailable): the notice simply shows again next time.
+            }
+        }
+
+        private async Task<string> GetReviewerInfoStorageKeyAsync()
+        {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            var userId = user.FindFirst(PMClaimsConst.UserId)?.Value
+                         ?? user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                         ?? "anonymous";
+            return $"{ReviewerInfoStorageKeyPrefix}.{userId}";
         }
 
         private static void AddOption(HashSet<string> options, string? value)

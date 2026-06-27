@@ -678,7 +678,11 @@ public static partial class SwedishTaskTextNormalizer
 
         lock (ExternalSynonymLock)
         {
+            // CA1508: double-checked locking — another thread may have assigned the field after the
+            // first null-check above, so this second check inside the lock is intentional, not dead.
+#pragma warning disable CA1508
             externalSynonymMap ??= LoadExternalSynonymMap();
+#pragma warning restore CA1508
             return externalSynonymMap;
         }
     }

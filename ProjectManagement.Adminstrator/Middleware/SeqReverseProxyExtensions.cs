@@ -162,7 +162,7 @@ public static class SeqReverseProxyExtensions
             return "/seq/" + location[targetBaseUri.ToString().Length..].TrimStart('/');
         }
 
-        if (location.StartsWith("/", StringComparison.Ordinal) && !location.StartsWith("/seq", StringComparison.OrdinalIgnoreCase))
+        if (location.StartsWith('/') && !location.StartsWith("/seq", StringComparison.OrdinalIgnoreCase))
         {
             return "/seq" + location;
         }
@@ -180,6 +180,6 @@ public static class SeqReverseProxyExtensions
 
     private static string NormalizeBaseUrl(string url)
     {
-        return url.EndsWith("/", StringComparison.Ordinal) ? url : url + "/";
+        return url.EndsWith('/') ? url : url + "/";
     }
 }

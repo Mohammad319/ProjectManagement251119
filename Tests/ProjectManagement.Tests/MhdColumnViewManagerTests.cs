@@ -57,16 +57,34 @@ public class MhdColumnViewManagerTests
             return Task.CompletedTask;
         }
 
+        public List<string>? ColumnOrder { get; set; }
+        public int SaveOrderCalls { get; private set; }
+
+        public Task<List<string>?> LoadColumnOrderAsync() => Task.FromResult(ColumnOrder);
+
+        public Task SaveColumnOrderAsync(IReadOnlyList<string> order)
+        {
+            SaveOrderCalls++;
+            ColumnOrder = order.ToList();
+            return Task.CompletedTask;
+        }
+
         private static MhdSavedColumnView Clone(MhdSavedColumnView v) => new()
         {
             Name = v.Name,
             CreatedAt = v.CreatedAt,
             Columns = new Dictionary<string, bool>(v.Columns),
+            Order = new List<string>(v.Order),
         };
     }
 
     private static MhdColumnViewManager Create(FakeStore store) =>
         new(store, Defaults, Labels, alwaysVisibleKeys: new[] { "row" });
+
+    private static MhdColumnViewManager CreateWithLock(FakeStore store) =>
+        new(store, Defaults, Labels,
+            alwaysVisibleKeys: new[] { "row" },
+            lockedOrderKeys: new[] { "row", "code" });
 
     [Fact]
     public void Fresh_Manager_Starts_On_Standard()
@@ -244,5 +262,93 @@ public class MhdColumnViewManagerTests
         var b = new Dictionary<string, bool> { ["name"] = true, ["code"] = true };
 
         Assert.Equal(MhdSavedColumnView.BuildSignature(a), MhdSavedColumnView.BuildSignature(b));
+    }
+
+    // ── column order ─────────────────────────────────────────────────────────
+
+    [Fact]
+    public void Fresh_Manager_Starts_In_Canonical_Order()
+    {
+        var mgr = CreateWithLock(new FakeStore());
+
+        Assert.Equal(new[] { "row", "code", "name", "extra" }, mgr.ColumnOrder.ToArray());
+        Assert.True(mgr.IsColumnLocked("row"));
+        Assert.True(mgr.IsColumnLocked("code"));
+        Assert.False(mgr.IsColumnLocked("name"));
+        Assert.True(mgr.IsStandardViewActive);
+    }
+
+    [Fact]
+    public async Task MoveColumn_Reorders_Persists_And_Makes_Layout_Custom()
+    {
+        var store = new FakeStore();
+        var mgr = CreateWithLock(store);
+        await mgr.ApplyStandardViewAsync();
+
+        var moved = await mgr.MoveColumnAsync("extra", -1); // before "name"
+
+        Assert.True(moved);
+        Assert.Equal(new[] { "row", "code", "extra", "name" }, mgr.ColumnOrder.ToArray());
+        Assert.False(mgr.IsStandardViewActive);             // order change → not Standard
+        Assert.Equal("Standard · modified", mgr.ActiveViewLabel);
+        Assert.True(store.SaveOrderCalls > 0);
+    }
+
+    [Fact]
+    public async Task MoveColumn_Cannot_Displace_Locked_Columns()
+    {
+        var mgr = CreateWithLock(new FakeStore());
+
+        // "name" is the first movable; it can't move up into the locked region.
+        Assert.False(await mgr.MoveColumnAsync("name", -1));
+        // Locked columns themselves never move.
+        Assert.False(await mgr.MoveColumnAsync("code", 1));
+        Assert.Equal(new[] { "row", "code", "name", "extra" }, mgr.ColumnOrder.ToArray());
+    }
+
+    [Fact]
+    public async Task InitializeAsync_Restores_Persisted_Order_With_Locked_First()
+    {
+        var store = new FakeStore { ColumnOrder = new List<string> { "extra", "name", "code", "row" } };
+        var mgr = CreateWithLock(store);
+
+        await mgr.InitializeAsync();
+
+        // Locked keys forced to the front (canonical), movable keys keep the saved order.
+        Assert.Equal(new[] { "row", "code", "extra", "name" }, mgr.ColumnOrder.ToArray());
+    }
+
+    [Fact]
+    public async Task SaveAndApply_Roundtrips_Order_And_Standard_Resets_It()
+    {
+        var store = new FakeStore();
+        var mgr = CreateWithLock(store);
+        await mgr.MoveColumnAsync("extra", -1);             // custom order
+        var error = await mgr.SaveCurrentViewAsync("Reordered");
+
+        Assert.Null(error);
+        var view = mgr.SavedViews[0];
+        Assert.Equal(new[] { "row", "code", "extra", "name" }, view.Order.ToArray());
+        Assert.True(mgr.IsViewActive(view));
+
+        await mgr.ApplyStandardViewAsync();                 // resets to canonical order
+        Assert.Equal(new[] { "row", "code", "name", "extra" }, mgr.ColumnOrder.ToArray());
+        Assert.False(mgr.IsViewActive(view));
+
+        await mgr.ApplySavedViewAsync(view);                // re-applies saved order
+        Assert.Equal(new[] { "row", "code", "extra", "name" }, mgr.ColumnOrder.ToArray());
+        Assert.True(mgr.IsViewActive(view));
+    }
+
+    [Fact]
+    public async Task Views_Differing_Only_By_Order_Are_Not_Duplicates()
+    {
+        var mgr = CreateWithLock(new FakeStore());
+        await mgr.SetColumnVisibleAsync("extra", true);
+        await mgr.SaveCurrentViewAsync("Natural");
+
+        await mgr.MoveColumnAsync("extra", -1);             // same visibility, new order
+        Assert.Null(await mgr.SaveCurrentViewAsync("Reordered"));
+        Assert.Equal(2, mgr.SavedViews.Count);
     }
 }

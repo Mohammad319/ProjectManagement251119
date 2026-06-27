@@ -7,6 +7,7 @@
 @using ProjectManagement.Shared
 @using ProjectManagement.Shared.Constant
 @using ProjectManagement.Shared.DTO.Notification
+@using ProjectManagement.Shared.Enums
 @using ProjectManagement.Services.UI
 @implements IDisposable
 @inject ICommandDispatcher Dispatcher
@@ -30,10 +31,10 @@
         </span>
         @if (_unreadCount > 0)
         {
-            <span class="absolute -top-1 -right-1 inline-flex min-w-[1.1rem] items-center justify-center rounded-full bg-rose-600 px-1 text-[0.65rem] font-semibold leading-tight text-white ring-2 ring-white dark:ring-gray-800"
-                  aria-label="@string.Format(PMWebResource.NotificationsUnreadAria, _unreadCount)">
-                @BadgeText
-            </span>
+            @* Small, discrete dot (no number) – the unread count is shown in the panel header instead.
+               Absolutely positioned in the icon corner so it never shifts the topbar layout. *@
+            <span class="pointer-events-none absolute right-0 top-0 h-2 w-2 rounded-full bg-rose-600 ring-2 ring-white dark:ring-gray-800"
+                  aria-label="@string.Format(PMWebResource.NotificationsUnreadAria, _unreadCount)"></span>
         }
     </button>
 
@@ -42,23 +43,27 @@
         <div class="fixed inset-0 z-[990]" @onclick="ClosePanel"></div>
         <div class="absolute right-0 z-[1000] mt-2 w-80 max-w-[90vw] origin-top-right rounded-xl border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
              role="menu" tabindex="-1" @onkeydown="OnPanelKeyDownAsync">
-            <div class="flex items-center justify-between gap-2 border-b border-gray-100 px-4 py-2 dark:border-gray-700">
-                <span class="text-sm font-semibold text-gray-800 dark:text-gray-100">@PMWebResource.NotificationsTitle</span>
-                <div class="flex items-center gap-3">
-                    @if (_unreadCount > 0)
-                    {
-                        <button type="button" class="text-xs text-indigo-600 hover:underline dark:text-indigo-400"
-                                @onclick="MarkAllReadAsync">
-                            @PMWebResource.NotificationsMarkAllRead
-                        </button>
-                    }
-                    @if (HasReadItems)
-                    {
-                        <button type="button" class="text-xs text-gray-500 hover:underline dark:text-gray-400"
-                                @onclick="ClearReadAsync">
-                            @PMWebResource.NotificationsClearRead
-                        </button>
-                    }
+            @* Compact two-row header: title + "Rensa lästa" on row 1, the unread count +
+               "Markera alla som lästa" on row 2. Both actions stay visible but go disabled
+               (no pointer) when there is nothing to act on. No dropdown – two plain text actions. *@
+            <div class="border-b border-gray-100 px-4 py-2 dark:border-gray-700">
+                <div class="flex items-center justify-between gap-2">
+                    <span class="text-sm font-semibold text-gray-800 dark:text-gray-100">@PMWebResource.NotificationsTitle</span>
+                    <button type="button"
+                            class="@(HasReadItems ? "pm-text-action-secondary" : "pm-text-action-disabled") text-xs"
+                            disabled="@(!HasReadItems)"
+                            @onclick="ClearReadAsync">
+                        @PMWebResource.NotificationsClearRead
+                    </button>
+                </div>
+                <div class="mt-0.5 flex items-center justify-between gap-2">
+                    <span class="text-[0.7rem] font-medium text-gray-500 dark:text-gray-400">@UnreadCountText</span>
+                    <button type="button"
+                            class="@(_unreadCount > 0 ? "pm-text-action-secondary" : "pm-text-action-disabled") text-xs"
+                            disabled="@(_unreadCount == 0)"
+                            @onclick="MarkAllReadAsync">
+                        @PMWebResource.NotificationsMarkAllRead
+                    </button>
                 </div>
             </div>
 
@@ -69,7 +74,10 @@
                 }
                 else if (_summary is null || _summary.Items.Count == 0)
                 {
-                    <div class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">@PMWebResource.NotificationsEmpty</div>
+                    <div class="px-4 py-6 text-center">
+                        <p class="text-sm font-medium text-gray-700 dark:text-gray-200">@PMWebResource.NotificationsEmpty</p>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">@PMWebResource.NotificationsEmptyHint</p>
+                    </div>
                 }
                 else
                 {
@@ -83,45 +91,98 @@
                                 }
                                 <div class="min-w-0 flex-1">
                                     @{
+                                        var isRemoved = item.Type == NotificationType.ProjectAccessRemoved;
+                                        var isExpanded = _expandedNotificationId == item.Id;
                                         var accessLevel = NotificationPresenter.AccessLevelLabel(item);
                                         var calcInfo = NotificationPresenter.CalculationsInfo(item);
+                                        var fullProject = string.IsNullOrWhiteSpace(item.ProjectName) ? "—" : item.ProjectName!;
                                     }
                                     <p class="truncate text-sm font-medium text-gray-900 dark:text-gray-100">@NotificationPresenter.Title(item)</p>
-                                    <p class="mt-0.5 whitespace-pre-line text-xs text-gray-600 dark:text-gray-300">@NotificationPresenter.Message(item)</p>
 
-                                    @if (!string.IsNullOrWhiteSpace(accessLevel) || !string.IsNullOrWhiteSpace(calcInfo))
-                                    {
-                                        <div class="mt-1 flex flex-wrap gap-1">
-                                            @if (!string.IsNullOrWhiteSpace(accessLevel))
-                                            {
-                                                <span class="rounded bg-gray-100 px-1.5 py-0.5 text-[0.65rem] text-gray-700 dark:bg-gray-700 dark:text-gray-200">@accessLevel</span>
-                                            }
-                                            @if (!string.IsNullOrWhiteSpace(calcInfo))
-                                            {
-                                                <span class="rounded bg-gray-100 px-1.5 py-0.5 text-[0.65rem] text-gray-700 dark:bg-gray-700 dark:text-gray-200">@calcInfo</span>
-                                            }
-                                        </div>
-                                    }
+                                    @* Compact message – clamped to max two lines, long project names ellipsised. *@
+                                    <p class="mt-0.5 line-clamp-2 text-xs text-gray-600 dark:text-gray-300">@NotificationPresenter.ShortMessage(item)</p>
 
-                                    <div class="mt-1.5 flex items-center justify-between gap-2">
+                                    @* Date + actions on one row (wraps on narrow widths but stays compact). *@
+                                    <div class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
                                         <span class="text-[0.65rem] text-gray-400">@FormatDate(item.CreatedAt)</span>
-                                        <div class="flex items-center gap-2">
-                                            @if (!item.IsRead)
-                                            {
-                                                <button type="button" class="text-[0.65rem] text-gray-500 hover:underline dark:text-gray-400"
-                                                        @onclick="() => MarkReadAsync(item)">
-                                                    @PMWebResource.NotificationsMarkRead
-                                                </button>
-                                            }
-                                            @if (item.ProjectId.HasValue)
-                                            {
-                                                <button type="button" class="text-[0.65rem] font-medium text-indigo-600 hover:underline dark:text-indigo-400"
-                                                        @onclick="() => OpenProjectAsync(item)">
-                                                    @(item.CalculationId.HasValue ? PMWebResource.NotificationsOpenCalculation : PMWebResource.NotificationsOpenProject)
-                                                </button>
-                                            }
-                                        </div>
+                                        <button type="button" class="pm-text-action-secondary text-[0.65rem]"
+                                                @onclick="() => ToggleDetails(item)">
+                                            @(isExpanded ? PMWebResource.NotificationsHideDetails : PMWebResource.NotificationsShowDetails)
+                                        </button>
+                                        @if (!item.IsRead)
+                                        {
+                                            <button type="button" class="pm-text-action-secondary text-[0.65rem]"
+                                                    @onclick="() => MarkReadAsync(item)">
+                                                @PMWebResource.NotificationsMarkRead
+                                            </button>
+                                        }
+                                        @* "Open project" is hidden for removed access – the user can no longer open it. *@
+                                        @if (item.ProjectId.HasValue && !isRemoved)
+                                        {
+                                            <button type="button" class="pm-text-action-primary text-[0.65rem]"
+                                                    @onclick="() => OpenProjectAsync(item)">
+                                                @(item.CalculationId.HasValue ? PMWebResource.NotificationsOpenCalculation : PMWebResource.NotificationsOpenProject)
+                                            </button>
+                                        }
                                     </div>
+
+                                    @* "Projektet är inte längre tillgängligt." is intentionally NOT shown in the
+                                       compact view – it now lives under "Visa detaljer" (see the details block). *@
+
+                                    @* Extra information only when expanded via "Show details". *@
+                                    @if (isExpanded)
+                                    {
+                                        <dl class="mt-1.5 space-y-0.5 rounded-lg bg-gray-50 px-2 py-1.5 text-[0.65rem] dark:bg-gray-700/40">
+                                            @if (isRemoved)
+                                            {
+                                                <p class="pb-0.5 font-medium text-gray-600 dark:text-gray-300">@PMWebResource.NotificationsProjectUnavailable</p>
+                                            }
+                                            <div class="flex gap-1">
+                                                <dt class="font-semibold text-gray-500 dark:text-gray-400">@PMWebResource.NotificationDetailProject:</dt>
+                                                <dd class="min-w-0 break-words text-gray-700 dark:text-gray-200">@fullProject</dd>
+                                            </div>
+                                            @if (isRemoved)
+                                            {
+                                                <div class="flex gap-1">
+                                                    <dt class="font-semibold text-gray-500 dark:text-gray-400">@PMWebResource.NotificationDetailStatus:</dt>
+                                                    <dd class="text-gray-700 dark:text-gray-200">@PMWebResource.NotificationTitleAccessRemoved</dd>
+                                                </div>
+                                                <div class="flex gap-1">
+                                                    <dt class="font-semibold text-gray-500 dark:text-gray-400">@PMWebResource.NotificationDetailTime:</dt>
+                                                    <dd class="text-gray-700 dark:text-gray-200">@FormatDate(item.CreatedAt)</dd>
+                                                </div>
+                                                <p class="pt-0.5 text-gray-500 dark:text-gray-400">@PMWebResource.NotificationAccessRemovedDetail</p>
+                                            }
+                                            else
+                                            {
+                                                @if (!string.IsNullOrWhiteSpace(item.ActorName))
+                                                {
+                                                    <div class="flex gap-1">
+                                                        <dt class="font-semibold text-gray-500 dark:text-gray-400">@PMWebResource.NotificationDetailSharedBy:</dt>
+                                                        <dd class="text-gray-700 dark:text-gray-200">@item.ActorName</dd>
+                                                    </div>
+                                                }
+                                                @if (!string.IsNullOrWhiteSpace(accessLevel))
+                                                {
+                                                    <div class="flex gap-1">
+                                                        <dt class="font-semibold text-gray-500 dark:text-gray-400">@PMWebResource.NotificationDetailAccessLevel:</dt>
+                                                        <dd class="text-gray-700 dark:text-gray-200">@accessLevel</dd>
+                                                    </div>
+                                                }
+                                                @if (!string.IsNullOrWhiteSpace(calcInfo))
+                                                {
+                                                    <div class="flex gap-1">
+                                                        <dt class="font-semibold text-gray-500 dark:text-gray-400">@PMWebResource.NotificationDetailCalculations:</dt>
+                                                        <dd class="text-gray-700 dark:text-gray-200">@calcInfo</dd>
+                                                    </div>
+                                                }
+                                                <div class="flex gap-1">
+                                                    <dt class="font-semibold text-gray-500 dark:text-gray-400">@PMWebResource.NotificationDetailValidity:</dt>
+                                                    <dd class="text-gray-700 dark:text-gray-200">@NotificationPresenter.ValidityLabel(item)</dd>
+                                                </div>
+                                            }
+                                        </dl>
+                                    }
 
                                     @if (_unavailableNotificationId == item.Id)
                                     {
@@ -132,7 +193,7 @@
                                 </div>
 
                                 <button type="button"
-                                        class="mt-0.5 flex-none rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+                                        class="pm-icon-action mt-0.5 flex-none p-1"
                                         title="@PMWebResource.NotificationsRemove"
                                         aria-label="@PMWebResource.NotificationsRemove"
                                         @onclick="() => RemoveAsync(item)">
@@ -163,12 +224,22 @@
     private bool _loading;
     private NotificationSummaryDTO? _summary;
     private int? _unavailableNotificationId;
+    // Which notification currently has its details expanded (null = all collapsed/compact).
+    private int? _expandedNotificationId;
 
     private IDisposable? _subscription;
 
-    private string BadgeText => _unreadCount > 99 ? "99+" : _unreadCount.ToString();
-
     private bool HasReadItems => _summary?.Items.Any(i => i.IsRead) == true;
+
+    // "1 oläst" / "N olästa" – always the UNREAD count (never "lästa"). Shown even at 0
+    // so the two-row header keeps a stable layout.
+    private string UnreadCountText =>
+        string.Format(
+            _unreadCount == 1 ? PMWebResource.NotificationsUnreadCountOne : PMWebResource.NotificationsUnreadCount,
+            _unreadCount);
+
+    private void ToggleDetails(NotificationListItemDTO item) =>
+        _expandedNotificationId = _expandedNotificationId == item.Id ? null : item.Id;
 
     protected override async Task OnInitializedAsync()
     {
@@ -234,6 +305,7 @@
     {
         _open = false;
         _unavailableNotificationId = null;
+        _expandedNotificationId = null;
     }
 
     private Task OnPanelKeyDownAsync(KeyboardEventArgs e)
@@ -304,6 +376,8 @@
         _summary?.Items.Remove(item);
         if (_unavailableNotificationId == item.Id)
             _unavailableNotificationId = null;
+        if (_expandedNotificationId == item.Id)
+            _expandedNotificationId = null;
 
         await InvokeAsync(StateHasChanged);
     }

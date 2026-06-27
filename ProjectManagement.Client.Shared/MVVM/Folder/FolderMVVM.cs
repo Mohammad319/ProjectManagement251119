@@ -12,5 +12,13 @@ namespace ProjectManagement.Client.Shared.MVVM.Folder
         public bool ProjectsLoaded { get; set; }
 
         public bool IsLoading { get; set; } = false; // جديد
+
+        /// <summary>
+        /// True when this folder is a read-only VISUAL GROUP for shared/assigned projects from a
+        /// department the user has no normal access to. The tree must not offer any folder-management
+        /// action (create/edit/move/copy/archive/delete) or project create/import for such folders.
+        /// Mirrors <see cref="ProjectManagement.Shared.DTO.Folder.ListFolderDTO.IsSharedGroup"/>.
+        /// </summary>
+        public bool IsReadOnlyGroup { get; set; }
     }
 }

@@ -75,7 +75,7 @@
 
                         @* ── Aktiva filter ── *@
                         <div class="px-3 pt-1.5 pb-0.5">
-                            <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Aktiva filter</span>
+                            <span class="text-[10px] font-semibold tracking-wide text-slate-400 dark:text-slate-500">Aktiva filter</span>
                         </div>
                         @if (HasActiveFilters)
                         {
@@ -169,7 +169,7 @@
                         @* ── Sparade filter ── *@
                         <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
                         <div class="px-3 pt-0.5 pb-0.5">
-                            <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Sparade filter</span>
+                            <span class="text-[10px] font-semibold tracking-wide text-slate-400 dark:text-slate-500">Sparade filter</span>
                         </div>
                         @if (_savedCalcFilters.Count == 0)
                         {
@@ -235,11 +235,11 @@
                 @if (_viewMenuOpen)
                 {
                     <div class="fixed inset-0 z-[70]" @onclick="() => _viewMenuOpen = false"></div>
-                    <div class="absolute left-0 top-full z-[90] mt-1 w-56 rounded-md border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+                    <div class="absolute left-0 top-full z-[90] mt-1 w-72 rounded-md border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
 
                         @* Innehåll *@
                         <div class="px-3 pt-1.5 pb-0.5">
-                            <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Innehåll</span>
+                            <span class="text-[10px] font-semibold tracking-wide text-slate-400 dark:text-slate-500">Innehåll</span>
                         </div>
                         <button type="button"
                                 class="@(_contentMode == ContentModeCalculations ? "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-blue-700 dark:text-blue-300" : "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800")"
@@ -427,122 +427,127 @@
                 </EmptyTemplate>
                 <ChildContent>
                     @* Radnummer — visuell hjälpkolumn (ej sorterbar/filterbar/sökbar). Frozen-offset + sticky-left beräknas av JS-motorn via data-pm-frozen. *@
-                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("rowNumber")' ColumnKey="rowNumber" Frozen="true"
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("rowNumber")' ColumnKey="rowNumber" Order='@_columnView.OrderIndex("rowNumber")' Frozen="true"
                                     HeaderClass="w-12 select-none whitespace-nowrap bg-slate-50 px-2 py-2 text-right font-semibold text-slate-400 dark:bg-slate-900 dark:text-slate-500" HeaderStyle="min-width:44px;">
                         <HeaderContent><HoverTooltip Text="Radnummer i aktuell vy" Class="justify-end">#</HoverTooltip></HeaderContent>
                     </MhdTableColumn>
-                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("code")' ColumnKey="code" Frozen="true"
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("code")' ColumnKey="code" Order='@_columnView.OrderIndex("code")' Frozen="true"
                                     HeaderClass='@($"{SortableHeaderClass("code")} w-28 bg-slate-50 dark:bg-slate-900")' HeaderStyle="min-width:70px;" OnHeaderClick='() => SortBy("code")'>
                         <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.code @((MarkupString)SortIndicatorHtml("code")) <TableColumnFilter FilterState='CF("code")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
                     </MhdTableColumn>
-                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("name")' ColumnKey="name" Frozen="true"
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("name")' ColumnKey="name" Order='@_columnView.OrderIndex("name")' Frozen="true"
                                     HeaderClass='@($"{SortableHeaderClass("name")} min-w-52 border-r border-slate-300 bg-slate-50 dark:border-slate-600 dark:bg-slate-900")' HeaderStyle="min-width:160px;" OnHeaderClick='() => SortBy("name")'>
                         <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["calculationName"] @((MarkupString)SortIndicatorHtml("name")) <TableColumnFilter FilterState='CF("name")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
                     </MhdTableColumn>
-                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("version")' ColumnKey="version"
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("version")' ColumnKey="version" Order='@_columnView.OrderIndex("version")'
                                     HeaderClass='@SortableHeaderClass("version")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("version")'>
                         <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["version"] @((MarkupString)SortIndicatorHtml("version")) <TableColumnFilter FilterState='CF("version")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
                     </MhdTableColumn>
-                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("project")' ColumnKey="project"
-                                    HeaderClass='@SortableHeaderClass("project")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("project")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["project"] @((MarkupString)SortIndicatorHtml("project")) <TableColumnFilter FilterState='CF("project")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
-                    </MhdTableColumn>
-                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("folder")' ColumnKey="folder"
-                                    HeaderClass='@SortableHeaderClass("folder")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("folder")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["folder"] @((MarkupString)SortIndicatorHtml("folder")) <TableColumnFilter FilterState='CF("folder")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
-                    </MhdTableColumn>
-                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("calculationType")' ColumnKey="calculationType"
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("calculationType")' ColumnKey="calculationType" Order='@_columnView.OrderIndex("calculationType")'
                                     HeaderClass='@SortableHeaderClass("calculationType")' HeaderStyle="min-width:150px;" OnHeaderClick='() => SortBy("calculationType")'>
                         <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["calculationType"] @((MarkupString)SortIndicatorHtml("calculationType")) <TableColumnFilter FilterState='CF("calculationType")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
                     </MhdTableColumn>
-                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("status")' ColumnKey="status"
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("status")' ColumnKey="status" Order='@_columnView.OrderIndex("status")'
                                     HeaderClass='@SortableHeaderClass("status")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("status")'>
                         <HeaderContent><span class="inline-flex items-center gap-1">Kalkylstatus @((MarkupString)SortIndicatorHtml("status")) <TableColumnFilter FilterState='CF("status")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
                     </MhdTableColumn>
-                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("calculationRole")' ColumnKey="calculationRole"
-                                    HeaderClass='@SortableHeaderClass("calculationRole")' HeaderStyle="min-width:150px;" OnHeaderClick='() => SortBy("calculationRole")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["calculationRole"] @((MarkupString)SortIndicatorHtml("calculationRole")) <TableColumnFilter FilterState='CF("calculationRole")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
-                    </MhdTableColumn>
-                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("responsible")' ColumnKey="responsible"
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("responsible")' ColumnKey="responsible" Order='@_columnView.OrderIndex("responsible")'
                                     HeaderClass='@SortableHeaderClass("responsible")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("responsible")'>
                         <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["calculationResponsible"] @((MarkupString)SortIndicatorHtml("responsible")) <TableColumnFilter FilterState='CF("responsible")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
                     </MhdTableColumn>
-                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("inspector")' ColumnKey="inspector"
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("inspector")' ColumnKey="inspector" Order='@_columnView.OrderIndex("inspector")'
                                     HeaderClass='@SortableHeaderClass("inspector")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("inspector")'>
                         <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["reviewer"] @((MarkupString)SortIndicatorHtml("inspector")) <TableColumnFilter FilterState='CF("inspector")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
                     </MhdTableColumn>
-                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("qa")' ColumnKey="qa"
-                                    HeaderClass='@SortableHeaderClass("qa")' HeaderStyle="min-width:120px;" OnHeaderClick='() => SortBy("qa")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1"><HoverTooltip Text="Sista dag för frågor och svar" ShowInfoIcon="true" Focusable="true">Frågor/svar</HoverTooltip> @((MarkupString)SortIndicatorHtml("qa")) <TableColumnFilter FilterState='CF("qa")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
-                    </MhdTableColumn>
-                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("deadline")' ColumnKey="deadline"
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("deadline")' ColumnKey="deadline" Order='@_columnView.OrderIndex("deadline")'
                                     HeaderClass='@SortableHeaderClass("deadline")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("deadline")'>
                         <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.tenderDeadline @((MarkupString)SortIndicatorHtml("deadline")) <TableColumnFilter FilterState='CF("deadline")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
                     </MhdTableColumn>
-                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("priority")' ColumnKey="priority"
-                                    HeaderClass='@SortableHeaderClass("priority")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("priority")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1"><HoverTooltip Text="Sannolikhet att vinna" ShowInfoIcon="true" Focusable="true">Vinstchans</HoverTooltip> @((MarkupString)SortIndicatorHtml("priority")) <TableColumnFilter FilterState='CF("priority")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
-                    </MhdTableColumn>
-                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("address")' ColumnKey="address"
-                                    HeaderClass='@SortableHeaderClass("address")' HeaderStyle="min-width:140px;" OnHeaderClick='() => SortBy("address")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1">Adress @((MarkupString)SortIndicatorHtml("address")) <TableColumnFilter FilterState='CF("address")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
-                    </MhdTableColumn>
-                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("createdAt")' ColumnKey="createdAt"
-                                    HeaderClass='@SortableHeaderClass("createdAt")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("createdAt")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["createdDate"] @((MarkupString)SortIndicatorHtml("createdAt")) <TableColumnFilter FilterState='CF("createdAt")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
-                    </MhdTableColumn>
-                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("updatedAt")' ColumnKey="updatedAt"
-                                    HeaderClass='@SortableHeaderClass("updatedAt")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("updatedAt")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["lastModified"] @((MarkupString)SortIndicatorHtml("updatedAt")) <TableColumnFilter FilterState='CF("updatedAt")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
-                    </MhdTableColumn>
-                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("start")' ColumnKey="start"
-                                    HeaderClass='@SortableHeaderClass("start")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("start")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.startDate @((MarkupString)SortIndicatorHtml("start")) <TableColumnFilter FilterState='CF("start")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
-                    </MhdTableColumn>
-                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("end")' ColumnKey="end"
-                                    HeaderClass='@SortableHeaderClass("end")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("end")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.endDate @((MarkupString)SortIndicatorHtml("end")) <TableColumnFilter FilterState='CF("end")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
-                    </MhdTableColumn>
-                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("timeMonth")' ColumnKey="timeMonth"
-                                    HeaderClass='@SortableHeaderClass("timeMonth")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("timeMonth")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["projectDurationMonths"] @((MarkupString)SortIndicatorHtml("timeMonth")) <TableColumnFilter FilterState='CF("timeMonth")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
-                    </MhdTableColumn>
-                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("tax")' ColumnKey="tax"
-                                    HeaderClass='@SortableHeaderClass("tax")' HeaderStyle="min-width:60px;" OnHeaderClick='() => SortBy("tax")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["vatPercent"] @((MarkupString)SortIndicatorHtml("tax")) <TableColumnFilter FilterState='CF("tax")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
-                    </MhdTableColumn>
-                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("archived")' ColumnKey="archived"
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("archived")' ColumnKey="archived" Order='@_columnView.OrderIndex("archived")'
                                     HeaderClass='@SortableHeaderClass("archived")' HeaderStyle="min-width:60px;" OnHeaderClick='() => SortBy("archived")'>
                         <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["archived"] @((MarkupString)SortIndicatorHtml("archived")) <TableColumnFilter FilterState='CF("archived")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
                     </MhdTableColumn>
-                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("privacy")' ColumnKey="privacy"
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("access")' ColumnKey="access" Order='@_columnView.OrderIndex("access")'
+                                    HeaderClass='@SortableHeaderClass("access")' HeaderStyle="min-width:110px;" OnHeaderClick='() => SortBy("access")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1"><HoverTooltip Text="Hur kalkylen är tillgänglig och om den ingår i extra delning. Klicka på värdet för detaljer." Focusable="true">Åtkomst</HoverTooltip> @((MarkupString)SortIndicatorHtml("access")) <TableColumnFilter FilterState='CF("access")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("project")' ColumnKey="project" Order='@_columnView.OrderIndex("project")'
+                                    HeaderClass='@SortableHeaderClass("project")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("project")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["project"] @((MarkupString)SortIndicatorHtml("project")) <TableColumnFilter FilterState='CF("project")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("folder")' ColumnKey="folder" Order='@_columnView.OrderIndex("folder")'
+                                    HeaderClass='@SortableHeaderClass("folder")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("folder")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["folder"] @((MarkupString)SortIndicatorHtml("folder")) <TableColumnFilter FilterState='CF("folder")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("calculationRole")' ColumnKey="calculationRole" Order='@_columnView.OrderIndex("calculationRole")'
+                                    HeaderClass='@SortableHeaderClass("calculationRole")' HeaderStyle="min-width:150px;" OnHeaderClick='() => SortBy("calculationRole")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["calculationRole"] @((MarkupString)SortIndicatorHtml("calculationRole")) <TableColumnFilter FilterState='CF("calculationRole")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("qa")' ColumnKey="qa" Order='@_columnView.OrderIndex("qa")'
+                                    HeaderClass='@SortableHeaderClass("qa")' HeaderStyle="min-width:120px;" OnHeaderClick='() => SortBy("qa")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1"><HoverTooltip Text="Sista dag för frågor och svar" ShowInfoIcon="true" Focusable="true">Frågor/svar</HoverTooltip> @((MarkupString)SortIndicatorHtml("qa")) <TableColumnFilter FilterState='CF("qa")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("createdAt")' ColumnKey="createdAt" Order='@_columnView.OrderIndex("createdAt")'
+                                    HeaderClass='@SortableHeaderClass("createdAt")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("createdAt")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["createdDate"] @((MarkupString)SortIndicatorHtml("createdAt")) <TableColumnFilter FilterState='CF("createdAt")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("updatedAt")' ColumnKey="updatedAt" Order='@_columnView.OrderIndex("updatedAt")'
+                                    HeaderClass='@SortableHeaderClass("updatedAt")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("updatedAt")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["lastModified"] @((MarkupString)SortIndicatorHtml("updatedAt")) <TableColumnFilter FilterState='CF("updatedAt")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("address")' ColumnKey="address" Order='@_columnView.OrderIndex("address")'
+                                    HeaderClass='@SortableHeaderClass("address")' HeaderStyle="min-width:140px;" OnHeaderClick='() => SortBy("address")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">Adress @((MarkupString)SortIndicatorHtml("address")) <TableColumnFilter FilterState='CF("address")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("priority")' ColumnKey="priority" Order='@_columnView.OrderIndex("priority")'
+                                    HeaderClass='@SortableHeaderClass("priority")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("priority")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1"><HoverTooltip Text="Sannolikhet att vinna" ShowInfoIcon="true" Focusable="true">Vinstchans</HoverTooltip> @((MarkupString)SortIndicatorHtml("priority")) <TableColumnFilter FilterState='CF("priority")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("start")' ColumnKey="start" Order='@_columnView.OrderIndex("start")'
+                                    HeaderClass='@SortableHeaderClass("start")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("start")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.startDate @((MarkupString)SortIndicatorHtml("start")) <TableColumnFilter FilterState='CF("start")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("end")' ColumnKey="end" Order='@_columnView.OrderIndex("end")'
+                                    HeaderClass='@SortableHeaderClass("end")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("end")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@CalcResource.endDate @((MarkupString)SortIndicatorHtml("end")) <TableColumnFilter FilterState='CF("end")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("timeMonth")' ColumnKey="timeMonth" Order='@_columnView.OrderIndex("timeMonth")'
+                                    HeaderClass='@SortableHeaderClass("timeMonth")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("timeMonth")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["projectDurationMonths"] @((MarkupString)SortIndicatorHtml("timeMonth")) <TableColumnFilter FilterState='CF("timeMonth")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("tax")' ColumnKey="tax" Order='@_columnView.OrderIndex("tax")'
+                                    HeaderClass='@SortableHeaderClass("tax")' HeaderStyle="min-width:60px;" OnHeaderClick='() => SortBy("tax")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["vatPercent"] @((MarkupString)SortIndicatorHtml("tax")) <TableColumnFilter FilterState='CF("tax")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    @* "Privat" är ingen egen standardkolumn (visas via Åtkomst) men behålls tekniskt –
+                       avkryssad som standard och saknas i kolumnväljaren, så den visas normalt aldrig. *@
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("privacy")' ColumnKey="privacy" Order='@_columnView.OrderIndex("privacy")'
                                     HeaderClass='@SortableHeaderClass("privacy")' HeaderStyle="min-width:60px;" OnHeaderClick='() => SortBy("privacy")'>
                         <HeaderContent><span class="inline-flex items-center gap-1">@ResourceApp._private @((MarkupString)SortIndicatorHtml("privacy")) <TableColumnFilter FilterState='CF("privacy")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
-                    </MhdTableColumn>
-                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("access")' ColumnKey="access"
-                                    HeaderClass='@SortableHeaderClass("access")' HeaderStyle="min-width:110px;" OnHeaderClick='() => SortBy("access")'>
-                        <HeaderContent><span class="inline-flex items-center gap-1"><HoverTooltip Text="Hur kalkylen är tillgänglig och om den ingår i extra delning. Klicka på värdet för detaljer." ShowInfoIcon="true" Focusable="true">Åtkomst</HoverTooltip> @((MarkupString)SortIndicatorHtml("access")) <TableColumnFilter FilterState='CF("access")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
                     </MhdTableColumn>
                 </ChildContent>
                 <RowTemplate Context="calu">
                     @{
                         var isSelected = Folder.State.Calculation?.Id == calu.Id;
-                        var rowClasses = GetCalculationRowClass(calu, isSelected);
+                        var canReorder = CanReorderCalculations;
+                        var draggableValue = canReorder ? "true" : "false";
+                        var rowClasses = GetCalculationRowClass(calu, isSelected, canReorder);
                         var rowNumber = _calcRowNumbers.TryGetValue(calu.Id, out var _rn) ? _rn : 0;
                     }
 
                         <tr @key="calu.Id"
                             class="@rowClasses"
+                            title="@(canReorder ? null : "Ändra ordning är bara tillgängligt vid manuell sortering.")"
                             @oncontextmenu:preventDefault
                             @oncontextmenu="() => Context(calu)"
                             @onclick="async () => await OpenCalculationAsync(calu)"
                             @ondrop="async _ => await HandleDrop(calu)"
                             @ondragleave="() => calu.IsDragOver = false"
                             @ondragover:preventDefault="true"
-                            @ondragover="() => calu.IsDragOver = !FolderScopeMode && calcDraging is not null"
-                            @ondragstart="() => calcDraging = calu"
+                            @ondragover="() => calu.IsDragOver = canReorder && calcDraging is not null"
+                            @ondragstart="() => OnCalcDragStart(calu)"
                             @ondragend="() => calcDraging = null"
-                            draggable="@(!FolderScopeMode)">
+                            draggable="@draggableValue">
                             @if (IsCalculationColumnVisible("rowNumber"))
                             {
                                 <td class="sticky left-0 z-[2] w-12 whitespace-nowrap bg-white px-2 py-2 text-right font-mono text-[11px] text-slate-400 group-hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-500 dark:group-hover:bg-slate-900/80 @(isSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
@@ -559,7 +564,7 @@
                             {
                                 <td class="sticky @NameStickyLeftClass z-[2] max-w-80 border-r border-slate-200 bg-white px-3 py-2 group-hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:group-hover:bg-slate-900/80 @(isSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
                                     <div class="flex min-w-0 items-center gap-2">
-                                        <HoverTooltip Text="@calu.Name" Class="truncate font-semibold text-slate-800 dark:text-slate-100">
+                                        <HoverTooltip Text="@calu.Name" OnlyWhenTruncated="true" Class="truncate font-semibold text-slate-800 dark:text-slate-100">
                                             <span class="truncate">@calu.Name</span>
                                         </HoverTooltip>
                                         @if (calu.ImportInfo?.IsImportedCopy == true)
@@ -597,14 +602,6 @@
                                     </div>
                                 </td>
                             }
-                            @if (IsCalculationColumnVisible("project"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(GetCalculationProjectName(calu))</td>
-                            }
-                            @if (IsCalculationColumnVisible("folder"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(GetCalculationFolderName(calu))</td>
-                            }
                             @if (IsCalculationColumnVisible("calculationType"))
                             {
                                 <td class="whitespace-nowrap px-3 py-2">
@@ -631,10 +628,6 @@
                                     </span>
                                 </td>
                             }
-                            @if (IsCalculationColumnVisible("calculationRole"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@GetCalculationRoleDisplay(calu)</td>
-                            }
                             @if (IsCalculationColumnVisible("responsible"))
                             {
                                 <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(calu.Responsible)</td>
@@ -643,53 +636,13 @@
                             {
                                 <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(calu.Inspector)</td>
                             }
-                            @if (IsCalculationColumnVisible("qa"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(calu.TenderQA)</td>
-                            }
                             @if (IsCalculationColumnVisible("deadline"))
                             {
                                 <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(calu.TenderDeadline)</td>
                             }
-                            @if (IsCalculationColumnVisible("priority"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@calu.Priority %</td>
-                            }
-                            @if (IsCalculationColumnVisible("address"))
-                            {
-                                <td class="px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(calu.AddressText)</td>
-                            }
-                            @if (IsCalculationColumnVisible("createdAt"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(calu.CreatedAt)</td>
-                            }
-                            @if (IsCalculationColumnVisible("updatedAt"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@(calu.UpdatedAt.HasValue ? FormatDate(calu.UpdatedAt.Value) : "-")</td>
-                            }
-                            @if (IsCalculationColumnVisible("start"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(calu.StartDate)</td>
-                            }
-                            @if (IsCalculationColumnVisible("end"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(calu.EndDate)</td>
-                            }
-                            @if (IsCalculationColumnVisible("timeMonth"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatMonthsDisplay(calu.TimeMonth)</td>
-                            }
-                            @if (IsCalculationColumnVisible("tax"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@calu.Tax %</td>
-                            }
                             @if (IsCalculationColumnVisible("archived"))
                             {
                                 <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatYesNo(calu.IsArchived)</td>
-                            }
-                            @if (IsCalculationColumnVisible("privacy"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatYesNo(calu.IsPrivate)</td>
                             }
                             @if (IsCalculationColumnVisible("access"))
                             {
@@ -712,13 +665,15 @@
                                                 {
                                                     <i class="fa-solid fa-diagram-project shrink-0 text-slate-400"></i>
                                                 }
-                                                <HoverTooltip Text="@CalcAccessTooltip(calu)" Class="truncate">
+                                                <HoverTooltip Text="@CalcAccessTooltip(calu, viewerOnly: false)" Class="truncate">
                                                     <span class="min-w-0 truncate">@CalcAccessSummaryText(calu)</span>
                                                 </HoverTooltip>
                                             </button>
                                         </Authorized>
                                         <NotAuthorized>
-                                            <span class="inline-flex max-w-[200px] items-center gap-1">
+                                            <button type="button"
+                                                    class="inline-flex max-w-[200px] items-center gap-1 rounded px-1.5 py-0.5 text-left text-slate-500 transition hover:bg-slate-100 hover:underline dark:text-slate-400 dark:hover:bg-slate-800"
+                                                    @onclick="() => OpenCalcShareDialog(calu)">
                                                 @if (calcShared)
                                                 {
                                                     <i class="fa-solid fa-share-nodes shrink-0 text-sky-500"></i>
@@ -727,13 +682,66 @@
                                                 {
                                                     <i class="fa-solid fa-lock shrink-0 text-amber-500"></i>
                                                 }
-                                                <HoverTooltip Text="@CalcAccessTooltip(calu)" Class="truncate">
+                                                <HoverTooltip Text="@CalcAccessTooltip(calu, viewerOnly: true)" Class="truncate">
                                                     <span class="min-w-0 truncate">@CalcAccessSummaryText(calu)</span>
                                                 </HoverTooltip>
-                                            </span>
+                                            </button>
                                         </NotAuthorized>
                                     </AuthorizeView>
                                 </td>
+                            }
+                            @* Extra kolumner (samma ordning som rubriker och kolumnväljaren). *@
+                            @if (IsCalculationColumnVisible("project"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(GetCalculationProjectName(calu))</td>
+                            }
+                            @if (IsCalculationColumnVisible("folder"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(GetCalculationFolderName(calu))</td>
+                            }
+                            @if (IsCalculationColumnVisible("calculationRole"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@GetCalculationRoleDisplay(calu)</td>
+                            }
+                            @if (IsCalculationColumnVisible("qa"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(calu.TenderQA)</td>
+                            }
+                            @if (IsCalculationColumnVisible("createdAt"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(calu.CreatedAt)</td>
+                            }
+                            @if (IsCalculationColumnVisible("updatedAt"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@(calu.UpdatedAt.HasValue ? FormatDate(calu.UpdatedAt.Value) : "-")</td>
+                            }
+                            @if (IsCalculationColumnVisible("address"))
+                            {
+                                <td class="px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(calu.AddressText)</td>
+                            }
+                            @if (IsCalculationColumnVisible("priority"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@calu.Priority %</td>
+                            }
+                            @if (IsCalculationColumnVisible("start"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(calu.StartDate)</td>
+                            }
+                            @if (IsCalculationColumnVisible("end"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(calu.EndDate)</td>
+                            }
+                            @if (IsCalculationColumnVisible("timeMonth"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatMonthsDisplay(calu.TimeMonth)</td>
+                            }
+                            @if (IsCalculationColumnVisible("tax"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@calu.Tax %</td>
+                            }
+                            @if (IsCalculationColumnVisible("privacy"))
+                            {
+                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatYesNo(calu.IsPrivate)</td>
                             }
                         </tr>
                 </RowTemplate>
@@ -864,6 +872,12 @@
         if (_columnWidths is not null)
             await _columnWidths.AttachAsync();
 
+        // Force a "move" cursor while dragging calc rows to reorder (no "copy"/plus indicator).
+        // Blazor's drag events can't set dataTransfer, so a tiny JS helper does it. Idempotent.
+        try { await JS.InvokeVoidAsync("dragMoveEffect.attach", "resizeMe"); }
+        catch (JSException) { }
+        catch (InvalidOperationException) { }
+
         var scopeKey = CurrentViewKey;
         if (_prevProjectId != scopeKey)
         {
@@ -884,6 +898,24 @@
     private string _contentMode = ContentModeCalculations;
 
     private ListCalculationMVVM? calcDraging;
+
+    // Manual drag-reorder is only meaningful for a single project's calculation list (not the
+    // folder/department scope that mixes projects), in the default (manual) order, with no column
+    // sort or filter rearranging/hiding rows. Cross-department views are treated as read-only here;
+    // the backend still enforces the real edit permission.
+    private bool CanReorderCalculations =>
+        !FolderScopeMode
+        && !Folder.State.OtherDepartment
+        && string.IsNullOrEmpty(_sort.Column)
+        && !HasActiveFilters
+        && Folder.State.ProjectSelected?.Calculations is not null;
+
+    private void OnCalcDragStart(ListCalculationMVVM calc)
+    {
+        if (CanReorderCalculations)
+            calcDraging = calc;
+    }
+
     private ListCalculationMVVM? _productionDialogCalculation;
     private bool _isCreatingProductionCalculation;
     private string _productionDialogMessage = string.Empty;
@@ -984,10 +1016,14 @@
                 ListSavedColumnViewStorage.CalculationListScope,
                 ViewPreference.LoadColumnsAsync,
                 ViewPreference.SaveColumnsAsync,
-                SavedColumnViewStorage),
+                SavedColumnViewStorage,
+                ViewPreference.LoadColumnOrderAsync,
+                ViewPreference.SaveColumnOrderAsync),
             DefaultCalculationColumns,
             ListColumnViewLabels.Swedish,
-            alwaysVisibleKeys: new[] { "rowNumber" });
+            alwaysVisibleKeys: new[] { "rowNumber" },
+            // Radnummer, Kod och Kalkylnamn är frysta och kan aldrig flyttas.
+            lockedOrderKeys: new[] { "rowNumber", "code", "name" });
 
         // Created before the first await so it is non-null on the first render (the
         // markup reads HasActiveFilters etc.). Saved filters load just below.
@@ -1272,33 +1308,42 @@
 
     // The built-in "Standard" column view. Always available and never deletable;
     // applying it resets the visible columns to these defaults.
+    // Canonical total column order for the calculation list. The table, the "View > Choose columns"
+    // menu and this default set all follow this exact order so an enabled extra column lands in its
+    // place instead of at the end. The first block is the standard (checked) view; the rest are extra
+    // (unchecked) columns. "privacy" is intentionally NOT a standard column — private status is shown
+    // in the "Åtkomst" column — so it is unchecked here and omitted from the column picker.
     private static readonly IReadOnlyDictionary<string, bool> DefaultCalculationColumns =
         new Dictionary<string, bool>
         {
+            // ── Standardvy (ikryssade) ──
             ["rowNumber"] = true,
             ["code"] = true,
             ["name"] = true,
             ["version"] = true,
-            ["project"] = false,
-            ["folder"] = false,
             ["calculationType"] = true,
             ["status"] = true,
-            ["calculationRole"] = false,
             ["responsible"] = true,
             ["inspector"] = true,
-            ["qa"] = false,
             ["deadline"] = true,
-            ["priority"] = false,
-            ["address"] = false,
+            ["archived"] = true,
+            ["access"] = true,
+            // ── Extra kolumner (avkryssade) ──
+            ["project"] = false,
+            ["folder"] = false,
+            ["calculationRole"] = false,
+            ["qa"] = false,
             ["createdAt"] = false,
             ["updatedAt"] = false,
+            ["address"] = false,
+            // ── Övriga valbara kolumner (avkryssade) ──
+            ["priority"] = false,
             ["start"] = false,
             ["end"] = false,
             ["timeMonth"] = false,
             ["tax"] = false,
-            ["archived"] = true,
-            ["privacy"] = true,
-            ["access"] = true
+            // ── Teknisk kompatibilitetskolumn – aldrig standard, visas via Åtkomst ──
+            ["privacy"] = false
         };
 
     // Column layout + named views are driven by the shared library manager
@@ -1308,35 +1353,36 @@
     private MhdColumnViewManager _columnView = default!;
     private Dictionary<string, bool> _calculationColumns => _columnView.Columns;
 
+    // Must mirror the table's column order exactly (see DefaultCalculationColumns). "privacy" is not
+    // listed: it is not an own column – private status is shown in "Åtkomst".
     private List<MhdColumnPickerItem> CalculationColumnOptions => new()
     {
+        // ── Standardvy ──
         new("rowNumber", "Radnummer"),
         new("code", CalcResource.code),
         new("name", AppLoc["calculationName"].Value),
         new("version", AppLoc["version"].Value),
-        new("project", AppLoc["project"].Value),
-        
-        new("qa", "Frågor/svar"),
-        new("deadline", CalcResource.tenderDeadline),
-        new("status", "Kalkylstatus"),
-
-        new("folder", AppLoc["folder"].Value),
-        new("calculationRole", AppLoc["calculationRole"].Value),
         new("calculationType", AppLoc["calculationType"].Value),
+        new("status", "Kalkylstatus"),
         new("responsible", AppLoc["calculationResponsible"].Value),
         new("inspector", AppLoc["reviewer"].Value),
-     
-        new("priority", "Vinstchans"),
-        new("address", "Adress"),
+        new("deadline", CalcResource.tenderDeadline),
+        new("archived", AppLoc["archived"].Value),
+        new("access", "Åtkomst"),
+        // ── Extra kolumner ──
+        new("project", AppLoc["project"].Value),
+        new("folder", AppLoc["folder"].Value),
+        new("calculationRole", AppLoc["calculationRole"].Value),
+        new("qa", "Frågor/svar"),
         new("createdAt", AppLoc["createdDate"].Value),
         new("updatedAt", AppLoc["lastModified"].Value),
+        new("address", "Adress"),
+        // ── Övriga valbara kolumner ──
+        new("priority", "Vinstchans"),
         new("start", CalcResource.startDate),
         new("end", CalcResource.endDate),
         new("timeMonth", AppLoc["projectDurationMonths"].Value),
-        new("tax", AppLoc["vatPercent"].Value),
-        new("archived", AppLoc["archived"].Value),
-        new("privacy", ResourceApp._private),
-        new("access", "Åtkomst")
+        new("tax", AppLoc["vatPercent"].Value)
     };
 
     // Base list after version selection and Part scoping, before column filters.
@@ -1496,7 +1542,9 @@
                 "access" => _sortAscending
                     ? list.OrderBy(CalcAccessSummaryText, StringComparer.CurrentCultureIgnoreCase)
                     : list.OrderByDescending(CalcAccessSummaryText, StringComparer.CurrentCultureIgnoreCase),
-                _ => list
+                // Default = manual order: highest Order on top, same convention as the left tree
+                // and the project list, so drag-reorder + tree stay in sync.
+                _ => list.OrderByDescending(x => x.Order)
             };
         }
     }
@@ -1543,84 +1591,96 @@
     private static bool CalcAccessIsShared(ListCalculationMVVM c) =>
         AccessSummaryFormatter.CalcIsShared(c.Access);
 
-    private static string CalcAccessSummaryText(ListCalculationMVVM c) =>
-        AccessSummaryFormatter.CalcSummaryText(c.Access, c.IsPrivate);
+    private string CalcAccessSummaryText(ListCalculationMVVM c) =>
+        AccessSummaryFormatter.CalcSummaryText(c.Access, c.IsPrivate, CalculationProjectHasSharing(c));
 
-    private static IEnumerable<string> CalcAccessTags(ListCalculationMVVM c) =>
-        AccessSummaryFormatter.CalcTags(c.Access, c.IsPrivate);
+    private IEnumerable<string> CalcAccessTags(ListCalculationMVVM c) =>
+        AccessSummaryFormatter.CalcTags(c.Access, c.IsPrivate, CalculationProjectHasSharing(c));
 
-    private static string CalcAccessTooltip(ListCalculationMVVM c)
+    private bool CalculationProjectHasSharing(ListCalculationMVVM c)
     {
-        // Delning sker på projektnivå: vägled användaren till projektets delningsdialog.
-        const string viaProjectHint = "Kalkyler delas via projektets delning. Klicka för att öppna projektets \"Delning och behörighet\" och välj vilka kalkyler som ska ingå.";
-        if (c.IsPrivate) return $"Privat kalkyl – endast ägare/Admin kan se den.\n{viaProjectHint}";
-        var a = c.Access;
-        if (a is null) return $"Kalkylen är tillgänglig via projektets normala åtkomst.\n{viaProjectHint}";
+        var project = GetCalculationProject(c);
+        return project is not null && AccessSummaryFormatter.ProjectIsShared(project.Access, project.IsShared);
+    }
 
+    // Grupperad, flerradig tooltip för Åtkomst-kolumnen. Kalkyler delas inte separat i denna
+    // version – åtkomsten styrs via projektets delning, vilket tooltipen förklarar tydligt.
+    // viewerOnly = användaren har endast visningsåtkomst (Granskare/Visare) och får då en
+    // hjälptext om granskningskommentarer i stället för "Klicka för detaljer".
+    private string CalcAccessTooltip(ListCalculationMVVM c, bool viewerOnly)
+    {
         var lines = new List<string>();
-        if (a.ViaProject) lines.Add("Via projektåtkomst");
-        foreach (var r in a.Recipients)
+
+        if (c.IsPrivate)
         {
-            var typ = r.Type == ProjectShareRecipientType.Department ? "avdelning" : "person";
-            lines.Add($"{r.Name} · {AccessSummaryFormatter.AccessLevelLabel(r.Role)} · {typ}");
+            lines.Add("Privat kalkyl");
+            lines.Add("Endast behöriga personer kan se kalkylen.");
         }
-        if (lines.Count == 0) lines.Add("Ingen extra delning");
+        else
+        {
+            var recips = c.Access?.Recipients ?? [];
+
+            if (recips.Count > 0)
+            {
+                // Kalkyler delas inte separat – åtkomsten kommer via projektets delning.
+                // Här FÅR åtkomstnivån (Kan visa/Kan ändra) visas eftersom den gäller kalkylen.
+                lines.Add("Delad via projektet");
+                lines.Add("Kalkylen ingår i projektets delning.");
+
+                var persons = recips.Where(r => r.Type == ProjectShareRecipientType.User).ToList();
+                if (persons.Count > 0)
+                {
+                    lines.Add("Delade personer");
+                    AccessSummaryFormatter.AppendRecipientLines(lines, persons, r => $"{r.Name} · {AccessSummaryFormatter.AccessLevelLabel(r.Role)}");
+                }
+
+                var depts = recips.Where(r => r.Type == ProjectShareRecipientType.Department).ToList();
+                if (depts.Count > 0)
+                {
+                    lines.Add("Delade avdelningar");
+                    AccessSummaryFormatter.AppendRecipientLines(lines, depts, r => $"{r.Name} · {AccessSummaryFormatter.AccessLevelLabel(r.Role)}");
+                }
+            }
+            else
+            {
+                if (CalculationProjectHasSharing(c))
+                {
+                    lines.Add("Ingår inte i projektets delning");
+                    lines.Add("Kalkylen ingår inte i den aktuella projektdelningen.");
+                }
+                else
+                {
+                    lines.Add("Avdelningsåtkomst");
+                    lines.Add("Kalkylen är synlig via normal avdelningsåtkomst.");
+                }
+            }
+        }
+
         lines.Add("Klicka för detaljer.");
+
         return string.Join("\n", lines);
     }
 
-    // Grupperade filtervärden: Åtkomsttyp, Åtkomstnivå, Personer, Avdelningar.
+    // Kalkyllistans Åtkomst-filter visar samma huvudstatusar som kolumnen.
     private List<FilterOptionGroup> GetCalcAccessFilterGroups()
     {
-        static FilterOption Opt(string s, string? tooltip = null) =>
-            new() { Value = s, Label = s, Tooltip = tooltip };
+        static FilterOption Opt(string s) =>
+            new() { Value = s, Label = s };
 
-        var groups = new List<FilterOptionGroup>
-        {
+        return
+        [
             new()
             {
                 Header = AccessSummaryFormatter.GroupAccessType,
                 Options =
                 [
-                    Opt(
-                        AccessSummaryFormatter.CalcTypeProjectOnly,
-                        "Kalkylen är tillgänglig via projektet och dess avdelning."),
-                    Opt(
-                        AccessSummaryFormatter.TypeShared,
-                        "Kalkylen är delad med personer eller avdelningar utöver projektets egen avdelning."),
-                    Opt(
-                        AccessSummaryFormatter.TypeLimited,
-                        "Kalkylen ingår i en delning där bara vissa kalkyler delas."),
-                    Opt(
-                        AccessSummaryFormatter.CalcTypePrivate,
-                        "Kalkylen är privat och endast tillgänglig för dig."),
+                    Opt(AccessSummaryFormatter.CalcTypePrivate),
+                    Opt(AccessSummaryFormatter.CalcTypeViaProject),
+                    Opt(AccessSummaryFormatter.CalcTypeNotViaProject),
+                    Opt(AccessSummaryFormatter.CalcTypeDepartmentAccess),
                 ]
             },
-            new()
-            {
-                Header = AccessSummaryFormatter.GroupAccessLevel,
-                Options =
-                [
-                    Opt(AccessSummaryFormatter.LevelEdit),
-                    Opt(AccessSummaryFormatter.LevelView),
-                ]
-            },
-        };
-
-        var recips = BaseCalculations
-            .Where(c => c.Access is not null)
-            .SelectMany(c => c.Access!.Recipients)
-            .ToList();
-
-        var persons = CalcRecipientOptions(recips, ProjectShareRecipientType.User);
-        if (persons.Count > 0)
-            groups.Add(new() { Header = AccessSummaryFormatter.GroupPersons, Options = persons });
-
-        var depts = CalcRecipientOptions(recips, ProjectShareRecipientType.Department);
-        if (depts.Count > 0)
-            groups.Add(new() { Header = AccessSummaryFormatter.GroupDepartments, Options = depts });
-
-        return groups;
+        ];
     }
 
     private static List<FilterOption> CalcRecipientOptions(IEnumerable<ProjectAccessRecipientDTO> recips, ProjectShareRecipientType type) =>
@@ -1632,19 +1692,27 @@
             .ToList();
 
     // Klick på "Åtkomst": öppna projektets delningsdialog (delning sker på projektnivå).
-    private void OpenCalcShareDialog(ListCalculationMVVM calculation)
+    // Skrivskyddad för den som inte får hantera delning (backend blockerar ändå obehörig hantering).
+    private async Task OpenCalcShareDialog(ListCalculationMVVM calculation)
     {
         var project = GetCalculationProject(calculation);
         if (project is null) return;
 
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var access = ContextMenuAccessPolicy.ForProject(authState.User, project.Access, Folder.State.OtherDepartment);
+        bool readOnly = !access.CanManageSharing;
+
         Modal.ShowComponent<ProjectShareUI>(
-            "Delning och behörighet",
+            readOnly ? "Visa delning och behörighet" : "Delning och behörighet",
             new Dictionary<string, object>
             {
                 [nameof(ProjectShareUI.ProjectId)]           = project.Id,
                 [nameof(ProjectShareUI.ProjectName)]         = project.Name,
-                [nameof(ProjectShareUI.ProjectDepartmentId)] = project.DepartmentId,
+                [nameof(ProjectShareUI.ProjectDepartmentId)] = project.DepartmentId!,
                 [nameof(ProjectShareUI.ProjectResponsible)]  = project.Responsible,
+                [nameof(ProjectShareUI.SelectedCalculationName)] = calculation.Name,
+                [nameof(ProjectShareUI.SelectedCalculationIsPrivate)] = calculation.IsPrivate,
+                [nameof(ProjectShareUI.ReadOnly)]            = readOnly,
                 [nameof(ProjectShareUI.OnCompleted)]         = EventCallback.Factory.Create(this, () => ReloadAfterShareChangeAsync(project))
             },
             BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
@@ -1669,6 +1737,9 @@
 
     private static string FormatDate(DateTime value) =>
         value == default ? "-" : value.ToString(ConstValues.DateFormat);
+
+    private static string FormatDate(DateTime? value) =>
+        value is { } v ? FormatDate(v) : "-";
 
     private static string FormatYesNo(bool value) =>
         value ? "Ja" : "Nej";
@@ -1846,11 +1917,11 @@
         return calculation.EndDate < DateTime.Today ? "#10b981" : "#f59e0b";
     }
 
-    private static string GetCalculationRowClass(ListCalculationMVVM calculation, bool selected)
+    private static string GetCalculationRowClass(ListCalculationMVVM calculation, bool selected, bool canReorder)
     {
         var classes = new List<string>
         {
-            "cursor-pointer transition-colors",
+            canReorder ? "cursor-grab active:cursor-grabbing transition-colors" : "cursor-pointer transition-colors",
             "group",
             "hover:bg-slate-50 dark:hover:bg-slate-900/80"
         };
@@ -1859,7 +1930,10 @@
             classes.Add("bg-violet-50 dark:bg-violet-950/30");
 
         if (calculation.IsDragOver)
-            classes.Add("ring-2 ring-blue-400");
+            // Full-row drop line: an inset top box-shadow on every cell (see .pm-drop-row in
+            // custom.css) so the blue line spans the whole row — including the sticky/frozen left
+            // columns — without breaking at the sticky boundary and without any layout shift.
+            classes.Add("pm-drop-row");
 
         return string.Join(" ", classes);
     }
@@ -1869,15 +1943,41 @@
         var list = new List<MhdContextMenuItem>();
 
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-        bool isInAnyRole = PMRolesConst.Tenant.AdminManger.Split(',').Any(r => user.IsInRole(r));
-        bool canManage = !Folder.State.OtherDepartment && user.Identity?.IsAuthenticated == true && isInAnyRole;
+        var access = ContextMenuAccessPolicy.ForCalculation(authState.User, item.Access, Folder.State.OtherDepartment);
 
-        if (canManage)
+        // Grouped order (separated by dividers), identical to the left tree's calculation menu:
+        // [huvudåtgärder] · [livscykel/hantering] · [export] · [ta bort].
+        if (access.CanView)
         {
-            if (item.IsCurrentVersion)
-                list.Add(new() { IconHtml = Icons.Edit, Label = ResourceApp.edit, OnClickAsync = () => { UpdateForm(item); return Task.CompletedTask; } });
+            list.Add(new() { IconHtml = Icons.Active, Label = AppLoc["openCalculation"], OnClickAsync = async () => await OpenCalculationAsync(item) });
+            list.Add(new()
+            {
+                IconHtml = access.CanEditWork && item.IsCurrentVersion ? Icons.Edit : Icons.Details,
+                Label = access.CanEditWork && item.IsCurrentVersion ? ResourceApp.edit : "Visa kalkyl",
+                OnClickAsync = () => { UpdateForm(item, access.CanEditWork && item.IsCurrentVersion); return Task.CompletedTask; }
+            });
+            list.Add(new() { IconHtml = Icons.Details, Label = "Visa detaljer", OnClickAsync = () => { CalculationDetails(item); return Task.CompletedTask; } });
+
+            if (GetCalculationProject(item) is { } projectForShare)
+            {
+                var projectAccess = ContextMenuAccessPolicy.ForProject(authState.User, projectForShare.Access, Folder.State.OtherDepartment);
+                list.Add(new()
+                {
+                    IconHtml = Icons.PermissionShield,
+                    Label = projectAccess.CanManageSharing ? "Delning och behörighet" : "Visa delning och behörighet",
+                    OnClickAsync = () => { OpenProjectShareDialog(projectForShare, readOnly: !projectAccess.CanManageSharing); return Task.CompletedTask; }
+                });
+            }
+        }
+
+        if (access.CanManageLifecycle)
+        {
+            // Grupp 1 — huvudåtgärder (Versioner direkt efter Ändra)
+            list.Add(new() { IsSeparator = true });
             list.Add(new() { IconHtml = Icons.Copy, Label = "Versioner", OnClickAsync = () => { OpenVersionsDialog(item); return Task.CompletedTask; } });
+
+            // Grupp 2 — livscykel/hantering
+            list.Add(new() { IsSeparator = true });
             // Delning sker på projektnivå – ingen separat kalkyldelning i kalkylmenyn (se ProjectShareUI).
             list.Add(new() { IconHtml = Icons.Folder, Label = AppLoc["moveCalculation"], OnClickAsync = () => { OpenMoveCopyDialog(item, MoveCopyOperation.Move); return Task.CompletedTask; } });
             list.Add(new() { IconHtml = Icons.Copy, Label = AppLoc["copyCalculation"], OnClickAsync = () => { OpenMoveCopyDialog(item, MoveCopyOperation.Copy); return Task.CompletedTask; } });
@@ -1886,28 +1986,31 @@
                 list.Add(new() { IconHtml = Icons.Archive, Label = AppLoc["archiveCalculation"], OnClickAsync = async () => await ArchiveOrRestoreCalculationAsync(item, archive: true) });
             else
                 list.Add(new() { IconHtml = Icons.Restore, Label = AppLoc["restoreFromArchive"], OnClickAsync = async () => await ArchiveOrRestoreCalculationAsync(item, archive: false) });
+
+            // Grupp 3 — export
+            list.Add(new() { IsSeparator = true });
+            list.Add(new() { IconHtml = Icons.Tender, Label = "Exportera kalkyl...", OnClickAsync = () => { OpenSendCalculationCopyDialog(item); return Task.CompletedTask; } });
         }
 
-        // "Ta bort kalkyl" / "Ta bort version" visas alltid längst ner med separator och
-        // destruktiv stil. Aktivt för olåsta kalkyler utan kritiska kopplingar; annars öppnas
+        // Grupp 4 — destruktiv åtgärd: "Ta bort kalkyl" / "Ta bort version" ligger alltid sist,
+        // med separator före. Aktivt för olåsta kalkyler utan kritiska kopplingar; annars öppnas
         // en informationsdialog som förklarar varför borttagning inte är tillåten.
         var projectCalcs = GetProjectCalculationsFor(item).ToList();
 
-        if (list.Count > 0)
+        if (access.CanManageLifecycle)
+        {
             list.Add(new() { IsSeparator = true });
 
-        if (canManage)
-            list.Add(new() { IconHtml = Icons.Tender, Label = "Exportera kalkyl...", OnClickAsync = () => { OpenSendCalculationCopyDialog(item); return Task.CompletedTask; } });
-
-        list.Add(new()
-        {
-            IconHtml = Icons.Delete,
-            Label = CalculationDeleteHelper.DeleteLabel(projectCalcs, item),
-            CssClass = CalculationDeleteHelper.DeleteCssClass,
-            OnClickAsync = () => CalculationDeleteHelper.RequestDeleteAsync(
-                this, Repo, MHD, ClientLog, item, projectCalcs, canManage,
-                () => DeleteCalculationConfirmedAsync(item))
-        });
+            list.Add(new()
+            {
+                IconHtml = Icons.Delete,
+                Label = CalculationDeleteHelper.DeleteLabel(projectCalcs, item),
+                CssClass = CalculationDeleteHelper.DeleteCssClass,
+                OnClickAsync = () => CalculationDeleteHelper.RequestDeleteAsync(
+                    this, Repo, MHD, ClientLog, item, projectCalcs, access.CanManageLifecycle,
+                    () => DeleteCalculationConfirmedAsync(item))
+            });
+        }
 
         await ContextService.ShowMenuAsync(list);
     }
@@ -2005,6 +2108,20 @@
             },
             BlazorMHD.UI.Core.Services.MhdDialogSize.Large);
     }
+
+    void OpenProjectShareDialog(ListProjectMVVM project, bool readOnly = false) =>
+        Modal.ShowComponent<ProjectShareUI>(
+            readOnly ? "Visa delning och behörighet" : "Delning och behörighet",
+            new Dictionary<string, object>
+            {
+                [nameof(ProjectShareUI.ProjectId)] = project.Id,
+                [nameof(ProjectShareUI.ProjectName)] = project.Name,
+                [nameof(ProjectShareUI.ProjectDepartmentId)] = project.DepartmentId!,
+                [nameof(ProjectShareUI.ProjectResponsible)] = project.Responsible,
+                [nameof(ProjectShareUI.ReadOnly)] = readOnly,
+                [nameof(ProjectShareUI.OnCompleted)] = EventCallback.Factory.Create(this, ReloadAfterMoveCopyAsync)
+            },
+            BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
 
     // Import a calculation copy (.atacost) into the currently selected project; always creates a new calculation.
     void OpenImportCalculationCopyDialog()
@@ -2204,20 +2321,36 @@
         _ => string.Empty
     };
 
-    void UpdateForm(ListCalculationMVVM model)
+    void UpdateForm(ListCalculationMVVM model, bool canEdit = true)
     {
+        var readOnly = model.Id > 0 && !canEdit;
+        var parameters = new Dictionary<string, object>
+        {
+            [nameof(CalculationFormUI.Calculation)] = model,
+            [nameof(CalculationFormUI.Callback)] =
+                EventCallback.Factory.Create<ListCalculationMVVM?>(this, CalcFormAsync),
+            [nameof(CalculationFormUI.OnReloadList)] =
+                EventCallback.Factory.Create(this, () => ReloadCalculationsAsync(closeModal: false))
+        };
+
+        var title = model.Id == 0
+            ? AppLoc[LocalizerConst.New, CalcResource.calculation]
+            : readOnly
+                ? "Visa kalkyl"
+                : AppLoc[LocalizerConst.Update, model.Name];
+
+        if (readOnly)
+        {
+            Modal.ShowComponent<CalculationFormUI>(
+                title,
+                parameters,
+                BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
+            return;
+        }
+
         Modal.ShowComponent<CalculationFormUI>(
-            model.Id == 0
-                ? AppLoc[LocalizerConst.New, CalcResource.calculation]
-                : AppLoc[LocalizerConst.Update, model.Name],
-            new Dictionary<string, object>
-            {
-                [nameof(CalculationFormUI.Calculation)] = model,
-                [nameof(CalculationFormUI.Callback)] =
-                    EventCallback.Factory.Create<ListCalculationMVVM?>(this, CalcFormAsync),
-                [nameof(CalculationFormUI.OnReloadList)] =
-                    EventCallback.Factory.Create(this, () => ReloadCalculationsAsync(closeModal: false))
-            },
+            title,
+            parameters,
             BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge,
             DialogButtonsHelper.CreateSaveCancelButtons(CalculationFormUI.DialogFormId));
     }
@@ -2277,33 +2410,74 @@
         await ReloadCalculationsAsync(closeModal: true);
     }
 
-    private async Task HandleDrop(ListCalculationMVVM calc)
+    // Robust, id-based reorder WITHIN the current project only (never moves a calc to another
+    // project): remove the dragged calc, re-insert relative to the drop target (after it when
+    // moving down, before it when moving up — so the last row is reachable), then renumber the
+    // whole project with stable gaps. No-ops when the order is unchanged.
+    private async Task HandleDrop(ListCalculationMVVM target)
     {
-        if (FolderScopeMode || calcDraging is null || Folder.State.ProjectSelected?.Calculations is null)
+        var dragged = calcDraging;
+        calcDraging = null;
+
+        if (dragged is not null) dragged.IsDragOver = false;
+        if (target is not null) target.IsDragOver = false;
+
+        if (dragged is null || target is null || !CanReorderCalculations || ReferenceEquals(dragged, target))
+        {
+            StateHasChanged();
+            return;
+        }
+
+        var calculations = Folder.State.ProjectSelected?.Calculations;
+        if (calculations is null)
             return;
 
-        calcDraging.IsDragOver = false;
-        calc.IsDragOver = false;
+        // Display order = top→bottom (highest Order first), matching the left tree and the project
+        // list. Working by Id keeps the move independent of fragile UI row indexes.
+        var ordered = calculations.OrderByDescending(c => c.Order).ToList();
 
-        var list = Folder.State.ProjectSelected.Calculations;
-        int index = list.IndexOf(calc);
+        var fromIndex = ordered.FindIndex(c => c.Id == dragged.Id);
+        var toIndex = ordered.FindIndex(c => c.Id == target.Id);
+        if (fromIndex < 0 || toIndex < 0)
+            return;
 
-        if (index == 0)
-            calcDraging.Order = calc.Order + 100;
-        else if (calcDraging.Order < calc.Order)
-            calcDraging.Order = (calc.Order + list[index - 1].Order) / 2;
-        else if (calcDraging.Order > calc.Order && (index + 1) < list.Count)
-            calcDraging.Order = (list[index + 1].Order + calc.Order) / 2;
-        else
-            calcDraging.Order = calc.Order - 100;
+        var originalIds = ordered.Select(c => c.Id).ToList();
 
-        Folder.State.ProjectSelected.Calculations =
-            list.OrderByDescending(x => x.Order).ToList();
+        ordered.RemoveAt(fromIndex);
+        var targetAfterRemoval = ordered.FindIndex(c => c.Id == target.Id);
+        // Moving down (dragged was above target) drops after the target; moving up drops before.
+        var insertIndex = fromIndex < toIndex ? targetAfterRemoval + 1 : targetAfterRemoval;
+        insertIndex = Math.Clamp(insertIndex, 0, ordered.Count);
+        ordered.Insert(insertIndex, dragged);
 
-        await Repo.Calculation.ReOrderAsync(calcDraging.Id, calcDraging.Order);
+        // Dropped back on the same effective position → save nothing, change nothing.
+        if (ordered.Select(c => c.Id).SequenceEqual(originalIds))
+        {
+            StateHasChanged();
+            return;
+        }
 
-        calcDraging = null;
+        // Renumber the whole project so Order stays stable and collision-free (top = highest).
+        // Only persist the calcs whose Order actually changed (backend sets SortOrder absolutely).
+        const int step = 100;
+        var changed = new List<ListCalculationMVVM>();
+        for (var i = 0; i < ordered.Count; i++)
+        {
+            var newOrder = (ordered.Count - i) * step;
+            if (ordered[i].Order != newOrder)
+            {
+                ordered[i].Order = newOrder;
+                changed.Add(ordered[i]);
+            }
+        }
+
+        // The right panel (default sort) and the left tree both render by Order over the same calc
+        // objects, so mutating Order aligns them; Notify() makes the tree re-render now.
+        Folder.State.Notify();
         StateHasChanged();
+
+        foreach (var c in changed)
+            await Repo.Calculation.ReOrderAsync(c.Id, c.Order);
     }
 
     private async Task ReloadCalculationsAsync(bool closeModal = false)

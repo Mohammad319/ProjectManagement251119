@@ -98,7 +98,7 @@ namespace Persistence.Service.CalculationItems.Task
             if (!await IsCalculationAllowedAsync(context, targetCalcId, userId, departmentId, ct))
                 return [];
 
-            int? parentTaskId = safeTasks.FirstOrDefault()?.ParentTaskId;
+            int? parentTaskId = safeTasks[0].ParentTaskId;
 
             if (parentTaskId.HasValue && parentTaskId > 0)
             {

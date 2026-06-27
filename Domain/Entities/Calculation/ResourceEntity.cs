@@ -39,6 +39,12 @@ namespace Domain.Entities.Calculation
         [MaxLength(FieldLengths.Comment)]
         public string? ProductionNote { get; private set; }
 
+        // Reviewer comment – a standalone comment from the reviewer (Granskare) per calculation row.
+        // Stored separately from the economic metadata; does not change quantity/price/cost/calculation.
+        // May be edited even when the calculation is locked (permission is enforced in the backend).
+        [MaxLength(FieldLengths.Comment)]
+        public string? ReviewerComment { get; private set; }
+
         public decimal? Quantity { get; private set; }
 
         public IReadOnlyList<string> Notes => _metadata?.UpperNote ?? [];
@@ -164,6 +170,16 @@ namespace Domain.Entities.Calculation
             if (string.Equals(ProductionNote, normalized, StringComparison.Ordinal))
                 return false;
             ProductionNote = normalized;
+            return true;
+        }
+
+        /// <summary>Sets the reviewer comment (does not affect economy/calculation). Returns true if the value changed.</summary>
+        public bool SetReviewerComment(string? value)
+        {
+            var normalized = NormalizeOptional(value);
+            if (string.Equals(ReviewerComment, normalized, StringComparison.Ordinal))
+                return false;
+            ReviewerComment = normalized;
             return true;
         }
 

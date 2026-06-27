@@ -222,6 +222,9 @@
   <data name="productionNote" xml:space="preserve">
     <value>Prod. note</value>
   </data>
+  <data name="reviewerComment" xml:space="preserve">
+    <value>Reviewer comment</value>
+  </data>
   <data name="opportunity" xml:space="preserve">
     <value>Opportunity</value>
   </data>
@@ -530,6 +533,7 @@
   <data name="matchStartsWith" xml:space="preserve"><value>Starts with</value></data>
   <data name="matchEndsWith" xml:space="preserve"><value>Ends with</value></data>
   <data name="matchSmartTip" xml:space="preserve"><value>Recommended. Searches using exact match, starts with, contains and similar spelling. Also finds some misspellings.</value></data>
+  <data name="matchInfoTooltip" xml:space="preserve"><value>Smart search uses exact match, starts with, contains and similar spelling. It can also find some misspellings.</value></data>
   <data name="matchContainsTip" xml:space="preserve"><value>Finds entries where the search text appears as an exact part of the text. Example: 'Nack' finds 'Nackaa'.</value></data>
   <data name="matchEqualsTip" xml:space="preserve"><value>Finds only entries where the whole value matches the search text.</value></data>
   <data name="matchStartsWithTip" xml:space="preserve"><value>Finds entries where the value starts with the search text.</value></data>

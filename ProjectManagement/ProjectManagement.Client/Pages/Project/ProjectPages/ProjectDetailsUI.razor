@@ -336,7 +336,7 @@
         new(CalcResource.startDate, FormatDate(details.StartDate)),
         new(CalcResource.endDate, FormatDate(details.EndDate)),
         new(CalcResource.tenderDeadline, FormatDate(details.TenderDeadline)),
-        new("Frågor/svar senast", FormatDate(details.TenderQA))
+        new("Sista dag för att ställa frågor", FormatDate(details.TenderQA))
     ];
 
     private List<DisplayField> BuildTeamItems(ProjectDetailsDTO details)
@@ -414,8 +414,8 @@
     private static string OrFallback(string? value) =>
         HasText(value) ? value!.Trim() : "-";
 
-    private static string FormatDate(DateTime value) =>
-        value.ToString(ConstValues.DateFormat);
+    private static string FormatDate(DateTime? value) =>
+        value.HasValue ? value.Value.ToString(ConstValues.DateFormat) : "-";
 
     private static string FormatDateTime(DateTime? value) =>
         value.HasValue ? value.Value.ToString($"{ConstValues.DateFormat} HH:mm") : "-";

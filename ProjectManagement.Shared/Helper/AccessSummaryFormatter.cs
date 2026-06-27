@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ProjectManagement.Shared.Constant;
@@ -21,12 +22,20 @@ namespace ProjectManagement.Shared.Helper
     {
         // ── Filtergrupp: Åtkomsttyp ──────────────────────────────────────
         /// <summary>Projekt: ingen extra delning, endast tillgängligt via projektets avdelning.</summary>
-        public const string ProjectTypeDepartmentOnly = "Endast avdelningsåtkomst";
-        /// <summary>Kalkyl: ingen extra delning, endast tillgänglig via projektet.</summary>
-        public const string CalcTypeProjectOnly = "Endast projektåtkomst";
-        /// <summary>Projektet/kalkylen är delad med personer eller avdelningar utöver den normala åtkomsten.</summary>
-        public const string TypeShared = "Delad med andra";
+        public const string ProjectTypeDepartmentOnly = "Avdelningsåtkomst";
+        /// <summary>Kalkyl: synlig via normal avdelningsåtkomst, inte via extra projektdelning.</summary>
+        public const string CalcTypeDepartmentAccess = "Avdelningsåtkomst";
+        /// <summary>Kalkyl: ingår i projektets delning.</summary>
+        public const string CalcTypeViaProject = "Via projekt";
+        /// <summary>Kalkyl: projektet är delat, men kalkylen ingår inte i projektdelningen.</summary>
+        public const string CalcTypeNotViaProject = "Ej via projekt";
+        /// <summary>Bakåtkompatibelt alias för äldre kod/tester.</summary>
+        public const string CalcTypeProjectOnly = CalcTypeDepartmentAccess;
+        /// <summary>Projektet är delat med personer eller avdelningar utöver den normala åtkomsten.</summary>
+        public const string TypeShared = "Delat";
         /// <summary>Projektet är delat, men bara vissa kalkyler ingår i delningen.</summary>
+        public const string ProjectTypeLimited = "Delvis delat";
+        /// <summary>Äldre kalkyl/filter-begrepp. Projektlistan använder <see cref="ProjectTypeLimited"/>.</summary>
         public const string TypeLimited = "Delvis delad";
         /// <summary>Kalkyl: privat (syns bara för ägare/Admin).</summary>
         public const string CalcTypePrivate = "Privat";
@@ -57,6 +66,30 @@ namespace ProjectManagement.Shared.Helper
             PMRolesConst.Tenant.Admin  => LevelEdit,
             _ => LevelView
         };
+
+        // ── Tooltip ──────────────────────────────────────────────────────
+        /// <summary>Max antal mottagarrader som visas per grupp i tooltipen innan resten sammanfattas.</summary>
+        public const int TooltipMaxRecipientRows = 5;
+
+        /// <summary>
+        /// Lägger till en rad per mottagare (formaterad via <paramref name="format"/>) i
+        /// <paramref name="lines"/>, men aldrig fler än <see cref="TooltipMaxRecipientRows"/>.
+        /// Återstoden sammanfattas på en egen rad som "+ X fler" så att långa delningslistor
+        /// inte gör tooltipen orimligt lång.
+        /// </summary>
+        public static void AppendRecipientLines(
+            List<string> lines,
+            IReadOnlyList<ProjectAccessRecipientDTO> recipients,
+            Func<ProjectAccessRecipientDTO, string> format)
+        {
+            int shown = Math.Min(recipients.Count, TooltipMaxRecipientRows);
+            for (int i = 0; i < shown; i++)
+                lines.Add(format(recipients[i]));
+
+            int rest = recipients.Count - shown;
+            if (rest > 0)
+                lines.Add($"+ {rest} fler");
+        }
 
         /// <summary>Mottagarens filtervärde: "Person: Namn" eller "Avdelning: Namn".</summary>
         public static string RecipientFilterValue(ProjectAccessRecipientDTO r) =>
@@ -92,8 +125,7 @@ namespace ProjectManagement.Shared.Helper
             access is not null ? access.Recipients.Count > 0 : fallbackIsShared;
 
         /// <summary>
-        /// Kompakt sammanfattning utan långa namn: "Avdelningsåtkomst", "Delad med andra · 2 personer",
-        /// "Delad med andra · Produktion" eller "Delvis delad · 3/5 kalkyler".
+        /// Kompakt sammanfattning utan detaljer: "Avdelningsåtkomst", "Delat" eller "Delvis delat".
         /// </summary>
         public static string ProjectSummaryText(ProjectAccessSummaryDTO? access, bool fallbackIsShared)
         {
@@ -105,31 +137,31 @@ namespace ProjectManagement.Shared.Helper
                 return access.ViaDepartment ? "Avdelningsåtkomst" : "—";
 
             if (IsLimited(access.ShareableCalcCount, recips))
-            {
-                // Show the LEAST-covered recipient. When any recipient is limited this is always
-                // below the total, so the label never reads as a contradictory "n/n kalkyler".
-                int min = recips.Min(r => r.CalcCount);
-                return $"{TypeLimited} · {min}/{access.ShareableCalcCount} kalkyler";
-            }
+                return ProjectTypeLimited;
 
-            return $"{TypeShared} · {RecipientCountText(recips)}";
+            return TypeShared;
         }
 
-        /// <summary>Filtervärden raden matchar: åtkomsttyp, åtkomstnivå och mottagare.</summary>
+        /// <summary>Filtervärden raden matchar i projektlistan: endast huvudstatus.</summary>
         public static IEnumerable<string> ProjectTags(ProjectAccessSummaryDTO? access, bool fallbackIsShared)
         {
             bool shared = ProjectIsShared(access, fallbackIsShared);
-            yield return shared ? TypeShared : ProjectTypeDepartmentOnly;
+            if (!shared)
+            {
+                yield return ProjectTypeDepartmentOnly;
+                yield break;
+            }
 
             if (access is null)
+            {
+                yield return TypeShared;
                 yield break;
+            }
 
             if (shared && IsLimited(access.ShareableCalcCount, access.Recipients))
-                yield return TypeLimited;
-            if (access.Recipients.Any(r => r.Role == PMRolesConst.Tenant.Manger)) yield return LevelEdit;
-            if (access.Recipients.Any(r => r.Role == PMRolesConst.Tenant.Viewer)) yield return LevelView;
-            foreach (var r in access.Recipients)
-                yield return RecipientFilterValue(r);
+                yield return ProjectTypeLimited;
+            else
+                yield return TypeShared;
         }
 
         // ════════════════════════════ Kalkyllistan ════════════════════════════
@@ -139,24 +171,24 @@ namespace ProjectManagement.Shared.Helper
             access is not null && access.Recipients.Count > 0;
 
         /// <summary>
-        /// Kompakt sammanfattning: "Privat", "Via projekt", "Delad med andra · 2 personer".
+        /// Kompakt sammanfattning: "Privat", "Via projekt", "Ej via projekt" eller "Avdelningsåtkomst".
         /// </summary>
-        public static string CalcSummaryText(CalculationAccessSummaryDTO? access, bool isPrivate)
+        public static string CalcSummaryText(CalculationAccessSummaryDTO? access, bool isPrivate, bool projectHasSharing = false)
         {
             if (isPrivate)
-                return "Privat";
+                return CalcTypePrivate;
             if (access is null)
-                return "Via projekt";
+                return projectHasSharing ? CalcTypeNotViaProject : CalcTypeDepartmentAccess;
 
             var recips = access.Recipients;
             if (recips.Count == 0)
-                return access.ViaProject ? "Via projekt" : TypeShared;
+                return projectHasSharing ? CalcTypeNotViaProject : CalcTypeDepartmentAccess;
 
-            return $"{TypeShared} · {RecipientCountText(recips)}";
+            return CalcTypeViaProject;
         }
 
-        /// <summary>Filtervärden raden matchar: åtkomsttyp, åtkomstnivå och mottagare.</summary>
-        public static IEnumerable<string> CalcTags(CalculationAccessSummaryDTO? access, bool isPrivate)
+        /// <summary>Filtervärden raden matchar: kalkyllistans fyra åtkomststatusar.</summary>
+        public static IEnumerable<string> CalcTags(CalculationAccessSummaryDTO? access, bool isPrivate, bool projectHasSharing = false)
         {
             if (isPrivate)
             {
@@ -165,16 +197,12 @@ namespace ProjectManagement.Shared.Helper
             }
 
             bool shared = CalcIsShared(access);
-            yield return shared ? TypeShared : CalcTypeProjectOnly;
-            if (access is null)
-                yield break;
-
-            // Projektdelning väljer alltid specifika kalkyler ⇒ en delad kalkyl är begränsad kalkylåtkomst.
-            if (shared) yield return TypeLimited;
-            if (access.Recipients.Any(r => r.Role == PMRolesConst.Tenant.Manger)) yield return LevelEdit;
-            if (access.Recipients.Any(r => r.Role == PMRolesConst.Tenant.Viewer)) yield return LevelView;
-            foreach (var r in access.Recipients)
-                yield return RecipientFilterValue(r);
+            if (shared)
+                yield return CalcTypeViaProject;
+            else if (projectHasSharing)
+                yield return CalcTypeNotViaProject;
+            else
+                yield return CalcTypeDepartmentAccess;
         }
     }
 }

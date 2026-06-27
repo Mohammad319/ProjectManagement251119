@@ -26,8 +26,8 @@ internal static class RecursiveTasksCte
         int rootTaskId,
         int? calculationId = null)
     {
-        if (db is null) throw new ArgumentNullException(nameof(db));
-        if (rootTaskId <= 0) throw new ArgumentOutOfRangeException(nameof(rootTaskId));
+        ArgumentNullException.ThrowIfNull(db);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(rootTaskId);
 
         var tenantId = db.TenantId;
         if (tenantId <= 0)

@@ -50,15 +50,12 @@
                 @* Kalkyltyp – bara Intäktsöversikt och Kalkyllista *@
             @if (_activeView is ReportView.Income or ReportView.Calculations)
             {
-                <div>
-                    <label class="@LabelClass">@AppLoc["calculationType"]</label>
-                    <select class="@SelectClass" @bind="_selectedCalculationType">
-                        <option value="">@AppLoc["allCalculationTypes"]</option>
-                        <option value="@CalculationVersionType.Tender">@AppLoc["tenderCalculation"]</option>
-                        <option value="@CalculationVersionType.Contract">@AppLoc["contractCalculation"]</option>
-                        <option value="@CalculationVersionType.Production">@AppLoc["productionCalculation"]</option>
-                    </select>
-                </div>
+                @MultiSelectDropdown(
+                    AppLoc["calculationType"].Value,
+                    _showCalcTypeDropdown, () => _showCalcTypeDropdown = !_showCalcTypeDropdown, () => _showCalcTypeDropdown = false,
+                    MultiButtonText(_selectedCalculationTypes.Count, AppLoc["allCalculationTypes"].Value, () => TypeLabel(_selectedCalculationTypes.First()), "kalkyltyper"),
+                    AppLoc["allCalculationTypes"].Value, _selectedCalculationTypes.Count == 0, () => _selectedCalculationTypes.Clear(),
+                    CalculationTypes, TypeLabel, t => _selectedCalculationTypes.Contains(t), ToggleCalcType)
             }
 
             @* Kalkylstatus – bara Intäktsöversikt och Kalkyllista *@
@@ -68,7 +65,7 @@
                     <label class="@LabelClass">Kalkylstatus</label>
                     <button type="button" class="@SelectClass flex items-center justify-between text-left"
                             @onclick="() => _showStatusDropdown = !_showStatusDropdown">
-                        <span class="truncate">@(_selectedStatuses.Count == 0 ? AppLoc["allStatuses"].Value : $"{_selectedStatuses.Count} {AppLoc["selected"].Value}")</span>
+                        <span class="truncate">@MultiButtonText(_selectedStatuses.Count, AppLoc["allStatuses"].Value, () => _selectedStatuses.First(), "statusar")</span>
                         @ChevronSvg
                     </button>
                     @if (_showStatusDropdown)
@@ -97,7 +94,7 @@
                     <label class="@LabelClass">Projektstatus</label>
                     <button type="button" class="@SelectClass flex items-center justify-between text-left"
                             @onclick="() => _showProjectStatusDropdown = !_showProjectStatusDropdown">
-                        <span class="truncate">@(_selectedProjectStatuses.Count == 0 ? AppLoc["allStatuses"].Value : $"{_selectedProjectStatuses.Count} {AppLoc["selected"].Value}")</span>
+                        <span class="truncate">@MultiButtonText(_selectedProjectStatuses.Count, AppLoc["allStatuses"].Value, () => _selectedProjectStatuses.First(), "statusar")</span>
                         @ChevronSvg
                     </button>
                     @if (_showProjectStatusDropdown)
@@ -122,40 +119,36 @@
             @* Kalkylroll – bara Intäktsöversikt och Kalkyllista *@
             @if (_activeView is ReportView.Income or ReportView.Calculations)
             {
-                <div>
-                    <label class="@LabelClass">Kalkylroll</label>
-                    <select class="@SelectClass" @bind="_selectedCalculationRole">
-                        <option value="">@AppLoc["allItems"]</option>
-                        @foreach (var role in CalculationRoles) { <option value="@role">@GetCalculationRoleLabel(role)</option> }
-                    </select>
-                </div>
+                @MultiSelectDropdown(
+                    "Kalkylroll",
+                    _showCalcRoleDropdown, () => _showCalcRoleDropdown = !_showCalcRoleDropdown, () => _showCalcRoleDropdown = false,
+                    MultiButtonText(_selectedCalculationRoles.Count, AppLoc["allItems"].Value, () => GetCalculationRoleLabel(_selectedCalculationRoles.First()), "kalkylroller"),
+                    AppLoc["allItems"].Value, _selectedCalculationRoles.Count == 0, () => _selectedCalculationRoles.Clear(),
+                    CalculationRoles, GetCalculationRoleLabel, r => _selectedCalculationRoles.Contains(r), ToggleCalcRole)
             }
 
             @* År *@
-            <div>
-                <label class="@LabelClass">@AppLoc["year"]</label>
-                <select class="@SelectClass" @bind="_selectedYear">
-                    <option value="">@AppLoc["allYears"]</option>
-                    @foreach (var year in AvailableYears) { <option value="@year">@year</option> }
-                </select>
-            </div>
+            @MultiSelectDropdown(
+                AppLoc["year"].Value,
+                _showYearDropdown, () => _showYearDropdown = !_showYearDropdown, () => _showYearDropdown = false,
+                MultiButtonText(_selectedYears.Count, AppLoc["allYears"].Value, () => _selectedYears.First().ToString(), "år"),
+                AppLoc["allYears"].Value, _selectedYears.Count == 0, () => _selectedYears.Clear(),
+                AvailableYears, y => y.ToString(), y => _selectedYears.Contains(y), ToggleYear)
 
             @* Kvartal *@
-            <div>
-                <label class="@LabelClass">@AppLoc["quarter"]</label>
-                <select class="@SelectClass" @bind="_selectedQuarter">
-                    <option value="0">@AppLoc["allQuarters"]</option>
-                    <option value="1">Q1</option><option value="2">Q2</option>
-                    <option value="3">Q3</option><option value="4">Q4</option>
-                </select>
-            </div>
+            @MultiSelectDropdown(
+                AppLoc["quarter"].Value,
+                _showQuarterDropdown, () => _showQuarterDropdown = !_showQuarterDropdown, () => _showQuarterDropdown = false,
+                MultiButtonText(_selectedQuarters.Count, AppLoc["allQuarters"].Value, () => $"Q{_selectedQuarters.First()}", "kvartal"),
+                AppLoc["allQuarters"].Value, _selectedQuarters.Count == 0, () => _selectedQuarters.Clear(),
+                Quarters, q => $"Q{q}", q => _selectedQuarters.Contains(q), ToggleQuarter)
 
             @* Kalkylansvarig – multi-select *@
             <div class="relative">
                 <label class="@LabelClass">@AppLoc["calculationResponsible"]</label>
                 <button type="button" class="@SelectClass flex items-center justify-between text-left"
                         @onclick="() => _showResponsibleDropdown = !_showResponsibleDropdown">
-                    <span class="truncate">@(_selectedResponsibles.Count == 0 ? AppLoc["allItems"].Value : $"{_selectedResponsibles.Count} {AppLoc["selected"].Value}")</span>
+                    <span class="truncate">@MultiButtonText(_selectedResponsibles.Count, AppLoc["allItems"].Value, () => PersonValueLabel(_selectedResponsibles.First()), "ansvariga")</span>
                     @ChevronSvg
                 </button>
                 @if (_showResponsibleDropdown)
@@ -179,7 +172,7 @@
                 <label class="@LabelClass">@AppLoc["reviewer"]</label>
                 <button type="button" class="@SelectClass flex items-center justify-between text-left"
                         @onclick="() => _showInspectorDropdown = !_showInspectorDropdown">
-                    <span class="truncate">@(_selectedInspectors.Count == 0 ? AppLoc["allItems"].Value : $"{_selectedInspectors.Count} {AppLoc["selected"].Value}")</span>
+                    <span class="truncate">@MultiButtonText(_selectedInspectors.Count, AppLoc["allItems"].Value, () => PersonValueLabel(_selectedInspectors.First()), "granskare")</span>
                     @ChevronSvg
                 </button>
                 @if (_showInspectorDropdown)
@@ -198,37 +191,32 @@
                 }
             </div>
 
-            @* Arkiverade *@
-            <div>
-                <label class="@LabelClass">@AppLoc["archivedItems"]</label>
-                <select class="@SelectClass" @bind="_selectedArchiveMode">
-                    <option value="active">@AppLoc["notArchived"]</option>
-                    <option value="all">@AppLoc["allItems"]</option>
-                    <option value="archived">@AppLoc["archivedOnly"]</option>
-                </select>
-            </div>
+            @* Arkiverade – single-select (motsatsval) *@
+            @SingleSelectDropdown(
+                AppLoc["archivedItems"].Value,
+                _showArchiveDropdown, () => _showArchiveDropdown = !_showArchiveDropdown, () => _showArchiveDropdown = false,
+                ArchiveModeLabel(_selectedArchiveMode),
+                ArchiveModes, ArchiveModeLabel, m => _selectedArchiveMode == m,
+                m => { _selectedArchiveMode = m; _showArchiveDropdown = false; })
 
             @* Intäktskälla – bara Intäktsöversikt *@
             @if (_activeView == ReportView.Income)
             {
-                <div>
-                    <label class="@LabelClass">@AppLoc["incomeSource"]</label>
-                    <select class="@SelectClass" @bind="_selectedIncomeSource">
-                        <option value="auto">@AppLoc["automatic"]</option>
-                        <option value="@CalculationVersionType.Tender">@AppLoc["tenderCalculation"]</option>
-                        <option value="@CalculationVersionType.Contract">@AppLoc["contractCalculation"]</option>
-                        <option value="@CalculationVersionType.Production">@AppLoc["productionCalculation"]</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="@LabelClass">Deltyp</label>
-                    <select class="@SelectClass" @bind="_selectedSubType">
-                        <option value="">@AppLoc["allItems"]</option>
-                        <option value="@((int)IncomeSubType.Grunddel)">Grunddel</option>
-                        <option value="@((int)IncomeSubType.Option)">Option</option>
-                        <option value="@((int)IncomeSubType.ATA)">ÄTA</option>
-                    </select>
-                </div>
+                @* Intäktskälla – single-select (styr beräkningen, exakt en källa) *@
+                @SingleSelectDropdown(
+                    AppLoc["incomeSource"].Value,
+                    _showIncomeSourceDropdown, () => _showIncomeSourceDropdown = !_showIncomeSourceDropdown, () => _showIncomeSourceDropdown = false,
+                    IncomeSourceLabel(_selectedIncomeSource),
+                    IncomeSourceOptions, IncomeSourceLabel, s => _selectedIncomeSource == s,
+                    s => { _selectedIncomeSource = s; _showIncomeSourceDropdown = false; })
+
+                @* Deltyp – multi-select *@
+                @MultiSelectDropdown(
+                    "Deltyp",
+                    _showSubTypeDropdown, () => _showSubTypeDropdown = !_showSubTypeDropdown, () => _showSubTypeDropdown = false,
+                    MultiButtonText(_selectedSubTypes.Count, AppLoc["allItems"].Value, () => SubTypeLabel(_selectedSubTypes.First()), "deltyper"),
+                    AppLoc["allItems"].Value, _selectedSubTypes.Count == 0, () => _selectedSubTypes.Clear(),
+                    SubTypes, SubTypeLabel, s => _selectedSubTypes.Contains(s), ToggleSubType)
             }
                 </div>
             </div>
@@ -252,16 +240,20 @@
                         <strong>@IncludedFilteredIncomeRows.Select(r => r.Entry.Calculation.Id).Distinct().Count()</strong>
                     </div>
                 </div>
-                <div class="flex flex-nowrap items-center gap-1.5 shrink-0">
+                @* Åtgärder samlade till höger i två rader så KPI-korten får mer bredd:
+                   rad 1 = kolumner + export/utskrift, rad 2 = sekundär "Visa Q1–Q4" under Skriv ut. *@
+                <div class="flex flex-col items-end gap-1.5 shrink-0">
+                    <div class="flex flex-nowrap items-center gap-1.5">
+                        @IncomeColumnPanel()
+                        <button type="button" class="@ActionButtonClass" @onclick="ExportExcelAsync">@AppLoc["exportExcel"]</button>
+                        <button type="button" class="@ActionButtonClass" @onclick="ExportPdfAsync">@AppLoc["exportPdf"]</button>
+                        <button type="button" class="@ActionButtonClass" @onclick="PrintAsync">@AppLoc["print"]</button>
+                    </div>
                     <button type="button"
                             class="@(_showQuarters ? "inline-flex h-8 items-center rounded-lg bg-sky-600 px-3 text-xs font-semibold text-white shadow-sm transition hover:bg-sky-700" : ActionButtonClass)"
                             @onclick="() => _showQuarters = !_showQuarters">
                         @(_showQuarters ? "Dölj Q1–Q4" : "Visa Q1–Q4")
                     </button>
-                    @IncomeColumnPanel()
-                    <button type="button" class="@ActionButtonClass" @onclick="ExportExcelAsync">@AppLoc["exportExcel"]</button>
-                    <button type="button" class="@ActionButtonClass" @onclick="ExportPdfAsync">@AppLoc["exportPdf"]</button>
-                    <button type="button" class="@ActionButtonClass" @onclick="PrintAsync">@AppLoc["print"]</button>
                 </div>
             </div>
             var _incCalcCols = IncomeCalcColumns.Where(c => _visibleIncomeColumns.Contains(c)).ToList();
@@ -474,7 +466,7 @@
                         @* Anbudsgivare – multi-select *@
                         <div class="relative w-48 min-w-0 shrink">
                             <button type="button" class="@SelectClass flex h-8 w-full items-center justify-between text-left" @onclick="() => _showBidderDropdown = !_showBidderDropdown">
-                                <span class="truncate">@(_selectedBidders.Count == 0 ? "Alla anbudsgivare" : $"{_selectedBidders.Count} valda")</span>
+                                <span class="truncate">@MultiButtonText(_selectedBidders.Count, "Alla anbudsgivare", () => _selectedBidders.First(), "anbudsgivare")</span>
                                 @ChevronSvg
                             </button>
                             @if (_showBidderDropdown)
@@ -519,12 +511,25 @@
                             }
                         </div>
 
-                        @* Tilldelad / ej tilldelad *@
-                        <select class="@SelectClass h-8 w-44 min-w-0 shrink" @bind="_awardedFilter">
-                            <option value="all">Alla anbud</option>
-                            <option value="awarded">Endast tilldelade</option>
-                            <option value="notawarded">Endast ej tilldelade</option>
-                        </select>
+                        @* Tilldelad / ej tilldelad – single-select med samma design som övriga *@
+                        <div class="relative w-44 min-w-0 shrink">
+                            <button type="button" class="@SelectClass flex h-8 w-full items-center justify-between text-left" @onclick="() => _showAwardedDropdown = !_showAwardedDropdown">
+                                <span class="truncate">@AwardedFilterLabel(_awardedFilter)</span>
+                                @ChevronSvg
+                            </button>
+                            @if (_showAwardedDropdown)
+                            {
+                                <div class="fixed inset-0 z-40" @onclick="() => _showAwardedDropdown = false"></div>
+                                <div class="absolute z-50 mt-0.5 min-w-full overflow-auto rounded-md border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900" style="max-height:14rem">
+                                    @foreach (var opt in AwardedOptions) { var o = opt;
+                                        <label class="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-xs hover:bg-sky-50 dark:hover:bg-sky-950/30 @(_awardedFilter == o ? "font-medium text-sky-700 dark:text-sky-300" : "text-slate-800 dark:text-slate-200")">
+                                            <input type="radio" name="awardedfilter" class="h-3.5 w-3.5" checked="@(_awardedFilter == o)" @onchange="() => { _awardedFilter = o; _showAwardedDropdown = false; }" />
+                                            <span>@AwardedFilterLabel(o)</span>
+                                        </label>
+                                    }
+                                </div>
+                            }
+                        </div>
 
                         @* Visa förkastade *@
                         <label class="inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-lg border border-slate-300 bg-white px-2.5 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
@@ -553,7 +558,9 @@
                     var colSpan = 1 + (showRowNo ? 1 : 0) + rowCols.Count;
                     var groups = FilteredBidRows
                         .GroupBy(r => r.Row.ProjectId)
-                        .OrderBy(g => g.First().ProjectName, StringComparer.CurrentCultureIgnoreCase)
+                        // Projektlistans ordning (namn som fallback när ingen låsning finns).
+                        .OrderBy(g => ProjectOrderIndex(g.Key))
+                        .ThenBy(g => g.First().ProjectName, StringComparer.CurrentCultureIgnoreCase)
                         .ToList();
                     <div class="@TableContainerClass">
                         <table class="@TableClass">
@@ -936,25 +943,31 @@
     private string _activeView = ReportView.Income;
     private string _selectedFolderId = string.Empty;
     private string _selectedProjectId = string.Empty;
-    private string _selectedCalculationType = string.Empty;
-    private string _selectedCalculationRole = string.Empty;
+    private readonly HashSet<CalculationVersionType> _selectedCalculationTypes = [];
+    private readonly HashSet<CalculationRole> _selectedCalculationRoles = [];
     private readonly HashSet<string> _selectedStatuses = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _selectedProjectStatuses = new(StringComparer.OrdinalIgnoreCase);
     private bool _showStatusDropdown;
     private bool _showProjectStatusDropdown;
-    private string _selectedYear = string.Empty;
-    private int _selectedQuarter;
+    private bool _showCalcTypeDropdown;
+    private bool _showCalcRoleDropdown;
+    private readonly HashSet<int> _selectedYears = [];
+    private readonly HashSet<int> _selectedQuarters = [];
+    private bool _showYearDropdown;
+    private bool _showQuarterDropdown;
     private readonly HashSet<string> _selectedResponsibles = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _selectedInspectors = new(StringComparer.OrdinalIgnoreCase);
     private bool _showResponsibleDropdown;
     private bool _showInspectorDropdown;
     private string _selectedArchiveMode = "active";
+    private bool _showArchiveDropdown;
     private string _selectedIncomeSource = "auto";
-    private string _selectedSubType = string.Empty;
+    private bool _showIncomeSourceDropdown;
+    private readonly HashSet<IncomeSubType> _selectedSubTypes = [];
+    private bool _showSubTypeDropdown;
     private bool _showQuarters;
     private bool _incomeFiltersExpanded = true;
     private string _projectSearch = string.Empty;
-    private bool _showProjectDropdown;
     private readonly HashSet<string> _excludedRowKeys = new(StringComparer.Ordinal);
 
     // ── Urval-ruta (hopfällbar, sparas i localStorage) ────────────────
@@ -962,7 +975,8 @@
     private const string SelectionCollapsedStorageKey = "ReportSelectionCollapsedV1";
 
     // ── Kalkyllista ───────────────────────────────────────────────────
-    private bool _showAllVersions;
+    // Local "show all versions" fallback used when no LockedShowAllVersions is passed in.
+    private bool _showAllVersions = false;
     private bool _showColumnPanelCalc;
     private HashSet<CalcReportColumn> _visibleCalcColumns = new(CalcDefaultColumns);
 
@@ -1006,6 +1020,7 @@
     private bool _showBidderDropdown;
     private bool _showRejectedBids;
     private string _awardedFilter = "all"; // all | awarded | notawarded
+    private bool _showAwardedDropdown;
     private string _ownCompanyName = string.Empty;
     private bool _showOwnCompanyDropdown;
     private List<ProjectBidComparisonRowDTO> _bidRowsRaw = [];
@@ -1019,8 +1034,10 @@
     {
         get
         {
-            var specificYear = !string.IsNullOrWhiteSpace(_selectedYear);
-            var yearText = specificYear ? $"År {_selectedYear}" : "Alla år";
+            var specificYear = _selectedYears.Count > 0;
+            var yearText = !specificYear ? "Alla år"
+                : _selectedYears.Count == 1 ? $"År {_selectedYears.First()}"
+                : $"{_selectedYears.Count} år";
 
             var chips = IncomeActiveFilterChips;
             if (chips.Count == 0)
@@ -1042,12 +1059,12 @@
         get
         {
             var chips = new List<string>();
-            if (_selectedQuarter > 0)
-                chips.Add($"Q{_selectedQuarter}");
-            if (Enum.TryParse<CalculationVersionType>(_selectedCalculationType, out var ct))
-                chips.Add(TypeLabel(ct));
-            if (Enum.TryParse<CalculationRole>(_selectedCalculationRole, out var role))
-                chips.Add(GetCalculationRoleLabel(role));
+            if (_selectedQuarters.Count > 0)
+                chips.Add(_selectedQuarters.Count == 1 ? $"Q{_selectedQuarters.First()}" : $"{_selectedQuarters.Count} kvartal");
+            if (_selectedCalculationTypes.Count > 0)
+                chips.Add(_selectedCalculationTypes.Count == 1 ? TypeLabel(_selectedCalculationTypes.First()) : $"{_selectedCalculationTypes.Count} kalkyltyper");
+            if (_selectedCalculationRoles.Count > 0)
+                chips.Add(_selectedCalculationRoles.Count == 1 ? GetCalculationRoleLabel(_selectedCalculationRoles.First()) : $"{_selectedCalculationRoles.Count} kalkylroller");
             if (_selectedStatuses.Count > 0)
                 chips.Add(_selectedStatuses.Count == 1 ? _selectedStatuses.First() : $"{_selectedStatuses.Count} statusar");
             if (_selectedResponsibles.Count > 0)
@@ -1058,8 +1075,8 @@
                 chips.Add(ArchiveModeLabel(_selectedArchiveMode));
             if (_selectedIncomeSource != "auto" && Enum.TryParse<CalculationVersionType>(_selectedIncomeSource, out var src))
                 chips.Add(TypeLabel(src));
-            if (int.TryParse(_selectedSubType, out var stp))
-                chips.Add(SubTypeLabel((IncomeSubType)stp));
+            if (_selectedSubTypes.Count > 0)
+                chips.Add(_selectedSubTypes.Count == 1 ? SubTypeLabel(_selectedSubTypes.First()) : $"{_selectedSubTypes.Count} deltyper");
             return chips;
         }
     }
@@ -1071,16 +1088,16 @@
         {
             var lines = new List<string>
             {
-                $"År: {(string.IsNullOrWhiteSpace(_selectedYear) ? "Alla år" : _selectedYear)}",
-                $"Kvartal: {(_selectedQuarter > 0 ? $"Q{_selectedQuarter}" : L("allQuarters"))}",
-                $"Kalkyltyp: {(Enum.TryParse<CalculationVersionType>(_selectedCalculationType, out var ct) ? TypeLabel(ct) : L("allCalculationTypes"))}",
+                $"År: {(_selectedYears.Count == 0 ? "Alla år" : string.Join(", ", _selectedYears.OrderBy(y => y)))}",
+                $"Kvartal: {(_selectedQuarters.Count == 0 ? L("allQuarters") : string.Join(", ", _selectedQuarters.OrderBy(q => q).Select(q => $"Q{q}")))}",
+                $"Kalkyltyp: {(_selectedCalculationTypes.Count == 0 ? L("allCalculationTypes") : string.Join(", ", _selectedCalculationTypes.Select(TypeLabel)))}",
                 $"Kalkylstatus: {(_selectedStatuses.Count == 0 ? L("allStatuses") : string.Join(", ", _selectedStatuses))}",
-                $"Kalkylroll: {(Enum.TryParse<CalculationRole>(_selectedCalculationRole, out var role) ? GetCalculationRoleLabel(role) : L("allItems"))}",
+                $"Kalkylroll: {(_selectedCalculationRoles.Count == 0 ? L("allItems") : string.Join(", ", _selectedCalculationRoles.Select(GetCalculationRoleLabel)))}",
                 $"Kalkylansvarig: {(_selectedResponsibles.Count == 0 ? L("allItems") : string.Join(", ", _selectedResponsibles.Select(PersonValueLabel)))}",
                 $"Granskare: {(_selectedInspectors.Count == 0 ? L("allItems") : string.Join(", ", _selectedInspectors.Select(PersonValueLabel)))}",
                 $"Arkiverade: {ArchiveModeLabel(_selectedArchiveMode)}",
                 $"Intäktskälla: {(Enum.TryParse<CalculationVersionType>(_selectedIncomeSource, out var src) ? TypeLabel(src) : L("automatic"))}",
-                $"Deltyp: {(int.TryParse(_selectedSubType, out var stp) ? SubTypeLabel((IncomeSubType)stp) : L("allItems"))}",
+                $"Deltyp: {(_selectedSubTypes.Count == 0 ? L("allItems") : string.Join(", ", _selectedSubTypes.Select(SubTypeLabel)))}",
             };
             return string.Join("\n", lines);
         }
@@ -1106,6 +1123,31 @@
     private readonly List<CalculationEntry> _calculations = [];
     private readonly List<CalculationEntry> _allVersions = [];
     private readonly Dictionary<int, CalculationPostDTO> _posts = [];
+
+    // Bevarar projektlistans ordning i rapporten: position per projekt-id enligt LockedProjectIds
+    // (urvalet som skickades med när rapporten öppnades). Saknas låsningen sorteras inget om.
+    private Dictionary<Guid, int>? _projectOrderMap;
+
+    private int ProjectOrderIndex(Guid id) =>
+        _projectOrderMap is not null && _projectOrderMap.TryGetValue(id, out var i) ? i : int.MaxValue;
+
+    // Sortera de laddade samlingarna enligt projektlistans ordning. OrderBy är stabil, så inom
+    // samma projekt (och när ingen låsning finns) bevaras befintlig ordning. Körs en gång efter
+    // laddning så alla rapportflikar ärver projektlistans ordning utan att sorteras om per default.
+    private void ApplyProjectListOrder()
+    {
+        if (_projectOrderMap is null) return;
+        ReorderByProject(_projects, e => e.Project.Id);
+        ReorderByProject(_calculations, e => e.Project.Id);
+        ReorderByProject(_allVersions, e => e.Project.Id);
+    }
+
+    private void ReorderByProject<T>(List<T> list, Func<T, Guid> projectId)
+    {
+        var ordered = list.OrderBy(e => ProjectOrderIndex(projectId(e))).ToList();
+        list.Clear();
+        list.AddRange(ordered);
+    }
 
     // ── CSS constants ─────────────────────────────────────────────────
     private const string LabelClass = "mb-1 block text-[11px] font-semibold text-slate-500 dark:text-slate-400";
@@ -1173,6 +1215,65 @@
                @onchange="e => { if ((bool)(e.Value ?? false)) add(MissingPersonValue); else remove(MissingPersonValue); }" />
         <span class="italic text-slate-400">Saknas</span>
     </label>;
+
+    // ── Gemensamma filter-dropdowns ───────────────────────────────────
+    // Samma visuella stil som Kalkylstatus/Kalkylansvarig. Popup ligger som absolut panel
+    // (z-50) med en fast bakgrund (z-40) som fångar klick utanför och stänger menyn.
+    private RenderFragment MultiSelectDropdown<T>(
+        string label, bool open, Action onToggle, Action onClose, string buttonText,
+        string allLabel, bool allSelected, Action onClear,
+        IEnumerable<T> items, Func<T, string> itemLabel, Func<T, bool> isChecked, Action<T, bool> onItemToggle)
+        => @<div class="relative">
+            <label class="@LabelClass">@label</label>
+            <button type="button" class="@SelectClass flex items-center justify-between text-left" @onclick="onToggle">
+                <span class="truncate">@buttonText</span>
+                @ChevronSvg
+            </button>
+            @if (open)
+            {
+                <div class="fixed inset-0 z-40" @onclick="onClose"></div>
+                <div class="absolute z-50 mt-0.5 min-w-full overflow-auto rounded-md border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900" style="max-height:12rem">
+                    <label class="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-xs hover:bg-sky-50 dark:hover:bg-sky-950/30">
+                        <input type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300" checked="@allSelected" @onchange="() => onClear()" />
+                        <span class="text-slate-500 dark:text-slate-400">@allLabel</span>
+                    </label>
+                    @foreach (var it in items)
+                    {
+                        var item = it;
+                        <label class="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-xs text-slate-800 hover:bg-sky-50 dark:text-slate-200 dark:hover:bg-sky-950/30">
+                            <input type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300" checked="@isChecked(item)" @onchange="e => onItemToggle(item, (bool)(e.Value ?? false))" />
+                            <span>@itemLabel(item)</span>
+                        </label>
+                    }
+                </div>
+            }
+        </div>;
+
+    // Single-select med samma design men exakt ett val; menyn stängs när ett val görs.
+    private RenderFragment SingleSelectDropdown<T>(
+        string label, bool open, Action onToggle, Action onClose, string buttonText,
+        IEnumerable<T> items, Func<T, string> itemLabel, Func<T, bool> isSelected, Action<T> onSelect)
+        => @<div class="relative">
+            <label class="@LabelClass">@label</label>
+            <button type="button" class="@SelectClass flex items-center justify-between text-left" @onclick="onToggle">
+                <span class="truncate">@buttonText</span>
+                @ChevronSvg
+            </button>
+            @if (open)
+            {
+                <div class="fixed inset-0 z-40" @onclick="onClose"></div>
+                <div class="absolute z-50 mt-0.5 min-w-full overflow-auto rounded-md border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900" style="max-height:12rem">
+                    @foreach (var it in items)
+                    {
+                        var item = it;
+                        <label class="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-xs hover:bg-sky-50 dark:hover:bg-sky-950/30 @(isSelected(item) ? "font-medium text-sky-700 dark:text-sky-300" : "text-slate-800 dark:text-slate-200")">
+                            <input type="radio" class="h-3.5 w-3.5" checked="@isSelected(item)" @onchange="() => onSelect(item)" />
+                            <span>@itemLabel(item)</span>
+                        </label>
+                    }
+                </div>
+            }
+        </div>;
 
     private IEnumerable<HitRateReportColumn> HitRateVisibleColumns =>
         HitRateAllColumns.Where(c => _visibleHitRateColumns.Contains(c));
@@ -1381,11 +1482,13 @@
 
     private IEnumerable<int> AvailableYears =>
         BuildIncomeRows().Select(r => r.Year)
-            .Concat(_projects.Select(e => e.Project.TenderDeadline).Where(d => d != default && d.Year > 2000).Select(d => d.Year))
+            .Concat(_projects.Select(e => e.Project.TenderDeadline).Where(d => d is { } dd && dd.Year > 2000).Select(d => d!.Value.Year))
             .Distinct().OrderBy(y => y);
 
     private string CurrentDepartmentName =>
-        Folder.State.Departments.FirstOrDefault(d => d.Id == Folder.State.SelectedDepartmentId)?.Name ?? L("currentDepartment");
+        Folder.State.AllAvailable
+            ? "Alla tillgängliga"
+            : Folder.State.Departments.FirstOrDefault(d => d.Id == Folder.State.SelectedDepartmentId)?.Name ?? L("currentDepartment");
 
     private IEnumerable<ProjectEntry> FilteredProjects =>
         _projects.Where(e =>
@@ -1465,15 +1568,26 @@
         {
             _activeView = InitialView;
         }
-        _selectedYear = string.IsNullOrEmpty(InitialYear) ? DateTime.Now.Year.ToString() : InitialYear;
-        _selectedCalculationType = InitialCalculationType;
-        _selectedCalculationRole = InitialCalculationRole;
+        var initialYear = !string.IsNullOrEmpty(InitialYear) && int.TryParse(InitialYear, out var iy) ? iy : DateTime.Now.Year;
+        _selectedYears.Add(initialYear);
+        if (Enum.TryParse<CalculationVersionType>(InitialCalculationType, out var initType)) _selectedCalculationTypes.Add(initType);
+        if (Enum.TryParse<CalculationRole>(InitialCalculationRole, out var initRole)) _selectedCalculationRoles.Add(initRole);
         if (!string.IsNullOrWhiteSpace(InitialStatus)) _selectedStatuses.Add(InitialStatus);
         if (!string.IsNullOrWhiteSpace(InitialResponsible)) _selectedResponsibles.Add(InitialResponsible);
         if (!string.IsNullOrWhiteSpace(InitialInspector)) _selectedInspectors.Add(InitialInspector);
         _selectedFolderId = FolderScope?.Id.ToString() ?? string.Empty;
         _selectedProjectId = ProjectScope?.Id.ToString() ?? string.Empty;
+
+        // Lås projektlistans ordning: bygg en position-karta från det medskickade urvalet så att
+        // rapporten visar projekten i exakt samma ordning som listan (inte default-sortering).
+        if (LockedProjectIds is { Count: > 0 })
+            _projectOrderMap = LockedProjectIds
+                .Select((id, i) => (id, i))
+                .GroupBy(x => x.id)               // robust mot ev. dubbletter i urvalet
+                .ToDictionary(g => g.Key, g => g.First().i);
+
         await LoadAsync();
+        ApplyProjectListOrder();
         if (IsViewEnabled(ReportView.Income)) BuildIncomeSelectionInfo();
         if (IsViewEnabled(ReportView.Projects)) LockProjReportProjects();
         if (IsViewEnabled(ReportView.HitRate)) LockHitRateProjects();
@@ -1543,9 +1657,10 @@
         var folders = FolderScope is null ? Folder.State.FoldersList : [FolderScope];
         foreach (var folder in folders)
         {
-            var projects = Folder.State.OtherDepartment
-                ? await Repo.Project.GetOtherDepartmentAsync(folder.Id, includeArchived: true)
-                : await Repo.Project.GetByFolderIdAsync(folder.Id, includeArchived: true);
+            // Always use the CanSee-filtered per-folder query: for a folder in another department it
+            // returns only the projects shared/assigned to the user, so the report follows the same
+            // scope as the tree and right panel (own department / 👥 shared / "Alla tillgängliga").
+            var projects = await Repo.Project.GetByFolderIdAsync(folder.Id, includeArchived: true);
 
             foreach (var project in projects.Where(p =>
                 (ProjectScope is null && LockedProjectIds is null) ||
@@ -1661,7 +1776,10 @@
                 projectById.TryGetValue(r.ProjectId, out var pe);
                 return new BidRow(r, pe?.Project, pe?.Project.Name ?? "-", pe?.Folder.Name ?? "-");
             })
-            .OrderBy(r => r.ProjectName)
+            // Projektlistans ordning först (faller tillbaka på namn när ingen låsning finns),
+            // därefter anbudens ordning inom projektet.
+            .OrderBy(r => ProjectOrderIndex(r.Row.ProjectId))
+            .ThenBy(r => r.ProjectName, StringComparer.CurrentCultureIgnoreCase)
             .ThenByDescending(r => r.Row.IsAwarded)
             .ThenBy(r => r.Row.Placement ?? int.MaxValue)
             .ThenBy(r => r.Row.ComparisonAmount ?? decimal.MaxValue)
@@ -1847,8 +1965,8 @@
             var f = AvailableFolders.FirstOrDefault(x => x.Id.ToString() == _selectedFolderId);
             if (f is not null) filters.Add($"Mapp: {f.Name}");
         }
-        if (!string.IsNullOrEmpty(_selectedYear)) filters.Add($"År {_selectedYear}");
-        if (_selectedQuarter > 0) filters.Add($"Q{_selectedQuarter}");
+        if (_selectedYears.Count > 0) filters.Add($"År {string.Join(", ", _selectedYears.OrderBy(y => y))}");
+        if (_selectedQuarters.Count > 0) filters.Add(string.Join(", ", _selectedQuarters.OrderBy(q => q).Select(q => $"Q{q}")));
         if (_selectedStatuses.Count > 0) filters.Add($"Kalkylstatus: {string.Join(", ", _selectedStatuses)}");
         var nonMissingResp = _selectedResponsibles.Where(r => r != MissingPersonValue).ToList();
         if (nonMissingResp.Count > 0) filters.Add($"Kalkylansvarig: {string.Join(", ", nonMissingResp)}");
@@ -1856,7 +1974,7 @@
         if (nonMissingInsp.Count > 0) filters.Add($"Granskare: {string.Join(", ", nonMissingInsp)}");
         filters.Add(_selectedArchiveMode switch { "all" => "Arkiverade inkluderade", "archived" => "Enbart arkiverade", _ => "Arkiverade ej inkluderade" });
 
-        bool hasFilter = filters.Count > 1 || !string.IsNullOrEmpty(_selectedFolderId) || !string.IsNullOrEmpty(_selectedYear) || _selectedQuarter > 0;
+        bool hasFilter = filters.Count > 1 || !string.IsNullOrEmpty(_selectedFolderId) || _selectedYears.Count > 0 || _selectedQuarters.Count > 0;
         _hitRateSelectionLine = hasFilter
             ? $"Hit rate baseras på {count} projekt från aktuell projektlista."
             : $"Hit rate baseras på alla projekt i {CurrentDepartmentName}.";
@@ -1897,7 +2015,7 @@
             if (f is not null) filters.Add($"Mapp: {f.Name}");
         }
         if (!string.IsNullOrEmpty(_selectedProjectId)) filters.Add($"Projekt: {_projectSearch}");
-        if (!string.IsNullOrWhiteSpace(_selectedCalculationType)) filters.Add($"Kalkyltyp: {_selectedCalculationType}");
+        if (_selectedCalculationTypes.Count > 0) filters.Add($"Kalkyltyp: {string.Join(", ", _selectedCalculationTypes.Select(TypeLabel))}");
         if (_selectedStatuses.Count > 0) filters.Add($"Kalkylstatus: {string.Join(", ", _selectedStatuses)}");
         var nonMissingResp = _selectedResponsibles.Where(r => r != MissingPersonValue).ToList();
         if (nonMissingResp.Count > 0) filters.Add($"Kalkylansvarig: {string.Join(", ", nonMissingResp)}");
@@ -1907,7 +2025,7 @@
 
         var versionInfo = _lockedCalcShowAllVersions ? "alla versioner" : "aktuella versioner";
         bool hasFilter = filters.Count > 1 || !string.IsNullOrEmpty(_selectedFolderId) || !string.IsNullOrEmpty(_selectedProjectId)
-            || !string.IsNullOrWhiteSpace(_selectedCalculationType) || _selectedStatuses.Count > 0;
+            || _selectedCalculationTypes.Count > 0 || _selectedStatuses.Count > 0;
         _calcReportSelectionLine = hasFilter
             ? $"Kalkyllistan baseras på {count} kalkyler ({versionInfo}) från aktuell lista."
             : $"Kalkyllistan baseras på alla kalkyler ({versionInfo}) i {CurrentDepartmentName}.";
@@ -2031,7 +2149,7 @@
         if (incl.Count > 1)
         {
             result.Add(new IncomeTableRow { Kind = IncomeTableRowKind.GrandTotal, SummaryLabel = "Totalt", Q1 = incl.Sum(r => r.Q1), Q2 = incl.Sum(r => r.Q2), Q3 = incl.Sum(r => r.Q3), Q4 = incl.Sum(r => r.Q4), Amount = incl.Sum(r => r.Amount), Forecast = incl.Sum(r => r.Forecast) });
-            if (string.IsNullOrEmpty(_selectedSubType) && incl.Select(r => r.SubType).Distinct().Count() > 1)
+            if (_selectedSubTypes.Count == 0 && incl.Select(r => r.SubType).Distinct().Count() > 1)
                 foreach (var sg in incl.GroupBy(r => r.SubType).OrderBy(g => g.Key))
                     result.Add(new IncomeTableRow { Kind = IncomeTableRowKind.SubTypeTotal, SummaryLabel = $"Summa {SubTypeLabel(sg.Key)}", Q1 = sg.Sum(r => r.Q1), Q2 = sg.Sum(r => r.Q2), Q3 = sg.Sum(r => r.Q3), Q4 = sg.Sum(r => r.Q4), Amount = sg.Sum(r => r.Amount), Forecast = sg.Sum(r => r.Forecast) });
 
@@ -2096,8 +2214,8 @@
     {
         var c = entry.Calculation;
         if (!MatchesFolder(entry.Folder) || !MatchesProject(entry.Project) || !MatchesArchive(!c.IsArchived)) return false;
-        if (!string.IsNullOrWhiteSpace(_selectedCalculationType) && c.CalculationType.ToString() != _selectedCalculationType) return false;
-        if (Enum.TryParse<CalculationRole>(_selectedCalculationRole, out var role) && c.CalculationRole != role) return false;
+        if (_selectedCalculationTypes.Count > 0 && !_selectedCalculationTypes.Contains(c.CalculationType)) return false;
+        if (_selectedCalculationRoles.Count > 0 && !_selectedCalculationRoles.Contains(c.CalculationRole)) return false;
         if (_selectedStatuses.Count > 0 && !_selectedStatuses.Contains(c.Status ?? string.Empty)) return false;
         if (!MatchesPersonField(c.Responsible, _selectedResponsibles)) return false;
         if (!MatchesPersonField(c.Inspector, _selectedInspectors)) return false;
@@ -2106,16 +2224,20 @@
 
     private bool MatchesIncome(IncomeRow row)
     {
-        if (!string.IsNullOrWhiteSpace(_selectedYear) && int.TryParse(_selectedYear, out var yr) && row.Year != yr) return false;
-        if (!string.IsNullOrWhiteSpace(_selectedSubType) && int.TryParse(_selectedSubType, out var st) && (int)row.SubType != st) return false;
-        return _selectedQuarter switch { 1 => row.Q1 != 0, 2 => row.Q2 != 0, 3 => row.Q3 != 0, 4 => row.Q4 != 0, _ => true };
+        if (_selectedYears.Count > 0 && !_selectedYears.Contains(row.Year)) return false;
+        if (_selectedSubTypes.Count > 0 && !_selectedSubTypes.Contains(row.SubType)) return false;
+        if (_selectedQuarters.Count == 0) return true;
+        return _selectedQuarters.Any(q => q switch { 1 => row.Q1 != 0, 2 => row.Q2 != 0, 3 => row.Q3 != 0, 4 => row.Q4 != 0, _ => true });
     }
 
     private bool MatchesCalculationYear(CalculationEntry entry)
     {
-        if (string.IsNullOrWhiteSpace(_selectedYear) || !int.TryParse(_selectedYear, out var yr)) return true;
+        if (_selectedYears.Count == 0) return true;
         var c = entry.Calculation;
-        return c.StartDate.Year == yr || c.EndDate.Year == yr || (c.TenderDeadline != default && c.TenderDeadline.Year == yr);
+        return _selectedYears.Any(yr =>
+            (c.StartDate is { } sd && sd.Year == yr)
+            || (c.EndDate is { } ed && ed.Year == yr)
+            || (c.TenderDeadline is { } td && td.Year == yr));
     }
 
     private bool MatchesFolder(FolderMVVM folder) =>
@@ -2131,16 +2253,18 @@
 
     private bool MatchesHitRateYear(ListProjectMVVM project)
     {
-        if (string.IsNullOrWhiteSpace(_selectedYear) || !int.TryParse(_selectedYear, out var yr)) return true;
-        if (project.TenderDeadline != default && project.TenderDeadline.Year == yr) return true;
-        return project.StartDate.Year == yr || project.EndDate.Year == yr;
+        if (_selectedYears.Count == 0) return true;
+        return _selectedYears.Any(yr =>
+            (project.TenderDeadline is { } td && td.Year == yr)
+            || (project.StartDate is { } sd && sd.Year == yr)
+            || (project.EndDate is { } ed && ed.Year == yr));
     }
 
     private bool MatchesHitRateQuarter(ListProjectMVVM project)
     {
-        if (_selectedQuarter == 0) return true;
-        if (project.TenderDeadline == default) return true;
-        return ((project.TenderDeadline.Month - 1) / 3) + 1 == _selectedQuarter;
+        if (_selectedQuarters.Count == 0) return true;
+        if (project.TenderDeadline is not { } deadline) return true;
+        return _selectedQuarters.Contains(((deadline.Month - 1) / 3) + 1);
     }
 
     private bool MatchesPersonField(string? value, HashSet<string> selected)
@@ -2165,6 +2289,35 @@
     private void ToggleProjectStatus(string s, bool v) { if (v) _selectedProjectStatuses.Add(s); else _selectedProjectStatuses.Remove(s); }
     private void ToggleResponsible(string s, bool v) { if (v) _selectedResponsibles.Add(s); else _selectedResponsibles.Remove(s); }
     private void ToggleInspector(string s, bool v) { if (v) _selectedInspectors.Add(s); else _selectedInspectors.Remove(s); }
+    private void ToggleCalcType(CalculationVersionType t, bool v) { if (v) _selectedCalculationTypes.Add(t); else _selectedCalculationTypes.Remove(t); }
+    private void ToggleCalcRole(CalculationRole r, bool v) { if (v) _selectedCalculationRoles.Add(r); else _selectedCalculationRoles.Remove(r); }
+    private void ToggleYear(int y, bool v) { if (v) _selectedYears.Add(y); else _selectedYears.Remove(y); }
+    private void ToggleQuarter(int q, bool v) { if (v) _selectedQuarters.Add(q); else _selectedQuarters.Remove(q); }
+    private void ToggleSubType(IncomeSubType s, bool v) { if (v) _selectedSubTypes.Add(s); else _selectedSubTypes.Remove(s); }
+
+    // ── Filter-alternativ (fasta listor) ──────────────────────────────
+    private static readonly CalculationVersionType[] CalculationTypes =
+        [CalculationVersionType.Tender, CalculationVersionType.Contract, CalculationVersionType.Production];
+    private static readonly int[] Quarters = [1, 2, 3, 4];
+    private static readonly IncomeSubType[] SubTypes =
+        [IncomeSubType.Grunddel, IncomeSubType.Option, IncomeSubType.ATA];
+    private static readonly string[] ArchiveModes = ["active", "all", "archived"];
+    // Intäktskälla: "auto" + de tre kalkyltyperna (samma värden som tidigare native select).
+    private static readonly string[] IncomeSourceOptions =
+        ["auto", nameof(CalculationVersionType.Tender), nameof(CalculationVersionType.Contract), nameof(CalculationVersionType.Production)];
+    private string IncomeSourceLabel(string s) =>
+        s == "auto" ? L("automatic") : Enum.TryParse<CalculationVersionType>(s, out var t) ? TypeLabel(t) : s;
+    private static readonly string[] AwardedOptions = ["all", "awarded", "notawarded"];
+    private static string AwardedFilterLabel(string s) => s switch
+    {
+        "awarded" => "Endast tilldelade",
+        "notawarded" => "Endast ej tilldelade",
+        _ => "Alla anbud"
+    };
+
+    // Knapptext för multi-select: "Alla …" (0 val), enskild etikett (1 val), "N <plural>" (flera).
+    private static string MultiButtonText(int count, string allLabel, Func<string> single, string plural) =>
+        count == 0 ? allLabel : count == 1 ? single() : $"{count} {plural}";
 
     private async Task ToggleCalcColumn(CalcReportColumn col, bool include)
     {
@@ -2197,7 +2350,6 @@
     private void OnProjectSearchInput(ChangeEventArgs e)
     {
         _projectSearch = e.Value?.ToString() ?? string.Empty;
-        _showProjectDropdown = true;
         if (string.IsNullOrWhiteSpace(_projectSearch)) _selectedProjectId = string.Empty;
     }
 
@@ -2205,14 +2357,11 @@
     {
         _selectedProjectId = entry?.Project.Id.ToString() ?? string.Empty;
         _projectSearch = entry is not null ? ProjectDisplayLabel(entry) : string.Empty;
-        _showProjectDropdown = false;
     }
-
-    private void CloseProjectDropdown() => _showProjectDropdown = false;
 
     private void OnProjectKeyDown(KeyboardEventArgs e)
     {
-        if (e.Key == "Escape") { _showProjectDropdown = false; _selectedProjectId = string.Empty; _projectSearch = string.Empty; }
+        if (e.Key == "Escape") { _selectedProjectId = string.Empty; _projectSearch = string.Empty; }
     }
 
     private string ProjectDisplayLabel(ProjectEntry e)
@@ -2675,15 +2824,15 @@
         }
         if (!string.IsNullOrEmpty(_selectedProjectId) && !string.IsNullOrWhiteSpace(_projectSearch))
             parts.Add($"Projekt: {_projectSearch}");
-        parts.Add($"År: {(string.IsNullOrWhiteSpace(_selectedYear) ? "Alla" : _selectedYear)}");
-        parts.Add($"Kvartal: {(_selectedQuarter == 0 ? "Alla" : $"Q{_selectedQuarter}")}");
+        parts.Add($"År: {(_selectedYears.Count == 0 ? "Alla" : string.Join(", ", _selectedYears.OrderBy(y => y)))}");
+        parts.Add($"Kvartal: {(_selectedQuarters.Count == 0 ? "Alla" : string.Join(", ", _selectedQuarters.OrderBy(q => q).Select(q => $"Q{q}")))}");
         parts.Add($"Kalkylstatus: {(_selectedStatuses.Count == 0 ? "Alla" : string.Join(", ", _selectedStatuses))}");
-        parts.Add($"Deltyp: {(int.TryParse(_selectedSubType, out var st) ? SubTypeLabel((IncomeSubType)st) : "Alla")}");
+        parts.Add($"Deltyp: {(_selectedSubTypes.Count == 0 ? "Alla" : string.Join(", ", _selectedSubTypes.Select(SubTypeLabel)))}");
         parts.Add($"Intäktskälla: {(Enum.TryParse<CalculationVersionType>(_selectedIncomeSource, out var src) ? TypeLabel(src) : L("automatic"))}");
-        if (Enum.TryParse<CalculationVersionType>(_selectedCalculationType, out var ct))
-            parts.Add($"Kalkyltyp: {TypeLabel(ct)}");
-        if (Enum.TryParse<CalculationRole>(_selectedCalculationRole, out var role))
-            parts.Add($"Kalkylroll: {GetCalculationRoleLabel(role)}");
+        if (_selectedCalculationTypes.Count > 0)
+            parts.Add($"Kalkyltyp: {string.Join(", ", _selectedCalculationTypes.Select(TypeLabel))}");
+        if (_selectedCalculationRoles.Count > 0)
+            parts.Add($"Kalkylroll: {string.Join(", ", _selectedCalculationRoles.Select(GetCalculationRoleLabel))}");
         var resp = _selectedResponsibles.Where(r => r != MissingPersonValue).ToList();
         if (resp.Count > 0) parts.Add($"Kalkylansvarig: {string.Join(", ", resp)}");
         var insp = _selectedInspectors.Where(r => r != MissingPersonValue).ToList();
@@ -3019,6 +3168,7 @@
 
     private static string FormatMoney(decimal v) => v.ToString("N0");
     private static string FormatDate(DateTime v) => v == default ? "-" : v.ToString("yyyy-MM-dd");
+    private static string FormatDate(DateTime? v) => v is { } d ? FormatDate(d) : "-";
     private string L(string key) => AppLoc[key].Value;
 
     private sealed record ProjectEntry(FolderMVVM Folder, ListProjectMVVM Project);

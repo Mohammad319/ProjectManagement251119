@@ -15,6 +15,7 @@ using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Project;
 using ProjectManagement.Shared.DTO.Transfer;
+using ProjectManagement.Shared.Exceptions;
 
 namespace Persistence.Service.Transfer
 {
@@ -33,7 +34,8 @@ namespace Persistence.Service.Transfer
         // User-safe Swedish messages (no technical details — exceptions are logged server-side only).
         private const string MsgCalcTargetMissing = "Målprojektet kunde inte hittas eller tillhör inte ditt företag. Välj ett projekt och försök igen.";
         private const string MsgProjectTargetMissing = "Målmappen kunde inte hittas eller tillhör inte ditt företag. Välj en mapp och försök igen.";
-        private const string MsgNotAuthorized = "Du har inte behörighet att importera i detta projekt.";
+        private const string MsgProjectNotAuthorized = "Du saknar behörighet att utföra denna projektåtgärd.";
+        private const string MsgCalculationNotAuthorized = "Du saknar behörighet att utföra denna kalkylåtgärd.";
         private const string MsgRequiredMapping = "Några obligatoriska värden saknar lokal mappning. Välj lokala värden innan import.";
         private const string MsgCalcInvalidFile = "Filen är inte en giltig kalkylkopia.";
         private const string MsgProjectInvalidFile = "Filen är inte en giltig projektkopia.";
@@ -66,13 +68,21 @@ namespace Persistence.Service.Transfer
         {
             await using var db = await dbFactory.CreateDbContextAsync(ct);
 
+            // Export is a lifecycle/management action, not a content read: a user who only reaches the
+            // project via an extra share (Kan visa/Kan ändra) must not export it. Only Admin/own-
+            // department/creator qualifies (CanManageLifecycle), so the share path is excluded.
             var project = await db.Projects
                 .AsNoTracking()
-                .Where(ProjectAccessRules.CanSee(userId, departmentId, isViewer))
+                .Where(ProjectAccessRules.CanManageLifecycle(userId, departmentId))
                 .FirstOrDefaultAsync(p => p.Id == projectId, ct);
 
             if (project is null)
+            {
+                if (await db.Projects.AsNoTracking().AnyAsync(p => p.Id == projectId, ct))
+                    throw new ForbiddenActionException(ProjectAccessRules.LifecycleForbiddenMessage);
+
                 return null;
+            }
 
             var selectedIds = request.CalculationIds?.Distinct().ToList() ?? [];
 
@@ -115,16 +125,24 @@ namespace Persistence.Service.Transfer
             await using var db = await dbFactory.CreateDbContextAsync(ct);
 
             // Private calculations can never be exported externally (not even by the owner).
+            // Export is a lifecycle/management action, not a content read: a user who only reaches the
+            // calc via an extra project share (Kan visa/Kan ändra) must not be able to export it. Only
+            // Admin/own-department access qualifies (CanManageLifecycle), so the share path is excluded.
             var calc = await db.Calculations
                 .AsNoTracking()
                 .Include(c => c.Tasks)
                     .ThenInclude(t => t.Resources)
                 .Where(c => c.Id == calculationId && !c.IsPrivate)
-                .Where(CalculationAccessRules.CanSee(userId, departmentId, isViewer))
+                .Where(CalculationAccessRules.CanManageLifecycle(departmentId))
                 .FirstOrDefaultAsync(ct);
 
             if (calc is null)
+            {
+                if (await db.Calculations.AsNoTracking().AnyAsync(c => c.Id == calculationId && !c.IsPrivate, ct))
+                    throw new ForbiddenActionException(CalculationAccessRules.LifecycleForbiddenMessage);
+
                 return null;
+            }
 
             var lookups = await LoadSourceLookupsAsync(db, ct);
 
@@ -296,7 +314,7 @@ namespace Persistence.Service.Transfer
                 logger.LogWarning(
                     "Atacost project import rejected: user {UserId} lacks cross-department rights for folder {FolderId} (target dept {TargetDept}, user dept {UserDept}).",
                     userId, targetFolderId, targetDepartmentId, departmentId);
-                return AtacostImportResultDTO.Fail(AtacostImportStatus.NotAuthorized, MsgNotAuthorized);
+                return AtacostImportResultDTO.Fail(AtacostImportStatus.NotAuthorized, MsgProjectNotAuthorized);
             }
 
             var existingProjectNames = await db.Projects.AsNoTracking()
@@ -401,7 +419,7 @@ namespace Persistence.Service.Transfer
                 logger.LogWarning(
                     "Atacost calc import rejected: user {UserId} lacks cross-department rights for project {ProjectId} (target dept {TargetDept}, user dept {UserDept}).",
                     userId, targetProjectId, target.DepartmentId, departmentId);
-                return AtacostImportResultDTO.Fail(AtacostImportStatus.NotAuthorized, MsgNotAuthorized);
+                return AtacostImportResultDTO.Fail(AtacostImportStatus.NotAuthorized, MsgCalculationNotAuthorized);
             }
 
             var existingCalcNames = await db.Calculations.AsNoTracking()

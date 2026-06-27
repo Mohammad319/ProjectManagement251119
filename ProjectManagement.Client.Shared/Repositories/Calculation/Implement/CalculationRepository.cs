@@ -93,7 +93,9 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
 
         public async Task<int> CreateAsync(Guid ProjectId, CalculationPostDTO model)
         {
-            return await _httpRepository.PostAsync<int, CalculationPostDTO>(model, CalcURLBase + URLConst.Calculation.Create + "/" + ProjectId);
+            // suppressGlobalError: the calculation form shows save failures inside its own dialog,
+            // so the page-level error dialog must not also pop for these requests.
+            return await _httpRepository.PostAsync<int, CalculationPostDTO>(model, CalcURLBase + URLConst.Calculation.Create + "/" + ProjectId, suppressGlobalError: true);
         }
 
         public async Task<bool> UpdateAsync(int calculationId, List<HourlyPriceListGroupDTO> hourlyPriceList)
@@ -102,7 +104,8 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
         }
         public async Task<bool> UpdateAsync(CalculationPostDTO model, int id)
         {
-            return await _httpRepository.PutAsync(model, CalcURLBase + id);
+            // suppressGlobalError: failures are surfaced inside the calculation form dialog.
+            return await _httpRepository.PutAsync(model, CalcURLBase + id, suppressGlobalError: true);
         }
 
         public async Task<bool> DeleteAsync(int id)
@@ -133,6 +136,11 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
         public async Task<bool> SaveProductionNoteAsync(ProductionNoteSaveDTO dto)
         {
             return await _httpRepository.PutAsync(dto, CalcURLBase + "productionnote");
+        }
+
+        public async Task<bool> SaveReviewerCommentAsync(ReviewerCommentSaveDTO dto)
+        {
+            return await _httpRepository.PutAsync(dto, CalcURLBase + "reviewercomment");
         }
 
         public async Task<byte[]> ExportCopyAsync(int calcId, AtacostCalculationExportRequest request)

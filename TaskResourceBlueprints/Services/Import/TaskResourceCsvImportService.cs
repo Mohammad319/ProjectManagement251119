@@ -847,7 +847,7 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
         var normalizedType = NormalizeToken(capWasteType);
         if (normalizedType.Contains("spill", StringComparison.OrdinalIgnoreCase) ||
             normalizedType.Contains("waste", StringComparison.OrdinalIgnoreCase) ||
-            normalizedType.Contains("%", StringComparison.OrdinalIgnoreCase))
+            normalizedType.Contains('%'))
         {
             metadata.Waste = value;
             metadata.Cap = 0m;

@@ -110,6 +110,12 @@
             public const string GetFoldersByDepartmentId = "getbyepart";
             public const string Move = "move";
             public const string CreateForDepartment = "createfordepartment";
+
+            /// <summary>Departments the user may pick (normal + shared-only, tagged with 👥).</summary>
+            public const string AccessibleDepartments = "accessible-departments";
+
+            /// <summary>"Alla tillgängliga": every folder the user can reach across departments.</summary>
+            public const string AccessibleFolders = "accessible";
         }
 
         public static class Project

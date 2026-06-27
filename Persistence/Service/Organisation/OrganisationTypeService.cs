@@ -43,7 +43,7 @@ namespace Persistence.Service.Organisation
 
             if (entity == null) return false;
 
-            if (entity.Organisations.Any())
+            if (entity.Organisations.Count > 0)
                 return false; // ممنوع الحذف إذا مرتبط بمنظمات
 
             db.OrganisationType.Remove(entity);

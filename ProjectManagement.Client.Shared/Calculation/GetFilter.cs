@@ -54,7 +54,7 @@ namespace ProjectManagement.Client.Shared.Calculation
 
         private static bool FilterStatus(List<string> items, FilterType type, string str)
         {
-            if (type == FilterType.equals && !string.IsNullOrEmpty(str) && items.Any(f => f.ToLower() == str.ToLower()))
+            if (type == FilterType.equals && !string.IsNullOrEmpty(str) && items.Any(f => f.Equals(str, System.StringComparison.CurrentCultureIgnoreCase)))
                 return false;
             if (type == FilterType.noEquals && (string.IsNullOrEmpty(str) || items.Any(f => !f.Equals(str, System.StringComparison.CurrentCultureIgnoreCase))))
                 return false;

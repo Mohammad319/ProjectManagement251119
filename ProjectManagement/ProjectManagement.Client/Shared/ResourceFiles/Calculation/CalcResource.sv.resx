@@ -222,6 +222,9 @@
   <data name="productionNote" xml:space="preserve">
     <value>Prod. anteckning</value>
   </data>
+  <data name="reviewerComment" xml:space="preserve">
+    <value>Granskarkommentar</value>
+  </data>
   <data name="opportunity" xml:space="preserve">
     <value>Möjlighet</value>
   </data>
@@ -530,6 +533,7 @@
   <data name="matchStartsWith" xml:space="preserve"><value>Börjar med</value></data>
   <data name="matchEndsWith" xml:space="preserve"><value>Slutar med</value></data>
   <data name="matchSmartTip" xml:space="preserve"><value>Rekommenderas. Söker med exakt träff, börjar med, innehåller och liknande stavning. Hittar även vissa stavfel.</value></data>
+  <data name="matchInfoTooltip" xml:space="preserve"><value>Smart sökning söker med exakt träff, börjar med, innehåller och liknande stavning. Den kan även hitta vissa stavfel.</value></data>
   <data name="matchContainsTip" xml:space="preserve"><value>Hittar poster där söktexten finns som exakt del av texten. Exempel: 'Nack' hittar 'Nackaa'.</value></data>
   <data name="matchEqualsTip" xml:space="preserve"><value>Hittar endast poster där hela värdet matchar söktexten.</value></data>
   <data name="matchStartsWithTip" xml:space="preserve"><value>Hittar poster där värdet börjar med söktexten.</value></data>

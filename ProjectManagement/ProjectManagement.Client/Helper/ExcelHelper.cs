@@ -101,7 +101,7 @@ namespace ProjectManagement.Client.Helper
 
         public static ExcelImportLayout DetectLayout(XLWorkbook workbook, int sheetNr)
         {
-            if (!workbook.Worksheets.Any())
+            if (workbook.Worksheets.Count == 0)
                 return new ExcelImportLayout();
 
             int safeSheetNr = Math.Clamp(sheetNr, 1, workbook.Worksheets.Count);
@@ -119,7 +119,7 @@ namespace ProjectManagement.Client.Helper
         public static ExcelImportResult ImportWithRowNumbers(int sheetNr, XLWorkbook workbook, int rowStart, int rowEnd,
             int codeIndex, int nameIndex, int unitIndex, int quantityIndex, int priceIndex, int amountIndex, bool isOH)
         {
-            if (!workbook.Worksheets.Any())
+            if (workbook.Worksheets.Count == 0)
                 return new ExcelImportResult();
 
             int safeSheetNr = Math.Clamp(sheetNr, 1, workbook.Worksheets.Count);

@@ -46,7 +46,7 @@ namespace ProjectManagement.Client.Helper
             // Behörighet
             if (!canManage)
             {
-                mhd.MessageOk(BlockedTitle, "Du saknar behörighet att ta bort kalkyler.", MhdState.Warning);
+                mhd.MessageOk(BlockedTitle, "Du saknar behörighet att ta bort denna kalkyl.", MhdState.Warning);
                 return;
             }
 

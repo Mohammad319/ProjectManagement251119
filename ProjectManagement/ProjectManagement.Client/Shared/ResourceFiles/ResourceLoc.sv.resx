@@ -223,7 +223,7 @@
     <value>Mallar</value>
   </data>
   <data name="tender" xml:space="preserve">
-    <value>Anbud</value>
+    <value>Anbudsutvärdering</value>
   </data>
   <data name="value" xml:space="preserve">
     <value>Värde</value>

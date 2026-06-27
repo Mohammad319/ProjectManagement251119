@@ -41,7 +41,7 @@ namespace ProjectManagement.Client.Helper
             // Behörighet
             if (!canManage)
             {
-                mhd.MessageOk(BlockedTitle, "Du saknar behörighet att ta bort projekt.", MhdState.Warning);
+                mhd.MessageOk(BlockedTitle, "Du saknar behörighet att ta bort detta projekt.", MhdState.Warning);
                 return;
             }
 

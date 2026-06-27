@@ -133,7 +133,7 @@
     <value>Din e-postadress och ditt lösenord stämmer inte överens. Var god försök igen</value>
   </data>
   <data name="Error_InvalidLoginAttempt" xml:space="preserve">
-    <value>Fel: Ogiltigt inloggningsförsök.</value>
+    <value>Inloggningsuppgifterna är fel. Kontrollera e-post och lösenord och försök igen.</value>
   </data>
   <data name="fax" xml:space="preserve">
     <value>Faxnummer</value>

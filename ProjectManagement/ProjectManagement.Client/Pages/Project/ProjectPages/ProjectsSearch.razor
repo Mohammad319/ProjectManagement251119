@@ -7,9 +7,12 @@
 @using ProjectManagement.Shared.DTO.Organisation
 @using ProjectManagement.Shared.DTO.Project
 @using ProjectManagement.Shared.Enums
+@using Microsoft.JSInterop
 @inherits AppComponentBase
+@implements IAsyncDisposable
+@inject IJSRuntime JS
 
-<div class="flex flex-col gap-3">
+<div class="flex h-[clamp(28rem,68vh,46rem)] max-h-[82vh] flex-col gap-3 overflow-visible">
 
     <!-- Search bar -->
     <div class="flex gap-2">
@@ -29,95 +32,82 @@
     </div>
 
     <!-- Filter row -->
-    <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <!-- Type filter -->
+    <div class="relative z-20 grid grid-cols-2 gap-2 overflow-visible sm:grid-cols-4">
+        <!-- Type filter (multi-select) -->
         <div>
-            <label class="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-400">
-                @CalcLoc[nameof(CalcResource.typeFilter)]
-            </label>
-            <select @bind="TypeFilter"
-                    class="h-8 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20">
-                <option value="@SearchTypeFilter.All">@CalcLoc[nameof(CalcResource.allTypes)]</option>
-                <option value="@SearchTypeFilter.Folders">@CalcLoc[nameof(CalcResource.foldersLabel)]</option>
-                <option value="@SearchTypeFilter.Projects">@CalcLoc[nameof(CalcResource.projectsLabel)]</option>
-                <option value="@SearchTypeFilter.Calculations">@CalcLoc[nameof(CalcResource.calculationsLabel)]</option>
-            </select>
+            <label class="@LabelClass">@CalcLoc[nameof(CalcResource.typeFilter)]</label>
+            <button type="button" data-search-dropdown-trigger @ref="_typeBtn"
+                    class="@SelectClass flex items-center justify-between text-left"
+                    @onclick='() => ToggleDropdown("type")'>
+                <span class="truncate">@MultiButtonText(_selectedTypes.Count, CalcLoc[nameof(CalcResource.allTypes)], () => TypeLabel(_selectedTypes.First()), "typer")</span>
+                @ChevronSvg
+            </button>
         </div>
 
-        <!-- Match operator -->
+        <!-- Match operator (single-select) -->
         <div>
-            <label class="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-400">
-                @CalcLoc[nameof(CalcResource.matchType)]
-            </label>
-            <select @bind="MatchOperator"
-                    title="@MatchOperatorHelp"
-                    class="h-8 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20">
-                <option value="smart" title="@CalcLoc[nameof(CalcResource.matchSmartTip)]">@CalcLoc[nameof(CalcResource.matchSmart)]</option>
-                <option value="%var%" title="@CalcLoc[nameof(CalcResource.matchContainsTip)]">@CalcLoc[nameof(CalcResource.matchContains)]</option>
-                <option value="==" title="@CalcLoc[nameof(CalcResource.matchEqualsTip)]">@CalcLoc[nameof(CalcResource.matchEquals)]</option>
-                <option value="var%" title="@CalcLoc[nameof(CalcResource.matchStartsWithTip)]">@CalcLoc[nameof(CalcResource.matchStartsWith)]</option>
-                <option value="%var" title="@CalcLoc[nameof(CalcResource.matchEndsWithTip)]">@CalcLoc[nameof(CalcResource.matchEndsWith)]</option>
-                <option value="~" title="@CalcLoc[nameof(CalcResource.matchSimilarTip)]">@CalcLoc[nameof(CalcResource.matchSimilar)]</option>
-            </select>
-            <p class="mt-1 text-[10px] leading-tight text-slate-400 dark:text-slate-500">@MatchOperatorHelp</p>
+            <div class="@LabelClass flex items-center gap-1">
+                <span>@CalcLoc[nameof(CalcResource.matchType)]</span>
+                @* Discreet info icon: the smart-search explanation moved here as a tooltip
+                   (shows on hover and keyboard focus, light/dark, layered above the dialog). *@
+                <span class="group relative z-30 inline-flex">
+                    <button type="button"
+                            aria-label="@CalcLoc[nameof(CalcResource.matchInfoTooltip)]"
+                            class="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full text-slate-400 outline-none transition hover:text-slate-600 focus-visible:ring-2 focus-visible:ring-sky-500/40 dark:text-slate-500 dark:hover:text-slate-300">
+                        <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9 9a1 1 0 012 0v4a1 1 0 11-2 0V9zm1-4a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                    <span role="tooltip"
+                          class="pointer-events-none absolute right-0 top-full z-[13000] mt-1 w-56 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-normal leading-snug text-slate-600 opacity-0 shadow-lg transition-opacity duration-100 group-hover:opacity-100 group-focus-within:opacity-100 sm:left-0 sm:right-auto dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                        @CalcLoc[nameof(CalcResource.matchInfoTooltip)]
+                    </span>
+                </span>
+            </div>
+            <button type="button" data-search-dropdown-trigger @ref="_matchBtn"
+                    class="@SelectClass flex items-center justify-between text-left"
+                    @onclick='() => ToggleDropdown("match")'>
+                <span class="truncate">@MatchOperatorLabel(MatchOperator)</span>
+                @ChevronSvg
+            </button>
         </div>
 
-        <!-- Calc status filter -->
+        <!-- Calc status filter (multi-select) -->
         <div>
-            <label class="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-400">
-                @CalcLoc[nameof(CalcResource.calculationStatus)]
-            </label>
-            <select @bind="CalcStatusFilter"
-                    class="h-8 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20">
-                <option value="">@AppLoc["allStatuses"]</option>
-                @foreach (var s in AvailableCalcStatuses)
-                {
-                    <option value="@s">@s</option>
-                }
-            </select>
+            <label class="@LabelClass">@CalcLoc[nameof(CalcResource.calculationStatus)]</label>
+            <button type="button" data-search-dropdown-trigger @ref="_statusBtn"
+                    class="@SelectClass flex items-center justify-between text-left"
+                    @onclick='() => ToggleDropdown("status")'>
+                <span class="truncate">@MultiButtonText(_selectedStatuses.Count, AppLoc["allStatuses"].Value, () => _selectedStatuses.First(), "statusar")</span>
+                @ChevronSvg
+            </button>
         </div>
 
         <!-- Archive checkbox -->
         <div class="flex flex-col justify-end">
             <label class="inline-flex h-8 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
                 <input type="checkbox"
-                       @bind="IncludeArchived"
+                       checked="@IncludeArchived"
+                       @onchange="OnIncludeArchivedChanged"
                        class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-blue-400" />
                 <span>@CalcLoc[nameof(CalcResource.includeArchived)]</span>
             </label>
         </div>
     </div>
 
-    <!-- Deadline filters (projects only) -->
-    @if (TypeFilter == SearchTypeFilter.All || TypeFilter == SearchTypeFilter.Projects)
-    {
-        <div class="grid grid-cols-2 gap-2">
-            <div>
-                <label class="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-400">
-                    Frågor/svar senast
-                </label>
-                <input type="date"
-                       @bind="TenderQADate"
-                       class="h-8 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20" />
-            </div>
-            <div>
-                <label class="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-400">
-                    @CalcLoc[nameof(CalcResource.tenderDeadline)]
-                </label>
-                <input type="date"
-                       @bind="TenderDeadlineDate"
-                       class="h-8 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20" />
-            </div>
-        </div>
-    }
+    @* Date filters (Sista dag för att ställa frågor / Anbudsdeadline) were removed from the
+       compact main view; they belong to a future "Visa avancerade filter" section. The
+       underlying TenderQADate/TenderDeadlineDate filter logic is kept intact below so it can
+       be re-surfaced there without rebuilding it. *@
 
     <!-- Results -->
+    <div class="min-h-0 flex-1 overflow-hidden">
     @if (HasSearched)
     {
-        <div class="overflow-hidden rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+        <div class="flex h-full min-h-0 flex-col overflow-hidden rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
 
             <!-- Result summary header -->
-            <div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2.5 dark:border-slate-700 dark:bg-slate-800/70">
+            <div class="flex shrink-0 items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2.5 dark:border-slate-700 dark:bg-slate-800/70">
                 <span class="text-sm font-semibold text-slate-800 dark:text-slate-100">
                     @AppLoc["searchResults"]
                 </span>
@@ -133,16 +123,23 @@
                 }
             </div>
 
+            <div class="min-h-0 flex-1 overflow-y-auto">
             @if (IsLoading)
             {
                 <div class="px-4 py-10 text-center text-sm text-slate-500 dark:text-slate-400">
-                    @AppLoc["loading"]
+                    @SearchLoadingText
+                </div>
+            }
+            else if (SearchFailed)
+            {
+                <div class="px-4 py-10 text-center">
+                    <p class="text-sm font-medium text-rose-700 dark:text-rose-300">@SearchErrorText</p>
                 </div>
             }
             else if (!FolderResults.Any() && !ProjectResults.Any() && !CalcResults.Any())
             {
                 <div class="px-4 py-8 text-center">
-                    <p class="text-sm font-medium text-slate-700 dark:text-slate-200">@CalcLoc[nameof(CalcResource.noResultsFound)]</p>
+                    <p class="text-sm font-medium text-slate-700 dark:text-slate-200">@NoSearchResultsText</p>
                     <p class="mt-1 text-xs text-slate-400 dark:text-slate-500">@CalcLoc[nameof(CalcResource.checkSpellingOrFilter)]</p>
                 </div>
 
@@ -290,9 +287,9 @@
                                             {
                                                 <span>· @projectFolder.Name</span>
                                             }
-                                            @if (project.TenderDeadline != default)
+                                            @if (project.TenderDeadline is { } projDeadline)
                                             {
-                                                <span>· @CalcLoc[nameof(CalcResource.tenderDeadline)]: @project.TenderDeadline.ToString("yyyy-MM-dd")</span>
+                                                <span>· @CalcLoc[nameof(CalcResource.tenderDeadline)]: @projDeadline.ToString("yyyy-MM-dd")</span>
                                             }
                                             @if (project.IsArchived)
                                             {
@@ -361,21 +358,67 @@
                     }
                 </div>
             }
+            </div>
         </div>
     }
+    </div>
+
+    @* Teleported dropdown popup. The host is moved to <body> (see searchDropdownPortal.js)
+       so the fixed popup escapes the dialog's transform/overflow and renders above it,
+       directly under the field, flipping up when there is no room below. *@
+    <div @ref="_portalHost">
+        @if (_openDropdown is not null)
+        {
+            <div @ref="_panelRef"
+                 class="fixed z-[11000] overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-xl dark:border-slate-700 dark:bg-slate-900"
+                 style="visibility:hidden;min-width:11rem"
+                 @onclick:stopPropagation="true">
+                <div class="mhd-select-scroll max-h-[16rem] overflow-y-auto py-1">
+                    @ActiveDropdownBody()
+                </div>
+            </div>
+        }
+    </div>
 </div>
 
 @code {
     private string SearchText = string.Empty;
     private string MatchOperator = "smart";
-    private SearchTypeFilter TypeFilter = SearchTypeFilter.All;
-    private string CalcStatusFilter = string.Empty;
+
+    // Multi-select filters: an empty set means "all" (no filtering on that dimension).
+    private readonly HashSet<SearchTypeFilter> _selectedTypes = new();
+    private readonly HashSet<string> _selectedStatuses = new(StringComparer.OrdinalIgnoreCase);
+
+    // Dropdown popup state. Only one of Typ/Matchning/Kalkylstatus is open at a time.
+    // The popup is teleported to <body> so it is never clipped by the dialog.
+    private string? _openDropdown;
+    private ElementReference _typeBtn;
+    private ElementReference _matchBtn;
+    private ElementReference _statusBtn;
+    private ElementReference _portalHost;
+    private ElementReference _panelRef;
+    private bool _portalMounted;
+    private bool _pendingOpen;
+    private DotNetObjectReference<ProjectsSearch>? _selfRef;
+
+    private bool IncludeFolders => _selectedTypes.Count == 0 || _selectedTypes.Contains(SearchTypeFilter.Folders);
+    private bool IncludeProjects => _selectedTypes.Count == 0 || _selectedTypes.Contains(SearchTypeFilter.Projects);
+    private bool IncludeCalculations => _selectedTypes.Count == 0 || _selectedTypes.Contains(SearchTypeFilter.Calculations);
+
     private bool IncludeArchived = false;
     private DateTime? TenderQADate = null;
     private DateTime? TenderDeadlineDate = null;
 
     private bool IsLoading = false;
     private bool HasSearched = false;
+    private bool SearchFailed = false;
+
+    private bool IsSwedishUi =>
+        System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Equals("sv", StringComparison.OrdinalIgnoreCase);
+
+    private string SearchLoadingText => IsSwedishUi ? "Söker..." : "Searching...";
+    private string NoSearchResultsText => IsSwedishUi ? "Inga träffar hittades." : "No matches found.";
+    private string SearchErrorText => IsSwedishUi ? "Kunde inte hämta sökresultat. Försök igen." : "Could not fetch search results. Please try again.";
 
     // Normalized search text, recomputed once per search for the scoring helpers.
     private string _ns = string.Empty;
@@ -400,17 +443,66 @@
 
     private enum SearchTypeFilter { All, Folders, Projects, Calculations }
 
-    private string SimilarBadge => CalcLoc[nameof(CalcResource.similarMatchBadge)];
+    // ── Filter options & toggles (multi-/single-select dropdowns) ─────
+    private static readonly SearchTypeFilter[] SpecificTypes =
+        [SearchTypeFilter.Folders, SearchTypeFilter.Projects, SearchTypeFilter.Calculations];
 
-    private string MatchOperatorHelp => MatchOperator switch
+    private string TypeLabel(SearchTypeFilter t) => t switch
     {
-        "%var%" => CalcLoc[nameof(CalcResource.matchContainsTip)],
-        "==" => CalcLoc[nameof(CalcResource.matchEqualsTip)],
-        "var%" => CalcLoc[nameof(CalcResource.matchStartsWithTip)],
-        "%var" => CalcLoc[nameof(CalcResource.matchEndsWithTip)],
-        "~" => CalcLoc[nameof(CalcResource.matchSimilarTip)],
-        _ => CalcLoc[nameof(CalcResource.matchSmartTip)],
+        SearchTypeFilter.Folders => CalcLoc[nameof(CalcResource.foldersLabel)],
+        SearchTypeFilter.Projects => CalcLoc[nameof(CalcResource.projectsLabel)],
+        SearchTypeFilter.Calculations => CalcLoc[nameof(CalcResource.calculationsLabel)],
+        _ => CalcLoc[nameof(CalcResource.allTypes)],
     };
+
+    private void ClearTypes()
+    {
+        _selectedTypes.Clear();
+        _ = SearchIfNeededAsync();
+    }
+
+    private void ToggleType(SearchTypeFilter t, bool on)
+    {
+        if (on) _selectedTypes.Add(t); else _selectedTypes.Remove(t);
+        _ = SearchIfNeededAsync();
+    }
+
+    private void ClearStatuses()
+    {
+        _selectedStatuses.Clear();
+        _ = SearchIfNeededAsync();
+    }
+
+    private void ToggleStatus(string s, bool on)
+    {
+        if (on) _selectedStatuses.Add(s); else _selectedStatuses.Remove(s);
+        _ = SearchIfNeededAsync();
+    }
+
+    private static readonly string[] MatchOperators = ["smart", "%var%", "==", "var%", "%var", "~"];
+
+    private string MatchOperatorLabel(string op) => op switch
+    {
+        "%var%" => CalcLoc[nameof(CalcResource.matchContains)],
+        "==" => CalcLoc[nameof(CalcResource.matchEquals)],
+        "var%" => CalcLoc[nameof(CalcResource.matchStartsWith)],
+        "%var" => CalcLoc[nameof(CalcResource.matchEndsWith)],
+        "~" => CalcLoc[nameof(CalcResource.matchSimilar)],
+        _ => CalcLoc[nameof(CalcResource.matchSmart)],
+    };
+
+    private void SelectMatchOperator(string op)
+    {
+        MatchOperator = op;
+        _ = CloseDropdownAsync();
+        _ = SearchIfNeededAsync();
+    }
+
+    // 0 selected ⇒ "all"; 1 ⇒ that label; otherwise a compact "N <plural>" summary.
+    private static string MultiButtonText(int count, string allLabel, Func<string> single, string plural) =>
+        count == 0 ? allLabel : count == 1 ? single() : $"{count} {plural}";
+
+    private string SimilarBadge => CalcLoc[nameof(CalcResource.similarMatchBadge)];
 
     private IEnumerable<string> AvailableCalcStatuses =>
         (UoWService?.Folder?.State?.FoldersList ?? [])
@@ -434,14 +526,23 @@
             await SearchAsync();
     }
 
+    private async Task OnIncludeArchivedChanged(ChangeEventArgs e)
+    {
+        IncludeArchived = e.Value is bool value && value;
+        await SearchIfNeededAsync();
+    }
+
+    private Task SearchIfNeededAsync() => HasSearched ? SearchAsync() : Task.CompletedTask;
+
     private async Task SearchAsync()
     {
-        if (string.IsNullOrWhiteSpace(SearchText) && string.IsNullOrWhiteSpace(CalcStatusFilter)
+        if (string.IsNullOrWhiteSpace(SearchText) && _selectedStatuses.Count == 0
             && TenderQADate == null && TenderDeadlineDate == null)
             return;
 
         IsLoading = true;
         HasSearched = true;
+        SearchFailed = false;
         StateHasChanged();
 
         try
@@ -461,15 +562,15 @@
             var folders = UoWService?.Folder?.State?.FoldersList ?? [];
 
             // Folder search (client-side, name only — folders have no other text fields)
-            if (TypeFilter is SearchTypeFilter.All or SearchTypeFilter.Folders)
+            if (IncludeFolders)
                 FolderResults = ScoreFolders(folders);
 
             // Project search (server provides candidates, scoring/fuzzy done client-side across all fields)
-            if (TypeFilter is SearchTypeFilter.All or SearchTypeFilter.Projects)
+            if (IncludeProjects)
                 ProjectResults = await ScoreProjectsAsync(hasText);
 
             // Calculation search (client-side from loaded data)
-            if (TypeFilter is SearchTypeFilter.All or SearchTypeFilter.Calculations)
+            if (IncludeCalculations)
                 CalcResults = ScoreCalculations(folders, hasText);
 
             // Fuzzy fallback for the strict operators: only when nothing matched.
@@ -478,13 +579,24 @@
             if (strict && hasText &&
                 FolderResults.Count == 0 && ProjectResults.Count == 0 && CalcResults.Count == 0)
             {
-                if (TypeFilter is SearchTypeFilter.All or SearchTypeFilter.Folders)
+                if (IncludeFolders)
                     FuzzyFolderResults = FuzzyFolders(folders);
-                if (TypeFilter is SearchTypeFilter.All or SearchTypeFilter.Projects)
+                if (IncludeProjects)
                     FuzzyProjectResults = FuzzyProjects(_projectCandidates);
-                if (TypeFilter is SearchTypeFilter.All or SearchTypeFilter.Calculations)
+                if (IncludeCalculations)
                     FuzzyCalcResults = FuzzyCalcs(folders);
             }
+        }
+        catch (Exception ex)
+        {
+            SearchFailed = true;
+            FolderResults = [];
+            ProjectResults = [];
+            CalcResults = [];
+            FuzzyFolderResults = [];
+            FuzzyProjectResults = [];
+            FuzzyCalcResults = [];
+            await ClientLog.ErrorAsync("Project search failed", ex: ex);
         }
         finally
         {
@@ -552,15 +664,17 @@
 
             return await Repo.Project.FilterAsync(filter);
         }
-        catch
+        catch (Exception ex)
         {
+            SearchFailed = true;
+            await ClientLog.ErrorAsync("Fetching project search candidates failed", ex: ex);
             return [];
         }
     }
 
     private List<CalcHit> ScoreCalculations(IEnumerable<FolderMVVM> folders, bool hasText)
     {
-        var hasStatus = !string.IsNullOrWhiteSpace(CalcStatusFilter);
+        var hasStatus = _selectedStatuses.Count > 0;
         if (!hasText && !hasStatus) return [];
 
         var hits = new List<CalcHit>();
@@ -577,7 +691,7 @@
                 {
                     if (!IncludeArchived && calc.IsArchived) continue;
 
-                    if (hasStatus && !string.Equals(calc.Status, CalcStatusFilter, StringComparison.OrdinalIgnoreCase))
+                    if (hasStatus && (calc.Status == null || !_selectedStatuses.Contains(calc.Status)))
                         continue;
 
                     int score = 0;
@@ -786,5 +900,137 @@
         await Folder.NewFolder(folder);
         await Folder.NewProject(project);
         await Modal.CloseAsync();
+    }
+
+    // ── Styled dropdown helpers (same look as the report window) ───────
+    private const string LabelClass = "mb-1 block text-[11px] font-semibold text-slate-500 dark:text-slate-400";
+    private const string SelectClass = "h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs text-slate-800 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:disabled:bg-slate-800";
+
+    private RenderFragment ChevronSvg => @<svg class="ml-1 h-3 w-3 shrink-0 text-slate-400" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+    </svg>;
+
+    private RenderFragment CheckSvg => @<svg class="ml-auto h-3.5 w-3.5 shrink-0 text-sky-600 dark:text-sky-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>;
+
+    // Body of the currently open dropdown popup (rendered inside the teleported panel).
+    private RenderFragment ActiveDropdownBody() => _openDropdown switch
+    {
+        "type" => MultiOptionList(
+            CalcLoc[nameof(CalcResource.allTypes)], _selectedTypes.Count == 0, ClearTypes,
+            SpecificTypes, TypeLabel, t => _selectedTypes.Contains(t), ToggleType),
+        "match" => SingleOptionList(
+            MatchOperators, MatchOperatorLabel, op => op == MatchOperator, SelectMatchOperator),
+        "status" => MultiOptionList(
+            AppLoc["allStatuses"].Value, _selectedStatuses.Count == 0, ClearStatuses,
+            AvailableCalcStatuses, s => s, s => _selectedStatuses.Contains(s), ToggleStatus),
+        _ => (RenderFragment)(_ => { })
+    };
+
+    // Multi-select list body: checkboxes; toggling an item keeps the popup open.
+    // The "All" row clears the set. Styled to match MhdFormSelect's option rows.
+    private RenderFragment MultiOptionList<T>(
+        string allLabel, bool allSelected, Action onClear,
+        IEnumerable<T> items, Func<T, string> itemLabel, Func<T, bool> isChecked, Action<T, bool> onItemToggle)
+        => @<text>
+            <button type="button" class="@OptionRowClass(allSelected)" @onclick="() => { onClear(); StateHasChanged(); }">
+                <span class="flex-1 truncate @(allSelected ? "" : "text-slate-500 dark:text-slate-400")">@allLabel</span>
+                @if (allSelected) { @CheckSvg }
+            </button>
+            @foreach (var it in items)
+            {
+                var item = it;
+                var on = isChecked(item);
+                <label class="@OptionRowClass(on)">
+                    <input type="checkbox" class="h-3.5 w-3.5 shrink-0 rounded border-slate-300 text-sky-600 focus:ring-sky-500 dark:border-slate-600 dark:bg-slate-950"
+                           checked="@on" @onchange="e => { onItemToggle(item, (bool)(e.Value ?? false)); StateHasChanged(); }" />
+                    <span class="flex-1 truncate">@itemLabel(item)</span>
+                </label>
+            }
+        </text>;
+
+    // Single-select list body: exactly one value; selecting closes the popup.
+    private RenderFragment SingleOptionList<T>(
+        IEnumerable<T> items, Func<T, string> itemLabel, Func<T, bool> isSelected, Action<T> onSelect)
+        => @<text>
+            @foreach (var it in items)
+            {
+                var item = it;
+                var sel = isSelected(item);
+                <button type="button" class="@OptionRowClass(sel)" @onclick="() => onSelect(item)">
+                    <span class="flex-1 truncate">@itemLabel(item)</span>
+                    @if (sel) { @CheckSvg }
+                </button>
+            }
+        </text>;
+
+    private static string OptionRowClass(bool selected) => selected
+        ? "flex w-full cursor-pointer items-center gap-2 px-3 py-1.5 text-left text-sm font-medium text-sky-700 bg-sky-50 dark:bg-sky-950/40 dark:text-sky-300"
+        : "flex w-full cursor-pointer items-center gap-2 px-3 py-1.5 text-left text-sm text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800";
+
+    // ── Teleported dropdown popup: open/close + positioning ────────────
+    private async Task ToggleDropdown(string key)
+    {
+        if (_openDropdown == key)
+        {
+            await CloseDropdownAsync();
+            return;
+        }
+
+        _openDropdown = key;
+        _pendingOpen = true;
+        StateHasChanged();
+    }
+
+    private async Task CloseDropdownAsync()
+    {
+        if (_openDropdown is null) return;
+        _openDropdown = null;
+        try { await JS.InvokeVoidAsync("searchDropdownPortal.close"); }
+        catch (JSException) { }
+        catch (InvalidOperationException) { }
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public Task OnPortalDismiss() => InvokeAsync(CloseDropdownAsync);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_portalMounted)
+        {
+            _portalMounted = true;
+            try { await JS.InvokeVoidAsync("searchDropdownPortal.mount", _portalHost); }
+            catch (JSException) { }
+            catch (InvalidOperationException) { }
+        }
+
+        if (_openDropdown is null) return;
+
+        var anchor = _openDropdown switch { "type" => _typeBtn, "match" => _matchBtn, _ => _statusBtn };
+        try
+        {
+            if (_pendingOpen)
+            {
+                _pendingOpen = false;
+                _selfRef ??= DotNetObjectReference.Create(this);
+                await JS.InvokeVoidAsync("searchDropdownPortal.open", _panelRef, anchor, _selfRef);
+            }
+            else
+            {
+                // Content changed (e.g. a checkbox toggled) — keep the popup anchored.
+                await JS.InvokeVoidAsync("searchDropdownPortal.reposition");
+            }
+        }
+        catch (JSException) { }
+        catch (InvalidOperationException) { }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try { await JS.InvokeVoidAsync("searchDropdownPortal.dispose"); }
+        catch (JSException) { }
+        catch (InvalidOperationException) { }
+        catch (JSDisconnectedException) { }
+        _selfRef?.Dispose();
     }
 }

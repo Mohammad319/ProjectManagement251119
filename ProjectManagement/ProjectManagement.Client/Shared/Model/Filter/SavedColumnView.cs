@@ -15,12 +15,15 @@ public sealed class SavedColumnView
     public string Name { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    /// <summary>
-    /// Visible-state per column key. Column order is currently fixed by the table
-    /// markup, so only visibility is stored; the signature stays order-independent
-    /// on purpose. (Order/width can be added later without breaking saved views.)
-    /// </summary>
+    /// <summary>Visible-state per column key.</summary>
     public Dictionary<string, bool> Columns { get; set; } = new();
+
+    /// <summary>
+    /// Column key order (left → right) for this view, including hidden columns so a
+    /// re-enabled extra column lands in its saved position. Empty for legacy views
+    /// saved before ordering existed (callers fall back to the table's natural order).
+    /// </summary>
+    public List<string> Order { get; set; } = new();
 
     /// <summary>
     /// Normalized, order-independent signature of the visible column set. Two views

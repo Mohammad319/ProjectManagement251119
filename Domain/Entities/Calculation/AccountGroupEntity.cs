@@ -13,8 +13,7 @@ namespace Domain.Entities.Calculation
         public IReadOnlyCollection<AccountEntity> Accounts => _accounts;
         public void AddAccount(AccountEntity account)
         {
-            if (account is null)
-                throw new ArgumentNullException(nameof(account));
+            ArgumentNullException.ThrowIfNull(account);
 
             if (account.AccountGroupId != Id)
                 account.SetGroup(Id);

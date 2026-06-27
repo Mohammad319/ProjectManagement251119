@@ -46,7 +46,7 @@ namespace Domain.Entities.Application
 
         public void UpdateFrom(ApplicationValuesEntity source)
         {
-            if (source is null) throw new ArgumentNullException(nameof(source));
+            ArgumentNullException.ThrowIfNull(source);
 
             UserId = source.UserId;
             Name = NormalizeRequired(source.Name, "Application value name");

@@ -47,7 +47,7 @@ namespace ProjectManagement.Client.Services.Folder
                     return;
                 }
 
-                int newOrder = folderState.FoldersList.Any()
+                int newOrder = folderState.FoldersList.Count > 0
                     ? folderState.FoldersList.Max(f => f.Order) + 100
                     : 0;
 
@@ -120,15 +120,21 @@ namespace ProjectManagement.Client.Services.Folder
             return LoadFoldersAsync(() => folderRepo.GetByDepartmentAsync(id, ShowArchived));
         }
 
+        /// <summary>
+        /// Loads the "Alla tillgängliga" scope: every folder the user can reach across departments.
+        /// Folders from departments the user has no normal access to arrive tagged as read-only visual
+        /// groups (<see cref="FolderMVVM.IsReadOnlyGroup"/>), mapped from the server's IsSharedGroup flag.
+        /// </summary>
+        public Task LoadAccessibleFoldersAsync() =>
+            LoadFoldersAsync(() => folderRepo.GetAccessibleFoldersAsync(ShowArchived));
+
         public async Task SetProjectsToFolder(FolderMVVM folder)
         {
             if (folder is null) return;
 
             if (!folder.ProjectsLoaded)
             {
-                folder.Projects = folderState.OtherDepartment
-                    ? await projectRepo.GetOtherDepartmentAsync(folder.Id, ShowArchived)
-                    : await projectRepo.GetByFolderIdAsync(folder.Id, ShowArchived);
+                folder.Projects = await projectRepo.GetByFolderIdAsync(folder.Id, ShowArchived);
                 folder.ProjectsLoaded = true;
             }
 
@@ -152,20 +158,9 @@ namespace ProjectManagement.Client.Services.Folder
 
             if (!project.CalculationsLoaded)
             {
-                List<ProjectManagement.Client.Shared.MVVM.Calculation.ListCalculationMVVM> all;
-                if (folderState.OtherDepartment)
-                {
-                    all = await calcRepo.GetShareCalculationsAsync(project.Id);
-                    all = CalculationVersionSelector
-                        .FilterFamiliesByCurrentVisibility(all, ShowArchived)
-                        .ToList();
-                }
-                else
-                {
-                    all = await calcRepo.GetAsync(project.Id);
-                    if (ShowArchived)
-                        all.AddRange(await calcRepo.GetAsync(project.Id, isArchived: true));
-                }
+                var all = await calcRepo.GetAsync(project.Id, isArchived: false);
+                if (ShowArchived)
+                    all.AddRange(await calcRepo.GetAsync(project.Id, isArchived: true));
 
                 project.Calculations = all.ToList();
                 project.CalculationCount = CalculationVersionSelector.CountCurrentVersions(project.Calculations);

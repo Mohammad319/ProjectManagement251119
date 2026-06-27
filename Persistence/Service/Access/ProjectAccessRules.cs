@@ -1,7 +1,10 @@
 using System;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 using Domain.Entities.Project;
+using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Shared.Constant;
 
 namespace Persistence.Service.Access
@@ -19,6 +22,44 @@ namespace Persistence.Service.Access
     /// </summary>
     public static class ProjectAccessRules
     {
+        /// <summary>User-facing error text when a project lifecycle action is blocked (UI also hides it).</summary>
+        public const string LifecycleForbiddenMessage = "Du saknar behörighet att utföra denna projektåtgärd.";
+
+        /// <summary>User-facing error text when managing a project's sharing is blocked.</summary>
+        public const string ShareForbiddenMessage = "Du saknar behörighet att hantera delning för detta projekt.";
+
+        /// <summary>
+        /// Reusable rule for who may perform ADMINISTRATIVE LIFECYCLE actions on a project — move,
+        /// copy, archive, export, delete, change of department/folder and share management. This is
+        /// intentionally stricter than <see cref="CanSee"/>/<see cref="CanEdit"/>: access gained via an
+        /// EXTRA project share (even "Kan ändra") grants work access to the project's content but never
+        /// lifecycle/ownership management.
+        /// <para>
+        /// Allowed for Admin (tenant-wide, <paramref name="departmentId"/> == null), for the project's
+        /// own department (<c>p.Folder.DepartmentId == departmentId</c>) and for the creator
+        /// (<c>p.CreatedBy == userId</c>) — the same set the UI's <c>Access.ViaDepartment</c> flag marks
+        /// as "normal access", so the share path is excluded.
+        /// </para>
+        /// </summary>
+        public static Expression<Func<ProjectEntity, bool>> CanManageLifecycle(int userId, int? departmentId)
+        {
+            if (departmentId == null)
+                return _ => true;
+
+            return p =>
+                p.Folder.DepartmentId == departmentId ||
+                p.CreatedBy == userId;
+        }
+
+        /// <summary>True when the user may perform lifecycle/share-management actions on <paramref name="projectId"/>.</summary>
+        public static Task<bool> CanManageLifecycleAsync(
+            IQueryable<ProjectEntity> projects,
+            Guid projectId,
+            int userId,
+            int? departmentId,
+            CancellationToken ct = default)
+            => projects.Where(CanManageLifecycle(userId, departmentId)).AnyAsync(p => p.Id == projectId, ct);
+
         public static Expression<Func<ProjectEntity, bool>> CanSee(int userId, int? departmentId, bool isViewerOnly = false)
         {
             var today = DateTime.UtcNow.Date;

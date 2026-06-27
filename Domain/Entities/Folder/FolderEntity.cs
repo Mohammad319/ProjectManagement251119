@@ -33,11 +33,8 @@ namespace Domain.Entities.Folder
 
         public FolderEntity(string name, string color, int departmentId, int createdBy, int sortOrder)
         {
-            if (departmentId <= 0)
-                throw new ArgumentOutOfRangeException(nameof(departmentId));
-
-            if (createdBy <= 0)
-                throw new ArgumentOutOfRangeException(nameof(createdBy));
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(departmentId);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(createdBy);
 
             DepartmentId = departmentId;
             CreatedBy = createdBy;
@@ -63,8 +60,7 @@ namespace Domain.Entities.Folder
 
         public void MoveToDepartment(int departmentId)
         {
-            if (departmentId <= 0)
-                throw new ArgumentOutOfRangeException(nameof(departmentId));
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(departmentId);
 
             DepartmentId = departmentId;
         }

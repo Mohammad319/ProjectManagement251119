@@ -74,6 +74,22 @@
         }
     }
 
+    // Anchor-based tooltip that only appears when the content is actually clipped. Measures the
+    // real truncating element (a descendant .truncate, else the anchor) and compares scrollWidth
+    // to clientWidth, so a fully visible label shows no tooltip.
+    function showIfTruncated(anchor, text) {
+        dismiss();
+        if (!anchor || !text) {
+            return;
+        }
+
+        const measured = anchor.querySelector(".truncate") || anchor;
+        // +1 guards against sub-pixel rounding that would otherwise show a tooltip for fitting text.
+        if (measured.scrollWidth - measured.clientWidth > 1) {
+            render(text, anchor.getBoundingClientRect());
+        }
+    }
+
     // Cursor-based tooltip used where wrapping each element in an anchor is awkward
     // (e.g. buttons inside a segmented control). Always uses a small delay.
     function showAt(x, y, text, delay) {
@@ -101,5 +117,5 @@
     window.addEventListener("resize", dismiss);
     window.addEventListener("blur", dismiss);
 
-    window.hoverTooltip = { show, showAt, dismiss };
+    window.hoverTooltip = { show, showIfTruncated, showAt, dismiss };
 })();

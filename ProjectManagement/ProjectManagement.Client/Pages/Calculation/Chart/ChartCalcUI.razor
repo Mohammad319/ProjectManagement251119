@@ -99,8 +99,11 @@
     // ===== Helpers =====
     private void GenerateRandomColors()
     {
+        // CA5394: non-cryptographic use — random colours for chart series, no security relevance.
+#pragma warning disable CA5394
         var rng = new Random();
         string Hex() => $"#{rng.Next(0x1000000):X6}";
+#pragma warning restore CA5394
         ColorsChart.Clear();
 
         // عدد ألوان يساوي عدد العوامل + ألوان إضافية للـ Bar

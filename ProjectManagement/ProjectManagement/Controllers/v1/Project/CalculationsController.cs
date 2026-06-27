@@ -1,6 +1,7 @@
 ﻿using Application.Feature.Calculation.Calculation.Commands;
 using Application.Feature.Calculation.Calculation.Queries;
 using Application.Feature.Calculation.ProductionNote.Commands;
+using Application.Feature.Calculation.ReviewerComment.Commands;
 using Application.Feature.Transfer.Commands;
 using ProjectManagement.Shared.DTO.Transfer;
 using Application.Feature.Project.Type.Queries;
@@ -118,6 +119,16 @@ namespace ProjectManagement.Server.Controllers.v1.Project
         public async Task<IActionResult> SaveProductionNote([FromBody] ProductionNoteSaveDTO dto)
         {
             return Ok(await MicroBus.Send(new SaveProductionNoteCommand(dto, GetUserId(), GetDepartmentId(), IsViewer())));
+        }
+
+        // Save a per-row reviewer comment (Granskarkommentar). Allowed for Viewer (Visare) and even on a
+        // locked calculation; access (incl. the private-calc rule) is enforced in the service. Only the
+        // comment field is written – economic fields are never touched here.
+        [Authorize(Roles = Tenant.UsersAndViewer)]
+        [HttpPut("reviewercomment")]
+        public async Task<IActionResult> SaveReviewerComment([FromBody] ReviewerCommentSaveDTO dto)
+        {
+            return Ok(await MicroBus.Send(new SaveReviewerCommentCommand(dto, GetUserId(), GetDepartmentId(), IsViewer())));
         }
         [Authorize(Roles = Tenant.AdminManger)]
         [HttpPost(URLConst.Calculation.Create + "/{ProjectId}")]

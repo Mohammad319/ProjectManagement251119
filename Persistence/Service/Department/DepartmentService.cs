@@ -125,7 +125,7 @@ namespace Persistence.Service.Department
                     HeadUserId = x.HeadUserId,
                     HeadUserName = x.Users
                         .Where(u => u.Id == x.HeadUserId)
-                        .Select(u => ((u.FirstName ?? "") + " " + (u.LastName ?? "")).Trim() != ""
+                        .Select(u => !string.IsNullOrEmpty(((u.FirstName ?? "") + " " + (u.LastName ?? "")).Trim())
                             ? ((u.FirstName ?? "") + " " + (u.LastName ?? "")).Trim()
                             : u.Email)
                         .FirstOrDefault(),

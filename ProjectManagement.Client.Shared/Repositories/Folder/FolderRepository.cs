@@ -4,6 +4,7 @@ using ProjectManagement.Client.Shared.MVVM.Folder;
 using ProjectManagement.Client.Shared.Repositories.Folder;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Folder;
+using ProjectManagement.Shared.DTO.General;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,6 +24,13 @@ namespace ProjectManagement.Client.Shared.Repositories.Folder
             => (await _httpRepository.GetAsync<List<ListFolderDTO>>(FolderURLBase + URLConst.GetList + $"?includeArchived={includeArchived}"))
                 .Select(x => x.ToFolderMVVM())
                 .OrderByDescending(x => x.Order)
+                .ToList();
+        public async Task<List<DepartmentAccessDTO>> GetAccessibleDepartmentsAsync()
+            => await _httpRepository.GetAsync<List<DepartmentAccessDTO>>(FolderURLBase + URLConst.Folder.AccessibleDepartments)
+               ?? [];
+        public async Task<List<FolderMVVM>> GetAccessibleFoldersAsync(bool includeArchived = false)
+            => (await _httpRepository.GetAsync<List<ListFolderDTO>>(FolderURLBase + URLConst.Folder.AccessibleFolders + $"?includeArchived={includeArchived}"))
+                .Select(x => x.ToFolderMVVM())
                 .ToList();
         public async Task<DetailsFolderDTO> DetailsAsync(Guid id)
         {

@@ -15,7 +15,8 @@ public static class CalculationRowCellRenderer
         bool showActiveToggle = false,
         Func<Task>? onToggleActive = null,
         bool parentActive = true,
-        Func<Task>? onEditProductionNote = null) =>
+        Func<Task>? onEditProductionNote = null,
+        Func<Task>? onEditReviewerComment = null) =>
         RenderCells(builder, columns.Count, i =>
         {
             if (showActiveToggle && columns[i].Id == NetColumnId.Active)
@@ -24,6 +25,8 @@ public static class CalculationRowCellRenderer
                 TableRenderHelpers.RenderWithTitleIndented(builder, task.Name, namePaddingPx);
             else if (columns[i].Id == NetColumnId.ProductionNote)
                 TableRenderHelpers.RenderProductionNoteTd(builder, task.ProductionNote, onEditProductionNote);
+            else if (columns[i].Id == NetColumnId.ReviewerComment)
+                TableRenderHelpers.RenderReviewerCommentTd(builder, task.ReviewerComment, onEditReviewerComment);
             else
                 columns[i].TaskRender(builder, task);
         });
@@ -36,7 +39,8 @@ public static class CalculationRowCellRenderer
         bool showActiveToggle = false,
         Func<Task>? onToggleActive = null,
         bool parentActive = true,
-        Func<Task>? onEditProductionNote = null) =>
+        Func<Task>? onEditProductionNote = null,
+        Func<Task>? onEditReviewerComment = null) =>
         RenderCells(builder, columns.Count, i =>
         {
             if (showActiveToggle && columns[i].Id == NetColumnId.Active)
@@ -45,6 +49,8 @@ public static class CalculationRowCellRenderer
                 TableRenderHelpers.RenderWithTitleIndented(builder, resource.Name, namePaddingPx);
             else if (columns[i].Id == NetColumnId.ProductionNote)
                 TableRenderHelpers.RenderProductionNoteTd(builder, resource.ProductionNote, onEditProductionNote);
+            else if (columns[i].Id == NetColumnId.ReviewerComment)
+                TableRenderHelpers.RenderReviewerCommentTd(builder, resource.ReviewerComment, onEditReviewerComment);
             else
                 columns[i].ResRender(builder, resource);
         });

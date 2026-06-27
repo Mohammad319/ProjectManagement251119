@@ -4,8 +4,10 @@ using Application.Feature.Project.ProjectBid;
 using Domain.Entities.Project;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Factory;
+using Persistence.Service.Access;
 using ProjectManagement.Shared.DTO.Project;
 using ProjectManagement.Shared.Enums;
+using ProjectManagement.Shared.Exceptions;
 using ProjectManagement.Shared.Helper;
 using System.Text.Json;
 
@@ -13,25 +15,58 @@ namespace Persistence.Service.Project
 {
     public sealed class ProjectBidService(IDbContextFactoryTenant dbFactory) : IProjectBidService
     {
+        /// <summary>Shown when a view-only user tries to change the tender evaluation.</summary>
+        public const string ReadOnlyMessage = "Du har endast visningsåtkomst och kan inte ändra anbudsutvärderingen.";
+
+        // True effective edit access for the tender evaluation = same rule as project content edit
+        // (Admin / own department / creator / shared as "Kan ändra"). Tender evaluation is work data,
+        // NOT project lifecycle management, so this deliberately does not require management rights.
+        private static async Task<bool> CanEditAsync(
+            Context.ShardingSingleDbContext context, Guid projectId, int userId, int? departmentId, CancellationToken ct) =>
+            await context.Projects
+                .Where(ProjectAccessRules.CanEdit(userId, departmentId))
+                .AnyAsync(p => p.Id == projectId, ct);
+
+        // Guards a write: a user without effective "Kan ändra" gets a clear 403 instead of a silent
+        // "not found" — and never reaches the mutation. Blocks the "Kan visa" save attempt cleanly.
+        private static async Task EnsureCanEditAsync(
+            Context.ShardingSingleDbContext context, Guid projectId, int userId, int? departmentId, CancellationToken ct)
+        {
+            if (!await CanEditAsync(context, projectId, userId, departmentId, ct))
+                throw new ForbiddenActionException(ReadOnlyMessage);
+        }
+
         public async Task<ProjectBidsViewDTO> GetViewAsync(
             Guid projectId,
+            int userId,
             int? departmentId,
+            bool isViewer,
             CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
+            // Read access follows effective project access (CanSee), so a project shared with the
+            // user (or their department) opens correctly. Without access we return an empty,
+            // read-only view rather than leaking another department's data.
             var evaluation = await context.Projects
-                .Where(x => x.Id == projectId &&
-                    (!departmentId.HasValue || x.Folder.DepartmentId == departmentId.Value))
+                .Where(ProjectAccessRules.CanSee(userId, departmentId, isViewer))
+                .Where(x => x.Id == projectId)
                 .Select(x => new { x.BidEvaluationModel, x.BidEvaluationBasis })
                 .FirstOrDefaultAsync(ct);
 
-            var evaluationModel = evaluation?.BidEvaluationModel ?? BidEvaluationModel.LowestComparison;
-            var evaluationBasis = evaluation?.BidEvaluationBasis ?? BidEvaluationBasis.Price;
+            if (evaluation is null)
+                return new ProjectBidsViewDTO { CanEdit = false };
 
+            // Effective edit right (Kan ändra). Visare is always read-only.
+            var canEdit = !isViewer && await CanEditAsync(context, projectId, userId, departmentId, ct);
+
+            var evaluationModel = evaluation.BidEvaluationModel;
+            var evaluationBasis = evaluation.BidEvaluationBasis;
+
+            // Access already verified at project level above; load the project's parts/bids by id
+            // (the tenant global filter still applies).
             var columns = await context.ProjectBidPriceColumns
-                .Where(x => x.ProjectId == projectId &&
-                    (!departmentId.HasValue || x.Project.Folder.DepartmentId == departmentId.Value))
+                .Where(x => x.ProjectId == projectId)
                 .AsNoTracking()
                 .OrderBy(x => x.SortOrder)
                 .ThenBy(x => x.CreatedAt)
@@ -45,8 +80,7 @@ namespace Persistence.Service.Project
                 .ToListAsync(ct);
 
             var bids = await context.ProjectBids
-                .Where(x => x.ProjectId == projectId &&
-                    (!departmentId.HasValue || x.Project.Folder.DepartmentId == departmentId.Value))
+                .Where(x => x.ProjectId == projectId)
                 .AsNoTracking()
                 .OrderBy(x => x.SortOrder)
                 .ThenBy(x => x.CreatedAt)
@@ -75,6 +109,7 @@ namespace Persistence.Service.Project
 
             var result = new ProjectBidsViewDTO
             {
+                CanEdit = canEdit,
                 EvaluationModel = evaluationModel,
                 EvaluationBasis = evaluationBasis,
                 PriceColumns = columns,
@@ -112,19 +147,31 @@ namespace Persistence.Service.Project
 
         public async Task<List<ProjectBidComparisonRowDTO>> GetComparisonAsync(
             IReadOnlyList<Guid> projectIds,
+            int userId,
             int? departmentId,
+            bool isViewer,
             CancellationToken ct = default)
         {
-            var ids = projectIds?.Distinct().ToList() ?? [];
-            if (ids.Count == 0)
+            var requestedIds = projectIds?.Distinct().ToList() ?? [];
+            if (requestedIds.Count == 0)
                 return [];
 
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
+            // Only include projects the user may actually see (effective access), so the comparison
+            // never leaks bids from projects outside the user's access.
+            var ids = await context.Projects
+                .Where(ProjectAccessRules.CanSee(userId, departmentId, isViewer))
+                .Where(x => requestedIds.Contains(x.Id))
+                .Select(x => x.Id)
+                .ToListAsync(ct);
+
+            if (ids.Count == 0)
+                return [];
+
             // Utvärderingsmodell per projekt (en samlad query).
             var models = await context.Projects
-                .Where(x => ids.Contains(x.Id) &&
-                    (!departmentId.HasValue || x.Folder.DepartmentId == departmentId.Value))
+                .Where(x => ids.Contains(x.Id))
                 .Select(x => new { x.Id, x.BidEvaluationModel, x.BidEvaluationBasis })
                 .ToListAsync(ct);
 
@@ -134,8 +181,7 @@ namespace Persistence.Service.Project
             // Alla utvärderingsdelar per projekt (en samlad query). Modellen avgör hur
             // delarna tolkas vid läsning, så vi behöver inte längre filtrera på typ.
             var allColumns = await context.ProjectBidPriceColumns
-                .Where(x => ids.Contains(x.ProjectId) &&
-                    (!departmentId.HasValue || x.Project.Folder.DepartmentId == departmentId.Value))
+                .Where(x => ids.Contains(x.ProjectId))
                 .Select(x => new { x.ProjectId, x.Id })
                 .ToListAsync(ct);
 
@@ -145,8 +191,7 @@ namespace Persistence.Service.Project
 
             // Anbud för alla projekt (en samlad query) – undviker N+1.
             var bids = await context.ProjectBids
-                .Where(x => ids.Contains(x.ProjectId) &&
-                    (!departmentId.HasValue || x.Project.Folder.DepartmentId == departmentId.Value))
+                .Where(x => ids.Contains(x.ProjectId))
                 .AsNoTracking()
                 .OrderBy(x => x.ProjectId)
                 .ThenBy(x => x.SortOrder)
@@ -216,6 +261,7 @@ namespace Persistence.Service.Project
         public async Task<int> CreateAsync(
             Guid projectId,
             ProjectBidPostDTO dto,
+            int userId,
             int? departmentId,
             CancellationToken ct = default)
         {
@@ -224,12 +270,7 @@ namespace Persistence.Service.Project
 
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            var projectExists = await context.Projects
-                .AnyAsync(x => x.Id == projectId &&
-                    (!departmentId.HasValue || x.Folder.DepartmentId == departmentId.Value), ct);
-
-            if (!projectExists)
-                return 0;
+            await EnsureCanEditAsync(context, projectId, userId, departmentId, ct);
 
             var sortOrder = await context.ProjectBids
                 .Where(x => x.ProjectId == projectId)
@@ -261,6 +302,7 @@ namespace Persistence.Service.Project
             int id,
             Guid projectId,
             ProjectBidPostDTO dto,
+            int userId,
             int? departmentId,
             CancellationToken ct = default)
         {
@@ -269,10 +311,10 @@ namespace Persistence.Service.Project
 
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
+            await EnsureCanEditAsync(context, projectId, userId, departmentId, ct);
+
             var bid = await context.ProjectBids
-                .FirstOrDefaultAsync(x => x.Id == id &&
-                    x.ProjectId == projectId &&
-                    (!departmentId.HasValue || x.Project.Folder.DepartmentId == departmentId.Value), ct);
+                .FirstOrDefaultAsync(x => x.Id == id && x.ProjectId == projectId, ct);
 
             if (bid is null)
                 return false;
@@ -293,15 +335,16 @@ namespace Persistence.Service.Project
         public async Task<bool> DeleteAsync(
             int id,
             Guid projectId,
+            int userId,
             int? departmentId,
             CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
+            await EnsureCanEditAsync(context, projectId, userId, departmentId, ct);
+
             var bid = await context.ProjectBids
-                .FirstOrDefaultAsync(x => x.Id == id &&
-                    x.ProjectId == projectId &&
-                    (!departmentId.HasValue || x.Project.Folder.DepartmentId == departmentId.Value), ct);
+                .FirstOrDefaultAsync(x => x.Id == id && x.ProjectId == projectId, ct);
 
             if (bid is null)
                 return false;
@@ -315,14 +358,16 @@ namespace Persistence.Service.Project
             Guid projectId,
             BidEvaluationBasis basis,
             BidEvaluationModel method,
+            int userId,
             int? departmentId,
             CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
+            await EnsureCanEditAsync(context, projectId, userId, departmentId, ct);
+
             var project = await context.Projects
-                .FirstOrDefaultAsync(x => x.Id == projectId &&
-                    (!departmentId.HasValue || x.Folder.DepartmentId == departmentId.Value), ct);
+                .FirstOrDefaultAsync(x => x.Id == projectId, ct);
 
             if (project is null)
                 return false;
@@ -335,6 +380,7 @@ namespace Persistence.Service.Project
         public async Task<int> CreatePriceColumnAsync(
             Guid projectId,
             ProjectBidPriceColumnPostDTO dto,
+            int userId,
             int? departmentId,
             CancellationToken ct = default)
         {
@@ -344,12 +390,7 @@ namespace Persistence.Service.Project
 
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            var projectExists = await context.Projects
-                .AnyAsync(x => x.Id == projectId &&
-                    (!departmentId.HasValue || x.Folder.DepartmentId == departmentId.Value), ct);
-
-            if (!projectExists)
-                return 0;
+            await EnsureCanEditAsync(context, projectId, userId, departmentId, ct);
 
             var nameTaken = await context.ProjectBidPriceColumns
                 .AnyAsync(x => x.ProjectId == projectId && x.Name.ToLower() == name.ToLower(), ct);
@@ -371,6 +412,7 @@ namespace Persistence.Service.Project
             int id,
             Guid projectId,
             ProjectBidPriceColumnPostDTO dto,
+            int userId,
             int? departmentId,
             CancellationToken ct = default)
         {
@@ -380,7 +422,9 @@ namespace Persistence.Service.Project
 
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            var column = await FindColumnAsync(context, id, projectId, departmentId, ct);
+            await EnsureCanEditAsync(context, projectId, userId, departmentId, ct);
+
+            var column = await FindColumnAsync(context, id, projectId, ct);
             if (column is null)
                 return false;
 
@@ -400,12 +444,15 @@ namespace Persistence.Service.Project
         public async Task<bool> DeletePriceColumnAsync(
             int id,
             Guid projectId,
+            int userId,
             int? departmentId,
             CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            var column = await FindColumnAsync(context, id, projectId, departmentId, ct);
+            await EnsureCanEditAsync(context, projectId, userId, departmentId, ct);
+
+            var column = await FindColumnAsync(context, id, projectId, ct);
             if (column is null)
                 return false;
 
@@ -453,6 +500,7 @@ namespace Persistence.Service.Project
             int id,
             Guid projectId,
             int direction,
+            int userId,
             int? departmentId,
             CancellationToken ct = default)
         {
@@ -461,7 +509,9 @@ namespace Persistence.Service.Project
 
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            var column = await FindColumnAsync(context, id, projectId, departmentId, ct);
+            await EnsureCanEditAsync(context, projectId, userId, departmentId, ct);
+
+            var column = await FindColumnAsync(context, id, projectId, ct);
             if (column is null)
                 return false;
 
@@ -492,16 +542,15 @@ namespace Persistence.Service.Project
             return true;
         }
 
+        // Edit access is verified by the caller (EnsureCanEditAsync); the column is then located by
+        // id + project (tenant global filter still applies).
         private static async Task<ProjectBidPriceColumnEntity?> FindColumnAsync(
             Context.ShardingSingleDbContext context,
             int id,
             Guid projectId,
-            int? departmentId,
             CancellationToken ct) =>
             await context.ProjectBidPriceColumns
-                .FirstOrDefaultAsync(x => x.Id == id &&
-                    x.ProjectId == projectId &&
-                    (!departmentId.HasValue || x.Project.Folder.DepartmentId == departmentId.Value), ct);
+                .FirstOrDefaultAsync(x => x.Id == id && x.ProjectId == projectId, ct);
 
         private static bool IsValid(ProjectBidPostDTO dto)
         {

@@ -1,0 +1,41 @@
+@inherits ProjectManagement.Client.Pages.AppComponentBase
+
+@* Small editor for a per-row reviewer comment (Granskarkommentar). Saving is handled by the caller
+   via OnSave; the comment is independent of the calculation economy and works even on a locked
+   calculation for an authorized reviewer. *@
+<div class="space-y-3 p-1">
+    <textarea class="w-full min-h-[140px] rounded-lg border border-slate-300 bg-white p-2 text-sm text-slate-800 focus:border-sky-500 focus:outline-none dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
+              placeholder="Skriv en granskarkommentar..."
+              @bind="_text" @bind:event="oninput"></textarea>
+
+    <div class="flex justify-end gap-2">
+        <button type="button"
+                class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+                @onclick="CancelAsync">
+            Avbryt
+        </button>
+        <button type="button"
+                class="rounded-lg bg-sky-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-700"
+                @onclick="SaveAsync">
+            Spara
+        </button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string? InitialText { get; set; }
+    [Parameter] public EventCallback<string?> OnSave { get; set; }
+
+    private string? _text;
+
+    protected override void OnInitialized() => _text = InitialText;
+
+    private async Task SaveAsync()
+    {
+        if (OnSave.HasDelegate)
+            await OnSave.InvokeAsync(_text);
+        await Modal.CloseAsync();
+    }
+
+    private async Task CancelAsync() => await Modal.CloseAsync();
+}

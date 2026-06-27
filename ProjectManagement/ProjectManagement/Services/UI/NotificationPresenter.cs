@@ -54,6 +54,37 @@ public static class NotificationPresenter
         };
     }
 
+    /// <summary>
+    /// Compact, single-line message for the notification's default (collapsed) view — just the
+    /// core sentence, without the access/validity sentences. The extra context (access level,
+    /// calculations, validity, full project name) is shown under "Show details" instead, so each
+    /// notification stays low and the panel can show more at once.
+    /// </summary>
+    public static string ShortMessage(NotificationListItemDTO n)
+    {
+        var project = string.IsNullOrWhiteSpace(n.ProjectName) ? "—" : n.ProjectName!;
+
+        return n.Type switch
+        {
+            NotificationType.ProjectSharedWithUser =>
+                Format(PMWebResource.NotificationMsgSharedWithUser, n.ActorName ?? "", project),
+            NotificationType.ProjectSharedWithDepartment =>
+                Format(PMWebResource.NotificationMsgSharedWithDepartment, project, n.DepartmentName ?? ""),
+            NotificationType.ProjectAccessChanged =>
+                Format(PMWebResource.NotificationMsgAccessChanged, project),
+            NotificationType.ProjectShareValidityChanged =>
+                Format(PMWebResource.NotificationMsgValidityChanged, project),
+            NotificationType.ProjectSharedCalculationsChanged =>
+                Format(PMWebResource.NotificationMsgCalculationsChanged, project),
+            NotificationType.ProjectAccessRemoved =>
+                Format(PMWebResource.NotificationMsgAccessRemoved, project),
+            _ => string.Empty
+        };
+    }
+
+    /// <summary>Validity label for the details view ("Valid until …" / "… further notice").</summary>
+    public static string ValidityLabel(NotificationListItemDTO n) => Validity(n.ValidUntil);
+
     /// <summary>Whether an access-level / calculation chip is meaningful for this notification type.</summary>
     public static bool ShowsAccessMeta(NotificationType type) => type is
         NotificationType.ProjectSharedWithUser or

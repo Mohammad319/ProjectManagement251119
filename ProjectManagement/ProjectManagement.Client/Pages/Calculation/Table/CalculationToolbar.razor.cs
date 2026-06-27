@@ -202,7 +202,7 @@ public partial class CalculationToolbar : ComponentBase, IDisposable
             return;
 
         var newMode = (CalculationFactorDisplayMode)rawValue;
-        if (!Enum.IsDefined(typeof(CalculationFactorDisplayMode), newMode) || Calc.FactorDisplayMode == newMode)
+        if (!Enum.IsDefined(newMode) || Calc.FactorDisplayMode == newMode)
             return;
 
         Calc.FactorDisplayMode = newMode;
@@ -248,7 +248,7 @@ public partial class CalculationToolbar : ComponentBase, IDisposable
             return null;
 
         var column = (NetColumnId)rawValue;
-        return Enum.IsDefined(typeof(NetColumnId), column) ? column : null;
+        return Enum.IsDefined(column) ? column : null;
     }
 
     private static string GetSortDirectionClass(bool active) =>

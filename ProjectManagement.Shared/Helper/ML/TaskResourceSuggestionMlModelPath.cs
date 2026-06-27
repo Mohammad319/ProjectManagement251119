@@ -15,8 +15,7 @@ public static class TaskResourceSuggestionMlModelPath
 
     public static string GetTenantModelPath(int tenantId)
     {
-        if (tenantId <= 0)
-            throw new ArgumentOutOfRangeException(nameof(tenantId));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(tenantId);
 
         var root = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
         if (string.IsNullOrWhiteSpace(root))

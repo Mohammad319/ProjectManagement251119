@@ -8,6 +8,7 @@ using Persistence.Factory;
 using Persistence.Service.Notification;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Project;
+using ProjectManagement.Shared.Exceptions;
 
 namespace Persistence.Service.Project
 {
@@ -39,7 +40,20 @@ namespace Persistence.Service.Project
                         : s.Department!.Name,
                     Role = s.Role,
                     ValidUntil = s.ValidUntil,
-                    CalculationIds = s.Calculations.Select(c => c.CalculationId).ToList()
+                    CalculationIds = s.Calculations.Select(c => c.CalculationId).ToList(),
+                    // "Delad av" + tooltip-metadata (vem som skapade/ändrade delningen).
+                    CreatedByName = s.CreatedByUser != null
+                        ? (((s.CreatedByUser.FirstName ?? "") + " " + (s.CreatedByUser.LastName ?? "")).Trim() == ""
+                            ? s.CreatedByUser.UserName
+                            : ((s.CreatedByUser.FirstName ?? "") + " " + (s.CreatedByUser.LastName ?? "")).Trim())
+                        : null,
+                    CreatedAt = s.CreatedAt,
+                    UpdatedByName = s.UpdatedByUser != null
+                        ? (((s.UpdatedByUser.FirstName ?? "") + " " + (s.UpdatedByUser.LastName ?? "")).Trim() == ""
+                            ? s.UpdatedByUser.UserName
+                            : ((s.UpdatedByUser.FirstName ?? "") + " " + (s.UpdatedByUser.LastName ?? "")).Trim())
+                        : null,
+                    UpdatedAt = s.UpdatedAt
                 })
                 .ToListAsync(ct);
         }
@@ -69,6 +83,11 @@ namespace Persistence.Service.Project
                 .FirstOrDefaultAsync(ct);
             if (projectName is null)
                 return 0;
+
+            // Sharing is administrative: receiving a project via an extra share never grants the right
+            // to (re-)share it. Only Admin/own-department/creator may manage sharing.
+            if (!await Access.ProjectAccessRules.CanManageLifecycleAsync(ctx.Projects, projectId, userId, departmentId, ct))
+                throw new ForbiddenActionException(Access.ProjectAccessRules.ShareForbiddenMessage);
 
             ProjectShareEntity? entity = dto.Id is > 0
                 ? await ctx.ProjectShare
@@ -121,6 +140,11 @@ namespace Persistence.Service.Project
                 return false;
 
             var projectId = entity.ProjectId;
+
+            // Only Admin/own-department/creator may manage sharing — not someone who merely received
+            // the project via an extra share.
+            if (!await Access.ProjectAccessRules.CanManageLifecycleAsync(ctx.Projects, projectId, userId, departmentId, ct))
+                throw new ForbiddenActionException(Access.ProjectAccessRules.ShareForbiddenMessage);
             var projectName = await ctx.Projects
                 .Where(p => p.Id == projectId)
                 .Select(p => p.Name)

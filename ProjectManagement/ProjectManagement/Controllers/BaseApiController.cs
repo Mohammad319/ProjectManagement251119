@@ -58,8 +58,7 @@ namespace ProjectManagement.Server.Controllers
             if (!currentDepartmentId.HasValue || currentDepartmentId.Value == targetDepartmentId)
                 return true;
 
-            return User.IsInRole(PMRolesConst.Tenant.Admin) ||
-                   User.IsInRole(PMRolesConst.Tenant.Manger);
+            return User.IsInRole(PMRolesConst.Tenant.Admin);
         }
 
         /// <summary>

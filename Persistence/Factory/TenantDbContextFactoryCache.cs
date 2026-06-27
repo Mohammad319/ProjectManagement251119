@@ -27,7 +27,7 @@ public sealed class TenantDbContextFactoryCache(IMemoryCache cache) : ITenantDbC
         string connectionString,
         TenantAuditSaveChangesInterceptor auditInterceptor)
     {
-        if (tenantId <= 0) throw new ArgumentOutOfRangeException(nameof(tenantId));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(tenantId);
         if (string.IsNullOrWhiteSpace(connectionString))
             throw new ArgumentException("Connection string is empty.", nameof(connectionString));
 

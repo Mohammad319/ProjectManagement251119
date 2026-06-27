@@ -33,9 +33,9 @@ public sealed class AccessSummaryFormatterTests
     [Fact]
     public void Access_type_filter_uses_clear_swedish_labels()
     {
-        Assert.Equal("Endast avdelningsåtkomst", AccessSummaryFormatter.ProjectTypeDepartmentOnly);
-        Assert.Equal("Delad med andra", AccessSummaryFormatter.TypeShared);
-        Assert.Equal("Delvis delad", AccessSummaryFormatter.TypeLimited);
+        Assert.Equal("Avdelningsåtkomst", AccessSummaryFormatter.ProjectTypeDepartmentOnly);
+        Assert.Equal("Delat", AccessSummaryFormatter.TypeShared);
+        Assert.Equal("Delvis delat", AccessSummaryFormatter.ProjectTypeLimited);
     }
 
     // ── RoleLabel / AccessLevelLabel ─────────────────────────────────────────
@@ -73,7 +73,7 @@ public sealed class AccessSummaryFormatterTests
     public void Project_null_access_uses_fallback_flag()
     {
         Assert.Equal("Avdelningsåtkomst", AccessSummaryFormatter.ProjectSummaryText(null, fallbackIsShared: false));
-        Assert.Equal("Delad med andra", AccessSummaryFormatter.ProjectSummaryText(null, fallbackIsShared: true));
+        Assert.Equal("Delat", AccessSummaryFormatter.ProjectSummaryText(null, fallbackIsShared: true));
     }
 
     [Fact]
@@ -85,40 +85,40 @@ public sealed class AccessSummaryFormatterTests
     }
 
     [Fact]
-    public void Project_single_person_full_calcs_shows_person_count()
+    public void Project_single_person_full_calcs_shows_short_shared_status()
     {
         var access = ProjAccess(viaDept: false, shareable: 5, User(Viewer, "Nordbygg Visare 02", calcCount: 5));
-        Assert.Equal("Delad med andra · 1 person", AccessSummaryFormatter.ProjectSummaryText(access, false));
+        Assert.Equal("Delat", AccessSummaryFormatter.ProjectSummaryText(access, false));
     }
 
     [Fact]
-    public void Project_single_department_full_calcs_shows_department_name()
+    public void Project_single_department_full_calcs_shows_short_shared_status()
     {
         var access = ProjAccess(viaDept: false, shareable: 5, Dept(Viewer, "Produktion", calcCount: 5));
-        Assert.Equal("Delad med andra · Produktion", AccessSummaryFormatter.ProjectSummaryText(access, false));
+        Assert.Equal("Delat", AccessSummaryFormatter.ProjectSummaryText(access, false));
     }
 
     [Fact]
-    public void Project_mixed_recipients_full_calcs_count_persons_and_departments()
+    public void Project_mixed_recipients_full_calcs_shows_short_shared_status()
     {
         var access = ProjAccess(viaDept: false, shareable: 5,
             User(Manager, "Anna", 5), User(Viewer, "Bo", 5), Dept(Viewer, "Ledning", 5));
-        Assert.Equal("Delad med andra · 2 personer · 1 avdelning", AccessSummaryFormatter.ProjectSummaryText(access, false));
+        Assert.Equal("Delat", AccessSummaryFormatter.ProjectSummaryText(access, false));
     }
 
     [Fact]
-    public void Project_two_departments_full_calcs_count_departments()
+    public void Project_two_departments_full_calcs_shows_short_shared_status()
     {
         var access = ProjAccess(viaDept: false, shareable: 5,
             Dept(Viewer, "Produktion", 5), Dept(Manager, "Ledning", 5));
-        Assert.Equal("Delad med andra · 2 avdelningar", AccessSummaryFormatter.ProjectSummaryText(access, false));
+        Assert.Equal("Delat", AccessSummaryFormatter.ProjectSummaryText(access, false));
     }
 
     [Fact]
-    public void Project_limited_calcs_shows_fraction()
+    public void Project_limited_calcs_shows_short_limited_status()
     {
         var access = ProjAccess(viaDept: false, shareable: 5, User(Viewer, "Visare 02", calcCount: 3));
-        Assert.Equal("Delvis delad · 3/5 kalkyler", AccessSummaryFormatter.ProjectSummaryText(access, false));
+        Assert.Equal("Delvis delat", AccessSummaryFormatter.ProjectSummaryText(access, false));
     }
 
     [Fact]
@@ -126,8 +126,7 @@ public sealed class AccessSummaryFormatterTests
     {
         var access = ProjAccess(viaDept: false, shareable: 5,
             User(Viewer, "A", 2), User(Viewer, "B", 3), User(Viewer, "C", 1));
-        // Least-covered recipient (1) is shown, never a contradictory "n/n".
-        Assert.Equal("Delvis delad · 1/5 kalkyler", AccessSummaryFormatter.ProjectSummaryText(access, false));
+        Assert.Equal("Delvis delat", AccessSummaryFormatter.ProjectSummaryText(access, false));
     }
 
     [Fact]
@@ -136,7 +135,7 @@ public sealed class AccessSummaryFormatterTests
         // One recipient has all calcs, another is limited — must NOT read as "2/2".
         var access = ProjAccess(viaDept: false, shareable: 2,
             User(Manager, "Full", 2), User(Viewer, "Partial", 1));
-        Assert.Equal("Delvis delad · 1/2 kalkyler", AccessSummaryFormatter.ProjectSummaryText(access, false));
+        Assert.Equal("Delvis delat", AccessSummaryFormatter.ProjectSummaryText(access, false));
     }
 
     // ── Project list: filter tags ────────────────────────────────────────────
@@ -157,12 +156,12 @@ public sealed class AccessSummaryFormatterTests
             User(Manager, "Anna", 5), Dept(Viewer, "Produktion", 2));
         var tags = AccessSummaryFormatter.ProjectTags(access, false).ToList();
 
-        Assert.Contains(AccessSummaryFormatter.TypeShared, tags);
-        Assert.Contains(AccessSummaryFormatter.TypeLimited, tags);          // Produktion only has 2/5
-        Assert.Contains(AccessSummaryFormatter.LevelEdit, tags);
-        Assert.Contains(AccessSummaryFormatter.LevelView, tags);
-        Assert.Contains("Person: Anna", tags);
-        Assert.Contains("Avdelning: Produktion", tags);
+        Assert.Contains(AccessSummaryFormatter.ProjectTypeLimited, tags);   // Produktion only has 2/5
+        Assert.DoesNotContain(AccessSummaryFormatter.TypeShared, tags);
+        Assert.DoesNotContain(AccessSummaryFormatter.LevelEdit, tags);
+        Assert.DoesNotContain(AccessSummaryFormatter.LevelView, tags);
+        Assert.DoesNotContain("Person: Anna", tags);
+        Assert.DoesNotContain("Avdelning: Produktion", tags);
         Assert.DoesNotContain(AccessSummaryFormatter.ProjectTypeDepartmentOnly, tags);
     }
 
@@ -171,7 +170,7 @@ public sealed class AccessSummaryFormatterTests
     {
         var access = ProjAccess(viaDept: false, shareable: 4, User(Viewer, "A", 4));
         var tags = AccessSummaryFormatter.ProjectTags(access, false).ToList();
-        Assert.DoesNotContain(AccessSummaryFormatter.TypeLimited, tags);
+        Assert.DoesNotContain(AccessSummaryFormatter.ProjectTypeLimited, tags);
     }
 
     [Fact]
@@ -195,14 +194,16 @@ public sealed class AccessSummaryFormatterTests
     [Fact]
     public void Calc_null_access_is_via_project()
     {
-        Assert.Equal("Via projekt", AccessSummaryFormatter.CalcSummaryText(null, isPrivate: false));
+        Assert.Equal("Avdelningsåtkomst", AccessSummaryFormatter.CalcSummaryText(null, isPrivate: false));
+        Assert.Equal("Ej via projekt", AccessSummaryFormatter.CalcSummaryText(null, isPrivate: false, projectHasSharing: true));
     }
 
     [Fact]
     public void Calc_no_recipients_via_project()
     {
         var access = CalcAccess(viaProject: true, isPrivate: false);
-        Assert.Equal("Via projekt", AccessSummaryFormatter.CalcSummaryText(access, false));
+        Assert.Equal("Avdelningsåtkomst", AccessSummaryFormatter.CalcSummaryText(access, false));
+        Assert.Equal("Ej via projekt", AccessSummaryFormatter.CalcSummaryText(access, false, projectHasSharing: true));
         Assert.False(AccessSummaryFormatter.CalcIsShared(access));
     }
 
@@ -211,11 +212,11 @@ public sealed class AccessSummaryFormatterTests
     {
         var access = CalcAccess(viaProject: false, isPrivate: false,
             User(Viewer, "A"), User(Viewer, "B"));
-        Assert.Equal("Delad med andra · 2 personer", AccessSummaryFormatter.CalcSummaryText(access, false));
+        Assert.Equal("Via projekt", AccessSummaryFormatter.CalcSummaryText(access, false));
 
         var mixed = CalcAccess(viaProject: false, isPrivate: false,
             User(Manager, "A"), Dept(Viewer, "Produktion"));
-        Assert.Equal("Delad med andra · 1 person · 1 avdelning", AccessSummaryFormatter.CalcSummaryText(mixed, false));
+        Assert.Equal("Via projekt", AccessSummaryFormatter.CalcSummaryText(mixed, false));
     }
 
     // ── Calculation list: filter tags ────────────────────────────────────────
@@ -234,12 +235,7 @@ public sealed class AccessSummaryFormatterTests
             User(Manager, "Anna"), Dept(Viewer, "Produktion"));
         var tags = AccessSummaryFormatter.CalcTags(access, false).ToList();
 
-        Assert.Contains(AccessSummaryFormatter.TypeShared, tags);
-        Assert.Contains(AccessSummaryFormatter.TypeLimited, tags);
-        Assert.Contains(AccessSummaryFormatter.LevelEdit, tags);
-        Assert.Contains(AccessSummaryFormatter.LevelView, tags);
-        Assert.Contains("Person: Anna", tags);
-        Assert.Contains("Avdelning: Produktion", tags);
+        Assert.Equal(new[] { AccessSummaryFormatter.CalcTypeViaProject }, tags);
         Assert.DoesNotContain(AccessSummaryFormatter.CalcTypeProjectOnly, tags);
     }
 
@@ -247,7 +243,20 @@ public sealed class AccessSummaryFormatterTests
     public void Calc_not_shared_tags_project_only()
     {
         var tags = AccessSummaryFormatter.CalcTags(CalcAccess(viaProject: true, isPrivate: false), false).ToList();
-        Assert.Contains(AccessSummaryFormatter.CalcTypeProjectOnly, tags);
+        Assert.Contains(AccessSummaryFormatter.CalcTypeDepartmentAccess, tags);
+        Assert.DoesNotContain(AccessSummaryFormatter.TypeShared, tags);
+        Assert.DoesNotContain(AccessSummaryFormatter.TypeLimited, tags);
+    }
+
+    [Fact]
+    public void Calc_not_in_project_share_tags_not_via_project()
+    {
+        var tags = AccessSummaryFormatter.CalcTags(
+            CalcAccess(viaProject: true, isPrivate: false),
+            false,
+            projectHasSharing: true).ToList();
+
+        Assert.Contains(AccessSummaryFormatter.CalcTypeNotViaProject, tags);
         Assert.DoesNotContain(AccessSummaryFormatter.TypeShared, tags);
         Assert.DoesNotContain(AccessSummaryFormatter.TypeLimited, tags);
     }

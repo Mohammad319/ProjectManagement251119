@@ -184,7 +184,7 @@ public partial class AccountImportFromFile
             });
         }
 
-        if (Groups.Count > 0 && Groups[0].Name == "G1_" && !Groups[0].Accounts.Any())
+        if (Groups.Count > 0 && Groups[0].Name == "G1_" && Groups[0].Accounts.Count == 0)
             Groups.RemoveAt(0);
     }
 

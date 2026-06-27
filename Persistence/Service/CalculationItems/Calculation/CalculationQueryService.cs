@@ -61,6 +61,8 @@ namespace Persistence.Service.CalculationItems.Calculation
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
+            var today = DateTime.UtcNow.Date;
+
             IQueryable<Domain.Entities.Calculation.CalculationEntity> query = context.Calculations
                 .AsNoTracking()
                 .Include(x => x.Status)
@@ -69,14 +71,19 @@ namespace Persistence.Service.CalculationItems.Calculation
                 .Where(x => !x.IsDeleted && x.ProjectId == projectId);
 
             // Visare: bara kalkyler valda i en projektdelning, aldrig privata.
-            // Övriga: befintlig delningslogik via kalkyldelning (ShareCalc).
+            // Övriga: åtkomst via egen avdelning, kalkyldelning (ShareCalc) ELLER projektdelning
+            // (ProjectShares) – samma regel som Access.CalculationAccessRules.CanSee, så en
+            // användare som ett projekt delats med ser kalkylerna även från en annan avdelning.
             query = isViewer
                 ? query.Where(Access.CalculationAccessRules.CanSee(userId, departmentId, isViewerOnly: true))
                 : query
                     .Where(x =>
                         departmentId == null ||
                         x.DepartmentId == departmentId.Value ||
-                        x.SharesCalc.Any(s => s.DepartmentId == departmentId.Value))
+                        x.SharesCalc.Any(s => s.DepartmentId == departmentId.Value) ||
+                        x.Project.Shares.Any(s =>
+                            (s.ValidUntil == null || s.ValidUntil >= today) &&
+                            (s.SharedWithUserId == userId || s.DepartmentId == departmentId.Value)))
                     .Where(x =>
                         !x.IsPrivate ||
                         x.CreatedBy == userId ||

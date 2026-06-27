@@ -145,6 +145,7 @@ namespace ProjectManagement.Client.Shared.Mapping
                 Opportunity = dto.Opportunity ?? string.Empty,
                 Metadata = dto.Metadata,
                 ProductionNote = dto.ProductionNote,
+                ReviewerComment = dto.ReviewerComment,
                 Quantity = dto.Quantity,
                 Unit = dto.Unit ?? string.Empty,
                 Name = dto.Name ?? string.Empty,
@@ -178,6 +179,7 @@ namespace ProjectManagement.Client.Shared.Mapping
                 Offers = dto.Offers?.Select(ToListOfferMVVM).ToList() ?? [],
                 Data = dto.Data,
                 ProductionNote = dto.ProductionNote,
+                ReviewerComment = dto.ReviewerComment,
                 Quantity = dto.Quantity,
                 Unit = dto.Unit ?? string.Empty,
                 Name = dto.Name ?? string.Empty,
@@ -315,6 +317,10 @@ namespace ProjectManagement.Client.Shared.Mapping
                 CreatedAt = dto.CreatedAt,
                 UpdatedAt = dto.UpdatedAt,
                 ProjectCount = dto.ProjectCount,
+                DepartmentId = dto.DepartmentId,
+                DepartmentName = dto.DepartmentName,
+                IsSharedGroup = dto.IsSharedGroup,
+                IsReadOnlyGroup = dto.IsSharedGroup,
                 Projects = [],
             };
         }

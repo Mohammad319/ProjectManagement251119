@@ -13,9 +13,11 @@
 @using ProjectManagement.Client.Pages.Project.ProjectPages
 @using NavTabItem = BlazorMHD.UI.Core.Navigation.MhdTabItem
 
+@using Microsoft.JSInterop
 @inherits AppComponentBase
 @attribute [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JS
 
 @if (CalculationUpdate != null)
 {
@@ -23,10 +25,32 @@
               @key="editContext"
               class="calculation-form-shell space-y-0"
               EditContext="editContext!"
-              OnValidSubmit="async () => await HandleSubmitAsync()">
+              OnValidSubmit="async () => await HandleSubmitAsync()"
+              OnInvalidSubmit="HandleInvalidSubmit">
 
         <DataAnnotationsValidator />
         <FormValidationSummary />
+
+        @* In-dialog feedback for the Save action: a saving indicator and a clear error banner
+           shown inside the form, so clicking Spara always produces visible feedback instead of a
+           silent no-op, a missed toast, or only the global error dialog. *@
+        @if (_isSaving)
+        {
+            <div class="mb-2 flex items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-800 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-200" role="status" aria-live="polite">
+                <svg class="h-4 w-4 shrink-0 animate-spin text-sky-600 dark:text-sky-400" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                <span>Sparar…</span>
+            </div>
+        }
+        else if (!string.IsNullOrWhiteSpace(_saveErrorMessage))
+        {
+            <div class="mb-2 flex items-start gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200" role="alert">
+                <svg class="mt-0.5 h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /></svg>
+                <span>@_saveErrorMessage</span>
+            </div>
+        }
 
         @if (IsReadOnly)
         {
@@ -272,15 +296,32 @@
                                             <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@AppLoc["calculationResponsible"]</label>
                                             <MhdFormSelect TValue="string"
                                                            @bind-Value="CalculationResponsible"
-                                                           Options="ResponsibilityUserSelectOptions"
+                                                           Options="ResponsibleUserSelectOptions"
                                                            Placeholder="Välj ansvarig"
                                                            Disabled="@CalculationUpdate.IsLocked"
                                                            Title="@AppLoc["calculationResponsible"]" />
                                         </div>
                                         <div>
-                                            <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@AppLoc["reviewer"]</label>
+                                            <label class="mb-0.5 flex items-center gap-1 text-xs font-medium text-slate-600 dark:text-slate-400">
+                                                <span>@AppLoc["reviewer"]</span>
+                                                @* Discreet info icon: CSS tooltip on hover and keyboard focus, layout-neutral
+                                                   (absolute + pointer-events-none), readable in light and dark mode. *@
+                                                <span class="group relative inline-flex">
+                                                    <svg tabindex="0" role="img"
+                                                         aria-label="En granskare med endast visningsåtkomst kan skriva granskningskommentarer, men inte ändra kalkylen eller ekonomiska värden."
+                                                         class="h-3.5 w-3.5 cursor-help text-slate-400 outline-none transition-colors hover:text-sky-600 focus-visible:text-sky-600 focus-visible:ring-2 focus-visible:ring-sky-500/40 dark:hover:text-sky-400 dark:focus-visible:text-sky-400"
+                                                         viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                    <span role="tooltip"
+                                                          class="pointer-events-none absolute left-1/2 top-full z-[80] mt-1 w-64 -translate-x-1/2 rounded-md bg-slate-800 px-2.5 py-1.5 text-xs font-normal leading-snug text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 dark:bg-slate-700">
+                                                        En granskare med endast visningsåtkomst kan skriva granskningskommentarer, men inte ändra kalkylen eller ekonomiska värden.
+                                                    </span>
+                                                </span>
+                                            </label>
                                             <MhdFormSelect TValue="string"
-                                                           @bind-Value="CalculationUpdate.Inspector"
+                                                           Value="CalculationUpdate.Inspector"
+                                                           ValueChanged="OnInspectorChanged"
                                                            Options="ResponsibilityUserSelectOptions"
                                                            Placeholder="Ingen granskare"
                                                            Disabled="@CalculationUpdate.IsLocked"
@@ -375,41 +416,43 @@
                                 <section class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
                                     <h3 class="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">@ResourceApp.date</h3>
                                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 [&>*]:min-w-0 [&_input]:min-w-0 [&_select]:min-w-0 [&_input]:w-full [&_select]:w-full">
+                                        @* Passerat-/nära-datum visas nu som en diskret statuscirkel vid labeln
+                                           (DateStatusDot), inte som permanent varningstext under fältet. *@
                                         <div>
-                                            <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400"
-                                                   title="Sista dag för frågor och svar">Frågor/svar senast</label>
-                                            <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900" @bind-Value="@CalculationUpdate.TenderQA" disabled="@IsContentLocked" />
-                                            @if (CalculationUpdate.TenderQA != default && CalculationUpdate.TenderQA < DateTime.Today)
-                                            {
-                                                <p class="mt-0.5 text-[11px] text-amber-600 dark:text-amber-400">@AppLoc["qaDeadlinePassed"]</p>
-                                            }
+                                            <label class="mb-0.5 flex items-center gap-1 text-xs font-medium text-slate-600 dark:text-slate-400">
+                                                <span>Sista dag för att ställa frågor</span>
+                                                <DateStatusDot Date="CalculationUpdate.TenderQA" />
+                                            </label>
+                                            <InputDate ParsingErrorMessage="Sista dag för att ställa frågor måste vara ett giltigt datum." class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900" @bind-Value="@CalculationUpdate.TenderQA" disabled="@IsContentLocked" />
                                         </div>
                                         <div>
-                                            <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.tenderDeadline</label>
-                                            <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900" @bind-Value="@CalculationUpdate.TenderDeadline" disabled="@IsContentLocked" />
-                                            @if (CalculationUpdate.TenderDeadline != default && CalculationUpdate.TenderDeadline < DateTime.Today)
-                                            {
-                                                <p class="mt-0.5 text-[11px] text-amber-600 dark:text-amber-400">@AppLoc["tenderDeadlinePassed"]</p>
-                                            }
+                                            <label class="mb-0.5 flex items-center gap-1 text-xs font-medium text-slate-600 dark:text-slate-400">
+                                                <span>@CalcResource.tenderDeadline</span>
+                                                <DateStatusDot Date="CalculationUpdate.TenderDeadline" />
+                                            </label>
+                                            <InputDate ParsingErrorMessage="@($"{CalcResource.tenderDeadline} måste vara ett giltigt datum.")" class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900" @bind-Value="@CalculationUpdate.TenderDeadline" disabled="@IsContentLocked" />
                                         </div>
                                         <div>
-                                            <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.startDate</label>
-                                            <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
+                                            <label class="mb-0.5 flex items-center gap-1 text-xs font-medium text-slate-600 dark:text-slate-400">
+                                                <span>@CalcResource.startDate</span>
+                                                <DateStatusDot Date="CalculationUpdate.StartDate" />
+                                            </label>
+                                            <InputDate ParsingErrorMessage="@($"{CalcResource.startDate} måste vara ett giltigt datum.")" class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
                                                        @bind-Value="@CalculationUpdate.StartDate"
                                                        disabled="@IsContentLocked"
                                                        @bind-Value:after="OnStartDateChanged" />
-                                            @if (CalculationUpdate.StartDate != default && CalculationUpdate.StartDate < DateTime.Today)
-                                            {
-                                                <p class="mt-0.5 text-[11px] text-amber-600 dark:text-amber-400">@AppLoc["startDatePassed"]</p>
-                                            }
                                         </div>
                                         <div>
-                                            <label class="mb-0.5 block text-xs font-medium text-slate-600 dark:text-slate-400">@CalcResource.endDate</label>
-                                            <InputDate class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
+                                            <label class="mb-0.5 flex items-center gap-1 text-xs font-medium text-slate-600 dark:text-slate-400">
+                                                <span>@CalcResource.endDate</span>
+                                                <DateStatusDot Date="CalculationUpdate.EndDate" />
+                                            </label>
+                                            <InputDate ParsingErrorMessage="@($"{CalcResource.endDate} måste vara ett giltigt datum.")" class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
                                                        @bind-Value="@CalculationUpdate.EndDate"
                                                        disabled="@IsContentLocked"
                                                        @bind-Value:after="OnEndDateChanged" />
-                                            @if (CalculationUpdate.EndDate != default && CalculationUpdate.StartDate != default && CalculationUpdate.EndDate < CalculationUpdate.StartDate)
+                                            @* Riktig validering kvar: slutdatum före startdatum kan aldrig räknas fram. *@
+                                            @if (CalculationUpdate.EndDate is { } ce && CalculationUpdate.StartDate is { } cs && ce < cs)
                                             {
                                                 <p class="mt-0.5 text-[11px] text-red-600 dark:text-red-400">@AppLoc["endBeforeStartError"]</p>
                                             }
@@ -616,7 +659,7 @@
                                 </td>
                                 <td class="px-3 py-2 text-xs text-slate-500 dark:text-slate-400">@FormatText(version.Status)</td>
                                 <td class="px-3 py-2 text-xs text-slate-500 dark:text-slate-400">
-                                    @(version.TenderDeadline == default ? "-" : version.TenderDeadline.ToString("yyyy-MM-dd"))
+                                    @(version.TenderDeadline is { } verDl ? verDl.ToString("yyyy-MM-dd") : "-")
                                 </td>
                                 <td class="px-3 py-2 text-right">
                                     <div class="flex flex-wrap justify-end gap-1.5">
@@ -708,9 +751,49 @@
     </div>
 }
 
+@* One-time info when a view-only reviewer is picked. Shown only the first time until the user ticks
+   "Visa inte detta meddelande igen"; selecting such a reviewer never grants edit rights. *@
+@if (_showReviewerInfoModal)
+{
+    <div class="fixed inset-0 z-[1100] flex items-center justify-center bg-black/40 p-4" @onclick="DismissReviewerInfoAsync">
+        <div class="w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 shadow-xl dark:border-slate-700 dark:bg-slate-900"
+             @onclick:stopPropagation="true">
+            <div class="mb-3 flex items-start gap-3">
+                <span class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sky-600 dark:bg-sky-950/50 dark:text-sky-400">
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                </span>
+                <div>
+                    <h3 class="text-base font-semibold text-slate-900 dark:text-slate-100">Granskaren har endast visningsåtkomst</h3>
+                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Granskaren kan skriva granskningskommentarer, men kan inte ändra kalkylen eller ekonomiska värden.</p>
+                </div>
+            </div>
+            <label class="mb-4 flex cursor-pointer items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                <input type="checkbox"
+                       class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-500"
+                       checked="@_dontShowReviewerInfoAgain"
+                       @onchange="e => _dontShowReviewerInfoAgain = (bool)(e.Value ?? false)" />
+                <span class="select-none">Visa inte detta meddelande igen</span>
+            </label>
+            <div class="flex justify-end">
+                <button type="button"
+                        class="rounded-md bg-sky-600 px-4 py-1.5 text-sm font-medium text-white shadow-sm transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500/40"
+                        @onclick="DismissReviewerInfoAsync">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     public const string DialogFormId = "calcForm";
     bool btnSubmitDisabled = false;
+
+    // Visible saving state + in-dialog save error (see HandleSubmitAsync / HandleInvalidSubmit).
+    // Keeps all save feedback inside the dialog instead of relying on toasts or the global
+    // error dialog, so the user always sees what happened when they click Spara.
+    private bool _isSaving;
+    private string? _saveErrorMessage;
     private bool _showContractDialog;
     private bool _isCreatingContractCalculation;
     private string _contractDialogMessage = string.Empty;
@@ -770,9 +853,7 @@
     };
 
     private int CalculationIncomeStartYear =>
-        CalculationUpdate.StartDate == default
-            ? DateTime.Today.Year
-            : CalculationUpdate.StartDate.Year;
+        CalculationUpdate.StartDate?.Year ?? DateTime.Today.Year;
 
     // Effective permission is only Visare on this calc's project — show everything read-only.
     private bool IsReadOnly => !CalculationUpdate.CanEdit;
@@ -849,6 +930,80 @@
 
     private IEnumerable<MhdSelectItem<string>> ResponsibilityUserSelectOptions =>
         ResponsibilityUserOptions.Select(user => new MhdSelectItem<string> { Value = user, Label = user });
+
+    // Display names of users whose system role is Visare (view-only). Used to (a) keep them out of the
+    // Kalkylansvarig picker (a responsible must be able to change), and (b) show a discreet note when
+    // such a person is picked as Granskare (reviewer). Best-effort by display name; unresolved names
+    // are simply not restricted/noticed (graceful degradation).
+    private readonly HashSet<string> _viewerUserNames = new(StringComparer.OrdinalIgnoreCase);
+
+    private bool IsViewerName(string? name) =>
+        !string.IsNullOrWhiteSpace(name) && _viewerUserNames.Contains(name.Trim());
+
+    // The selected reviewer (Granskare) only has view access → can read and write reviewer comments,
+    // but not change the calculation.
+    private bool SelectedReviewerIsViewerOnly => IsViewerName(CalculationUpdate.Inspector);
+
+    // localStorage key for the per-user "don't show again" choice. Calculation-form only — the
+    // project form uses its own key so the two notices are independent.
+    private const string ReviewerInfoStorageKeyPrefix = "atacost.hideReviewerViewOnlyInfo.calculation";
+
+    // One-time view-only-reviewer notice state. _hideReviewerInfo is loaded once from localStorage.
+    private bool _hideReviewerInfo;
+    private bool _reviewerInfoLoaded;
+    private bool _showReviewerInfoModal;
+    private bool _dontShowReviewerInfoAgain;
+
+    // Granskare changed: keep the value, then show the one-time notice when the picked reviewer is
+    // view-only and the user hasn't opted out. Selecting a view-only reviewer never grants edit rights.
+    private Task OnInspectorChanged(string? value)
+    {
+        CalculationUpdate.Inspector = value ?? string.Empty;
+
+        if (SelectedReviewerIsViewerOnly && !_hideReviewerInfo)
+        {
+            _dontShowReviewerInfoAgain = false;
+            _showReviewerInfoModal = true;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private async Task DismissReviewerInfoAsync()
+    {
+        _showReviewerInfoModal = false;
+
+        if (!_dontShowReviewerInfoAgain)
+            return;
+
+        _hideReviewerInfo = true;
+        try
+        {
+            var key = await GetReviewerInfoStorageKeyAsync();
+            await JS.InvokeVoidAsync("localStorage.setItem", key, "true");
+        }
+        catch (Exception ex) when (ex is JSException or JSDisconnectedException or InvalidOperationException or TaskCanceledException)
+        {
+            // Persisting the preference failed (JS unavailable): the notice simply shows again next time.
+        }
+    }
+
+    private async Task<string> GetReviewerInfoStorageKeyAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userId = user.FindFirst(PMClaimsConst.UserId)?.Value
+                     ?? user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                     ?? "anonymous";
+        return $"{ReviewerInfoStorageKeyPrefix}.{userId}";
+    }
+
+    // Kalkylansvarig options exclude view-only users (rule unchanged: responsible must be able to
+    // change). The currently selected responsible is always kept so legacy values aren't dropped.
+    private IEnumerable<MhdSelectItem<string>> ResponsibleUserSelectOptions =>
+        ResponsibilityUserOptions
+            .Where(user => !IsViewerName(user) || string.Equals(user, CalculationResponsible, StringComparison.OrdinalIgnoreCase))
+            .Select(user => new MhdSelectItem<string> { Value = user, Label = user });
 
     private bool CanCreateProductionCalculation =>
         Calculation.Id > 0 &&
@@ -1322,13 +1477,20 @@
                 : await Repo.Departments.GetDepartmentsAsListAsync() ?? [];
 
             var usersByName = new Dictionary<string, ListDTO>(StringComparer.OrdinalIgnoreCase);
+            _viewerUserNames.Clear();
 
             foreach (var department in departments)
             {
-                var users = await Repo.Departments.GetUsersAsListAsync(department.Id) ?? [];
+                var users = await Repo.Departments.GetUsersAuthAsListAsync(department.Id) ?? [];
 
-                foreach (var departmentUser in users.Where(x => !string.IsNullOrWhiteSpace(x.Name)))
-                    usersByName.TryAdd(departmentUser.Name.Trim(), departmentUser);
+                foreach (var departmentUser in users.Where(x => !string.IsNullOrWhiteSpace(x.FullName)))
+                {
+                    var name = departmentUser.FullName.Trim();
+                    usersByName.TryAdd(name, new ListDTO { Id = departmentUser.UserId ?? 0, Name = name });
+
+                    if (string.Equals(departmentUser.Role, PMRolesConst.Tenant.Viewer, StringComparison.OrdinalIgnoreCase))
+                        _viewerUserNames.Add(name);
+                }
             }
 
             ResponsibilityUsers = [.. usersByName.Values.OrderBy(x => x.Name)];
@@ -1473,6 +1635,22 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        // Load the per-user "don't show the view-only reviewer notice again" choice once JS is ready.
+        if (!_reviewerInfoLoaded)
+        {
+            _reviewerInfoLoaded = true;
+            try
+            {
+                var key = await GetReviewerInfoStorageKeyAsync();
+                var stored = await JS.InvokeAsync<string?>("localStorage.getItem", key);
+                _hideReviewerInfo = string.Equals(stored, "true", StringComparison.OrdinalIgnoreCase);
+            }
+            catch (Exception ex) when (ex is JSException or JSDisconnectedException or InvalidOperationException or TaskCanceledException)
+            {
+                // JS unavailable (prerender/circuit gone): default to showing the notice.
+            }
+        }
+
         // Focus the open confirm dialog so Escape reaches it.
         if (_focusApprovalDialog && _showApprovalDialog)
         {
@@ -1484,9 +1662,9 @@
 
     private void ComputeTimeMonth()
     {
-        if (CalculationUpdate.StartDate == default || CalculationUpdate.EndDate == default)
+        if (CalculationUpdate.StartDate is not { } start || CalculationUpdate.EndDate is not { } end)
             return;
-        var totalDays = (CalculationUpdate.EndDate - CalculationUpdate.StartDate).TotalDays;
+        var totalDays = (end - start).TotalDays;
         if (totalDays < 0) return;
         CalculationUpdate.TimeMonth = Math.Round((decimal)totalDays / 30.4375m, 1, MidpointRounding.AwayFromZero);
     }
@@ -1520,22 +1698,23 @@
     {
         if (changed is DateFieldChanged.StartDate or DateFieldChanged.EndDate)
         {
-            if (CalculationUpdate.StartDate != default && CalculationUpdate.EndDate != default)
+            if (CalculationUpdate.StartDate is { } && CalculationUpdate.EndDate is { })
                 ComputeTimeMonth();
-            else if (CalculationUpdate.StartDate != default && CalculationUpdate.TimeMonth > 0)
-                CalculationUpdate.EndDate = AddDecimalMonths(CalculationUpdate.StartDate, CalculationUpdate.TimeMonth);
-            else if (CalculationUpdate.EndDate != default && CalculationUpdate.TimeMonth > 0)
-                CalculationUpdate.StartDate = AddDecimalMonths(CalculationUpdate.EndDate, -CalculationUpdate.TimeMonth);
+            else if (CalculationUpdate.StartDate is { } start && CalculationUpdate.TimeMonth > 0)
+                CalculationUpdate.EndDate = AddDecimalMonths(start, CalculationUpdate.TimeMonth);
+            else if (CalculationUpdate.EndDate is { } end && CalculationUpdate.TimeMonth > 0)
+                CalculationUpdate.StartDate = AddDecimalMonths(end, -CalculationUpdate.TimeMonth);
 
             return;
         }
 
         if (CalculationUpdate.TimeMonth <= 0) return;
 
-        if (CalculationUpdate.StartDate != default)
-            CalculationUpdate.EndDate = AddDecimalMonths(CalculationUpdate.StartDate, CalculationUpdate.TimeMonth);
-        else if (CalculationUpdate.EndDate != default)
-            CalculationUpdate.StartDate = AddDecimalMonths(CalculationUpdate.EndDate, -CalculationUpdate.TimeMonth);
+        // Projekttid changed: derive the missing endpoint from whichever date exists.
+        if (CalculationUpdate.StartDate is { } s)
+            CalculationUpdate.EndDate = AddDecimalMonths(s, CalculationUpdate.TimeMonth);
+        else if (CalculationUpdate.EndDate is { } e)
+            CalculationUpdate.StartDate = AddDecimalMonths(e, -CalculationUpdate.TimeMonth);
     }
 
     private static DateTime AddDecimalMonths(DateTime date, decimal months)
@@ -1558,34 +1737,41 @@
         editContext.SetFieldCssClassProvider(RequiredFieldCssClassProvider.Instance);
     }
 
+    // The form's DataAnnotations validation failed (e.g. Kod or Namn saknas). Surface it clearly:
+    // switch to the main tab (where the validated fields live) and show a banner, so clicking Spara
+    // never feels like a silent no-op when something is missing.
+    private void HandleInvalidSubmit()
+    {
+        _saveErrorMessage = "Några uppgifter behöver kompletteras innan kalkylen kan sparas. Kontrollera de markerade fälten nedan.";
+        Part = 1;
+    }
+
     async Task HandleSubmitAsync(bool keepOpen = false)
     {
         if (btnSubmitDisabled)
             return;
 
-        // Effective Visare permission — read but not change. Bail with a clear message instead of
-        // the generic save error (the backend would refuse the save anyway).
+        // A fresh attempt clears the previous in-dialog error.
+        _saveErrorMessage = null;
+
+        // Effective Visare permission — read but not change. Bail with a clear, in-dialog message
+        // instead of the generic save error (the backend would refuse the save anyway).
         if (IsReadOnly)
         {
-            MHD.MessageOk(
-                CalcResource.calculation,
-                "Du har visningsbehörighet och kan inte ändra den här kalkylen.",
-                BlazorMHD.UI.Core.DesignSystem.MhdState.Warning);
+            _saveErrorMessage = "Du saknar behörighet att ändra den här kalkylen — du har endast visningsåtkomst.";
             return;
         }
 
         if (CalculationUpdate.IsLocked && !HasAllowedLockedStatusChange)
         {
-            // The calculation is locked and nothing changeable remains. Show a clear,
-            // specific reason instead of the generic "an unexpected error occurred" toast.
-            MHD.MessageOk(
-                CalcResource.calculation,
-                "Kalkylen är låst och kan inte ändras.",
-                BlazorMHD.UI.Core.DesignSystem.MhdState.Warning);
+            // The calculation is locked and nothing changeable remains. Show a clear, specific
+            // reason in the dialog instead of the generic "an unexpected error occurred" toast.
+            _saveErrorMessage = "Kalkylen är låst och kan inte ändras.";
             return;
         }
 
         btnSubmitDisabled = true;
+        _isSaving = true;
         var shouldClose = true;
         NormalizeResponsibilityFields();
 
@@ -1606,6 +1792,7 @@
                     // (read-only fields, "Låst & godkänd", next-step buttons) is shown.
                     await OnReloadList.InvokeAsync();
                     btnSubmitDisabled = false;
+                    _isSaving = false;
                     await LoadCalculationAsync();
                     StateHasChanged();
                     return;
@@ -1618,8 +1805,11 @@
                 var projectId = Folder.State.ProjectSelected?.Id;
                 if (projectId is null)
                 {
+                    // No project context — never silently no-op. Keep the dialog open with a clear
+                    // reason so the user can act (the New Calculation button is normally disabled
+                    // without a project, but the context can be lost while the dialog is open).
                     shouldClose = false;
-                    MHD.Notifications(ToastType.Info);
+                    _saveErrorMessage = "Kunde inte skapa kalkylen eftersom projektet saknas eller inte längre är tillgängligt. Stäng dialogen, välj ett projekt och försök igen.";
                     return;
                 }
 
@@ -1636,16 +1826,59 @@
         }
         catch (Exception ex)
         {
-            MHD.Notifications(ToastType.Update, false);
-            _ = ClientLog.ErrorAsync("CalculationForm submit failed", ex: ex);
+            // Keep the dialog open and show the reason inside it (the global error dialog is
+            // suppressed for this request — see CalculationRepository), so the user can correct
+            // the fields and try again instead of seeing a page-level "reload" message.
+            shouldClose = false;
+            _saveErrorMessage = BuildSaveErrorMessage(ex);
+            await LogSaveFailureAsync(ex);
         }
         finally
         {
+            _isSaving = false;
             if (!shouldClose)
                 btnSubmitDisabled = false;
         }
 
-        await Callback.InvokeAsync(null);
+        if (shouldClose)
+            await Callback.InvokeAsync(null);
+    }
+
+    // Maps a failed save to a clear, non-technical Swedish message based on the HTTP status code
+    // (permission, missing project, bad input, or a generic transient failure).
+    private static string BuildSaveErrorMessage(Exception ex)
+    {
+        if (ex is System.Net.Http.HttpRequestException { StatusCode: { } status })
+        {
+            return status switch
+            {
+                System.Net.HttpStatusCode.Forbidden or System.Net.HttpStatusCode.Unauthorized =>
+                    "Du saknar behörighet att skapa eller ändra kalkyl i det här projektet.",
+                System.Net.HttpStatusCode.NotFound =>
+                    "Kunde inte spara kalkylen eftersom projektet saknas eller inte längre är tillgängligt.",
+                System.Net.HttpStatusCode.BadRequest or System.Net.HttpStatusCode.Conflict =>
+                    "Kunde inte spara kalkylen. Kontrollera uppgifterna och försök igen.",
+                _ =>
+                    "Kunde inte spara kalkylen just nu. Försök igen om en stund."
+            };
+        }
+
+        return "Kunde inte spara kalkylen just nu. Försök igen om en stund.";
+    }
+
+    // Logs the real technical failure with enough context to diagnose it server-side: which save
+    // ran, the calculation/project ids, the calculation code/name, the user, and the HTTP status.
+    private async Task LogSaveFailureAsync(Exception ex)
+    {
+        var statusCode = (ex as System.Net.Http.HttpRequestException)?.StatusCode;
+        var projectId = Folder.State.ProjectSelected?.Id;
+        var context =
+            $"CalculationForm save failed. Mode={(Calculation.Id > 0 ? "update" : "create")}; " +
+            $"CalculationId={Calculation.Id}; ProjectId={projectId}; " +
+            $"Code={CalculationUpdate.Code}; Name={CalculationUpdate.Name}; StatusId={CalculationUpdate.StatusId}; " +
+            $"User={_currentUserDisplayName}; HttpStatus={(statusCode.HasValue ? ((int)statusCode.Value).ToString() : "n/a")}";
+
+        await ClientLog.ErrorAsync(context, ex: ex);
     }
 
     private void OpenImportInfoDialog()

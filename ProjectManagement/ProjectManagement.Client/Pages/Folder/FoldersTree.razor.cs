@@ -6,6 +6,7 @@ using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Helper.DropDown;
 using ProjectManagement.Client.Pages.Folder.Component;
 using ProjectManagement.Client.Pages.Project.ProjectPages;
+using ProjectManagement.Client.Pages.Calculation;
 using ProjectManagement.Client.Pages.Calculation.Form;
 using ProjectManagement.Client.Pages.Calculation.Share;
 using ProjectManagement.Client.Shared.Model.Project;
@@ -15,7 +16,9 @@ using ProjectManagement.Client.Shared.ResourceFiles.Calculation;
 using ProjectManagement.Client.Shared.ResourceFiles;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Folder;
+using ProjectManagement.Shared.DTO.Project;
 using ProjectManagement.Shared.Helper;
+using System.Security.Claims;
 using System.Text.Json;
 
 public sealed class GroupSelectionInfo
@@ -88,7 +91,7 @@ namespace ProjectManagement.Client.Pages.Folder
             var user = authState.User;
             bool isInAnyRole = PMRolesConst.Tenant.AdminManger.Split(',').Any(r => user.IsInRole(r));
 
-            if (!Folder.State.OtherDepartment && user.Identity?.IsAuthenticated == true && isInAnyRole && OnCreateNewFolder.HasDelegate)
+            if (!Folder.State.OtherDepartment && !Folder.State.AllAvailable && user.Identity?.IsAuthenticated == true && isInAnyRole && OnCreateNewFolder.HasDelegate)
             {
                 list.Add(new() { IconHtml = Icons.Folder, Label = AppLoc[LocalizerConst.New, ResourceLoc.folder], OnClickAsync = async () => await OnCreateNewFolder.InvokeAsync() });
             }
@@ -294,10 +297,35 @@ namespace ProjectManagement.Client.Pages.Folder
             }
         }
 
+        // Current user identity, read once from the auth claims so the tooltip line ("Egen avdelning" /
+        // "Delad med mig · Kan visa/ändra") can be computed synchronously while rendering rows.
+        private int _currentUserId;
+        private int? _currentDepartmentId;
+
         protected override void OnInitialized()
         {
             UoWService.Folder.State.OnChange += Refresh;
         }
+
+        protected override async Task OnInitializedAsync()
+        {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            _currentUserId = TryGetIntClaim(user, PMClaimsConst.UserId) ?? 0;
+            _currentDepartmentId = TryGetIntClaim(user, PMClaimsConst.DepartmentId);
+        }
+
+        private static int? TryGetIntClaim(ClaimsPrincipal user, string claimType)
+            => int.TryParse(user.FindFirst(claimType)?.Value, out var value) && value > 0 ? value : null;
+
+        // Folder management is blocked when the folder is a read-only shared/visual group, or the whole
+        // department is "another department" (single 👥 department selected). Per-folder so the
+        // "Alla tillgängliga" tree can mix editable (own department) and read-only (shared) folders.
+        private bool IsFolderManageBlocked(FolderMVVM folder) =>
+            folder.IsReadOnlyGroup || Folder.State.OtherDepartment;
+
+        // Tree root row label: "Alla tillgängliga" for the special scope, otherwise "Hela avdelningen".
+        private string TreeRootLabel => Folder.State.AllAvailable ? "Alla tillgängliga" : "Hela avdelningen";
 
         protected override void OnParametersSet()
         {
@@ -536,7 +564,7 @@ namespace ProjectManagement.Client.Pages.Folder
         {
             _selectedGroupKey = node.Key;
 
-            IEnumerable<GroupedCalculation> allCalcs = node.Children?.Any() == true
+            IEnumerable<GroupedCalculation> allCalcs = node.Children?.Count > 0
                 ? node.Children.SelectMany(c => c.Calculations)
                 : (IEnumerable<GroupedCalculation>)node.Calculations;
 
@@ -607,9 +635,9 @@ namespace ProjectManagement.Client.Pages.Folder
             var info = new GroupSelectionInfo
             {
                 Key = "hela-avdelningen",
-                Label = "Hela avdelningen",
+                Label = TreeRootLabel,
                 GroupType = "AllProjects",
-                Header = "Hela avdelningen",
+                Header = TreeRootLabel,
                 Calculations = allCalcs
             };
 
@@ -838,11 +866,14 @@ namespace ProjectManagement.Client.Pages.Folder
 
         // Unified selection style for every node type (Hela avdelningen, folder, project, calculation).
         // Blue is the navigation/selected color; green is reserved for status meaning.
+        // Calmer selection: a thin (2px) left accent + soft light-blue tint instead of a
+        // full border + shadow + ring, so the tree never out-shouts the main table.
         private const string TreeSelectedRowClass =
-            "border-l-4 border-sky-500 bg-sky-100/80 shadow-sm ring-1 ring-sky-300/80 dark:bg-sky-950/45 dark:ring-sky-700/70";
+            "border-l-2 border-sky-500 bg-sky-50 dark:border-sky-400 dark:bg-sky-950/30";
 
+        // Expanded (but not selected): a faint tint, no ring.
         private const string TreeExpandedRowClass =
-            "bg-slate-50 ring-1 ring-slate-200/70 hover:bg-slate-100 dark:bg-slate-900/65 dark:ring-slate-700/60 dark:hover:bg-slate-800/75";
+            "bg-slate-50 hover:bg-slate-100 dark:bg-slate-900/50 dark:hover:bg-slate-800/70";
 
         private const string TreeNormalRowClass =
             "bg-white hover:bg-slate-50 dark:bg-slate-900/50 dark:hover:bg-slate-800/60";
@@ -850,19 +881,19 @@ namespace ProjectManagement.Client.Pages.Folder
         private const string TreeRowFocusClass =
             "outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50";
 
-        // Icon chips: neutral when idle, sky when the row is selected.
+        // Icon chips: discreet (no ring, soft background) when idle, soft sky when selected.
         private const string TreeIconIdleClass =
-            "bg-slate-100 text-slate-500 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-700";
+            "bg-slate-100/70 text-slate-400 dark:bg-slate-800/60 dark:text-slate-500";
 
         private const string TreeIconSelectedClass =
-            "bg-sky-100 text-sky-700 ring-1 ring-sky-200 dark:bg-sky-950/50 dark:text-sky-300 dark:ring-sky-800";
+            "bg-sky-100 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300";
 
         private const string TreeIconArchivedClass =
-            "bg-slate-200 text-slate-500 ring-1 ring-slate-300 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-700";
+            "bg-slate-100/70 text-slate-400 dark:bg-slate-800/60 dark:text-slate-500";
 
         // Discreet blue tint so projects don't look "actively selected" when idle.
         private const string TreeProjectIconIdleClass =
-            "bg-slate-100 text-sky-600/80 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-sky-300/70 dark:ring-slate-700";
+            "bg-slate-100/70 text-sky-600/70 dark:bg-slate-800/60 dark:text-sky-300/70";
 
         private const string CalculationIndicatorBaseClass =
             "block h-2.5 w-2.5 rounded-full shadow-sm ring-1 ring-inset ring-black/10 transition-colors dark:ring-white/20";
@@ -967,13 +998,22 @@ namespace ProjectManagement.Client.Pages.Folder
             return count == 1 ? "1 projekt" : $"{count} projekt";
         }
 
-        private static string GetFolderTitle(FolderMVVM folder) =>
-            $"{folder.Name} · {GetFolderProjectCountLabel(folder)}";
+        private static string GetFolderTitle(FolderMVVM folder)
+        {
+            var line1 = $"{folder.Name} · {GetFolderProjectCountLabel(folder)}";
+            // Read-only shared folder: explain it is only a visual grouping of shared/assigned projects.
+            return folder.IsReadOnlyGroup
+                ? $"{line1}\nDelade med mig · visuell grupp, mappen kan inte ändras"
+                : line1;
+        }
 
         private static int GetProjectCalculationCount(ListProjectMVVM project) =>
             project.CalculationsLoaded
                 ? CalculationVersionSelector.CountCurrentVersions(project.Calculations)
                 : project.CalculationCount;
+
+        private static bool ShouldShowProjectCalculationCount(ListProjectMVVM project) =>
+            project.CalculationsLoaded || project.CalculationCount > 0;
 
         private static string GetProjectCalculationCountLabel(ListProjectMVVM project)
         {
@@ -985,8 +1025,31 @@ namespace ProjectManagement.Client.Pages.Folder
         {
             var parts = new[] { project.Code, project.Name, GetProjectCalculationCountLabel(project) }
                 .Where(x => !string.IsNullOrWhiteSpace(x));
-            return string.Join(" · ", parts);
+            var line1 = string.Join(" · ", parts);
+            return $"{line1}\n{GetProjectAccessLine(project)}";
         }
+
+        // Second tooltip line: explains how the user reaches the project.
+        // "Egen avdelning" for normal department access, otherwise
+        // "Delad med mig · Kan visa" / "Delad med mig · Kan ändra" based on the share role.
+        private string GetProjectAccessLine(ListProjectMVVM project)
+        {
+            var access = project.Access;
+            if (access is null || access.ViaDepartment)
+                return "Egen avdelning";
+
+            var role = GetMatchingShareRole(access);
+            return role is not null
+                ? $"Delad med mig · {AccessSummaryFormatter.AccessLevelLabel(role)}"
+                : "Delad med mig";
+        }
+
+        // Role of the share that grants the current user access (direct user share or via their department).
+        private string? GetMatchingShareRole(ProjectAccessSummaryDTO access) =>
+            access.Recipients.FirstOrDefault(r =>
+                (r.UserId.HasValue && r.UserId.Value == _currentUserId) ||
+                (r.DepartmentId.HasValue && _currentDepartmentId.HasValue && r.DepartmentId.Value == _currentDepartmentId.Value))
+            ?.Role;
 
         private bool IsManualOrderMode => IsReorderMode;
         private bool HasManualOrderChanges => _manualOrderDirty;
@@ -1382,14 +1445,25 @@ namespace ProjectManagement.Client.Pages.Folder
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             var user = authState.User;
             bool isInAnyRole = PMRolesConst.Tenant.AdminManger.Split(',').Any(r => user.IsInRole(r));
-            bool canManageFolder = !Folder.State.OtherDepartment && user.Identity?.IsAuthenticated == true && isInAnyRole;
+            bool canManageFolder = !IsFolderManageBlocked(item) && user.Identity?.IsAuthenticated == true && isInAnyRole;
 
+            // Mapphantering kräver normal avdelningsåtkomst eller adminbehörighet. Extra
+            // projektdelning ger INTE rätt att hantera mappar, så menyn döljs helt för
+            // användare utan behörighet (samma grupperade ordning/utseende som projekt-
+            // och kalkylmenyerna, separerade med avdelare).
             if (canManageFolder)
             {
-                list.Add(new() { IconHtml = Icons.Plus, Label = AppLoc[LocalizerConst.New, CalcResource.project], OnClickAsync = () => { CreateProjectFromFolderTree(item); return Task.CompletedTask; } });
+                // Grupp 1 — skapa/importera
+                list.Add(new() { IconHtml = Icons.Plus, Label = AppLoc["newProject"], OnClickAsync = () => { CreateProjectFromFolderTree(item); return Task.CompletedTask; } });
                 // Import a project copy (.atacost) into this folder — creates a new project.
                 list.Add(new() { IconHtml = Icons.ImportFromFile, Label = "Importera projektkopia...", OnClickAsync = () => RequestImportProjectCopy(item, canManageFolder) });
+
+                // Grupp 2 — ändra mapp
+                list.Add(new() { IsSeparator = true });
                 list.Add(new() { IconHtml = Icons.Edit, Label = AppLoc["editFolder"], OnClickAsync = () => { UpdateForm(item); return Task.CompletedTask; } });
+
+                // Grupp 3 — mapphantering
+                list.Add(new() { IsSeparator = true });
                 list.Add(new() { IconHtml = Icons.Folder, Label = AppLoc["moveFolder"], OnClickAsync = () => { OpenMoveCopyDialog(MoveCopyItemKind.Folder, MoveCopyOperation.Move, item); return Task.CompletedTask; } });
                 list.Add(new() { IconHtml = Icons.Copy, Label = AppLoc["copyFolder"], OnClickAsync = () => { OpenMoveCopyDialog(MoveCopyItemKind.Folder, MoveCopyOperation.Copy, item); return Task.CompletedTask; } });
 
@@ -1397,25 +1471,22 @@ namespace ProjectManagement.Client.Pages.Folder
                     list.Add(new() { IconHtml = Icons.Archive, Label = AppLoc["archiveFolder"], OnClickAsync = async () => await ArchiveOrRestoreFolderAsync(item, archive: true) });
                 else
                     list.Add(new() { IconHtml = Icons.Restore, Label = AppLoc["restoreFromArchive"], OnClickAsync = async () => await ArchiveOrRestoreFolderAsync(item, archive: false) });
-            }
-            else
-            {
-                list.Add(new() { IconHtml = Icons.ImportFromFile, Label = "Importera projektkopia...", OnClickAsync = () => RequestImportProjectCopy(item, canManageFolder) });
-            }
 
-            // "Ta bort mapp" visas alltid längst ner med separator och destruktiv stil.
-            // Den är aktiv för helt tomma mappar; annars öppnas en informationsdialog
-            // som förklarar varför borttagning inte är tillåten (innehåll eller behörighet).
-            if (list.Count > 0)
+                // Grupp 4 — destruktiv åtgärd: "Ta bort mapp" ligger alltid sist, röd, med separator före.
+                // Aktiv för helt tomma mappar; annars öppnas en informationsdialog som förklarar
+                // varför borttagning inte är tillåten (innehåll eller behörighet).
                 list.Add(new() { IsSeparator = true });
+                list.Add(new()
+                {
+                    IconHtml = Icons.Delete,
+                    Label = "Ta bort mapp",
+                    CssClass = "text-red-600 dark:text-red-400",
+                    OnClickAsync = () => RequestDeleteFolderAsync(item, canManageFolder)
+                });
+            }
 
-            list.Add(new()
-            {
-                IconHtml = Icons.Delete,
-                Label = "Ta bort mapp",
-                CssClass = "text-red-600 dark:text-red-400",
-                OnClickAsync = () => RequestDeleteFolderAsync(item, canManageFolder)
-            });
+            if (list.Count == 0)
+                return;
 
             await ContextService.ShowMenuAsync(list);
         }
@@ -1541,18 +1612,42 @@ namespace ProjectManagement.Client.Pages.Folder
             List<MhdContextMenuItem> list = [];
 
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-            var user = authState.User;
-            bool isInAnyRole = PMRolesConst.Tenant.AdminManger.Split(',').Any(r => user.IsInRole(r));
-            bool canManageProject = !Folder.State.OtherDepartment && user.Identity?.IsAuthenticated == true && isInAnyRole;
+            var access = ContextMenuAccessPolicy.ForProject(authState.User, project.Access, IsFolderManageBlocked(folder));
 
-            if (canManageProject)
+            // Grouped order (separated by dividers), identical to the right-panel project list:
+            // [skapa/importera] · [arbeta med projekt] · [livscykel] · [export] · [ta bort].
+            if (access.CanManageLifecycle)
             {
+                // Grupp 1 — skapa/importera
                 list.Add(new() { IconHtml = Icons.Plus, Label = AppLoc[LocalizerConst.New, CalcResource.calculation], OnClickAsync = async () => await CreateCalcFromProjectTreeAsync(folder, project) });
                 // Import a calculation copy (.atacost) into this project — creates a new calculation.
-                list.Add(new() { IconHtml = Icons.ImportFromFile, Label = "Importera kalkylkopia...", OnClickAsync = () => RequestImportCalcCopy(folder, project, canManageProject) });
-                list.Add(new() { IconHtml = Icons.Edit, Label = AppLoc["editProject"], OnClickAsync = () => { EditProjectFromTree(folder, project); return Task.CompletedTask; } });
+                list.Add(new() { IconHtml = Icons.ImportFromFile, Label = "Importera kalkylkopia...", OnClickAsync = () => RequestImportCalcCopy(folder, project, access.CanManageLifecycle) });
+            }
+
+            if (access.CanView)
+            {
+                // Grupp 2 — arbeta med projekt
+                if (list.Count > 0)
+                    list.Add(new() { IsSeparator = true });
+                list.Add(new()
+                {
+                    IconHtml = access.CanEditWork ? Icons.Edit : Icons.Details,
+                    Label = access.CanEditWork ? AppLoc["editProject"] : "Visa projekt",
+                    OnClickAsync = () => { EditProjectFromTree(folder, project, access.CanEditWork); return Task.CompletedTask; }
+                });
                 list.Add(new() { IconHtml = Icons.Tender, Label = ResourceLoc.tender, OnClickAsync = () => { OpenProjectBidsFromTree(project); return Task.CompletedTask; } });
-                list.Add(new() { IconHtml = Icons.PermissionShield, Label = "Delning och behörighet", OnClickAsync = () => { OpenProjectShareFromTree(project); return Task.CompletedTask; } });
+                list.Add(new()
+                {
+                    IconHtml = Icons.PermissionShield,
+                    Label = access.CanManageSharing ? "Delning och behörighet" : "Visa delning och behörighet",
+                    OnClickAsync = () => { OpenProjectShareFromTree(project, readOnly: !access.CanManageSharing); return Task.CompletedTask; }
+                });
+            }
+
+            if (access.CanManageLifecycle)
+            {
+                // Grupp 3 — projektlivscykel
+                list.Add(new() { IsSeparator = true });
                 list.Add(new() { IconHtml = Icons.Folder, Label = AppLoc["moveProject"], OnClickAsync = () => { OpenMoveCopyProjectDialog(folder, project, MoveCopyOperation.Move); return Task.CompletedTask; } });
                 list.Add(new() { IconHtml = Icons.Copy, Label = AppLoc["copyProject"], OnClickAsync = () => { OpenMoveCopyProjectDialog(folder, project, MoveCopyOperation.Copy); return Task.CompletedTask; } });
 
@@ -1560,30 +1655,26 @@ namespace ProjectManagement.Client.Pages.Folder
                     list.Add(new() { IconHtml = Icons.Archive, Label = AppLoc["archiveProject"], OnClickAsync = async () => await ArchiveOrRestoreProjectAsync(project, archive: true) });
                 else
                     list.Add(new() { IconHtml = Icons.Restore, Label = AppLoc["restoreFromArchive"], OnClickAsync = async () => await ArchiveOrRestoreProjectAsync(project, archive: false) });
-            }
-            else
-            {
-                list.Add(new() { IconHtml = Icons.ImportFromFile, Label = "Importera kalkylkopia...", OnClickAsync = () => RequestImportCalcCopy(folder, project, canManageProject) });
-            }
 
-            // "Ta bort projekt" visas alltid längst ner med separator och destruktiv stil.
-            // Aktivt för tomma projekt; annars öppnas en informationsdialog som förklarar
-            // varför borttagning inte är tillåten (kalkyler, anbudsdata eller behörighet).
-            if (list.Count > 0)
+                // Grupp 4 — export. Separator före, och en till mellan export och borttagning.
                 list.Add(new() { IsSeparator = true });
 
-            // Export the project as an .atacost copy — same dialog as the right-panel project list.
-            list.Add(new() { IconHtml = Icons.Tender, Label = "Exportera projektet...", OnClickAsync = () => RequestExportProjectCopy(project, canManageProject) });
+                // Export the project as an .atacost copy — same dialog as the right-panel project list.
+                list.Add(new() { IconHtml = Icons.Tender, Label = "Exportera projektet...", OnClickAsync = () => RequestExportProjectCopy(project, access.CanManageLifecycle) });
 
-            list.Add(new()
-            {
-                IconHtml = Icons.Delete,
-                Label = ProjectDeleteHelper.DeleteLabel,
-                CssClass = ProjectDeleteHelper.DeleteCssClass,
-                OnClickAsync = () => ProjectDeleteHelper.RequestDeleteAsync(
-                    this, Repo, MHD, ClientLog, project, canManageProject,
-                    () => DeleteProjectFromTreeConfirmedAsync(folder, project))
-            });
+                // Grupp 5 — destruktiv åtgärd: "Ta bort projekt" ligger alltid sist, med separator före.
+                list.Add(new() { IsSeparator = true });
+
+                list.Add(new()
+                {
+                    IconHtml = Icons.Delete,
+                    Label = ProjectDeleteHelper.DeleteLabel,
+                    CssClass = ProjectDeleteHelper.DeleteCssClass,
+                    OnClickAsync = () => ProjectDeleteHelper.RequestDeleteAsync(
+                        this, Repo, MHD, ClientLog, project, access.CanManageLifecycle,
+                        () => DeleteProjectFromTreeConfirmedAsync(folder, project))
+                });
+            }
 
             await ContextService.ShowMenuAsync(list);
         }
@@ -1619,40 +1710,63 @@ namespace ProjectManagement.Client.Pages.Folder
             List<MhdContextMenuItem> list = [];
 
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-            var user = authState.User;
-            bool isInAnyRole = PMRolesConst.Tenant.AdminManger.Split(',').Any(r => user.IsInRole(r));
-            bool canManageCalc = !Folder.State.OtherDepartment && user.Identity?.IsAuthenticated == true && isInAnyRole;
+            var blocked = IsFolderManageBlocked(folder);
+            var access = ContextMenuAccessPolicy.ForCalculation(authState.User, cal.Access, blocked);
+            var projectAccess = ContextMenuAccessPolicy.ForProject(authState.User, project.Access, blocked);
 
+            // "Öppna kalkyl" (läsåtgärd) ligger överst; därefter samma grupperade ordning som i
+            // kalkyllistan: [huvudåtgärder] · [livscykel] · [export] · [ta bort].
             list.Add(new() { IconHtml = Icons.Active, Label = AppLoc["openCalculation"], OnClickAsync = async () => await NewCalculations(folder, project, cal) });
-
-            if (canManageCalc)
+            list.Add(new()
             {
-                list.Add(new() { IconHtml = Icons.Edit, Label = ResourceApp.edit, OnClickAsync = () => { EditCalculationFromTree(project, cal); return Task.CompletedTask; } });
+                IconHtml = access.CanEditWork && cal.IsCurrentVersion ? Icons.Edit : Icons.Details,
+                Label = access.CanEditWork && cal.IsCurrentVersion ? ResourceApp.edit : "Visa kalkyl",
+                OnClickAsync = () => { EditCalculationFromTree(project, cal, access.CanEditWork && cal.IsCurrentVersion); return Task.CompletedTask; }
+            });
+            list.Add(new() { IconHtml = Icons.Details, Label = "Visa detaljer", OnClickAsync = () => { OpenCalculationDetailsFromTree(project, cal); return Task.CompletedTask; } });
+            list.Add(new()
+            {
+                IconHtml = Icons.PermissionShield,
+                Label = projectAccess.CanManageSharing ? "Delning och behörighet" : "Visa delning och behörighet",
+                OnClickAsync = () => { OpenProjectShareFromTree(project, readOnly: !projectAccess.CanManageSharing); return Task.CompletedTask; }
+            });
+
+            if (access.CanManageLifecycle)
+            {
+                // Grupp 1 — huvudåtgärder (Versioner direkt efter Ändra)
+                list.Add(new() { IsSeparator = true });
                 list.Add(new() { IconHtml = Icons.Copy, Label = "Versioner", OnClickAsync = () => { OpenCalculationVersionsFromTree(project, cal); return Task.CompletedTask; } });
+
+                // Grupp 2 — livscykel/hantering
+                list.Add(new() { IsSeparator = true });
                 // Delning sker på projektnivå – ingen separat kalkyldelning i kalkylmenyn (se ProjectShareUI).
                 list.Add(new() { IconHtml = Icons.Folder, Label = AppLoc["moveCalculation"], OnClickAsync = () => { OpenMoveCopyCalcDialog(folder, project, cal, MoveCopyOperation.Move); return Task.CompletedTask; } });
                 list.Add(new() { IconHtml = Icons.Copy, Label = AppLoc["copyCalculation"], OnClickAsync = () => { OpenMoveCopyCalcDialog(folder, project, cal, MoveCopyOperation.Copy); return Task.CompletedTask; } });
                 list.Add(new() { IconHtml = Icons.Archive, Label = AppLoc["archiveCalculation"], OnClickAsync = async () => await ArchiveCalculationFromTreeAsync(project, cal) });
             }
 
-            // "Ta bort kalkyl" / "Ta bort version" visas alltid längst ner med separator och
-            // destruktiv stil; blockerade fall förklaras i en informationsdialog.
             var projectCalcs = project.Calculations ?? [];
 
-            list.Add(new() { IsSeparator = true });
-
-            // Export the calculation as an .atacost copy — same dialog as the right-panel calculation list.
-            list.Add(new() { IconHtml = Icons.Tender, Label = "Exportera kalkyl...", OnClickAsync = () => RequestExportCalcCopy(cal, canManageCalc) });
-
-            list.Add(new()
+            if (access.CanManageLifecycle)
             {
-                IconHtml = Icons.Delete,
-                Label = CalculationDeleteHelper.DeleteLabel(projectCalcs, cal),
-                CssClass = CalculationDeleteHelper.DeleteCssClass,
-                OnClickAsync = () => CalculationDeleteHelper.RequestDeleteAsync(
-                    this, Repo, MHD, ClientLog, cal, projectCalcs, canManageCalc,
-                    () => DeleteCalculationFromTreeConfirmedAsync(folder, project, cal))
-            });
+                // Grupp 3 — export (separator före).
+                list.Add(new() { IsSeparator = true });
+                // Export the calculation as an .atacost copy — same dialog as the right-panel calculation list.
+                list.Add(new() { IconHtml = Icons.Tender, Label = "Exportera kalkyl...", OnClickAsync = () => RequestExportCalcCopy(cal, access.CanManageLifecycle) });
+
+                // Grupp 4 — destruktiv åtgärd: "Ta bort kalkyl" ligger alltid sist, med separator före.
+                list.Add(new() { IsSeparator = true });
+
+                list.Add(new()
+                {
+                    IconHtml = Icons.Delete,
+                    Label = CalculationDeleteHelper.DeleteLabel(projectCalcs, cal),
+                    CssClass = CalculationDeleteHelper.DeleteCssClass,
+                    OnClickAsync = () => CalculationDeleteHelper.RequestDeleteAsync(
+                        this, Repo, MHD, ClientLog, cal, projectCalcs, access.CanManageLifecycle,
+                        () => DeleteCalculationFromTreeConfirmedAsync(folder, project, cal))
+                });
+            }
 
             await ContextService.ShowMenuAsync(list);
         }
@@ -1685,7 +1799,7 @@ namespace ProjectManagement.Client.Pages.Folder
         {
             if (archive)
             {
-                var hasActive = (await Repo.Project.GetByFolderIdAsync(folder.Id, includeArchived: false)).Any();
+                var hasActive = (await Repo.Project.GetByFolderIdAsync(folder.Id, includeArchived: false)).Count > 0;
                 if (hasActive)
                 {
                     MHD.MessageYesNo(
@@ -1784,17 +1898,29 @@ namespace ProjectManagement.Client.Pages.Folder
                 DialogButtonsHelper.CreateSaveCancelButtons(CalculationFormUI.DialogFormId));
         }
 
-        private void EditProjectFromTree(FolderMVVM folder, ListProjectMVVM project)
+        private void EditProjectFromTree(FolderMVVM folder, ListProjectMVVM project, bool canEdit = true)
         {
+            var readOnly = !canEdit;
+            var parameters = new Dictionary<string, object>
+            {
+                [nameof(ProjectForm.Project)] = project,
+                [nameof(ProjectForm.FolderId)] = folder.Id,
+                [nameof(ProjectForm.Callback)] = EventCallback.Factory.Create<Tuple<bool, ListProjectMVVM>>(this,
+                    async t => await OnProjectEditedFromTreeAsync(folder, t))
+            };
+
+            if (readOnly)
+            {
+                Modal.ShowComponent<ProjectForm>(
+                    "Visa projekt",
+                    parameters,
+                    BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
+                return;
+            }
+
             Modal.ShowComponent<ProjectForm>(
                 AppLoc[LocalizerConst.Update, project.Name],
-                new Dictionary<string, object>
-                {
-                    [nameof(ProjectForm.Project)] = project,
-                    [nameof(ProjectForm.FolderId)] = folder.Id,
-                    [nameof(ProjectForm.Callback)] = EventCallback.Factory.Create<Tuple<bool, ListProjectMVVM>>(this,
-                        async t => await OnProjectEditedFromTreeAsync(folder, t))
-                },
+                parameters,
                 BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge,
                 DialogButtonsHelper.CreateSaveCancelButtons(ProjectForm.DialogFormId));
         }
@@ -1809,49 +1935,72 @@ namespace ProjectManagement.Client.Pages.Folder
             await Modal.CloseAsync();
         }
 
-        private void EditCalculationFromTree(ListProjectMVVM project, ListCalculationMVVM cal)
+        private void EditCalculationFromTree(ListProjectMVVM project, ListCalculationMVVM cal, bool canEdit = true)
         {
+            var readOnly = !canEdit;
+            var parameters = new Dictionary<string, object>
+            {
+                [nameof(CalculationFormUI.Calculation)] = cal,
+                [nameof(CalculationFormUI.Callback)] = EventCallback.Factory.Create<ListCalculationMVVM?>(this,
+                    async updated =>
+                    {
+                        if (updated != null)
+                        {
+                            cal.Name = updated.Name;
+                            cal.Code = updated.Code;
+                            cal.Status = updated.Status;
+                            UoWService.Folder.State.Notify();
+                        }
+                        await Modal.CloseAsync();
+                    }),
+                // Refresh the project's calculations in the tree without closing the dialog
+                // (used after approve-and-lock and after creating a contract/production calc).
+                [nameof(CalculationFormUI.OnReloadList)] = EventCallback.Factory.Create(this,
+                    async () =>
+                    {
+                        project.CalculationsLoaded = false;
+                        await Folder.SetCalcsToProject(project);
+                        project.ShowCalculations = ProjectHasChildren(project);
+                        UoWService.Folder.State.Notify();
+                    })
+            };
+
+            if (readOnly)
+            {
+                Modal.ShowComponent<CalculationFormUI>(
+                    "Visa kalkyl",
+                    parameters,
+                    BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
+                return;
+            }
+
             Modal.ShowComponent<CalculationFormUI>(
                 AppLoc[LocalizerConst.Update, cal.Name],
-                new Dictionary<string, object>
-                {
-                    [nameof(CalculationFormUI.Calculation)] = cal,
-                    [nameof(CalculationFormUI.Callback)] = EventCallback.Factory.Create<ListCalculationMVVM?>(this,
-                        async updated =>
-                        {
-                            if (updated != null)
-                            {
-                                cal.Name = updated.Name;
-                                cal.Code = updated.Code;
-                                cal.Status = updated.Status;
-                                UoWService.Folder.State.Notify();
-                            }
-                            await Modal.CloseAsync();
-                        }),
-                    // Refresh the project's calculations in the tree without closing the dialog
-                    // (used after approve-and-lock and after creating a contract/production calc).
-                    [nameof(CalculationFormUI.OnReloadList)] = EventCallback.Factory.Create(this,
-                        async () =>
-                        {
-                            project.CalculationsLoaded = false;
-                            await Folder.SetCalcsToProject(project);
-                            project.ShowCalculations = ProjectHasChildren(project);
-                            UoWService.Folder.State.Notify();
-                        })
-                },
+                parameters,
                 BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge,
                 DialogButtonsHelper.CreateSaveCancelButtons(CalculationFormUI.DialogFormId));
         }
 
-        private void OpenProjectShareFromTree(ListProjectMVVM project) =>
+        private void OpenProjectShareFromTree(ListProjectMVVM project, bool readOnly = false) =>
             Modal.ShowComponent<ProjectShareUI>(
-                "Delning och behörighet",
+                readOnly ? "Visa delning och behörighet" : "Delning och behörighet",
                 new Dictionary<string, object>
                 {
                     [nameof(ProjectShareUI.ProjectId)] = project.Id,
                     [nameof(ProjectShareUI.ProjectName)] = project.Name,
-                    [nameof(ProjectShareUI.ProjectDepartmentId)] = project.DepartmentId,
-                    [nameof(ProjectShareUI.ProjectResponsible)] = project.Responsible
+                    [nameof(ProjectShareUI.ProjectDepartmentId)] = project.DepartmentId!,
+                    [nameof(ProjectShareUI.ProjectResponsible)] = project.Responsible,
+                    [nameof(ProjectShareUI.ReadOnly)] = readOnly
+                },
+                BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
+
+        private void OpenCalculationDetailsFromTree(ListProjectMVVM project, ListCalculationMVVM cal) =>
+            Modal.ShowComponent<CalculationDetailsUI>(
+                ResourceLoc.details,
+                new Dictionary<string, object>
+                {
+                    [nameof(CalculationDetailsUI.Id)] = cal.Id,
+                    [nameof(CalculationDetailsUI.ProjectId)] = project.Id
                 },
                 BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
 
@@ -1987,7 +2136,7 @@ namespace ProjectManagement.Client.Pages.Folder
             if (hasPermission)
                 OpenImportProjectCopyDialog(folder);
             else
-                MHD.MessageOk("Importera projektkopia", "Du saknar behÃ¶righet att importera projektkopior.", BlazorMHD.UI.Core.DesignSystem.MhdState.Warning);
+                MHD.MessageOk("Importera projektkopia", "Du saknar behörighet att importera en projektkopia till den här mappen.", BlazorMHD.UI.Core.DesignSystem.MhdState.Warning);
 
             return Task.CompletedTask;
         }
@@ -1997,7 +2146,7 @@ namespace ProjectManagement.Client.Pages.Folder
             if (hasPermission)
                 OpenImportCalcCopyDialog(folder, project);
             else
-                MHD.MessageOk("Importera kalkylkopia", "Du saknar behÃ¶righet att importera kalkylkopior.", BlazorMHD.UI.Core.DesignSystem.MhdState.Warning);
+                MHD.MessageOk("Importera kalkylkopia", "Du saknar behörighet att importera en kalkylkopia till detta projekt.", BlazorMHD.UI.Core.DesignSystem.MhdState.Warning);
 
             return Task.CompletedTask;
         }
@@ -2007,7 +2156,7 @@ namespace ProjectManagement.Client.Pages.Folder
             if (hasPermission)
                 OpenExportProjectDialog(project);
             else
-                MHD.MessageOk("Exportera projektet", "Du saknar behÃ¶righet att exportera projektkopior.", BlazorMHD.UI.Core.DesignSystem.MhdState.Warning);
+                MHD.MessageOk("Exportera projektet", "Du saknar behörighet att exportera detta projekt.", BlazorMHD.UI.Core.DesignSystem.MhdState.Warning);
 
             return Task.CompletedTask;
         }
@@ -2017,7 +2166,7 @@ namespace ProjectManagement.Client.Pages.Folder
             if (hasPermission)
                 OpenExportCalcDialog(calculation);
             else
-                MHD.MessageOk("Exportera kalkyl", "Du saknar behÃ¶righet att exportera kalkylkopior.", BlazorMHD.UI.Core.DesignSystem.MhdState.Warning);
+                MHD.MessageOk("Exportera kalkyl", "Du saknar behörighet att exportera denna kalkyl.", BlazorMHD.UI.Core.DesignSystem.MhdState.Warning);
 
             return Task.CompletedTask;
         }

@@ -59,6 +59,8 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public string? Sort { get; set; }
         // Production note – a standalone scalar field (not in Data/Metadata). Edited separately, does not affect economy.
         public string? ProductionNote { get; set; }
+        // Reviewer comment (Granskarkommentar) – standalone scalar field, edited separately, does not affect economy.
+        public string? ReviewerComment { get; set; }
         [JsonIgnore] public decimal DisplayCapWaste => Computed.EffectiveCapWaste ?? Data.CapWaste;
 
         [JsonIgnore]

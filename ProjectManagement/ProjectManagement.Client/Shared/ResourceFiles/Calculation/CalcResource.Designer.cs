@@ -999,6 +999,7 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.Calculation {
         public static string matchStartsWith                 => ResourceManager.GetString("matchStartsWith", resourceCulture)!;
         public static string matchEndsWith                   => ResourceManager.GetString("matchEndsWith", resourceCulture)!;
         public static string matchSmartTip                   => ResourceManager.GetString("matchSmartTip", resourceCulture)!;
+        public static string matchInfoTooltip                => ResourceManager.GetString("matchInfoTooltip", resourceCulture)!;
         public static string matchContainsTip                => ResourceManager.GetString("matchContainsTip", resourceCulture)!;
         public static string matchEqualsTip                  => ResourceManager.GetString("matchEqualsTip", resourceCulture)!;
         public static string matchStartsWithTip              => ResourceManager.GetString("matchStartsWithTip", resourceCulture)!;

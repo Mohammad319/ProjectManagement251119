@@ -8,6 +8,8 @@ namespace ProjectManagement.Client.Extensions
 {
     public static class JsonHelper
     {
+        private static readonly JsonSerializerOptions WebJsonOptions = new(JsonSerializerDefaults.Web);
+
         private static string Localized(string key, string fallback)
             => ResourceApp.ResourceManager.GetString(key, CultureInfo.CurrentUICulture) ?? fallback;
 
@@ -20,7 +22,7 @@ namespace ProjectManagement.Client.Extensions
             if (string.IsNullOrWhiteSpace(json))
                 throw new ArgumentNullException(nameof(obj), Localized("inputValueRequired", "The input value cannot be null or empty."));
 
-            var result = JsonSerializer.Deserialize<T>(json, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+            var result = JsonSerializer.Deserialize<T>(json, WebJsonOptions);
             if (result is null)
                 throw new InvalidOperationException(Localized("jsonDeserializationFailed", "Failed to convert the JSON value to the requested object."));
 

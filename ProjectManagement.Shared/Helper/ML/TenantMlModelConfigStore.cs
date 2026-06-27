@@ -24,8 +24,7 @@ public static class TenantMlModelConfigStore
 
     public static string GetConfigPath(int tenantId)
     {
-        if (tenantId <= 0)
-            throw new ArgumentOutOfRangeException(nameof(tenantId));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(tenantId);
 
         var modelPath = TaskResourceSuggestionMlModelPath.GetTenantModelPath(tenantId);
         return Path.Combine(Path.GetDirectoryName(modelPath) ?? AppContext.BaseDirectory, "tenant-ml-settings.json");
@@ -59,7 +58,7 @@ public static class TenantMlModelConfigStore
     {
         ArgumentNullException.ThrowIfNull(config);
         if (config.TenantId <= 0)
-            throw new ArgumentOutOfRangeException(nameof(config.TenantId));
+            throw new ArgumentOutOfRangeException(nameof(config), config.TenantId, "TenantId must be greater than zero.");
 
         config.UpdatedAtUtc = DateTime.UtcNow;
         var path = GetConfigPath(config.TenantId);

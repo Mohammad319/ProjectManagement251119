@@ -90,8 +90,7 @@ internal sealed class LocalizedIdentityEmailSender(
                 client.Credentials = new NetworkCredential(from, password);
             }
 
-            ct.ThrowIfCancellationRequested();
-            await client.SendMailAsync(message);
+            await client.SendMailAsync(message, ct);
         }
         catch (Exception ex)
         {

@@ -9,22 +9,29 @@ using Persistence.Context;
 using Persistence.Factory;
 using ProjectManagement.Shared.DTO.General;
 using ProjectManagement.Shared.DTO.Project;
+using ProjectManagement.Shared.Exceptions;
 
 namespace Persistence.Service.Project
 {
     public sealed class ProjectService(IDbContextFactoryTenant dbFactory) : IProjectService
     {
+        private const string CreateProjectInFolderForbiddenMessage = "Du saknar behörighet att skapa projekt i denna mapp.";
+
         public async Task<Guid> CreateAsync(PostProjectDTO dto, int userId, int? departmentId, CancellationToken ct)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            var folderOk = await context.Folders
+            var targetDepartmentId = await context.Folders
                 .AsNoTracking()
                 .Where(f => f.Id == dto.FolderId)
-                .AnyAsync(f => departmentId == null || f.DepartmentId == departmentId, ct);
+                .Select(f => (int?)f.DepartmentId)
+                .FirstOrDefaultAsync(ct);
 
-            if (!folderOk)
+            if (!targetDepartmentId.HasValue)
                 return Guid.Empty;
+
+            if (departmentId.HasValue && targetDepartmentId.Value != departmentId.Value)
+                throw new ForbiddenActionException(CreateProjectInFolderForbiddenMessage);
 
             if (!await ValidateProjectReferencesAsync(context, dto, departmentId, currentProjectId: null, ct: ct))
                 return Guid.Empty;
@@ -57,11 +64,29 @@ namespace Persistence.Service.Project
             // "Användare" can save it (previously only own-department/admin passed, which is
             // why such users hit the generic "Ett oväntat fel uppstod" on save).
             var project = await context.Projects
+                .Include(x => x.Folder)
                 .Where(Access.ProjectAccessRules.CanEdit(userId, departmentId))
                 .FirstOrDefaultAsync(x => x.Id == id, ct);
 
             if (project == null)
                 return false;
+
+            // Archiving and re-homing the project (folder/department) are administrative lifecycle
+            // actions, not content edits. A user who only reaches the project via an extra share
+            // (CanEdit can be true for "Kan ändra") must not do these — only Admin/own-department/
+            // creator may. Other field edits stay allowed for shared editors.
+            bool canManageLifecycle = departmentId == null
+                || (project.Folder != null && project.Folder.DepartmentId == departmentId)
+                || project.CreatedBy == userId;
+
+            if (!canManageLifecycle)
+            {
+                if (dto.IsArchived != project.IsArchived ||
+                    (dto.FolderId != Guid.Empty && dto.FolderId != project.FolderId))
+                {
+                    throw new ForbiddenActionException(Access.ProjectAccessRules.LifecycleForbiddenMessage);
+                }
+            }
 
             if (!await ValidateProjectReferencesAsync(context, dto, departmentId, id, ct, project.FolderId))
                 return false;
@@ -97,11 +122,17 @@ namespace Persistence.Service.Project
             var project = await context.Projects
                 .Include(x => x.Folder)
                 .Include(x => x.Calculations)
-                .FirstOrDefaultAsync(x => x.Id == id &&
-                    (departmentId == null || x.Folder.DepartmentId == departmentId), ct);
+                .FirstOrDefaultAsync(x => x.Id == id, ct);
 
             if (project is null)
                 return false;
+
+            if (!await context.Projects
+                    .Where(Access.ProjectAccessRules.CanManageLifecycle(userId, departmentId))
+                    .AnyAsync(x => x.Id == id, ct))
+            {
+                throw new ForbiddenActionException(Access.ProjectAccessRules.LifecycleForbiddenMessage);
+            }
 
             var targetDepartmentId = await context.Folders
                 .AsNoTracking()
@@ -113,7 +144,7 @@ namespace Persistence.Service.Project
                 return false;
 
             if (departmentId.HasValue && targetDepartmentId.Value != departmentId.Value && !allowCrossDepartment)
-                return false;
+                throw new ForbiddenActionException(CreateProjectInFolderForbiddenMessage);
 
             project.MoveToFolder(targetFolderId);
             project.UpdatedBy = userId;
@@ -139,11 +170,17 @@ namespace Persistence.Service.Project
                 .Include(x => x.Calculations)
                     .ThenInclude(x => x.Tasks)
                         .ThenInclude(x => x.Resources)
-                .FirstOrDefaultAsync(x => x.Id == id &&
-                    (departmentId == null || x.Folder.DepartmentId == departmentId || x.CreatedBy == userId), ct);
+                .FirstOrDefaultAsync(x => x.Id == id, ct);
 
             if (original is null)
                 return Guid.Empty;
+
+            if (!await context.Projects
+                    .Where(Access.ProjectAccessRules.CanManageLifecycle(userId, departmentId))
+                    .AnyAsync(x => x.Id == id, ct))
+            {
+                throw new ForbiddenActionException(Access.ProjectAccessRules.LifecycleForbiddenMessage);
+            }
 
             var targetDepartmentId = await context.Folders
                 .AsNoTracking()
@@ -155,7 +192,7 @@ namespace Persistence.Service.Project
                 return Guid.Empty;
 
             if (departmentId.HasValue && targetDepartmentId.Value != departmentId.Value && !allowCrossDepartment)
-                return Guid.Empty;
+                throw new ForbiddenActionException(CreateProjectInFolderForbiddenMessage);
 
             var existingProjectNames = await context.Projects
                 .AsNoTracking()
@@ -216,11 +253,18 @@ namespace Persistence.Service.Project
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var project = await context.Projects
-                .FirstOrDefaultAsync(x => x.Id == id &&
-                    (departmentId == null || x.Folder.DepartmentId == departmentId), ct);
+                .Include(x => x.Folder)
+                .FirstOrDefaultAsync(x => x.Id == id, ct);
 
             if (project == null)
                 return false;
+
+            if (!await context.Projects
+                    .Where(Access.ProjectAccessRules.CanManageLifecycle(userId, departmentId))
+                    .AnyAsync(x => x.Id == id, ct))
+            {
+                throw new ForbiddenActionException(Access.ProjectAccessRules.LifecycleForbiddenMessage);
+            }
 
             project.MarkDeleted(userId);
             await context.SaveChangesAsync(ct);
@@ -398,7 +442,7 @@ namespace Persistence.Service.Project
                 .ToListAsync(ct);
 
             var statusSortOrders = await GetProjectStatusSortOrdersAsync(context, ct);
-            var calculationCounts = await GetCalculationCountsAsync(context, projects.Select(x => x.Id), ct);
+            var calculationCounts = await GetCalculationCountsAsync(context, projects.Select(x => x.Id), userId, departmentId, isViewer, ct);
             var accessSummaries = await GetAccessSummariesAsync(context, projects, userId, departmentId, ct);
             return projects.Select(x =>
             {
@@ -438,7 +482,7 @@ namespace Persistence.Service.Project
                 .ToListAsync(ct);
 
             var statusSortOrders = await GetProjectStatusSortOrdersAsync(context, ct);
-            var calculationCounts = await GetCalculationCountsAsync(context, projects.Select(x => x.Id), ct);
+            var calculationCounts = await GetCalculationCountsAsync(context, projects.Select(x => x.Id), userId, departmentId, isViewer, ct);
             var accessSummaries = await GetAccessSummariesAsync(context, projects, userId, departmentId, ct);
             return projects.Select(x =>
             {
@@ -533,6 +577,9 @@ namespace Persistence.Service.Project
         private static async Task<Dictionary<Guid, int>> GetCalculationCountsAsync(
             ShardingSingleDbContext context,
             IEnumerable<Guid> projectIds,
+            int userId,
+            int? departmentId,
+            bool isViewer,
             CancellationToken ct)
         {
             var ids = projectIds.Distinct().ToList();
@@ -542,6 +589,7 @@ namespace Persistence.Service.Project
             var calculations = await context.Calculations
                 .AsNoTracking()
                 .Where(calculation => !calculation.IsDeleted && ids.Contains(calculation.ProjectId))
+                .Where(Access.CalculationAccessRules.CanSee(userId, departmentId, isViewer))
                 .Select(calculation => new
                 {
                     calculation.Id,

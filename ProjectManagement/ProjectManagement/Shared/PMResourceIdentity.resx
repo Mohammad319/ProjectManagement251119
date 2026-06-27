@@ -133,7 +133,7 @@
     <value>Your email and password do not match. Please try again.</value>
   </data>
   <data name="Error_InvalidLoginAttempt" xml:space="preserve">
-    <value>Error: Invalid login attempt.</value>
+    <value>The sign-in details are incorrect. Check your email and password and try again.</value>
   </data>
   <data name="fax" xml:space="preserve">
     <value>Fax number</value>

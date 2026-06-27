@@ -6,8 +6,10 @@ using Microsoft.JSInterop;
 using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Pages.Project.ProjectPages;
 using ProjectManagement.Client.Shared.Model.Project;
+using ProjectManagement.Client.Shared.Constants;
 using ProjectManagement.Client.Shared.MVVM.Folder;
 using ProjectManagement.Client.Shared.ResourceFiles;
+using ProjectManagement.Client.Shared.SharedComponent;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.General;
 using ProjectManagement.Shared.Helper;
@@ -22,6 +24,9 @@ namespace ProjectManagement.Client.Pages.Folder
         bool CanChooseAllDepartments { get; set; }
         int? CurrentUserDepartmentId { get; set; }
         int? SelectedDepartmentId { get; set; }
+
+        // Departments where the user has NO normal access but has shared/assigned projects (👥).
+        private readonly HashSet<int> _sharedOnlyDeptIds = new();
         string TreeGroupingMode { get; set; } = ProjectTreeGroupingMode.FolderStructure;
         string TreeSortMode { get; set; } = ProjectTreeSortMode.Manual;
 
@@ -45,7 +50,7 @@ namespace ProjectManagement.Client.Pages.Folder
         private const string SideBarCollapsedKey = "ProjectTreeSideBarCollapsed";
         private bool _sortPreferenceLoaded;
 
-        private bool HasDepartmentAccess => Folder.State.Departments?.Any() == true;
+        private bool HasDepartmentAccess => Folder.State.Departments?.Count > 0;
 
         private int ActiveTreeFilterCount
         {
@@ -237,22 +242,26 @@ namespace ProjectManagement.Client.Pages.Folder
                     if (!AuthRecoveryPathHelper.HasRetryFlag(currentLocalUrl))
                     {
                         await ClientLog.InfoAsync(
-                            $"FolderIndex.InitializeSession: authenticated but tenant/user claims missing (tenant={tenantId}, user={userId}); refreshing session.");
+                            $"FolderIndex.InitializeSession: authenticated but tenant/user claims missing (tenant={tenantId}, user={userId}); refreshing session once.");
                         Nav.NavigateTo(AuthRecoveryPathHelper.BuildRefreshUrl(currentLocalUrl), forceLoad: true);
                         return;
                     }
 
+                    // Already refreshed once and the session still has no tenant/user claims: this is an
+                    // authentication problem, not a workspace/data error. Send the user to login in a
+                    // controlled way instead of showing "could not load workspace" or starting another
+                    // retry (which would loop). Stay in a neutral loading state until the redirect lands.
                     await ClientLog.ErrorAsync(
-                        $"FolderIndex.InitializeSession: tenant/user claims still missing after refresh (tenant={tenantId}, user={userId}).");
-                    _initState = SessionInitState.Failed;
-                    await InvokeAsync(StateHasChanged);
+                        $"FolderIndex.InitializeSession: tenant/user claims still missing after refresh (tenant={tenantId}, user={userId}); redirecting to login.");
+                    _initState = SessionInitState.NotStarted;
+                    Nav.NavigateTo(AuthRecoveryPathHelper.BuildLoginUrl(currentLocalUrl), forceLoad: true);
                     return;
                 }
 
                 CurrentUserDepartmentId = GetUserDepartmentId(user);
-                CanChooseAllDepartments =
-                    user.IsInRole(PMRolesConst.Tenant.Admin) ||
-                    user.IsInRole(PMRolesConst.Tenant.Manger);
+                // TenantUser is scoped to its own department. Extra project sharing may grant
+                // project access, but it must not expose or unlock another department's folders.
+                CanChooseAllDepartments = user.IsInRole(PMRolesConst.Tenant.Admin);
 
                 var departments = await GetAllowedDepartmentsAsync();
                 Folder.State.SetDepartments(departments);
@@ -431,19 +440,18 @@ namespace ProjectManagement.Client.Pages.Folder
         private static int? GetClaimInt(ClaimsPrincipal user, string claimType) =>
             int.TryParse(user.FindFirst(claimType)?.Value, out var value) && value > 0 ? value : null;
 
+        // Departments the user may pick: their normal-access department(s) (own dept, or all for Admin)
+        // PLUS any department where projects are shared/assigned to them (👥). The shared-only ones are
+        // tracked in _sharedOnlyDeptIds so the rest of the page can tell normal vs shared access.
         private async Task<List<ListDTO>> GetAllowedDepartmentsAsync()
         {
-            var departments = await Repo.Departments.GetDepartmentsAsListAsync() ?? [];
+            var accessible = await Repo.Folder.GetAccessibleDepartmentsAsync() ?? [];
 
-            if (CanChooseAllDepartments)
-                return departments;
+            _sharedOnlyDeptIds.Clear();
+            foreach (var d in accessible.Where(x => x.SharedOnly))
+                _sharedOnlyDeptIds.Add(d.Id);
 
-            if (!CurrentUserDepartmentId.HasValue)
-                return [];
-
-            return departments
-                .Where(x => x.Id == CurrentUserDepartmentId.Value)
-                .ToList();
+            return accessible.Cast<ListDTO>().ToList();
         }
 
         private int? GetInitialDepartmentId(List<ListDTO> departments)
@@ -451,23 +459,59 @@ namespace ProjectManagement.Client.Pages.Folder
             if (departments.Count == 0)
                 return null;
 
+            // Own normal department keeps today's behavior (lands on the user's department).
             if (CurrentUserDepartmentId.HasValue &&
-                departments.Any(x => x.Id == CurrentUserDepartmentId.Value))
+                departments.Any(x => x.Id == CurrentUserDepartmentId.Value && !_sharedOnlyDeptIds.Contains(x.Id)))
                 return CurrentUserDepartmentId.Value;
 
             if (CanChooseAllDepartments)
                 return departments[0].Id;
 
-            return departments.Count == 1
-                ? departments[0].Id
-                : null;
+            // A user without a normal department but with shared/assigned projects lands on
+            // "Alla tillgängliga" so every project they may see is visible at once.
+            return FolderConstants.AllAvailableDepartmentId;
         }
 
-        private async Task OnDepartmentChanged(ChangeEventArgs e)
+        // Options for the styled single-select department dropdown: normal departments (plain name),
+        // shared-only departments (👥), and the "Alla tillgängliga" special entry.
+        private IEnumerable<MhdSelectItem<int?>> DepartmentItems
         {
-            SelectedDepartmentId = int.TryParse(e.Value?.ToString(), out int id) && id > 0
-                ? id
-                : null;
+            get
+            {
+                foreach (var d in Folder.State.Departments)
+                {
+                    var sharedOnly = _sharedOnlyDeptIds.Contains(d.Id);
+                    yield return new MhdSelectItem<int?>
+                    {
+                        Value = d.Id,
+                        Label = sharedOnly ? $"{d.Name} 👥" : d.Name
+                    };
+                }
+
+                if (Folder.State.Departments.Count > 0)
+                    yield return new MhdSelectItem<int?>
+                    {
+                        Value = FolderConstants.AllAvailableDepartmentId,
+                        Label = "Alla tillgängliga"
+                    };
+            }
+        }
+
+        // The dropdown is only disabled when there is genuinely a single option to pick.
+        private bool IsDepartmentSelectDisabled => DepartmentItems.Count() <= 1;
+
+        // Name of the currently selected scope, used by the right panel / report context line.
+        // "Alla tillgängliga" for the special scope; otherwise the department name (with 👥 for shared).
+        private string? SelectedScopeName =>
+            Folder.State.AllAvailable
+                ? "Alla tillgängliga"
+                : Folder.State.Departments.FirstOrDefault(d => d.Id == SelectedDepartmentId) is { } dept
+                    ? (_sharedOnlyDeptIds.Contains(dept.Id) ? $"{dept.Name} 👥" : dept.Name)
+                    : null;
+
+        private async Task OnDepartmentSelected(int? id)
+        {
+            SelectedDepartmentId = id is > 0 || id == FolderConstants.AllAvailableDepartmentId ? id : null;
 
             await LoadSelectedDepartmentAsync();
         }
@@ -476,6 +520,16 @@ namespace ProjectManagement.Client.Pages.Folder
         {
             var openNodes = preserveOpenNodes ? SnapshotOpenNodes() : null;
 
+            bool isAllAvailable = SelectedDepartmentId == FolderConstants.AllAvailableDepartmentId;
+
+            if (SelectedDepartmentId.HasValue && !isAllAvailable &&
+                !Folder.State.Departments.Any(x => x.Id == SelectedDepartmentId.Value))
+            {
+                await ClientLog.InfoAsync(
+                    $"FolderIndex.LoadSelectedDepartment: blocked unauthorized department selection ({SelectedDepartmentId}).");
+                SelectedDepartmentId = null;
+            }
+
             Folder.State.SetSelectedDepartment(SelectedDepartmentId);
             Folder.State.ClearSelection();
             Folder.State.ClearFolders();
@@ -483,21 +537,53 @@ namespace ProjectManagement.Client.Pages.Folder
             if (!SelectedDepartmentId.HasValue)
             {
                 Folder.State.SetOtherDepartment(false);
+                Folder.State.SetAllAvailable(false);
                 return;
             }
 
-            bool isOwnDepartment =
-                CurrentUserDepartmentId.HasValue &&
-                SelectedDepartmentId.Value == CurrentUserDepartmentId.Value;
+            // "Alla tillgängliga": every folder the user can reach, grouped by department in the tree.
+            // Read-only is decided PER folder (IsReadOnlyGroup), so the global OtherDepartment flag stays
+            // false here while shared-department folders remain non-manageable.
+            if (isAllAvailable)
+            {
+                Folder.State.SetAllAvailable(true);
+                Folder.State.SetOtherDepartment(false);
 
-            bool canManageSelectedDepartment = CanChooseAllDepartments || isOwnDepartment;
+                _isTreeLoading = true;
+                await InvokeAsync(StateHasChanged);
+                try
+                {
+                    await Folder.LoadAccessibleFoldersAsync();
+                    if (openNodes is not null)
+                        await RestoreOpenNodesAsync(openNodes);
+                    await EnsureProjectsLoadedForGroupingAsync();
+                }
+                finally
+                {
+                    _isTreeLoading = false;
+                    await InvokeAsync(StateHasChanged);
+                }
+                return;
+            }
+
+            Folder.State.SetAllAvailable(false);
+
+            bool isSharedOnly = _sharedOnlyDeptIds.Contains(SelectedDepartmentId.Value);
+            bool isOwnNormalDepartment =
+                CurrentUserDepartmentId.HasValue &&
+                SelectedDepartmentId.Value == CurrentUserDepartmentId.Value &&
+                !isSharedOnly;
+
+            // A 👥 department (shared only) is treated like "another department": folders are read-only
+            // visual groups. Admins manage everything; everyone else only manages their own department.
+            bool canManageSelectedDepartment = CanChooseAllDepartments || isOwnNormalDepartment;
             Folder.State.SetOtherDepartment(!canManageSelectedDepartment);
 
             _isTreeLoading = true;
             await InvokeAsync(StateHasChanged);
             try
             {
-                if (isOwnDepartment)
+                if (isOwnNormalDepartment)
                     await Folder.LoadPrivateAndGroupFoldersAsync();
                 else
                     await Folder.LoadFoldersByDepartmentAsync(SelectedDepartmentValue);
@@ -525,9 +611,35 @@ namespace ProjectManagement.Client.Pages.Folder
             await LoadSelectedDepartmentAsync(preserveOpenNodes: true);
         }
 
-        private async Task OnTreeGroupingModeChanged(ChangeEventArgs e)
+        // Options for the styled single-select tree-view dropdown (mirrors the former <option> list).
+        private static readonly IReadOnlyList<MhdSelectItem<string>> TreeGroupingItems = new[]
         {
-            TreeGroupingMode = e.Value?.ToString() switch
+            new MhdSelectItem<string> { Value = ProjectTreeGroupingMode.FolderStructure, Label = "Mappstruktur" },
+            new MhdSelectItem<string> { Value = ProjectTreeGroupingMode.Projects, Label = "Projekt" },
+        };
+
+        // Options for the styled single-select sort dropdown. "Manuell ordning" is only offered in
+        // folder-structure mode, matching the previous @if-guarded <option>.
+        private IEnumerable<MhdSelectItem<string>> TreeSortItems
+        {
+            get
+            {
+                var items = new List<MhdSelectItem<string>>();
+                if (TreeGroupingMode == ProjectTreeGroupingMode.FolderStructure)
+                    items.Add(new MhdSelectItem<string> { Value = ProjectTreeSortMode.Manual, Label = "Manuell ordning" });
+                items.Add(new MhdSelectItem<string> { Value = ProjectTreeSortMode.NameAscending, Label = "Namn A–Ö" });
+                items.Add(new MhdSelectItem<string> { Value = ProjectTreeSortMode.NameDescending, Label = "Namn Ö–A" });
+                items.Add(new MhdSelectItem<string> { Value = ProjectTreeSortMode.CreatedNewest, Label = "Skapad nyast först" });
+                items.Add(new MhdSelectItem<string> { Value = ProjectTreeSortMode.CreatedOldest, Label = "Skapad äldst först" });
+                items.Add(new MhdSelectItem<string> { Value = ProjectTreeSortMode.ModifiedNewest, Label = "Senast ändrad först" });
+                items.Add(new MhdSelectItem<string> { Value = ProjectTreeSortMode.LastOpenedNewest, Label = "Senast öppnad först" });
+                return items;
+            }
+        }
+
+        private async Task OnTreeGroupingModeChanged(string value)
+        {
+            TreeGroupingMode = value switch
             {
                 ProjectTreeGroupingMode.Projects => ProjectTreeGroupingMode.Projects,
                 _ => ProjectTreeGroupingMode.FolderStructure
@@ -544,12 +656,12 @@ namespace ProjectManagement.Client.Pages.Folder
             await EnsureProjectsLoadedForGroupingAsync();
         }
 
-        private async Task OnTreeSortModeChanged(ChangeEventArgs e)
+        private async Task OnTreeSortModeChanged(string value)
         {
             var defaultSort = TreeGroupingMode == ProjectTreeGroupingMode.FolderStructure
                 ? ProjectTreeSortMode.Manual
                 : ProjectTreeSortMode.ModifiedNewest;
-            TreeSortMode = NormalizeTreeSortMode(e.Value?.ToString(), defaultSort);
+            TreeSortMode = NormalizeTreeSortMode(value, defaultSort);
             _isReorderMode = false;
             await SaveTreeSortModeAsync();
         }

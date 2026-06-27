@@ -1,11 +1,12 @@
 @using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Client.Shared.SharedComponent
 @using ProjectManagement.Shared.DTO.General
 @using ProjectManagement.Shared.DTO.Project
 @using ProjectManagement.Shared.Helper
 @using ProjectManagement.Shared.Models.Account
 @using Microsoft.AspNetCore.Authorization
 @inherits AppComponentBase
-@attribute [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
+@attribute [Authorize(Roles = PMRolesConst.Tenant.UsersAndViewer)]
 
 <div class="flex max-h-[calc(100dvh-9rem)] flex-col text-slate-800 dark:text-slate-100">
 
@@ -14,6 +15,17 @@
         <div class="truncate text-sm text-slate-600 dark:text-slate-300" title="@ProjectName">
             <span class="font-semibold text-slate-800 dark:text-slate-100">Projekt:</span> @ProjectName
         </div>
+        @if (!string.IsNullOrWhiteSpace(SelectedCalculationName))
+        {
+            <div class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                <span class="font-semibold text-slate-700 dark:text-slate-200">Vald kalkyl:</span> @SelectedCalculationName
+            </div>
+            <div class="text-xs text-slate-500 dark:text-slate-400">
+                @(SelectedCalculationIsPrivate
+                    ? "Denna kalkyl är privat och ingår inte i projektets delning."
+                    : "Delningen hanteras på projektnivå.")
+            </div>
+        }
     </div>
 
     @if (_loadFailed)
@@ -29,6 +41,13 @@
     else
     {
     <div class="min-h-0 flex-1 space-y-3 overflow-y-auto pt-3 pr-0.5">
+        @if (ReadOnly)
+        {
+            <div class="flex items-start gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-200">
+                <span aria-hidden="true">@((MarkupString)Icons.PermissionShield)</span>
+                <span>Du kan se delning och behörighet, men inte lägga till, ändra eller ta bort delningar.</span>
+            </div>
+        }
 
         @* ── Åtkomstöversikt (hopfällbar – kompakt som standard) ────────── *@
         <div class="rounded-lg border border-slate-200 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-950">
@@ -36,7 +55,7 @@
                     class="flex w-full items-center justify-between gap-2 text-left"
                     aria-expanded="@_overviewOpen"
                     @onclick="() => _overviewOpen = !_overviewOpen">
-                <span class="shrink-0 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Åtkomstöversikt</span>
+                <span class="shrink-0 text-[11px] font-semibold tracking-wide text-slate-500 dark:text-slate-400">Åtkomstöversikt</span>
                 <span class="flex min-w-0 items-center gap-2">
                     @if (!_overviewOpen)
                     {
@@ -92,7 +111,7 @@
                             }
                             @if (canEdit.Count > 0)
                             {
-                                <div class="ml-1 mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Kan ändra</div>
+                                <div class="ml-1 mt-0.5 text-[10px] font-semibold tracking-wide text-slate-400">Kan ändra</div>
                                 @foreach (var s in canEdit)
                                 {
                                     <div class="ml-2 text-slate-600 dark:text-slate-300" title="@CalcNamesTooltip(s)">@s.RecipientName · @OverviewCalcText(s)</div>
@@ -100,7 +119,7 @@
                             }
                             @if (canView.Count > 0)
                             {
-                                <div class="ml-1 mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Kan visa</div>
+                                <div class="ml-1 mt-0.5 text-[10px] font-semibold tracking-wide text-slate-400">Kan visa</div>
                                 @foreach (var s in canView)
                                 {
                                     <div class="ml-2 text-slate-600 dark:text-slate-300" title="@CalcNamesTooltip(s)">@s.RecipientName · @OverviewCalcText(s)</div>
@@ -132,7 +151,7 @@
 
         @* ── Delat med (visas FÖRE formuläret "Dela med") ──────────────── *@
         <div>
-            <div class="mb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Delat med</div>
+            <div class="mb-1 text-[11px] font-semibold tracking-wide text-slate-500 dark:text-slate-400">Delat med</div>
             @if (_shares.Count == 0)
             {
                 <p class="rounded border border-dashed border-slate-300 px-2 py-3 text-center text-xs text-slate-400 dark:border-slate-700">
@@ -141,16 +160,22 @@
             }
             else
             {
-                <div class="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
+                @* Begränsad höjd (~5 rader) + scroll så dialogen inte växer för mycket; sticky thead. *@
+                <div class="max-h-52 overflow-auto rounded-lg border border-slate-200 dark:border-slate-700">
                     <table class="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-700">
-                        <thead class="bg-slate-100 dark:bg-slate-800">
+                        <thead class="sticky top-0 z-10 bg-slate-100 dark:bg-slate-800">
                             <tr>
                                 <th class="px-2 py-1.5 text-left font-medium text-slate-700 dark:text-slate-200">Mottagare</th>
                                 <th class="px-2 py-1.5 text-left font-medium text-slate-700 dark:text-slate-200">Mottagartyp</th>
                                 <th class="px-2 py-1.5 text-left font-medium text-slate-700 dark:text-slate-200">Åtkomstnivå</th>
                                 <th class="px-2 py-1.5 text-left font-medium text-slate-700 dark:text-slate-200">Kalkyler</th>
                                 <th class="px-2 py-1.5 text-left font-medium text-slate-700 dark:text-slate-200">Giltighet</th>
-                                <th class="px-2 py-1.5 text-right font-medium text-slate-700 dark:text-slate-200">Åtgärder</th>
+                                @* "Delad av" – egen kolumn (tabellen scrollar horisontellt på smal skärm). *@
+                                <th class="px-2 py-1.5 text-left font-medium text-slate-700 dark:text-slate-200">Delad av</th>
+                                @if (!ReadOnly)
+                                {
+                                    <th class="w-px whitespace-nowrap px-2 py-1.5 text-right font-medium text-slate-700 dark:text-slate-200">Åtgärder</th>
+                                }
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -158,7 +183,9 @@
                             {
                                 var share = s;
                                 <tr class="align-top hover:bg-slate-50 dark:hover:bg-slate-800/60">
-                                    <td class="px-2 py-1.5 text-slate-800 dark:text-slate-200">@share.RecipientName</td>
+                                    <td class="px-2 py-1.5 text-slate-800 dark:text-slate-200">
+                                        @share.RecipientName
+                                    </td>
                                     <td class="px-2 py-1.5 text-slate-500 dark:text-slate-400">@(share.RecipientType == ProjectShareRecipientType.User ? "Person" : "Avdelning")</td>
                                     <td class="px-2 py-1.5 text-slate-500 dark:text-slate-400">@AccessLevelLabel(share.Role)</td>
                                     <td class="px-2 py-1.5 text-slate-600 dark:text-slate-300">
@@ -197,16 +224,33 @@
                                             <span>@ValidityText(share)</span>
                                         }
                                     </td>
-                                    <td class="px-2 py-1.5">
-                                        <div class="flex items-center justify-end gap-1">
-                                            <button type="button"
-                                                    class="inline-flex h-7 items-center rounded border border-sky-600 px-2 text-xs text-sky-600 transition hover:bg-sky-600 hover:text-white dark:border-sky-400 dark:text-sky-300"
-                                                    @onclick="() => EditShareAsync(share)">Ändra</button>
-                                            <button type="button"
-                                                    class="inline-flex h-7 items-center rounded border border-red-600 px-2 text-xs text-red-600 transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-300"
-                                                    @onclick="() => RemoveAsync(share)">Ta bort</button>
-                                        </div>
+                                    <td class="px-2 py-1.5 text-slate-500 dark:text-slate-400" title="@SharedByTooltip(share)">
+                                        @(string.IsNullOrWhiteSpace(share.CreatedByName) ? "—" : share.CreatedByName)
                                     </td>
+                                    @if (!ReadOnly)
+                                    {
+                                        @* Kompakta ikonknappar – Ändra/Ta bort på samma rad, smal kolumn. *@
+                                        <td class="px-2 py-1.5">
+                                            <div class="flex items-center justify-end gap-1">
+                                                @* Diskreta, alltid synliga ikonknappar: neutral i normalläge, accent vid hover
+                                                   (Ändra = blå, Ta bort = röd), tydlig focus-ring. *@
+                                                <button type="button"
+                                                        title="Ändra delning"
+                                                        aria-label="Ändra delning"
+                                                        class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 outline-none transition hover:border-sky-300 hover:bg-sky-50 hover:text-sky-700 focus-visible:ring-2 focus-visible:ring-sky-500/40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:border-sky-700 dark:hover:bg-sky-950/40 dark:hover:text-sky-300"
+                                                        @onclick="() => EditShareAsync(share)">
+                                                    <i class="fa-solid fa-pen text-xs" aria-hidden="true"></i>
+                                                </button>
+                                                <button type="button"
+                                                        title="Ta bort delning"
+                                                        aria-label="Ta bort delning"
+                                                        class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 outline-none transition hover:border-red-300 hover:bg-red-50 hover:text-red-700 focus-visible:ring-2 focus-visible:ring-red-500/40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:border-red-800 dark:hover:bg-red-950/40 dark:hover:text-red-300"
+                                                        @onclick="() => RemoveAsync(share)">
+                                                    <i class="fa-solid fa-trash text-xs" aria-hidden="true"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    }
                                 </tr>
                             }
                         </tbody>
@@ -216,8 +260,10 @@
         </div>
 
         @* ── Dela med / Ändra delning (tvåkolumnslayout på bred skärm) ──── *@
+        @if (!ReadOnly)
+        {
         <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/60">
-            <div class="mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <div class="mb-2 text-[11px] font-semibold tracking-wide text-slate-500 dark:text-slate-400">
                 @(_editingId.HasValue ? "Ändra delning" : "Dela med")
             </div>
 
@@ -226,9 +272,9 @@
                 @* ── VÄNSTER: mottagare ──────────────────────────────────── *@
                 <div class="space-y-3">
 
-                    @* Mottagartyp *@
-                    <div>
-                        <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Mottagartyp</label>
+                    @* Mottagartyp – etikett och knappar på samma rad (kompakt) *@
+                    <div class="flex items-center gap-2">
+                        <label class="shrink-0 text-xs font-medium text-slate-600 dark:text-slate-300">Mottagartyp</label>
                         <div class="inline-flex overflow-hidden rounded-lg border border-slate-300 dark:border-slate-600">
                             <button type="button"
                                     disabled="@_editingId.HasValue"
@@ -257,15 +303,10 @@
                         {
                             <div>
                                 <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Filtrera personer efter avdelning</label>
-                                <select class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
-                                        value="@_userFilterDeptId" @onchange="OnUserFilterChanged">
-                                    <option value="0">Alla avdelningar</option>
-                                    @foreach (var d in _departments)
-                                    {
-                                        <option value="@d.Id">@d.Name</option>
-                                    }
-                                    <option value="-1">Utan avdelning</option>
-                                </select>
+                                <MhdFormSelect TValue="int"
+                                               Value="_userFilterDeptId"
+                                               ValueChanged="OnUserFilterChanged"
+                                               Options="UserFilterDeptItems" />
                             </div>
                             <div>
                                 <div class="mb-1 flex items-center justify-between gap-2">
@@ -283,7 +324,8 @@
                                 }
                                 else
                                 {
-                                    <div class="max-h-40 space-y-0.5 overflow-y-auto rounded border border-slate-300 bg-white p-1 dark:border-slate-600 dark:bg-slate-950">
+                                    @* Samma min-/maxhöjd som kalkyllistan så de två listorna linjerar och dialogen känns symmetrisk. *@
+                                    <div class="min-h-[6rem] max-h-48 space-y-0.5 overflow-y-auto rounded border border-slate-300 bg-white p-1 dark:border-slate-600 dark:bg-slate-950">
                                         @foreach (var u in _userOptions)
                                         {
                                             var user = u;
@@ -358,19 +400,18 @@
                     @* Åtkomstnivå i detta projekt *@
                     <div>
                         <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Åtkomstnivå i detta projekt</label>
-                        <select class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
-                                value="@_role" @onchange="OnRoleChanged"
-                                title="@(DisableEditOption ? "Personen har systemrollen Visare och kan bara få åtkomstnivån Kan visa." : null)">
-                            <option value="@PMRolesConst.Tenant.Viewer">Kan visa</option>
-                            <option value="@PMRolesConst.Tenant.Manger" disabled="@DisableEditOption">Kan ändra</option>
-                        </select>
+                        <MhdFormSelect TValue="string"
+                                       Value="_role"
+                                       ValueChanged="OnRoleChanged"
+                                       Options="RoleItems"
+                                       Title="@(DisableEditOption ? "Personen har systemrollen Visare och kan bara få åtkomstnivån Kan visa." : null)" />
                     </div>
 
-                    @* Giltighet *@
+                    @* Giltighet – allt på en rad på bred skärm, bryts responsivt på liten skärm *@
                     <div>
-                        <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Giltighet</label>
-                        <div class="space-y-1.5 rounded-lg border border-slate-200 bg-white px-2 py-2 text-sm dark:border-slate-700 dark:bg-slate-950">
-                            <label class="flex cursor-pointer items-center gap-2">
+                        <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                            <label class="shrink-0 text-xs font-medium text-slate-600 dark:text-slate-300">Giltighet</label>
+                            <label class="flex cursor-pointer items-center gap-1.5 text-sm">
                                 <input type="radio"
                                        name="project-share-validity"
                                        class="h-4 w-4 border-slate-300 text-sky-600 focus:ring-sky-500"
@@ -378,7 +419,7 @@
                                        @onchange="() => SetUseEndDate(false)" />
                                 <span>Tills vidare</span>
                             </label>
-                            <label class="flex cursor-pointer items-center gap-2">
+                            <label class="flex cursor-pointer items-center gap-1.5 text-sm">
                                 <input type="radio"
                                        name="project-share-validity"
                                        class="h-4 w-4 border-slate-300 text-sky-600 focus:ring-sky-500"
@@ -386,23 +427,24 @@
                                        @onchange="() => SetUseEndDate(true)" />
                                 <span>Till datum</span>
                             </label>
-                            @if (_useEndDate)
-                            {
-                                <input type="date"
-                                       class="mt-1 w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-                                       min="@TodayInputValue"
-                                       value="@ValidUntilInputValue"
-                                       @onchange="OnValidUntilChanged" />
-                                @if (!_validUntil.HasValue)
-                                {
-                                    <p class="text-[11px] text-amber-600 dark:text-amber-400">Välj ett slutdatum.</p>
-                                }
-                                else if (_validUntil.Value.Date < DateTime.UtcNow.Date)
-                                {
-                                    <p class="text-[11px] text-rose-600 dark:text-rose-400">Slutdatum kan inte ligga bakåt i tiden.</p>
-                                }
-                            }
+                            @* Kompakt datumfält direkt efter "Till datum" – tar inte hela radens bredd. *@
+                            <input type="date"
+                                   class="w-[200px] max-w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                                   min="@TodayInputValue"
+                                   value="@ValidUntilInputValue"
+                                   disabled="@(!_useEndDate)"
+                                   @onchange="OnValidUntilChanged"
+                                   @onblur="() => _validUntilTouched = true" />
                         </div>
+                        @* Felmeddelanden visas inte direkt – först efter försök att lägga till eller efter att fältet lämnats tomt. *@
+                        @if (_useEndDate && !_validUntil.HasValue && (ShowValidationErrors || _validUntilTouched))
+                        {
+                            <p class="mt-1 text-[11px] text-amber-600 dark:text-amber-400">Välj ett slutdatum.</p>
+                        }
+                        else if (_useEndDate && _validUntil is { } vu && vu.Date < DateTime.UtcNow.Date)
+                        {
+                            <p class="mt-1 text-[11px] text-rose-600 dark:text-rose-400">Slutdatum kan inte ligga bakåt i tiden.</p>
+                        }
                     </div>
 
                     @* Kalkyler *@
@@ -430,7 +472,7 @@
                                     Inga tillgängliga kalkyler att dela.
                                 </p>
                             }
-                            <div class="max-h-48 space-y-1 overflow-y-auto rounded border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-950">
+                            <div class="min-h-[6rem] max-h-48 space-y-1 overflow-y-auto rounded border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-950">
                                 @foreach (var c in _calcs)
                                 {
                                     var calc = c;
@@ -451,7 +493,8 @@
                             </div>
                         }
 
-                        @if (HasShareableCalcs && SelectedShareableCalcCount == 0)
+                        @* Visas inte direkt – först efter försök att lägga till eller efter att kalkylvalet rörts. *@
+                        @if (HasShareableCalcs && SelectedShareableCalcCount == 0 && (ShowValidationErrors || _calcTouched))
                         {
                             <p class="mt-1 text-[11px] text-amber-600 dark:text-amber-400">Välj minst en kalkyl.</p>
                         }
@@ -477,6 +520,7 @@
                 </div>
             </div>
         </div>
+        }
 
     </div>
     }
@@ -489,6 +533,9 @@
     [Parameter] public int? ProjectDepartmentId { get; set; }
     // Optional: project responsible (shown under "Ägare / ansvariga" when present). No new data model.
     [Parameter] public string? ProjectResponsible { get; set; }
+    [Parameter] public string? SelectedCalculationName { get; set; }
+    [Parameter] public bool SelectedCalculationIsPrivate { get; set; }
+    [Parameter] public bool ReadOnly { get; set; }
     [Parameter] public EventCallback OnCompleted { get; set; }
 
     private List<ProjectShareListItemDTO> _shares = [];
@@ -513,6 +560,11 @@
     private DateTime? _validUntil;
     private readonly HashSet<int> _selectedCalcIds = [];
     private bool _saving;
+    // Valideringsfel visas inte direkt – först efter försök att lägga till (_hasTriedSubmit)
+    // eller efter att respektive fält har rörts (_validUntilTouched / _calcTouched).
+    private bool _hasTriedSubmit;
+    private bool _validUntilTouched;
+    private bool _calcTouched;
     // Åtkomstöversikten är hopfälld som standard (kompakt) – sammanfattning visas i rubrikraden.
     private bool _overviewOpen;
     // Vilken delnings kalkyler som är expanderade i "Delat med"-tabellen (null = ingen).
@@ -530,18 +582,17 @@
 
     private int ShareableCalcCount => _calcs.Count(c => !c.IsPrivate);
 
-    // Kort sammanfattning för den hopfällda åtkomstöversikten.
+    // Kort sammanfattning för den hopfällda åtkomstöversikten. Leder med antal delade
+    // personer/avdelningar (inte projektets avdelningsnamn, som var otydligt).
     private string OverviewSummary()
     {
-        var parts = new List<string>();
-        if (ProjectDepartmentName is { } dn)
-            parts.Add(dn);
-
         var users = _shares.Count(s => IsShareActive(s) && s.RecipientType == ProjectShareRecipientType.User);
         var depts = _shares.Count(s => IsShareActive(s) && s.RecipientType == ProjectShareRecipientType.Department);
-        if (users > 0) parts.Add($"{users} delade personer");
-        if (depts > 0) parts.Add($"{depts} delade avdelningar");
-        if (users == 0 && depts == 0) parts.Add("Endast avdelningsåtkomst");
+
+        var parts = new List<string>();
+        if (users > 0) parts.Add(users == 1 ? "1 delad person"     : $"{users} delade personer");
+        if (depts > 0) parts.Add(depts == 1 ? "1 delad avdelning"  : $"{depts} delade avdelningar");
+        if (parts.Count == 0) return "Endast avdelningsåtkomst";
 
         return string.Join(" · ", parts);
     }
@@ -578,6 +629,9 @@
         _recipientType == ProjectShareRecipientType.Department &&
         _departmentId is > 0 &&
         _shares.Any(s => s.RecipientType == ProjectShareRecipientType.Department && s.DepartmentId == _departmentId);
+
+    // Stora feltexter visas först efter ett (försökt) "Lägg till delning".
+    private bool ShowValidationErrors => _hasTriedSubmit;
 
     private bool CanSave =>
         !string.IsNullOrWhiteSpace(_role) &&
@@ -679,9 +733,23 @@
         _overviewPartial = anyFailed;
     }
 
-    private void OnRoleChanged(ChangeEventArgs e)
+    // Åtkomstnivå options for the custom dropdown. "Kan ändra" stays disabled (with its
+    // explanatory tooltip) when the recipient is a system Visare, mirroring the old <option disabled>.
+    private IEnumerable<MhdSelectItem<string>> RoleItems => new[]
     {
-        _role = e.Value?.ToString() ?? PMRolesConst.Tenant.Viewer;
+        new MhdSelectItem<string> { Value = PMRolesConst.Tenant.Viewer, Label = "Kan visa" },
+        new MhdSelectItem<string>
+        {
+            Value = PMRolesConst.Tenant.Manger,
+            Label = "Kan ändra",
+            Disabled = DisableEditOption,
+            Title = DisableEditOption ? "Personen har systemrollen Visare och kan bara få åtkomstnivån Kan visa." : null,
+        },
+    };
+
+    private void OnRoleChanged(string value)
+    {
+        _role = string.IsNullOrWhiteSpace(value) ? PMRolesConst.Tenant.Viewer : value;
         // A system Visare can never be granted "Kan ändra": drop any selected viewers when switching.
         if (_role == PMRolesConst.Tenant.Manger)
             _selectedUserIds.RemoveWhere(id => _userIsViewerCache.GetValueOrDefault(id));
@@ -695,9 +763,22 @@
         _departmentId = null;
     }
 
-    private async Task OnUserFilterChanged(ChangeEventArgs e)
+    // Avdelningsfilter options for the custom dropdown: "Alla avdelningar" (0), each department,
+    // then "Utan avdelning" (-1) — same set/order as the old <select>.
+    private IEnumerable<MhdSelectItem<int>> UserFilterDeptItems
     {
-        _userFilterDeptId = int.TryParse(e.Value?.ToString(), out var v) ? v : 0;
+        get
+        {
+            var items = new List<MhdSelectItem<int>> { new() { Value = 0, Label = "Alla avdelningar" } };
+            items.AddRange(_departments.Select(d => new MhdSelectItem<int> { Value = d.Id, Label = d.Name }));
+            items.Add(new() { Value = -1, Label = "Utan avdelning" });
+            return items;
+        }
+    }
+
+    private async Task OnUserFilterChanged(int value)
+    {
+        _userFilterDeptId = value;
         await ReloadUserOptionsAsync();
     }
 
@@ -824,18 +905,26 @@
 
     private void ToggleCalc(int id, bool on)
     {
+        // Användaren har aktivt rört kalkylvalet – ev. fel får visas.
+        _calcTouched = true;
         if (on) _selectedCalcIds.Add(id);
         else _selectedCalcIds.Remove(id);
     }
 
     private void SelectAllShareable()
     {
+        _calcTouched = true;
         foreach (var c in _calcs.Where(c => !c.IsPrivate))
             _selectedCalcIds.Add(c.Id);
     }
 
     private async Task SaveAsync()
     {
+        if (ReadOnly)
+            return;
+
+        // Användaren har försökt lägga till – nu får valideringsfel visas.
+        _hasTriedSubmit = true;
         if (!CanSave || _saving) return;
         _saving = true;
         try
@@ -907,6 +996,12 @@
 
     private async Task EditShareAsync(ProjectShareListItemDTO share)
     {
+        if (ReadOnly)
+            return;
+
+        _hasTriedSubmit = false;
+        _validUntilTouched = false;
+        _calcTouched = false;
         _editingId = share.Id;
         _recipientType = share.RecipientType;
         _role = string.IsNullOrWhiteSpace(share.Role) ? PMRolesConst.Tenant.Viewer : share.Role;
@@ -942,15 +1037,46 @@
         _useEndDate = false;
         _validUntil = null;
         _selectedCalcIds.Clear();
+        _hasTriedSubmit = false;
+        _validUntilTouched = false;
+        _calcTouched = false;
     }
 
     private void RemoveAsync(ProjectShareListItemDTO share)
     {
-        MHD.DeleteMessage(share.RecipientName, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(share)));
+        if (ReadOnly)
+            return;
+
+        // Bekräftelsetext beror på mottagartyp (person vs avdelning).
+        var message = share.RecipientType == ProjectShareRecipientType.Department
+            ? $"Är du säker på att du vill ta bort delningen för avdelningen \"{share.RecipientName}\"?"
+            : $"Är du säker på att du vill ta bort delningen för \"{share.RecipientName}\"?";
+
+        MHD.MessageYesNo("Ta bort delning", message,
+            BlazorMHD.UI.Core.DesignSystem.MhdState.Danger,
+            EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(share)));
+    }
+
+    // Tooltip för "Delad av"-kolumnen: vem som skapade delningen och (om ändrad) vem/när.
+    private static string? SharedByTooltip(ProjectShareListItemDTO share)
+    {
+        var lines = new List<string>();
+        if (!string.IsNullOrWhiteSpace(share.CreatedByName))
+            lines.Add($"Delad av {share.CreatedByName}");
+        if (share.CreatedAt is { } created)
+            lines.Add($"Skapad {created:yyyy-MM-dd}");
+        // Visa bara "Ändrad" när den faktiskt ändrats efter skapandet.
+        if (!string.IsNullOrWhiteSpace(share.UpdatedByName) && share.UpdatedAt is { } updated &&
+            (share.CreatedAt is null || updated - share.CreatedAt.Value > TimeSpan.FromSeconds(1)))
+            lines.Add($"Ändrad av {share.UpdatedByName} {updated:yyyy-MM-dd}");
+        return lines.Count > 0 ? string.Join("\n", lines) : null;
     }
 
     private async Task ConfirmRemoveAsync(ProjectShareListItemDTO share)
     {
+        if (ReadOnly)
+            return;
+
         bool ok = await Repo.ProjectShare.DeleteAsync(share.Id);
         if (ok)
         {
@@ -1042,6 +1168,8 @@
     private void SetUseEndDate(bool useEndDate)
     {
         _useEndDate = useEndDate;
+        // Att välja "Till datum" ska inte direkt visa "Välj ett slutdatum." – nollställ touch-läget.
+        _validUntilTouched = false;
         if (!useEndDate)
             _validUntil = null;
     }

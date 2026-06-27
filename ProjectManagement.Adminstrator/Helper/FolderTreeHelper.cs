@@ -88,10 +88,8 @@ namespace ProjectManagement.Adminstrator.Helper
 
         private static void Toggle(HashSet<int> expanded, int folderId)
         {
-            if (expanded.Contains(folderId))
+            if (!expanded.Add(folderId))
                 expanded.Remove(folderId);
-            else
-                expanded.Add(folderId);
         }
 
         private static string GetClass(bool isSelected)

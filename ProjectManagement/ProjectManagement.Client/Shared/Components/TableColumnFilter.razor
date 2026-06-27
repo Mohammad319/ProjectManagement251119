@@ -1,5 +1,6 @@
 @namespace ProjectManagement.Client.Shared.Components
 @using ProjectManagement.Client.Shared.Model.Filter
+@using ProjectManagement.Client.Shared.SharedComponent
 @inject IJSRuntime JS
 
 @* Compact filter icon that opens a fixed popup. Works inside sticky / overflow:hidden headers. *@
@@ -24,25 +25,19 @@
     @* Click-away overlay *@
     <div class="fixed inset-0" style="z-index:2147483646" @onclick="ClosePopup" @onclick:stopPropagation="true"></div>
 
-    @* Popup — fixed so it escapes overflow:hidden table cells *@
-    <div class="fixed w-56 rounded-lg border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-700 dark:bg-slate-900"
-         style="z-index:2147483647;top:@(_popY.ToString("F0"))px;left:min(calc(100vw - 14rem - 8px),max(4px,@(_popX.ToString("F0"))px))"
+    @* Popup — fixed so it escapes overflow:hidden table cells. Compact: narrow width, tight padding. *@
+    <div class="fixed w-52 rounded-lg border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900"
+         style="z-index:2147483647;top:@(_popY.ToString("F0"))px;left:min(calc(100vw - 13rem - 8px),max(4px,@(_popX.ToString("F0"))px))"
          @onclick:stopPropagation="true">
 
         @if (FilterState.Type == ColumnFilterType.Text)
         {
-            <div class="mb-2">
-                <select class="@SelectCss"
-                        value="@((int)FilterState.TextOp)"
-                        @onchange="e => { FilterState.TextOp = (TextFilterOp)int.Parse(e.Value!.ToString()!); _ = Notify(); }">
-                    <option value="0">Innehåller</option>
-                    <option value="1">Är lika med</option>
-                    <option value="2">Är inte lika med</option>
-                    <option value="3">Är tomt</option>
-                    <option value="4">Börjar med</option>
-                    <option value="5">Slutar med</option>
-                    <option value="7">Är inte tomt</option>
-                </select>
+            <div class="mb-1.5">
+                <MhdFormSelect TValue="TextFilterOp"
+                               Value="FilterState.TextOp"
+                               ValueChanged="OnTextOpChanged"
+                               Options="TextOpOptions"
+                               FixedPopup="true" />
             </div>
             @if (FilterState.TextOp != TextFilterOp.IsEmpty && FilterState.TextOp != TextFilterOp.IsNotEmpty)
             {
@@ -53,17 +48,12 @@
         }
         else if (FilterState.Type == ColumnFilterType.Date)
         {
-            <div class="mb-2">
-                <select class="@SelectCss"
-                        value="@((int)FilterState.DateOp)"
-                        @onchange="e => { FilterState.DateOp = (DateFilterOp)int.Parse(e.Value!.ToString()!); _ = Notify(); }">
-                    <option value="0">Är lika med</option>
-                    <option value="1">Före</option>
-                    <option value="2">Efter</option>
-                    <option value="3">Mellan</option>
-                    <option value="4">Är tomt</option>
-                    <option value="5">Är inte tomt</option>
-                </select>
+            <div class="mb-1.5">
+                <MhdFormSelect TValue="DateFilterOp"
+                               Value="FilterState.DateOp"
+                               ValueChanged="OnDateOpChanged"
+                               Options="DateOpOptions"
+                               FixedPopup="true" />
             </div>
             @if (FilterState.DateOp != DateFilterOp.IsEmpty && FilterState.DateOp != DateFilterOp.IsNotEmpty)
             {
@@ -81,18 +71,12 @@
         }
         else if (FilterState.Type == ColumnFilterType.Number)
         {
-            <div class="mb-2">
-                <select class="@SelectCss"
-                        value="@((int)FilterState.NumberOp)"
-                        @onchange="e => { FilterState.NumberOp = (NumberFilterOp)int.Parse(e.Value!.ToString()!); _ = Notify(); }">
-                    <option value="0">Är lika med</option>
-                    <option value="5">Är inte lika med</option>
-                    <option value="1">Större än</option>
-                    <option value="2">Mindre än</option>
-                    <option value="3">Mellan</option>
-                    <option value="4">Är tomt</option>
-                    <option value="6">Är inte tomt</option>
-                </select>
+            <div class="mb-1.5">
+                <MhdFormSelect TValue="NumberFilterOp"
+                               Value="FilterState.NumberOp"
+                               ValueChanged="OnNumberOpChanged"
+                               Options="NumberOpOptions"
+                               FixedPopup="true" />
             </div>
             @if (FilterState.NumberOp != NumberFilterOp.IsEmpty && FilterState.NumberOp != NumberFilterOp.IsNotEmpty)
             {
@@ -110,32 +94,30 @@
         }
         else if (FilterState.Type == ColumnFilterType.Boolean)
         {
-            <select class="@SelectCss"
-                    value="@FilterState.BoolValue"
-                    @onchange="e => { FilterState.BoolValue = e.Value?.ToString() ?? string.Empty; _ = Notify(); }">
-                <option value="">Alla</option>
-                <option value="true">Ja</option>
-                <option value="false">Nej</option>
-            </select>
+            <MhdFormSelect TValue="string"
+                           Value="FilterState.BoolValue"
+                           ValueChanged="OnBoolChanged"
+                           Options="BoolOptions"
+                           FixedPopup="true" />
         }
         else if (FilterState.Type == ColumnFilterType.Dropdown)
         {
             @if (FilterState.AvailableGroups is { Count: > 0 } groups)
             {
                 @* Grouped: headed sections with thin dividers. *@
-                <div class="max-h-56 space-y-1 overflow-y-auto">
+                <div class="max-h-52 space-y-0.5 overflow-y-auto">
                     @for (var gi = 0; gi < groups.Count; gi++)
                     {
                         var group = groups[gi];
                         if (group.Options.Count == 0) { continue; }
-                        <div class="@(gi > 0 ? "border-t border-slate-100 pt-1 dark:border-slate-700" : "")">
-                            <div class="px-1 pb-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400">@group.Header</div>
+                        <div class="@(gi > 0 ? "border-t border-slate-100 pt-0.5 dark:border-slate-700" : "")">
+                            <div class="px-1 pb-0.5 text-[11px] font-semibold tracking-wide text-slate-500 dark:text-slate-400">@group.Header</div>
                             @foreach (var option in group.Options)
                             {
                                 var value = option.Value;
                                 var isChecked = FilterState.SelectedValues.Contains(value);
-                                <label class="flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 text-[11px] hover:bg-slate-50 dark:hover:bg-slate-800">
-                                    <input type="checkbox" class="h-3 w-3" checked="@isChecked"
+                                <label class="flex cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 text-[11px] leading-tight transition-colors @(isChecked ? "bg-sky-50 dark:bg-sky-950/40" : "hover:bg-slate-50 dark:hover:bg-slate-800")">
+                                    <input type="checkbox" class="h-3 w-3 shrink-0 accent-sky-600" checked="@isChecked"
                                            @onchange="e => { if ((bool)(e.Value ?? false)) FilterState.SelectedValues.Add(value); else FilterState.SelectedValues.Remove(value); _ = Notify(); }" />
                                     @if (!string.IsNullOrWhiteSpace(option.Tooltip))
                                     {
@@ -156,12 +138,12 @@
             }
             else
             {
-                <div class="max-h-40 space-y-0.5 overflow-y-auto">
+                <div class="max-h-44 space-y-0.5 overflow-y-auto">
                     @foreach (var option in FilterState.AvailableValues)
                     {
                         var isChecked = FilterState.SelectedValues.Contains(option);
-                        <label class="flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 text-[11px] hover:bg-slate-50 dark:hover:bg-slate-800">
-                            <input type="checkbox" class="h-3 w-3" checked="@isChecked"
+                        <label class="flex cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 text-[11px] leading-tight transition-colors @(isChecked ? "bg-sky-50 dark:bg-sky-950/40" : "hover:bg-slate-50 dark:hover:bg-slate-800")">
+                            <input type="checkbox" class="h-3 w-3 shrink-0 accent-sky-600" checked="@isChecked"
                                    @onchange="e => { if ((bool)(e.Value ?? false)) FilterState.SelectedValues.Add(option); else FilterState.SelectedValues.Remove(option); _ = Notify(); }" />
                             <span class="text-slate-700 dark:text-slate-200">@option</span>
                         </label>
@@ -170,15 +152,15 @@
             }
         }
 
-        <div class="mt-2 flex items-center justify-between gap-1 border-t border-slate-100 pt-2 dark:border-slate-700">
+        <div class="mt-1.5 flex items-center justify-between gap-1 border-t border-slate-100 pt-1.5 dark:border-slate-700">
             <button type="button"
-                    class="rounded px-2 py-1 text-[11px] font-medium text-red-600 hover:bg-red-50 disabled:opacity-30 dark:text-red-400 dark:hover:bg-red-950/30"
+                    class="rounded px-2 py-0.5 text-[11px] font-medium text-red-600 hover:bg-red-50 disabled:opacity-30 dark:text-red-400 dark:hover:bg-red-950/30"
                     disabled="@(!FilterState.IsActive)"
                     @onclick="ClearFilter">
                 Rensa
             </button>
             <button type="button"
-                    class="rounded px-2 py-1 text-[11px] font-medium text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800"
+                    class="rounded px-2 py-0.5 text-[11px] font-medium text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800"
                     @onclick="ClosePopup">
                 Stäng
             </button>
@@ -210,7 +192,7 @@
             var position = await JS.InvokeAsync<FilterPopupPosition>(
                 "tableColumnFilterPosition.calculate",
                 _buttonRef,
-                224,
+                208,
                 8);
             _popX = position.X;
             _popY = position.Y;
@@ -244,6 +226,52 @@
         await OnChanged.InvokeAsync();
     }
 
+    // Operator/boolean selections — set state then re-run the filter (logic unchanged).
+    private Task OnTextOpChanged(TextFilterOp op)     { FilterState.TextOp = op;   return Notify(); }
+    private Task OnDateOpChanged(DateFilterOp op)     { FilterState.DateOp = op;   return Notify(); }
+    private Task OnNumberOpChanged(NumberFilterOp op) { FilterState.NumberOp = op; return Notify(); }
+    private Task OnBoolChanged(string value)          { FilterState.BoolValue = value ?? string.Empty; return Notify(); }
+
+    // Operator option lists for the custom dropdowns (labels match the previous native <option>s).
+    private static readonly List<MhdSelectItem<TextFilterOp>> TextOpOptions = new()
+    {
+        new() { Value = TextFilterOp.Contains,   Label = "Innehåller" },
+        new() { Value = TextFilterOp.Equals,     Label = "Är lika med" },
+        new() { Value = TextFilterOp.NotEquals,  Label = "Är inte lika med" },
+        new() { Value = TextFilterOp.IsEmpty,    Label = "Är tomt" },
+        new() { Value = TextFilterOp.StartsWith, Label = "Börjar med" },
+        new() { Value = TextFilterOp.EndsWith,   Label = "Slutar med" },
+        new() { Value = TextFilterOp.IsNotEmpty, Label = "Är inte tomt" },
+    };
+
+    private static readonly List<MhdSelectItem<DateFilterOp>> DateOpOptions = new()
+    {
+        new() { Value = DateFilterOp.On,         Label = "Är lika med" },
+        new() { Value = DateFilterOp.Before,     Label = "Före" },
+        new() { Value = DateFilterOp.After,      Label = "Efter" },
+        new() { Value = DateFilterOp.Between,    Label = "Mellan" },
+        new() { Value = DateFilterOp.IsEmpty,    Label = "Är tomt" },
+        new() { Value = DateFilterOp.IsNotEmpty, Label = "Är inte tomt" },
+    };
+
+    private static readonly List<MhdSelectItem<NumberFilterOp>> NumberOpOptions = new()
+    {
+        new() { Value = NumberFilterOp.Equals,      Label = "Är lika med" },
+        new() { Value = NumberFilterOp.NotEquals,   Label = "Är inte lika med" },
+        new() { Value = NumberFilterOp.GreaterThan, Label = "Större än" },
+        new() { Value = NumberFilterOp.LessThan,    Label = "Mindre än" },
+        new() { Value = NumberFilterOp.Between,     Label = "Mellan" },
+        new() { Value = NumberFilterOp.IsEmpty,     Label = "Är tomt" },
+        new() { Value = NumberFilterOp.IsNotEmpty,  Label = "Är inte tomt" },
+    };
+
+    private static readonly List<MhdSelectItem<string>> BoolOptions = new()
+    {
+        new() { Value = "",      Label = "Alla" },
+        new() { Value = "true",  Label = "Ja" },
+        new() { Value = "false", Label = "Nej" },
+    };
+
     private async Task DismissTooltipAsync()
     {
         try { await JS.InvokeVoidAsync("hoverTooltip.dismiss"); }
@@ -255,7 +283,6 @@
             ? "text-blue-600 dark:text-blue-400"
             : "text-slate-400 opacity-50 hover:opacity-100 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300");
 
-    private const string SelectCss = "w-full rounded border border-slate-300 bg-white px-2 py-1 text-[11px] text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200";
     private const string InputCss  = "w-full rounded border border-slate-300 bg-white px-2 py-1 text-[11px] text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200";
 
     private sealed class FilterPopupPosition

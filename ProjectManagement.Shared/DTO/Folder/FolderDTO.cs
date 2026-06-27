@@ -26,5 +26,18 @@ namespace ProjectManagement.Shared.DTO.Folder
         /// chevron) before its projects have been lazily loaded.
         /// </summary>
         public int ProjectCount { get; set; }
+
+        /// <summary>Department the folder belongs to. Used to group the tree in "Alla tillgängliga".</summary>
+        public int DepartmentId { get; set; }
+
+        /// <summary>Display name of the folder's department (for the "Alla tillgängliga" group header).</summary>
+        public string? DepartmentName { get; set; }
+
+        /// <summary>
+        /// True when the folder is only a VISUAL GROUP for shared/assigned projects from a department
+        /// the user has no normal access to. Such folders are read-only: they cannot be created in,
+        /// edited, moved, copied, archived or deleted, and projects cannot be created/imported into them.
+        /// </summary>
+        public bool IsSharedGroup { get; set; }
     }
 }

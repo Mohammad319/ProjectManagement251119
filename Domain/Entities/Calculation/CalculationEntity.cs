@@ -48,8 +48,7 @@ namespace Domain.Entities.Calculation
 
         public void AssignDepartment(int departmentId)
         {
-            if (departmentId <= 0)
-                throw new ArgumentOutOfRangeException(nameof(departmentId));
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(departmentId);
 
             DepartmentId = departmentId;
         }
@@ -65,10 +64,12 @@ namespace Domain.Entities.Calculation
 
 
 
-        public DateTime TenderDeadline { get; private set; } = DateTime.UtcNow;
-        public DateTime TenderQA { get; private set; } = DateTime.UtcNow;
-        public DateTime StartDate { get; private set; } = DateTime.UtcNow;
-        public DateTime EndDate { get; private set; } = DateTime.UtcNow.AddMonths(2);
+        // Nullable so a new calculation starts with empty dates instead of auto-filling today's
+        // (possibly already-passed) date.
+        public DateTime? TenderDeadline { get; private set; }
+        public DateTime? TenderQA { get; private set; }
+        public DateTime? StartDate { get; private set; }
+        public DateTime? EndDate { get; private set; }
 
         public int SortOrder { get; private set; }
 
@@ -303,11 +304,8 @@ namespace Domain.Entities.Calculation
             if (versionGroupId == Guid.Empty)
                 throw new ArgumentException("VersionGroupId cannot be empty.", nameof(versionGroupId));
 
-            if (versionNumber <= 0)
-                throw new ArgumentOutOfRangeException(nameof(versionNumber));
-
-            if (createdFromCalculationId <= 0)
-                throw new ArgumentOutOfRangeException(nameof(createdFromCalculationId));
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(versionNumber);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(createdFromCalculationId);
 
             VersionGroupId = versionGroupId;
             VersionNumber = versionNumber;
@@ -368,8 +366,7 @@ namespace Domain.Entities.Calculation
 
         public void MarkAsProductionCopy(int sourceCalculationId)
         {
-            if (sourceCalculationId <= 0)
-                throw new ArgumentOutOfRangeException(nameof(sourceCalculationId));
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sourceCalculationId);
 
             CalculationType = CalculationVersionType.Production;
             SourceCalculationId = sourceCalculationId;
@@ -383,8 +380,7 @@ namespace Domain.Entities.Calculation
 
         public void MarkAsContractCopy(int sourceCalculationId)
         {
-            if (sourceCalculationId <= 0)
-                throw new ArgumentOutOfRangeException(nameof(sourceCalculationId));
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sourceCalculationId);
 
             CalculationType = CalculationVersionType.Contract;
             SourceCalculationId = sourceCalculationId;
@@ -404,9 +400,10 @@ namespace Domain.Entities.Calculation
             Tax = tax;
         }
 
-        public void SetDates(DateTime start, DateTime end)
+        public void SetDates(DateTime? start, DateTime? end)
         {
-            if (end < start)
+            // Only enforce ordering when both dates are present; either may be empty.
+            if (start.HasValue && end.HasValue && end.Value < start.Value)
                 throw new ArgumentException("EndDate cannot be before StartDate.");
 
             StartDate = start;
@@ -414,8 +411,8 @@ namespace Domain.Entities.Calculation
         }
 
         public void SetTenderDates(
-            DateTime tenderDeadline,
-            DateTime tenderQA,
+            DateTime? tenderDeadline,
+            DateTime? tenderQA,
             DateTime? publicationDate,
             DateTime? decisionDate)
         {

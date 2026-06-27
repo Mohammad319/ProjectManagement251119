@@ -76,7 +76,7 @@ public partial class UpdateUserUI : AppComponentBase
         if (Form is null)
             return;
 
-        if (!Form.DepartmentId.HasValue && Departments?.Any() == true)
+        if (!Form.DepartmentId.HasValue && Departments?.Count > 0)
             Form.DepartmentId = Departments[0].Id;
 
         var resolvedRole = await ResolveExistingRoleAsync();

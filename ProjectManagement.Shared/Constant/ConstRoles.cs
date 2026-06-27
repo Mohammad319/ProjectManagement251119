@@ -143,7 +143,10 @@ namespace ProjectManagement.Shared.DTO.Calculation.Template
         ProductionNote = 43,
 
         [Display(Name = "Importinfo")]
-        ImportInfo = 44
+        ImportInfo = 44,
+
+        [Display(Name = "reviewerComment")]
+        ReviewerComment = 45
     }
 
     public enum SummarySheetColumnId
@@ -241,6 +244,7 @@ namespace ProjectManagement.Shared.DTO.Calculation.Template
     { NetColumnId.PriceWorkedQTax, "Price Worked Q Tax" },
     { NetColumnId.Note, "note" },
     { NetColumnId.ProductionNote, "productionNote" },
+    { NetColumnId.ReviewerComment, "reviewerComment" },
     { NetColumnId.PriceTotalSubTax, "priceTotalSubTax" },
 };
         public static readonly Dictionary<SummarySheetColumnId, string> SummaryLoc = new()
@@ -351,6 +355,7 @@ namespace ProjectManagement.Shared.Constants
         new() { Id = NetColumnId.PriceWorkedQTax, Width = 60, Frozen = false },
         new() { Id = NetColumnId.Note, Width = 80, Frozen = false },
         new() { Id = NetColumnId.ProductionNote, Width = 120, Frozen = false },
+        new() { Id = NetColumnId.ReviewerComment, Width = 140, Frozen = false },
     ];
         }
 

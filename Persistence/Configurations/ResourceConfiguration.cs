@@ -118,6 +118,11 @@ internal sealed class ResourceConfiguration : IEntityTypeConfiguration<ResourceE
         builder.Property(x => x.ProductionNote)
             .HasMaxLength(FieldLengths.Comment);
 
+        // Reviewer comment – a standalone scalar column (not computed), editable in isolation
+        // (incl. by an authorized reviewer/Viewer on a locked calculation).
+        builder.Property(x => x.ReviewerComment)
+            .HasMaxLength(FieldLengths.Comment);
+
         builder.Property(x => x.Unit)
             .HasMaxLength(FieldLengths.Unit);
 
@@ -202,6 +207,10 @@ internal sealed class TaskConfiguration : IEntityTypeConfiguration<TaskEntity>
 
         // Production note – a standalone scalar column (not computed), can be updated in isolation.
         builder.Property(x => x.ProductionNote)
+            .HasMaxLength(FieldLengths.Comment);
+
+        // Reviewer comment – a standalone scalar column (not computed), editable in isolation.
+        builder.Property(x => x.ReviewerComment)
             .HasMaxLength(FieldLengths.Comment);
 
         builder.Property(x => x.Unit)

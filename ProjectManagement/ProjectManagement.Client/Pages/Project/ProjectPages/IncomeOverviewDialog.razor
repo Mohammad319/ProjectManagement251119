@@ -274,8 +274,8 @@
 
     private static int GetIncomeStartYear(ListCalculationMVVM calculation, CalculationPostDTO post)
     {
-        var start = post.StartDate == default ? calculation.StartDate : post.StartDate;
-        return start == default ? DateTime.Today.Year : start.Year;
+        var start = post.StartDate ?? calculation.StartDate;
+        return start?.Year ?? DateTime.Today.Year;
     }
 
     private static bool HasIncome(IncomeBase income) =>
