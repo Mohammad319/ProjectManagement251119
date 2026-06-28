@@ -348,7 +348,19 @@
       "Bash(find . -iname \"*select*.razor\" -not -path \"*/obj/*\")",
       "Bash(grep -rln \"<select\" --include=*.razor ProjectManagement/ProjectManagement.Client/Pages/Project ProjectManagement/ProjectManagement.Client/Shared)",
       "Bash(ls ProjectManagement/ProjectManagement/wwwroot/js/)",
-      "Bash(find . -iname \"ListColumnWidthController*\" -not -path \"*/obj/*\")"
+      "Bash(find . -iname \"ListColumnWidthController*\" -not -path \"*/obj/*\")",
+      "Bash(awk 'NR==612 || NR==814 || NR==815 {printf \"%d: %s\\\\n\", NR, $0}' \"ProjectManagement/ProjectManagement.Client/Pages/Project/ProjectPages/ProjectsUI.razor\")",
+      "Bash(node -)",
+      "Bash(node \"C:/Users/ADMINI~1/AppData/Local/Temp/claude/C--Users-Administrator-Desktop-PM-b07-ProjectManagement251119/0a1627ff-0af6-42c6-aa6d-dee461e6e8a4/scratchpad/insertProjectCell.js\")",
+      "Bash(awk 'NR==555 || NR==761 || NR==762 {printf \"%d: %s\\\\n\", NR, $0}' \"ProjectManagement/ProjectManagement.Client/Pages/Project/ProjectPages/ProjectsCalculationList.razor\")",
+      "Bash(node \"C:/Users/ADMINI~1/AppData/Local/Temp/claude/C--Users-Administrator-Desktop-PM-b07-ProjectManagement251119/0a1627ff-0af6-42c6-aa6d-dee461e6e8a4/scratchpad/refactorCalcCells.js\")",
+      "Bash(powershell -Command 'Get-NetTCPConnection -State Listen -LocalPort 5286 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }')",
+      "Bash(node -e \"try{require\\('playwright'\\);console.log\\('playwright OK'\\)}catch\\(e\\){try{require\\('@playwright/test'\\);console.log\\('@playwright/test OK'\\)}catch\\(e2\\){console.log\\('NOT found:', e2.message\\)}}\")",
+      "Bash(node pwind_discover.js)",
+      "Bash(node pwind_verify.js)",
+      "Bash(node pwind_tree.js)",
+      "Bash(node pwind_tree2.js)",
+      "Bash(node pwind_tree3.js)"
     ]
   }
 }

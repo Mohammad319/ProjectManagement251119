@@ -23,6 +23,7 @@ public sealed class ProjectListViewPreference(
     private const string VisibleColumnsKind = "VisibleColumns";
     private const string ColumnWidthsKind = "ColumnWidths";
     private const string ColumnOrderKind = "ColumnOrder";
+    private const string LastOpenedKind = "LastOpened";
 
     // ── visible columns ────────────────────────────────────────────────────
 
@@ -47,6 +48,16 @@ public sealed class ProjectListViewPreference(
 
     public Task SaveColumnWidthsAsync(Dictionary<string, int> widths)
         => SaveAsync(ColumnWidthsKind, widths);
+
+    // ── last-opened per object (för ändringsindikatorn) ─────────────────────
+    // Map: projekt-id (string) → tidpunkt då aktuell användare senast öppnade projektet.
+    // Indikatorn visas när UpdatedAt > denna tidpunkt. Per användare (server-auktoritativt).
+
+    public Task<Dictionary<string, DateTime>?> LoadLastOpenedAsync()
+        => LoadAsync<Dictionary<string, DateTime>>(LastOpenedKind);
+
+    public Task SaveLastOpenedAsync(Dictionary<string, DateTime> lastOpened)
+        => SaveAsync(LastOpenedKind, lastOpened);
 
     // ── shared load/save (server-authoritative, cache-backed) ──────────────
 

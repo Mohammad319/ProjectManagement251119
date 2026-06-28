@@ -1,0 +1,36 @@
+@namespace ProjectManagement.Client.Shared.Components
+@using ProjectManagement.Client.Shared.Helper
+@using ProjectManagement.Shared.DTO.ChangeLog
+
+@* Diskret ändringsindikator – tre små linjer (aktivitetsmarkering), blå/gråblå, ~14px.
+   Värdkomponenten renderar den ENDAST när objektet ändrats efter att aktuell användare
+   senast öppnade det (Senast ändrad > senast öppnad). Tooltipen visar de senaste
+   ändringarna (max fem); saknas full historik visas en enkel fallback (Senast ändrad + Ändrad av).
+   OBS: ingen klocka/emoji/varningsikon – bara tre linjer. *@
+<HoverTooltip Text="@TooltipText"
+              Class="shrink-0 align-middle text-sky-500 dark:text-sky-400"
+              Focusable="true">
+    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2.5" stroke-linecap="round" role="img" aria-label="Ändrad sedan du senast öppnade">
+        <line x1="5" y1="7" x2="19" y2="7" />
+        <line x1="5" y1="12" x2="15" y2="12" />
+        <line x1="5" y1="17" x2="11" y2="17" />
+    </svg>
+</HoverTooltip>
+
+@code {
+    /// <summary>Objektets senaste ändringstidpunkt (fallback i tooltipen).</summary>
+    [Parameter] public DateTime? UpdatedAt { get; set; }
+
+    /// <summary>Namn på den som ändrade senast (fallback om historik saknas). Aldrig null/undefined/id i UI:t.</summary>
+    [Parameter] public string? UpdatedByName { get; set; }
+
+    /// <summary>De senaste ändringarna (max fem visas). Tom/null → fallback-rader.</summary>
+    [Parameter] public IReadOnlyList<ChangeLogItemDTO>? RecentChanges { get; set; }
+
+    /// <summary>True för projekt, false för kalkyl – styr åtgärdstexten (t.ex. projektstatus/kalkylstatus).</summary>
+    [Parameter] public bool IsProject { get; set; } = true;
+
+    private string TooltipText =>
+        ChangeLogTextFormatter.BuildTooltip(RecentChanges, UpdatedAt, UpdatedByName, IsProject);
+}

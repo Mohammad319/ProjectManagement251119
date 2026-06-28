@@ -195,7 +195,8 @@ public sealed class AccessSummaryFormatterTests
     public void Calc_null_access_is_via_project()
     {
         Assert.Equal("Avdelningsåtkomst", AccessSummaryFormatter.CalcSummaryText(null, isPrivate: false));
-        Assert.Equal("Ej via projekt", AccessSummaryFormatter.CalcSummaryText(null, isPrivate: false, projectHasSharing: true));
+        // "Ej via projekt" är borttaget som huvudstatus – sådana kalkyler visar nu "Avdelningsåtkomst".
+        Assert.Equal("Avdelningsåtkomst", AccessSummaryFormatter.CalcSummaryText(null, isPrivate: false, projectHasSharing: true));
     }
 
     [Fact]
@@ -203,7 +204,7 @@ public sealed class AccessSummaryFormatterTests
     {
         var access = CalcAccess(viaProject: true, isPrivate: false);
         Assert.Equal("Avdelningsåtkomst", AccessSummaryFormatter.CalcSummaryText(access, false));
-        Assert.Equal("Ej via projekt", AccessSummaryFormatter.CalcSummaryText(access, false, projectHasSharing: true));
+        Assert.Equal("Avdelningsåtkomst", AccessSummaryFormatter.CalcSummaryText(access, false, projectHasSharing: true));
         Assert.False(AccessSummaryFormatter.CalcIsShared(access));
     }
 
@@ -249,14 +250,16 @@ public sealed class AccessSummaryFormatterTests
     }
 
     [Fact]
-    public void Calc_not_in_project_share_tags_not_via_project()
+    public void Calc_not_in_project_share_tags_department_access()
     {
+        // "Ej via projekt" är inte längre ett huvudvärde; sådana kalkyler matchar "Avdelningsåtkomst".
         var tags = AccessSummaryFormatter.CalcTags(
             CalcAccess(viaProject: true, isPrivate: false),
             false,
             projectHasSharing: true).ToList();
 
-        Assert.Contains(AccessSummaryFormatter.CalcTypeNotViaProject, tags);
+        Assert.Contains(AccessSummaryFormatter.CalcTypeDepartmentAccess, tags);
+        Assert.DoesNotContain(AccessSummaryFormatter.CalcTypeNotViaProject, tags);
         Assert.DoesNotContain(AccessSummaryFormatter.TypeShared, tags);
         Assert.DoesNotContain(AccessSummaryFormatter.TypeLimited, tags);
     }

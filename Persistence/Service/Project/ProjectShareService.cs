@@ -8,6 +8,7 @@ using Persistence.Factory;
 using Persistence.Service.Notification;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Project;
+using ProjectManagement.Shared.Enums;
 using ProjectManagement.Shared.Exceptions;
 
 namespace Persistence.Service.Project
@@ -15,7 +16,8 @@ namespace Persistence.Service.Project
     public sealed class ProjectShareService(
         IDbContextFactoryTenant dbFactory,
         INotificationPublisher? publisher = null,
-        IUserSystemRoleProvider? roleProvider = null) : IProjectShareService
+        IUserSystemRoleProvider? roleProvider = null,
+        global::Application.Feature.ChangeLog.IChangeLogService? changeLog = null) : IProjectShareService
     {
         public async Task<IReadOnlyList<ProjectShareListItemDTO>> GetByProjectAsync(
             Guid projectId, int? departmentId, int userId, CancellationToken ct = default)
@@ -127,6 +129,10 @@ namespace Persistence.Service.Project
             await ctx.SaveChangesAsync(ct);
 
             await PublishAsync(notifications.Select(n => n.UserId), ct);
+
+            // Record the share so the project's change indicator can show "Delade projektet".
+            if (isNew && changeLog is not null)
+                await changeLog.AppendProjectAsync(projectId, ChangeAction.Shared, userId, ct);
 
             return entity.Id;
         }

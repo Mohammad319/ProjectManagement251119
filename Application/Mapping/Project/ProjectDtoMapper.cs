@@ -85,6 +85,7 @@ namespace Application.Mapping.Project
                 IsShared = access is not null ? access.Recipients.Count > 0 : isShared,
                 Access = access,
                 DepartmentId = entity.Folder?.DepartmentId,
+                FolderName = entity.Folder?.Name ?? string.Empty,
                 CalculationCount = calculationCount,
                 Status = entity.ProjectStatus?.Name ?? metadata.StatusName,
                 StatusId = entity.ProjectStatusId ?? metadata.StatusId,
@@ -96,6 +97,7 @@ namespace Application.Mapping.Project
                 Responsible = metadata.Responsibles.FirstOrDefault(x => !string.IsNullOrWhiteSpace(x)) ?? string.Empty,
                 CreatedAt = entity.CreatedAt,
                 UpdatedAt = entity.UpdatedAt,
+                UpdatedByName = DisplayName(entity.UpdatedByUser),
                 Developer = metadata.Developer,
                 Organisation = entity.Organisation?.Name ?? string.Empty,
                 ProcurementName = metadata.ProcurementName,
@@ -115,6 +117,15 @@ namespace Application.Mapping.Project
                 DecisionDate = metadata.DecisionDate,
                 ImportInfo = metadata.ImportInfo
             };
+        }
+
+        // Visningsnamn för "Ändrad av": "Förnamn Efternamn", annars användarnamnet. Null när okänt.
+        private static string? DisplayName(Domain.Entities.Users.UserEntity? user)
+        {
+            if (user is null)
+                return null;
+            var name = $"{user.FirstName} {user.LastName}".Trim();
+            return string.IsNullOrWhiteSpace(name) ? user.UserName : name;
         }
 
         private static string FormatAddress(ProjectManagement.Shared.DTO.App.AddressDTO? address)

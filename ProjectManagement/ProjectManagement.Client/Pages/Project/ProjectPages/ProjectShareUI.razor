@@ -12,18 +12,22 @@
 
     @* ── Sticky topp: projektinfo ligger kvar vid scroll ──────────────── *@
     <div class="shrink-0 border-b border-slate-200 pb-2 dark:border-slate-700">
-        <div class="truncate text-sm text-slate-600 dark:text-slate-300" title="@ProjectName">
+        <div class="truncate text-[14px] text-slate-600 dark:text-slate-300" title="@ProjectName">
             <span class="font-semibold text-slate-800 dark:text-slate-100">Projekt:</span> @ProjectName
         </div>
         @if (!string.IsNullOrWhiteSpace(SelectedCalculationName))
         {
-            <div class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                <span class="font-semibold text-slate-700 dark:text-slate-200">Vald kalkyl:</span> @SelectedCalculationName
-            </div>
-            <div class="text-xs text-slate-500 dark:text-slate-400">
-                @(SelectedCalculationIsPrivate
-                    ? "Denna kalkyl är privat och ingår inte i projektets delning."
-                    : "Delningen hanteras på projektnivå.")
+            @* Kompakt rad: "Vald kalkyl: <namn> · Delningen hanteras på projektnivå."
+               Bryts till två rader på liten skärm (separatorn döljs, meddelandet blir block). *@
+            <div class="mt-1 text-[13px] text-slate-500 dark:text-slate-400">
+                <span class="font-semibold text-slate-700 dark:text-slate-200">Vald kalkyl:</span>
+                <span class="text-slate-600 dark:text-slate-300">@SelectedCalculationName</span>
+                <span class="hidden sm:inline" aria-hidden="true"> · </span>
+                <span class="block sm:inline">
+                    @(SelectedCalculationIsPrivate
+                        ? "Denna kalkyl är privat och ingår inte i projektets delning."
+                        : "Delningen hanteras på projektnivå.")
+                </span>
             </div>
         }
     </div>
@@ -55,11 +59,11 @@
                     class="flex w-full items-center justify-between gap-2 text-left"
                     aria-expanded="@_overviewOpen"
                     @onclick="() => _overviewOpen = !_overviewOpen">
-                <span class="shrink-0 text-[11px] font-semibold tracking-wide text-slate-500 dark:text-slate-400">Åtkomstöversikt</span>
+                <span class="shrink-0 text-[13px] font-semibold text-slate-600 dark:text-slate-300">Åtkomstöversikt för projektet</span>
                 <span class="flex min-w-0 items-center gap-2">
                     @if (!_overviewOpen)
                     {
-                        <span class="truncate text-[11px] text-slate-400">@OverviewSummary()</span>
+                        <span class="truncate text-xs text-slate-400">@OverviewSummary()</span>
                     }
                     <svg class="h-3 w-3 shrink-0 text-slate-400 transition-transform @(_overviewOpen ? "rotate-180" : "")" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                         <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -151,7 +155,7 @@
 
         @* ── Delat med (visas FÖRE formuläret "Dela med") ──────────────── *@
         <div>
-            <div class="mb-1 text-[11px] font-semibold tracking-wide text-slate-500 dark:text-slate-400">Delat med</div>
+            <div class="mb-1 text-[13px] font-semibold text-slate-600 dark:text-slate-300">Delat med</div>
             @if (_shares.Count == 0)
             {
                 <p class="rounded border border-dashed border-slate-300 px-2 py-3 text-center text-xs text-slate-400 dark:border-slate-700">
@@ -165,16 +169,16 @@
                     <table class="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-700">
                         <thead class="sticky top-0 z-10 bg-slate-100 dark:bg-slate-800">
                             <tr>
-                                <th class="px-2 py-1.5 text-left font-medium text-slate-700 dark:text-slate-200">Mottagare</th>
-                                <th class="px-2 py-1.5 text-left font-medium text-slate-700 dark:text-slate-200">Mottagartyp</th>
-                                <th class="px-2 py-1.5 text-left font-medium text-slate-700 dark:text-slate-200">Åtkomstnivå</th>
-                                <th class="px-2 py-1.5 text-left font-medium text-slate-700 dark:text-slate-200">Kalkyler</th>
-                                <th class="px-2 py-1.5 text-left font-medium text-slate-700 dark:text-slate-200">Giltighet</th>
+                                <th class="px-2 py-1.5 text-left text-[13px] font-semibold text-slate-700 dark:text-slate-200">Mottagare</th>
+                                <th class="px-2 py-1.5 text-left text-[13px] font-semibold text-slate-700 dark:text-slate-200">Mottagartyp</th>
+                                <th class="px-2 py-1.5 text-left text-[13px] font-semibold text-slate-700 dark:text-slate-200">Åtkomstnivå</th>
+                                <th class="px-2 py-1.5 text-left text-[13px] font-semibold text-slate-700 dark:text-slate-200">Kalkyler</th>
+                                <th class="px-2 py-1.5 text-left text-[13px] font-semibold text-slate-700 dark:text-slate-200">Giltighet</th>
                                 @* "Delad av" – egen kolumn (tabellen scrollar horisontellt på smal skärm). *@
-                                <th class="px-2 py-1.5 text-left font-medium text-slate-700 dark:text-slate-200">Delad av</th>
+                                <th class="px-2 py-1.5 text-left text-[13px] font-semibold text-slate-700 dark:text-slate-200">Delad av</th>
                                 @if (!ReadOnly)
                                 {
-                                    <th class="w-px whitespace-nowrap px-2 py-1.5 text-right font-medium text-slate-700 dark:text-slate-200">Åtgärder</th>
+                                    <th class="w-px whitespace-nowrap px-2 py-1.5 text-right text-[13px] font-semibold text-slate-700 dark:text-slate-200">Åtgärder</th>
                                 }
                             </tr>
                         </thead>
@@ -217,7 +221,7 @@
                                     <td class="px-2 py-1.5 text-slate-500 dark:text-slate-400">
                                         @if (IsShareExpired(share))
                                         {
-                                            <span class="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">Utgången</span>
+                                            <span class="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">Utgången</span>
                                         }
                                         else
                                         {
@@ -263,7 +267,7 @@
         @if (!ReadOnly)
         {
         <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/60">
-            <div class="mb-2 text-[11px] font-semibold tracking-wide text-slate-500 dark:text-slate-400">
+            <div class="mb-2 text-[13px] font-semibold text-slate-600 dark:text-slate-300">
                 @(_editingId.HasValue ? "Ändra delning" : "Dela med")
             </div>
 
@@ -274,7 +278,7 @@
 
                     @* Mottagartyp – etikett och knappar på samma rad (kompakt) *@
                     <div class="flex items-center gap-2">
-                        <label class="shrink-0 text-xs font-medium text-slate-600 dark:text-slate-300">Mottagartyp</label>
+                        <label class="shrink-0 text-[13px] font-medium text-slate-600 dark:text-slate-300">Mottagartyp</label>
                         <div class="inline-flex overflow-hidden rounded-lg border border-slate-300 dark:border-slate-600">
                             <button type="button"
                                     disabled="@_editingId.HasValue"
@@ -293,7 +297,7 @@
                         {
                             @* Vid ändring är mottagaren låst – endast åtkomstnivå/kalkyler ändras. *@
                             <div>
-                                <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Person</label>
+                                <label class="mb-1 block text-[13px] font-medium text-slate-600 dark:text-slate-300">Person</label>
                                 <div class="rounded-lg border border-slate-300 bg-slate-100 px-2 py-1.5 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200">
                                     @EditingRecipientName
                                 </div>
@@ -302,7 +306,7 @@
                         else
                         {
                             <div>
-                                <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Filtrera personer efter avdelning</label>
+                                <label class="mb-1 block text-[13px] font-medium text-slate-600 dark:text-slate-300">Filtrera personer efter avdelning</label>
                                 <MhdFormSelect TValue="int"
                                                Value="_userFilterDeptId"
                                                ValueChanged="OnUserFilterChanged"
@@ -310,7 +314,7 @@
                             </div>
                             <div>
                                 <div class="mb-1 flex items-center justify-between gap-2">
-                                    <label class="text-xs font-medium text-slate-600 dark:text-slate-300">Personer</label>
+                                    <label class="text-[13px] font-medium text-slate-600 dark:text-slate-300">Personer</label>
                                     @if (_selectedUserIds.Count > 0)
                                     {
                                         <span class="text-[10px] font-semibold text-sky-700 dark:text-sky-300">Valda personer (@_selectedUserIds.Count)</span>
@@ -344,12 +348,12 @@
                                                 <span class="min-w-0 flex-1 truncate text-slate-700 dark:text-slate-200">@user.Name</span>
                                                 @if (user.IsViewer)
                                                 {
-                                                    <span class="shrink-0 cursor-help rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+                                                    <span class="shrink-0 cursor-help rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-400"
                                                           title="Personen har systemrollen Visare och kan bara få åtkomstnivån Kan visa.">Visare</span>
                                                 }
                                                 @if (!string.IsNullOrWhiteSpace(user.ShortStatus))
                                                 {
-                                                    <span class="shrink-0 text-[10px] text-slate-400" title="@user.AccessNote">@user.ShortStatus</span>
+                                                    <span class="shrink-0 text-[11px] text-slate-400" title="@user.AccessNote">@user.ShortStatus</span>
                                                 }
                                             </label>
                                         }
@@ -374,7 +378,7 @@
                     else
                     {
                         <div>
-                            <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Välj avdelning</label>
+                            <label class="mb-1 block text-[13px] font-medium text-slate-600 dark:text-slate-300">Välj avdelning</label>
                             <select class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
                                     disabled="@_editingId.HasValue"
                                     value="@_departmentId" @onchange="e => _departmentId = ParseNullableInt(e.Value)">
@@ -394,23 +398,15 @@
                     }
                 </div>
 
-                @* ── HÖGER: åtkomstnivå + kalkyler + åtgärd ───────────────── *@
+                @* ── HÖGER: giltighet + åtkomstnivå + kalkyler + åtgärd ──────
+                   Giltighet ligger överst (generell inställning för delningen),
+                   åtkomstnivån direkt under och nära kalkylvalet. *@
                 <div class="flex flex-col gap-3">
-
-                    @* Åtkomstnivå i detta projekt *@
-                    <div>
-                        <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Åtkomstnivå i detta projekt</label>
-                        <MhdFormSelect TValue="string"
-                                       Value="_role"
-                                       ValueChanged="OnRoleChanged"
-                                       Options="RoleItems"
-                                       Title="@(DisableEditOption ? "Personen har systemrollen Visare och kan bara få åtkomstnivån Kan visa." : null)" />
-                    </div>
 
                     @* Giltighet – allt på en rad på bred skärm, bryts responsivt på liten skärm *@
                     <div>
                         <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                            <label class="shrink-0 text-xs font-medium text-slate-600 dark:text-slate-300">Giltighet</label>
+                            <label class="shrink-0 text-[13px] font-medium text-slate-600 dark:text-slate-300">Giltighet</label>
                             <label class="flex cursor-pointer items-center gap-1.5 text-sm">
                                 <input type="radio"
                                        name="project-share-validity"
@@ -447,10 +443,20 @@
                         }
                     </div>
 
+                    @* Åtkomstnivå i detta projekt – under Giltighet, nära kalkylvalet *@
+                    <div>
+                        <label class="mb-1 block text-[13px] font-medium text-slate-600 dark:text-slate-300">Åtkomstnivå i detta projekt</label>
+                        <MhdFormSelect TValue="string"
+                                       Value="_role"
+                                       ValueChanged="OnRoleChanged"
+                                       Options="RoleItems"
+                                       Title="@(DisableEditOption ? "Personen har systemrollen Visare och kan bara få åtkomstnivån Kan visa." : null)" />
+                    </div>
+
                     @* Kalkyler *@
                     <div>
                         <div class="mb-1 flex items-center justify-between gap-2">
-                            <label class="text-xs font-medium text-slate-600 dark:text-slate-300">Välj kalkyler som ska delas</label>
+                            <label class="text-[13px] font-medium text-slate-600 dark:text-slate-300">Välj kalkyler som ska delas</label>
                             <button type="button"
                                     class="text-[11px] font-semibold text-sky-700 hover:text-sky-900 disabled:opacity-40 dark:text-sky-300"
                                     title="Väljer alla kalkyler som kan delas. Privata kalkyler ingår inte."
@@ -486,7 +492,7 @@
                                         <span class="min-w-0 flex-1 truncate text-slate-700 dark:text-slate-200">@calc.Name</span>
                                         @if (calc.IsPrivate)
                                         {
-                                            <span class="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">Privat</span>
+                                            <span class="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">Privat</span>
                                         }
                                     </label>
                                 }

@@ -38,6 +38,21 @@ namespace ProjectManagement.Client.Pages.Folder
     {
         [Inject] private IJSRuntime JS { get; set; } = default!;
         [Inject] private IClientLogger ClientLogger { get; set; } = default!;
+        // Server-auktoritativ "senast öppnad" per användare (samma lager som höger­panelens listor),
+        // så ändringsindikatorn i trädet och i listorna är konsekvent och döljs oavsett var objektet öppnas.
+        [Inject] private ProjectManagement.Client.Services.Folder.ProjectListViewPreference ProjectViewPreference { get; set; } = default!;
+        [Inject] private ProjectManagement.Client.Services.Calculation.CalculationListViewPreference CalcViewPreference { get; set; } = default!;
+        [Inject] private ProjectManagement.Client.Shared.Repositories.ChangeLog.IChangeLogRepository ChangeLogRepo { get; set; } = default!;
+
+        // id (string) → senast öppnad (server). Driver ändringsindikatorn (UpdatedAt > värdet).
+        private Dictionary<string, DateTime> _projectChangeSeen = new();
+        private Dictionary<string, DateTime> _calcChangeSeen = new();
+
+        // Senaste ändringar per objekt för trädets indikator-tooltip. Hämtas bara för objekt som
+        // visar indikatorn (osedd ändring); signatur-vakt hindrar omladdning på varje render.
+        private Dictionary<Guid, List<ProjectManagement.Shared.DTO.ChangeLog.ChangeLogItemDTO>> _projectRecentChanges = new();
+        private Dictionary<int, List<ProjectManagement.Shared.DTO.ChangeLog.ChangeLogItemDTO>> _calcRecentChanges = new();
+        private string _treeRecentSig = string.Empty;
 
         [Parameter] public string GroupingMode { get; set; } = ProjectTreeGroupingMode.FolderStructure;
         [Parameter] public string SortMode { get; set; } = ProjectTreeSortMode.NameAscending;
@@ -313,6 +328,80 @@ namespace ProjectManagement.Client.Pages.Folder
             var user = authState.User;
             _currentUserId = TryGetIntClaim(user, PMClaimsConst.UserId) ?? 0;
             _currentDepartmentId = TryGetIntClaim(user, PMClaimsConst.DepartmentId);
+
+            // Senast öppnad per projekt/kalkyl (för ändringsindikatorn i trädet).
+            _projectChangeSeen = await ProjectViewPreference.LoadLastOpenedAsync() ?? new();
+            _calcChangeSeen = await CalcViewPreference.LoadLastOpenedAsync() ?? new();
+        }
+
+        // Ändringsindikator i trädet: visas efter namnet när objektet ändrats efter att aktuell
+        // användare senast öppnade det. Aldrig öppnade objekt (ingen baslinje) visar ingen indikator.
+        // Mappar har ingen indikator i denna första version.
+        private bool HasUnseenProjectChange(ListProjectMVVM p) =>
+            p.UpdatedAt is { } updated
+            && _projectChangeSeen.TryGetValue(p.Id.ToString(), out var opened)
+            && updated > opened;
+
+        private bool HasUnseenCalcChange(ListCalculationMVVM c) =>
+            c.UpdatedAt is { } updated
+            && _calcChangeSeen.TryGetValue(c.Id.ToString(), out var opened)
+            && updated > opened;
+
+        private async Task MarkProjectChangeSeenAsync(ListProjectMVVM p)
+        {
+            _projectChangeSeen[p.Id.ToString()] = DateTime.UtcNow;
+            await ProjectViewPreference.SaveLastOpenedAsync(_projectChangeSeen);
+        }
+
+        private async Task MarkCalcChangeSeenAsync(ListCalculationMVVM c)
+        {
+            _calcChangeSeen[c.Id.ToString()] = DateTime.UtcNow;
+            await CalcViewPreference.SaveLastOpenedAsync(_calcChangeSeen);
+        }
+
+        private IReadOnlyList<ProjectManagement.Shared.DTO.ChangeLog.ChangeLogItemDTO>? GetProjectRecentChanges(Guid id) =>
+            _projectRecentChanges.TryGetValue(id, out var list) ? list : null;
+
+        private IReadOnlyList<ProjectManagement.Shared.DTO.ChangeLog.ChangeLogItemDTO>? GetCalcRecentChanges(int id) =>
+            _calcRecentChanges.TryGetValue(id, out var list) ? list : null;
+
+        // Förladda "Senaste ändringar" för de projekt/kalkyler i trädet som visar indikatorn (osedd
+        // ändring). Signatur-vakt gör att hämtningen bara sker när uppsättningen ändras, så
+        // OnAfterRender inte loopar. Mappar har ingen indikator/historik i denna version.
+        private async Task EnsureTreeRecentChangesAsync()
+        {
+            var projectIds = new List<Guid>();
+            var calcIds = new List<int>();
+
+            foreach (var folder in UoWService.Folder.State.FoldersList ?? [])
+            {
+                foreach (var project in folder.Projects ?? [])
+                {
+                    if (HasUnseenProjectChange(project))
+                        projectIds.Add(project.Id);
+
+                    foreach (var calc in project.Calculations ?? [])
+                        if (HasUnseenCalcChange(calc))
+                            calcIds.Add(calc.Id);
+                }
+            }
+
+            projectIds = projectIds.Distinct().OrderBy(x => x).ToList();
+            calcIds = calcIds.Distinct().OrderBy(x => x).ToList();
+
+            var sig = string.Join("|", projectIds) + "#" + string.Join(",", calcIds);
+            if (sig == _treeRecentSig)
+                return;
+
+            _treeRecentSig = sig;
+            _projectRecentChanges = projectIds.Count == 0
+                ? new()
+                : await ChangeLogRepo.GetRecentForProjectsAsync(projectIds);
+            _calcRecentChanges = calcIds.Count == 0
+                ? new()
+                : await ChangeLogRepo.GetRecentForCalculationsAsync(calcIds);
+
+            await InvokeAsync(StateHasChanged);
         }
 
         private static int? TryGetIntClaim(ClaimsPrincipal user, string claimType)
@@ -356,6 +445,9 @@ namespace ProjectManagement.Client.Pages.Folder
                 if (SortMode == ProjectTreeSortMode.LastOpenedNewest)
                     await InvokeAsync(StateHasChanged);
             }
+
+            // Förladda trädets indikator-tooltipar (signatur-vakt internt → ingen render-loop).
+            await EnsureTreeRecentChangesAsync();
 
             if (!_jsReady || _restoreCompleted || _restoreInProgress)
                 return;
@@ -539,6 +631,7 @@ namespace ProjectManagement.Client.Pages.Folder
             AddMissingManualOrderSnapshot(project);
             Folder.State.SetCalculation(null, project, folder);
             await MarkOpenedAsync(GetProjectKey(project));
+            await MarkProjectChangeSeenAsync(project);
             await SaveLastSelection(folder, project, null);
         }
 
@@ -557,6 +650,7 @@ namespace ProjectManagement.Client.Pages.Folder
             _selectedGroupKey = null;
             await CalcService.SetCalc(calculation.Id, project, folder);
             await MarkOpenedAsync(GetCalculationKey(calculation));
+            await MarkCalcChangeSeenAsync(calculation);
             await SaveLastSelection(folder, project, calculation);
         }
 
@@ -866,10 +960,11 @@ namespace ProjectManagement.Client.Pages.Folder
 
         // Unified selection style for every node type (Hela avdelningen, folder, project, calculation).
         // Blue is the navigation/selected color; green is reserved for status meaning.
-        // Calmer selection: a thin (2px) left accent + soft light-blue tint instead of a
-        // full border + shadow + ring, so the tree never out-shouts the main table.
+        // Selected row: tydligare men fortfarande blå (aldrig orange/tung grå). En lite kraftigare
+        // ljusblå bakgrund + en tydligare 3px blå vänsterkant, så valt objekt syns klart på alla
+        // nivåer även i långa träd – utan ring/skugga som skulle skrika över huvudtabellen.
         private const string TreeSelectedRowClass =
-            "border-l-2 border-sky-500 bg-sky-50 dark:border-sky-400 dark:bg-sky-950/30";
+            "border-l-4 border-sky-500 bg-sky-100 dark:border-sky-400 dark:bg-sky-950/50";
 
         // Expanded (but not selected): a faint tint, no ring.
         private const string TreeExpandedRowClass =
@@ -1203,6 +1298,20 @@ namespace ProjectManagement.Client.Pages.Folder
             return index >= 0 && index < list.Count - 1;
         }
 
+        // I ordningsläge visas upp/ner-knapparna alltid (konsekvent), men inaktiveras när flytt inte är
+        // tillåten. Dessa metoder returnerar tooltip-förklaringen (null = flytt tillåten). Sorteringen är
+        // alltid manuell i ordningsläge, så den orsaken är inte aktuell här.
+        private const string FolderMoveBlockedReason =
+            "Mappar i delade avdelningar är bara visuella grupper och kan inte flyttas.";
+        private const string ItemMoveBlockedReason =
+            "Du kan inte ändra ordning i en delad vy.";
+
+        private string? MoveUpReason<T>(IEnumerable<T> items, T item, bool blocked, string blockedReason) where T : class =>
+            blocked ? blockedReason : (CanMoveUp(items, item) ? null : "Objektet ligger redan först.");
+
+        private string? MoveDownReason<T>(IEnumerable<T> items, T item, bool blocked, string blockedReason) where T : class =>
+            blocked ? blockedReason : (CanMoveDown(items, item) ? null : "Objektet ligger redan sist.");
+
         private async Task SaveManualOrderAsync()
         {
             var tasks = new List<Task<bool>>();
@@ -1456,7 +1565,7 @@ namespace ProjectManagement.Client.Pages.Folder
                 // Grupp 1 — skapa/importera
                 list.Add(new() { IconHtml = Icons.Plus, Label = AppLoc["newProject"], OnClickAsync = () => { CreateProjectFromFolderTree(item); return Task.CompletedTask; } });
                 // Import a project copy (.atacost) into this folder — creates a new project.
-                list.Add(new() { IconHtml = Icons.ImportFromFile, Label = "Importera projektkopia...", OnClickAsync = () => RequestImportProjectCopy(item, canManageFolder) });
+                list.Add(new() { IconHtml = Icons.ImportFromFile, Label = "Importera projekt...", OnClickAsync = () => RequestImportProjectCopy(item, canManageFolder) });
 
                 // Grupp 2 — ändra mapp
                 list.Add(new() { IsSeparator = true });
@@ -1621,7 +1730,7 @@ namespace ProjectManagement.Client.Pages.Folder
                 // Grupp 1 — skapa/importera
                 list.Add(new() { IconHtml = Icons.Plus, Label = AppLoc[LocalizerConst.New, CalcResource.calculation], OnClickAsync = async () => await CreateCalcFromProjectTreeAsync(folder, project) });
                 // Import a calculation copy (.atacost) into this project — creates a new calculation.
-                list.Add(new() { IconHtml = Icons.ImportFromFile, Label = "Importera kalkylkopia...", OnClickAsync = () => RequestImportCalcCopy(folder, project, access.CanManageLifecycle) });
+                list.Add(new() { IconHtml = Icons.ImportFromFile, Label = "Importera kalkyl...", OnClickAsync = () => RequestImportCalcCopy(folder, project, access.CanManageLifecycle) });
             }
 
             if (access.CanView)
@@ -1632,7 +1741,7 @@ namespace ProjectManagement.Client.Pages.Folder
                 list.Add(new()
                 {
                     IconHtml = access.CanEditWork ? Icons.Edit : Icons.Details,
-                    Label = access.CanEditWork ? AppLoc["editProject"] : "Visa projekt",
+                    Label = access.CanEditWork ? "Ändra projektuppgifter" : "Visa projekt",
                     OnClickAsync = () => { EditProjectFromTree(folder, project, access.CanEditWork); return Task.CompletedTask; }
                 });
                 list.Add(new() { IconHtml = Icons.Tender, Label = ResourceLoc.tender, OnClickAsync = () => { OpenProjectBidsFromTree(project); return Task.CompletedTask; } });
@@ -1712,7 +1821,6 @@ namespace ProjectManagement.Client.Pages.Folder
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             var blocked = IsFolderManageBlocked(folder);
             var access = ContextMenuAccessPolicy.ForCalculation(authState.User, cal.Access, blocked);
-            var projectAccess = ContextMenuAccessPolicy.ForProject(authState.User, project.Access, blocked);
 
             // "Öppna kalkyl" (läsåtgärd) ligger överst; därefter samma grupperade ordning som i
             // kalkyllistan: [huvudåtgärder] · [livscykel] · [export] · [ta bort].
@@ -1720,22 +1828,17 @@ namespace ProjectManagement.Client.Pages.Folder
             list.Add(new()
             {
                 IconHtml = access.CanEditWork && cal.IsCurrentVersion ? Icons.Edit : Icons.Details,
-                Label = access.CanEditWork && cal.IsCurrentVersion ? ResourceApp.edit : "Visa kalkyl",
+                Label = access.CanEditWork && cal.IsCurrentVersion ? "Ändra kalkyluppgifter" : "Visa kalkyl",
                 OnClickAsync = () => { EditCalculationFromTree(project, cal, access.CanEditWork && cal.IsCurrentVersion); return Task.CompletedTask; }
             });
-            list.Add(new() { IconHtml = Icons.Details, Label = "Visa detaljer", OnClickAsync = () => { OpenCalculationDetailsFromTree(project, cal); return Task.CompletedTask; } });
-            list.Add(new()
-            {
-                IconHtml = Icons.PermissionShield,
-                Label = projectAccess.CanManageSharing ? "Delning och behörighet" : "Visa delning och behörighet",
-                OnClickAsync = () => { OpenProjectShareFromTree(project, readOnly: !projectAccess.CanManageSharing); return Task.CompletedTask; }
-            });
+            // "Visa detaljer" borttagen – öppna/ändra räcker. Kalkyldelning hanteras på projektnivå
+            // (ingen "Delning och behörighet" i kalkylmenyn).
 
             if (access.CanManageLifecycle)
             {
-                // Grupp 1 — huvudåtgärder (Versioner direkt efter Ändra)
+                // Grupp 1 — huvudåtgärder (Kalkylversioner direkt efter Ändra)
                 list.Add(new() { IsSeparator = true });
-                list.Add(new() { IconHtml = Icons.Copy, Label = "Versioner", OnClickAsync = () => { OpenCalculationVersionsFromTree(project, cal); return Task.CompletedTask; } });
+                list.Add(new() { IconHtml = Icons.Copy, Label = "Kalkylversioner", OnClickAsync = () => { OpenCalculationVersionsFromTree(project, cal); return Task.CompletedTask; } });
 
                 // Grupp 2 — livscykel/hantering
                 list.Add(new() { IsSeparator = true });
@@ -1991,16 +2094,6 @@ namespace ProjectManagement.Client.Pages.Folder
                     [nameof(ProjectShareUI.ProjectDepartmentId)] = project.DepartmentId!,
                     [nameof(ProjectShareUI.ProjectResponsible)] = project.Responsible,
                     [nameof(ProjectShareUI.ReadOnly)] = readOnly
-                },
-                BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
-
-        private void OpenCalculationDetailsFromTree(ListProjectMVVM project, ListCalculationMVVM cal) =>
-            Modal.ShowComponent<CalculationDetailsUI>(
-                ResourceLoc.details,
-                new Dictionary<string, object>
-                {
-                    [nameof(CalculationDetailsUI.Id)] = cal.Id,
-                    [nameof(CalculationDetailsUI.ProjectId)] = project.Id
                 },
                 BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
 

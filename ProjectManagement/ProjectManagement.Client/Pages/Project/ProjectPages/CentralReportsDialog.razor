@@ -29,6 +29,13 @@
     {
         <MhdLoading />
     }
+    else if (_loadError is not null)
+    {
+        @* Lokalt fel i rapportdialogen – inget globalt "Ett oväntat fel uppstod". *@
+        <div class="m-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
+            @_loadError
+        </div>
+    }
     else
     {
         @if (_activeView == ReportView.Income)
@@ -260,6 +267,15 @@
             var _incShowRowNo = _visibleIncomeColumns.Contains(IncomeReportColumn.RowNumber);
             var _incShowQ = _showQuarters && _incCalcCols.Contains(IncomeReportColumn.Year);
             var _incColSpan = 1 + (_incShowRowNo ? 1 : 0) + _incCalcCols.Count + (_incShowQ ? 4 : 0);
+            @if (HasNoAccessibleCalculations)
+            {
+                @* Tomt läge: åtkomst till projekt finns men inga läsbara kalkyler i urvalet. Ingen krasch. *@
+                <div class="rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400">
+                    Det finns inga kalkyler du har åtkomst till i detta urval.
+                </div>
+            }
+            else
+            {
             <div class="@TableContainerClass">
                 <table class="@TableClass">
                     <thead class="@TableHeadClass">
@@ -348,6 +364,7 @@
                     </tbody>
                 </table>
             </div>
+            }
         }
 
         @* ═══ HIT RATE ═══ *@
@@ -706,7 +723,9 @@
         Responsible, Inspector, TenderQA, TenderDeadline, Priority, CreatedAt, UpdatedAt, Archived,
         Code, Private,
         // Appended last to keep existing stored column-pref indices stable.
-        RowNumber
+        RowNumber,
+        // Kalkylens projektavdelning. Tillagd sist för indexstabilitet i sparade kolumnval.
+        Department
     }
 
     private enum ProjReportColumn
@@ -721,7 +740,9 @@
         RowNumber,
         // "Delat" – Ja/Nej whether the project is internally shared. Appended after RowNumber
         // so existing stored column-pref indices stay stable.
-        Shared
+        Shared,
+        // Projektets avdelning. Tillagd sist för indexstabilitet i sparade kolumnval.
+        Department
     }
 
     private static readonly CalcReportColumn[] CalcAllColumns = Enum.GetValues<CalcReportColumn>();
@@ -751,7 +772,9 @@
         TenderDeadline, PublicationDate, DecisionDate,
         Contract, Compensation, ProcurementName, ProcurementProcedure, Archived,
         // Appended last to keep existing stored column-pref indices stable.
-        RowNumber
+        RowNumber,
+        // Projektets avdelning (projektuppgift). Tillagd sist för indexstabilitet i sparade kolumnval.
+        Department
     }
 
     private static readonly IncomeReportColumn[] IncomeAllColumns = Enum.GetValues<IncomeReportColumn>();
@@ -768,7 +791,7 @@
     // kalkylraderna. Kolumnvalet delas upp i dessa grupper. RowNumber är en visningskolumn.
     private static readonly IncomeReportColumn[] IncomeProjectColumns =
     [
-        IncomeReportColumn.Folder, IncomeReportColumn.Project, IncomeReportColumn.ProjStatus,
+        IncomeReportColumn.Folder, IncomeReportColumn.Project, IncomeReportColumn.Department, IncomeReportColumn.ProjStatus,
         IncomeReportColumn.Organisation, IncomeReportColumn.Developer, IncomeReportColumn.ProjectCode,
         IncomeReportColumn.ProjectType, IncomeReportColumn.Contract, IncomeReportColumn.Compensation,
         IncomeReportColumn.ProcurementName, IncomeReportColumn.ProcurementProcedure,
@@ -800,7 +823,9 @@
         Code, Organisation, Developer, Contract, Compensation, ProcurementName, ProcurementProcedure,
         PublicationDate, DecisionDate, UpdatedAt, CreatedAt, Archived, TenderQA,
         // Appended last to keep existing stored column-pref indices stable.
-        RowNumber
+        RowNumber,
+        // Projektets avdelning. Tillagd sist för indexstabilitet i sparade kolumnval.
+        Department
     }
 
     private static readonly HitRateReportColumn[] HitRateAllColumns = Enum.GetValues<HitRateReportColumn>();
@@ -820,7 +845,9 @@
         ProjectCode, ProjectType, ProjStatus, Organisation, Developer, TenderDeadline,
         EvaluationModel, TotalPoints, Note, CreatedAt, UpdatedAt,
         // Appended last to keep existing stored column-pref indices stable.
-        RowNumber
+        RowNumber,
+        // Projektets avdelning. Tillagd sist för indexstabilitet i sparade kolumnval.
+        Department
     }
 
     private static readonly BidReportColumn[] BidAllColumns = Enum.GetValues<BidReportColumn>();
@@ -845,7 +872,7 @@
     [
         BidReportColumn.Bidder, BidReportColumn.Placement, BidReportColumn.Awarded, BidReportColumn.BidStatus,
         BidReportColumn.Amount, BidReportColumn.Deduction, BidReportColumn.Comparison, BidReportColumn.Deviation,
-        BidReportColumn.ProjectCode, BidReportColumn.ProjectType, BidReportColumn.ProjStatus, BidReportColumn.Organisation,
+        BidReportColumn.ProjectCode, BidReportColumn.ProjectType, BidReportColumn.ProjStatus, BidReportColumn.Department, BidReportColumn.Organisation,
         BidReportColumn.Developer, BidReportColumn.TenderDeadline, BidReportColumn.EvaluationModel, BidReportColumn.TotalPoints,
         BidReportColumn.Note, BidReportColumn.Rejected, BidReportColumn.RejectionReason, BidReportColumn.CreatedAt, BidReportColumn.UpdatedAt
     ];
@@ -887,6 +914,7 @@
         public string ProjectCode { get; init; } = "";
         public string ProjectType { get; init; } = "";
         public string ProjStatus { get; init; } = "";
+        public string DepartmentName { get; init; } = "";
         public string Organisation { get; init; } = "";
         public string Developer { get; init; } = "";
         public string CalcCode { get; init; } = "";
@@ -940,6 +968,8 @@
 
     // ── Filter state ──────────────────────────────────────────────────
     private bool _isLoading = true;
+    // Lokalt rapportfel (behörighet/laddning). Visas inne i dialogen i stället för det globala UI-felet.
+    private string? _loadError;
     private string _activeView = ReportView.Income;
     private string _selectedFolderId = string.Empty;
     private string _selectedProjectId = string.Empty;
@@ -1586,22 +1616,60 @@
                 .GroupBy(x => x.id)               // robust mot ev. dubbletter i urvalet
                 .ToDictionary(g => g.Key, g => g.First().i);
 
-        await LoadAsync();
-        ApplyProjectListOrder();
-        if (IsViewEnabled(ReportView.Income)) BuildIncomeSelectionInfo();
-        if (IsViewEnabled(ReportView.Projects)) LockProjReportProjects();
-        if (IsViewEnabled(ReportView.HitRate)) LockHitRateProjects();
-        if (IsViewEnabled(ReportView.Calculations)) LockCalcReportList();
-        if (IsViewEnabled(ReportView.BidComparison)) LockBidComparison();
-
-        if (!string.IsNullOrWhiteSpace(_selectedProjectId))
+        // Rapportladdning hanteras LOKALT: ett förväntat rapport-/behörighetsfel ska avsluta loading och
+        // visa ett tydligt fel i dialogen, aldrig bubbla upp till det globala "Ett oväntat fel uppstod".
+        try
         {
-            var found = AvailableProjects.FirstOrDefault(p => p.Project.Id.ToString() == _selectedProjectId);
-            if (found is not null) _projectSearch = ProjectDisplayLabel(found);
-        }
+            await LoadAsync();
 
-        _isLoading = false;
+            // Avdelningsnamn (id → namn) för rapporternas "Avdelning"-kolumn.
+            var departments = await Repo.Departments.GetDepartmentsAsListAsync();
+            if (departments is not null)
+                _departmentNames = departments.GroupBy(d => d.Id).ToDictionary(g => g.Key, g => g.First().Name);
+
+            ApplyProjectListOrder();
+            if (IsViewEnabled(ReportView.Income)) BuildIncomeSelectionInfo();
+            if (IsViewEnabled(ReportView.Projects)) LockProjReportProjects();
+            if (IsViewEnabled(ReportView.HitRate)) LockHitRateProjects();
+            if (IsViewEnabled(ReportView.Calculations)) LockCalcReportList();
+            if (IsViewEnabled(ReportView.BidComparison)) LockBidComparison();
+
+            if (!string.IsNullOrWhiteSpace(_selectedProjectId))
+            {
+                var found = AvailableProjects.FirstOrDefault(p => p.Project.Id.ToString() == _selectedProjectId);
+                if (found is not null) _projectSearch = ProjectDisplayLabel(found);
+            }
+
+            // Tydligt behörighetsfel om rapporten öppnats för ETT specifikt projekt som användaren saknar
+            // åtkomst till: project-frågorna är CanSee-filtrerade, så ett otillåtet projekt finns inte med.
+            if (_loadError is null && ProjectScope is not null && _projects.Count == 0)
+                _loadError = "Du saknar behörighet att visa rapport för detta projekt.";
+        }
+        catch (Exception ex)
+        {
+            var projectIds = string.Join(",", _projects.Select(p => p.Project.Id));
+            await ClientLog.ErrorAsync(
+                $"Report load failed (scope folder={_selectedFolderId}, project={_selectedProjectId}, view={_activeView}, projectIds=[{projectIds}])",
+                ex: ex);
+            _loadError = IsForbiddenError(ex)
+                ? "Du saknar behörighet att visa rapport för detta projekt."
+                : "Kunde inte läsa in rapporten. Kontrollera behörighet eller försök igen.";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
     }
+
+    // 403 (Forbidden) från ett rapport-API ska visas som ett tydligt behörighetsfel i dialogen,
+    // inte som det globala "Ett oväntat fel uppstod".
+    private static bool IsForbiddenError(Exception ex) =>
+        ex is System.Net.Http.HttpRequestException { StatusCode: System.Net.HttpStatusCode.Forbidden }
+        || ex.Message.Contains("403");
+
+    // Användaren har åtkomst till projekt i urvalet men inga kalkyler som får läsas (t.ex. delat projekt
+    // där bara vissa/inga kalkyler ingår). Visas som tomt läge i dialogen – inte som fel/krasch.
+    private bool HasNoAccessibleCalculations => _loadError is null && _projects.Count > 0 && _allVersions.Count == 0;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -1697,16 +1765,29 @@
     private async Task LoadCalculationsAsync(FolderMVVM folder, ListProjectMVVM project)
     {
         List<ListCalculationMVVM> all;
-        if (Folder.State.OtherDepartment)
+        try
         {
-            all = CalculationVersionSelector.FilterFamiliesByCurrentVisibility(
-                await Repo.Calculation.GetShareCalculationsAsync(project.Id), includeArchived: true).ToList();
+            // Effektiv projektåtkomst, inte bara det globala avdelnings-läget: ett delat/tilldelat projekt
+            // (folder.IsReadOnlyGroup – t.ex. i "Alla tillgängliga" där OtherDepartment är false) läser endast
+            // de kalkyler som ingår i delningen via share-frågan. GetAsync kräver mapp-/avdelningsåtkomst och
+            // skulle annars kasta för delade projekt och ge globalt UI-fel.
+            if (Folder.State.OtherDepartment || folder.IsReadOnlyGroup)
+            {
+                all = CalculationVersionSelector.FilterFamiliesByCurrentVisibility(
+                    await Repo.Calculation.GetShareCalculationsAsync(project.Id), includeArchived: true).ToList();
+            }
+            else
+            {
+                all = await Repo.Calculation.GetAsync(project.Id);
+                all.AddRange(await Repo.Calculation.GetAsync(project.Id, isArchived: true));
+                all = all.DistinctBy(c => c.Id).ToList();
+            }
         }
-        else
+        catch (Exception ex)
         {
-            all = await Repo.Calculation.GetAsync(project.Id);
-            all.AddRange(await Repo.Calculation.GetAsync(project.Id, isArchived: true));
-            all = all.DistinctBy(c => c.Id).ToList();
+            // Ett enskilt projekt utan läsbar kalkyldata ska inte krascha hela rapporten – logga och hoppa över.
+            await ClientLog.ErrorAsync($"Loading report calculations failed for project {project.Id} (folder {folder.Id})", ex: ex);
+            return;
         }
 
         var lookup = all.ToDictionary(c => c.Id);
@@ -1919,6 +2000,7 @@
         BidReportColumn.Note => r.Row.Note ?? "",
         BidReportColumn.CreatedAt => r.Row.CreatedAt == default ? "" : r.Row.CreatedAt.ToString("yyyy-MM-dd"),
         BidReportColumn.UpdatedAt => r.Row.UpdatedAt?.ToString("yyyy-MM-dd") ?? "",
+        BidReportColumn.Department => r.Project is { } bp ? GetReportDepartmentName(bp) : "-",
         _ => ""
     };
 
@@ -1949,6 +2031,7 @@
         BidReportColumn.CreatedAt => "Skapad",
         BidReportColumn.UpdatedAt => "Senast ändrad",
         BidReportColumn.RowNumber => "Radnummer",
+        BidReportColumn.Department => "Avdelning",
         _ => col.ToString()
     };
 
@@ -2108,6 +2191,7 @@
                 Kind = IncomeTableRowKind.ProjectHeader,
                 FolderName = folderName, ProjectName = p.Name,
                 ProjectCode = p.Code, ProjectType = p.Type, ProjStatus = p.Status,
+                DepartmentName = GetReportDepartmentName(p),
                 Organisation = p.Organisation, Developer = p.Developer,
                 Contract = p.Contract, Compensation = p.Compensation,
                 ProcurementName = p.ProcurementName, ProcurementProcedure = p.ProcurementProcedure,
@@ -2398,6 +2482,7 @@
         HitRateReportColumn.Archived => "Arkiverad",
         HitRateReportColumn.TenderQA => "Frågor/svar",
         HitRateReportColumn.RowNumber => "Radnummer",
+        HitRateReportColumn.Department => "Avdelning",
         _ => col.ToString()
     };
 
@@ -2423,6 +2508,7 @@
         HitRateReportColumn.CreatedAt => e.Project.CreatedAt == default ? "" : e.Project.CreatedAt.ToString("yyyy-MM-dd"),
         HitRateReportColumn.Archived => !e.Project.IsArchived ? "" : L("archived"),
         HitRateReportColumn.TenderQA => FormatDate(e.Project.TenderQA),
+        HitRateReportColumn.Department => GetReportDepartmentName(e.Project),
         _ => ""
     };
 
@@ -2458,6 +2544,7 @@
         IncomeReportColumn.ProcurementProcedure => "Upphandlingsförfarande",
         IncomeReportColumn.Archived => "Arkiverad",
         IncomeReportColumn.RowNumber => "Radnummer",
+        IncomeReportColumn.Department => "Avdelning",
         _ => col.ToString()
     };
 
@@ -2492,6 +2579,7 @@
         IncomeReportColumn.ProjectCode => row.ProjectCode,
         IncomeReportColumn.ProjectType => row.ProjectType,
         IncomeReportColumn.ProjStatus => row.ProjStatus,
+        IncomeReportColumn.Department => row.DepartmentName,
         IncomeReportColumn.Organisation => row.Organisation,
         IncomeReportColumn.Developer => row.Developer,
         IncomeReportColumn.CalcCode => row.CalcCode,
@@ -2510,6 +2598,13 @@
         IncomeReportColumn.Archived => row.ArchivedText,
         _ => ""
     };
+
+    // Avdelnings-id → namn (laddas en gång). Avdelningsnamnen bor i identitets-DB:n; samma
+    // klientuppslag som listorna. "-" när namn saknas (aldrig null/undefined/id i UI:t).
+    private Dictionary<int, string> _departmentNames = new();
+
+    private string GetReportDepartmentName(ListProjectMVVM project) =>
+        project.DepartmentId is int id && _departmentNames.TryGetValue(id, out var name) ? name : "-";
 
     private string GetCalcColumnLabel(CalcReportColumn col) => col switch
     {
@@ -2531,6 +2626,7 @@
         CalcReportColumn.Code => "Kalkylkod",
         CalcReportColumn.Private => "Privat",
         CalcReportColumn.RowNumber => "Radnummer",
+        CalcReportColumn.Department => "Avdelning",
         _ => col.ToString()
     };
 
@@ -2555,6 +2651,7 @@
         CalcReportColumn.Archived => !e.Calculation.IsArchived ? "" : L("archived"),
         CalcReportColumn.Code => e.Calculation.Code ?? "",
         CalcReportColumn.Private => e.Calculation.IsPrivate ? "Privat" : "",
+        CalcReportColumn.Department => GetReportDepartmentName(e.Project),
         _ => ""
     };
 
@@ -2593,6 +2690,7 @@
         ProjReportColumn.CreatedAt => "Skapad datum",
         ProjReportColumn.UpdatedAt => "Senast ändrad",
         ProjReportColumn.RowNumber => "Radnummer",
+        ProjReportColumn.Department => "Avdelning",
         _ => col.ToString()
     };
 
@@ -2630,6 +2728,7 @@
         ProjReportColumn.DecisionDate => e.Project.DecisionDate.HasValue ? e.Project.DecisionDate.Value.ToString("yyyy-MM-dd") : "",
         ProjReportColumn.CreatedAt => e.Project.CreatedAt == default ? "" : e.Project.CreatedAt.ToString("yyyy-MM-dd"),
         ProjReportColumn.UpdatedAt => e.Project.UpdatedAt?.ToString("yyyy-MM-dd") ?? "",
+        ProjReportColumn.Department => GetReportDepartmentName(e.Project),
         _ => ""
     };
 

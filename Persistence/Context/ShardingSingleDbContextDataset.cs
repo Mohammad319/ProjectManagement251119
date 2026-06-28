@@ -54,6 +54,7 @@ public partial class ShardingSingleDbContext
     public DbSet<UserListSettingEntity> UserListSettings { get; set; } = default!;
     public DbSet<UserManagementAuditEntity> UserManagementAuditLogs { get; set; } = default!;
     public DbSet<NotificationEntity> Notifications { get; set; } = default!;
+    public DbSet<Domain.Entities.ChangeLog.ChangeLogEntity> ChangeLogs { get; set; } = default!;
     public DbSet<TenderAttributeDefinitionEntity> AttributeNameTender { get; set; } = default!;
     public DbSet<TenderAttributeBindEntity> TenderAttributeBind { get; set; } = default!;
     public DbSet<PriceList> PriceLists => Set<PriceList>();

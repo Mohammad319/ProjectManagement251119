@@ -17,7 +17,8 @@ namespace Persistence.Service.CalculationItems.Calculation
 {
     public sealed class CalculationService(
         IDbContextFactoryTenant dbFactory,
-        INotificationHub notification)
+        INotificationHub notification,
+        global::Application.Feature.ChangeLog.IChangeLogService? changeLog = null)
         : ICalculationService
     {
         public async Task<int> CreateAsync(
@@ -66,6 +67,9 @@ namespace Persistence.Service.CalculationItems.Calculation
 
             db.Calculations.Add(calculation);
             await db.SaveChangesAsync(cancellationToken);
+
+            if (changeLog is not null)
+                await changeLog.AppendCalculationAsync(calculation.Id, ChangeAction.Created, userId, cancellationToken);
 
             return calculation.Id;
         }
@@ -132,6 +136,8 @@ namespace Persistence.Service.CalculationItems.Calculation
                     .FirstOrDefaultAsync(cancellationToken)
                 : null;
 
+            var wasArchived = calculation.IsArchived;
+
             dto.CalculationType = calculation.CalculationType;
             calculation.Update(dto);
             calculation.AssignDepartment(effectiveDepartmentId);
@@ -145,6 +151,16 @@ namespace Persistence.Service.CalculationItems.Calculation
 
             Touch(calculation, userId);
             await db.SaveChangesAsync(cancellationToken);
+
+            if (changeLog is not null)
+            {
+                var action = calculation.IsArchived != wasArchived
+                    ? (calculation.IsArchived ? ChangeAction.Archived : ChangeAction.Restored)
+                    : calculation.StatusId != oldStatusId
+                        ? ChangeAction.StatusChanged
+                        : ChangeAction.Updated;
+                await changeLog.AppendCalculationAsync(calculation.Id, action, userId, cancellationToken);
+            }
 
             await notification.SendNotificationAsync(
                 calculation.Id.ToString(),

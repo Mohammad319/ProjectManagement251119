@@ -32,6 +32,7 @@ namespace Persistence.Service.CalculationItems.Calculation
                 .Include(x => x.Status)
                 .Include(x => x.Project)
                     .ThenInclude(x => x.Folder)
+                .Include(x => x.UpdatedByUser)
                 .Where(x => !x.IsDeleted && x.ProjectId == projectId)
                 .Where(Access.CalculationAccessRules.CanSee(userId, departmentId, isViewer))
                 .OrderBy(x => x.SortOrder)
@@ -68,6 +69,7 @@ namespace Persistence.Service.CalculationItems.Calculation
                 .Include(x => x.Status)
                 .Include(x => x.Project)
                     .ThenInclude(x => x.Folder)
+                .Include(x => x.UpdatedByUser)
                 .Where(x => !x.IsDeleted && x.ProjectId == projectId);
 
             // Visare: bara kalkyler valda i en projektdelning, aldrig privata.
@@ -263,6 +265,7 @@ namespace Persistence.Service.CalculationItems.Calculation
             CountsAsLostBid = x.Status?.CountsAsLostBid ?? false,
             CreatedAt = x.CreatedAt,
             UpdatedAt = x.UpdatedAt,
+            UpdatedByName = DisplayName(x.UpdatedByUser),
             Tax = x.Tax,
             IsArchived = x.IsArchived,
             Inspector = x.Metadata.Inspector,
@@ -273,6 +276,15 @@ namespace Persistence.Service.CalculationItems.Calculation
             TimeMonth = x.Metadata.TimeMonth,
             ImportInfo = x.Metadata.ImportInfo
         };
+
+        // Visningsnamn för "Ändrad av": "Förnamn Efternamn", annars användarnamnet. Null när okänt.
+        private static string? DisplayName(Domain.Entities.Users.UserEntity? user)
+        {
+            if (user is null)
+                return null;
+            var name = $"{user.FirstName} {user.LastName}".Trim();
+            return string.IsNullOrWhiteSpace(name) ? user.UserName : name;
+        }
 
         private static string FormatAddress(ProjectManagement.Shared.DTO.App.AddressDTO? address)
         {

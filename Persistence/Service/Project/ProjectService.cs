@@ -1,3 +1,4 @@
+using Application.Feature.ChangeLog;
 using Application.Feature.Project.Project;
 using Application.Mapping.Calculation;
 using Application.Helper;
@@ -9,11 +10,12 @@ using Persistence.Context;
 using Persistence.Factory;
 using ProjectManagement.Shared.DTO.General;
 using ProjectManagement.Shared.DTO.Project;
+using ProjectManagement.Shared.Enums;
 using ProjectManagement.Shared.Exceptions;
 
 namespace Persistence.Service.Project
 {
-    public sealed class ProjectService(IDbContextFactoryTenant dbFactory) : IProjectService
+    public sealed class ProjectService(IDbContextFactoryTenant dbFactory, IChangeLogService changeLog) : IProjectService
     {
         private const string CreateProjectInFolderForbiddenMessage = "Du saknar behörighet att skapa projekt i denna mapp.";
 
@@ -53,6 +55,7 @@ namespace Persistence.Service.Project
             var project = ProjectEntity.Create(dto, dto.FolderId, userId, maxOrder + 100);
             context.Projects.Add(project);
             await context.SaveChangesAsync(ct);
+            await changeLog.AppendProjectAsync(project.Id, ChangeAction.Created, userId, ct);
             return project.Id;
         }
 
@@ -101,6 +104,10 @@ namespace Persistence.Service.Project
             if (dto.FolderId == Guid.Empty)
                 return false;
 
+            // Capture before applying so the change log can record the most specific action.
+            var wasArchived = project.IsArchived;
+            var oldStatusId = project.ProjectStatusId;
+
             if (project.FolderId != dto.FolderId)
                 project.MoveToFolder(dto.FolderId);
 
@@ -109,6 +116,13 @@ namespace Persistence.Service.Project
             project.UpdatedAt = DateTime.UtcNow;
 
             await context.SaveChangesAsync(ct);
+
+            var action = project.IsArchived != wasArchived
+                ? (project.IsArchived ? ChangeAction.Archived : ChangeAction.Restored)
+                : project.ProjectStatusId != oldStatusId
+                    ? ChangeAction.StatusChanged
+                    : ChangeAction.Updated;
+            await changeLog.AppendProjectAsync(id, action, userId, ct);
             return true;
         }
 
@@ -154,6 +168,7 @@ namespace Persistence.Service.Project
                 calculation.AssignDepartment(targetDepartmentId.Value);
 
             await context.SaveChangesAsync(ct);
+            await changeLog.AppendProjectAsync(id, ChangeAction.Moved, userId, ct);
             return true;
         }
 
@@ -245,6 +260,7 @@ namespace Persistence.Service.Project
             }
 
             await context.SaveChangesAsync(ct);
+            await changeLog.AppendProjectAsync(copy.Id, ChangeAction.Copied, userId, ct);
             return copy.Id;
         }
 
@@ -435,6 +451,7 @@ namespace Persistence.Service.Project
                 .Include(x => x.ProcurementProcedure)
                 .Include(x => x.ProjectType)
                 .Include(x => x.ProjectStatus)
+                .Include(x => x.UpdatedByUser)
                 .Where(x => x.FolderId == folderId && (includeArchived || !x.IsArchived))
                 .Where(Access.ProjectAccessRules.CanSee(userId, departmentId, isViewer))
                 .OrderBy(x => x.SortOrder)
@@ -467,6 +484,7 @@ namespace Persistence.Service.Project
                 .Include(x => x.ProcurementProcedure)
                 .Include(x => x.ProjectType)
                 .Include(x => x.ProjectStatus)
+                .Include(x => x.UpdatedByUser)
                 .Where(x => x.FolderId == folderId && (includeArchived || !x.IsArchived));
 
             // Visare: bara projekt som delats med dem via intern projektdelning.

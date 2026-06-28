@@ -478,7 +478,10 @@ namespace ProjectManagement.Client.Pages.Folder
         {
             get
             {
-                foreach (var d in Folder.State.Departments)
+                // Egna avdelningar först, därefter delade/tilldelade (👥). OrderBy är stabil så
+                // ursprungsordningen behålls inom varje grupp. "Alla tillgängliga" läggs sist eftersom
+                // det är ett special-scope/val, inte en riktig avdelning.
+                foreach (var d in Folder.State.Departments.OrderBy(x => _sharedOnlyDeptIds.Contains(x.Id)))
                 {
                     var sharedOnly = _sharedOnlyDeptIds.Contains(d.Id);
                     yield return new MhdSelectItem<int?>

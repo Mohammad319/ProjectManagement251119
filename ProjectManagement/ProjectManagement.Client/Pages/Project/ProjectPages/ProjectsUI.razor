@@ -19,6 +19,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IJSRuntime JS
 @inject ProjectManagement.Client.Services.Folder.ProjectListViewPreference ViewPreference
+@inject ProjectManagement.Client.Shared.Repositories.ChangeLog.IChangeLogRepository ChangeLogRepo
 @inject ProjectManagement.Client.Services.Folder.ListSavedFilterStorage SavedFilterStorage
 @inject ProjectManagement.Client.Services.Folder.ListSavedColumnViewStorage SavedColumnViewStorage
 
@@ -79,7 +80,7 @@
 
                         @* ── Aktiva filter ── *@
                         <div class="px-3 pt-1.5 pb-0.5">
-                            <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Aktiva filter</span>
+                            <span class="text-[11px] font-semibold tracking-wide text-slate-400 dark:text-slate-500">Aktiva filter</span>
                         </div>
                         @if (HasActiveProjectFilters)
                         {
@@ -174,7 +175,7 @@
                         @* ── Sparade filter ── *@
                         <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
                         <div class="px-3 pt-0.5 pb-0.5">
-                            <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Sparade filter</span>
+                            <span class="text-[11px] font-semibold tracking-wide text-slate-400 dark:text-slate-500">Sparade filter</span>
                         </div>
                         @if (_savedProjectFilters.Count == 0)
                         {
@@ -244,7 +245,7 @@
 
                         @* Innehåll *@
                         <div class="px-3 pt-1.5 pb-0.5">
-                            <span class="text-[10px] font-semibold tracking-wide text-slate-400 dark:text-slate-500">Innehåll</span>
+                            <span class="text-[11px] font-semibold text-slate-700 dark:text-slate-200">Innehåll</span>
                         </div>
                         <button type="button"
                                 class="@(_contentMode == ContentModeProjects ? "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-blue-700 dark:text-blue-300" : "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800")"
@@ -344,14 +345,26 @@
             <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
                 @if (_contentMode == ContentModeProjects)
                 {
-                    var noFolderContext = IsDepartmentScope || Folder.State.OtherDepartment || Folder.State.FolderSelected is null;
+                    // En läsbar/delad mapp från en annan avdelning (IsReadOnlyGroup) i "Alla
+                    // tillgängliga"-vyn får inte ta emot nya projekt — servern skulle neka (403).
+                    // OtherDepartment är false i den vyn, så åtkomsten avgörs per vald mapp.
+                    var readOnlySharedFolder = Folder.State.FolderSelected?.IsReadOnlyGroup == true;
+                    var noFolderContext = IsDepartmentScope || Folder.State.OtherDepartment
+                        || Folder.State.FolderSelected is null
+                        || readOnlySharedFolder;
+
+                    // Förklara varför knappen är inaktiv i stället för en tyst inaktivering: en delad
+                    // mapp från en annan avdelning kan inte ta emot nya projekt.
+                    var newProjectDisabledReason = readOnlySharedFolder
+                        ? "Du kan inte skapa projekt i en delad mapp från en annan avdelning. Välj en mapp i din egen avdelning."
+                        : "Välj en mapp innan du skapar ett projekt";
 
                     @* Split button: primary creates a new project, the caret opens import. *@
                     <div class="relative inline-flex">
                         <button type="button"
                                 class="inline-flex h-7 shrink-0 items-center gap-1 rounded-l border border-emerald-400 bg-emerald-500 px-2 text-[11px] font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-40 dark:border-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700"
                                 disabled="@noFolderContext"
-                                title="@(noFolderContext ? "Välj en mapp innan du skapar ett projekt" : AppLoc["newProject"].Value)"
+                                title="@(noFolderContext ? newProjectDisabledReason : AppLoc["newProject"].Value)"
                                 @onclick="() => UpdateForm(new ListProjectMVVM())">
                             <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -374,6 +387,7 @@
                                 <button type="button"
                                         class="flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-800"
                                         disabled="@noFolderContext"
+                                        title="@(noFolderContext ? newProjectDisabledReason : AppLoc["newProject"].Value)"
                                         @onclick="() => { _newProjectMenuOpen = false; UpdateForm(new ListProjectMVVM()); }">
                                     <span aria-hidden="true">@((MarkupString)Icons.Plus)</span>
                                     <span>@AppLoc["newProject"]</span>
@@ -381,10 +395,10 @@
                                 <button type="button"
                                         class="flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-800"
                                         disabled="@noFolderContext"
-                                        title="@(noFolderContext ? "Välj en mapp först för att importera en projektkopia." : "Importera en projektkopia (.atacost) till vald mapp.")"
+                                        title="@(noFolderContext ? (readOnlySharedFolder ? newProjectDisabledReason : "Välj en mapp först för att importera en projektkopia.") : "Importera en projektkopia till vald mapp.")"
                                         @onclick="() => { _newProjectMenuOpen = false; OpenImportProjectCopyDialog(); }">
                                     <span aria-hidden="true">@((MarkupString)Icons.ImportFromFile)</span>
-                                    <span>Importera projektkopia...</span>
+                                    <span>Importera projekt...</span>
                                 </button>
                             </div>
                         }
@@ -453,6 +467,14 @@
                     <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("name")' ColumnKey="name" Order='@_columnView.OrderIndex("name")' Frozen="true"
                                     HeaderClass='@($"{SortableHeaderClass("name")} min-w-52 border-r border-slate-300 bg-slate-50 dark:border-slate-600 dark:bg-slate-900")' HeaderStyle="min-width:160px;" OnHeaderClick='() => SortBy("name")'>
                         <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["projectName"] @((MarkupString)SortIndicatorHtml("name")) <TableColumnFilter FilterState='PF("name")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("department")' ColumnKey="department" Order='@_columnView.OrderIndex("department")'
+                                    HeaderClass='@SortableHeaderClass("department")' HeaderStyle="min-width:90px;" OnHeaderClick='() => SortBy("department")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">Avdelning @((MarkupString)SortIndicatorHtml("department")) <TableColumnFilter FilterState='PF("department")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
+                    <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("folder")' ColumnKey="folder" Order='@_columnView.OrderIndex("folder")'
+                                    HeaderClass='@SortableHeaderClass("folder")' HeaderStyle="min-width:90px;" OnHeaderClick='() => SortBy("folder")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["folder"] @((MarkupString)SortIndicatorHtml("folder")) <TableColumnFilter FilterState='PF("folder")' OnChanged="OnProjectColumnFilterChanged" /></span></HeaderContent>
                     </MhdTableColumn>
                     <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("status")' ColumnKey="status" Order='@_columnView.OrderIndex("status")'
                                     HeaderClass='@SortableHeaderClass("status")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("status")'>
@@ -592,196 +614,14 @@
                             @ondragstart="() => OnProjectDragStart(project)"
                             @ondragend="() => draggingProject = null"
                             draggable="@draggableValue">
-                            @if (IsProjectColumnVisible("rowNumber"))
+                            @* Cellerna renderas i kolumnordningen (_columnView.ColumnOrder) så varje cell
+                               alltid hamnar under sin egen rubrik – styrt av samma ColumnKey. *@
+                            @foreach (var __col in _columnView.ColumnOrder)
                             {
-                                <td class="w-12 whitespace-nowrap bg-white px-2 py-2 text-right font-mono text-[11px] text-slate-400 group-hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-500 dark:group-hover:bg-slate-900/80 @(isProjectSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
-                                    @rowNumber
-                                </td>
-                            }
-                            @if (IsProjectColumnVisible("code"))
-                            {
-                                <td class="w-28 whitespace-nowrap bg-white px-3 py-2 font-mono text-[11px] text-slate-500 group-hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-400 dark:group-hover:bg-slate-900/80 @(isProjectSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
-                                    @(string.IsNullOrWhiteSpace(project.Code) ? "-" : project.Code)
-                                </td>
-                            }
-                            @if (IsProjectColumnVisible("name"))
-                            {
-                                <td class="max-w-80 border-r border-slate-200 bg-white px-3 py-2 group-hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:group-hover:bg-slate-900/80 @(isProjectSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
-                                    <div class="flex min-w-0 items-center gap-2">
-                                        <HoverTooltip Text="@project.Name" OnlyWhenTruncated="true" Class="truncate font-semibold text-slate-800 dark:text-slate-100">
-                                            <span class="truncate">@project.Name</span>
-                                        </HoverTooltip>
-                                        @if (project.ImportInfo?.IsImportedCopy == true)
-                                        {
-                                            <button type="button"
-                                                    class="shrink-0 rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[10px] font-semibold text-sky-700 transition hover:bg-sky-100 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-300"
-                                                    title="Visa importinformation"
-                                                    @onclick:stopPropagation="true"
-                                                    @onclick="() => OpenImportInfoDialog(project)">
-                                                Importerad kopia
-                                            </button>
-                                        }
-                                    </div>
-                                </td>
-                            }
-                            @if (IsProjectColumnVisible("status"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2">
-                                    <span class="inline-flex items-center gap-1.5">
-                                        <span class="h-2 w-2 shrink-0 rounded-full" style="background-color:@GetProjectStatusColor(project)"></span>
-                                        <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">@GetProjectStatusText(project)</span>
-                                    </span>
-                                </td>
-                            }
-                            @if (IsProjectColumnVisible("responsible"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Responsible)</td>
-                            }
-                            @if (IsProjectColumnVisible("inspector"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Inspector)</td>
-                            }
-                            @if (IsProjectColumnVisible("deadline"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.TenderDeadline)</td>
-                            }
-                            @if (IsProjectColumnVisible("organisation"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Organisation)</td>
-                            }
-                            @if (IsProjectColumnVisible("projectType"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Type)</td>
-                            }
-                            @if (IsProjectColumnVisible("updatedAt"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.UpdatedAt)</td>
-                            }
-                            @if (IsProjectColumnVisible("archived"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatYesNo(project.IsArchived)</td>
-                            }
-                            @if (IsProjectColumnVisible("shared"))
-                            {
-                                var accessShared = AccessIsShared(project);
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300" @onclick:stopPropagation="true">
-                                    <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger" Context="accessAuth">
-                                        <Authorized>
-                                            <button type="button"
-                                                    class="@(accessShared ? "inline-flex max-w-[200px] items-center gap-1 rounded px-1.5 py-0.5 text-left text-sky-700 transition hover:bg-sky-50 hover:underline dark:text-sky-300 dark:hover:bg-sky-950/40" : "inline-flex max-w-[200px] items-center gap-1 rounded px-1.5 py-0.5 text-left text-slate-500 transition hover:bg-slate-100 hover:underline dark:text-slate-400 dark:hover:bg-slate-800")"
-                                                    @onclick="() => OpenShareFromCellAsync(project)">
-                                                @if (accessShared)
-                                                {
-                                                    <i class="fa-solid fa-share-nodes shrink-0 text-sky-500"></i>
-                                                }
-                                                else
-                                                {
-                                                    <i class="fa-solid fa-building shrink-0 text-slate-400"></i>
-                                                }
-                                                <HoverTooltip Text="@AccessTooltip(project)" Class="truncate">
-                                                    <span class="min-w-0 truncate">@AccessSummaryText(project)</span>
-                                                </HoverTooltip>
-                                            </button>
-                                        </Authorized>
-                                        <NotAuthorized>
-                                            <span class="inline-flex max-w-[200px] items-center gap-1">
-                                                @if (accessShared)
-                                                {
-                                                    <i class="fa-solid fa-share-nodes shrink-0 text-sky-500"></i>
-                                                }
-                                                <HoverTooltip Text="@AccessTooltip(project)" Class="truncate">
-                                                    <span class="min-w-0 truncate">@AccessSummaryText(project)</span>
-                                                </HoverTooltip>
-                                            </span>
-                                        </NotAuthorized>
-                                    </AuthorizeView>
-                                </td>
-                            }
-                            @* Extra kolumner (samma ordning som rubriker och kolumnväljaren). *@
-                            @if (IsProjectColumnVisible("procurementNumber"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.ProcurementNumber)</td>
-                            }
-                            @if (IsProjectColumnVisible("customerReference"))
-                            {
-                                <td class="px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.CustomerReference)</td>
-                            }
-                            @if (IsProjectColumnVisible("procurementName"))
-                            {
-                                <td class="px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.ProcurementName)</td>
-                            }
-                            @if (IsProjectColumnVisible("procurementMethods"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.ProcurementMethods)</td>
-                            }
-                            @if (IsProjectColumnVisible("contract"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Contract)</td>
-                            }
-                            @if (IsProjectColumnVisible("compensation"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Compensation)</td>
-                            }
-                            @if (IsProjectColumnVisible("procurementProcedure"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.ProcurementProcedure)</td>
-                            }
-                            @if (IsProjectColumnVisible("publicationDate"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.PublicationDate)</td>
-                            }
-                            @if (IsProjectColumnVisible("decisionDate"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.DecisionDate)</td>
-                            }
-                            @if (IsProjectColumnVisible("start"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.StartDate)</td>
-                            }
-                            @if (IsProjectColumnVisible("end"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.EndDate)</td>
-                            }
-                            @if (IsProjectColumnVisible("byggherre"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Developer)</td>
-                            }
-                            @if (IsProjectColumnVisible("clientsManager"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.ClientsManager)</td>
-                            }
-                            @if (IsProjectColumnVisible("designer"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Designer)</td>
-                            }
-                            @if (IsProjectColumnVisible("address"))
-                            {
-                                <td class="px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.AddressText)</td>
-                            }
-                            @if (IsProjectColumnVisible("qa"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.TenderQA)</td>
-                            }
-                            @if (IsProjectColumnVisible("supervisor"))
-                            {
-                                <td class="px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Supervisor)</td>
-                            }
-                            @* "Skapad datum" sist i totalordningen. *@
-                            @if (IsProjectColumnVisible("createdAt"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.CreatedAt)</td>
-                            }
-                            @if (IsProjectColumnVisible("calculations"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-right">
-                                    <button type="button"
-                                            class="inline-flex min-w-[2rem] items-center justify-center rounded-md px-1.5 py-0.5 text-xs font-semibold text-slate-600 transition hover:bg-sky-100 hover:text-sky-700 dark:text-slate-300 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
-                                            title="@AppLoc["showCalculations"]"
-                                            @onclick:stopPropagation
-                                            @onclick="async () => await SetProject(project)">
-                                        @FormatCalculationCount(project)
-                                    </button>
-                                </td>
+                                if (IsProjectColumnVisible(__col))
+                                {
+                                    @RenderProjectCell(__col, project, isProjectSelected, rowNumber)
+                                }
                             }
                         </tr>
                 </RowTemplate>
@@ -839,7 +679,8 @@
             <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">@CalcResource.project</div>
             <h3 class="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-100">@AppLoc["projectsEmptyState"]</h3>
             <p class="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">@AppLoc["projectsEmptyStateHint"]</p>
-            @if (!Folder.State.OtherDepartment && Folder.State.FolderSelected is not null)
+            @if (!Folder.State.OtherDepartment && Folder.State.FolderSelected is not null
+                 && !Folder.State.FolderSelected.IsReadOnlyGroup)
             {
                 <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
                     <button type="button"
@@ -881,6 +722,24 @@
     // Shared sort state + header chrome (toggle, header CSS, indicator SVG) — see ListSortController.
     private readonly ListSortController _sort = new();
 
+    // Avdelnings-id → namn. Avdelningsnamnen bor i identitets-DB:n (inte i projektlistans DTO,
+    // som bara bär DepartmentId), så de hämtas en gång och slås upp på klienten — samma mönster
+    // som delningsdialogen. Täcker även delade projekt från andra avdelningar (endpointen
+    // returnerar alla avdelningar).
+    private Dictionary<int, string> _departmentNames = new();
+
+    // Per användare: projekt-id (string) → senast öppnad. Driver ändringsindikatorn (UpdatedAt > värdet).
+    private Dictionary<string, DateTime> _lastOpened = new();
+
+    // Senaste ändringar per projekt (för indikatorns "Senaste ändringar"-tooltip). Hämtas bara för
+    // projekt som faktiskt visar indikatorn (osedd ändring); _recentChangesSig hindrar omladdning
+    // när samma uppsättning redan är hämtad.
+    private Dictionary<Guid, List<ProjectManagement.Shared.DTO.ChangeLog.ChangeLogItemDTO>> _projectRecentChanges = new();
+    private string _recentChangesSig = string.Empty;
+
+    private IReadOnlyList<ProjectManagement.Shared.DTO.ChangeLog.ChangeLogItemDTO>? GetProjectRecentChanges(Guid id) =>
+        _projectRecentChanges.TryGetValue(id, out var list) ? list : null;
+
     private int _pageSize = 25;
     private int _currentPage = 1;
     private const string ProjPaginationBtnCls = "inline-flex h-6 w-6 items-center justify-center rounded border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-35 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800";
@@ -897,6 +756,8 @@
     {
         ["code"]                 = new() { Type = ColumnFilterType.Text },
         ["name"]                 = new() { Type = ColumnFilterType.Text },
+        ["department"]           = new() { Type = ColumnFilterType.Dropdown },
+        ["folder"]               = new() { Type = ColumnFilterType.Dropdown },
         ["status"]               = new() { Type = ColumnFilterType.Dropdown },
         ["responsible"]          = new() { Type = ColumnFilterType.Dropdown },
         ["inspector"]            = new() { Type = ColumnFilterType.Dropdown },
@@ -1050,6 +911,8 @@
         Func<ListProjectMVVM, string?> selector = key switch
         {
             "status"               => GetProjectStatusText,
+            "department"           => GetProjectDepartmentName,
+            "folder"               => GetProjectFolderName,
             "responsible"          => p => p.Responsible,
             "inspector"            => p => p.Inspector,
             "organisation"         => p => p.Organisation,
@@ -1133,6 +996,10 @@
                 projects = projects.Where(p => _projColFilters["code"].MatchesText(p.Code));
             if (_projColFilters["name"].IsActive)
                 projects = projects.Where(p => _projColFilters["name"].MatchesText(p.Name));
+            if (_projColFilters["department"].IsActive)
+                projects = projects.Where(p => _projColFilters["department"].MatchesDropdown(GetProjectDepartmentName(p)));
+            if (_projColFilters["folder"].IsActive)
+                projects = projects.Where(p => _projColFilters["folder"].MatchesDropdown(GetProjectFolderName(p)));
             if (_projColFilters["status"].IsActive)
                 projects = projects.Where(p => _projColFilters["status"].MatchesDropdown(GetProjectStatusText(p)));
             if (_projColFilters["responsible"].IsActive)
@@ -1212,6 +1079,8 @@
             {
                 "code"             => _sortAscending ? projects.OrderBy(x => x.Code)               : projects.OrderByDescending(x => x.Code),
                 "name"             => _sortAscending ? projects.OrderBy(x => x.Name)               : projects.OrderByDescending(x => x.Name),
+                "department"       => _sortAscending ? projects.OrderBy(GetProjectDepartmentName, StringComparer.CurrentCultureIgnoreCase) : projects.OrderByDescending(GetProjectDepartmentName, StringComparer.CurrentCultureIgnoreCase),
+                "folder"           => _sortAscending ? projects.OrderBy(GetProjectFolderName, StringComparer.CurrentCultureIgnoreCase) : projects.OrderByDescending(GetProjectFolderName, StringComparer.CurrentCultureIgnoreCase),
                 "status"           => _sortAscending ? projects.OrderBy(x => x.Status)             : projects.OrderByDescending(x => x.Status),
                 "responsible"      => _sortAscending ? projects.OrderBy(x => x.Responsible)        : projects.OrderByDescending(x => x.Responsible),
                 "start"            => _sortAscending ? projects.OrderBy(x => x.StartDate)          : projects.OrderByDescending(x => x.StartDate),
@@ -1298,6 +1167,97 @@
         return Task.CompletedTask;
     }
 
+    // Renderar EN cell i projektlistan via dess ColumnKey. Raden itererar kolumnerna i
+    // _columnView.ColumnOrder (samma ordning som rubrikerna) och anropar denna metod, så
+    // varje cellvärde alltid hamnar under rätt rubrik – även efter ändrad kolumnordning/vy.
+    private RenderFragment? RenderProjectCell(string key, ListProjectMVVM project, bool isProjectSelected, int rowNumber) => key switch
+    {
+        "rowNumber" => @<td class="w-12 whitespace-nowrap bg-white px-2 py-2 text-right font-mono text-[11px] text-slate-400 group-hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-500 dark:group-hover:bg-slate-900/80 @(isProjectSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">@rowNumber</td>,
+        "code" => @<td class="w-28 whitespace-nowrap bg-white px-3 py-2 font-mono text-[11px] text-slate-500 group-hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-400 dark:group-hover:bg-slate-900/80 @(isProjectSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">@(string.IsNullOrWhiteSpace(project.Code) ? "-" : project.Code)</td>,
+        "name" => @<td class="max-w-80 border-r border-slate-200 bg-white px-3 py-2 group-hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:group-hover:bg-slate-900/80 @(isProjectSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
+            <div class="flex min-w-0 items-center gap-2">
+                <HoverTooltip Text="@project.Name" OnlyWhenTruncated="true" Class="truncate font-semibold text-slate-800 dark:text-slate-100">
+                    <span class="truncate">@project.Name</span>
+                </HoverTooltip>
+                @if (project.ImportInfo?.IsImportedCopy == true)
+                {
+                    <button type="button"
+                            class="shrink-0 rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[10px] font-semibold text-sky-700 transition hover:bg-sky-100 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-300"
+                            title="Visa importinformation"
+                            @onclick:stopPropagation="true"
+                            @onclick="() => OpenImportInfoDialog(project)">
+                        Importerad kopia
+                    </button>
+                }
+            </div>
+        </td>,
+        "department" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(GetProjectDepartmentName(project))</td>,
+        "folder" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(GetProjectFolderName(project))</td>,
+        "status" => @<td class="whitespace-nowrap px-3 py-2"><span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 shrink-0 rounded-full" style="background-color:@GetProjectStatusColor(project)"></span><span class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">@GetProjectStatusText(project)</span></span></td>,
+        "responsible" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Responsible)</td>,
+        "inspector" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Inspector)</td>,
+        "deadline" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.TenderDeadline)</td>,
+        "organisation" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Organisation)</td>,
+        "projectType" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Type)</td>,
+        "createdAt" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.CreatedAt)</td>,
+        "updatedAt" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300"><span class="inline-flex items-center gap-1.5"><span>@FormatDate(project.UpdatedAt)</span>@if (HasUnseenProjectChange(project)){<ChangeIndicator UpdatedAt="project.UpdatedAt" UpdatedByName="@project.UpdatedByName" RecentChanges="GetProjectRecentChanges(project.Id)" IsProject="true" />}</span></td>,
+        "archived" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatYesNo(project.IsArchived)</td>,
+        "shared" => RenderProjectSharedCell(project),
+        "procurementNumber" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.ProcurementNumber)</td>,
+        "customerReference" => @<td class="px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.CustomerReference)</td>,
+        "procurementName" => @<td class="px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.ProcurementName)</td>,
+        "procurementMethods" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.ProcurementMethods)</td>,
+        "contract" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Contract)</td>,
+        "compensation" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Compensation)</td>,
+        "procurementProcedure" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.ProcurementProcedure)</td>,
+        "publicationDate" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.PublicationDate)</td>,
+        "decisionDate" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.DecisionDate)</td>,
+        "start" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.StartDate)</td>,
+        "end" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.EndDate)</td>,
+        "byggherre" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Developer)</td>,
+        "clientsManager" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.ClientsManager)</td>,
+        "designer" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Designer)</td>,
+        "address" => @<td class="px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.AddressText)</td>,
+        "qa" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.TenderQA)</td>,
+        "supervisor" => @<td class="px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Supervisor)</td>,
+        _ => null
+    };
+
+    // "Åtkomst"-cellen är komplex (delningsknapp + behörighetsvy); egen metod för läsbarhet.
+    private RenderFragment RenderProjectSharedCell(ListProjectMVVM project) => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300" @onclick:stopPropagation="true">
+        @{ var accessShared = AccessIsShared(project); }
+        <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger" Context="accessAuth">
+            <Authorized>
+                <button type="button"
+                        class="@(accessShared ? "inline-flex max-w-[200px] items-center gap-1 rounded px-1.5 py-0.5 text-left text-sky-700 transition hover:bg-sky-50 hover:underline dark:text-sky-300 dark:hover:bg-sky-950/40" : "inline-flex max-w-[200px] items-center gap-1 rounded px-1.5 py-0.5 text-left text-slate-500 transition hover:bg-slate-100 hover:underline dark:text-slate-400 dark:hover:bg-slate-800")"
+                        @onclick="() => OpenShareFromCellAsync(project)">
+                    @if (accessShared)
+                    {
+                        <i class="fa-solid fa-share-nodes shrink-0 text-sky-500"></i>
+                    }
+                    else
+                    {
+                        <i class="fa-solid fa-building shrink-0 text-slate-400"></i>
+                    }
+                    <HoverTooltip Text="@AccessTooltip(project)" Class="truncate">
+                        <span class="min-w-0 truncate">@AccessSummaryText(project)</span>
+                    </HoverTooltip>
+                </button>
+            </Authorized>
+            <NotAuthorized>
+                <span class="inline-flex max-w-[200px] items-center gap-1">
+                    @if (accessShared)
+                    {
+                        <i class="fa-solid fa-share-nodes shrink-0 text-sky-500"></i>
+                    }
+                    <HoverTooltip Text="@AccessTooltip(project)" Class="truncate">
+                        <span class="min-w-0 truncate">@AccessSummaryText(project)</span>
+                    </HoverTooltip>
+                </span>
+            </NotAuthorized>
+        </AuthorizeView>
+    </td>;
+
     private string SortableHeaderClass(string column) => _sort.HeaderClass(column);
 
     private string SortIndicatorHtml(string column) => _sort.IndicatorHtml(column);
@@ -1312,16 +1272,20 @@
     private static readonly IReadOnlyDictionary<string, bool> DefaultProjectColumns =
         new Dictionary<string, bool>
         {
-            // ── Standardvy (ikryssade) ──
+            // ── Standardvy (ikryssade) ── Rekommenderad grundordning:
+            // Avdelning före Mapp; Skapad datum direkt före Senast ändrad.
             ["rowNumber"]            = true,
             ["code"]                 = true,
             ["name"]                 = true,
+            ["department"]           = true,
+            ["folder"]               = true,
             ["status"]               = true,
             ["responsible"]          = true,
             ["inspector"]            = true,
             ["deadline"]             = true,
             ["organisation"]         = true,
             ["projectType"]          = true,
+            ["createdAt"]            = true,
             ["updatedAt"]            = true,
             ["archived"]             = true,
             ["shared"]               = true,
@@ -1343,9 +1307,7 @@
             ["address"]              = false,
             // ── Övriga befintliga valbara kolumner (avkryssade) ──
             ["qa"]                   = false,
-            ["supervisor"]           = false,
-            // "Skapad datum" är sista kolumnen i totalordningen.
-            ["createdAt"]            = false
+            ["supervisor"]           = false
         };
 
     // Shared column-view manager: owns visible columns + saved views and persists
@@ -1359,16 +1321,19 @@
     // Must mirror the table's column order exactly (see DefaultProjectColumns).
     private List<MhdColumnPickerItem> ProjectColumnOptions => new()
     {
-        // ── Standardvy ──
+        // ── Standardvy ── (Avdelning före Mapp; Skapad datum direkt före Senast ändrad)
         new("rowNumber",         "Radnummer"),
         new("code",              CalcResource.code),
         new("name",              AppLoc["projectName"].Value),
+        new("department",        "Avdelning"),
+        new("folder",            AppLoc["folder"].Value),
         new("status",            "Projektstatus"),
         new("responsible",       AppLoc["calculationResponsible"].Value),
         new("inspector",         CalcResource.inspector),
         new("deadline",          CalcResource.tenderDeadline),
         new("organisation",      "Beställare"),
         new("projectType",       CalcResource.projectType),
+        new("createdAt",         AppLoc["createdDate"].Value),
         new("updatedAt",         AppLoc["lastModified"].Value),
         new("archived",          AppLoc["archived"].Value),
         new("shared",            "Åtkomst"),
@@ -1390,9 +1355,7 @@
         new("address",           "Adress"),
         // ── Övriga befintliga valbara kolumner ──
         new("qa",                "Frågor/svar"),
-        new("supervisor",        "Kundens kontaktperson under upphandlingstiden"),
-        // "Skapad datum" sist i totalordningen.
-        new("createdAt",         AppLoc["createdDate"].Value)
+        new("supervisor",        "Kundens kontaktperson under upphandlingstiden")
     };
 
     // Resizable-column width persistence + JS interop (shared with ProjectsCalculationList).
@@ -1420,6 +1383,31 @@
             return;
 
         await _columnWidths.AttachAsync();
+
+        await EnsureProjectRecentChangesAsync();
+    }
+
+    // Hämta "Senaste ändringar" för de projekt som visar indikatorn (osedd ändring). Signatur-vakt
+    // gör att vi bara hämtar när uppsättningen ändras, så OnAfterRender inte loopar.
+    private async Task EnsureProjectRecentChangesAsync()
+    {
+        var ids = BaseProjects
+            .Where(HasUnseenProjectChange)
+            .Select(p => p.Id)
+            .Distinct()
+            .OrderBy(x => x)
+            .ToList();
+
+        var sig = string.Join(",", ids);
+        if (sig == _recentChangesSig)
+            return;
+
+        _recentChangesSig = sig;
+        _projectRecentChanges = ids.Count == 0
+            ? new()
+            : await ChangeLogRepo.GetRecentForProjectsAsync(ids);
+
+        StateHasChanged();
     }
 
     protected override async Task OnInitializedAsync()
@@ -1460,6 +1448,16 @@
             JS, ViewPreference.LoadColumnWidthsAsync, ViewPreference.SaveColumnWidthsAsync);
         await _columnWidths.LoadAsync();
 
+        // Avdelningsnamn (id → namn) för "Avdelning"-kolumnen, dess filter och export.
+        var departments = await Repo.Departments.GetDepartmentsAsListAsync();
+        if (departments is not null)
+            _departmentNames = departments
+                .GroupBy(d => d.Id)
+                .ToDictionary(g => g.Key, g => g.First().Name);
+
+        // Senast öppnad per projekt (för ändringsindikatorn).
+        _lastOpened = await ViewPreference.LoadLastOpenedAsync() ?? new();
+
         await _filter.LoadSavedAsync();
     }
 
@@ -1485,6 +1483,28 @@
 
     private static string FormatText(string? value) =>
         string.IsNullOrWhiteSpace(value) ? "-" : value;
+
+    // Projektets avdelningsnamn via avdelnings-id. Tom sträng när namn saknas → visas som "-"
+    // (FormatText). Symbolen 👥 hör hemma i avdelningsträdet/dropdownen, inte i tabellkolumnen.
+    private string GetProjectDepartmentName(ListProjectMVVM p) =>
+        p.DepartmentId is int id && _departmentNames.TryGetValue(id, out var name) ? name : string.Empty;
+
+    // "Mapp"-kolumnen: projektets egen mapp (serverlevererat namn). Tomt → FormatText visar "-".
+    private static string GetProjectFolderName(ListProjectMVVM p) => p.FolderName;
+
+    // Ändringsindikator: visas när projektet ändrats efter att aktuell användare senast öppnade det.
+    // Aldrig öppnade objekt (ingen baslinje) visar ingen indikator.
+    private bool HasUnseenProjectChange(ListProjectMVVM p) =>
+        p.UpdatedAt is { } updated
+        && _lastOpened.TryGetValue(p.Id.ToString(), out var opened)
+        && updated > opened;
+
+    // Markera som läst när användaren öppnar projektet → indikatorn döljs (tills nästa ändring).
+    private async Task MarkProjectOpenedAsync(ListProjectMVVM p)
+    {
+        _lastOpened[p.Id.ToString()] = DateTime.UtcNow;
+        await ViewPreference.SaveLastOpenedAsync(_lastOpened);
+    }
 
     private static string FormatDate(DateTime value) =>
         value == default ? "-" : value.ToString(ConstValues.DateFormat);
@@ -1549,7 +1569,7 @@
             list.Add(new()
             {
                 IconHtml = access.CanEditWork ? Icons.Edit : Icons.Details,
-                Label = access.CanEditWork ? ResourceApp.edit : "Visa projekt",
+                Label = access.CanEditWork ? "Ändra projektuppgifter" : "Visa projekt",
                 OnClickAsync = () => { UpdateForm(item, access.CanEditWork); return Task.CompletedTask; }
             });
             list.Add(new() { IconHtml = Icons.Tender, Label = ResourceLoc.tender, OnClickAsync = () => { OpenProjectBidsDialog(item); return Task.CompletedTask; } });
@@ -1771,6 +1791,7 @@
         {
             "code"                 => "Kod",
             "name"                 => "Projektnamn",
+            "department"           => "Avdelning",
             "status"               => "Projektstatus",
             "responsible"          => "Ansvarig",
             "inspector"            => "Granskare",
@@ -1844,6 +1865,8 @@
     {
         "code"              => project.Code,
         "name"              => project.Name,
+        "department"        => GetProjectDepartmentName(project),
+        "folder"            => GetProjectFolderName(project),
         "status"            => GetProjectStatusText(project),
         "responsible"       => project.Responsible,
         "start"             => FormatDate(project.StartDate),
@@ -1910,6 +1933,7 @@
 
     async Task SetProject(ListProjectMVVM pro)
     {
+        await MarkProjectOpenedAsync(pro);
         await Folder.NewProject(pro);
         Folder.State.SetCalculation(null, pro, Folder.State.FolderSelected!);
     }
@@ -1930,21 +1954,38 @@
         await Modal.CloseAsync();
     }
 
-    void AddProjectAsync(Tuple<bool, ListProjectMVVM> callBack)
+    async Task AddProjectAsync(Tuple<bool, ListProjectMVVM> callBack)
     {
         if (callBack == null)
         {
-            Modal.CloseAsync();
+            await Modal.CloseAsync();
             return;
         }
 
         var project = callBack.Item2;
         bool shouldKeepInList = UoWService.Folder.ShowArchived || callBack.Item1;
+        var targetId = UpdateProject == Guid.Empty ? project.Id : UpdateProject;
+
+        // Re-fetch the authoritative row from the server. The form's MVVM only carries the edited
+        // grunddata, so using it directly would blank out the denormalized/display columns (Avdelning,
+        // Mapp, Skapad datum, beställare/upphandling-metadata, Senast ändrad m.m.). Falls back to the
+        // form values if the refresh can't find the row. Mirrors how the calc list reloads after save.
+        ListProjectMVVM? fresh = null;
+        if (targetId != Guid.Empty && Folder.State.FolderSelected is not null)
+        {
+            try
+            {
+                fresh = (await Repo.Project.GetByFolderIdAsync(Folder.State.FolderSelected.Id, includeArchived: true))
+                    .FirstOrDefault(x => x.Id == targetId);
+            }
+            catch { /* keep fallback below */ }
+        }
+        var rowData = fresh ?? project;
 
         if (UpdateProject == Guid.Empty)
         {
             if (project.Id != Guid.Empty && shouldKeepInList)
-                Folder.State.FolderSelected!.Projects.Insert(0, project);
+                Folder.State.FolderSelected!.Projects.Insert(0, rowData);
         }
         else
         {
@@ -1955,7 +1996,7 @@
                     Folder.State.FolderSelected.Projects.Remove(existing);
                 else
                 {
-                    PropertyCopier.CopyPropertiesTo(project, existing);
+                    PropertyCopier.CopyPropertiesTo(rowData, existing);
                     existing.Id = UpdateProject;
                 }
             }
@@ -1967,7 +2008,7 @@
                 .ToList();
 
         UoWService.Folder.State.Notify();
-        Modal.CloseAsync();
+        await Modal.CloseAsync();
     }
 
     async Task DeleteProjectConfirmedAsync(ListProjectMVVM project)

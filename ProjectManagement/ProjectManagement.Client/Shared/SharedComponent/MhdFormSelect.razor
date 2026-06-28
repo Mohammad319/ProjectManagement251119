@@ -16,7 +16,7 @@
             @onkeydown="OnKeyDown"
             disabled="@Disabled"
             title="@Title"
-            class="flex w-full items-center gap-2 rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900">
+            class="flex w-full cursor-pointer items-center gap-2 rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900">
         @if (ShowColorDot)
         {
             <span class="h-2.5 w-2.5 shrink-0 rounded-full ring-1 ring-inset ring-black/10 dark:ring-white/20"
@@ -34,7 +34,7 @@
         @* Shared panel body so the absolute (form) and fixed (in-table) variants stay identical. *@
         RenderFragment panelBody =
             @<text>
-                <div class="mhd-select-scroll max-h-[320px] overflow-y-auto py-1">
+                <div class="mhd-select-scroll max-h-64 cursor-default overflow-y-auto py-1">
                     @if (Placeholder is not null)
                     {
                         <button type="button" class="@OptionClass(!HasSelection)" @onclick="() => SelectValue(default!)">
@@ -216,9 +216,9 @@
     }
 
     private static string OptionClass(bool selected) => selected
-        ? "flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm font-medium text-sky-700 bg-sky-50 dark:bg-sky-950/40 dark:text-sky-300"
-        : "flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800";
+        ? "flex min-h-[28px] w-full cursor-pointer items-center gap-2 px-2.5 py-1 text-left text-[13px] font-medium text-sky-700 bg-sky-50 dark:bg-sky-950/40 dark:text-sky-300"
+        : "flex min-h-[28px] w-full cursor-pointer items-center gap-2 px-2.5 py-1 text-left text-[13px] text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800";
 
     private const string DisabledOptionClass =
-        "flex w-full cursor-not-allowed items-center gap-2 px-3 py-1.5 text-left text-sm text-slate-400 dark:text-slate-600";
+        "flex min-h-[28px] w-full cursor-not-allowed items-center gap-2 px-2.5 py-1 text-left text-[13px] text-slate-400 dark:text-slate-600";
 }

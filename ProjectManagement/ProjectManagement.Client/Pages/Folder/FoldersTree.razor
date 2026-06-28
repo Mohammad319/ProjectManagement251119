@@ -12,6 +12,7 @@
             <button type="button"
                     class="h-7 rounded-md bg-emerald-600 px-2 text-xs font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
                     disabled="@(!HasManualOrderChanges)"
+                    title="@(HasManualOrderChanges ? null : "Det finns inga ändringar att spara.")"
                     @onclick="SaveManualOrderAsync">
                 @AppLoc["saveOrder"]
             </button>
@@ -190,11 +191,16 @@
             </span>
 
             <span class="min-w-0 flex items-center gap-1.5">
-                @if (IsManualOrderMode && !IsFolderManageBlocked(folder))
+                @if (IsManualOrderMode)
                 {
+                    @* Knapparna visas alltid i ordningsläge men inaktiveras när flytt inte är tillåten;
+                       tooltip förklarar varför (redan först/sist, eller delad/visuell grupp). *@
+                    var folderBlocked = IsFolderManageBlocked(folder);
+                    var folderUpReason = MoveUpReason(sortedFolders, folder, folderBlocked, FolderMoveBlockedReason);
+                    var folderDownReason = MoveDownReason(sortedFolders, folder, folderBlocked, FolderMoveBlockedReason);
                     <span class="flex shrink-0 items-center gap-0.5">
-                        <button type="button" class="@ManualOrderButtonClass" disabled="@(!CanMoveUp(sortedFolders, folder))" title="@AppLoc["moveUp"]" @onclick:stopPropagation="true" @onclick="() => MoveFolder(folder, -1)">↑</button>
-                        <button type="button" class="@ManualOrderButtonClass" disabled="@(!CanMoveDown(sortedFolders, folder))" title="@AppLoc["moveDown"]" @onclick:stopPropagation="true" @onclick="() => MoveFolder(folder, 1)">↓</button>
+                        <button type="button" class="@ManualOrderButtonClass" disabled="@(folderUpReason != null)" title="@(folderUpReason ?? AppLoc["moveUp"].Value)" @onclick:stopPropagation="true" @onclick="() => MoveFolder(folder, -1)">↑</button>
+                        <button type="button" class="@ManualOrderButtonClass" disabled="@(folderDownReason != null)" title="@(folderDownReason ?? AppLoc["moveDown"].Value)" @onclick:stopPropagation="true" @onclick="() => MoveFolder(folder, 1)">↓</button>
                     </span>
                 }
                 <span class="truncate text-[13px] font-semibold leading-5 @(isFolderArchived ? "text-slate-500 dark:text-slate-400" : "text-slate-800 group-hover:text-slate-900 dark:text-slate-100 dark:group-hover:text-slate-100") @(isFolderSelected ? "text-sky-900 dark:text-sky-100" : "")">
@@ -302,16 +308,20 @@
                         </span>
 
                         <span class="min-w-0 flex items-center gap-1.5">
-                            @if (IsManualOrderMode && !IsFolderManageBlocked(folder))
+                            @if (IsManualOrderMode)
                             {
+                                var projectBlocked = IsFolderManageBlocked(folder);
+                                var projectUpReason = MoveUpReason(sortedProjects, project, projectBlocked, ItemMoveBlockedReason);
+                                var projectDownReason = MoveDownReason(sortedProjects, project, projectBlocked, ItemMoveBlockedReason);
                                 <span class="flex shrink-0 items-center gap-0.5">
-                                    <button type="button" class="@ManualOrderButtonClass" disabled="@(!CanMoveUp(sortedProjects, project))" title="@AppLoc["moveUp"]" @onclick:stopPropagation="true" @onclick="() => MoveProject(folder.Projects, project, -1)">↑</button>
-                                    <button type="button" class="@ManualOrderButtonClass" disabled="@(!CanMoveDown(sortedProjects, project))" title="@AppLoc["moveDown"]" @onclick:stopPropagation="true" @onclick="() => MoveProject(folder.Projects, project, 1)">↓</button>
+                                    <button type="button" class="@ManualOrderButtonClass" disabled="@(projectUpReason != null)" title="@(projectUpReason ?? AppLoc["moveUp"].Value)" @onclick:stopPropagation="true" @onclick="() => MoveProject(folder.Projects, project, -1)">↑</button>
+                                    <button type="button" class="@ManualOrderButtonClass" disabled="@(projectDownReason != null)" title="@(projectDownReason ?? AppLoc["moveDown"].Value)" @onclick:stopPropagation="true" @onclick="() => MoveProject(folder.Projects, project, 1)">↓</button>
                                 </span>
                             }
                             <span class="truncate text-[13px] leading-5 @(isProjectArchived ? "text-slate-500 dark:text-slate-400" : "text-slate-700 group-hover:text-slate-900 dark:text-slate-200 dark:group-hover:text-slate-100") @(isProjectSelected ? "font-semibold text-sky-900 dark:text-sky-100" : isProjectOpen ? "font-semibold text-slate-800 dark:text-slate-100" : "font-medium")">
                                 @project.Name
                             </span>
+                            @if (HasUnseenProjectChange(project)) { <ChangeIndicator UpdatedAt="project.UpdatedAt" UpdatedByName="@project.UpdatedByName" RecentChanges="GetProjectRecentChanges(project.Id)" IsProject="true" /> }
                             @if (ShouldShowProjectCalculationCount(project))
                             {
                                 <span class="shrink-0 text-[11px] font-medium text-slate-400 dark:text-slate-500" aria-label="@GetProjectCalculationCountLabel(project)">
@@ -361,15 +371,19 @@
                                 <span class="min-w-0 flex items-center gap-1.5">
                                     @if (IsManualOrderMode)
                                     {
+                                        var calcBlocked = IsFolderManageBlocked(folder);
+                                        var calcUpReason = MoveUpReason(sortedCalculations, cal, calcBlocked, ItemMoveBlockedReason);
+                                        var calcDownReason = MoveDownReason(sortedCalculations, cal, calcBlocked, ItemMoveBlockedReason);
                                         <span class="flex shrink-0 items-center gap-0.5">
-                                            <button type="button" class="@ManualOrderButtonClass" disabled="@(!CanMoveUp(sortedCalculations, cal))" title="@AppLoc["moveUp"]" @onclick:stopPropagation="true" @onclick="() => MoveCalculation(project.Calculations, cal, -1)">↑</button>
-                                            <button type="button" class="@ManualOrderButtonClass" disabled="@(!CanMoveDown(sortedCalculations, cal))" title="@AppLoc["moveDown"]" @onclick:stopPropagation="true" @onclick="() => MoveCalculation(project.Calculations, cal, 1)">↓</button>
+                                            <button type="button" class="@ManualOrderButtonClass" disabled="@(calcUpReason != null)" title="@(calcUpReason ?? AppLoc["moveUp"].Value)" @onclick:stopPropagation="true" @onclick="() => MoveCalculation(project.Calculations, cal, -1)">↑</button>
+                                            <button type="button" class="@ManualOrderButtonClass" disabled="@(calcDownReason != null)" title="@(calcDownReason ?? AppLoc["moveDown"].Value)" @onclick:stopPropagation="true" @onclick="() => MoveCalculation(project.Calculations, cal, 1)">↓</button>
                                         </span>
                                     }
                                     <span title="@cal.Name"
                                           class="truncate text-[12px] font-normal leading-5 @GetCalculationTextClass(cal, calcSelected)">
                                         @cal.Name
                                     </span>
+                                    @if (HasUnseenCalcChange(cal)) { <ChangeIndicator UpdatedAt="cal.UpdatedAt" UpdatedByName="@cal.UpdatedByName" RecentChanges="GetCalcRecentChanges(cal.Id)" IsProject="false" /> }
                                 </span>
                             </div>
                         }
@@ -480,6 +494,7 @@ else if (GroupingMode == ProjectTreeGroupingMode.Projects)
                               class="truncate text-[13px] font-medium leading-5 @(isProjArchived ? "text-slate-500 dark:text-slate-400" : "text-slate-700 group-hover:text-slate-900 dark:text-slate-200 dark:group-hover:text-slate-100") @(isProjSelected ? "text-sky-900 dark:text-sky-100 font-semibold" : "")">
                             @project.Name
                         </span>
+                        @if (HasUnseenProjectChange(project)) { <ChangeIndicator UpdatedAt="project.UpdatedAt" UpdatedByName="@project.UpdatedByName" RecentChanges="GetProjectRecentChanges(project.Id)" IsProject="true" /> }
                     </div>
                 }
 
@@ -604,6 +619,7 @@ else
                                           class="truncate text-[13px] font-medium leading-5 @(isProjectArchived ? "text-slate-500 dark:text-slate-400" : "text-slate-700 group-hover:text-slate-900 dark:text-slate-200 dark:group-hover:text-slate-100") @(isProjectSelected ? "text-sky-900 dark:text-sky-100 font-semibold" : "")">
                                         @project.Name
                                     </span>
+                                    @if (HasUnseenProjectChange(project)) { <ChangeIndicator UpdatedAt="project.UpdatedAt" UpdatedByName="@project.UpdatedByName" RecentChanges="GetProjectRecentChanges(project.Id)" IsProject="true" /> }
 
                                 </div>
 
@@ -635,6 +651,7 @@ else
                                                       class="truncate text-[12px] font-normal leading-5 @GetCalculationTextClass(cal, calcSelected)">
                                                     @cal.Name
                                                 </span>
+                                                @if (HasUnseenCalcChange(cal)) { <ChangeIndicator UpdatedAt="cal.UpdatedAt" UpdatedByName="@cal.UpdatedByName" RecentChanges="GetCalcRecentChanges(cal.Id)" IsProject="false" /> }
                                             </div>
                                         }
                                     </div>
@@ -679,6 +696,7 @@ else
                                 <div @key="@($"{group.Key}-f2-{f2.Id}-{cal.Id}")" @onclick="async () => await NewCalculations(entry.Folder, entry.Project, cal)" class="@string.Join(" ", calcClasses)">
                                     <span class="flex h-5 w-5 shrink-0 items-center justify-center" title="@($"{CalcResource.calculation}{(string.IsNullOrWhiteSpace(cal.Status) ? string.Empty : $": {cal.Status}")}")"><span class="@CalculationIndicatorBaseClass" style="background-color:@GetCalculationStatusColor(cal)" title="@GetCalculationStatusTitle(cal)"></span></span>
                                     <span title="@cal.Name" class="truncate text-[12px] font-normal leading-5 @GetCalculationTextClass(cal, calcSelected)">@cal.Name</span>
+                                    @if (HasUnseenCalcChange(cal)) { <ChangeIndicator UpdatedAt="cal.UpdatedAt" UpdatedByName="@cal.UpdatedByName" RecentChanges="GetCalcRecentChanges(cal.Id)" IsProject="false" /> }
                                 </div>
                             }
                         </div>
@@ -705,7 +723,7 @@ else
                         <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md @(p3Archived ? TreeIconArchivedClass : p3Selected ? TreeIconSelectedClass : TreeProjectIconIdleClass)" title="@CalcResource.project">
                             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4.5 5.5h15v13h-15z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 9h8M8 13h3M14 13h2M8 16h8" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6.5 3.5v4M17.5 16.5v4" /></svg>
                         </span>
-                        <span title="@GetProjectTitle(p3)" class="truncate text-[13px] font-medium leading-5 @(p3Archived ? "text-slate-500 dark:text-slate-400" : "text-slate-700 group-hover:text-slate-900 dark:text-slate-200 dark:group-hover:text-slate-100") @(p3Selected ? "text-sky-900 dark:text-sky-100 font-semibold" : "")">@p3.Name</span>
+                        <span title="@GetProjectTitle(p3)" class="truncate text-[13px] font-medium leading-5 @(p3Archived ? "text-slate-500 dark:text-slate-400" : "text-slate-700 group-hover:text-slate-900 dark:text-slate-200 dark:group-hover:text-slate-100") @(p3Selected ? "text-sky-900 dark:text-sky-100 font-semibold" : "")">@p3.Name</span>@if (HasUnseenProjectChange(p3)) { <ChangeIndicator UpdatedAt="p3.UpdatedAt" UpdatedByName="@p3.UpdatedByName" RecentChanges="GetProjectRecentChanges(p3.Id)" IsProject="true" /> }
                     </div>
 
                     @if (IsGroupExpanded(p3Key))
@@ -719,6 +737,7 @@ else
                                 <div @key="@($"{group.Key}-p3-{p3.Id}-{cal.Id}")" @onclick="async () => await NewCalculations(pg3.Folder, p3, cal)" class="@string.Join(" ", calcClasses)">
                                     <span class="flex h-5 w-5 shrink-0 items-center justify-center" title="@($"{CalcResource.calculation}{(string.IsNullOrWhiteSpace(cal.Status) ? string.Empty : $": {cal.Status}")}")"><span class="@CalculationIndicatorBaseClass" style="background-color:@GetCalculationStatusColor(cal)" title="@GetCalculationStatusTitle(cal)"></span></span>
                                     <span title="@cal.Name" class="truncate text-[12px] font-normal leading-5 @GetCalculationTextClass(cal, calcSelected)">@cal.Name</span>
+                                    @if (HasUnseenCalcChange(cal)) { <ChangeIndicator UpdatedAt="cal.UpdatedAt" UpdatedByName="@cal.UpdatedByName" RecentChanges="GetCalcRecentChanges(cal.Id)" IsProject="false" /> }
                                 </div>
                             }
                         </div>
@@ -753,6 +772,7 @@ else
                               class="truncate text-[12px] font-normal leading-5 @GetCalculationTextClass(cal, calcSelected)">
                             @cal.Name
                         </span>
+                        @if (HasUnseenCalcChange(cal)) { <ChangeIndicator UpdatedAt="cal.UpdatedAt" UpdatedByName="@cal.UpdatedByName" RecentChanges="GetCalcRecentChanges(cal.Id)" IsProject="false" /> }
                     </div>
                 }
             }

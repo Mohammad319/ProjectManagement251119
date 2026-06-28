@@ -651,6 +651,8 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public DateTime? TenderQA { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
+        // Visningsnamn för den som ändrade senast (ändringsindikatorns tooltip "Ändrad av").
+        public string? UpdatedByName { get; set; }
         public int Tax { get; set; }
         public bool IsArchived { get; set; } = false;
         public string Inspector { get; set; } = string.Empty;

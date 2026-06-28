@@ -171,36 +171,29 @@ namespace ProjectManagement.Shared.Helper
             access is not null && access.Recipients.Count > 0;
 
         /// <summary>
-        /// Kompakt sammanfattning: "Privat", "Via projekt", "Ej via projekt" eller "Avdelningsåtkomst".
+        /// Kompakt sammanfattning – endast tre huvudstatusar: "Privat", "Via projekt" eller
+        /// "Avdelningsåtkomst". En kalkyl som inte ingår i projektets extra delning men syns via normal
+        /// avdelningsåtkomst visar "Avdelningsåtkomst" (inte längre det missvisande "Ej via projekt").
+        /// <paramref name="projectHasSharing"/> behålls för signaturkompatibilitet men påverkar inte
+        /// längre huvudstatusen.
         /// </summary>
         public static string CalcSummaryText(CalculationAccessSummaryDTO? access, bool isPrivate, bool projectHasSharing = false)
         {
             if (isPrivate)
                 return CalcTypePrivate;
-            if (access is null)
-                return projectHasSharing ? CalcTypeNotViaProject : CalcTypeDepartmentAccess;
-
-            var recips = access.Recipients;
-            if (recips.Count == 0)
-                return projectHasSharing ? CalcTypeNotViaProject : CalcTypeDepartmentAccess;
-
-            return CalcTypeViaProject;
+            return CalcIsShared(access) ? CalcTypeViaProject : CalcTypeDepartmentAccess;
         }
 
-        /// <summary>Filtervärden raden matchar: kalkyllistans fyra åtkomststatusar.</summary>
+        /// <summary>
+        /// Filtervärden raden matchar (huvudstatus): Privat, Via projekt eller Avdelningsåtkomst.
+        /// "Ej via projekt" är inte längre ett huvudvärde – sådana kalkyler matchar "Avdelningsåtkomst".
+        /// </summary>
         public static IEnumerable<string> CalcTags(CalculationAccessSummaryDTO? access, bool isPrivate, bool projectHasSharing = false)
         {
             if (isPrivate)
-            {
                 yield return CalcTypePrivate;
-                yield break;
-            }
-
-            bool shared = CalcIsShared(access);
-            if (shared)
+            else if (CalcIsShared(access))
                 yield return CalcTypeViaProject;
-            else if (projectHasSharing)
-                yield return CalcTypeNotViaProject;
             else
                 yield return CalcTypeDepartmentAccess;
         }

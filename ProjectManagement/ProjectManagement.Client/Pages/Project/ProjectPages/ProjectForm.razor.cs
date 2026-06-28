@@ -224,24 +224,35 @@ namespace ProjectManagement.Client.Pages.Project.ProjectPages
             resultInfo.Item2.ProcurementProcedure = Config?.Procedures?.FirstOrDefault(x => x.Id == ProjectUpdate.ProcurementProcedureId)?.Name ?? string.Empty;
             resultInfo.Item2.AddressText = FormatAddress(ProjectUpdate.Address.FirstOrDefault());
 
-            bool result;
-
-            if (Project.Id != Guid.Empty)
-                result = await
-                    Repo.Project.UpdateAsync(Project.Id, entity);
-            else
+            try
             {
-                resultInfo.Item2.Id = await Repo.Project.CreateAsync(entity);
+                bool result;
 
-                result = resultInfo.Item2.Id != Guid.Empty;
+                if (Project.Id != Guid.Empty)
+                    result = await
+                        Repo.Project.UpdateAsync(Project.Id, entity);
+                else
+                {
+                    resultInfo.Item2.Id = await Repo.Project.CreateAsync(entity);
+
+                    result = resultInfo.Item2.Id != Guid.Empty;
+                }
+
+                if (result)
+                    await Callback.InvokeAsync(resultInfo);
+
+                MHD.Notifications(Project.Id != Guid.Empty ? ToastType.Update : ToastType.Add, result);
             }
-
-            if (result)
-                await Callback.InvokeAsync(resultInfo);
-
-            MHD.Notifications(Project.Id != Guid.Empty ? ToastType.Update : ToastType.Add, result);
-
-            IsLoading = false;
+            catch (Exception)
+            {
+                // The API handlers already surface a global error dialog (e.g. a 403 when the target
+                // folder belongs to another department). Swallow here so the exception doesn't tear
+                // down the circuit/show the error page — the dialog stays open for a retry.
+            }
+            finally
+            {
+                IsLoading = false;
+            }
         }
 
         private AddressDTO EnsureMainAddress()

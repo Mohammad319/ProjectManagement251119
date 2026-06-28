@@ -23,6 +23,7 @@
 @inherits AppComponentBase
 @inject IJSRuntime JS
 @inject ProjectManagement.Client.Services.Calculation.CalculationListViewPreference ViewPreference
+@inject ProjectManagement.Client.Shared.Repositories.ChangeLog.IChangeLogRepository ChangeLogRepo
 @inject ProjectManagement.Client.Services.Folder.ListSavedFilterStorage SavedFilterStorage
 @inject ProjectManagement.Client.Services.Folder.ListSavedColumnViewStorage SavedColumnViewStorage
 @implements IDisposable
@@ -75,7 +76,7 @@
 
                         @* ── Aktiva filter ── *@
                         <div class="px-3 pt-1.5 pb-0.5">
-                            <span class="text-[10px] font-semibold tracking-wide text-slate-400 dark:text-slate-500">Aktiva filter</span>
+                            <span class="text-[11px] font-semibold tracking-wide text-slate-400 dark:text-slate-500">Aktiva filter</span>
                         </div>
                         @if (HasActiveFilters)
                         {
@@ -169,7 +170,7 @@
                         @* ── Sparade filter ── *@
                         <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
                         <div class="px-3 pt-0.5 pb-0.5">
-                            <span class="text-[10px] font-semibold tracking-wide text-slate-400 dark:text-slate-500">Sparade filter</span>
+                            <span class="text-[11px] font-semibold tracking-wide text-slate-400 dark:text-slate-500">Sparade filter</span>
                         </div>
                         @if (_savedCalcFilters.Count == 0)
                         {
@@ -239,7 +240,7 @@
 
                         @* Innehåll *@
                         <div class="px-3 pt-1.5 pb-0.5">
-                            <span class="text-[10px] font-semibold tracking-wide text-slate-400 dark:text-slate-500">Innehåll</span>
+                            <span class="text-[11px] font-semibold text-slate-700 dark:text-slate-200">Innehåll</span>
                         </div>
                         <button type="button"
                                 class="@(_contentMode == ContentModeCalculations ? "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-blue-700 dark:text-blue-300" : "flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800")"
@@ -373,10 +374,10 @@
                             <button type="button"
                                     class="flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-800"
                                     disabled="@noProjectContext"
-                                    title="@(noProjectContext ? "Välj ett projekt först för att importera en kalkylkopia." : "Importera en kalkylkopia (.atacost) till valt projekt.")"
+                                    title="@(noProjectContext ? "Välj ett projekt först för att importera en kalkylkopia." : "Importera en kalkylkopia till valt projekt.")"
                                     @onclick="() => { _newCalcMenuOpen = false; OpenImportCalculationCopyDialog(); }">
                                 <span aria-hidden="true">@((MarkupString)Icons.ImportFromFile)</span>
-                                <span>Importera kalkylkopia...</span>
+                                <span>Importera kalkyl...</span>
                             </button>
                         </div>
                     }
@@ -475,6 +476,10 @@
                                     HeaderClass='@SortableHeaderClass("project")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("project")'>
                         <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["project"] @((MarkupString)SortIndicatorHtml("project")) <TableColumnFilter FilterState='CF("project")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
                     </MhdTableColumn>
+                    <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("department")' ColumnKey="department" Order='@_columnView.OrderIndex("department")'
+                                    HeaderClass='@SortableHeaderClass("department")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("department")'>
+                        <HeaderContent><span class="inline-flex items-center gap-1">Avdelning @((MarkupString)SortIndicatorHtml("department")) <TableColumnFilter FilterState='CF("department")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
+                    </MhdTableColumn>
                     <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("folder")' ColumnKey="folder" Order='@_columnView.OrderIndex("folder")'
                                     HeaderClass='@SortableHeaderClass("folder")' HeaderStyle="min-width:80px;" OnHeaderClick='() => SortBy("folder")'>
                         <HeaderContent><span class="inline-flex items-center gap-1">@AppLoc["folder"] @((MarkupString)SortIndicatorHtml("folder")) <TableColumnFilter FilterState='CF("folder")' OnChanged="OnColumnFilterChanged" /></span></HeaderContent>
@@ -548,200 +553,14 @@
                             @ondragstart="() => OnCalcDragStart(calu)"
                             @ondragend="() => calcDraging = null"
                             draggable="@draggableValue">
-                            @if (IsCalculationColumnVisible("rowNumber"))
+                            @* Cellerna renderas i kolumnordningen (_columnView.ColumnOrder) så varje cell
+                               alltid hamnar under sin egen rubrik – styrt av samma ColumnKey. *@
+                            @foreach (var __col in _columnView.ColumnOrder)
                             {
-                                <td class="sticky left-0 z-[2] w-12 whitespace-nowrap bg-white px-2 py-2 text-right font-mono text-[11px] text-slate-400 group-hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-500 dark:group-hover:bg-slate-900/80 @(isSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
-                                    @rowNumber
-                                </td>
-                            }
-                            @if (IsCalculationColumnVisible("code"))
-                            {
-                                <td class="sticky @CodeStickyLeftClass z-[2] w-28 whitespace-nowrap bg-white px-3 py-2 font-mono text-[11px] text-slate-500 group-hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-400 dark:group-hover:bg-slate-900/80 @(isSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
-                                    @FormatText(calu.Code)
-                                </td>
-                            }
-                            @if (IsCalculationColumnVisible("name"))
-                            {
-                                <td class="sticky @NameStickyLeftClass z-[2] max-w-80 border-r border-slate-200 bg-white px-3 py-2 group-hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:group-hover:bg-slate-900/80 @(isSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
-                                    <div class="flex min-w-0 items-center gap-2">
-                                        <HoverTooltip Text="@calu.Name" OnlyWhenTruncated="true" Class="truncate font-semibold text-slate-800 dark:text-slate-100">
-                                            <span class="truncate">@calu.Name</span>
-                                        </HoverTooltip>
-                                        @if (calu.ImportInfo?.IsImportedCopy == true)
-                                        {
-                                            <button type="button"
-                                                    class="shrink-0 rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[10px] font-semibold text-sky-700 transition hover:bg-sky-100 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-300"
-                                                    title="Visa importinformation"
-                                                    @onclick:stopPropagation="true"
-                                                    @onclick="() => OpenImportInfoDialog(calu)">
-                                                Importerad kopia
-                                            </button>
-                                        }
-                                    </div>
-                                </td>
-                            }
-                            @if (IsCalculationColumnVisible("version"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2">
-                                    <div class="flex items-center gap-1.5">
-                                        <span class="font-mono text-slate-600 dark:text-slate-300">@FormatVersion(calu.VersionNumber)</span>
-                                        @if (calu.IsCurrentVersion)
-                                        {
-                                            <span class="shrink-0 font-semibold text-emerald-600 dark:text-emerald-400" title="Aktuell version" aria-label="Aktuell version">✓</span>
-                                        }
-                                        @if (HasMultipleVersions(calu))
-                                        {
-                                            <button type="button"
-                                                    class="shrink-0 rounded border border-slate-300 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 transition hover:border-slate-400 hover:text-slate-700 dark:border-slate-700 dark:text-slate-400 dark:hover:border-slate-500 dark:hover:text-slate-200"
-                                                    title="Visa alla versioner"
-                                                    @onclick:stopPropagation="true"
-                                                    @onclick="() => OpenVersionsDialog(calu)">
-                                                Versioner
-                                            </button>
-                                        }
-                                    </div>
-                                </td>
-                            }
-                            @if (IsCalculationColumnVisible("calculationType"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2">
-                                    <span class="inline-flex items-center gap-1">
-                                        <span class="@GetCalcTypeBadgeClass(calu)">
-                                            @GetCalculationTypeLabel(calu.CalculationType)
-                                        </span>
-                                        @if (calu.IsLocked)
-                                        {
-                                            <svg class="h-3 w-3 shrink-0 text-amber-500 dark:text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-label="@AppLoc["locked"]">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                            </svg>
-                                        }
-                                    </span>
-                                </td>
-                            }
-                            @if (IsCalculationColumnVisible("status"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2">
-                                    <span class="inline-flex items-center gap-1.5">
-                                        <span class="h-2 w-2 shrink-0 rounded-full"
-                                              style="background-color:@GetCalculationStatusColor(calu)"></span>
-                                        <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">@GetCalculationStatusText(calu)</span>
-                                    </span>
-                                </td>
-                            }
-                            @if (IsCalculationColumnVisible("responsible"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(calu.Responsible)</td>
-                            }
-                            @if (IsCalculationColumnVisible("inspector"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(calu.Inspector)</td>
-                            }
-                            @if (IsCalculationColumnVisible("deadline"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(calu.TenderDeadline)</td>
-                            }
-                            @if (IsCalculationColumnVisible("archived"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatYesNo(calu.IsArchived)</td>
-                            }
-                            @if (IsCalculationColumnVisible("access"))
-                            {
-                                var calcShared = CalcAccessIsShared(calu);
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300" @onclick:stopPropagation="true">
-                                    <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger" Context="calcAccessAuth">
-                                        <Authorized>
-                                            <button type="button"
-                                                    class="@(calcShared ? "inline-flex max-w-[200px] items-center gap-1 rounded px-1.5 py-0.5 text-left text-sky-700 transition hover:bg-sky-50 hover:underline dark:text-sky-300 dark:hover:bg-sky-950/40" : "inline-flex max-w-[200px] items-center gap-1 rounded px-1.5 py-0.5 text-left text-slate-500 transition hover:bg-slate-100 hover:underline dark:text-slate-400 dark:hover:bg-slate-800")"
-                                                    @onclick="() => OpenCalcShareDialog(calu)">
-                                                @if (calcShared)
-                                                {
-                                                    <i class="fa-solid fa-share-nodes shrink-0 text-sky-500"></i>
-                                                }
-                                                else if (calu.IsPrivate)
-                                                {
-                                                    <i class="fa-solid fa-lock shrink-0 text-amber-500"></i>
-                                                }
-                                                else
-                                                {
-                                                    <i class="fa-solid fa-diagram-project shrink-0 text-slate-400"></i>
-                                                }
-                                                <HoverTooltip Text="@CalcAccessTooltip(calu, viewerOnly: false)" Class="truncate">
-                                                    <span class="min-w-0 truncate">@CalcAccessSummaryText(calu)</span>
-                                                </HoverTooltip>
-                                            </button>
-                                        </Authorized>
-                                        <NotAuthorized>
-                                            <button type="button"
-                                                    class="inline-flex max-w-[200px] items-center gap-1 rounded px-1.5 py-0.5 text-left text-slate-500 transition hover:bg-slate-100 hover:underline dark:text-slate-400 dark:hover:bg-slate-800"
-                                                    @onclick="() => OpenCalcShareDialog(calu)">
-                                                @if (calcShared)
-                                                {
-                                                    <i class="fa-solid fa-share-nodes shrink-0 text-sky-500"></i>
-                                                }
-                                                else if (calu.IsPrivate)
-                                                {
-                                                    <i class="fa-solid fa-lock shrink-0 text-amber-500"></i>
-                                                }
-                                                <HoverTooltip Text="@CalcAccessTooltip(calu, viewerOnly: true)" Class="truncate">
-                                                    <span class="min-w-0 truncate">@CalcAccessSummaryText(calu)</span>
-                                                </HoverTooltip>
-                                            </button>
-                                        </NotAuthorized>
-                                    </AuthorizeView>
-                                </td>
-                            }
-                            @* Extra kolumner (samma ordning som rubriker och kolumnväljaren). *@
-                            @if (IsCalculationColumnVisible("project"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(GetCalculationProjectName(calu))</td>
-                            }
-                            @if (IsCalculationColumnVisible("folder"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(GetCalculationFolderName(calu))</td>
-                            }
-                            @if (IsCalculationColumnVisible("calculationRole"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@GetCalculationRoleDisplay(calu)</td>
-                            }
-                            @if (IsCalculationColumnVisible("qa"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(calu.TenderQA)</td>
-                            }
-                            @if (IsCalculationColumnVisible("createdAt"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(calu.CreatedAt)</td>
-                            }
-                            @if (IsCalculationColumnVisible("updatedAt"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@(calu.UpdatedAt.HasValue ? FormatDate(calu.UpdatedAt.Value) : "-")</td>
-                            }
-                            @if (IsCalculationColumnVisible("address"))
-                            {
-                                <td class="px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(calu.AddressText)</td>
-                            }
-                            @if (IsCalculationColumnVisible("priority"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@calu.Priority %</td>
-                            }
-                            @if (IsCalculationColumnVisible("start"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(calu.StartDate)</td>
-                            }
-                            @if (IsCalculationColumnVisible("end"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(calu.EndDate)</td>
-                            }
-                            @if (IsCalculationColumnVisible("timeMonth"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatMonthsDisplay(calu.TimeMonth)</td>
-                            }
-                            @if (IsCalculationColumnVisible("tax"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@calu.Tax %</td>
-                            }
-                            @if (IsCalculationColumnVisible("privacy"))
-                            {
-                                <td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatYesNo(calu.IsPrivate)</td>
+                                if (IsCalculationColumnVisible(__col))
+                                {
+                                    @RenderCalculationCell(__col, calu, isSelected, rowNumber)
+                                }
                             }
                         </tr>
                 </RowTemplate>
@@ -889,6 +708,31 @@
                 StateHasChanged();
             }
         }
+
+        await EnsureCalcRecentChangesAsync();
+    }
+
+    // Hämta "Senaste ändringar" för de kalkyler som visar indikatorn (osedd ändring). Signatur-vakt
+    // gör att vi bara hämtar när uppsättningen ändras, så OnAfterRender inte loopar.
+    private async Task EnsureCalcRecentChangesAsync()
+    {
+        var ids = VisibleBaseCalculations
+            .Where(HasUnseenCalcChange)
+            .Select(c => c.Id)
+            .Distinct()
+            .OrderBy(x => x)
+            .ToList();
+
+        var sig = string.Join(",", ids);
+        if (sig == _calcRecentChangesSig)
+            return;
+
+        _calcRecentChangesSig = sig;
+        _calcRecentChanges = ids.Count == 0
+            ? new()
+            : await ChangeLogRepo.GetRecentForCalculationsAsync(ids);
+
+        StateHasChanged();
     }
 
     public void Dispose() => _columnWidths?.Dispose();
@@ -973,6 +817,7 @@
         ["name"]            = new() { Type = ColumnFilterType.Text },
         ["version"]         = new() { Type = ColumnFilterType.Number },
         ["project"]         = new() { Type = ColumnFilterType.Text },
+        ["department"]      = new() { Type = ColumnFilterType.Dropdown },
         ["folder"]          = new() { Type = ColumnFilterType.Text },
         ["calculationType"] = new() { Type = ColumnFilterType.Dropdown },
         ["calculationRole"] = new() { Type = ColumnFilterType.Dropdown },
@@ -994,6 +839,21 @@
         // "Åtkomst" filtreras som flervalslista: åtkomsttyp, behörighet och mottagare.
         ["access"]          = new() { Type = ColumnFilterType.Dropdown },
     };
+
+    // Avdelnings-id → namn. Kalkylens avdelning hämtas via dess projekt (DepartmentId). Namnen bor
+    // i identitets-DB:n, så de hämtas en gång och slås upp på klienten (samma mönster som projektlistan).
+    private Dictionary<int, string> _departmentNames = new();
+
+    // Per användare: kalkyl-id (string) → senast öppnad. Driver ändringsindikatorn (UpdatedAt > värdet).
+    private Dictionary<string, DateTime> _lastOpened = new();
+
+    // Senaste ändringar per kalkyl (för indikatorns "Senaste ändringar"-tooltip). Hämtas bara för
+    // kalkyler som visar indikatorn; signatur-vakt hindrar omladdning.
+    private Dictionary<int, List<ProjectManagement.Shared.DTO.ChangeLog.ChangeLogItemDTO>> _calcRecentChanges = new();
+    private string _calcRecentChangesSig = string.Empty;
+
+    private IReadOnlyList<ProjectManagement.Shared.DTO.ChangeLog.ChangeLogItemDTO>? GetCalcRecentChanges(int id) =>
+        _calcRecentChanges.TryGetValue(id, out var list) ? list : null;
 
     protected override async Task OnInitializedAsync()
     {
@@ -1048,11 +908,22 @@
         {
             _calculationColumns["project"] = true;
             _calculationColumns["folder"] = IsDepartmentScope;
+            _calculationColumns["department"] = IsDepartmentScope;
         }
 
         _columnWidths = new ListColumnWidthController(
             JS, ViewPreference.LoadColumnWidthsAsync, ViewPreference.SaveColumnWidthsAsync);
         await _columnWidths.LoadAsync();
+
+        // Avdelningsnamn (id → namn) för "Avdelning"-kolumnen, dess filter och export.
+        var departments = await Repo.Departments.GetDepartmentsAsListAsync();
+        if (departments is not null)
+            _departmentNames = departments
+                .GroupBy(d => d.Id)
+                .ToDictionary(g => g.Key, g => g.First().Name);
+
+        // Senast öppnad per kalkyl (för ändringsindikatorn).
+        _lastOpened = await ViewPreference.LoadLastOpenedAsync() ?? new();
 
         await _filter.LoadSavedAsync();
     }
@@ -1091,6 +962,9 @@
                 break;
             case "inspector":
                 state.AvailableValues = GetCalcDropdownValues(c => c.Inspector);
+                break;
+            case "department":
+                state.AvailableValues = GetCalcDropdownValues(GetCalculationDepartmentName);
                 break;
             case "access":
                 state.AvailableGroups = GetCalcAccessFilterGroups();
@@ -1316,7 +1190,8 @@
     private static readonly IReadOnlyDictionary<string, bool> DefaultCalculationColumns =
         new Dictionary<string, bool>
         {
-            // ── Standardvy (ikryssade) ──
+            // ── Standardvy (ikryssade) ── Rekommenderad grundordning:
+            // Projekt; Avdelning före Mapp; Skapad datum direkt före Senast ändrad.
             ["rowNumber"] = true,
             ["code"] = true,
             ["name"] = true,
@@ -1326,15 +1201,16 @@
             ["responsible"] = true,
             ["inspector"] = true,
             ["deadline"] = true,
+            ["project"] = true,
+            ["department"] = true,
+            ["folder"] = true,
+            ["createdAt"] = true,
+            ["updatedAt"] = true,
             ["archived"] = true,
             ["access"] = true,
             // ── Extra kolumner (avkryssade) ──
-            ["project"] = false,
-            ["folder"] = false,
             ["calculationRole"] = false,
             ["qa"] = false,
-            ["createdAt"] = false,
-            ["updatedAt"] = false,
             ["address"] = false,
             // ── Övriga valbara kolumner (avkryssade) ──
             ["priority"] = false,
@@ -1357,7 +1233,7 @@
     // listed: it is not an own column – private status is shown in "Åtkomst".
     private List<MhdColumnPickerItem> CalculationColumnOptions => new()
     {
-        // ── Standardvy ──
+        // ── Standardvy ── (Projekt; Avdelning före Mapp; Skapad datum direkt före Senast ändrad)
         new("rowNumber", "Radnummer"),
         new("code", CalcResource.code),
         new("name", AppLoc["calculationName"].Value),
@@ -1367,15 +1243,16 @@
         new("responsible", AppLoc["calculationResponsible"].Value),
         new("inspector", AppLoc["reviewer"].Value),
         new("deadline", CalcResource.tenderDeadline),
+        new("project", AppLoc["project"].Value),
+        new("department", "Avdelning"),
+        new("folder", AppLoc["folder"].Value),
+        new("createdAt", AppLoc["createdDate"].Value),
+        new("updatedAt", AppLoc["lastModified"].Value),
         new("archived", AppLoc["archived"].Value),
         new("access", "Åtkomst"),
         // ── Extra kolumner ──
-        new("project", AppLoc["project"].Value),
-        new("folder", AppLoc["folder"].Value),
         new("calculationRole", AppLoc["calculationRole"].Value),
         new("qa", "Frågor/svar"),
-        new("createdAt", AppLoc["createdDate"].Value),
-        new("updatedAt", AppLoc["lastModified"].Value),
         new("address", "Adress"),
         // ── Övriga valbara kolumner ──
         new("priority", "Vinstchans"),
@@ -1420,6 +1297,8 @@
                 list = list.Where(c => _calcColFilters["version"].MatchesNumber(c.VersionNumber));
             if (_calcColFilters["project"].IsActive)
                 list = list.Where(c => _calcColFilters["project"].MatchesText(GetCalculationProjectName(c)));
+            if (_calcColFilters["department"].IsActive)
+                list = list.Where(c => _calcColFilters["department"].MatchesDropdown(GetCalculationDepartmentName(c)));
             if (_calcColFilters["folder"].IsActive)
                 list = list.Where(c => _calcColFilters["folder"].MatchesText(GetCalculationFolderName(c)));
             if (_calcColFilters["calculationType"].IsActive)
@@ -1457,7 +1336,12 @@
             if (_calcColFilters["privacy"].IsActive)
                 list = list.Where(c => _calcColFilters["privacy"].MatchesBool(c.IsPrivate));
             if (_calcColFilters["access"].IsActive)
-                list = list.Where(c => CalcAccessTags(c).Any(t => _calcColFilters["access"].SelectedValues.Contains(t)));
+            {
+                // Facetterad matchning (OR inom grupp, AND mellan grupper) – samma princip som projektlistan.
+                var accessGroups = CalcAccessFilter.BuildGroups(BaseCalculations);
+                var accessSelected = _calcColFilters["access"].SelectedValues;
+                list = list.Where(c => CalcAccessFilter.Matches(c, accessGroups, accessSelected));
+            }
 
             return list;
         }
@@ -1497,6 +1381,9 @@
                 "project" => _sortAscending
                     ? list.OrderBy(GetCalculationProjectName)
                     : list.OrderByDescending(GetCalculationProjectName),
+                "department" => _sortAscending
+                    ? list.OrderBy(GetCalculationDepartmentName, StringComparer.CurrentCultureIgnoreCase)
+                    : list.OrderByDescending(GetCalculationDepartmentName, StringComparer.CurrentCultureIgnoreCase),
                 "folder" => _sortAscending
                     ? list.OrderBy(GetCalculationFolderName)
                     : list.OrderByDescending(GetCalculationFolderName),
@@ -1559,6 +1446,130 @@
 
     private string SortIndicatorHtml(string column) => _sort.IndicatorHtml(column);
 
+    // Renderar EN cell i kalkyllistan via dess ColumnKey. Raden itererar kolumnerna i
+    // _columnView.ColumnOrder (samma ordning som rubrikerna), så cellvärdet alltid hamnar
+    // under rätt rubrik – även efter ändrad kolumnordning/kolumnvy.
+    private RenderFragment? RenderCalculationCell(string key, ListCalculationMVVM calu, bool isSelected, int rowNumber) => key switch
+    {
+        "rowNumber" => @<td class="sticky left-0 z-[2] w-12 whitespace-nowrap bg-white px-2 py-2 text-right font-mono text-[11px] text-slate-400 group-hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-500 dark:group-hover:bg-slate-900/80 @(isSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">@rowNumber</td>,
+        "code" => @<td class="sticky @CodeStickyLeftClass z-[2] w-28 whitespace-nowrap bg-white px-3 py-2 font-mono text-[11px] text-slate-500 group-hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-400 dark:group-hover:bg-slate-900/80 @(isSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">@FormatText(calu.Code)</td>,
+        "name" => @<td class="sticky @NameStickyLeftClass z-[2] max-w-80 border-r border-slate-200 bg-white px-3 py-2 group-hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:group-hover:bg-slate-900/80 @(isSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
+            <div class="flex min-w-0 items-center gap-2">
+                <HoverTooltip Text="@calu.Name" OnlyWhenTruncated="true" Class="truncate font-semibold text-slate-800 dark:text-slate-100">
+                    <span class="truncate">@calu.Name</span>
+                </HoverTooltip>
+                @if (calu.ImportInfo?.IsImportedCopy == true)
+                {
+                    <button type="button"
+                            class="shrink-0 rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[10px] font-semibold text-sky-700 transition hover:bg-sky-100 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-300"
+                            title="Visa importinformation"
+                            @onclick:stopPropagation="true"
+                            @onclick="() => OpenImportInfoDialog(calu)">
+                        Importerad kopia
+                    </button>
+                }
+            </div>
+        </td>,
+        "version" => @<td class="whitespace-nowrap px-3 py-2">
+            <div class="flex items-center gap-1.5">
+                <span class="font-mono text-slate-600 dark:text-slate-300">@FormatVersion(calu.VersionNumber)</span>
+                @if (calu.IsCurrentVersion)
+                {
+                    <span class="shrink-0 font-semibold text-emerald-600 dark:text-emerald-400" title="Aktuell version" aria-label="Aktuell version">✓</span>
+                }
+                @if (HasMultipleVersions(calu))
+                {
+                    <button type="button"
+                            class="shrink-0 rounded border border-slate-300 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 transition hover:border-slate-400 hover:text-slate-700 dark:border-slate-700 dark:text-slate-400 dark:hover:border-slate-500 dark:hover:text-slate-200"
+                            title="Visa alla versioner"
+                            @onclick:stopPropagation="true"
+                            @onclick="() => OpenVersionsDialog(calu)">
+                        Versioner
+                    </button>
+                }
+            </div>
+        </td>,
+        "calculationType" => @<td class="whitespace-nowrap px-3 py-2">
+            <span class="inline-flex items-center gap-1">
+                <span class="@GetCalcTypeBadgeClass(calu)">
+                    @GetCalculationTypeLabel(calu.CalculationType)
+                </span>
+                @if (calu.IsLocked)
+                {
+                    <svg class="h-3 w-3 shrink-0 text-amber-500 dark:text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-label="@AppLoc["locked"]">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                }
+            </span>
+        </td>,
+        "status" => @<td class="whitespace-nowrap px-3 py-2"><span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 shrink-0 rounded-full" style="background-color:@GetCalculationStatusColor(calu)"></span><span class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">@GetCalculationStatusText(calu)</span></span></td>,
+        "responsible" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(calu.Responsible)</td>,
+        "inspector" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(calu.Inspector)</td>,
+        "deadline" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(calu.TenderDeadline)</td>,
+        "archived" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatYesNo(calu.IsArchived)</td>,
+        "access" => RenderCalculationAccessCell(calu),
+        "project" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(GetCalculationProjectName(calu))</td>,
+        "department" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(GetCalculationDepartmentName(calu))</td>,
+        "folder" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(GetCalculationFolderName(calu))</td>,
+        "calculationRole" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@GetCalculationRoleDisplay(calu)</td>,
+        "qa" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(calu.TenderQA)</td>,
+        "createdAt" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(calu.CreatedAt)</td>,
+        "updatedAt" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300"><span class="inline-flex items-center gap-1.5"><span>@(calu.UpdatedAt.HasValue ? FormatDate(calu.UpdatedAt.Value) : "-")</span>@if (HasUnseenCalcChange(calu)){<ChangeIndicator UpdatedAt="calu.UpdatedAt" UpdatedByName="@calu.UpdatedByName" RecentChanges="GetCalcRecentChanges(calu.Id)" IsProject="false" />}</span></td>,
+        "address" => @<td class="px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(calu.AddressText)</td>,
+        "priority" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@calu.Priority %</td>,
+        "start" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(calu.StartDate)</td>,
+        "end" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(calu.EndDate)</td>,
+        "timeMonth" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatMonthsDisplay(calu.TimeMonth)</td>,
+        "tax" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@calu.Tax %</td>,
+        "privacy" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatYesNo(calu.IsPrivate)</td>,
+        _ => null
+    };
+
+    // "Åtkomst"-cellen för kalkyl (delningsknapp + behörighetsvy + privat-ikon); egen metod.
+    private RenderFragment RenderCalculationAccessCell(ListCalculationMVVM calu) => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300" @onclick:stopPropagation="true">
+        @{ var calcShared = CalcAccessIsShared(calu); }
+        <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger" Context="calcAccessAuth">
+            <Authorized>
+                <button type="button"
+                        class="@(calcShared ? "inline-flex max-w-[200px] items-center gap-1 rounded px-1.5 py-0.5 text-left text-sky-700 transition hover:bg-sky-50 hover:underline dark:text-sky-300 dark:hover:bg-sky-950/40" : "inline-flex max-w-[200px] items-center gap-1 rounded px-1.5 py-0.5 text-left text-slate-500 transition hover:bg-slate-100 hover:underline dark:text-slate-400 dark:hover:bg-slate-800")"
+                        @onclick="() => OpenCalcShareDialog(calu)">
+                    @if (calcShared)
+                    {
+                        <i class="fa-solid fa-share-nodes shrink-0 text-sky-500"></i>
+                    }
+                    else if (calu.IsPrivate)
+                    {
+                        <i class="fa-solid fa-lock shrink-0 text-amber-500"></i>
+                    }
+                    else
+                    {
+                        <i class="fa-solid fa-diagram-project shrink-0 text-slate-400"></i>
+                    }
+                    <HoverTooltip Text="@CalcAccessTooltip(calu, viewerOnly: false)" Class="truncate">
+                        <span class="min-w-0 truncate">@CalcAccessSummaryText(calu)</span>
+                    </HoverTooltip>
+                </button>
+            </Authorized>
+            <NotAuthorized>
+                <button type="button"
+                        class="inline-flex max-w-[200px] items-center gap-1 rounded px-1.5 py-0.5 text-left text-slate-500 transition hover:bg-slate-100 hover:underline dark:text-slate-400 dark:hover:bg-slate-800"
+                        @onclick="() => OpenCalcShareDialog(calu)">
+                    @if (calcShared)
+                    {
+                        <i class="fa-solid fa-share-nodes shrink-0 text-sky-500"></i>
+                    }
+                    else if (calu.IsPrivate)
+                    {
+                        <i class="fa-solid fa-lock shrink-0 text-amber-500"></i>
+                    }
+                    <HoverTooltip Text="@CalcAccessTooltip(calu, viewerOnly: true)" Class="truncate">
+                        <span class="min-w-0 truncate">@CalcAccessSummaryText(calu)</span>
+                    </HoverTooltip>
+                </button>
+            </NotAuthorized>
+        </AuthorizeView>
+    </td>;
+
     private bool IsCalculationColumnVisible(string key) => _columnView.IsColumnVisible(key);
 
     // The radnummer column (when shown) is the first frozen column at left-0 (w-12).
@@ -1583,6 +1594,25 @@
     private string? GetCalculationProjectName(ListCalculationMVVM calculation) =>
         GetScopeRow(calculation)?.Project.Name ?? calculation.ProjectName;
 
+    // Kalkylens avdelningsnamn via projektets avdelnings-id. Tom sträng när namn saknas → visas som "-".
+    private string GetCalculationDepartmentName(ListCalculationMVVM calculation) =>
+        GetCalculationProject(calculation)?.DepartmentId is int id && _departmentNames.TryGetValue(id, out var name)
+            ? name : string.Empty;
+
+    // Ändringsindikator: visas när kalkylen ändrats efter att aktuell användare senast öppnade den.
+    // Aldrig öppnade kalkyler (ingen baslinje) visar ingen indikator.
+    private bool HasUnseenCalcChange(ListCalculationMVVM c) =>
+        c.UpdatedAt is { } updated
+        && _lastOpened.TryGetValue(c.Id.ToString(), out var opened)
+        && updated > opened;
+
+    // Markera som läst när användaren öppnar kalkylen → indikatorn döljs (tills nästa ändring).
+    private async Task MarkCalcOpenedAsync(ListCalculationMVVM c)
+    {
+        _lastOpened[c.Id.ToString()] = DateTime.UtcNow;
+        await ViewPreference.SaveLastOpenedAsync(_lastOpened);
+    }
+
     private string? GetCalculationFolderName(ListCalculationMVVM calculation) =>
         GetScopeRow(calculation)?.Folder.Name ?? calculation.FolderName;
 
@@ -1592,16 +1622,7 @@
         AccessSummaryFormatter.CalcIsShared(c.Access);
 
     private string CalcAccessSummaryText(ListCalculationMVVM c) =>
-        AccessSummaryFormatter.CalcSummaryText(c.Access, c.IsPrivate, CalculationProjectHasSharing(c));
-
-    private IEnumerable<string> CalcAccessTags(ListCalculationMVVM c) =>
-        AccessSummaryFormatter.CalcTags(c.Access, c.IsPrivate, CalculationProjectHasSharing(c));
-
-    private bool CalculationProjectHasSharing(ListCalculationMVVM c)
-    {
-        var project = GetCalculationProject(c);
-        return project is not null && AccessSummaryFormatter.ProjectIsShared(project.Access, project.IsShared);
-    }
+        AccessSummaryFormatter.CalcSummaryText(c.Access, c.IsPrivate);
 
     // Grupperad, flerradig tooltip för Åtkomst-kolumnen. Kalkyler delas inte separat i denna
     // version – åtkomsten styrs via projektets delning, vilket tooltipen förklarar tydligt.
@@ -1643,16 +1664,10 @@
             }
             else
             {
-                if (CalculationProjectHasSharing(c))
-                {
-                    lines.Add("Ingår inte i projektets delning");
-                    lines.Add("Kalkylen ingår inte i den aktuella projektdelningen.");
-                }
-                else
-                {
-                    lines.Add("Avdelningsåtkomst");
-                    lines.Add("Kalkylen är synlig via normal avdelningsåtkomst.");
-                }
+                // Inte i projektets extra delning → synlig via normal avdelningsåtkomst.
+                // (Visar inte längre "Ej via projekt"/"Ingår inte i projektets delning" som huvudstatus.)
+                lines.Add("Avdelningsåtkomst");
+                lines.Add("Kalkylen är synlig via normal avdelningsåtkomst.");
             }
         }
 
@@ -1662,26 +1677,10 @@
     }
 
     // Kalkyllistans Åtkomst-filter visar samma huvudstatusar som kolumnen.
-    private List<FilterOptionGroup> GetCalcAccessFilterGroups()
-    {
-        static FilterOption Opt(string s) =>
-            new() { Value = s, Label = s };
-
-        return
-        [
-            new()
-            {
-                Header = AccessSummaryFormatter.GroupAccessType,
-                Options =
-                [
-                    Opt(AccessSummaryFormatter.CalcTypePrivate),
-                    Opt(AccessSummaryFormatter.CalcTypeViaProject),
-                    Opt(AccessSummaryFormatter.CalcTypeNotViaProject),
-                    Opt(AccessSummaryFormatter.CalcTypeDepartmentAccess),
-                ]
-            },
-        ];
-    }
+    // Fyra facetter (Åtkomsttyp, Åtkomstnivå, Personer, Avdelningar) byggda från kalkylerna i listan.
+    // Ren + enhetstestbar logik bor i CalcAccessFilter (speglar ProjectAccessFilter).
+    private List<FilterOptionGroup> GetCalcAccessFilterGroups() =>
+        CalcAccessFilter.BuildGroups(BaseCalculations);
 
     private static List<FilterOption> CalcRecipientOptions(IEnumerable<ProjectAccessRecipientDTO> recips, ProjectShareRecipientType type) =>
         recips.Where(r => r.Type == type)
@@ -1953,28 +1952,18 @@
             list.Add(new()
             {
                 IconHtml = access.CanEditWork && item.IsCurrentVersion ? Icons.Edit : Icons.Details,
-                Label = access.CanEditWork && item.IsCurrentVersion ? ResourceApp.edit : "Visa kalkyl",
+                Label = access.CanEditWork && item.IsCurrentVersion ? "Ändra kalkyluppgifter" : "Visa kalkyl",
                 OnClickAsync = () => { UpdateForm(item, access.CanEditWork && item.IsCurrentVersion); return Task.CompletedTask; }
             });
-            list.Add(new() { IconHtml = Icons.Details, Label = "Visa detaljer", OnClickAsync = () => { CalculationDetails(item); return Task.CompletedTask; } });
-
-            if (GetCalculationProject(item) is { } projectForShare)
-            {
-                var projectAccess = ContextMenuAccessPolicy.ForProject(authState.User, projectForShare.Access, Folder.State.OtherDepartment);
-                list.Add(new()
-                {
-                    IconHtml = Icons.PermissionShield,
-                    Label = projectAccess.CanManageSharing ? "Delning och behörighet" : "Visa delning och behörighet",
-                    OnClickAsync = () => { OpenProjectShareDialog(projectForShare, readOnly: !projectAccess.CanManageSharing); return Task.CompletedTask; }
-                });
-            }
+            // "Visa detaljer" borttagen – öppna/ändra räcker. Kalkyldelning hanteras på projektnivå
+            // (ingen "Delning och behörighet" i kalkylmenyn); Åtkomst-kolumnen öppnar projektets dialog.
         }
 
         if (access.CanManageLifecycle)
         {
             // Grupp 1 — huvudåtgärder (Versioner direkt efter Ändra)
             list.Add(new() { IsSeparator = true });
-            list.Add(new() { IconHtml = Icons.Copy, Label = "Versioner", OnClickAsync = () => { OpenVersionsDialog(item); return Task.CompletedTask; } });
+            list.Add(new() { IconHtml = Icons.Copy, Label = "Kalkylversioner", OnClickAsync = () => { OpenVersionsDialog(item); return Task.CompletedTask; } });
 
             // Grupp 2 — livscykel/hantering
             list.Add(new() { IsSeparator = true });
@@ -2109,20 +2098,6 @@
             BlazorMHD.UI.Core.Services.MhdDialogSize.Large);
     }
 
-    void OpenProjectShareDialog(ListProjectMVVM project, bool readOnly = false) =>
-        Modal.ShowComponent<ProjectShareUI>(
-            readOnly ? "Visa delning och behörighet" : "Delning och behörighet",
-            new Dictionary<string, object>
-            {
-                [nameof(ProjectShareUI.ProjectId)] = project.Id,
-                [nameof(ProjectShareUI.ProjectName)] = project.Name,
-                [nameof(ProjectShareUI.ProjectDepartmentId)] = project.DepartmentId!,
-                [nameof(ProjectShareUI.ProjectResponsible)] = project.Responsible,
-                [nameof(ProjectShareUI.ReadOnly)] = readOnly,
-                [nameof(ProjectShareUI.OnCompleted)] = EventCallback.Factory.Create(this, ReloadAfterMoveCopyAsync)
-            },
-            BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
-
     // Import a calculation copy (.atacost) into the currently selected project; always creates a new calculation.
     void OpenImportCalculationCopyDialog()
     {
@@ -2231,6 +2206,7 @@
             "name"            => "Kalkylnamn",
             "version"         => AppLoc["version"].Value,
             "project"         => "Projekt",
+            "department"      => "Avdelning",
             "folder"          => "Mapp",
             "calculationType" => "Kalkyltyp",
             "calculationRole" => "Kalkylroll",
@@ -2303,6 +2279,7 @@
         "responsible" => calculation.Responsible,
         "inspector" => calculation.Inspector,
         "project" => GetCalculationProjectName(calculation),
+        "department" => GetCalculationDepartmentName(calculation),
         "folder" => GetCalculationFolderName(calculation),
         "priority" => $"{calculation.Priority} %",
         "address" => calculation.AddressText,
@@ -2355,17 +2332,6 @@
             DialogButtonsHelper.CreateSaveCancelButtons(CalculationFormUI.DialogFormId));
     }
 
-    void CalculationDetails(ListCalculationMVVM model)
-    {
-        Modal.ShowComponent<CalculationDetailsUI>(
-            ResourceLoc.details,
-            new Dictionary<string, object>
-            {
-                [nameof(CalculationDetailsUI.Id)] = model.Id,
-                [nameof(CalculationDetailsUI.ProjectId)] = GetCalculationProject(model)?.Id ?? Guid.Empty
-            }, BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
-    }
-
     void TenderPage(ListCalculationMVVM model)
     {
         Modal.ShowComponent<TenderListUI>(
@@ -2386,6 +2352,8 @@
 
     private async Task OpenCalculationAsync(ListCalculationMVVM calculation)
     {
+        await MarkCalcOpenedAsync(calculation);
+
         var project = GetCalculationProject(calculation);
         var folder = GetCalculationFolder(calculation);
 

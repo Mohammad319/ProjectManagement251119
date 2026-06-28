@@ -318,12 +318,18 @@ namespace ProjectManagement.Shared.DTO.Project
         // The project's owning department (via its folder). Used by the sharing dialog to mark
         // recipients that already have access "via projektets avdelning".
         public int? DepartmentId { get; set; }
+        // Projektets mappnamn för list-kolumnen "Mapp". Tomt när okänt – UI:t visar då "-",
+        // aldrig null eller tekniska id:n.
+        public string FolderName { get; set; } = string.Empty;
         // Compact access summary for the project list's "Åtkomst" column and its filter.
         // Null when not computed (e.g. global search); the UI then falls back to IsShared.
         public ProjectAccessSummaryDTO? Access { get; set; }
         public int CalculationCount { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
+        // Visningsnamn för den som ändrade senast (ändringsindikatorns tooltip "Ändrad av").
+        // Null när okänt – UI:t visar då bara datumraden, aldrig id/null.
+        public string? UpdatedByName { get; set; }
         public string Developer { get; set; } = string.Empty;
         public string Organisation { get; set; } = string.Empty;
         public string ProcurementName { get; set; } = string.Empty;
