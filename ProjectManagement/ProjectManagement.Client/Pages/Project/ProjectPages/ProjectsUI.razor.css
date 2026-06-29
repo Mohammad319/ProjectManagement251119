@@ -1,0 +1,47 @@
+.pm-list-row {
+    background-color: #ffffff;
+}
+
+.pm-list-row-zebra {
+    background-color: #f8fafc;
+}
+
+.pm-list-row:hover {
+    background-color: #f0f9ff;
+}
+
+.pm-list-row-selected,
+.pm-list-row-selected:hover {
+    background-color: #dbeafe;
+    box-shadow: inset 3px 0 0 #0284c7;
+}
+
+.pm-list-row > td {
+    background-color: inherit !important;
+}
+
+.pm-list-row-selected > td {
+    color: #0f172a;
+}
+
+:global(.dark) .pm-list-row {
+    background-color: #020617;
+}
+
+:global(.dark) .pm-list-row-zebra {
+    background-color: #0f172a;
+}
+
+:global(.dark) .pm-list-row:hover {
+    background-color: #082f49;
+}
+
+:global(.dark) .pm-list-row-selected,
+:global(.dark) .pm-list-row-selected:hover {
+    background-color: #172554;
+    box-shadow: inset 3px 0 0 #38bdf8;
+}
+
+:global(.dark) .pm-list-row-selected > td {
+    color: #f8fafc;
+}

@@ -16,6 +16,24 @@ else if (ProjectUpdate is not null)
         <DataAnnotationsValidator />
         <FormValidationSummary />
 
+        @if (_isSaving)
+        {
+            <div class="project-save-toast" role="status" aria-live="polite">
+                <svg class="h-4 w-4 shrink-0 animate-spin text-slate-500 dark:text-slate-300" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                <span>Sparar…</span>
+            </div>
+        }
+        else if (!string.IsNullOrWhiteSpace(_saveErrorMessage))
+        {
+            <div class="mb-3 flex items-start gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200" role="alert">
+                <svg class="mt-0.5 h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /></svg>
+                <span>@_saveErrorMessage</span>
+            </div>
+        }
+
         @if (IsReadOnly)
         {
             <div class="mb-3 flex items-start gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-800 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-200">

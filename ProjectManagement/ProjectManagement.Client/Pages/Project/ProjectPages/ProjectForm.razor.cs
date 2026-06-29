@@ -25,6 +25,8 @@ namespace ProjectManagement.Client.Pages.Project.ProjectPages
         [Parameter] public Guid FolderId { get; set; }
 
         bool IsLoading = true;
+        private bool _isSaving;
+        private string? _saveErrorMessage;
 
         // True when the current user's effective permission is Visare: the form is shown read-only
         // and saving is blocked, so they never edit a field that cannot be persisted.
@@ -190,18 +192,20 @@ namespace ProjectManagement.Client.Pages.Project.ProjectPages
 
         private async Task HandleSubmitAsync()
         {
-            if (IsLoading)
+            if (IsLoading || _isSaving)
                 return;
+
+            _saveErrorMessage = null;
 
             // Visare can read but not change grunddata — bail with a clear message instead of the
             // generic save error.
             if (IsReadOnly)
             {
-                MHD.MessageOk("Behörighet", "Du har visningsbehörighet och kan inte ändra projektets grunddata.", MhdState.Warning);
+                _saveErrorMessage = "Du har visningsbehörighet och kan inte ändra projektets grunddata.";
                 return;
             }
 
-            IsLoading = true;
+            _isSaving = true;
             SyncProjectStatusName();
             NormalizeResponsibilityFields();
 
@@ -240,18 +244,22 @@ namespace ProjectManagement.Client.Pages.Project.ProjectPages
 
                 if (result)
                     await Callback.InvokeAsync(resultInfo);
+                else
+                    _saveErrorMessage = "Projektet kunde inte sparas. Kontrollera uppgifterna och försök igen.";
 
                 MHD.Notifications(Project.Id != Guid.Empty ? ToastType.Update : ToastType.Add, result);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 // The API handlers already surface a global error dialog (e.g. a 403 when the target
                 // folder belongs to another department). Swallow here so the exception doesn't tear
                 // down the circuit/show the error page — the dialog stays open for a retry.
+                _saveErrorMessage = "Projektet kunde inte sparas. Kontrollera uppgifterna och försök igen.";
+                await ClientLog.ErrorAsync("ProjectForm save failed", ex: ex);
             }
             finally
             {
-                IsLoading = false;
+                _isSaving = false;
             }
         }
 

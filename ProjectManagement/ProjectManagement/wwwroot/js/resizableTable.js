@@ -23,6 +23,63 @@ const PM_TABLE_OPTIONS = {
     saveMethodName: 'SaveTemplateBlazor',
 };
 
+const PM_COLUMN_BOUNDS = {
+    rowNumber: [45, 55],
+    code: [55, 160],
+    name: [150, 520],
+    project: [150, 520],
+    status: [100, 260],
+    calculationType: [100, 260],
+    projectType: [100, 260],
+    access: [120, 260],
+    shared: [120, 260],
+    archived: [80, 220],
+    deadline: [110, 180],
+    createdAt: [110, 180],
+    updatedAt: [110, 180],
+    publicationDate: [110, 180],
+    decisionDate: [110, 180],
+    start: [110, 180],
+    end: [110, 180],
+    qa: [110, 180],
+    department: [90, 260],
+    folder: [90, 260],
+    responsible: [100, 300],
+    inspector: [100, 300],
+    organisation: [120, 360],
+    procurementNumber: [120, 360],
+    customerReference: [120, 360],
+    procurementName: [120, 360],
+    procurementMethods: [110, 360],
+    contract: [90, 260],
+    compensation: [110, 260],
+    procurementProcedure: [130, 360],
+    byggherre: [120, 360],
+    clientsManager: [120, 360],
+    designer: [120, 360],
+    address: [140, 360],
+    supervisor: [120, 360],
+    version: [70, 160],
+    calculationRole: [130, 260],
+    priority: [80, 220],
+    timeMonth: [80, 220],
+    tax: [60, 140],
+    privacy: [60, 140],
+};
+
+function clampWidth(columnKey, width) {
+    const bounds = PM_COLUMN_BOUNDS[columnKey] || [80, 360];
+    return Math.min(bounds[1], Math.max(bounds[0], Number(width) || bounds[0]));
+}
+
+function clampWidths(widths) {
+    return Object.fromEntries(
+        Object.entries(widths)
+            .filter(([, width]) => Number(width) > 0)
+            .map(([columnKey, width]) => [columnKey, clampWidth(columnKey, width)])
+    );
+}
+
 // Cache the library module import so init + applySavedColumnWidths share one load.
 let _mhdModulePromise = null;
 function loadEngine() {
@@ -58,5 +115,5 @@ window.initializeResizableColumns = async function (dotNetRef) {
 window.applySavedColumnWidths = async function (widths) {
     if (!widths) return;
     const tableColumns = await loadEngine();
-    tableColumns.applySavedWidths(widths, document.getElementById('resizeMe'));
+    tableColumns.applySavedWidths(clampWidths(widths), document.getElementById('resizeMe'));
 };

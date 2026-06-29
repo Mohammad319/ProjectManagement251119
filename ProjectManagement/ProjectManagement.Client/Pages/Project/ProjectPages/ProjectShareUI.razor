@@ -8,7 +8,7 @@
 @inherits AppComponentBase
 @attribute [Authorize(Roles = PMRolesConst.Tenant.UsersAndViewer)]
 
-<div class="flex max-h-[calc(100dvh-9rem)] flex-col text-slate-800 dark:text-slate-100">
+<div class="project-share-dialog flex flex-col text-slate-800 dark:text-slate-100">
 
     @* ── Sticky topp: projektinfo ligger kvar vid scroll ──────────────── *@
     <div class="shrink-0 border-b border-slate-200 pb-2 dark:border-slate-700">
@@ -44,7 +44,7 @@
     }
     else
     {
-    <div class="min-h-0 flex-1 space-y-3 overflow-y-auto pt-3 pr-0.5">
+    <div class="min-h-0 flex-1 space-y-3 overflow-y-auto pt-3 pr-1">
         @if (ReadOnly)
         {
             <div class="flex items-start gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-200">
@@ -165,7 +165,7 @@
             else
             {
                 @* Begränsad höjd (~5 rader) + scroll så dialogen inte växer för mycket; sticky thead. *@
-                <div class="max-h-52 overflow-auto rounded-lg border border-slate-200 dark:border-slate-700">
+                <div class="max-h-48 overflow-auto rounded-lg border border-slate-200 dark:border-slate-700">
                     <table class="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-700">
                         <thead class="sticky top-0 z-10 bg-slate-100 dark:bg-slate-800">
                             <tr>
@@ -271,10 +271,10 @@
                 @(_editingId.HasValue ? "Ändra delning" : "Dela med")
             </div>
 
-            <div class="grid gap-4 md:grid-cols-2">
+            <div class="grid min-h-0 items-stretch gap-4 md:grid-cols-2">
 
                 @* ── VÄNSTER: mottagare ──────────────────────────────────── *@
-                <div class="space-y-3">
+                <div class="flex min-h-0 flex-col gap-3">
 
                     @* Mottagartyp – etikett och knappar på samma rad (kompakt) *@
                     <div class="flex items-center gap-2">
@@ -329,7 +329,7 @@
                                 else
                                 {
                                     @* Samma min-/maxhöjd som kalkyllistan så de två listorna linjerar och dialogen känns symmetrisk. *@
-                                    <div class="min-h-[6rem] max-h-48 space-y-0.5 overflow-y-auto rounded border border-slate-300 bg-white p-1 dark:border-slate-600 dark:bg-slate-950">
+                                    <div class="share-list-panel space-y-0.5 overflow-y-auto rounded border border-slate-300 bg-white p-1 dark:border-slate-600 dark:bg-slate-950">
                                         @foreach (var u in _userOptions)
                                         {
                                             var user = u;
@@ -401,7 +401,7 @@
                 @* ── HÖGER: giltighet + åtkomstnivå + kalkyler + åtgärd ──────
                    Giltighet ligger överst (generell inställning för delningen),
                    åtkomstnivån direkt under och nära kalkylvalet. *@
-                <div class="flex flex-col gap-3">
+                <div class="flex min-h-0 flex-col gap-3">
 
                     @* Giltighet – allt på en rad på bred skärm, bryts responsivt på liten skärm *@
                     <div>
@@ -455,9 +455,9 @@
 
                     @* Delningsomfattning – två tydliga lägen: alla kalkyler (inkl. nya) eller bara valda.
                        Ligger i samma högra yta, direkt ovanför kalkyllistan. *@
-                    <div>
-                        <label class="mb-1 block text-[13px] font-medium text-slate-600 dark:text-slate-300">Delningsomfattning</label>
-                        <div class="space-y-1">
+                    <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                        <label class="shrink-0 text-[13px] font-medium text-slate-600 dark:text-slate-300">Delningsomfattning</label>
+                        <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5">
                             <label class="flex cursor-pointer items-center gap-1.5 text-sm">
                                 <input type="radio"
                                        name="project-share-scope"
@@ -517,19 +517,13 @@
                         }
                         else
                         {
-                            @if (_shareScopeAll)
-                            {
-                                <p class="mb-1 rounded border border-dashed border-sky-300 bg-sky-50/60 px-2 py-1.5 text-[11px] text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-300">
-                                    Alla icke-privata kalkyler i projektet ingår automatiskt.
-                                </p>
-                            }
-                            else if (!HasShareableCalcs)
+                            @if (!_shareScopeAll && !HasShareableCalcs)
                             {
                                 <p class="mb-1 rounded border border-dashed border-slate-300 px-2 py-2 text-center text-[11px] text-slate-400 dark:border-slate-700">
                                     Inga tillgängliga kalkyler att dela.
                                 </p>
                             }
-                            <div class="min-h-[6rem] max-h-48 space-y-1 overflow-y-auto rounded border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-950 @(_shareScopeAll ? "opacity-70" : "")">
+                            <div class="share-list-panel space-y-1 overflow-y-auto rounded border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-950 @(_shareScopeAll ? "opacity-70" : "")">
                                 @foreach (var c in _calcs)
                                 {
                                     var calc = c;
@@ -560,29 +554,33 @@
                         }
                     </div>
 
-                    @* Åtgärd – längst ner till höger i formulärsektionen *@
-                    <div class="mt-auto flex items-center justify-end gap-2 pt-1">
-                        @if (_editingId.HasValue)
-                        {
-                            <button type="button"
-                                    class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
-                                    @onclick="ResetForm">Avbryt</button>
-                        }
-                        <button type="button"
-                                class="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
-                                disabled="@(!CanSave || _saving)"
-                                title="@(CanSave ? null : SaveDisabledReason)"
-                                @onclick="SaveAsync">
-                            <span aria-hidden="true">@((MarkupString)Icons.PermissionShield)</span>
-                            @(_editingId.HasValue ? "Spara delning" : "Lägg till delning")
-                        </button>
-                    </div>
                 </div>
             </div>
         </div>
         }
 
     </div>
+    @if (!ReadOnly)
+    {
+        <div class="project-share-footer shrink-0 border-t border-slate-200 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-950">
+            <div class="flex items-center justify-end gap-2">
+                @if (_editingId.HasValue)
+                {
+                    <button type="button"
+                            class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+                            @onclick="ResetForm">Avbryt</button>
+                }
+                <button type="button"
+                        class="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        disabled="@(!CanSave || _saving)"
+                        title="@(CanSave ? null : SaveDisabledReason)"
+                        @onclick="SaveAsync">
+                    <span aria-hidden="true">@((MarkupString)Icons.PermissionShield)</span>
+                    @(_editingId.HasValue ? "Spara delning" : "Lägg till delning")
+                </button>
+            </div>
+        </div>
+    }
     }
 </div>
 

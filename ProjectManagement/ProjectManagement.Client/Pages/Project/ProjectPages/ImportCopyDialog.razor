@@ -10,7 +10,7 @@
 
     @* ── Select file ──────────────────────────────────────────── *@
     <div>
-        <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">@(IsProject ? "Välj projektkopia (.atacost)" : "Välj kalkylkopia (.atacost)")</label>
+        <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">@(IsProject ? "Välj projektfil (.atacost)" : "Välj kalkylfil (.atacost)")</label>
         <InputFile OnChange="OnFileSelectedAsync" accept=".atacost" disabled="@_busy"
                    class="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-sky-600 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-white hover:file:bg-sky-700 dark:text-slate-300" />
     </div>
@@ -98,7 +98,7 @@
         @if (IsProject && !HasPresetTarget && string.IsNullOrEmpty(_folderValue))
         {
             <div class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300">
-                Välj en mapp först för att importera en projektkopia.
+                Välj en mapp först för att importera ett projekt.
             </div>
         }
 
@@ -295,15 +295,15 @@
             if (_info is null || !_info.IsValid)
             {
                 _error = IsProject
-                    ? "Filen är inte en giltig projektkopia."
-                    : "Filen är inte en giltig kalkylkopia.";
+                    ? "Filen är inte en giltig projektfil."
+                    : "Filen är inte en giltig kalkylfil.";
                 _info = null;
             }
             else if (_info.Kind != Kind)
             {
                 _error = IsProject
-                    ? "Filen innehåller en kalkylkopia, inte en projektkopia."
-                    : "Filen innehåller en projektkopia, inte en kalkylkopia.";
+                    ? "Filen innehåller en kalkyl, inte ett projekt."
+                    : "Filen innehåller ett projekt, inte en kalkyl.";
                 _info = null;
             }
             else
@@ -374,7 +374,7 @@
             if (result is { Success: true })
             {
                 // The file was valid and the import succeeded.
-                MHD.ToastInfo(IsProject ? "Projektkopian har importerats." : "Kalkylkopian har importerats.");
+                MHD.ToastInfo(IsProject ? "Projektet har importerats." : "Kalkylen har importerats.");
                 if (OnCompleted.HasDelegate)
                     await OnCompleted.InvokeAsync();
                 await Modal.CloseAsync();
@@ -386,16 +386,16 @@
                 _error = !string.IsNullOrWhiteSpace(result?.Message)
                     ? result!.Message
                     : (IsProject
-                        ? "Projektkopian kunde läsas men kunde inte importeras. Kontrollera målplatsen och försök igen."
-                        : "Kalkylkopian kunde läsas men kunde inte importeras. Kontrollera målprojektet och försök igen.");
+                        ? "Projektet kunde läsas men kunde inte importeras. Kontrollera målplatsen och försök igen."
+                        : "Kalkylen kunde läsas men kunde inte importeras. Kontrollera målprojektet och försök igen.");
             }
         }
         catch (Exception ex)
         {
             await ClientLog.ErrorAsync("Atacost import failed", ex: ex);
             _error = IsProject
-                ? "Projektkopian kunde läsas men kunde inte importeras. Kontrollera målplatsen och försök igen."
-                : "Kalkylkopian kunde läsas men kunde inte importeras. Kontrollera målprojektet och försök igen.";
+                ? "Projektet kunde läsas men kunde inte importeras. Kontrollera målplatsen och försök igen."
+                : "Kalkylen kunde läsas men kunde inte importeras. Kontrollera målprojektet och försök igen.";
         }
         finally
         {

@@ -1,0 +1,26 @@
+.project-share-dialog {
+    height: min(52rem, calc(100dvh - 9rem));
+    max-height: calc(100dvh - 9rem);
+    overflow: hidden;
+}
+
+.share-list-panel {
+    height: 12rem;
+    min-height: 12rem;
+}
+
+.project-share-footer {
+    margin-inline: -0.125rem;
+}
+
+@media (max-height: 760px) {
+    .project-share-dialog {
+        height: calc(100dvh - 7rem);
+        min-height: 0;
+    }
+
+    .share-list-panel {
+        height: 10rem;
+        min-height: 10rem;
+    }
+}

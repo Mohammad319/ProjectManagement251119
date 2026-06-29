@@ -964,7 +964,7 @@ namespace ProjectManagement.Client.Pages.Folder
         // ljusblå bakgrund + en tydligare 3px blå vänsterkant, så valt objekt syns klart på alla
         // nivåer även i långa träd – utan ring/skugga som skulle skrika över huvudtabellen.
         private const string TreeSelectedRowClass =
-            "border-l-4 border-sky-500 bg-sky-100 dark:border-sky-400 dark:bg-sky-950/50";
+            "border border-sky-200 border-l-4 border-l-sky-500 bg-sky-100 text-sky-950 shadow-sm dark:border-sky-900/70 dark:border-l-sky-400 dark:bg-sky-950/60 dark:text-sky-100";
 
         // Expanded (but not selected): a faint tint, no ring.
         private const string TreeExpandedRowClass =
@@ -981,7 +981,7 @@ namespace ProjectManagement.Client.Pages.Folder
             "bg-slate-100/70 text-slate-400 dark:bg-slate-800/60 dark:text-slate-500";
 
         private const string TreeIconSelectedClass =
-            "bg-sky-100 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300";
+            "bg-sky-200 text-sky-800 ring-1 ring-inset ring-sky-300 dark:bg-sky-900/70 dark:text-sky-200 dark:ring-sky-700";
 
         private const string TreeIconArchivedClass =
             "bg-slate-100/70 text-slate-400 dark:bg-slate-800/60 dark:text-slate-500";
@@ -1822,9 +1822,8 @@ namespace ProjectManagement.Client.Pages.Folder
             var blocked = IsFolderManageBlocked(folder);
             var access = ContextMenuAccessPolicy.ForCalculation(authState.User, cal.Access, blocked);
 
-            // "Öppna kalkyl" (läsåtgärd) ligger överst; därefter samma grupperade ordning som i
-            // kalkyllistan: [huvudåtgärder] · [livscykel] · [export] · [ta bort].
-            list.Add(new() { IconHtml = Icons.Active, Label = AppLoc["openCalculation"], OnClickAsync = async () => await NewCalculations(folder, project, cal) });
+            // Kalkylen öppnas redan genom klick/markering i trädet; context-menyn börjar därför
+            // direkt med formuläråtgärden och behåller övriga behörighetsstyrda val.
             list.Add(new()
             {
                 IconHtml = access.CanEditWork && cal.IsCurrentVersion ? Icons.Edit : Icons.Details,
@@ -2205,7 +2204,7 @@ namespace ProjectManagement.Client.Pages.Folder
         // Import a project copy (.atacost) into the given folder — target shown read-only.
         private void OpenImportProjectCopyDialog(FolderMVVM folder) =>
             Modal.ShowComponent<ImportCopyDialog>(
-                "Importera projektkopia",
+                "Importera projekt",
                 new Dictionary<string, object>
                 {
                     [nameof(ImportCopyDialog.Kind)]           = ProjectManagement.Shared.DTO.Transfer.AtacostPackageDTO.KindProject,
@@ -2218,7 +2217,7 @@ namespace ProjectManagement.Client.Pages.Folder
         // Import a calculation copy (.atacost) into the given project — target shown read-only.
         private void OpenImportCalcCopyDialog(FolderMVVM folder, ListProjectMVVM project) =>
             Modal.ShowComponent<ImportCopyDialog>(
-                "Importera kalkylkopia",
+                "Importera kalkyl",
                 new Dictionary<string, object>
                 {
                     [nameof(ImportCopyDialog.Kind)]            = ProjectManagement.Shared.DTO.Transfer.AtacostPackageDTO.KindCalculation,
@@ -2233,7 +2232,7 @@ namespace ProjectManagement.Client.Pages.Folder
             if (hasPermission)
                 OpenImportProjectCopyDialog(folder);
             else
-                MHD.MessageOk("Importera projektkopia", "Du saknar behörighet att importera en projektkopia till den här mappen.", BlazorMHD.UI.Core.DesignSystem.MhdState.Warning);
+                MHD.MessageOk("Importera projekt", "Du saknar behörighet att importera ett projekt till den här mappen.", BlazorMHD.UI.Core.DesignSystem.MhdState.Warning);
 
             return Task.CompletedTask;
         }
@@ -2243,7 +2242,7 @@ namespace ProjectManagement.Client.Pages.Folder
             if (hasPermission)
                 OpenImportCalcCopyDialog(folder, project);
             else
-                MHD.MessageOk("Importera kalkylkopia", "Du saknar behörighet att importera en kalkylkopia till detta projekt.", BlazorMHD.UI.Core.DesignSystem.MhdState.Warning);
+                MHD.MessageOk("Importera kalkyl", "Du saknar behörighet att importera en kalkyl till detta projekt.", BlazorMHD.UI.Core.DesignSystem.MhdState.Warning);
 
             return Task.CompletedTask;
         }

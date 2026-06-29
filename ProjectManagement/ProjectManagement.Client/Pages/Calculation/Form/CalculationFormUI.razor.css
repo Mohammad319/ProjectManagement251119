@@ -42,6 +42,26 @@
     isolation: isolate;
 }
 
+.calculation-save-toast {
+    position: fixed;
+    top: 5rem;
+    left: 50%;
+    z-index: 140;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transform: translateX(-50%);
+    border: 1px solid #cbd5e1;
+    border-radius: 9999px;
+    background-color: rgba(255, 255, 255, 0.96);
+    padding: 0.375rem 0.75rem;
+    color: #334155;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.14);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    pointer-events: none;
+}
+
 .calculation-form-tabs {
     margin-top: -0.75rem;
     margin-left: -1rem;
@@ -75,4 +95,11 @@
 
 :global(.dark) .calculation-form-tabs::before {
     background-color: #020617;
+}
+
+:global(.dark) .calculation-save-toast {
+    border-color: #334155;
+    background-color: rgba(15, 23, 42, 0.96);
+    color: #e2e8f0;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
 }

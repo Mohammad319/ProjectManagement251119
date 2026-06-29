@@ -395,7 +395,7 @@
                                 <button type="button"
                                         class="flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-800"
                                         disabled="@noFolderContext"
-                                        title="@(noFolderContext ? (readOnlySharedFolder ? newProjectDisabledReason : "Välj en mapp först för att importera en projektkopia.") : "Importera en projektkopia till vald mapp.")"
+                                        title="@(noFolderContext ? (readOnlySharedFolder ? newProjectDisabledReason : "Välj en mapp först för att importera ett projekt.") : "Importera ett projekt till vald mapp.")"
                                         @onclick="() => { _newProjectMenuOpen = false; OpenImportProjectCopyDialog(); }">
                                     <span aria-hidden="true">@((MarkupString)Icons.ImportFromFile)</span>
                                     <span>Importera projekt...</span>
@@ -457,7 +457,7 @@
                 <ChildContent>
                     @* Radnummer — visuell hjälpkolumn (ej sorterbar/filterbar/sökbar). Frozen-offset + sticky-left beräknas av JS-motorn via data-pm-frozen. *@
                     <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("rowNumber")' ColumnKey="rowNumber" Order='@_columnView.OrderIndex("rowNumber")' Frozen="true"
-                                    HeaderClass="w-12 select-none whitespace-nowrap bg-slate-50 px-2 py-2 text-right font-semibold text-slate-400 dark:bg-slate-900 dark:text-slate-500" HeaderStyle="min-width:44px;">
+                                    HeaderClass="w-12 select-none whitespace-nowrap bg-slate-50 px-1.5 py-2 text-right font-semibold text-slate-400 dark:bg-slate-900 dark:text-slate-500" HeaderStyle="width:48px;min-width:45px;max-width:55px;">
                         <HeaderContent><HoverTooltip Text="Radnummer i aktuell vy" Class="justify-end">#</HoverTooltip></HeaderContent>
                     </MhdTableColumn>
                     <MhdTableColumn TItem="ListProjectMVVM" Visible='IsProjectColumnVisible("code")' ColumnKey="code" Order='@_columnView.OrderIndex("code")' Frozen="true"
@@ -595,8 +595,8 @@
                     @{
                         var isProjectArchived = project.IsArchived;
                         var isProjectSelected = Folder.State.ProjectSelected?.Id == project.Id;
-                        var rowClasses = GetProjectRowClass(project, isProjectSelected, isProjectArchived, CanReorderProjects);
                         var rowNumber = _projectRowNumbers.TryGetValue(project.Id, out var _rn) ? _rn : 0;
+                        var rowClasses = GetProjectRowClass(project, isProjectSelected, isProjectArchived, CanReorderProjects, rowNumber);
                         var canReorder = CanReorderProjects;
                         var draggableValue = canReorder ? "true" : "false";
                     }
@@ -1178,7 +1178,7 @@
     // varje cellvärde alltid hamnar under rätt rubrik – även efter ändrad kolumnordning/vy.
     private RenderFragment? RenderProjectCell(string key, ListProjectMVVM project, bool isProjectSelected, int rowNumber) => key switch
     {
-        "rowNumber" => @<td class="w-12 whitespace-nowrap bg-white px-2 py-2 text-right font-mono text-[11px] text-slate-400 group-hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-500 dark:group-hover:bg-slate-900/80 @(isProjectSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">@rowNumber</td>,
+        "rowNumber" => @<td class="w-12 whitespace-nowrap bg-white px-1.5 py-2 text-right font-mono text-[11px] text-slate-400 group-hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-500 dark:group-hover:bg-slate-900/80 @(isProjectSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">@rowNumber</td>,
         "code" => @<td class="w-28 whitespace-nowrap bg-white px-3 py-2 font-mono text-[11px] text-slate-500 group-hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-400 dark:group-hover:bg-slate-900/80 @(isProjectSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">@(string.IsNullOrWhiteSpace(project.Code) ? "-" : project.Code)</td>,
         "name" => @<td class="max-w-80 border-r border-slate-200 bg-white px-3 py-2 group-hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:group-hover:bg-slate-900/80 @(isProjectSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
             <div class="flex min-w-0 items-center gap-2">
@@ -1188,11 +1188,11 @@
                 @if (project.ImportInfo?.IsImportedCopy == true)
                 {
                     <button type="button"
-                            class="shrink-0 rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[10px] font-semibold text-sky-700 transition hover:bg-sky-100 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-300"
+                            class="@ImportBadgeClass"
                             title="Visa importinformation"
                             @onclick:stopPropagation="true"
                             @onclick="() => OpenImportInfoDialog(project)">
-                        Importerad kopia
+                        Importerat
                     </button>
                 }
             </div>
@@ -1495,6 +1495,9 @@
     private string CodeStickyLeftClass => IsProjectColumnVisible("rowNumber") ? "left-12" : "left-0";
     private string NameStickyLeftClass => IsProjectColumnVisible("rowNumber") ? "left-40" : "left-28";
 
+    private const string ImportBadgeClass =
+        "inline-flex shrink-0 items-center rounded-full border border-sky-200/80 bg-sky-50/70 px-1.5 py-px text-[10px] font-medium leading-4 text-sky-700 transition hover:bg-sky-100 dark:border-sky-900/70 dark:bg-sky-950/30 dark:text-sky-300";
+
     private static string FormatText(string? value) =>
         string.IsNullOrWhiteSpace(value) ? "-" : value;
 
@@ -1552,16 +1555,17 @@
     private static string GetProjectStatusColor(ListProjectMVVM project)
         => ProjectStatusColor.Resolve(project);
 
-    private static string GetProjectRowClass(ListProjectMVVM project, bool selected, bool archived, bool canReorder)
+    private static string GetProjectRowClass(ListProjectMVVM project, bool selected, bool archived, bool canReorder, int rowNumber)
     {
         var classes = new List<string>
         {
             // Grab/grabbing feel when manual reorder is available, otherwise the normal click cursor.
             canReorder ? "cursor-grab active:cursor-grabbing transition-colors" : "cursor-pointer transition-colors",
             "group",
-            "hover:bg-slate-50 dark:hover:bg-slate-900/80"
+            "pm-list-row",
+            rowNumber % 2 == 0 ? "pm-list-row-zebra" : string.Empty
         };
-        if (selected)  classes.Add("bg-sky-50 dark:bg-sky-950/30");
+        if (selected)  classes.Add("pm-list-row-selected");
         // Full-row drop line across all cells incl. frozen left columns (see .pm-drop-row in custom.css).
         if (project.IsDragOver) classes.Add("pm-drop-row");
         if (archived)  classes.Add("text-slate-500 opacity-75 grayscale dark:text-slate-400");
@@ -1688,14 +1692,14 @@
         var folder = Folder.State.FolderSelected;
         if (folder is null)
         {
-            MHD.MessageOk("Importera projektkopia",
-                "Välj en mapp först för att importera en projektkopia.",
+            MHD.MessageOk("Importera projekt",
+                "Välj en mapp först för att importera ett projekt.",
                 BlazorMHD.UI.Core.DesignSystem.MhdState.Warning);
             return;
         }
 
         Modal.ShowComponent<ImportCopyDialog>(
-            "Importera projektkopia",
+            "Importera projekt",
             new Dictionary<string, object>
             {
                 [nameof(ImportCopyDialog.Kind)]           = ProjectManagement.Shared.DTO.Transfer.AtacostPackageDTO.KindProject,

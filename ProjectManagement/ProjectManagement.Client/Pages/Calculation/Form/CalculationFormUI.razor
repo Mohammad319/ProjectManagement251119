@@ -53,13 +53,10 @@
         <DataAnnotationsValidator />
         <FormValidationSummary />
 
-        @* In-dialog feedback for the Save action: a saving indicator and a clear error banner
-           shown inside the form, so clicking Spara always produces visible feedback instead of a
-           silent no-op, a missed toast, or only the global error dialog. *@
         @if (_isSaving)
         {
-            <div class="mb-2 flex items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-800 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-200" role="status" aria-live="polite">
-                <svg class="h-4 w-4 shrink-0 animate-spin text-sky-600 dark:text-sky-400" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <div class="calculation-save-toast" role="status" aria-live="polite">
+                <svg class="h-4 w-4 shrink-0 animate-spin text-slate-500 dark:text-slate-300" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>

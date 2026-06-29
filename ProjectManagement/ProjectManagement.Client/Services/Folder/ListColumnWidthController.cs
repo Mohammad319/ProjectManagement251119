@@ -21,12 +21,64 @@ public sealed class ListColumnWidthController(
     Func<Task<Dictionary<string, int>?>> loadWidths,
     Func<Dictionary<string, int>, Task> saveWidths) : IDisposable
 {
+    private static readonly IReadOnlyDictionary<string, (int Min, int Max)> ColumnBounds = new Dictionary<string, (int Min, int Max)>(StringComparer.OrdinalIgnoreCase)
+    {
+        ["rowNumber"] = (45, 55),
+        ["code"] = (55, 160),
+        ["name"] = (150, 520),
+        ["project"] = (150, 520),
+        ["status"] = (100, 260),
+        ["calculationType"] = (100, 260),
+        ["projectType"] = (100, 260),
+        ["access"] = (120, 260),
+        ["shared"] = (120, 260),
+        ["archived"] = (80, 220),
+        ["deadline"] = (110, 180),
+        ["createdAt"] = (110, 180),
+        ["updatedAt"] = (110, 180),
+        ["publicationDate"] = (110, 180),
+        ["decisionDate"] = (110, 180),
+        ["start"] = (110, 180),
+        ["end"] = (110, 180),
+        ["qa"] = (110, 180),
+        ["department"] = (90, 260),
+        ["folder"] = (90, 260),
+        ["responsible"] = (100, 300),
+        ["inspector"] = (100, 300),
+        ["organisation"] = (120, 360),
+        ["procurementNumber"] = (120, 360),
+        ["customerReference"] = (120, 360),
+        ["procurementName"] = (120, 360),
+        ["procurementMethods"] = (110, 360),
+        ["contract"] = (90, 260),
+        ["compensation"] = (110, 260),
+        ["procurementProcedure"] = (130, 360),
+        ["byggherre"] = (120, 360),
+        ["clientsManager"] = (120, 360),
+        ["designer"] = (120, 360),
+        ["address"] = (140, 360),
+        ["supervisor"] = (120, 360),
+        ["version"] = (70, 160),
+        ["calculationRole"] = (130, 260),
+        ["priority"] = (80, 220),
+        ["timeMonth"] = (80, 220),
+        ["tax"] = (60, 140),
+        ["privacy"] = (60, 140),
+    };
+
     private DotNetObjectReference<ListColumnWidthController>? _ref;
     private Dictionary<string, int> _widths = new();
     private bool _applied;
 
     /// <summary>Loads persisted widths. Call from the component's initialization.</summary>
-    public async Task LoadAsync() => _widths = await loadWidths() ?? new();
+    public async Task LoadAsync()
+    {
+        var loaded = await loadWidths() ?? new();
+        _widths = loaded.ToDictionary(
+            pair => pair.Key,
+            pair => ClampColumnWidth(pair.Key, pair.Value),
+            StringComparer.OrdinalIgnoreCase);
+    }
 
     /// <summary>
     /// Initializes the JS resize engine against the current <c>#resizeMe</c> table and
@@ -60,8 +112,22 @@ public sealed class ListColumnWidthController(
         if (parts.Length < 2 || !int.TryParse(parts[1], out var width) || width <= 0)
             return;
 
-        _widths[parts[0]] = width;
+        var columnKey = parts[0];
+        var clampedWidth = ClampColumnWidth(columnKey, width);
+
+        _widths[columnKey] = clampedWidth;
         await saveWidths(_widths);
+
+        if (clampedWidth != width)
+            await js.InvokeVoidAsync("applySavedColumnWidths", new Dictionary<string, int> { [columnKey] = clampedWidth });
+    }
+
+    private static int ClampColumnWidth(string columnKey, int width)
+    {
+        if (!ColumnBounds.TryGetValue(columnKey, out var bounds))
+            bounds = (80, 360);
+
+        return Math.Clamp(width, bounds.Min, bounds.Max);
     }
 
     public void Dispose() => _ref?.Dispose();

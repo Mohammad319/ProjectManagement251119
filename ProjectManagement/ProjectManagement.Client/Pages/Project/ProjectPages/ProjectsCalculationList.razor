@@ -374,7 +374,7 @@
                             <button type="button"
                                     class="flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-800"
                                     disabled="@noProjectContext"
-                                    title="@(noProjectContext ? "Välj ett projekt först för att importera en kalkylkopia." : "Importera en kalkylkopia till valt projekt.")"
+                                    title="@(noProjectContext ? "Välj ett projekt först för att importera en kalkyl." : "Importera en kalkyl till valt projekt.")"
                                     @onclick="() => { _newCalcMenuOpen = false; OpenImportCalculationCopyDialog(); }">
                                 <span aria-hidden="true">@((MarkupString)Icons.ImportFromFile)</span>
                                 <span>Importera kalkyl...</span>
@@ -429,7 +429,7 @@
                 <ChildContent>
                     @* Radnummer — visuell hjälpkolumn (ej sorterbar/filterbar/sökbar). Frozen-offset + sticky-left beräknas av JS-motorn via data-pm-frozen. *@
                     <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("rowNumber")' ColumnKey="rowNumber" Order='@_columnView.OrderIndex("rowNumber")' Frozen="true"
-                                    HeaderClass="w-12 select-none whitespace-nowrap bg-slate-50 px-2 py-2 text-right font-semibold text-slate-400 dark:bg-slate-900 dark:text-slate-500" HeaderStyle="min-width:44px;">
+                                    HeaderClass="w-12 select-none whitespace-nowrap bg-slate-50 px-1.5 py-2 text-right font-semibold text-slate-400 dark:bg-slate-900 dark:text-slate-500" HeaderStyle="width:48px;min-width:45px;max-width:55px;">
                         <HeaderContent><HoverTooltip Text="Radnummer i aktuell vy" Class="justify-end">#</HoverTooltip></HeaderContent>
                     </MhdTableColumn>
                     <MhdTableColumn TItem="ListCalculationMVVM" Visible='IsCalculationColumnVisible("code")' ColumnKey="code" Order='@_columnView.OrderIndex("code")' Frozen="true"
@@ -536,8 +536,8 @@
                         var isSelected = Folder.State.Calculation?.Id == calu.Id;
                         var canReorder = CanReorderCalculations;
                         var draggableValue = canReorder ? "true" : "false";
-                        var rowClasses = GetCalculationRowClass(calu, isSelected, canReorder);
                         var rowNumber = _calcRowNumbers.TryGetValue(calu.Id, out var _rn) ? _rn : 0;
+                        var rowClasses = GetCalculationRowClass(calu, isSelected, canReorder, rowNumber);
                     }
 
                         <tr @key="calu.Id"
@@ -1471,7 +1471,7 @@
     // under rätt rubrik – även efter ändrad kolumnordning/kolumnvy.
     private RenderFragment? RenderCalculationCell(string key, ListCalculationMVVM calu, bool isSelected, int rowNumber) => key switch
     {
-        "rowNumber" => @<td class="sticky left-0 z-[2] w-12 whitespace-nowrap bg-white px-2 py-2 text-right font-mono text-[11px] text-slate-400 group-hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-500 dark:group-hover:bg-slate-900/80 @(isSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">@rowNumber</td>,
+        "rowNumber" => @<td class="sticky left-0 z-[2] w-12 whitespace-nowrap bg-white px-1.5 py-2 text-right font-mono text-[11px] text-slate-400 group-hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-500 dark:group-hover:bg-slate-900/80 @(isSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">@rowNumber</td>,
         "code" => @<td class="sticky @CodeStickyLeftClass z-[2] w-28 whitespace-nowrap bg-white px-3 py-2 font-mono text-[11px] text-slate-500 group-hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-400 dark:group-hover:bg-slate-900/80 @(isSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">@FormatText(calu.Code)</td>,
         "name" => @<td class="sticky @NameStickyLeftClass z-[2] max-w-80 border-r border-slate-200 bg-white px-3 py-2 group-hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:group-hover:bg-slate-900/80 @(isSelected ? "!bg-blue-50 dark:!bg-blue-950/30" : string.Empty)">
             <div class="flex min-w-0 items-center gap-2">
@@ -1481,11 +1481,11 @@
                 @if (calu.ImportInfo?.IsImportedCopy == true)
                 {
                     <button type="button"
-                            class="shrink-0 rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[10px] font-semibold text-sky-700 transition hover:bg-sky-100 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-300"
+                            class="@ImportBadgeClass"
                             title="Visa importinformation"
                             @onclick:stopPropagation="true"
                             @onclick="() => OpenImportInfoDialog(calu)">
-                        Importerad kopia
+                        Importerat
                     </button>
                 }
             </div>
@@ -1591,6 +1591,9 @@
     // Shift the following frozen columns (code, name) right so they don't overlap it.
     private string CodeStickyLeftClass => IsCalculationColumnVisible("rowNumber") ? "left-12" : "left-0";
     private string NameStickyLeftClass => IsCalculationColumnVisible("rowNumber") ? "left-40" : "left-28";
+
+    private const string ImportBadgeClass =
+        "inline-flex shrink-0 items-center rounded-full border border-sky-200/80 bg-sky-50/70 px-1.5 py-px text-[10px] font-medium leading-4 text-sky-700 transition hover:bg-sky-100 dark:border-sky-900/70 dark:bg-sky-950/30 dark:text-sky-300";
 
     private ScopeCalculationRow? GetScopeRow(ListCalculationMVVM calculation) =>
         FolderScopeMode && _scopeCalculationLookup.TryGetValue(calculation.Id, out var row)
@@ -1945,17 +1948,18 @@
         return calculation.EndDate < DateTime.Today ? "#10b981" : "#f59e0b";
     }
 
-    private static string GetCalculationRowClass(ListCalculationMVVM calculation, bool selected, bool canReorder)
+    private static string GetCalculationRowClass(ListCalculationMVVM calculation, bool selected, bool canReorder, int rowNumber)
     {
         var classes = new List<string>
         {
             canReorder ? "cursor-grab active:cursor-grabbing transition-colors" : "cursor-pointer transition-colors",
             "group",
-            "hover:bg-slate-50 dark:hover:bg-slate-900/80"
+            "pm-list-row",
+            rowNumber % 2 == 0 ? "pm-list-row-zebra" : string.Empty
         };
 
         if (selected)
-            classes.Add("bg-violet-50 dark:bg-violet-950/30");
+            classes.Add("pm-list-row-selected");
 
         if (calculation.IsDragOver)
             // Full-row drop line: an inset top box-shadow on every cell (see .pm-drop-row in
@@ -1977,7 +1981,6 @@
         // [huvudåtgärder] · [livscykel/hantering] · [export] · [ta bort].
         if (access.CanView)
         {
-            list.Add(new() { IconHtml = Icons.Active, Label = AppLoc["openCalculation"], OnClickAsync = async () => await OpenCalculationAsync(item) });
             list.Add(new()
             {
                 IconHtml = access.CanEditWork && item.IsCurrentVersion ? Icons.Edit : Icons.Details,
@@ -2133,14 +2136,14 @@
         var project = Folder.State.ProjectSelected;
         if (project is null)
         {
-            MHD.MessageOk("Importera kalkylkopia",
-                "Välj ett projekt först för att importera en kalkylkopia.",
+            MHD.MessageOk("Importera kalkyl",
+                "Välj ett projekt först för att importera en kalkyl.",
                 BlazorMHD.UI.Core.DesignSystem.MhdState.Warning);
             return;
         }
 
         Modal.ShowComponent<ImportCopyDialog>(
-            "Importera kalkylkopia",
+            "Importera kalkyl",
             new Dictionary<string, object>
             {
                 [nameof(ImportCopyDialog.Kind)]            = ProjectManagement.Shared.DTO.Transfer.AtacostPackageDTO.KindCalculation,

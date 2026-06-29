@@ -362,7 +362,20 @@
       "Bash(node pwind_tree2.js)",
       "Bash(node pwind_tree3.js)",
       "Bash(node pwsave_verify.js)",
-      "PowerShell(Get-NetTCPConnection *)"
+      "PowerShell(Get-NetTCPConnection *)",
+      "Bash(grep -iE \"\\\\.\\(js|css\\)$\")",
+      "Bash(node --check BlazorMHDUI.js)",
+      "Bash(grep -iA6 \"ConnectionStrings\" \"ProjectManagement/ProjectManagement/appsettings.json\")",
+      "Bash(mkdir -p /c/pmshot)",
+      "Bash(SHOT=\"C:/pmshot/01-landing.png\" node \"C:\\\\Users\\\\ADMINI~1\\\\AppData\\\\Local\\\\Temp\\\\2\\\\claude\\\\C--Users-Administrator-Desktop-PM-b07-ProjectManagement251119\\\\be3badec-e2c7-46f5-bfca-c662ea8360f5\\\\scratchpad\\\\login.mjs\")",
+      "Bash(cp \"C:\\\\Users\\\\ADMINI~1\\\\AppData\\\\Local\\\\Temp\\\\2\\\\claude\\\\C--Users-Administrator-Desktop-PM-b07-ProjectManagement251119\\\\be3badec-e2c7-46f5-bfca-c662ea8360f5\\\\scratchpad\\\\login.mjs\" /c/Library/BlazorMHD/e2e/_pmlogin.mjs)",
+      "Bash(SHOT=\"C:/pmshot/01-landing.png\" node _pmlogin.mjs)",
+      "Bash(SHOT=\"C:/pmshot/02-application.png\" node _pmnav.mjs)",
+      "Bash(curl -s -o /dev/null -D - -H \"Accept-Encoding: br\" \"http://localhost:5286/ProjectManagement.j8lkczbnks.styles.css\")",
+      "Bash(curl -s \"http://localhost:5286/_content/BlazorMHD.UI/js/BlazorMHDUI.js\")",
+      "Bash(SHOT=\"C:/pmshot/03-position.png\" node _pmpos.mjs)",
+      "Bash(rm -rf /c/pmshot)",
+      "Bash(taskkill //PID 16004 //F)"
     ]
   }
 }
