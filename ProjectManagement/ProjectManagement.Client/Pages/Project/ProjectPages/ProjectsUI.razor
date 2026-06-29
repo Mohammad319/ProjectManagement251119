@@ -740,6 +740,12 @@
     private IReadOnlyList<ProjectManagement.Shared.DTO.ChangeLog.ChangeLogItemDTO>? GetProjectRecentChanges(Guid id) =>
         _projectRecentChanges.TryGetValue(id, out var list) ? list : null;
 
+    // Tooltip för "Senast ändrad"-cellen: senaste ändringar (max 5), annars fallback (datum + ändrad av).
+    // Visas på hela cellen/datumet oavsett om ändringsindikatorn syns – så länge ett ändringsdatum finns.
+    private string ProjectChangeTooltip(ListProjectMVVM project) =>
+        ProjectManagement.Client.Shared.Helper.ChangeLogTextFormatter.BuildTooltip(
+            GetProjectRecentChanges(project.Id), project.UpdatedAt, project.UpdatedByName, isProject: true);
+
     private int _pageSize = 25;
     private int _currentPage = 1;
     private const string ProjPaginationBtnCls = "inline-flex h-6 w-6 items-center justify-center rounded border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-35 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800";
@@ -1200,7 +1206,7 @@
         "organisation" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Organisation)</td>,
         "projectType" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.Type)</td>,
         "createdAt" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(project.CreatedAt)</td>,
-        "updatedAt" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300"><span class="inline-flex items-center gap-1.5"><span>@FormatDate(project.UpdatedAt)</span>@if (HasUnseenProjectChange(project)){<ChangeIndicator UpdatedAt="project.UpdatedAt" UpdatedByName="@project.UpdatedByName" RecentChanges="GetProjectRecentChanges(project.Id)" IsProject="true" />}</span></td>,
+        "updatedAt" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300"><span class="inline-flex items-center gap-1.5">@if (project.UpdatedAt is not null){<HoverTooltip Text="@ProjectChangeTooltip(project)" Focusable="true"><span>@FormatDate(project.UpdatedAt)</span></HoverTooltip>}else{<span>@FormatDate(project.UpdatedAt)</span>}@if (HasUnseenProjectChange(project)){<ChangeIndicator UpdatedAt="project.UpdatedAt" UpdatedByName="@project.UpdatedByName" RecentChanges="GetProjectRecentChanges(project.Id)" IsProject="true" />}</span></td>,
         "archived" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatYesNo(project.IsArchived)</td>,
         "shared" => RenderProjectSharedCell(project),
         "procurementNumber" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(project.ProcurementNumber)</td>,
@@ -1464,15 +1470,23 @@
     protected override void OnInitialized()
     {
         CalcService.PageChanged += ToastChanged;
+        // Gemensamt change-event: när ett projekt ändras var som helst (vänsterträdets
+        // context-meny, högerpanelens meny, edit-dialog från annan plats) publiceras
+        // Folder.State.Notify(). Genom att lyssna här uppdateras högerpanelen direkt –
+        // användaren behöver inte byta mapp och gå tillbaka.
+        Folder.State.OnChange += OnFolderStateChanged;
     }
 
     public void Dispose()
     {
         CalcService.PageChanged -= ToastChanged;
+        Folder.State.OnChange -= OnFolderStateChanged;
         _columnWidths?.Dispose();
     }
 
     private void ToastChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);
+
+    private void OnFolderStateChanged() => InvokeAsync(StateHasChanged);
 
     private bool IsProjectColumnVisible(string key) => _columnView.IsColumnVisible(key);
 

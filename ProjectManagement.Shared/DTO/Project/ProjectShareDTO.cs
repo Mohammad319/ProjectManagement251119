@@ -21,6 +21,13 @@ namespace ProjectManagement.Shared.DTO.Project
         public DateTime? ValidUntil { get; set; }
         public List<int> CalculationIds { get; set; } = [];
 
+        /// <summary>
+        /// Delningsomfattning. <see langword="true"/> = "Alla kalkyler i projektet" (omfattar även nya
+        /// icke-privata kalkyler; <see cref="CalculationIds"/> ignoreras). <see langword="false"/> =
+        /// "Valda kalkyler" (endast de listade).
+        /// </summary>
+        public bool AllCalculations { get; set; }
+
         // ── Metadata: vem som skapade/ändrade delningen ("Delad av" + tooltip) ──
         /// <summary>Visningsnamn för den som skapade delningen (visas i kolumnen "Delad av").</summary>
         public string? CreatedByName { get; set; }
@@ -74,5 +81,12 @@ namespace ProjectManagement.Shared.DTO.Project
         public string Role { get; set; } = string.Empty;
         public DateTime? ValidUntil { get; set; }
         public List<int> CalculationIds { get; set; } = [];
+
+        /// <summary>
+        /// Delningsomfattning. <see langword="true"/> = "Alla kalkyler i projektet" (omfattar även nya
+        /// icke-privata kalkyler; <see cref="CalculationIds"/> ignoreras av åtkomstreglerna).
+        /// <see langword="false"/> = "Valda kalkyler" (endast de listade).
+        /// </summary>
+        public bool AllCalculations { get; set; }
     }
 }

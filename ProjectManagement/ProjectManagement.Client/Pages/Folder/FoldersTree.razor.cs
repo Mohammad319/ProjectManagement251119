@@ -2049,9 +2049,13 @@ namespace ProjectManagement.Client.Pages.Folder
                     {
                         if (updated != null)
                         {
-                            cal.Name = updated.Name;
-                            cal.Code = updated.Code;
-                            cal.Status = updated.Status;
+                            // Ladda om projektets kalkyler från servern så att Senast ändrad/Ändrad av,
+                            // status och ändringsindikator/tooltip uppdateras direkt i både träd och
+                            // högerpanel (inte bara namn/kod/status). Spegel av projekt-flödet
+                            // (OnProjectEditedFromTreeAsync) – Notify() driver båda vyerna.
+                            project.CalculationsLoaded = false;
+                            await Folder.SetCalcsToProject(project);
+                            project.ShowCalculations = ProjectHasChildren(project);
                             UoWService.Folder.State.Notify();
                         }
                         await Modal.CloseAsync();
@@ -2112,7 +2116,7 @@ namespace ProjectManagement.Client.Pages.Folder
                             UoWService.Folder.State.Notify();
                         })
                 },
-                BlazorMHD.UI.Core.Services.MhdDialogSize.Large);
+                BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
 
         private void OpenProjectBidsFromTree(ListProjectMVVM project) =>
             Modal.ShowComponent<ProjectBidsDialog>(

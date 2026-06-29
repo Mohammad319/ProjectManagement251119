@@ -148,6 +148,77 @@ public sealed class AccessRulesCanEditTests
         Assert.True(CanEditCalculation(calc, UserId, departmentId: null));
     }
 
+    // ── Delningsomfattning: "Alla kalkyler i projektet" (AllCalculations) ──
+    // En "alla kalkyler"-delning omfattar varje icke-privat kalkyl utan att kalkyl-id:t står i listan.
+
+    [Fact]
+    public void Calculation_in_all_calculations_share_as_Anvandare_is_editable_even_if_not_selected()
+    {
+        var calc = BuildCalculation(calcDept: OtherDept, createdBy: OtherUserId, calcId: 1,
+            shares: new[] { ShareAllCalcs(PMRolesConst.Tenant.Manger, UserId) });
+        Assert.True(CanEditCalculation(calc, UserId, OwnDept));
+    }
+
+    [Fact]
+    public void Calculation_in_all_calculations_share_is_visible_to_viewer_even_if_not_selected()
+    {
+        var calc = BuildCalculation(calcDept: OtherDept, createdBy: OtherUserId, calcId: 1,
+            shares: new[] { ShareAllCalcs(PMRolesConst.Tenant.Viewer, UserId) });
+        Assert.True(CanSeeCalculation(calc, UserId, OwnDept, isViewerOnly: true));
+    }
+
+    [Fact]
+    public void Calculation_in_all_calculations_share_is_visible_via_general_access()
+    {
+        var calc = BuildCalculation(calcDept: OtherDept, createdBy: OtherUserId, calcId: 1,
+            shares: new[] { ShareAllCalcs(PMRolesConst.Tenant.Manger, UserId) });
+        Assert.True(CanSeeCalculation(calc, UserId, OwnDept, isViewerOnly: false));
+    }
+
+    // ── Privat kalkyl undantas ALLTID från delning (även "alla kalkyler") ──
+
+    [Fact]
+    public void Private_calculation_in_all_calculations_share_is_not_editable()
+    {
+        var calc = BuildCalculation(calcDept: OtherDept, createdBy: OtherUserId, calcId: 1,
+            shares: new[] { ShareAllCalcs(PMRolesConst.Tenant.Manger, UserId) }, isPrivate: true);
+        Assert.False(CanEditCalculation(calc, UserId, OwnDept));
+    }
+
+    [Fact]
+    public void Private_calculation_in_all_calculations_share_is_not_visible_to_viewer()
+    {
+        var calc = BuildCalculation(calcDept: OtherDept, createdBy: OtherUserId, calcId: 1,
+            shares: new[] { ShareAllCalcs(PMRolesConst.Tenant.Viewer, UserId) }, isPrivate: true);
+        Assert.False(CanSeeCalculation(calc, UserId, OwnDept, isViewerOnly: true));
+    }
+
+    [Fact]
+    public void Private_calculation_in_all_calculations_share_is_not_visible_via_general_access()
+    {
+        var calc = BuildCalculation(calcDept: OtherDept, createdBy: OtherUserId, calcId: 1,
+            shares: new[] { ShareAllCalcs(PMRolesConst.Tenant.Manger, UserId) }, isPrivate: true);
+        Assert.False(CanSeeCalculation(calc, UserId, OwnDept, isViewerOnly: false));
+    }
+
+    [Fact]
+    public void Private_calculation_explicitly_selected_in_share_is_still_not_visible_to_viewer()
+    {
+        // Även om id:t skulle ligga i den valda listan ska en privat kalkyl aldrig läcka till en delad användare.
+        var calc = BuildCalculation(calcDept: OtherDept, createdBy: OtherUserId, calcId: 1,
+            shares: new[] { ShareWithCalcs(PMRolesConst.Tenant.Viewer, UserId, 1) }, isPrivate: true);
+        Assert.False(CanSeeCalculation(calc, UserId, OwnDept, isViewerOnly: true));
+    }
+
+    [Fact]
+    public void Selected_calculations_share_still_excludes_unselected_calc_for_viewer()
+    {
+        // "Valda kalkyler"-läget (utan AllCalculations) ska fortsatt bara omfatta de valda id:na.
+        var calc = BuildCalculation(calcDept: OtherDept, createdBy: OtherUserId, calcId: 1,
+            shares: new[] { ShareWithCalcs(PMRolesConst.Tenant.Viewer, UserId, 2) });
+        Assert.False(CanSeeCalculation(calc, UserId, OwnDept, isViewerOnly: true));
+    }
+
     // ── Helpers ────────────────────────────────────────────────────────
 
     private static bool CanEditProject(ProjectEntity project, int userId, int? departmentId)
@@ -169,6 +240,14 @@ public sealed class AccessRulesCanEditTests
         return share;
     }
 
+    // "Alla kalkyler i projektet"-delning: ingen explicit kalkyl-lista, omfattar alla icke-privata.
+    private static ProjectShareEntity ShareAllCalcs(string role, int userId)
+    {
+        var share = ProjectShareEntity.ForUser(System.Guid.Empty, userId, role);
+        share.SetAllCalculations(true);
+        return share;
+    }
+
     private static ProjectEntity BuildProject(int folderDept, int createdBy, params ProjectShareEntity[] shares)
     {
         var folder = new FolderEntity("Folder", "#08BF66", folderDept, createdBy: 1, sortOrder: 0);
@@ -184,7 +263,7 @@ public sealed class AccessRulesCanEditTests
         return project;
     }
 
-    private static CalculationEntity BuildCalculation(int calcDept, int createdBy, ProjectShareEntity[] shares, int calcId = 1)
+    private static CalculationEntity BuildCalculation(int calcDept, int createdBy, ProjectShareEntity[] shares, int calcId = 1, bool isPrivate = false)
     {
         var project = BuildProject(folderDept: calcDept, createdBy: OtherUserId, shares);
 
@@ -192,6 +271,7 @@ public sealed class AccessRulesCanEditTests
         _ = calc.Metadata;
         _ = calc.Sort;
         calc.AssignDepartment(calcDept);
+        calc.SetVisibility(isPrivate, isArchived: false);
         SetPrivate(calc, "CreatedBy", createdBy);
         SetPrivate(calc, nameof(CalculationEntity.Project), project);
         SetPrivate(calc, nameof(CalculationEntity.ProjectId), project.Id);

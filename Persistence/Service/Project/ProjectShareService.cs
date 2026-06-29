@@ -42,6 +42,7 @@ namespace Persistence.Service.Project
                         : s.Department!.Name,
                     Role = s.Role,
                     ValidUntil = s.ValidUntil,
+                    AllCalculations = s.AllCalculations,
                     CalculationIds = s.Calculations.Select(c => c.CalculationId).ToList(),
                     // "Delad av" + tooltip-metadata (vem som skapade/ändrade delningen).
                     CreatedByName = s.CreatedByUser != null
@@ -102,14 +103,21 @@ namespace Persistence.Service.Project
             // Capture the previous state before mutating, so we can classify the change for notifications.
             string? oldRole = entity?.Role;
             DateTime? oldValid = entity?.ValidUntil;
+            bool oldAll = entity?.AllCalculations ?? false;
             var oldCalcIds = entity?.Calculations.Select(c => c.CalculationId).ToList() ?? [];
+
+            // "Alla kalkyler i projektet": kalkyllistan ignoreras av åtkomstreglerna; rensa den så att
+            // ingen vilseledande explicit lista sparas. "Valda kalkyler": spara de valda (privata redan
+            // bortfiltrerade av anroparen).
+            var calcIdsToStore = dto.AllCalculations ? Enumerable.Empty<int>() : dto.CalculationIds;
 
             if (entity is null)
             {
                 entity = validUser
                     ? ProjectShareEntity.ForUser(projectId, dto.UserId!.Value, dto.Role)
                     : ProjectShareEntity.ForDepartment(projectId, dto.DepartmentId!.Value, dto.Role);
-                entity.ReplaceCalculations(dto.CalculationIds);
+                entity.SetAllCalculations(dto.AllCalculations);
+                entity.ReplaceCalculations(calcIdsToStore);
                 entity.SetValidUntil(validUntil);
                 ctx.ProjectShare.Add(entity);
             }
@@ -117,11 +125,12 @@ namespace Persistence.Service.Project
             {
                 entity.SetRole(dto.Role);
                 entity.SetValidUntil(validUntil);
-                entity.ReplaceCalculations(dto.CalculationIds);
+                entity.SetAllCalculations(dto.AllCalculations);
+                entity.ReplaceCalculations(calcIdsToStore);
             }
 
             var notifications = await BuildUpsertNotificationsAsync(
-                ctx, projectId, projectName, dto, validUser, validUntil, isNew, oldRole, oldValid, oldCalcIds, userId, ct);
+                ctx, projectId, projectName, dto, validUser, validUntil, isNew, oldRole, oldValid, oldAll, oldCalcIds, userId, ct);
 
             foreach (var n in notifications)
                 ctx.Notifications.Add(n);
@@ -176,21 +185,25 @@ namespace Persistence.Service.Project
         private async Task<List<NotificationEntity>> BuildUpsertNotificationsAsync(
             ShardingSingleDbContext ctx, Guid projectId, string projectName, ProjectShareUpsertDTO dto,
             bool validUser, DateTime? newValid, bool isNew, string? oldRole, DateTime? oldValid,
-            List<int> oldCalcIds, int actorId, CancellationToken ct)
+            bool oldAll, List<int> oldCalcIds, int actorId, CancellationToken ct)
         {
             var result = new List<NotificationEntity>();
 
             var newRole = dto.Role;
             var newCalcIds = (dto.CalculationIds ?? []).Distinct().ToList();
-            int calcCount = newCalcIds.Count;
 
-            var totalCalcs = await ctx.Calculations.CountAsync(c => c.ProjectId == projectId, ct);
-            bool calcAll = calcCount > 0 && totalCalcs > 0 && calcCount >= totalCalcs;
+            // Antal icke-privata (delbara) kalkyler – nämnaren och "alla kalkyler"-texten i aviseringar.
+            var shareableCalcs = await ctx.Calculations.CountAsync(c => c.ProjectId == projectId && !c.IsPrivate, ct);
 
-            // Change classification (only relevant for updates).
+            // "Alla kalkyler i projektet" → räkna som alla delbara; annars antalet valda.
+            int calcCount = dto.AllCalculations ? shareableCalcs : newCalcIds.Count;
+            bool calcAll = dto.AllCalculations || (calcCount > 0 && shareableCalcs > 0 && calcCount >= shareableCalcs);
+
+            // Change classification (only relevant for updates). Ett byte av delningsomfattning
+            // (valda ↔ alla) räknas som en kalkyländring även om id-listan är oförändrad.
             bool roleChanged = !string.Equals(oldRole, newRole, StringComparison.Ordinal);
             bool validChanged = oldValid != newValid;
-            bool calcsChanged = !oldCalcIds.ToHashSet().SetEquals(newCalcIds);
+            bool calcsChanged = oldAll != dto.AllCalculations || !oldCalcIds.ToHashSet().SetEquals(newCalcIds);
 
             NotificationEntity? UpdateNotif(int uid, string role)
             {

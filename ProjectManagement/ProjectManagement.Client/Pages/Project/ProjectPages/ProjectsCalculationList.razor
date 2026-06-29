@@ -735,7 +735,21 @@
         StateHasChanged();
     }
 
-    public void Dispose() => _columnWidths?.Dispose();
+    protected override void OnInitialized()
+    {
+        // Gemensamt change-event: när en kalkyl ändras var som helst (vänsterträdets context-meny,
+        // högerpanelens meny, edit-dialog från annan plats) publiceras Folder.State.Notify(). Genom
+        // att lyssna här uppdateras kalkyllistan direkt – ingen mapp-/projektbyte behövs.
+        Folder.State.OnChange += OnFolderStateChanged;
+    }
+
+    private void OnFolderStateChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        Folder.State.OnChange -= OnFolderStateChanged;
+        _columnWidths?.Dispose();
+    }
 
     private const string ContentModeCalculations = "calculations";
     private const string ContentModeProjects = "projects";
@@ -854,6 +868,12 @@
 
     private IReadOnlyList<ProjectManagement.Shared.DTO.ChangeLog.ChangeLogItemDTO>? GetCalcRecentChanges(int id) =>
         _calcRecentChanges.TryGetValue(id, out var list) ? list : null;
+
+    // Tooltip för "Senast ändrad"-cellen: senaste ändringar (max 5), annars fallback (datum + ändrad av).
+    // Visas på hela cellen/datumet oavsett om ändringsindikatorn syns – så länge ett ändringsdatum finns.
+    private string CalcChangeTooltip(ListCalculationMVVM calculation) =>
+        ProjectManagement.Client.Shared.Helper.ChangeLogTextFormatter.BuildTooltip(
+            GetCalcRecentChanges(calculation.Id), calculation.UpdatedAt, calculation.UpdatedByName, isProject: false);
 
     protected override async Task OnInitializedAsync()
     {
@@ -1489,20 +1509,15 @@
                 }
             </div>
         </td>,
+        @* Kalkyltyp visar ENDAST typen – lås-/statusymboler hör hemma i Kalkylstatus-kolumnen. *@
         "calculationType" => @<td class="whitespace-nowrap px-3 py-2">
-            <span class="inline-flex items-center gap-1">
-                <span class="@GetCalcTypeBadgeClass(calu)">
-                    @GetCalculationTypeLabel(calu.CalculationType)
-                </span>
-                @if (calu.IsLocked)
-                {
-                    <svg class="h-3 w-3 shrink-0 text-amber-500 dark:text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-label="@AppLoc["locked"]">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                }
+            <span class="@GetCalcTypeBadgeClass(calu)">
+                @GetCalculationTypeLabel(calu.CalculationType)
             </span>
         </td>,
-        "status" => @<td class="whitespace-nowrap px-3 py-2"><span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 shrink-0 rounded-full" style="background-color:@GetCalculationStatusColor(calu)"></span><span class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">@GetCalculationStatusText(calu)</span></span></td>,
+        @* Kalkylstatus: statusfärg + status-badge, och DÄREFTER en diskret lås-symbol när kalkylen är
+           låst/read-only (tooltip förklarar orsaken). Visas inte för en redigerbar kalkyl. *@
+        "status" => @<td class="whitespace-nowrap px-3 py-2"><span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 shrink-0 rounded-full" style="background-color:@GetCalculationStatusColor(calu)"></span><span class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">@GetCalculationStatusText(calu)</span>@{ var calcLockReason = CalcLockReason(calu); }@if (calcLockReason is not null){<HoverTooltip Text="@calcLockReason" Focusable="true" Class="shrink-0 text-amber-500 dark:text-amber-400"><svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" role="img" aria-label="@AppLoc["locked"]"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg></HoverTooltip>}</span></td>,
         "responsible" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(calu.Responsible)</td>,
         "inspector" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(calu.Inspector)</td>,
         "deadline" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(calu.TenderDeadline)</td>,
@@ -1514,7 +1529,7 @@
         "calculationRole" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@GetCalculationRoleDisplay(calu)</td>,
         "qa" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(calu.TenderQA)</td>,
         "createdAt" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(calu.CreatedAt)</td>,
-        "updatedAt" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300"><span class="inline-flex items-center gap-1.5"><span>@(calu.UpdatedAt.HasValue ? FormatDate(calu.UpdatedAt.Value) : "-")</span>@if (HasUnseenCalcChange(calu)){<ChangeIndicator UpdatedAt="calu.UpdatedAt" UpdatedByName="@calu.UpdatedByName" RecentChanges="GetCalcRecentChanges(calu.Id)" IsProject="false" />}</span></td>,
+        "updatedAt" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300"><span class="inline-flex items-center gap-1.5">@if (calu.UpdatedAt.HasValue){<HoverTooltip Text="@CalcChangeTooltip(calu)" Focusable="true"><span>@FormatDate(calu.UpdatedAt.Value)</span></HoverTooltip>}else{<span>-</span>}@if (HasUnseenCalcChange(calu)){<ChangeIndicator UpdatedAt="calu.UpdatedAt" UpdatedByName="@calu.UpdatedByName" RecentChanges="GetCalcRecentChanges(calu.Id)" IsProject="false" />}</span></td>,
         "address" => @<td class="px-3 py-2 text-slate-600 dark:text-slate-300">@FormatText(calu.AddressText)</td>,
         "priority" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@calu.Priority %</td>,
         "start" => @<td class="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">@FormatDate(calu.StartDate)</td>,
@@ -1828,7 +1843,7 @@
                 [nameof(CalculationVersionsDialog.Calculation)] = calculation,
                 [nameof(CalculationVersionsDialog.OnReloadRequired)] = EventCallback.Factory.Create(this, async () => await ReloadCalculationsAsync())
             },
-            BlazorMHD.UI.Core.Services.MhdDialogSize.Large);
+            BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
     }
 
     private static bool CanCreateProductionCalculation(ListCalculationMVVM calculation) =>
@@ -1904,6 +1919,20 @@
             return calculation.Status;
 
         return calculation.EndDate < DateTime.Today ? AppLoc["finished"] : CalcResource.active;
+    }
+
+    // Orsak till att kalkylen är låst/read-only, för lås-symbolen i Kalkylstatus-kolumnen. null ⇒
+    // kalkylen är redigerbar och ingen symbol visas. Ändrar ingen status-/versions-/behörighetslogik –
+    // läser bara befintliga flaggor och väljer en förklarande tooltip-text (aldrig id/null/teknisk text).
+    private static string? CalcLockReason(ListCalculationMVVM calculation)
+    {
+        if (calculation.IsArchived)
+            return "Kalkylen är arkiverad och kan inte ändras.";
+        if (calculation.IsLocked)
+            return "Kalkylen är låst och kan inte ändras.";
+        if (!calculation.IsCurrentVersion)
+            return "Kalkylen är låst eftersom detta inte är aktuell version.";
+        return null;
     }
 
     private string GetCalculationStatusColor(ListCalculationMVVM calculation)

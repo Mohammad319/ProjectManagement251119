@@ -21,6 +21,28 @@
 
 @if (CalculationUpdate != null)
 {
+    @* Bekräftelse innan en kalkyl som just nu är synlig via projektets delning görs privat.
+       Overlay inuti formuläret (egen confirm, inte nästlad dialog) → exakta knappar Gör privat/Avbryt. *@
+    @if (_showPrivateConfirm)
+    {
+        <div class="fixed inset-0 z-[120] flex items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true">
+            <div class="w-full max-w-md rounded-lg border border-slate-200 bg-white p-4 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+                <h3 class="mb-2 text-sm font-semibold text-slate-800 dark:text-slate-100">Gör kalkylen privat</h3>
+                <p class="mb-4 text-sm text-slate-600 dark:text-slate-300">
+                    Den här kalkylen ingår i projektets delning. Om du gör kalkylen privat kommer delade användare och avdelningar inte längre kunna se den här kalkylen. Projektets övriga delning påverkas inte.
+                </p>
+                <div class="flex justify-end gap-2">
+                    <button type="button"
+                            class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+                            @onclick="CancelPrivateConfirm">Avbryt</button>
+                    <button type="button"
+                            class="rounded-lg bg-amber-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-amber-700"
+                            @onclick="ConfirmPrivateAsync">Gör privat</button>
+                </div>
+            </div>
+        </div>
+    }
+
     <EditForm id="@DialogFormId"
               @key="editContext"
               class="calculation-form-shell space-y-0"
@@ -265,19 +287,19 @@
                                         </label>
                                     </div>
 
-                                    @if (Calculation.Id == 0 || CalculationUpdate.IsPrivate)
-                                    {
-                                        <div class="shrink-0 max-[430px]:w-full">
-                                            <label class="@LockedToggleLabelClass">
-                                                <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-500"
-                                                               @bind-Value="@CalculationUpdate.IsPrivate"
-                                                               disabled="@IsContentLocked" />
-                                                <span class="select-none">
-                                                    @ResourceApp._private
-                                                </span>
-                                            </label>
-                                        </div>
-                                    }
+                                    @* "Privat" ska ALLTID visas (oavsett om kalkylen tidigare sparats som icke-privat),
+                                       så att en kalkyl kan göras privat igen. Disabled (med förklarande tooltip) när
+                                       kalkylen är låst eller användaren saknar redigeringsrätt – men aldrig dold. *@
+                                    <div class="shrink-0 max-[430px]:w-full">
+                                        <label class="@LockedToggleLabelClass" title="@PrivateDisabledTooltip">
+                                            <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-500"
+                                                           @bind-Value="@CalculationUpdate.IsPrivate"
+                                                           disabled="@IsContentLocked" />
+                                            <span class="select-none">
+                                                @ResourceApp._private
+                                            </span>
+                                        </label>
+                                    </div>
                                 </div>
 
                             </section>
@@ -859,6 +881,38 @@
     private bool IsReadOnly => !CalculationUpdate.CanEdit;
 
     private bool IsContentLocked => CalculationUpdate.IsLocked || IsReadOnly;
+
+    // ── "Privat"-status ──────────────────────────────────────────────────────────
+    // Utgångsvärdet vid laddning (för att kräva bekräftelse vid övergången icke-privat → privat),
+    // samt overlay-/bekräftelsestate. Ändrar ingen behörighetslogik – styr bara UI:t.
+    private bool _originalIsPrivate;
+    private bool _showPrivateConfirm;
+    private bool _privateConfirmHandled;
+    private bool _pendingPrivateKeepOpen;
+
+    // Tooltip när "Privat" är disabled – förklarar varför, utan teknisk text/id.
+    private string? PrivateDisabledTooltip =>
+        IsReadOnly ? "Du saknar behörighet att ändra privat status för denna kalkyl."
+        : CalculationUpdate.IsLocked ? "Kalkylen är låst och kan inte ändras."
+        : null;
+
+    // Bekräftelse krävs bara när en BEFINTLIG kalkyl görs privat (icke-privat → privat) OCH kalkylen
+    // just nu är synlig via projektets delning (Access.Recipients = aktiva delningar där den ingår),
+    // dvs. när ändringen faktiskt får delade användare/avdelningar att tappa åtkomst.
+    private bool RequiresPrivateShareConfirmation() =>
+        Calculation.Id > 0 &&
+        CalculationUpdate.IsPrivate &&
+        !_originalIsPrivate &&
+        Calculation.Access is { Recipients.Count: > 0 };
+
+    private void CancelPrivateConfirm() => _showPrivateConfirm = false;
+
+    private async Task ConfirmPrivateAsync()
+    {
+        _showPrivateConfirm = false;
+        _privateConfirmHandled = true;
+        await HandleSubmitAsync(_pendingPrivateKeepOpen);
+    }
 
     private string CalculationResponsible
     {
@@ -1608,6 +1662,11 @@
                  ?? Config.Statuses.FirstOrDefault())?.Id;
 
         _originalStatusId = CalculationUpdate.StatusId;
+        // Utgångsvärde för "Privat" (för att upptäcka övergången icke-privat → privat och kräva
+        // bekräftelse när en delad kalkyl görs privat). Återställ bekräftelsen vid (om)laddning.
+        _originalIsPrivate = CalculationUpdate.IsPrivate;
+        _privateConfirmHandled = false;
+        _showPrivateConfirm = false;
         RecalculateDateFields(DateFieldChanged.EndDate);
         ResetEditContext();
     }
@@ -1767,6 +1826,18 @@
             // The calculation is locked and nothing changeable remains. Show a clear, specific
             // reason in the dialog instead of the generic "an unexpected error occurred" toast.
             _saveErrorMessage = "Kalkylen är låst och kan inte ändras.";
+            return;
+        }
+
+        // Bekräfta innan en kalkyl som just nu är synlig via projektets delning görs privat – delade
+        // användare/avdelningar tappar då åtkomst till just denna kalkyl (projektets övriga delning
+        // påverkas inte, och inga delningsrader tas bort). Bekräftelse krävs bara vid övergången
+        // icke-privat → privat OCH när kalkylen faktiskt ingår i en delning just nu.
+        if (!_privateConfirmHandled && RequiresPrivateShareConfirmation())
+        {
+            _pendingPrivateKeepOpen = keepOpen;
+            _showPrivateConfirm = true;
+            StateHasChanged();
             return;
         }
 

@@ -60,11 +60,12 @@ namespace Persistence.Service.Access
 
             if (isViewerOnly)
             {
-                // Visare: bara kalkyler som uttryckligen valts i en projektdelning – aldrig privata.
+                // Visare: bara kalkyler som ingår i en projektdelning – aldrig privata. Delningen kan
+                // omfatta antingen ALLA icke-privata kalkyler (s.AllCalculations) eller bara de valda.
                 return c => !c.IsPrivate && c.Project.Shares.Any(s =>
                     (s.ValidUntil == null || s.ValidUntil >= today) &&
                     (s.SharedWithUserId == userId || (departmentId != null && s.DepartmentId == departmentId)) &&
-                    s.Calculations.Any(sc => sc.CalculationId == c.Id));
+                    (s.AllCalculations || s.Calculations.Any(sc => sc.CalculationId == c.Id)));
             }
 
             return c =>
@@ -72,11 +73,14 @@ namespace Persistence.Service.Access
                     departmentId == null ||
                     c.Project.Folder.DepartmentId == departmentId ||
                     c.CreatedBy == userId ||
+                    // Delning: "Alla kalkyler i projektet" (s.AllCalculations) inkluderar automatiskt nya
+                    // icke-privata kalkyler; annars bara de uttryckligen valda. Privat-regeln nedan (AND)
+                    // ser till att privata kalkyler aldrig läcker via "alla"-läget.
                     c.Project.Shares.Any(s =>
                         (s.ValidUntil == null || s.ValidUntil >= today) &&
                         (s.SharedWithUserId == userId ||
                          (departmentId != null && s.DepartmentId == departmentId)) &&
-                        s.Calculations.Any(sc => sc.CalculationId == c.Id))
+                        (s.AllCalculations || s.Calculations.Any(sc => sc.CalculationId == c.Id)))
                 )
                 &&
                 (
@@ -108,11 +112,13 @@ namespace Persistence.Service.Access
             return c =>
                 c.DepartmentId == departmentId ||
                 c.CreatedBy == userId ||
-                c.Project.Shares.Any(s =>
+                // Delning som "Kan ändra": "Alla kalkyler i projektet" inkluderar nya icke-privata kalkyler,
+                // annars bara de valda. Privata kalkyler får ALDRIG redigeras via en delning (!c.IsPrivate).
+                (!c.IsPrivate && c.Project.Shares.Any(s =>
                     (s.ValidUntil == null || s.ValidUntil >= today) &&
                     s.Role == PMRolesConst.Tenant.Manger &&
                     (s.SharedWithUserId == userId || s.DepartmentId == departmentId) &&
-                    s.Calculations.Any(sc => sc.CalculationId == c.Id));
+                    (s.AllCalculations || s.Calculations.Any(sc => sc.CalculationId == c.Id))));
         }
 
         /// <summary>

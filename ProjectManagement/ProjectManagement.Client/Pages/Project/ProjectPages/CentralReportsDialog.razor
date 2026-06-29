@@ -1745,8 +1745,18 @@
         {
             foreach (var calc in _calculations)
             {
-                try { _posts[calc.Calculation.Id] = await Repo.Calculation.GetPostAsync(calc.Calculation.Id); }
-                catch (Exception ex) { await ClientLog.ErrorAsync("Loading calculation report data failed", ex: ex); }
+                try
+                {
+                    // Hämta intäktsdata via EFFEKTIV kalkylåtkomst. Backend (GetPostModelAsync) filtrerar
+                    // med CanSee och returnerar NULL för en kalkyl användaren inte får läsa (t.ex. ett delat
+                    // projekt där just denna kalkyl inte ingår i delningen). Lagra då ingen post, så
+                    // Intäktsöversikten bara summerar tillåtna kalkyler i stället för att krascha (NRE) på en
+                    // null-post – vilket annars gav globalt "Ett oväntat fel uppstod" + fastnat "Läser in…".
+                    var post = await Repo.Calculation.GetPostAsync(calc.Calculation.Id);
+                    if (post is not null)
+                        _posts[calc.Calculation.Id] = post;
+                }
+                catch (Exception ex) { await ClientLog.ErrorAsync($"Loading calculation report data failed (calcId={calc.Calculation.Id}, projectId={calc.Project.Id}, folderId={calc.Folder.Id})", ex: ex); }
             }
         }
 
@@ -2142,7 +2152,8 @@
         foreach (var group in BaseFilteredCalculations.GroupBy(e => $"{e.Project.Id}:{e.ChainKey}"))
         {
             var sel = ChooseIncomeSource(group);
-            if (sel is null || !_posts.TryGetValue(sel.Calculation.Id, out var post)) continue;
+            // post kan saknas ELLER vara null (kalkyl utan läsbar intäktsdata) – hoppa över, krascha aldrig.
+            if (sel is null || !_posts.TryGetValue(sel.Calculation.Id, out var post) || post is null) continue;
             foreach (var income in post.Income ?? [])
             {
                 if (income.Year <= 0 || !HasIncome(income)) continue;

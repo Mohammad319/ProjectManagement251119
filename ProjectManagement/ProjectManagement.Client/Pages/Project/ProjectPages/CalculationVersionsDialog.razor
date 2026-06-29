@@ -13,70 +13,26 @@
         </button>
     </div>
 
+    @* Intern scroll i tabellområdet så hela sidan aldrig får horisontell scroll. *@
     <div class="overflow-x-auto">
         <table class="min-w-full text-xs">
             <thead>
                 <tr class="border-b border-slate-200 dark:border-slate-700">
-                    <th class="pb-2 pr-4 text-left text-[11px] font-semibold text-slate-500 dark:text-slate-400">@AppLoc["version"]</th>
-                    <th class="pb-2 pr-4 text-left text-[11px] font-semibold text-slate-500 dark:text-slate-400">@AppLoc["code"]</th>
-                    <th class="pb-2 pr-4 text-left text-[11px] font-semibold text-slate-500 dark:text-slate-400">@AppLoc["calculationName"]</th>
-                    <th class="pb-2 pr-4 text-left text-[11px] font-semibold text-slate-500 dark:text-slate-400">@AppLoc["tenderDeadline"]</th>
-                    <th class="pb-2"></th>
+                    @* Rubrik och cellvärde styrs av samma ColumnKey (VersionColumns) så ordningen alltid stämmer. *@
+                    @foreach (var col in VersionColumns)
+                    {
+                        <th class="@VersionHeaderClass(col)">@VersionHeaderLabel(col)</th>
+                    }
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                 @foreach (var version in GetVersions())
                 {
                     <tr>
-                        <td class="py-2 pr-4">
-                            <div class="flex items-center gap-1.5">
-                                <span class="font-mono font-semibold text-slate-800 dark:text-slate-100">@FormatVersion(version.VersionNumber)</span>
-                                @if (version.IsCurrentVersion)
-                                {
-                                    <span class="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300" title="Aktuell version">@AppLoc["current"]</span>
-                                }
-                            </div>
-                        </td>
-                        <td class="py-2 pr-4 font-mono text-slate-500 dark:text-slate-400">@FormatText(version.Code)</td>
-                        <td class="py-2 pr-4 text-slate-700 dark:text-slate-200">@version.Name</td>
-                        <td class="py-2 pr-4 text-slate-500 dark:text-slate-400">
-                            @if (version.TenderDeadline is { } verDeadline)
-                            {
-                                <span title="@verDeadline.ToString("yyyy-MM-dd HH:mm:ss")">
-                                    @verDeadline.ToString("yyyy-MM-dd")
-                                </span>
-                            }
-                            else
-                            {
-                                <span>-</span>
-                            }
-                        </td>
-                        <td class="py-2 text-right">
-                            <div class="flex flex-wrap justify-end gap-1.5">
-                                <button type="button"
-                                        class="rounded-md border border-slate-300 px-2 py-1 font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
-                                        @onclick="async () => await OpenVersionAsync(version)">
-                                    @AppLoc["open"]
-                                </button>
-                                @if (!version.IsCurrentVersion)
-                                {
-                                    <button type="button"
-                                            class="rounded-md border border-violet-300 px-2 py-1 font-medium text-violet-700 transition hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-violet-800 dark:text-violet-300 dark:hover:bg-violet-950/40"
-                                            disabled="@_isCreatingVersion"
-                                            @onclick="async () => await RestoreAsNewVersionAsync(version)">
-                                        @AppLoc["restoreAsNewVersion"]
-                                    </button>
-                                }
-                                @if (CanArchiveVersion(version))
-                                {
-                                    <button type="button"
-                                            class="rounded-md border border-amber-300 px-2 py-1 font-medium text-amber-700 transition hover:bg-amber-50 dark:border-amber-800 dark:text-amber-300 dark:hover:bg-amber-950/40"
-                                            @onclick="async () => await ArchiveVersionAsync(version)">
-                                        @AppLoc["archiveVersion"]
-                                    </button>
-                                }
-                            </div>
-                        </td>
+                        @foreach (var col in VersionColumns)
+                        {
+                            @RenderVersionCell(col, version)
+                        }
                     </tr>
                 }
             </tbody>
@@ -98,6 +54,91 @@
     private bool _isCreatingVersion;
     private string _message = string.Empty;
 
+    // Kanonisk kolumnordning. Rubrik (VersionHeaderLabel) och cell (RenderVersionCell) styrs av
+    // samma nyckel, så data aldrig kan hamna under fel rubrik även om listan ändras senare.
+    private static readonly string[] VersionColumns =
+        { "version", "code", "name", "created", "updated", "status", "actions" };
+
+    private string VersionHeaderClass(string key) => key switch
+    {
+        // Åtgärder ligger längst till höger.
+        "actions" => "pb-2 text-right text-[11px] font-semibold text-slate-500 dark:text-slate-400",
+        _ => "pb-2 pr-4 text-left text-[11px] font-semibold text-slate-500 dark:text-slate-400"
+    };
+
+    private string VersionHeaderLabel(string key) => key switch
+    {
+        "version" => AppLoc["version"].Value,
+        "code"    => AppLoc["code"].Value,
+        "name"    => AppLoc["calculationName"].Value,
+        "created" => AppLoc["createdDate"].Value,
+        "updated" => AppLoc["lastModified"].Value,
+        "status"  => AppLoc["calculationStatus"].Value,
+        "actions" => string.Empty,
+        _         => string.Empty
+    };
+
+    private RenderFragment RenderVersionCell(string key, ListCalculationMVVM version) => key switch
+    {
+        "version" => @<td class="py-2 pr-4"><span class="font-mono font-semibold text-slate-800 dark:text-slate-100">@FormatVersion(version.VersionNumber)</span></td>,
+        "code"    => @<td class="py-2 pr-4 font-mono text-slate-500 dark:text-slate-400">@FormatText(version.Code)</td>,
+        "name"    => @<td class="py-2 pr-4 text-slate-700 dark:text-slate-200">@version.Name</td>,
+        "created" => @<td class="py-2 pr-4 text-slate-500 dark:text-slate-400">@FormatDate(version.CreatedAt)</td>,
+        "updated" => @<td class="py-2 pr-4 text-slate-500 dark:text-slate-400">@(version.UpdatedAt is { } u ? FormatDate(u) : "-")</td>,
+        "status"  => RenderVersionStatusCell(version),
+        "actions" => RenderVersionActionsCell(version),
+        _         => @<td></td>
+    };
+
+    private RenderFragment RenderVersionStatusCell(ListCalculationMVVM version) => __builder =>
+    {
+        var (label, cls) = VersionStatus(version);
+        <td class="py-2 pr-4">
+            <span class="inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-semibold @cls">@label</span>
+        </td>;
+    };
+
+    private RenderFragment RenderVersionActionsCell(ListCalculationMVVM version) =>
+        @<td class="py-2 text-right">
+            <div class="flex flex-wrap justify-end gap-1.5">
+                <button type="button"
+                        class="rounded-md border border-slate-300 px-2 py-1 font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                        @onclick="async () => await OpenVersionAsync(version)">
+                    @AppLoc["open"]
+                </button>
+                @if (!version.IsCurrentVersion)
+                {
+                    <button type="button"
+                            class="rounded-md border border-violet-300 px-2 py-1 font-medium text-violet-700 transition hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-violet-800 dark:text-violet-300 dark:hover:bg-violet-950/40"
+                            disabled="@_isCreatingVersion"
+                            @onclick="async () => await RestoreAsNewVersionAsync(version)">
+                        @AppLoc["restoreAsNewVersion"]
+                    </button>
+                }
+                @if (CanArchiveVersion(version))
+                {
+                    <button type="button"
+                            class="rounded-md border border-amber-300 px-2 py-1 font-medium text-amber-700 transition hover:bg-amber-50 dark:border-amber-800 dark:text-amber-300 dark:hover:bg-amber-950/40"
+                            @onclick="async () => await ArchiveVersionAsync(version)">
+                        @AppLoc["archiveVersion"]
+                    </button>
+                }
+            </div>
+        </td>;
+
+    // Versionsstatus: arkiverad → "Arkiverad"; aktuell version → "Aktuell"; låst → "Låst";
+    // i övrigt en tidigare (ej aktuell) version. Återanvänder befintliga statusflaggor – ingen ny logik.
+    private (string Label, string Class) VersionStatus(ListCalculationMVVM version)
+    {
+        if (version.IsArchived)
+            return (AppLoc["archived"].Value, "bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300");
+        if (version.IsCurrentVersion)
+            return (AppLoc["current"].Value, "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300");
+        if (version.IsLocked)
+            return (AppLoc["locked"].Value, "bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300");
+        return ("Tidigare version", "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400");
+    }
+
     private IEnumerable<ListCalculationMVVM> GetVersions() =>
         CalculationVersionSelector.GetVersions(
             Folder.State.ProjectSelected?.Calculations,
@@ -112,6 +153,7 @@
 
     private static string FormatVersion(int v) => $"V.{v:D2}";
     private static string FormatText(string? v) => string.IsNullOrWhiteSpace(v) ? "-" : v;
+    private static string FormatDate(DateTime d) => d == default ? "-" : d.ToString("yyyy-MM-dd");
 
     private async Task OpenVersionAsync(ListCalculationMVVM version)
     {

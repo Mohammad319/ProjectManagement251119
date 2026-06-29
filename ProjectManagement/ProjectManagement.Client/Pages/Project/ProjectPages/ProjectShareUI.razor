@@ -453,15 +453,60 @@
                                        Title="@(DisableEditOption ? "Personen har systemrollen Visare och kan bara få åtkomstnivån Kan visa." : null)" />
                     </div>
 
+                    @* Delningsomfattning – två tydliga lägen: alla kalkyler (inkl. nya) eller bara valda.
+                       Ligger i samma högra yta, direkt ovanför kalkyllistan. *@
+                    <div>
+                        <label class="mb-1 block text-[13px] font-medium text-slate-600 dark:text-slate-300">Delningsomfattning</label>
+                        <div class="space-y-1">
+                            <label class="flex cursor-pointer items-center gap-1.5 text-sm">
+                                <input type="radio"
+                                       name="project-share-scope"
+                                       class="h-4 w-4 border-slate-300 text-sky-600 focus:ring-sky-500"
+                                       checked="@_shareScopeAll"
+                                       @onchange="() => SetShareScope(true)" />
+                                <span class="text-slate-700 dark:text-slate-200">Alla kalkyler i projektet</span>
+                                <HoverTooltip Text="Inkluderar även nya kalkyler som skapas senare. Privata kalkyler delas inte."
+                                              Focusable="true"
+                                              Class="shrink-0 cursor-help text-slate-400 dark:text-slate-500">
+                                    <span class="text-[11px] font-normal" aria-hidden="true">ⓘ</span>
+                                </HoverTooltip>
+                            </label>
+                            <label class="flex cursor-pointer items-center gap-1.5 text-sm">
+                                <input type="radio"
+                                       name="project-share-scope"
+                                       class="h-4 w-4 border-slate-300 text-sky-600 focus:ring-sky-500"
+                                       checked="@(!_shareScopeAll)"
+                                       @onchange="() => SetShareScope(false)" />
+                                <span class="text-slate-700 dark:text-slate-200">Valda kalkyler</span>
+                                <HoverTooltip Text="Endast markerade kalkyler delas. Nya kalkyler delas inte automatiskt."
+                                              Focusable="true"
+                                              Class="shrink-0 cursor-help text-slate-400 dark:text-slate-500">
+                                    <span class="text-[11px] font-normal" aria-hidden="true">ⓘ</span>
+                                </HoverTooltip>
+                            </label>
+                        </div>
+                    </div>
+
                     @* Kalkyler *@
                     <div>
                         <div class="mb-1 flex items-center justify-between gap-2">
-                            <label class="text-[13px] font-medium text-slate-600 dark:text-slate-300">Välj kalkyler som ska delas</label>
-                            <button type="button"
-                                    class="text-[11px] font-semibold text-sky-700 hover:text-sky-900 disabled:opacity-40 dark:text-sky-300"
-                                    title="Väljer alla kalkyler som kan delas. Privata kalkyler ingår inte."
-                                    disabled="@(!HasShareableCalcs)"
-                                    @onclick="SelectAllShareable">Välj alla tillgängliga kalkyler</button>
+                            <span class="inline-flex items-center gap-1">
+                                <label class="text-[13px] font-medium text-slate-600 dark:text-slate-300">Välj kalkyler som ska delas</label>
+                                <HoverTooltip Text="Endast markerade kalkyler delas. Nya kalkyler delas inte automatiskt."
+                                              Focusable="true"
+                                              Class="shrink-0 cursor-help text-slate-400 dark:text-slate-500">
+                                    <span class="text-[11px] font-normal" aria-hidden="true">ⓘ</span>
+                                </HoverTooltip>
+                            </span>
+                            @* Länken gäller bara läget "Valda kalkyler" och döljs när alla kalkyler delas. *@
+                            @if (!_shareScopeAll)
+                            {
+                                <button type="button"
+                                        class="text-[11px] font-semibold text-sky-700 hover:text-sky-900 disabled:opacity-40 dark:text-sky-300"
+                                        title="Väljer alla kalkyler som kan delas just nu. Privata kalkyler ingår inte. Nya kalkyler delas inte automatiskt."
+                                        disabled="@(!HasShareableCalcs)"
+                                        @onclick="SelectAllShareable">Välj alla tillgängliga kalkyler</button>
+                            }
                         </div>
 
                         @if (_calcs.Count == 0)
@@ -472,21 +517,30 @@
                         }
                         else
                         {
-                            @if (!HasShareableCalcs)
+                            @if (_shareScopeAll)
+                            {
+                                <p class="mb-1 rounded border border-dashed border-sky-300 bg-sky-50/60 px-2 py-1.5 text-[11px] text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-300">
+                                    Alla icke-privata kalkyler i projektet ingår automatiskt.
+                                </p>
+                            }
+                            else if (!HasShareableCalcs)
                             {
                                 <p class="mb-1 rounded border border-dashed border-slate-300 px-2 py-2 text-center text-[11px] text-slate-400 dark:border-slate-700">
                                     Inga tillgängliga kalkyler att dela.
                                 </p>
                             }
-                            <div class="min-h-[6rem] max-h-48 space-y-1 overflow-y-auto rounded border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-950">
+                            <div class="min-h-[6rem] max-h-48 space-y-1 overflow-y-auto rounded border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-950 @(_shareScopeAll ? "opacity-70" : "")">
                                 @foreach (var c in _calcs)
                                 {
                                     var calc = c;
-                                    <label class="flex items-center gap-2 rounded px-1.5 py-1 text-sm @(calc.IsPrivate ? "opacity-60" : "hover:bg-slate-50 dark:hover:bg-slate-800")">
+                                    @* I läget "Alla kalkyler" är listan avaktiverad: icke-privata visas ikryssade men disabled. *@
+                                    var calcChecked = _shareScopeAll ? !calc.IsPrivate : _selectedCalcIds.Contains(calc.Id);
+                                    var calcDisabled = calc.IsPrivate || _shareScopeAll;
+                                    <label class="flex items-center gap-2 rounded px-1.5 py-1 text-sm @(calcDisabled ? "opacity-60" : "hover:bg-slate-50 dark:hover:bg-slate-800")">
                                         <input type="checkbox"
                                                class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 disabled:cursor-not-allowed dark:border-slate-600 dark:bg-slate-800"
-                                               checked="@_selectedCalcIds.Contains(calc.Id)"
-                                               disabled="@calc.IsPrivate"
+                                               checked="@calcChecked"
+                                               disabled="@calcDisabled"
                                                @onchange="e => ToggleCalc(calc.Id, e.Value is bool b && b)" />
                                         <span class="font-mono text-[11px] text-slate-400">V.@(calc.VersionNumber.ToString("D2"))</span>
                                         <span class="min-w-0 flex-1 truncate text-slate-700 dark:text-slate-200">@calc.Name</span>
@@ -499,8 +553,8 @@
                             </div>
                         }
 
-                        @* Visas inte direkt – först efter försök att lägga till eller efter att kalkylvalet rörts. *@
-                        @if (HasShareableCalcs && SelectedShareableCalcCount == 0 && (ShowValidationErrors || _calcTouched))
+                        @* Endast i läget "Valda kalkyler": visas först efter försök att lägga till eller efter att kalkylvalet rörts. *@
+                        @if (!_shareScopeAll && HasShareableCalcs && SelectedShareableCalcCount == 0 && (ShowValidationErrors || _calcTouched))
                         {
                             <p class="mt-1 text-[11px] text-amber-600 dark:text-amber-400">Välj minst en kalkyl.</p>
                         }
@@ -565,6 +619,9 @@
     private bool _useEndDate;
     private DateTime? _validUntil;
     private readonly HashSet<int> _selectedCalcIds = [];
+    // Delningsomfattning: false = "Valda kalkyler" (standard, bevarar befintligt beteende),
+    // true = "Alla kalkyler i projektet" (omfattar även nya icke-privata kalkyler).
+    private bool _shareScopeAll;
     private bool _saving;
     // Valideringsfel visas inte direkt – först efter försök att lägga till (_hasTriedSubmit)
     // eller efter att respektive fält har rörts (_validUntilTouched / _calcTouched).
@@ -606,6 +663,7 @@
     // Åtkomstöversiktens kalkyltext per delning: "Alla tillgängliga kalkyler" eller "n/total kalkyler".
     private string OverviewCalcText(ProjectShareListItemDTO share)
     {
+        if (share.AllCalculations) return "Alla kalkyler i projektet";
         var total = ShareableCalcCount;
         var n = share.CalculationIds.Count;
         if (n == 0) return "Saknar kalkyler";
@@ -643,8 +701,9 @@
         !string.IsNullOrWhiteSpace(_role) &&
         HasValidValidity &&
         !DuplicateDepartment &&
-        // En delning måste innehålla minst en kalkyl – annars ger den ingen faktisk åtkomst.
-        SelectedShareableCalcCount > 0 &&
+        // I läget "Valda kalkyler" måste minst en kalkyl vara markerad – annars ger delningen ingen
+        // faktisk åtkomst. I läget "Alla kalkyler i projektet" omfattas alla (även framtida) automatiskt.
+        (_shareScopeAll || SelectedShareableCalcCount > 0) &&
         (_recipientType == ProjectShareRecipientType.User
             ? _selectedUserIds.Count > 0
             : _departmentId is > 0);
@@ -664,7 +723,7 @@
                 return "Välj ett slutdatum.";
             if (_useEndDate && _validUntil!.Value.Date < DateTime.UtcNow.Date)
                 return "Slutdatum kan inte ligga bakåt i tiden.";
-            if (SelectedShareableCalcCount == 0)
+            if (!_shareScopeAll && SelectedShareableCalcCount == 0)
                 return "Välj minst en kalkyl.";
             if (string.IsNullOrWhiteSpace(_role))
                 return "Välj åtkomstnivå.";
@@ -924,6 +983,15 @@
             _selectedCalcIds.Add(c.Id);
     }
 
+    // Byter delningsomfattning. "Alla kalkyler i projektet" avaktiverar kalkyllistan; "Valda kalkyler"
+    // återställer normalt manuellt val. Att byta läge ska inte direkt visa "Välj minst en kalkyl".
+    private void SetShareScope(bool all)
+    {
+        _shareScopeAll = all;
+        if (all)
+            _calcTouched = false;
+    }
+
     private async Task SaveAsync()
     {
         if (ReadOnly)
@@ -959,7 +1027,8 @@
                         DepartmentId = null,
                         Role = role,
                         ValidUntil = SelectedValidUntil,
-                        CalculationIds = calcIds
+                        CalculationIds = calcIds,
+                        AllCalculations = _shareScopeAll
                     });
                 }
             }
@@ -993,7 +1062,8 @@
             DepartmentId = _recipientType == ProjectShareRecipientType.Department ? _departmentId : null,
             Role = role,
             ValidUntil = SelectedValidUntil,
-            CalculationIds = calcIds
+            CalculationIds = calcIds,
+            AllCalculations = _shareScopeAll
         };
     }
 
@@ -1019,6 +1089,7 @@
         if (share.RecipientType == ProjectShareRecipientType.User && share.UserId is int uid)
             _selectedUserIds.Add(uid);
 
+        _shareScopeAll = share.AllCalculations;
         _selectedCalcIds.Clear();
         foreach (var cid in share.CalculationIds)
             _selectedCalcIds.Add(cid);
@@ -1043,6 +1114,7 @@
         _useEndDate = false;
         _validUntil = null;
         _selectedCalcIds.Clear();
+        _shareScopeAll = false;
         _hasTriedSubmit = false;
         _validUntilTouched = false;
         _calcTouched = false;
@@ -1114,6 +1186,7 @@
 
     private string CalcSummary(ProjectShareListItemDTO share)
     {
+        if (share.AllCalculations) return "Alla kalkyler i projektet";
         var ids = share.CalculationIds;
         if (ids.Count == 0) return "Saknar kalkyler";
         if (ids.Count == 1)

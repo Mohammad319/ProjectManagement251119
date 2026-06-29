@@ -133,6 +133,7 @@ namespace Persistence.Service.CalculationItems.Calculation
                             : ((s.SharedWithUser!.FirstName ?? "") + " " + (s.SharedWithUser!.LastName ?? "")).Trim())
                         : s.Department!.Name,
                     s.Role,
+                    s.AllCalculations,
                     CalcIds = s.Calculations.Select(c => c.CalculationId).ToList()
                 })
                 .ToListAsync(ct);
@@ -150,7 +151,9 @@ namespace Persistence.Service.CalculationItems.Calculation
                     ViaProject = viaProject,
                     IsPrivate = dto.IsPrivate,
                     Recipients = shares
-                        .Where(s => s.CalcIds.Contains(dto.Id))
+                        // "Alla kalkyler i projektet" omfattar varje icke-privat kalkyl (även denna),
+                        // annars bara de uttryckligen valda. Privata kalkyler delas aldrig.
+                        .Where(s => s.AllCalculations ? !dto.IsPrivate : s.CalcIds.Contains(dto.Id))
                         .Select(s => new ProjectAccessRecipientDTO
                         {
                             Type = s.Type,

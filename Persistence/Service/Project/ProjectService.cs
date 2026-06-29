@@ -675,6 +675,7 @@ namespace Persistence.Service.Project
                             : ((s.SharedWithUser!.FirstName ?? "") + " " + (s.SharedWithUser!.LastName ?? "")).Trim())
                         : s.Department!.Name,
                     s.Role,
+                    s.AllCalculations,
                     CalcCount = s.Calculations.Count
                 })
                 .ToListAsync(ct);
@@ -684,13 +685,14 @@ namespace Persistence.Service.Project
 
             foreach (var p in projects)
             {
+                var shareable = shareableCounts.TryGetValue(p.Id, out var sc) ? sc : 0;
                 result[p.Id] = new ProjectAccessSummaryDTO
                 {
                     // Normal avdelningsåtkomst: admin (tenant-wide), egen avdelning eller skapare.
                     ViaDepartment = departmentId == null
                         || (p.Folder != null && p.Folder.DepartmentId == departmentId)
                         || p.CreatedBy == userId,
-                    ShareableCalcCount = shareableCounts.TryGetValue(p.Id, out var sc) ? sc : 0,
+                    ShareableCalcCount = shareable,
                     Recipients = sharesByProject[p.Id]
                         .Select(s => new ProjectAccessRecipientDTO
                         {
@@ -699,7 +701,9 @@ namespace Persistence.Service.Project
                             DepartmentId = s.DepartmentId,
                             Name = s.Name ?? string.Empty,
                             Role = s.Role ?? string.Empty,
-                            CalcCount = s.CalcCount
+                            // "Alla kalkyler i projektet" → räkna som alla delbara kalkyler (även nya),
+                            // så listans "Åtkomst"-kolumn visar "Alla tillgängliga kalkyler".
+                            CalcCount = s.AllCalculations ? shareable : s.CalcCount
                         })
                         .ToList()
                 };

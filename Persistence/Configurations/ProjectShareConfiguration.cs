@@ -13,6 +13,10 @@ internal sealed class ProjectShareConfiguration : IEntityTypeConfiguration<Proje
         builder.Property(x => x.Role).HasMaxLength(64).IsRequired();
         builder.Property(x => x.ValidUntil).HasColumnType("date");
 
+        // Delningsomfattning: false = "Valda kalkyler" (befintligt beteende, bevaras för gamla rader),
+        // true = "Alla kalkyler i projektet" (omfattar även nya icke-privata kalkyler).
+        builder.Property(x => x.AllCalculations).HasDefaultValue(false);
+
         // Exakt en mottagare: användare ELLER avdelning.
         builder.ToTable(t => t.HasCheckConstraint(
             "CK_ProjectShares_OneRecipient",

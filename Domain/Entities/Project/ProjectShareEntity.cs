@@ -27,6 +27,15 @@ namespace Domain.Entities.Project
         /// <summary>Delningen gäller till och med detta UTC-datum. <see langword="null"/> = tills vidare.</summary>
         public DateTime? ValidUntil { get; private set; }
 
+        /// <summary>
+        /// Delningsomfattning. <see langword="true"/> = "Alla kalkyler i projektet": delningen omfattar
+        /// ALLA icke-privata kalkyler i projektet, inklusive nya som skapas senare (kalkyllistan
+        /// <see cref="Calculations"/> ignoreras då av åtkomstreglerna). <see langword="false"/> =
+        /// "Valda kalkyler": endast de uttryckligen valda kalkylerna i <see cref="Calculations"/>.
+        /// Privata kalkyler delas aldrig i något läge.
+        /// </summary>
+        public bool AllCalculations { get; private set; }
+
         public ICollection<ProjectShareCalculationEntity> Calculations { get; private set; }
             = new List<ProjectShareCalculationEntity>();
 
@@ -49,6 +58,9 @@ namespace Domain.Entities.Project
         public void SetRole(string role) => Role = role ?? string.Empty;
 
         public void SetValidUntil(DateTime? validUntil) => ValidUntil = validUntil?.Date;
+
+        /// <summary>Sätter delningsomfattningen (true = alla kalkyler i projektet, false = valda kalkyler).</summary>
+        public void SetAllCalculations(bool allCalculations) => AllCalculations = allCalculations;
 
         /// <summary>Ersätter listan av valda kalkyler som ingår i delningen.</summary>
         public void ReplaceCalculations(IEnumerable<int>? calculationIds)

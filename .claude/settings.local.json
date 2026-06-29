@@ -360,7 +360,9 @@
       "Bash(node pwind_verify.js)",
       "Bash(node pwind_tree.js)",
       "Bash(node pwind_tree2.js)",
-      "Bash(node pwind_tree3.js)"
+      "Bash(node pwind_tree3.js)",
+      "Bash(node pwsave_verify.js)",
+      "PowerShell(Get-NetTCPConnection *)"
     ]
   }
 }
