@@ -32,7 +32,7 @@
 
         @if (FilterState.Type == ColumnFilterType.Text)
         {
-            <div class="mb-1.5">
+            <div class="filter-operator-select mb-1.5">
                 <MhdFormSelect TValue="TextFilterOp"
                                Value="FilterState.TextOp"
                                ValueChanged="OnTextOpChanged"
@@ -48,7 +48,7 @@
         }
         else if (FilterState.Type == ColumnFilterType.Date)
         {
-            <div class="mb-1.5">
+            <div class="filter-operator-select mb-1.5">
                 <MhdFormSelect TValue="DateFilterOp"
                                Value="FilterState.DateOp"
                                ValueChanged="OnDateOpChanged"
@@ -71,7 +71,7 @@
         }
         else if (FilterState.Type == ColumnFilterType.Number)
         {
-            <div class="mb-1.5">
+            <div class="filter-operator-select mb-1.5">
                 <MhdFormSelect TValue="NumberFilterOp"
                                Value="FilterState.NumberOp"
                                ValueChanged="OnNumberOpChanged"
@@ -94,11 +94,13 @@
         }
         else if (FilterState.Type == ColumnFilterType.Boolean)
         {
-            <MhdFormSelect TValue="string"
-                           Value="FilterState.BoolValue"
-                           ValueChanged="OnBoolChanged"
-                           Options="BoolOptions"
-                           FixedPopup="true" />
+            <div class="filter-operator-select">
+                <MhdFormSelect TValue="string"
+                               Value="FilterState.BoolValue"
+                               ValueChanged="OnBoolChanged"
+                               Options="BoolOptions"
+                               FixedPopup="true" />
+            </div>
         }
         else if (FilterState.Type == ColumnFilterType.Dropdown)
         {

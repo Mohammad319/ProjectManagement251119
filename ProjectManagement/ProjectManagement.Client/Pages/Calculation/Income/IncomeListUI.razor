@@ -14,7 +14,7 @@
                     <col style="width: 2.25rem;" />
                     <col style="width: 4.25rem;" />
                     <col class="w-auto" />
-                    <col style="width: 5rem;" />
+                    <col style="width: 10rem;" />
                     <col style="width: 4.2rem;" /> @* Q1 - forced also on th/td *@
                     <col style="width: 4.2rem;" /> @* Q2 *@
                     <col style="width: 4.2rem;" /> @* Q3 *@
@@ -72,12 +72,14 @@
                                        class="@InputBase w-full min-w-0" />
                             </td>
                             <td class="px-1 py-0.5">
-                                <MhdFormSelect TValue="IncomeSubType"
-                                               Value="income.SubType"
-                                               ValueChanged="@(v => SetSubType(income, v))"
-                                               Options="SubTypeItems"
-                                               Disabled="ReadOnly"
-                                               FixedPopup="true" />
+                                <div class="income-subtype-select">
+                                    <MhdFormSelect TValue="IncomeSubType"
+                                                   Value="income.SubType"
+                                                   ValueChanged="@(v => SetSubType(income, v))"
+                                                   Options="SubTypeItems"
+                                                   Disabled="ReadOnly"
+                                                   FixedPopup="true" />
+                                </div>
                             </td>
                             <td style="width: 4.2rem; min-width: 4.2rem; max-width: 4.2rem;" class="border-l border-slate-100 px-1 py-0.5 dark:border-slate-800">
                                 <input type="number" value="@DisplayQ(income, income.Q1)"
