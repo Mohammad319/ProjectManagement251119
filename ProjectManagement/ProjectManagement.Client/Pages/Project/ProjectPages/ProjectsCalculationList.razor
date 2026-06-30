@@ -723,7 +723,10 @@
             .OrderBy(x => x)
             .ToList();
 
-        var sig = string.Join(",", ids);
+        var sig = string.Join(",", VisibleBaseCalculations
+            .Where(HasUnseenCalcChange)
+            .Select(c => $"{c.Id}:{c.UpdatedAt?.Ticks ?? 0}")
+            .OrderBy(x => x));
         if (sig == _calcRecentChangesSig)
             return;
 
@@ -1621,8 +1624,9 @@
     // Aldrig öppnade kalkyler (ingen baslinje) visar ingen indikator.
     private bool HasUnseenCalcChange(ListCalculationMVVM c) =>
         c.UpdatedAt is { } updated
-        && _lastOpened.TryGetValue(c.Id.ToString(), out var opened)
-        && updated > opened;
+        && (!_lastOpened.TryGetValue(c.Id.ToString(), out var opened)
+            ? c.ImportInfo?.IsImportedCopy == true
+            : updated > opened);
 
     // Markera som läst när användaren öppnar kalkylen → indikatorn döljs (tills nästa ändring).
     private async Task MarkCalcOpenedAsync(ListCalculationMVVM c)

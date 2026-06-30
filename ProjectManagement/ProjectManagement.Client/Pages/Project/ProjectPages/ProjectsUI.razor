@@ -1404,7 +1404,10 @@
             .OrderBy(x => x)
             .ToList();
 
-        var sig = string.Join(",", ids);
+        var sig = string.Join(",", BaseProjects
+            .Where(HasUnseenProjectChange)
+            .Select(p => $"{p.Id:N}:{p.UpdatedAt?.Ticks ?? 0}")
+            .OrderBy(x => x));
         if (sig == _recentChangesSig)
             return;
 
@@ -1513,8 +1516,9 @@
     // Aldrig öppnade objekt (ingen baslinje) visar ingen indikator.
     private bool HasUnseenProjectChange(ListProjectMVVM p) =>
         p.UpdatedAt is { } updated
-        && _lastOpened.TryGetValue(p.Id.ToString(), out var opened)
-        && updated > opened;
+        && (!_lastOpened.TryGetValue(p.Id.ToString(), out var opened)
+            ? p.ImportInfo?.IsImportedCopy == true
+            : updated > opened);
 
     // Markera som läst när användaren öppnar projektet → indikatorn döljs (tills nästa ändring).
     private async Task MarkProjectOpenedAsync(ListProjectMVVM p)

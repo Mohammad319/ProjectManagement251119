@@ -134,7 +134,12 @@ namespace Domain.Entities.Project
             CompensationId = dto.CompensationId;
             ContractId = dto.ContractId;
 
-            Metadata = dto.ToMetadata();
+            var metadata = dto.ToMetadata();
+            var existingImportInfo = GetMetadataSnapshot().ImportInfo;
+            if (metadata.ImportInfo is null && existingImportInfo is not null)
+                metadata.ImportInfo = existingImportInfo.Clone();
+
+            Metadata = metadata;
         }
 
         public ProjectData GetMetadataSnapshot()

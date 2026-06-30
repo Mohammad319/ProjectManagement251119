@@ -339,13 +339,15 @@ namespace ProjectManagement.Client.Pages.Folder
         // Mappar har ingen indikator i denna första version.
         private bool HasUnseenProjectChange(ListProjectMVVM p) =>
             p.UpdatedAt is { } updated
-            && _projectChangeSeen.TryGetValue(p.Id.ToString(), out var opened)
-            && updated > opened;
+            && (!_projectChangeSeen.TryGetValue(p.Id.ToString(), out var opened)
+                ? p.ImportInfo?.IsImportedCopy == true
+                : updated > opened);
 
         private bool HasUnseenCalcChange(ListCalculationMVVM c) =>
             c.UpdatedAt is { } updated
-            && _calcChangeSeen.TryGetValue(c.Id.ToString(), out var opened)
-            && updated > opened;
+            && (!_calcChangeSeen.TryGetValue(c.Id.ToString(), out var opened)
+                ? c.ImportInfo?.IsImportedCopy == true
+                : updated > opened);
 
         private async Task MarkProjectChangeSeenAsync(ListProjectMVVM p)
         {
@@ -389,7 +391,24 @@ namespace ProjectManagement.Client.Pages.Folder
             projectIds = projectIds.Distinct().OrderBy(x => x).ToList();
             calcIds = calcIds.Distinct().OrderBy(x => x).ToList();
 
-            var sig = string.Join("|", projectIds) + "#" + string.Join(",", calcIds);
+            var projectSig = new List<string>();
+            var calcSig = new List<string>();
+            foreach (var folder in UoWService.Folder.State.FoldersList ?? [])
+            {
+                foreach (var project in folder.Projects ?? [])
+                {
+                    if (HasUnseenProjectChange(project))
+                        projectSig.Add($"{project.Id:N}:{project.UpdatedAt?.Ticks ?? 0}");
+
+                    foreach (var calc in project.Calculations ?? [])
+                        if (HasUnseenCalcChange(calc))
+                            calcSig.Add($"{calc.Id}:{calc.UpdatedAt?.Ticks ?? 0}");
+                }
+            }
+
+            var sig = string.Join("|", projectSig.Distinct().OrderBy(x => x))
+                + "#"
+                + string.Join(",", calcSig.Distinct().OrderBy(x => x));
             if (sig == _treeRecentSig)
                 return;
 

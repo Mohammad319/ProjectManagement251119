@@ -15,6 +15,7 @@ namespace ProjectManagement.Shared.Enums
         Archived = 5,
         Restored = 6,
         Moved = 7,
-        Copied = 8
+        Copied = 8,
+        Imported = 9
     }
 }

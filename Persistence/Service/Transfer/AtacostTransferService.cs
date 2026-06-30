@@ -5,6 +5,7 @@ using Application.Feature.Transfer;
 using Application.Mapping.CalcItems;
 using Application.Mapping.Calculation;
 using Application.Mapping.Project;
+using Domain.Entities.ChangeLog;
 using Domain.Entities.Calculation;
 using Domain.Entities.Project;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +16,7 @@ using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Project;
 using ProjectManagement.Shared.DTO.Transfer;
+using ProjectManagement.Shared.Enums;
 using ProjectManagement.Shared.Exceptions;
 
 namespace Persistence.Service.Transfer
@@ -356,9 +358,15 @@ namespace Persistence.Service.Transfer
             return await RunImportAsync(db, userId, targetFolderId, AtacostPackageDTO.KindProject,
                 MsgProjectSaveFailed, async () =>
                 {
+                    var importedAt = DateTime.UtcNow;
+                    var actorName = await ResolveActorNameAsync(db, userId, ct);
                     var project = ProjectEntity.Create(projectDto, targetFolderId, userId, maxOrder + 100);
                     project.Id = Guid.NewGuid();
+                    project.CreatedAt = importedAt;
+                    project.UpdatedAt = importedAt;
+                    project.UpdatedBy = userId;
                     db.Projects.Add(project);
+                    db.ChangeLogs.Add(ChangeLogEntity.ForProject(project.Id, ChangeAction.Imported, actorName));
                     await db.SaveChangesAsync(ct);
 
                     var existingCalcNames = new List<string>();
@@ -369,7 +377,8 @@ namespace Persistence.Service.Transfer
                     {
                         await CreateCalculationFromPayloadAsync(
                             db, project.Id, targetDepartmentId.Value, userId, payload,
-                            existingCalcNames, existingCalcCodes, order += 100, package, project.Name, matchCtx, ct);
+                            existingCalcNames, existingCalcCodes, order += 100, package, project.Name, matchCtx,
+                            actorName, importedAt, ct);
                     }
 
                     logger.LogInformation(
@@ -442,9 +451,12 @@ namespace Persistence.Service.Transfer
             return await RunImportAsync(db, userId, targetProjectId, AtacostPackageDTO.KindCalculation,
                 MsgCalcSaveFailed, async () =>
                 {
+                    var importedAt = DateTime.UtcNow;
+                    var actorName = await ResolveActorNameAsync(db, userId, ct);
                     var newId = await CreateCalculationFromPayloadAsync(
                         db, targetProjectId, target.DepartmentId.Value, userId, package.Calculation,
-                        existingCalcNames, existingCalcCodes, maxOrder + 100, package, target.Name, matchCtx, ct);
+                        existingCalcNames, existingCalcCodes, maxOrder + 100, package, target.Name, matchCtx,
+                        actorName, importedAt, ct);
 
                     var info = package.Calculation.Calculation.Metadata.ImportInfo;
                     LogImportInfo("calculation", db.TenantId, userId, targetProjectId, target.Name, info);
@@ -631,6 +643,8 @@ namespace Persistence.Service.Transfer
             AtacostPackageDTO package,
             string targetProjectName,
             MatchContext matchCtx,
+            string? actorName,
+            DateTime importedAt,
             CancellationToken ct)
         {
             var calcDto = payload.Calculation;
@@ -649,10 +663,13 @@ namespace Persistence.Service.Transfer
             calc.Update(calcDto);
             calc.InitializeVersionGroup();
             calc.CreatedBy = userId;
-            calc.CreatedAt = DateTime.UtcNow;
+            calc.CreatedAt = importedAt;
+            calc.UpdatedAt = importedAt;
+            calc.UpdatedBy = userId;
 
             db.Calculations.Add(calc);
             await db.SaveChangesAsync(ct);
+            db.ChangeLogs.Add(ChangeLogEntity.ForCalculation(calc.Id, ChangeAction.Imported, actorName));
 
             foreach (var taskDto in payload.Tasks)
             {
@@ -668,6 +685,23 @@ namespace Persistence.Service.Transfer
             existingNames.Add(calcDto.Name);
             existingCodes.Add(calcDto.Code);
             return calc.Id;
+        }
+
+        private static Task<string?> ResolveActorNameAsync(
+            Persistence.Context.ShardingSingleDbContext db,
+            int actorUserId,
+            CancellationToken ct)
+        {
+            if (actorUserId <= 0)
+                return Task.FromResult<string?>(null);
+
+            return db.User
+                .AsNoTracking()
+                .Where(u => u.Id == actorUserId)
+                .Select(u => ((u.FirstName ?? "") + " " + (u.LastName ?? "")).Trim() == ""
+                    ? u.UserName
+                    : ((u.FirstName ?? "") + " " + (u.LastName ?? "")).Trim())
+                .FirstOrDefaultAsync(ct);
         }
 
         // ──────────────────── Manual mapping infrastructure ───────────────────

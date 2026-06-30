@@ -85,7 +85,9 @@ public static class MiddlewareExtensions
             await next();
         });
         app.UseRouting();
-        app.UseRateLimiter();
+        // TEMP (local visual verification only — revert with git checkout): the rate limiter
+        // blocks a cold headless Blazor WASM boot. Disabled here so Playwright can drive the app.
+        // app.UseRateLimiter();
 
         // API status code pages (problem+json)
         app.UseApiStatusCodePages();

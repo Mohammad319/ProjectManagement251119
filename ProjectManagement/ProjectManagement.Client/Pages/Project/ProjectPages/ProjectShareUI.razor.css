@@ -1,6 +1,9 @@
+/* Bind the dialog to its content (max-height only, no fixed height) so it doesn't
+   force itself a few millimetres taller than the modal body — that was what produced
+   the tiny, near-useless outer scrollbar. The inner content area (flex-1 + overflow-y-auto)
+   takes over scrolling only when content actually exceeds the available height. */
 .project-share-dialog {
-    height: min(52rem, calc(100dvh - 9rem));
-    max-height: calc(100dvh - 9rem);
+    max-height: calc(100dvh - 10rem);
     overflow: hidden;
 }
 
@@ -9,14 +12,29 @@
     min-height: 12rem;
 }
 
+/* Growable variant: the person and calculation lists fill the remaining height of
+   their column so the two columns' list bottoms line up. The right column has more
+   fields above its list, so a fixed height left the bottoms uneven; letting both
+   grow (never shorter than the 12rem baseline) keeps the layout symmetric. */
+.share-list-grow {
+    flex: 1 1 auto;
+    min-height: 12rem;
+    overflow-y: auto;
+}
+
+@media (max-height: 760px) {
+    .share-list-grow {
+        min-height: 10rem;
+    }
+}
+
 .project-share-footer {
     margin-inline: -0.125rem;
 }
 
 @media (max-height: 760px) {
     .project-share-dialog {
-        height: calc(100dvh - 7rem);
-        min-height: 0;
+        max-height: calc(100dvh - 7rem);
     }
 
     .share-list-panel {

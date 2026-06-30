@@ -271,7 +271,12 @@ namespace Domain.Entities.Calculation
             SetTenderDates(dto.TenderDeadline, dto.TenderQA, dto.PublicationDate, dto.DecisionDate);
             UpdateOrder(dto.Order);
 
-            Metadata = dto.Metadata;
+            var metadata = dto.Metadata;
+            var existingImportInfo = GetMetadataSnapshot().ImportInfo;
+            if (metadata.ImportInfo is null && existingImportInfo is not null)
+                metadata.ImportInfo = existingImportInfo.Clone();
+
+            Metadata = metadata;
             Sort = dto.Sort;
             HourlyPrice = CloneHourlyPrice(dto.HourlyPrice);
             Factors = CloneFactors(dto.Factors);

@@ -243,14 +243,25 @@
                                                         aria-label="Ändra delning"
                                                         class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 outline-none transition hover:border-sky-300 hover:bg-sky-50 hover:text-sky-700 focus-visible:ring-2 focus-visible:ring-sky-500/40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:border-sky-700 dark:hover:bg-sky-950/40 dark:hover:text-sky-300"
                                                         @onclick="() => EditShareAsync(share)">
-                                                    <i class="fa-solid fa-pen text-xs" aria-hidden="true"></i>
+                                                    @* Inline SVG (penna) – Font Awesome laddas inte i appen, så ikonfonter blir tomma rutor. *@
+                                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                        <path d="M12 20h9" />
+                                                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+                                                    </svg>
                                                 </button>
                                                 <button type="button"
                                                         title="Ta bort delning"
                                                         aria-label="Ta bort delning"
                                                         class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 outline-none transition hover:border-red-300 hover:bg-red-50 hover:text-red-700 focus-visible:ring-2 focus-visible:ring-red-500/40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:border-red-800 dark:hover:bg-red-950/40 dark:hover:text-red-300"
                                                         @onclick="() => RemoveAsync(share)">
-                                                    <i class="fa-solid fa-trash text-xs" aria-hidden="true"></i>
+                                                    @* Inline SVG (papperskorg) – samma skäl som ovan. *@
+                                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                        <polyline points="3 6 5 6 21 6" />
+                                                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                                                        <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
+                                                        <line x1="10" y1="11" x2="10" y2="17" />
+                                                        <line x1="14" y1="11" x2="14" y2="17" />
+                                                    </svg>
                                                 </button>
                                             </div>
                                         </td>
@@ -312,7 +323,7 @@
                                                ValueChanged="OnUserFilterChanged"
                                                Options="UserFilterDeptItems" />
                             </div>
-                            <div>
+                            <div class="flex min-h-0 flex-1 flex-col">
                                 <div class="mb-1 flex items-center justify-between gap-2">
                                     <label class="text-[13px] font-medium text-slate-600 dark:text-slate-300">Personer</label>
                                     @if (_selectedUserIds.Count > 0)
@@ -328,13 +339,16 @@
                                 }
                                 else
                                 {
-                                    @* Samma min-/maxhöjd som kalkyllistan så de två listorna linjerar och dialogen känns symmetrisk. *@
-                                    <div class="share-list-panel space-y-0.5 overflow-y-auto rounded border border-slate-300 bg-white p-1 dark:border-slate-600 dark:bg-slate-950">
+                                    @* Växer för att fylla kolumnen så personlistan och kalkyllistan linjerar i nederkant. *@
+                                    <div class="share-list-grow space-y-0.5 rounded border border-slate-300 bg-white p-1 dark:border-slate-600 dark:bg-slate-950">
                                         @foreach (var u in _userOptions)
                                         {
                                             var user = u;
                                             var blockedAsViewer = _role == PMRolesConst.Tenant.Manger && user.IsViewer;
-                                            var disabled = user.AlreadyDirect || blockedAsViewer;
+                                            // Already shared directly ⇒ always blocked (ändra via tabellen ovan).
+                                            // Department access ⇒ blocked unless the new share grants strictly more.
+                                            var blockedByDeptAccess = DeptAccessCoversNewShare(user);
+                                            var disabled = user.AlreadyDirect || blockedAsViewer || blockedByDeptAccess;
                                             var tip = user.AlreadyDirect ? user.AccessNote
                                                 : blockedAsViewer ? "Personen har systemrollen Visare och kan bara få åtkomstnivån Kan visa."
                                                 : user.AccessNote;
@@ -456,7 +470,7 @@
                     @* Delningsomfattning – två tydliga lägen: alla kalkyler (inkl. nya) eller bara valda.
                        Ligger i samma högra yta, direkt ovanför kalkyllistan. *@
                     <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                        <label class="shrink-0 text-[13px] font-medium text-slate-600 dark:text-slate-300">Delningsomfattning</label>
+                        <label class="shrink-0 text-[13px] font-medium text-slate-600 dark:text-slate-300">Delningsomfattning:</label>
                         <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5">
                             <label class="flex cursor-pointer items-center gap-1.5 text-sm">
                                 <input type="radio"
@@ -488,7 +502,7 @@
                     </div>
 
                     @* Kalkyler *@
-                    <div>
+                    <div class="flex min-h-0 flex-1 flex-col">
                         <div class="mb-1 flex items-center justify-between gap-2">
                             <span class="inline-flex items-center gap-1">
                                 <label class="text-[13px] font-medium text-slate-600 dark:text-slate-300">Välj kalkyler som ska delas</label>
@@ -523,7 +537,7 @@
                                     Inga tillgängliga kalkyler att dela.
                                 </p>
                             }
-                            <div class="share-list-panel space-y-1 overflow-y-auto rounded border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-950 @(_shareScopeAll ? "opacity-70" : "")">
+                            <div class="share-list-grow space-y-1 rounded border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-950 @(_shareScopeAll ? "opacity-70" : "")">
                                 @foreach (var c in _calcs)
                                 {
                                     var calc = c;
@@ -927,6 +941,12 @@
         string? shortStatus = null;
         bool alreadyDirect = false;
 
+        // Department-derived access (own department or a department share) the person already holds.
+        bool hasDeptAccess = false;
+        string? deptAccessLevel = null;
+        bool deptAccessAllCalcs = false;
+        HashSet<int> deptAccessCalcIds = [];
+
         var direct = _shares.FirstOrDefault(s => s.RecipientType == ProjectShareRecipientType.User && s.UserId == id);
         if (direct is not null)
         {
@@ -936,19 +956,71 @@
         }
         else if (u.DepartmentId is int own && ProjectDepartmentId.HasValue && own == ProjectDepartmentId.Value)
         {
-            // In the project's own department — no separate share needed.
-            note = "Har redan avdelningsåtkomst";
+            // In the project's own department — members already see all available calculations,
+            // at their own system level. No separate share can add anything.
+            note = "Ingår via avdelning – har redan avdelningsåtkomst";
             shortStatus = "Avdelningsåtkomst";
+            hasDeptAccess = true;
+            deptAccessLevel = u.Role;            // system role = effective level via own department
+            deptAccessAllCalcs = true;
         }
         else if (u.DepartmentId is int dep &&
-                 _shares.Any(s => s.RecipientType == ProjectShareRecipientType.Department && s.DepartmentId == dep))
+                 _shares.FirstOrDefault(s => s.RecipientType == ProjectShareRecipientType.Department && s.DepartmentId == dep) is { } depShare)
         {
             var depName = _departments.FirstOrDefault(d => d.Id == dep)?.Name ?? "avdelning";
-            note = $"Har redan åtkomst via avdelning {depName}";
+            note = $"Ingår via avdelning {depName} ({AccessLevelLabel(depShare.Role)})";
             shortStatus = "Avdelningsåtkomst";
+            hasDeptAccess = true;
+            deptAccessLevel = depShare.Role;
+            deptAccessAllCalcs = depShare.AllCalculations;
+            deptAccessCalcIds = depShare.AllCalculations ? [] : [.. depShare.CalculationIds];
         }
 
-        return new UserOption { Id = id, Name = name, Role = u.Role ?? string.Empty, DepartmentId = u.DepartmentId, AccessNote = note, ShortStatus = shortStatus, AlreadyDirect = alreadyDirect };
+        return new UserOption
+        {
+            Id = id,
+            Name = name,
+            Role = u.Role ?? string.Empty,
+            DepartmentId = u.DepartmentId,
+            AccessNote = note,
+            ShortStatus = shortStatus,
+            AlreadyDirect = alreadyDirect,
+            HasDeptAccess = hasDeptAccess,
+            DeptAccessLevel = deptAccessLevel,
+            DeptAccessAllCalcs = deptAccessAllCalcs,
+            DeptAccessCalcIds = deptAccessCalcIds,
+        };
+    }
+
+    // True when the person already has department-derived access that fully covers what the new
+    // share (as currently configured in the form) would grant — i.e. the new share adds nothing.
+    // Re-evaluated on every render, so it updates live as the admin changes access level, scope
+    // or the selected calculations.
+    private bool DeptAccessCoversNewShare(UserOption u)
+    {
+        if (!u.HasDeptAccess) return false;
+
+        // Effective new level — a system Visare can never be granted "Kan ändra".
+        var newLevel = u.IsViewer ? PMRolesConst.Tenant.Viewer : _role;
+        bool newIsManager = newLevel == PMRolesConst.Tenant.Manger;
+        bool existingIsManager = u.DeptAccessLevel == PMRolesConst.Tenant.Manger;
+
+        // Higher access level than the existing one ⇒ the share gives more.
+        if (newIsManager && !existingIsManager) return false;
+
+        // Broader calculation coverage than the existing one ⇒ the share gives more.
+        // (If the person already has all calculations, nothing new can be added on that axis.)
+        if (!u.DeptAccessAllCalcs)
+        {
+            IEnumerable<int> newCalcIds = _shareScopeAll
+                ? _calcs.Where(c => !c.IsPrivate).Select(c => c.Id)
+                : _selectedCalcIds.Where(id => _calcs.Any(c => c.Id == id && !c.IsPrivate));
+
+            if (newCalcIds.Any(id => !u.DeptAccessCalcIds.Contains(id))) return false;
+        }
+
+        // Nothing new — block re-sharing.
+        return true;
     }
 
     private bool DepartmentAlreadyShared(int deptId) =>
@@ -1279,6 +1351,14 @@
         public string? AccessNote { get; init; }
         public string? ShortStatus { get; init; }
         public bool AlreadyDirect { get; init; }
+
+        // Existing access the person already has via a department (the project's own department or a
+        // department share). Used to block re-sharing unless the new share grants strictly more access.
+        public bool HasDeptAccess { get; init; }
+        public string? DeptAccessLevel { get; init; }   // PMRolesConst role of the existing dept-derived access
+        public bool DeptAccessAllCalcs { get; init; }
+        public HashSet<int> DeptAccessCalcIds { get; init; } = [];
+
         public bool IsViewer => Role == PMRolesConst.Tenant.Viewer;
     }
 }

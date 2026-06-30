@@ -23,6 +23,7 @@ namespace ProjectManagement.Client.Shared.Helper
             ChangeAction.Restored => isProject ? "Återställde projektet" : "Återställde kalkylen",
             ChangeAction.Moved => isProject ? "Flyttade projektet" : "Flyttade kalkylen",
             ChangeAction.Copied => isProject ? "Kopierade projektet" : "Kopierade kalkylen",
+            ChangeAction.Imported => isProject ? "Importerade projektet" : "Importerade kalkylen",
             _ => isProject ? "Ändrade projektet" : "Ändrade kalkylen"
         };
 
