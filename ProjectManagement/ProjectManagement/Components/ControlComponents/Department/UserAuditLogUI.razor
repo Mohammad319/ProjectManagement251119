@@ -1,0 +1,114 @@
+@using Microsoft.Extensions.Localization
+@using ProjectManagement.Services.UI
+@using ProjectManagement.Shared
+@inherits AppComponentBase
+@inject IUserManagementAuditService UserAuditService
+@inject IStringLocalizer<PMWebResource> WebLoc
+
+@* User activity log shown in its own modal (opened from the department toolbar and the
+   all-users view) instead of being permanently rendered at the bottom of the page. *@
+<div class="space-y-2.5">
+    <div class="flex items-start justify-between gap-3">
+        <p class="text-xs text-slate-500 dark:text-slate-400">Senaste administrativa ändringar för företagsanvändare.</p>
+        <button type="button"
+                disabled="@IsLoading"
+                class="inline-flex shrink-0 items-center rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-60 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+                @onclick="LoadAsync">
+            @WebLoc["Refresh"]
+        </button>
+    </div>
+
+    @if (IsLoading)
+    {
+        <MhdLoading />
+    }
+    else if (!string.IsNullOrWhiteSpace(LoadError))
+    {
+        <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
+            @WebLoc["AuditTemporarilyUnavailable"]
+        </div>
+    }
+    else if (Entries.Count == 0)
+    {
+        <div class="rounded-lg border border-dashed border-slate-300 px-4 py-6 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+            @WebLoc["NoAuditEntries"]
+        </div>
+    }
+    else
+    {
+        <div class="max-h-[60vh] overflow-auto rounded-lg border border-slate-200 dark:border-slate-700">
+            <table class="min-w-[820px] w-full text-sm">
+                <thead class="sticky top-0 bg-slate-50 dark:bg-slate-800">
+                    <tr>
+                        <th class="px-3 py-2 text-left text-xs font-semibold text-slate-500 dark:text-slate-400">@WebLoc["AuditAction"]</th>
+                        <th class="px-3 py-2 text-left text-xs font-semibold text-slate-500 dark:text-slate-400">@WebLoc["AuditTarget"]</th>
+                        <th class="px-3 py-2 text-left text-xs font-semibold text-slate-500 dark:text-slate-400">@WebLoc["AuditActor"]</th>
+                        <th class="px-3 py-2 text-left text-xs font-semibold text-slate-500 dark:text-slate-400">@WebLoc["AuditDetails"]</th>
+                        <th class="px-3 py-2 text-left text-xs font-semibold text-slate-500 dark:text-slate-400">@WebLoc["CreatedLabel"]</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                    @foreach (var entry in Entries)
+                    {
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                            <td class="whitespace-nowrap px-3 py-2 font-medium text-slate-800 dark:text-slate-100">@GetActionLabel(entry.Action)</td>
+                            <td class="px-3 py-2 text-slate-700 dark:text-slate-200">@entry.TargetDisplayName</td>
+                            <td class="px-3 py-2 text-slate-600 dark:text-slate-300">@entry.ActorDisplayName</td>
+                            <td class="max-w-sm truncate px-3 py-2 text-slate-500 dark:text-slate-400" title="@entry.Details">@(entry.Details ?? "—")</td>
+                            <td class="whitespace-nowrap px-3 py-2 text-slate-500 dark:text-slate-400">@entry.CreatedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    private IReadOnlyList<UserManagementAuditItem> Entries { get; set; } = [];
+    private bool IsLoading = true;
+    private string? LoadError;
+
+    protected override async Task OnInitializedAsync()
+        => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        IsLoading = true;
+        LoadError = null;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            Entries = await UserAuditService.GetRecentAsync(50);
+        }
+        catch (Exception ex)
+        {
+            Entries = [];
+            LoadError = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private string GetActionLabel(string action) => action switch
+    {
+        "user.created" => WebLoc["AuditUserCreated"].Value,
+        "user.registered" => WebLoc["AuditUserRegistered"].Value,
+        "user.auth-recreated" => WebLoc["AuditAuthRecreated"].Value,
+        "user.updated" => WebLoc["AuditUserUpdated"].Value,
+        "user.unregistered" => WebLoc["AuditUserUnregistered"].Value,
+        "user.deleted" => WebLoc["AuditUserDeleted"].Value,
+        "user.password-reset" => WebLoc["AuditPasswordReset"].Value,
+        "user.locked" => WebLoc["AuditUserLocked"].Value,
+        "user.unlocked" => WebLoc["AuditUserUnlocked"].Value,
+        "user.deactivated" => WebLoc["AuditUserDeactivated"].Value,
+        "user.activated" => WebLoc["AuditUserActivated"].Value,
+        "user.department-changed" => WebLoc["AuditDepartmentChanged"].Value,
+        "user.role-changed" => WebLoc["AuditRoleChanged"].Value,
+        _ => action
+    };
+}

@@ -13,6 +13,7 @@ using ProjectManagement.Shared.DTO.General;
 namespace ProjectManagement.Components.ControlComponents.Department;
 
 using AuthPermissions.Context;
+using ProjectManagement.Client.Shared.SharedComponent;
 using ProjectManagement.Components.Shared;
 
 public partial class UpdateUserUI : AppComponentBase
@@ -32,6 +33,26 @@ public partial class UpdateUserUI : AppComponentBase
     protected bool IsLoading { get; set; } = true;
     protected bool IsSaving { get; set; }
     protected bool IsBusy => IsLoading || IsSaving;
+
+    /// <summary>Selected departments in click order; the first one becomes the user's primary department.</summary>
+    protected List<int> SelectedDepartmentIds { get; } = [];
+    protected int? PrimaryDepartmentId => SelectedDepartmentIds.Count > 0 ? SelectedDepartmentIds[0] : null;
+
+    /// <summary>"Tills vidare": lockout without an end date.</summary>
+    protected bool LockIndefinitely { get; set; }
+
+    protected List<string> ValidationErrors { get; } = [];
+    private readonly Dictionary<string, string> _fieldErrors = new();
+
+    protected string? FieldError(string field)
+        => _fieldErrors.TryGetValue(field, out var message) ? message : null;
+
+    protected IEnumerable<MhdSelectItem<string>> RoleOptions =>
+    [
+        new MhdSelectItem<string> { Value = PMRolesConst.Tenant.Admin, Label = WebLoc["LevelManager"].Value },
+        new MhdSelectItem<string> { Value = PMRolesConst.Tenant.Manger, Label = WebLoc["LevelUser"].Value },
+        new MhdSelectItem<string> { Value = PMRolesConst.Tenant.User, Label = WebLoc["LevelGuest"].Value }
+    ];
 
     protected override async Task OnInitializedAsync()
     {
@@ -62,6 +83,13 @@ public partial class UpdateUserUI : AppComponentBase
                 Role = sourceUser.Role
             };
 
+            // Lockout without an end date is stored as a far-future timestamp.
+            if (Form.LockoutEnd.HasValue && Form.LockoutEnd.Value.Year >= 3000)
+            {
+                LockIndefinitely = true;
+                Form.LockoutEnd = null;
+            }
+
             await InitDefaultsAsync();
         }
         finally
@@ -76,8 +104,8 @@ public partial class UpdateUserUI : AppComponentBase
         if (Form is null)
             return;
 
-        if (!Form.DepartmentId.HasValue && Departments?.Count > 0)
-            Form.DepartmentId = Departments[0].Id;
+        if (Form.DepartmentId.HasValue)
+            SelectedDepartmentIds.Add(Form.DepartmentId.Value);
 
         var resolvedRole = await ResolveExistingRoleAsync();
         Form.Role = !string.IsNullOrWhiteSpace(resolvedRole)
@@ -108,6 +136,38 @@ public partial class UpdateUserUI : AppComponentBase
         return roles.FirstOrDefault();
     }
 
+    protected void OnRoleChanged(string role)
+    {
+        if (Form is null)
+            return;
+
+        Form.Role = role;
+    }
+
+    protected void ToggleDepartment(int departmentId, bool selected)
+    {
+        if (selected)
+        {
+            if (!SelectedDepartmentIds.Contains(departmentId))
+                SelectedDepartmentIds.Add(departmentId);
+        }
+        else
+        {
+            SelectedDepartmentIds.Remove(departmentId);
+        }
+    }
+
+    protected void ToggleIndefinite(bool value)
+    {
+        LockIndefinitely = value;
+
+        if (Form is null)
+            return;
+
+        if (value)
+            Form.LockoutEnd = null;
+    }
+
     protected void ClearLockoutStart()
     {
         if (Form is null) return;
@@ -126,6 +186,44 @@ public partial class UpdateUserUI : AppComponentBase
             await Callback.InvokeAsync(false);
     }
 
+    private static bool IsValidEmail(string email)
+        => System.Net.Mail.MailAddress.TryCreate(email, out var parsed)
+           && parsed.Host.Contains('.');
+
+    /// <summary>Field-level checks with explicit Swedish messages; the DTO carries no annotations.</summary>
+    private bool Validate()
+    {
+        ValidationErrors.Clear();
+        _fieldErrors.Clear();
+
+        if (Form is null)
+            return false;
+
+        void AddError(string field, string message)
+        {
+            ValidationErrors.Add(message);
+            _fieldErrors[field] = message;
+        }
+
+        if (string.IsNullOrWhiteSpace(Form.Firstname))
+            AddError("firstname", "Förnamn är obligatoriskt.");
+
+        if (string.IsNullOrWhiteSpace(Form.Lastname))
+            AddError("lastname", "Efternamn är obligatoriskt.");
+
+        if (string.IsNullOrWhiteSpace(Form.Email))
+            AddError("email", "Email är obligatoriskt.");
+        else if (!IsValidEmail(Form.Email.Trim()))
+            AddError("email", "Email har ogiltigt format.");
+
+        if (string.IsNullOrWhiteSpace(Form.Role))
+            AddError("role", "Roll är obligatorisk.");
+        else if (Form.Role != PMRolesConst.Tenant.Admin && SelectedDepartmentIds.Count == 0)
+            AddError("department", "Minst en avdelning måste väljas.");
+
+        return ValidationErrors.Count == 0;
+    }
+
     protected async Task HandleSubmitAsync()
     {
         if (Form is null)
@@ -138,13 +236,17 @@ public partial class UpdateUserUI : AppComponentBase
         if (IsSaving)
             return;
 
-        if (Form.Role == PMRolesConst.Tenant.Admin)
-            Form.DepartmentId = null;
-        else if (!Form.DepartmentId.HasValue)
+        if (!Validate())
         {
-            MHD.Notifications(ToastType.Danger, false);
+            await InvokeAsync(StateHasChanged);
             return;
         }
+
+        Form.DepartmentId = Form.Role == PMRolesConst.Tenant.Admin ? null : PrimaryDepartmentId;
+
+        // "Tills vidare" — lockout with no end date is stored as a far-future timestamp.
+        if (LockIndefinitely)
+            Form.LockoutEnd = DateTimeOffset.MaxValue;
 
         IsSaving = true;
 

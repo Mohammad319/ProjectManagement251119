@@ -1,0 +1,54 @@
+@using BlazorMHD.UI.Components.Navigation.Tabs
+@using BlazorMHD.UI.Core.Navigation
+@using ProjectManagement.Components.ControlComponents.Template
+
+<MhdTabs Items="@Tabs"
+         @bind-ActiveKey="activeKey"
+         Size="MhdSize.Sm"
+         Class="admin-subtabs flex min-h-0 flex-col"
+         ContentClass="min-h-0 flex-1 overflow-y-auto" />
+
+@code {
+    private string? activeKey;
+    private List<MhdTabItem> Tabs = new();
+
+    protected override void OnInitialized()
+    {
+        Tabs =
+        [
+            new MhdTabItem
+            {
+                Key = "resource-type",
+                Text = CalcResource.resourceType,
+                Content = @<ProjectManagement.Components.ControlComponents.ResourceType.ResourceTypeUI />
+            },
+            new MhdTabItem
+            {
+                Key = "templates",
+                Text = ResourceLoc.templates,
+                Content = @<TemplateIndex />
+            },
+            new MhdTabItem
+            {
+                Key = "calculation-status",
+                Text = CalcResource.calculationStatus,
+                Content = @<ProjectManagement.Components.ControlComponents.Project.Status.IndexUI />
+            },
+            new MhdTabItem
+            {
+                Key = "task-status",
+                Text = ResourceLoc.taskStatus,
+                Content = @<ProjectManagement.Components.ControlComponents.TaskStatus.IndexUI />
+            },
+            new MhdTabItem
+            {
+                Key = "resource-status",
+                Text = CalcResource.resourcesStatus,
+                Content = @<ProjectManagement.Components.ControlComponents.ResourceStatus.IndexUI />
+            }
+        ];
+
+        if (string.IsNullOrWhiteSpace(activeKey) && Tabs.Count > 0)
+            activeKey = Tabs[0].Key;
+    }
+}

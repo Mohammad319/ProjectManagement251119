@@ -1,0 +1,82 @@
+@using Application.Feature.General.DropdownSettings.Commands
+@using Application.Feature.General.DropdownSettings.Queries
+@inherits AppComponentBase
+
+@* "Obligatorisk" toggle for one dropdown category/tab in Admin Settings. The setting applies to
+   the whole dropdown field (the category), never to individual values in the list. *@
+<div class="flex items-center gap-1.5">
+    <label class="inline-flex cursor-pointer select-none items-center gap-1.5 text-sm text-slate-700 dark:text-slate-300">
+        <input @key="_renderKey"
+               type="checkbox"
+               class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-500"
+               checked="@_isRequired"
+               disabled="@_isSaving"
+               @onchange="OnToggleAsync" />
+        <span>Obligatorisk</span>
+    </label>
+    <span class="group relative inline-flex">
+        <svg tabindex="0" role="img"
+             aria-label="@TooltipText"
+             class="h-3.5 w-3.5 cursor-help text-slate-400 outline-none transition-colors hover:text-sky-600 focus-visible:text-sky-600 focus-visible:ring-2 focus-visible:ring-sky-500/40 dark:hover:text-sky-400 dark:focus-visible:text-sky-400"
+             viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span role="tooltip"
+              class="pointer-events-none absolute left-1/2 top-full z-[80] mt-1 w-64 -translate-x-1/2 rounded-md bg-slate-800 px-2.5 py-1.5 text-xs font-normal leading-snug text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 dark:bg-slate-700">
+            @TooltipText
+        </span>
+    </span>
+</div>
+
+@code {
+    private const string TooltipText =
+        "Om detta är aktiverat måste användaren välja ett värde i denna lista innan formuläret kan sparas.";
+
+    /// <summary>Category key from <see cref="DropdownCategoryConst"/>.</summary>
+    [Parameter, EditorRequired] public string Category { get; set; } = string.Empty;
+
+    /// <summary>Whether the list currently has at least one active (visible) value.</summary>
+    [Parameter] public bool HasActiveItems { get; set; }
+
+    private bool _isRequired;
+    private bool _isSaving;
+    private int _renderKey;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var requirements = await Dispatcher.Send(new GetDropdownRequirementsQuery());
+        _isRequired = requirements.TryGetValue(Category, out var isRequired) && isRequired;
+    }
+
+    private async Task OnToggleAsync(ChangeEventArgs e)
+    {
+        var newValue = (bool)(e.Value ?? false);
+
+        if (newValue && !HasActiveItems)
+        {
+            // The @key bump forces the checkbox to re-render unchecked after the user ticked it.
+            _renderKey++;
+            _isRequired = false;
+            MHD.ToastInfo("Listan saknar aktiva värden och kan därför inte göras obligatorisk.", isSuccess: false);
+            return;
+        }
+
+        _isSaving = true;
+        try
+        {
+            var previous = _isRequired;
+            _isRequired = newValue;
+
+            if (!await Dispatcher.Send(new SetDropdownRequirementCommand(Category, newValue)))
+            {
+                _renderKey++;
+                _isRequired = previous;
+                MHD.Notifications(ToastType.Update, false);
+            }
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+}

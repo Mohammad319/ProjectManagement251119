@@ -1089,6 +1089,17 @@
     private StatusListDTO? SelectedStatus =>
         Config?.Statuses.FirstOrDefault(x => x.Id == CalculationUpdate.StatusId);
 
+    // Admin-styrd obligatorisk-validering (Admin Settings → Kalkylstatus → "Obligatorisk"):
+    // when required, an empty selection blocks saving in HandleSubmitAsync.
+    private bool IsCalculationStatusRequired =>
+        Config?.RequiredDropdowns is { } required &&
+        required.TryGetValue(DropdownCategoryConst.CalculationStatus, out var isRequired) &&
+        isRequired;
+
+    private bool HasValidStatusSelection =>
+        CalculationUpdate.StatusId is { } statusId &&
+        Config?.Statuses.Any(status => status.Id == statusId) == true;
+
     private IEnumerable<StatusListDTO> AvailableStatuses =>
         Config?.Statuses is null
             ? []
@@ -1823,6 +1834,12 @@
             // The calculation is locked and nothing changeable remains. Show a clear, specific
             // reason in the dialog instead of the generic "an unexpected error occurred" toast.
             _saveErrorMessage = "Kalkylen är låst och kan inte ändras.";
+            return;
+        }
+
+        if (IsCalculationStatusRequired && !HasValidStatusSelection)
+        {
+            _saveErrorMessage = "Kalkylstatus är obligatorisk.";
             return;
         }
 

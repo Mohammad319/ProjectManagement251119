@@ -7,6 +7,7 @@ using ProjectManagement.Client.Helper;
 using Domain.DTO.User;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Localization;
+using ProjectManagement.Components.Account;
 using ProjectManagement.Services;
 using ProjectManagement.Services.UI;
 using Application.Feature.Identity.Department.Queries;
@@ -36,18 +37,21 @@ public partial class UsersIndex : IAsyncDisposable
 
     [Inject] public ITenantUserService TenantUserService { get; set; } = default!;
     [Inject] public IDepartmentUsersViewService DepartmentUsersViewService { get; set; } = default!;
-    [Inject] public IUserManagementAuditService UserAuditService { get; set; } = default!;
     [Inject] public IStringLocalizer<PMWebResource> WebLoc { get; set; } = default!;
     [Inject] public IJSRuntime JS { get; set; } = default!;
+    [Inject] public IAccountNotificationEmailSender AccountEmailSender { get; set; } = default!;
 
     protected List<TenantUserDto>? Users { get; set; }
     protected bool IsLoading { get; set; } = true;
     protected bool IsBusy { get; set; }
     protected string? LoadError { get; set; }
     protected TenantUserDto? DetailsUser { get; set; }
-    protected IReadOnlyList<UserManagementAuditItem> AuditEntries { get; set; } = [];
-    protected bool IsLoadingAudit { get; set; }
-    protected string? AuditLoadError { get; set; }
+
+    protected const string ActionMenuItemClass =
+        "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:text-slate-200 dark:hover:bg-slate-800";
+
+    protected const string ActionMenuDangerClass =
+        "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-rose-600 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60 dark:text-rose-300 dark:hover:bg-rose-950/40";
 
     private int? _lastDepartmentId;
     private bool _lastWithoutDepartmentOnly;
@@ -291,7 +295,6 @@ public partial class UsersIndex : IAsyncDisposable
 
             if (TenantMaxUsers == 0)
                 TenantMaxUsers = await DepartmentUsersViewService.GetTenantMaxUsersAsync(ct);
-            await LoadAuditAsync(ct);
             DetailsUser = DetailsUser is null ? null : Users.FirstOrDefault(x => x.Id == DetailsUser.Id);
             SelectedIds.Clear();
             InvalidateFilteredUsers();
@@ -316,60 +319,40 @@ public partial class UsersIndex : IAsyncDisposable
         }
     }
 
-    protected async Task RefreshAuditAsync()
-    {
-        if (IsLoadingAudit)
-            return;
-
-        try
-        {
-            IsLoadingAudit = true;
-            await LoadAuditAsync();
-        }
-        finally
-        {
-            IsLoadingAudit = false;
-        }
-    }
-
-    private async Task LoadAuditAsync(CancellationToken ct = default)
-    {
-        try
-        {
-            AuditLoadError = null;
-            AuditEntries = await UserAuditService.GetRecentAsync(50, ct);
-        }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            AuditEntries = [];
-            AuditLoadError = ex.Message;
-        }
-    }
-
-    protected string GetAuditActionLabel(string action) => action switch
-    {
-        "user.created" => WebLoc["AuditUserCreated"].Value,
-        "user.registered" => WebLoc["AuditUserRegistered"].Value,
-        "user.auth-recreated" => WebLoc["AuditAuthRecreated"].Value,
-        "user.updated" => WebLoc["AuditUserUpdated"].Value,
-        "user.unregistered" => WebLoc["AuditUserUnregistered"].Value,
-        "user.deleted" => WebLoc["AuditUserDeleted"].Value,
-        "user.password-reset" => WebLoc["AuditPasswordReset"].Value,
-        "user.locked" => WebLoc["AuditUserLocked"].Value,
-        "user.unlocked" => WebLoc["AuditUserUnlocked"].Value,
-        "user.deactivated" => WebLoc["AuditUserDeactivated"].Value,
-        "user.activated" => WebLoc["AuditUserActivated"].Value,
-        "user.department-changed" => WebLoc["AuditDepartmentChanged"].Value,
-        "user.role-changed" => WebLoc["AuditRoleChanged"].Value,
-        _ => action
-    };
+    /// <summary>Opens the shared user-activity-log component in its own modal (same log as on the department page).</summary>
+    protected void OpenAuditLog()
+        => MHD.Modal.ShowComponent<UserAuditLogUI>(
+            "Användaraktivitetslogg",
+            new Dictionary<string, object>(),
+            MhdDialogSize.ExtraLarge);
 
     protected void ShowDetails(TenantUserDto user) => DetailsUser = user;
     protected void CloseDetails() => DetailsUser = null;
+
+    protected string GetDepartmentName(TenantUserDto user)
+        => user.DepartmentId.HasValue
+            ? DepartmentsList?.FirstOrDefault(d => d.Id == user.DepartmentId.Value)?.Name ?? "—"
+            : "—";
+
+    /// <summary>Same status text as the table's Inloggningsstatus badge.</summary>
+    protected string GetStatusLabel(TenantUserDto user)
+        => !user.IsInAuth ? WebLoc["UserMissingAuth"].Value
+            : IsDeactivated(user) ? WebLoc["StatusInactive"].Value
+            : IsLocked(user) ? WebLoc["Lockout"].Value
+            : IsPending(user) ? WebLoc["InvitePending"].Value
+            : IsStale(user) ? WebLoc["StatusStale"].Value
+            : WebLoc["StatusActive"].Value;
+
+    protected string GetLockoutStatus(TenantUserDto user)
+    {
+        if (!IsLocked(user))
+            return "Inte spärrad";
+
+        // An indefinite lockout ("Tills vidare") is stored as a far-future end date.
+        return user.LockoutEnd!.Value.Year >= 3000
+            ? "Spärrad tills vidare"
+            : $"Spärrad till {FormatDate(user.LockoutEnd)}";
+    }
 
     protected static bool IsLocked(TenantUserDto user)
         => user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow;
@@ -677,6 +660,42 @@ public partial class UsersIndex : IAsyncDisposable
             await MHD.Modal.CloseAsync();
             var ok = await TenantUserService.ResetPasswordAsync(user.IdAuth);
             MHD.Notifications(ToastType.Update, ok);
+        }
+        finally
+        {
+            IsBusy = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    #endregion
+
+    #region Send confirmation email
+
+    protected void AskSendConfirmation(TenantUserDto user)
+    {
+        if (string.IsNullOrWhiteSpace(user.Email))
+        {
+            MHD.Notifications(ToastType.Update, false);
+            return;
+        }
+
+        MHD.MessageYesNo("Skicka bekräftelsemail",
+            $"Vill du skicka ett bekräftelsemail till {user.Email}? Användaren ombeds bekräfta sina uppgifter för att slutföra registreringen.",
+            onYes: EventCallback.Factory.Create(this, () => SendConfirmationAsync(user)));
+    }
+
+    protected async Task SendConfirmationAsync(TenantUserDto user)
+    {
+        if (IsBusy || string.IsNullOrWhiteSpace(user.Email))
+            return;
+
+        IsBusy = true;
+        try
+        {
+            await MHD.Modal.CloseAsync();
+            await AccountEmailSender.SendInvitationConfirmationAsync(user.Email, GetDisplayName(user));
+            MHD.Notifications(ToastType.Update, true);
         }
         finally
         {

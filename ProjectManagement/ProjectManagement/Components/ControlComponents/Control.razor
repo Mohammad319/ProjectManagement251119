@@ -45,9 +45,8 @@
         if (isAdmin)
         {
             AddTab("department", ResourceApp.department, "fa fa-building", @<ProjectManagement.Components.ControlComponents.Department.Index />);
-            AddTab("resourceType", CalcResource.resourceType, "fa fa-cubes", @<ProjectManagement.Components.ControlComponents.ResourceType.ResourceTypeUI />);
             AddTab("project", CalcResource.project, "fa fa-diagram-project", @<ProjectManagement.Components.ControlComponents.Project.ProjectPages.ProjectControl />);
-            AddTab("templates-admin", ResourceLoc.templates, "fa fa-layer-group", @<TemplateIndex />);
+            AddTab("calculation", CalcResource.calculation, "fa fa-calculator", @<ProjectManagement.Components.ControlComponents.Calculation.CalculationControl />);
             AddTab("organisation", ResourceApp.organisation, "fa fa-sitemap", @<ProjectManagement.Components.ControlComponents.Organisation.OrganisationCategory.CategoriesUI />);
         }
 

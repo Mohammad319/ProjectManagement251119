@@ -205,6 +205,15 @@ namespace ProjectManagement.Client.Pages.Project.ProjectPages
                 return;
             }
 
+            // Admin-styrd obligatorisk-validering: en dropdown som markerats som obligatorisk i
+            // Admin Settings måste ha ett giltigt val (tomt/"Välj..." räknas inte) före spar.
+            var missingRequired = GetMissingRequiredDropdowns();
+            if (missingRequired.Count > 0)
+            {
+                _saveErrorMessage = string.Join(" ", missingRequired.Select(label => $"{label} är obligatorisk."));
+                return;
+            }
+
             _isSaving = true;
             SyncProjectStatusName();
             NormalizeResponsibilityFields();
@@ -260,6 +269,35 @@ namespace ProjectManagement.Client.Pages.Project.ProjectPages
             finally
             {
                 _isSaving = false;
+            }
+        }
+
+        // Labels (form-label wording) for the dropdowns whose category is marked required in
+        // Admin Settings but lacks a valid selection. A selection is valid only when it points
+        // at an option that exists in the loaded config list.
+        private List<string> GetMissingRequiredDropdowns()
+        {
+            var missing = new List<string>();
+            var required = Config?.RequiredDropdowns;
+            if (required is null || required.Count == 0)
+                return missing;
+
+            AddIfMissing(DropdownCategoryConst.ProjectStatus, "Projektstatus", ProjectUpdate.StatusId, Config?.ProjectStatuses?.Select(x => x.Id));
+            AddIfMissing(DropdownCategoryConst.ProjectType, CalcResource.projectType, ProjectUpdate.TypeId, Config?.Types?.Select(x => x.Id));
+            AddIfMissing(DropdownCategoryConst.ProcurementMethod, CalcResource.procurementMethods, ProjectUpdate.ProcurementMethodsId, Config?.Methods?.Select(x => x.Id));
+            AddIfMissing(DropdownCategoryConst.Contract, CalcResource.projectContract, ProjectUpdate.ContractId, Config?.Contracts?.Select(x => x.Id));
+            AddIfMissing(DropdownCategoryConst.Compensation, CalcResource.projectCompensation, ProjectUpdate.CompensationId, Config?.Compensations?.Select(x => x.Id));
+            AddIfMissing(DropdownCategoryConst.ProcurementProcedure, "Upphandlingsförfarande", ProjectUpdate.ProcurementProcedureId, Config?.Procedures?.Select(x => x.Id));
+
+            return missing;
+
+            void AddIfMissing(string category, string label, int? selectedId, IEnumerable<int>? validIds)
+            {
+                if (required.TryGetValue(category, out var isRequired) && isRequired &&
+                    (!selectedId.HasValue || validIds?.Contains(selectedId.Value) != true))
+                {
+                    missing.Add(label);
+                }
             }
         }
 

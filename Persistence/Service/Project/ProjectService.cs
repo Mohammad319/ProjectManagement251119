@@ -8,6 +8,7 @@ using Domain.Entities.Project;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Context;
 using Persistence.Factory;
+using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.General;
 using ProjectManagement.Shared.DTO.Project;
 using ProjectManagement.Shared.Enums;
@@ -389,7 +390,11 @@ namespace Persistence.Service.Project
                     .Where(x => x.IsVisible)
                     .OrderBy(x => x.Name)
                     .Select(x => new ListDTO { Id = x.Id, Name = x.Name })
-                    .ToListAsync(ct)
+                    .ToListAsync(ct),
+                RequiredDropdowns = DropdownCategoryConst.MergeWithDefaults(
+                    await context.DropdownSettings
+                        .AsNoTracking()
+                        .ToDictionaryAsync(x => x.Category, x => x.IsRequired, ct))
             };
 
             return result;

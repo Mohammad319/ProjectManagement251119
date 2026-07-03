@@ -173,6 +173,8 @@ public partial class Index
         await ReportExportInterop.ExportExcelAsync(JS, "departments", WebLoc["DepartmentsTitle"].Value, columns, rows);
     }
 
+    // Only resets the in-page view. It must NOT close the modal host: "Tillbaka till
+    // avdelningar" would otherwise close the whole settings window.
     private void BackToList()
     {
         SelectedDepartment = null;
@@ -180,9 +182,14 @@ public partial class Index
         WithoutDepartmentOnly = false;
         Mode = ViewMode.List;
 
-        MHD.Modal.CloseAsync();
         _ = InvokeAsync(StateHasChanged);
     }
+
+    private void OpenAuditLog()
+        => MHD.Modal.ShowComponent<UserAuditLogUI>(
+            "Användaraktivitetslogg",
+            new Dictionary<string, object>(),
+            MhdDialogSize.ExtraLarge);
 
     private void OpenRegisterUser()
     {
@@ -213,11 +220,9 @@ public partial class Index
 
     private void OpenDepartmentModal(DepartmentDetailsDTO department)
     {
-        var departmentText = AppLoc[nameof(ResourceApp.department)];
-
         var title = department.Id > 0
-            ? AppLoc[LocalizerConst.Update, department.Name]
-            : AppLoc[LocalizerConst.New, departmentText];
+            ? AppLoc[LocalizerConst.Update, department.Name].Value
+            : WebLoc["NewDepartment"].Value;
 
         var existingNames = (Departments ?? Enumerable.Empty<DepartmentDetailsDTO>())
             .Where(d => d.Id != department.Id)
@@ -295,6 +300,8 @@ public partial class Index
 
     private async Task OnModalResultAsync(bool isSuccess)
     {
+        await MHD.Modal.CloseAsync();
+
         if (isSuccess)
             await ReloadDepartmentsAsync();
 

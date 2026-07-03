@@ -5,6 +5,7 @@ using Application.Feature.Calculation.Calculation;
 using Application.Feature.Calculation.Resource;
 using Application.Feature.Calculation.Task;
 using Application.Feature.General;
+using Application.Feature.General.DropdownSettings;
 using Application.Feature.General.ListSettings;
 using Application.Feature.Identity.Department;
 using Application.Feature.Offer;
@@ -85,6 +86,7 @@ namespace Persistence.Factory
             services.AddScoped<IDepartmentService, DepartmentService>();
             services.AddScoped<IFolderService, FolderService>();
             services.AddScoped<IUserListSettingService, UserListSettingService>();
+            services.AddScoped<IDropdownSettingService, DropdownSettingService>();
             services.AddScoped<IOfferService, OfferService>();
             services.AddScoped<IOrganisationCategoryService, OrganisationCategoryService>();
             services.AddScoped<IOrganisationService, OrganisationService>();

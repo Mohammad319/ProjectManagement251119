@@ -8,15 +8,15 @@
 else
 {
     <div class="space-y-2">
-        <div class="pm-toolbar sticky top-0 z-10 -mx-2 bg-white px-2 pb-2 pt-1 dark:bg-gray-950">
+        <div class="pm-toolbar sticky top-0 z-10 -mx-2 bg-white px-2 pb-2 pt-1 dark:bg-slate-900">
             <div class="flex items-center gap-2">
                 <button @onclick="CreateNewAsync"
                         class="pm-btn pm-btn-success"
-                        title="+ Lägg till upphandlingsförfarande"
-                        aria-label="+ Lägg till upphandlingsförfarande">
+                        title="Lägg till upphandlingsförfarande"
+                        aria-label="Lägg till upphandlingsförfarande">
                     <span class="flex items-center gap-1.5">
-                        @Icons.Plus2
-                        <span>+ Lägg till upphandlingsförfarande</span>
+                        @((MarkupString)Icons.PlusSVG)
+                        <span>Lägg till upphandlingsförfarande</span>
                     </span>
                 </button>
                 <button @onclick="ToggleVisibleAsync"
@@ -25,6 +25,10 @@ else
                         aria-label="@(IsVisible ? CalcLoc[nameof(CalcResource.showHiddenStatuses)] : CalcLoc[nameof(CalcResource.hideHiddenStatuses)])">
                     @((MarkupString)Icons.GetVisibleIcon(IsVisible))
                 </button>
+                <div class="ml-1 flex items-center border-l border-slate-200 pl-3 dark:border-slate-700">
+                    <DropdownRequiredToggle Category="@DropdownCategoryConst.ProcurementProcedure"
+                                        HasActiveItems="@((Procedures ?? []).Any(x => x.IsVisible))" />
+                </div>
             </div>
             @if (VisibleItems.Count > 0)
             {

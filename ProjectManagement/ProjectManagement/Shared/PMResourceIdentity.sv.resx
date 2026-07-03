@@ -151,10 +151,10 @@
     <value>Lockout</value>
   </data>
   <data name="lockoutEnd" xml:space="preserve">
-    <value>lockout-slut</value>
+    <value>Spärr slutar</value>
   </data>
   <data name="lockoutStart" xml:space="preserve">
-    <value>Utlåsningsstart</value>
+    <value>Spärr startar</value>
   </data>
   <data name="login" xml:space="preserve">
     <value>Logga in</value>
@@ -206,7 +206,7 @@
     <value>Vänligen välj en avdelning</value>
   </data>
   <data name="register" xml:space="preserve">
-    <value>Register</value>
+    <value>Registrera ny användare</value>
   </data>
   <data name="rememberMe" xml:space="preserve">
     <value>Kom ihåg me?</value>

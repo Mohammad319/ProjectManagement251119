@@ -25,8 +25,8 @@
   <data name="DepartmentsDescription" xml:space="preserve"><value>Hantera avdelningar, användare och åtkomststruktur.</value></data>
   <data name="NewDepartment" xml:space="preserve"><value>Ny avdelning</value></data>
   <data name="QuickAction" xml:space="preserve"><value>Snabbåtgärd</value></data>
-  <data name="OpenAllUsers" xml:space="preserve"><value>Öppna alla användare</value></data>
-  <data name="AdminUsersDescription" xml:space="preserve"><value>Visar tenant-användare som inte tillhör någon avdelning.</value></data>
+  <data name="OpenAllUsers" xml:space="preserve"><value>Visa alla användare</value></data>
+  <data name="AdminUsersDescription" xml:space="preserve"><value>Visar användare som inte tillhör någon avdelning.</value></data>
   <data name="AllUsersLabel" xml:space="preserve"><value>Alla tenant-användare</value></data>
   <data name="OpenUsersWithoutDepartment" xml:space="preserve"><value>Öppna användare utan avdelning</value></data>
   <data name="UsersWithoutDepartmentLabel" xml:space="preserve"><value>Utan avdelning</value></data>
@@ -34,7 +34,7 @@
   <data name="OpenUsers" xml:space="preserve"><value>Öppna användare</value></data>
   <data name="NoDepartmentsMessage" xml:space="preserve"><value>Inga avdelningar har skapats ännu.</value></data>
   <data name="DepartmentUsersTitle" xml:space="preserve"><value>Avdelningsanvändare</value></data>
-  <data name="AllTenantUsersTitle" xml:space="preserve"><value>Alla tenant-användare</value></data>
+  <data name="AllTenantUsersTitle" xml:space="preserve"><value>Alla användare</value></data>
   <data name="UsersWithoutDepartmentTitle" xml:space="preserve"><value>Användare utan avdelning</value></data>
   <data name="DepartmentUsersDescription" xml:space="preserve"><value>Granska inloggningsstatus, roller, spärrinformation och användaråtgärder.</value></data>
   <data name="BackToDepartments" xml:space="preserve"><value>Tillbaka till avdelningar</value></data>
@@ -61,12 +61,12 @@
   <data name="CapacityReached" xml:space="preserve"><value>Användargränsen är nådd</value></data>
   <data name="AuditUserDeactivated" xml:space="preserve"><value>Användare inaktiverad</value></data>
   <data name="AuditUserActivated" xml:space="preserve"><value>Användare aktiverad</value></data>
-  <data name="LockoutStart" xml:space="preserve"><value>Spärr start</value></data>
-  <data name="LockoutEnd" xml:space="preserve"><value>Spärr slut</value></data>
+  <data name="LockoutStart" xml:space="preserve"><value>Spärr startar</value></data>
+  <data name="LockoutEnd" xml:space="preserve"><value>Spärr slutar</value></data>
   <data name="Enabled" xml:space="preserve"><value>Aktiverad</value></data>
   <data name="Disabled" xml:space="preserve"><value>Inaktiverad</value></data>
   <data name="NoUsersFound" xml:space="preserve"><value>Inga användare hittades för detta val.</value></data>
-  <data name="RegisterUserHint" xml:space="preserve"><value>Skapa en tenant-användare och dess inloggningskonto i ett steg.</value></data>
+  <data name="RegisterUserHint" xml:space="preserve"><value>Skapa ett användarkonto och koppla användaren till rätt roll och avdelning.</value></data>
   <data name="EditUserHint" xml:space="preserve"><value>Uppdatera profil, avdelningstilldelning och inloggningsbegränsningar.</value></data>
   <data name="CreateDepartmentHint" xml:space="preserve"><value>Skapa en avdelning för att gruppera användare, mappar och projekt.</value></data>
   <data name="EditDepartmentHint" xml:space="preserve"><value>Uppdatera avdelningens namn och beskrivning.</value></data>
@@ -188,15 +188,15 @@
   <data name="DepartmentHead" xml:space="preserve"><value>Avdelningschef</value></data>
   <data name="NoHead" xml:space="preserve"><value>Ingen chef</value></data>
   <data name="LastLogin" xml:space="preserve"><value>Senaste inloggning</value></data>
-  <data name="UserDetails" xml:space="preserve"><value>User details</value></data>
-  <data name="ExportSelected" xml:space="preserve"><value>Export selected</value></data>
-  <data name="DepartmentDetails" xml:space="preserve"><value>Department details</value></data>
-  <data name="CreatedLabel" xml:space="preserve"><value>Created</value></data>
-  <data name="UpdatedLabel" xml:space="preserve"><value>Updated</value></data>
-  <data name="InviteUser" xml:space="preserve"><value>Invite user</value></data>
+  <data name="UserDetails" xml:space="preserve"><value>Användardetaljer</value></data>
+  <data name="ExportSelected" xml:space="preserve"><value>Exportera valda</value></data>
+  <data name="DepartmentDetails" xml:space="preserve"><value>Avdelningsdetaljer</value></data>
+  <data name="CreatedLabel" xml:space="preserve"><value>Skapad</value></data>
+  <data name="UpdatedLabel" xml:space="preserve"><value>Uppdaterad</value></data>
+  <data name="InviteUser" xml:space="preserve"><value>Bjud in användare</value></data>
   <data name="UserSummary" xml:space="preserve"><value>Användaröversikt</value></data>
   <data name="UserAuditLog" xml:space="preserve"><value>Användaraktivitetslogg</value></data>
-  <data name="UserAuditLogDescription" xml:space="preserve"><value>Senaste administrativa ändringar av företagsanvändare.</value></data>
+  <data name="UserAuditLogDescription" xml:space="preserve"><value>Senaste administrativa ändringar för företagsanvändare.</value></data>
   <data name="NoAuditEntries" xml:space="preserve"><value>Ingen användaraktivitet har registrerats ännu.</value></data>
   <data name="AuditTemporarilyUnavailable" xml:space="preserve"><value>Aktivitetsloggen är tillfälligt otillgänglig. Användarhanteringen är fortfarande tillgänglig.</value></data>
   <data name="AuditAction" xml:space="preserve"><value>Åtgärd</value></data>

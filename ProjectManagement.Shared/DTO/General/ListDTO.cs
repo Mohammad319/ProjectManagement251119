@@ -57,5 +57,11 @@ namespace ProjectManagement.Shared.DTO.General
         public List<StatusListDTO> Statuses { get; set; } = [];
         public List<StatusListDTO> ProjectStatuses { get; set; } = [];
         public List<ListDTO> Organisation { get; set; } = [];
+
+        /// <summary>
+        /// IsRequired per dropdown category (keys from DropdownCategoryConst). When a category is
+        /// required, the project/calculation form must have a valid selection before saving.
+        /// </summary>
+        public Dictionary<string, bool> RequiredDropdowns { get; set; } = [];
     }
 }

@@ -52,6 +52,7 @@ public partial class ShardingSingleDbContext
     public DbSet<StatusResourcesEntity> ResourceStatus { get; set; } = default!;
     public DbSet<UserEntity> User { get; set; } = default!;
     public DbSet<UserListSettingEntity> UserListSettings { get; set; } = default!;
+    public DbSet<DropdownSettingEntity> DropdownSettings { get; set; } = default!;
     public DbSet<UserManagementAuditEntity> UserManagementAuditLogs { get; set; } = default!;
     public DbSet<NotificationEntity> Notifications { get; set; } = default!;
     public DbSet<Domain.Entities.ChangeLog.ChangeLogEntity> ChangeLogs { get; set; } = default!;

@@ -12,6 +12,9 @@ public interface IAccountNotificationEmailSender
 {
     Task SendUserCreatedAsync(string email, string? fullName, string? temporaryPassword, bool passwordWasGenerated, CancellationToken ct = default);
     Task SendPasswordChangedNoticeAsync(string email, string? fullName, CancellationToken ct = default);
+
+    /// <summary>Invitation-confirmation email: asks the user to verify their details and finish registration.</summary>
+    Task SendInvitationConfirmationAsync(string email, string? fullName, CancellationToken ct = default);
 }
 
 internal sealed class LocalizedIdentityEmailSender(
@@ -47,6 +50,12 @@ internal sealed class LocalizedIdentityEmailSender(
     public Task SendPasswordChangedNoticeAsync(string email, string? fullName, CancellationToken ct = default)
     {
         var content = BuildPasswordChangedContent(fullName);
+        return SendEmailInternalAsync(email, content.Subject, content.HtmlBody, ct);
+    }
+
+    public Task SendInvitationConfirmationAsync(string email, string? fullName, CancellationToken ct = default)
+    {
+        var content = BuildInvitationConfirmationContent(email, fullName);
         return SendEmailInternalAsync(email, content.Subject, content.HtmlBody, ct);
     }
 
@@ -197,6 +206,33 @@ internal sealed class LocalizedIdentityEmailSender(
 
         englishBody += "<br/>If you did not expect this email, you can ignore it.";
         return ("Your account has been created", BuildShell("Your account has been created", englishBody));
+    }
+
+    private (string Subject, string HtmlBody) BuildInvitationConfirmationContent(string email, string? fullName)
+    {
+        var safeName = HtmlEncoder.Default.Encode(string.IsNullOrWhiteSpace(fullName) ? email : fullName);
+        var appName = HtmlEncoder.Default.Encode(configuration["MailSettings:DisplayName"] ?? "Atacost");
+
+        if (IsSwedish())
+        {
+            var body = $"Hej {safeName},<br/><br/>" +
+                       $"Du har blivit inbjuden till <strong>{appName}</strong>. " +
+                       "Bekräfta dina uppgifter för att slutföra registreringen.<br/><br/>" +
+                       "Logga in med din e-postadress och kontrollera att namn, roll och avdelning stämmer. " +
+                       "Kontakta din administratör om något behöver ändras.<br/><br/>" +
+                       "Om du inte förväntade dig detta meddelande kan du ignorera det.";
+
+            return ($"Du har blivit inbjuden till {appName}", BuildShell($"Du har blivit inbjuden till {appName}", body));
+        }
+
+        var englishBody = $"Hello {safeName},<br/><br/>" +
+                          $"You have been invited to <strong>{appName}</strong>. " +
+                          "Please confirm your details to complete the registration.<br/><br/>" +
+                          "Sign in with your email address and verify that your name, role and department are correct. " +
+                          "Contact your administrator if anything needs to be changed.<br/><br/>" +
+                          "If you did not expect this email, you can ignore it.";
+
+        return ($"You have been invited to {appName}", BuildShell($"You have been invited to {appName}", englishBody));
     }
 
     private (string Subject, string HtmlBody) BuildPasswordChangedContent(string? fullName)
