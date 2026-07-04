@@ -6,6 +6,7 @@ using BlazorMHD.UI.Core.Services;
 using ProjectManagement.Client.Helper;
 using Domain.DTO.User;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.Localization;
 using ProjectManagement.Components.Account;
 using ProjectManagement.Services;
@@ -31,6 +32,24 @@ public partial class UsersIndex : IAsyncDisposable
     private void OnUserColumnResized(MhdColumnWidthChange change)
         => _userColumnWidths[change.ColumnKey] = change.Width;
 
+    /// <summary>Swedish labels for the MhdTable chrome (pagination, search, sort tooltips).</summary>
+    protected Dictionary<string, string> TableLocalization { get; } = new()
+    {
+        ["Prev"] = "Föregående",
+        ["Next"] = "Nästa",
+        ["Page"] = "Sida",
+        ["Of"] = "av",
+        ["RowsPerPage"] = "Rader per sida",
+        ["SearchPlaceholder"] = "Sök...",
+        ["Export"] = "Exportera",
+        ["SelectAll"] = "Markera alla",
+        ["SelectRow"] = "Markera rad",
+        ["NoData"] = "Inga rader",
+        ["Loading"] = "Laddar",
+        ["SortAsc"] = "Sortera stigande",
+        ["SortDesc"] = "Sortera fallande",
+    };
+
     [Parameter] public int? DepartmentId { get; set; }
     [Parameter] public bool WithoutDepartmentOnly { get; set; }
     [Parameter] public EventCallback<bool> OnClickCallback { get; set; }
@@ -46,6 +65,11 @@ public partial class UsersIndex : IAsyncDisposable
     protected bool IsBusy { get; set; }
     protected string? LoadError { get; set; }
     protected TenantUserDto? DetailsUser { get; set; }
+    protected TenantUserDto? ActionMenuUser { get; set; }
+    protected double ActionMenuLeftPx { get; set; } = 16;
+    protected double ActionMenuTopPx { get; set; } = 96;
+    protected string ActionMenuStyle => FormattableString.Invariant(
+        $"left: clamp(1rem, {ActionMenuLeftPx}px, calc(100vw - 21rem)); top: clamp(4rem, {ActionMenuTopPx}px, calc(100vh - 24rem)); max-width: calc(100vw - 2rem);");
 
     protected const string ActionMenuItemClass =
         "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:text-slate-200 dark:hover:bg-slate-800";
@@ -59,8 +83,6 @@ public partial class UsersIndex : IAsyncDisposable
     private CancellationTokenSource? _searchCts;
     private List<TenantUserDto>? _filteredCache;
     private string _searchTerm = string.Empty;
-    private string _roleFilter = string.Empty;
-    private string _statusFilter = string.Empty;
 
     // Filtering / search state
     protected string SearchInput { get; set; } = string.Empty;
@@ -75,33 +97,93 @@ public partial class UsersIndex : IAsyncDisposable
         }
     }
 
-    protected string RoleFilter
-    {
-        get => _roleFilter;
-        set
-        {
-            if (_roleFilter == value) return;
-            _roleFilter = value;
-            InvalidateFilteredUsers();
-        }
-    }
+    // Multi-choice filters. Empty set = no restriction on that dimension.
+    protected HashSet<string> RoleFilters { get; } = new(StringComparer.OrdinalIgnoreCase);
+    protected HashSet<string> StatusFilters { get; } = new(StringComparer.Ordinal);
+    protected HashSet<int> DepartmentFilters { get; } = new();
 
-    protected string StatusFilter
+    // Options carry the DISPLAY label as their value; filtering compares GetRoleName(user).
+    // This is deliberate: both the Guest tier and the separate Viewer role render as "Visare",
+    // so a single "Visare" option must match users of either underlying role (the old
+    // role-value filter only matched TenantGuest and returned nothing for TenantViewer users).
+    protected IReadOnlyList<FilterMultiSelect<string>.Option> RoleFilterOptions =>
+    [
+        new(WebLoc["LevelManager"].Value, WebLoc["LevelManager"].Value),
+        new(WebLoc["LevelUser"].Value, WebLoc["LevelUser"].Value),
+        new(WebLoc["LevelGuest"].Value, WebLoc["LevelGuest"].Value),
+    ];
+
+    // Status filter is deliberately limited to the five states that are distinct and actionable.
+    // "Ansluten" (auth) was dropped as a duplicate of Aktiv, "Inaktiv 90+ dagar" (stale) and
+    // "Användare utan avdelning" (nodept) were removed — the latter now lives in the department filter.
+    protected IReadOnlyList<FilterMultiSelect<string>.Option> StatusFilterOptions =>
+    [
+        new("active", WebLoc["StatusActive"].Value),
+        new("pending", WebLoc["InvitePending"].Value),
+        new("locked", WebLoc["Lockout"].Value),
+        new("inactive", WebLoc["StatusInactive"].Value),
+        new("noauth", WebLoc["UserMissingAuth"].Value),
+    ];
+
+    /// <summary>Sentinel option value in the department filter that matches users with no department.</summary>
+    internal const int NoDepartmentFilterKey = -1;
+
+    // "Användare utan avdelning" is offered first, followed by the real departments.
+    protected IReadOnlyList<FilterMultiSelect<int>.Option> DepartmentFilterOptions =>
+    [
+        new(NoDepartmentFilterKey, WebLoc["UsersWithoutDepartmentLabel"].Value),
+        .. (DepartmentsList ?? [])
+            .Select(d => new FilterMultiSelect<int>.Option(d.Id, d.Name ?? "—")),
+    ];
+
+    // Batch "Flytta till avdelning" dropdown: "none" removes the department, otherwise the id.
+    protected IReadOnlyList<AppSelect<string>.Option> BulkDepartmentOptions =>
+    [
+        new("none", WebLoc["UsersWithoutDepartmentLabel"].Value),
+        .. (DepartmentsList ?? [])
+            .Select(d => new AppSelect<string>.Option(d.Id.ToString(), d.Name ?? "—")),
+    ];
+
+    // Batch "Ändra roll" dropdown.
+    protected IReadOnlyList<AppSelect<string>.Option> BulkRoleOptions =>
+    [
+        new(PMRolesConst.Tenant.Admin, WebLoc["LevelManager"].Value),
+        new(PMRolesConst.Tenant.Manger, WebLoc["LevelUser"].Value),
+        new(PMRolesConst.Tenant.User, WebLoc["LevelGuest"].Value),
+    ];
+
+    /// <summary>Invoked by the filter dropdowns after they mutate a selection set in place.</summary>
+    protected async Task OnFilterChangedAsync()
     {
-        get => _statusFilter;
-        set
-        {
-            if (_statusFilter == value) return;
-            _statusFilter = value;
-            InvalidateFilteredUsers();
-        }
+        InvalidateFilteredUsers();
+        await SaveFilterPreferencesAsync();
+        await InvokeAsync(StateHasChanged);
     }
 
     // Bulk-selection state
     protected HashSet<int> SelectedIds { get; } = new();
     protected List<ListDTO>? DepartmentsList { get; set; }
-    protected int? BulkDepartmentId { get; set; }
+
+    // Batch selectors: "" = not chosen. Dept "none" = remove department, otherwise the id as text.
+    protected string BulkDeptValue { get; set; } = string.Empty;
     protected string BulkRole { get; set; } = string.Empty;
+
+    protected bool BulkMoveChosen => !string.IsNullOrEmpty(BulkDeptValue);
+    protected bool BulkRoleChosen => !string.IsNullOrEmpty(BulkRole);
+
+    /// <summary>Apply is enabled only when exactly one batch action is configured with its value.</summary>
+    protected bool CanApplyBatch => BulkMoveChosen ^ BulkRoleChosen;
+
+    protected async Task ApplyBatchAsync()
+    {
+        if (IsBusy || !CanApplyBatch)
+            return;
+
+        if (BulkMoveChosen)
+            await BulkMoveAsync();
+        else
+            AskBulkRole();
+    }
 
     /// <summary>Accounts considered inactive when their last sign-in is older than this many days.</summary>
     private const int StaleDays = 90;
@@ -122,15 +204,19 @@ public partial class UsersIndex : IAsyncDisposable
     protected bool CapacityReached => ShowCapacity && RegisteredCount >= TenantMaxUsers;
     protected bool CapacityNearLimit => ShowCapacity && !CapacityReached && RegisteredCount >= TenantMaxUsers - 1;
 
-    // Role distribution (constant names map to tiers by position: Admin=Manager, Manger=User, User=Guest).
+    // Role distribution — counted through GetRoleName so the totals match exactly what the
+    // table shows. Note the "Visare" bucket covers BOTH the Guest tier (Tenant.User) and the
+    // separate Viewer role (Tenant.Viewer); the old count only looked at Tenant.User and so
+    // reported 0 for tenants whose viewers are on the Tenant.Viewer role.
     protected int ManagerCount => Users?.Count(x => x.Role == PMRolesConst.Tenant.Admin) ?? 0;
     protected int MemberCount => Users?.Count(x => x.Role == PMRolesConst.Tenant.Manger) ?? 0;
-    protected int GuestCount => Users?.Count(x => x.Role == PMRolesConst.Tenant.User) ?? 0;
+    protected int GuestCount => Users?.Count(x => x.Role is PMRolesConst.Tenant.User or PMRolesConst.Tenant.Viewer) ?? 0;
 
     protected bool HasActiveFilters =>
         !string.IsNullOrWhiteSpace(SearchTerm)
-        || !string.IsNullOrEmpty(RoleFilter)
-        || !string.IsNullOrEmpty(StatusFilter);
+        || RoleFilters.Count > 0
+        || StatusFilters.Count > 0
+        || DepartmentFilters.Count > 0;
 
     protected IReadOnlyList<TenantUserDto> FilteredUsers
         => _filteredCache ??= ComputeFilteredUsers();
@@ -139,21 +225,21 @@ public partial class UsersIndex : IAsyncDisposable
     {
         IEnumerable<TenantUserDto> query = Users ?? Enumerable.Empty<TenantUserDto>();
 
-        if (!string.IsNullOrEmpty(RoleFilter))
-            query = query.Where(u => string.Equals(u.Role, RoleFilter, StringComparison.OrdinalIgnoreCase));
+        if (RoleFilters.Count > 0)
+            query = query.Where(u => RoleFilters.Contains(GetRoleName(u)));
 
-        query = StatusFilter switch
+        // Department filter (OR within the dimension). The sentinel key matches users with no department.
+        if (DepartmentFilters.Count > 0)
         {
-            "active" => query.Where(IsActive),
-            "pending" => query.Where(IsPending),
-            "stale" => query.Where(IsStale),
-            "inactive" => query.Where(IsDeactivated),
-            "auth" => query.Where(u => u.IsInAuth),
-            "noauth" => query.Where(u => !u.IsInAuth),
-            "locked" => query.Where(IsLocked),
-            "nodept" => query.Where(u => !u.DepartmentId.HasValue),
-            _ => query
-        };
+            var includeNoDept = DepartmentFilters.Contains(NoDepartmentFilterKey);
+            query = query.Where(u =>
+                (u.DepartmentId.HasValue && DepartmentFilters.Contains(u.DepartmentId.Value))
+                || (includeNoDept && !u.DepartmentId.HasValue));
+        }
+
+        // Any selected status matches (OR within the dimension).
+        if (StatusFilters.Count > 0)
+            query = query.Where(u => StatusFilters.Any(s => MatchesStatus(u, s)));
 
         if (!string.IsNullOrWhiteSpace(SearchTerm))
         {
@@ -174,13 +260,29 @@ public partial class UsersIndex : IAsyncDisposable
     private static bool MatchesTerm(string? value, string term)
         => !string.IsNullOrEmpty(value) && value.Contains(term, StringComparison.OrdinalIgnoreCase);
 
+    private bool MatchesStatus(TenantUserDto u, string status) => status switch
+    {
+        "active" => IsActive(u),
+        "pending" => IsPending(u),
+        "stale" => IsStale(u),
+        "inactive" => IsDeactivated(u),
+        "auth" => u.IsInAuth,
+        "noauth" => !u.IsInAuth,
+        "locked" => IsLocked(u),
+        "nodept" => !u.DepartmentId.HasValue,
+        _ => true
+    };
+
     protected async Task ClearFilters()
     {
         SearchInput = string.Empty;
         SearchTerm = string.Empty;
-        RoleFilter = string.Empty;
-        StatusFilter = string.Empty;
+        RoleFilters.Clear();
+        StatusFilters.Clear();
+        DepartmentFilters.Clear();
+        InvalidateFilteredUsers();
         await SaveFilterPreferencesAsync();
+        await InvokeAsync(StateHasChanged);
     }
 
     protected async Task HandleSearchInput(ChangeEventArgs args)
@@ -207,7 +309,12 @@ public partial class UsersIndex : IAsyncDisposable
     {
         try
         {
-            var json = System.Text.Json.JsonSerializer.Serialize(new UserFilterPreferences(SearchInput, RoleFilter, StatusFilter));
+            var prefs = new UserFilterPreferences(
+                SearchInput,
+                RoleFilters.ToList(),
+                StatusFilters.ToList(),
+                DepartmentFilters.ToList());
+            var json = System.Text.Json.JsonSerializer.Serialize(prefs);
             await JS.InvokeVoidAsync("localStorage.setItem", FilterStorageKey, json);
         }
         catch (JSException)
@@ -258,8 +365,20 @@ public partial class UsersIndex : IAsyncDisposable
             {
                 SearchInput = saved.Search ?? string.Empty;
                 SearchTerm = SearchInput;
-                RoleFilter = saved.Role ?? string.Empty;
-                StatusFilter = saved.Status ?? string.Empty;
+
+                RoleFilters.Clear();
+                foreach (var r in saved.Roles ?? [])
+                    RoleFilters.Add(r);
+
+                StatusFilters.Clear();
+                foreach (var s in saved.Statuses ?? [])
+                    StatusFilters.Add(s);
+
+                DepartmentFilters.Clear();
+                foreach (var d in saved.Departments ?? [])
+                    DepartmentFilters.Add(d);
+
+                InvalidateFilteredUsers();
                 await InvokeAsync(StateHasChanged);
             }
         }
@@ -296,6 +415,7 @@ public partial class UsersIndex : IAsyncDisposable
             if (TenantMaxUsers == 0)
                 TenantMaxUsers = await DepartmentUsersViewService.GetTenantMaxUsersAsync(ct);
             DetailsUser = DetailsUser is null ? null : Users.FirstOrDefault(x => x.Id == DetailsUser.Id);
+            ActionMenuUser = ActionMenuUser is null ? null : Users.FirstOrDefault(x => x.Id == ActionMenuUser.Id);
             SelectedIds.Clear();
             InvalidateFilteredUsers();
         }
@@ -319,15 +439,66 @@ public partial class UsersIndex : IAsyncDisposable
         }
     }
 
-    /// <summary>Opens the shared user-activity-log component in its own modal (same log as on the department page).</summary>
-    protected void OpenAuditLog()
-        => MHD.Modal.ShowComponent<UserAuditLogUI>(
-            "Användaraktivitetslogg",
-            new Dictionary<string, object>(),
-            MhdDialogSize.ExtraLarge);
+    /// <summary>Registers a new tenant user (moved here from the department toolbar when the tabs were introduced).</summary>
+    protected void OpenRegisterUser()
+    {
+        if (IsBusy)
+            return;
 
-    protected void ShowDetails(TenantUserDto user) => DetailsUser = user;
+        var user = new TenantUserDto();
+        if (DepartmentId is > 0)
+            user.DepartmentId = DepartmentId;
+
+        MHD.Modal.ShowComponent<UpdateUserUI>(
+            "Registrera ny användare",
+            new Dictionary<string, object>
+            {
+                [nameof(UpdateUserUI.UserForm)] = user,
+                [nameof(UpdateUserUI.DepartmentId)] = DepartmentId ?? 0,
+                [nameof(UpdateUserUI.Callback)] = EventCallback.Factory.Create<bool>(this, OnEditUserResultAsync),
+            },
+            MhdDialogSize.ExtraLarge,
+            DialogButtonsHelper.CreateSaveCancelButtons(UpdateUserUI.DialogFormId));
+    }
+
+    protected void ShowDetails(TenantUserDto user)
+    {
+        CloseActionMenu();
+        DetailsUser = user;
+    }
+
     protected void CloseDetails() => DetailsUser = null;
+
+    protected void ToggleActionMenu(TenantUserDto user, MouseEventArgs args)
+    {
+        if (ActionMenuUser?.Id == user.Id)
+        {
+            CloseActionMenu();
+            return;
+        }
+
+        ActionMenuLeftPx = Math.Max(16, args.ClientX - 8);
+        ActionMenuTopPx = Math.Max(64, args.ClientY + 32);
+        ActionMenuUser = user;
+    }
+
+    protected void CloseActionMenu()
+        => ActionMenuUser = null;
+
+    protected bool IsActionMenuOpen(TenantUserDto user)
+        => ActionMenuUser?.Id == user.Id;
+
+    protected void RunUserAction(TenantUserDto user, Action<TenantUserDto> action)
+    {
+        CloseActionMenu();
+        action(user);
+    }
+
+    protected async Task RunUserActionAsync(TenantUserDto user, Func<TenantUserDto, Task> action)
+    {
+        CloseActionMenu();
+        await action(user);
+    }
 
     protected string GetDepartmentName(TenantUserDto user)
         => user.DepartmentId.HasValue
@@ -376,7 +547,12 @@ public partial class UsersIndex : IAsyncDisposable
     /// <summary>Toggles a summary card's status filter on/off and persists it.</summary>
     protected async Task SetStatusFilter(string status)
     {
-        StatusFilter = string.Equals(StatusFilter, status, StringComparison.Ordinal) ? string.Empty : status;
+        if (string.IsNullOrEmpty(status))
+            StatusFilters.Clear();
+        else if (!StatusFilters.Add(status))
+            StatusFilters.Remove(status);
+
+        InvalidateFilteredUsers();
         await SaveFilterPreferencesAsync();
         await InvokeAsync(StateHasChanged);
     }
@@ -847,11 +1023,16 @@ public partial class UsersIndex : IAsyncDisposable
         if (ids.Count == 0)
             return;
 
+        int? departmentId = string.Equals(BulkDeptValue, "none", StringComparison.Ordinal)
+            ? null
+            : int.TryParse(BulkDeptValue, out var parsed) ? parsed : (int?)null;
+
         IsBusy = true;
         try
         {
-            var count = await TenantUserService.SetDepartmentAsync(ids, BulkDepartmentId);
+            var count = await TenantUserService.SetDepartmentAsync(ids, departmentId);
             MHD.Notifications(ToastType.Update, count > 0);
+            BulkDeptValue = string.Empty;
             await LoadAsync();
         }
         finally
@@ -963,5 +1144,9 @@ public partial class UsersIndex : IAsyncDisposable
         _loadCts?.Dispose();
     }
 
-    private sealed record UserFilterPreferences(string? Search, string? Role, string? Status);
+    private sealed record UserFilterPreferences(
+        string? Search,
+        List<string>? Roles,
+        List<string>? Statuses,
+        List<int>? Departments);
 }

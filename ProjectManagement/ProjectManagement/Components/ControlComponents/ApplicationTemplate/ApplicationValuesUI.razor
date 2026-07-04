@@ -3,8 +3,9 @@
 @using ProjectManagement.Client.Shared.ViewModel
 @using ProjectManagement.Services.UI
 @using ProjectManagement.Shared.Base.Application
+@using ProjectManagement.Shared.DTO.App
 @inherits AppComponentBase
-@attribute [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
+@attribute [Authorize(Roles = PMRolesConst.Tenant.Users)]
 @inject IApplicationValuesViewService ApplicationValuesViewService
 <div class="d-flex justify-content-between mt-1">
     <div>
@@ -39,6 +40,124 @@
             </div>
         </div>
 
+        @if (IsRiskAnalysis)
+        {
+            <div class="mt-3 space-y-2">
+                <div class="flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-800/50">
+                    <button type="button"
+                            class="inline-flex items-center justify-center rounded-md border border-emerald-400 px-3 py-1.5 text-sm font-medium text-emerald-600 transition hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-900/30"
+                            @onclick="AddRiskRow">
+                        + Ny risk
+                    </button>
+                    <input type="search"
+                           class="w-56 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                           placeholder="Sök risk..."
+                           @bind="RiskSearch"
+                           @bind:event="oninput" />
+                    <select class="rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100" @bind="RiskLevelFilter">
+                        <option value="">Alla risknivåer</option>
+                        <option value="Låg">Låg</option>
+                        <option value="Måttlig">Måttlig</option>
+                        <option value="Hög">Hög</option>
+                        <option value="Mycket hög">Mycket hög</option>
+                    </select>
+                    <select class="rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100" @bind="RiskCategoryFilter">
+                        <option value="">Alla kategorier</option>
+                        @foreach (var category in RiskCategories)
+                        {
+                            <option value="@category">@category</option>
+                        }
+                    </select>
+                    <input type="search"
+                           class="w-44 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                           placeholder="Ansvarig..."
+                           @bind="RiskResponsibleFilter"
+                           @bind:event="oninput" />
+                    <select class="rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100" @bind="RiskDoneFilter">
+                        <option value="">Klart / ej klart</option>
+                        <option value="true">Klart</option>
+                        <option value="false">Ej klart</option>
+                    </select>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(RiskValidationMessage))
+                {
+                    <div class="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
+                        @RiskValidationMessage
+                    </div>
+                }
+
+                <div class="max-h-[60vh] overflow-auto rounded-lg border border-slate-200 dark:border-slate-700">
+                    <table class="min-w-[1350px] divide-y divide-slate-200 text-sm dark:divide-slate-700">
+                        <thead class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-800">
+                            <tr>
+                                <th class="px-2 py-2 text-left font-semibold text-slate-600 dark:text-slate-200">Risk</th>
+                                <th class="px-2 py-2 text-left font-semibold text-slate-600 dark:text-slate-200">Konsekvens</th>
+                                <th class="px-2 py-2 text-left font-semibold text-slate-600 dark:text-slate-200"><button type="button" @onclick="SortRiskByCategory">Kategori</button></th>
+                                <th class="px-2 py-2 text-left font-semibold text-slate-600 dark:text-slate-200">Sannolikhet</th>
+                                <th class="px-2 py-2 text-left font-semibold text-slate-600 dark:text-slate-200">Konsekvensvärde</th>
+                                <th class="px-2 py-2 text-left font-semibold text-slate-600 dark:text-slate-200"><button type="button" @onclick="SortRiskByValue">Riskvärde</button></th>
+                                <th class="px-2 py-2 text-left font-semibold text-slate-600 dark:text-slate-200"><button type="button" @onclick="SortRiskByLevel">Risknivå</button></th>
+                                <th class="px-2 py-2 text-left font-semibold text-slate-600 dark:text-slate-200">Riskaktivitet</th>
+                                <th class="px-2 py-2 text-left font-semibold text-slate-600 dark:text-slate-200"><button type="button" @onclick="SortRiskByResponsible">Ansvarig</button></th>
+                                <th class="px-2 py-2 text-left font-semibold text-slate-600 dark:text-slate-200"><button type="button" @onclick="SortRiskByDate">Uppföljningsdatum</button></th>
+                                <th class="px-2 py-2 text-left font-semibold text-slate-600 dark:text-slate-200"><button type="button" @onclick="SortRiskByDone">Klart</button></th>
+                                <th class="px-2 py-2 text-left font-semibold text-slate-600 dark:text-slate-200">Åtgärder</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 bg-white dark:divide-slate-800 dark:bg-slate-900">
+                            @foreach (var risk in FilteredRiskRows)
+                            {
+                                <tr @key="risk.Id" class="align-top hover:bg-slate-50 dark:hover:bg-slate-800/60">
+                                    <td class="px-2 py-2"><textarea class="@RiskTextAreaClass(risk, nameof(risk.Risk))" @bind="risk.Risk"></textarea></td>
+                                    <td class="px-2 py-2"><textarea class="@RiskTextAreaClass(risk, nameof(risk.Consequence))" @bind="risk.Consequence"></textarea></td>
+                                    <td class="px-2 py-2">
+                                        <select class="w-36 rounded-md border border-slate-300 bg-white px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100" @bind="risk.Category">
+                                            @foreach (var category in RiskCategories)
+                                            {
+                                                <option value="@category">@category</option>
+                                            }
+                                        </select>
+                                    </td>
+                                    <td class="px-2 py-2">
+                                        <select class="w-16 rounded-md border border-slate-300 bg-white px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100" @bind="risk.Probability">
+                                            @foreach (var value in RiskScale)
+                                            {
+                                                <option value="@value">@value</option>
+                                            }
+                                        </select>
+                                    </td>
+                                    <td class="px-2 py-2">
+                                        <select class="w-16 rounded-md border border-slate-300 bg-white px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100" @bind="risk.Impact">
+                                            @foreach (var value in RiskScale)
+                                            {
+                                                <option value="@value">@value</option>
+                                            }
+                                        </select>
+                                    </td>
+                                    <td class="px-2 py-2 font-semibold text-slate-800 dark:text-slate-100">@risk.RiskValue</td>
+                                    <td class="px-2 py-2"><span class="@RiskLevelClass(risk.RiskLevel)">@risk.RiskLevel</span></td>
+                                    <td class="px-2 py-2"><textarea class="@RiskTextAreaClass(risk, nameof(risk.RiskActivity))" @bind="risk.RiskActivity"></textarea></td>
+                                    <td class="px-2 py-2"><input class="@RiskInputClass(risk, nameof(risk.Responsible))" @bind="risk.Responsible" /></td>
+                                    <td class="px-2 py-2"><InputDate class="w-36 rounded-md border border-slate-300 bg-white px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100" @bind-Value="risk.FollowUpDate" /></td>
+                                    <td class="px-2 py-2 text-center"><input class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 dark:border-slate-600 dark:bg-slate-800" type="checkbox" @bind="risk.Done" /></td>
+                                    <td class="px-2 py-2">
+                                        <button type="button"
+                                                class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-red-300 bg-red-50 text-red-600 transition hover:bg-red-100 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300"
+                                                title="Ta bort risk"
+                                                @onclick="() => RemoveRiskRow(risk)">
+                                            @((MarkupString)Icons.DeleteSVG)
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+        else
+        {
         @foreach (var row in Application.Data.Row)
         {
             <div style="display:flex;@row.StyleRow">
@@ -81,6 +200,7 @@
                     }
             </div>
         }
+        }
 
         <button type="submit" class="inline-flex items-center justify-center rounded-md border border-emerald-400 px-3 py-1.5 text-sm font-medium text-emerald-600 transition hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-900/30 mt-1">@ResourceApp.save</button>
     </EditForm>
@@ -88,9 +208,61 @@
 @code {
     private List<ApplicationModel> Applications = [];
     private ApplicationModel? Application { get; set; }
+    private string RiskSearch { get; set; } = string.Empty;
+    private string RiskLevelFilter { get; set; } = string.Empty;
+    private string RiskCategoryFilter { get; set; } = string.Empty;
+    private string RiskResponsibleFilter { get; set; } = string.Empty;
+    private string RiskDoneFilter { get; set; } = string.Empty;
+    private string RiskSortColumn { get; set; } = "value";
+    private bool RiskSortDescending { get; set; } = true;
+    private string RiskValidationMessage { get; set; } = string.Empty;
+    private static readonly IReadOnlyList<int> RiskScale = [1, 2, 3, 4, 5];
+    private static readonly IReadOnlyList<string> RiskCategories = SelfInspectionStandardTemplates.GetRiskCategories();
+    private bool IsRiskAnalysis => Application?.Data.TemplateType == SelfInspectionTemplateTypes.RiskAnalysis;
 
     [Parameter] public ApplicationValuesModel ApplicationValues { get; set; } = new();
     [Parameter] public EventCallback<ApplicationValuesModel> CallbackUpdate { get; set; }
+
+    private IEnumerable<RiskAnalysisRowData> FilteredRiskRows
+    {
+        get
+        {
+            var query = ApplicationValues.Data.RiskRows.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(RiskSearch))
+            {
+                query = query.Where(x =>
+                    Contains(x.Risk, RiskSearch) ||
+                    Contains(x.Consequence, RiskSearch) ||
+                    Contains(x.RiskActivity, RiskSearch) ||
+                    Contains(x.Comment, RiskSearch));
+            }
+
+            if (!string.IsNullOrWhiteSpace(RiskLevelFilter))
+                query = query.Where(x => string.Equals(x.RiskLevel, RiskLevelFilter, StringComparison.OrdinalIgnoreCase));
+
+            if (!string.IsNullOrWhiteSpace(RiskCategoryFilter))
+                query = query.Where(x => string.Equals(x.Category, RiskCategoryFilter, StringComparison.OrdinalIgnoreCase));
+
+            if (!string.IsNullOrWhiteSpace(RiskResponsibleFilter))
+                query = query.Where(x => Contains(x.Responsible, RiskResponsibleFilter));
+
+            if (bool.TryParse(RiskDoneFilter, out var done))
+                query = query.Where(x => x.Done == done);
+
+            query = RiskSortColumn switch
+            {
+                "level" => RiskSortDescending ? query.OrderByDescending(RiskLevelWeight) : query.OrderBy(RiskLevelWeight),
+                "category" => RiskSortDescending ? query.OrderByDescending(x => x.Category) : query.OrderBy(x => x.Category),
+                "responsible" => RiskSortDescending ? query.OrderByDescending(x => x.Responsible) : query.OrderBy(x => x.Responsible),
+                "date" => RiskSortDescending ? query.OrderByDescending(x => x.FollowUpDate) : query.OrderBy(x => x.FollowUpDate),
+                "done" => RiskSortDescending ? query.OrderByDescending(x => x.Done) : query.OrderBy(x => x.Done),
+                _ => RiskSortDescending ? query.OrderByDescending(x => x.RiskValue) : query.OrderBy(x => x.RiskValue)
+            };
+
+            return query;
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -115,6 +287,8 @@
                 return;
 
             ApplyDefaultValues(Application);
+            if (IsRiskAnalysis && ApplicationValues.Data.RiskRows.Count == 0)
+                AddRiskRow();
         }
     }
 
@@ -190,13 +364,24 @@
         if (Application is null)
             return;
 
-        ApplicationValues.Data.Attributes = new Dictionary<Guid, string>();
-        foreach (var attr in Application.Data.Row.SelectMany(x => x.Attributes ?? []))
+        if (IsRiskAnalysis)
         {
-            if (attr.AttributeType == AttributeType.Bool)
-                attr.Value = (attr.ValueBool ?? false).ToString();
+            if (!ValidateRiskRows())
+                return;
 
-            ApplicationValues.Data.Attributes[attr.ID] = attr.Value ?? string.Empty;
+            ApplicationValues.Data.RiskRows = ApplicationValues.Data.RiskRows.Select(x => x.Clone()).ToList();
+            ApplicationValues.Data.Attributes = [];
+        }
+        else
+        {
+            ApplicationValues.Data.Attributes = new Dictionary<Guid, string>();
+            foreach (var attr in Application.Data.Row.SelectMany(x => x.Attributes ?? []))
+            {
+                if (attr.AttributeType == AttributeType.Bool)
+                    attr.Value = (attr.ValueBool ?? false).ToString();
+
+                ApplicationValues.Data.Attributes[attr.ID] = attr.Value ?? string.Empty;
+            }
         }
 
         ApplicationValues.ApplicationId = Application.Id;
@@ -214,4 +399,93 @@
         if (await ApplicationValuesViewService.UpdateAsync(ApplicationValues))
             await CallbackUpdate.InvokeAsync(ApplicationValues);
     }
+
+    private void AddRiskRow()
+    {
+        ApplicationValues.Data.RiskRows.Add(new RiskAnalysisRowData
+        {
+            Category = RiskCategories.FirstOrDefault() ?? string.Empty,
+            Probability = 1,
+            Impact = 1
+        });
+    }
+
+    private void RemoveRiskRow(RiskAnalysisRowData row)
+    {
+        ApplicationValues.Data.RiskRows.Remove(row);
+    }
+
+    private void SetRiskSort(string column)
+    {
+        if (RiskSortColumn == column)
+            RiskSortDescending = !RiskSortDescending;
+        else
+        {
+            RiskSortColumn = column;
+            RiskSortDescending = column is "value" or "level";
+        }
+    }
+
+    private void SortRiskByCategory() => SetRiskSort("category");
+    private void SortRiskByValue() => SetRiskSort("value");
+    private void SortRiskByLevel() => SetRiskSort("level");
+    private void SortRiskByResponsible() => SetRiskSort("responsible");
+    private void SortRiskByDate() => SetRiskSort("date");
+    private void SortRiskByDone() => SetRiskSort("done");
+
+    private bool ValidateRiskRows()
+    {
+        RiskValidationMessage = string.Empty;
+        var invalidRows = ApplicationValues.Data.RiskRows
+            .Where(x => string.IsNullOrWhiteSpace(x.Risk)
+                || x.Probability is < 1 or > 5
+                || x.Impact is < 1 or > 5
+                || (x.RequiresAction && (string.IsNullOrWhiteSpace(x.RiskActivity) || string.IsNullOrWhiteSpace(x.Responsible))))
+            .ToList();
+
+        if (invalidRows.Count == 0)
+            return true;
+
+        RiskValidationMessage = "Risk, sannolikhet och konsekvensvärde är obligatoriska. Hög och mycket hög risk kräver riskaktivitet och ansvarig.";
+        return false;
+    }
+
+    private static bool Contains(string? value, string search)
+        => !string.IsNullOrWhiteSpace(value)
+           && value.Contains(search, StringComparison.OrdinalIgnoreCase);
+
+    private static int RiskLevelWeight(RiskAnalysisRowData row) => row.RiskValue switch
+    {
+        <= 4 => 1,
+        <= 9 => 2,
+        <= 15 => 3,
+        _ => 4
+    };
+
+    private static string RiskLevelClass(string level) => level switch
+    {
+        "Låg" => "inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300",
+        "Måttlig" => "inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300",
+        "Hög" => "inline-flex rounded-full bg-orange-50 px-2 py-0.5 text-xs font-semibold text-orange-700 dark:bg-orange-950/40 dark:text-orange-300",
+        _ => "inline-flex rounded-full bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-700 dark:bg-red-950/40 dark:text-red-300"
+    };
+
+    private static string RiskTextAreaClass(RiskAnalysisRowData row, string field)
+    {
+        var missingRequired = field == nameof(row.Risk) && string.IsNullOrWhiteSpace(row.Risk);
+        var missingAction = row.RequiresAction && field == nameof(row.RiskActivity) && string.IsNullOrWhiteSpace(row.RiskActivity);
+        return RiskFieldClass(missingRequired || missingAction, "h-16 w-44 resize-y");
+    }
+
+    private static string RiskInputClass(RiskAnalysisRowData row, string field)
+    {
+        var missingResponsible = row.RequiresAction && field == nameof(row.Responsible) && string.IsNullOrWhiteSpace(row.Responsible);
+        return RiskFieldClass(missingResponsible, "w-36");
+    }
+
+    private static string RiskFieldClass(bool invalid, string sizeClass)
+        => $"{sizeClass} rounded-md border bg-white px-2 py-1 text-sm text-slate-800 shadow-sm focus:outline-none focus:ring-2 dark:bg-slate-900 dark:text-slate-100 " +
+           (invalid
+               ? "border-red-300 focus:border-red-400 focus:ring-red-200 dark:border-red-700 dark:focus:ring-red-900"
+               : "border-slate-300 focus:border-sky-400 focus:ring-sky-200 dark:border-slate-600 dark:focus:border-sky-500 dark:focus:ring-sky-900");
 }

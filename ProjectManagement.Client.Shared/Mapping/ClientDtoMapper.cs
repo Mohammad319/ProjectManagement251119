@@ -426,6 +426,11 @@ namespace ProjectManagement.Client.Shared.Mapping
                 Data = new ApplicationDataModel
                 {
                     Description = dto.Data?.Description ?? string.Empty,
+                    TemplateType = dto.Data?.TemplateType ?? SelfInspectionTemplateTypes.Checklist,
+                    Purpose = dto.Data?.Purpose ?? string.Empty,
+                    IsSystemTemplate = dto.Data?.IsSystemTemplate ?? false,
+                    SystemTemplateKey = dto.Data?.SystemTemplateKey ?? string.Empty,
+                    CopiedFromSystemTemplateKey = dto.Data?.CopiedFromSystemTemplateKey ?? string.Empty,
                     Row = dto.Data?.Rows?.Select(ToRowModel).ToList() ?? []
                 }
             };
@@ -482,6 +487,11 @@ namespace ProjectManagement.Client.Shared.Mapping
                 Data = new ApplicationDataDTO
                 {
                     Description = model.Data?.Description ?? string.Empty,
+                    TemplateType = model.Data?.TemplateType ?? SelfInspectionTemplateTypes.Checklist,
+                    Purpose = model.Data?.Purpose ?? string.Empty,
+                    IsSystemTemplate = model.Data?.IsSystemTemplate ?? false,
+                    SystemTemplateKey = model.Data?.SystemTemplateKey ?? string.Empty,
+                    CopiedFromSystemTemplateKey = model.Data?.CopiedFromSystemTemplateKey ?? string.Empty,
                     Rows = model.Data?.Row?.Select(ToRowDto).ToList() ?? []
                 }
             };

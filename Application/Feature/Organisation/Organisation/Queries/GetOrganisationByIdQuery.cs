@@ -67,4 +67,28 @@ namespace Application.Feature.Organisation.Organisation.Queries
         public Task<List<ListDTO>> Handle(GetOrganisationsAsListQuery request, CancellationToken ct)
             => service.GetAsListAsync(ct);
     }
+
+    // -------------------------
+    // Flat rows for "Kunder & leverantörer" table (OrganisationRowDTO)
+    // -------------------------
+    public sealed record GetOrganisationRowsQuery(bool IncludeArchived) : IRequest<List<OrganisationRowDTO>>;
+
+    public sealed class GetOrganisationRowsQueryHandler(IOrganisationService service)
+        : IRequestHandler<GetOrganisationRowsQuery, List<OrganisationRowDTO>>
+    {
+        public Task<List<OrganisationRowDTO>> Handle(GetOrganisationRowsQuery request, CancellationToken ct)
+            => service.GetRowsAsync(request.IncludeArchived, ct);
+    }
+
+    // -------------------------
+    // Dubblettkontroll: liknande namn (ListDTO)
+    // -------------------------
+    public sealed record FindSimilarOrganisationsQuery(string Name) : IRequest<List<ListDTO>>;
+
+    public sealed class FindSimilarOrganisationsQueryHandler(IOrganisationService service)
+        : IRequestHandler<FindSimilarOrganisationsQuery, List<ListDTO>>
+    {
+        public Task<List<ListDTO>> Handle(FindSimilarOrganisationsQuery request, CancellationToken ct)
+            => service.FindSimilarByNameAsync(request.Name, ct);
+    }
 }

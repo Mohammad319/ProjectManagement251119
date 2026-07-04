@@ -1,21 +1,36 @@
 @using Microsoft.Extensions.Localization
 @using ProjectManagement.Services.UI
 @using ProjectManagement.Shared
+@using ProjectManagement.Shared.Constant
+@using ProjectManagement.Shared.DTO.General
+@using Application.Feature.Identity.Department.Queries
 @inherits AppComponentBase
+@implements IDisposable
 @inject IUserManagementAuditService UserAuditService
 @inject IStringLocalizer<PMWebResource> WebLoc
 
-@* User activity log shown in its own modal (opened from the department toolbar and the
-   all-users view) instead of being permanently rendered at the bottom of the page. *@
-<div class="space-y-2.5">
-    <div class="flex items-start justify-between gap-3">
-        <p class="text-xs text-slate-500 dark:text-slate-400">Senaste administrativa ändringar för företagsanvändare.</p>
-        <button type="button"
-                disabled="@IsLoading"
-                class="inline-flex shrink-0 items-center rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-60 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
-                @onclick="LoadAsync">
-            @WebLoc["Refresh"]
-        </button>
+@* User activity log rendered as the Aktivitetslogg tab under "Avdelningar & användare". *@
+<div class="flex h-full min-h-0 flex-col gap-2 p-0.5">
+    <div class="flex shrink-0 items-start justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div>
+            <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Aktivitetslogg</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Senaste administrativa ändringar för företagsanvändare.</p>
+        </div>
+        <div class="flex shrink-0 items-center gap-2">
+            @if (_justRefreshed)
+            {
+                <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+                    <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                    Uppdaterat!
+                </span>
+            }
+            <button type="button"
+                    disabled="@IsLoading"
+                    class="inline-flex shrink-0 items-center rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-60 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+                    @onclick="RefreshAsync">
+                @WebLoc["Refresh"]
+            </button>
+        </div>
     </div>
 
     @if (IsLoading)
@@ -36,26 +51,48 @@
     }
     else
     {
-        <div class="max-h-[60vh] overflow-auto rounded-lg border border-slate-200 dark:border-slate-700">
-            <table class="min-w-[820px] w-full text-sm">
-                <thead class="sticky top-0 bg-slate-50 dark:bg-slate-800">
+        @* Only the log rows scroll; the header stays pinned. *@
+        <div class="min-h-0 flex-1 overflow-auto rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+            <table class="w-full min-w-[720px] border-separate border-spacing-0 text-sm">
+                <thead class="sticky top-0 z-10">
                     <tr>
-                        <th class="px-3 py-2 text-left text-xs font-semibold text-slate-500 dark:text-slate-400">@WebLoc["AuditAction"]</th>
-                        <th class="px-3 py-2 text-left text-xs font-semibold text-slate-500 dark:text-slate-400">@WebLoc["AuditTarget"]</th>
-                        <th class="px-3 py-2 text-left text-xs font-semibold text-slate-500 dark:text-slate-400">@WebLoc["AuditActor"]</th>
-                        <th class="px-3 py-2 text-left text-xs font-semibold text-slate-500 dark:text-slate-400">@WebLoc["AuditDetails"]</th>
-                        <th class="px-3 py-2 text-left text-xs font-semibold text-slate-500 dark:text-slate-400">@WebLoc["CreatedLabel"]</th>
+                        <th class="@HeaderClass">
+                            <button type="button" class="inline-flex items-center gap-1 hover:text-slate-700 dark:hover:text-slate-200" @onclick="() => SortBy(AuditSortColumn.Time)">
+                                Tidpunkt @(SortArrow(AuditSortColumn.Time))
+                            </button>
+                        </th>
+                        <th class="@HeaderClass">
+                            <button type="button" class="inline-flex items-center gap-1 hover:text-slate-700 dark:hover:text-slate-200" @onclick="() => SortBy(AuditSortColumn.Action)">
+                                Åtgärd @(SortArrow(AuditSortColumn.Action))
+                            </button>
+                        </th>
+                        <th class="@HeaderClass">
+                            <button type="button" class="inline-flex items-center gap-1 hover:text-slate-700 dark:hover:text-slate-200" @onclick="() => SortBy(AuditSortColumn.Target)">
+                                Mål @(SortArrow(AuditSortColumn.Target))
+                            </button>
+                        </th>
+                        <th class="@HeaderClass">
+                            <button type="button" class="inline-flex items-center gap-1 hover:text-slate-700 dark:hover:text-slate-200" @onclick="() => SortBy(AuditSortColumn.Actor)">
+                                Utförd av @(SortArrow(AuditSortColumn.Actor))
+                            </button>
+                        </th>
+                        <th class="@HeaderClass">
+                            <button type="button" class="inline-flex items-center gap-1 hover:text-slate-700 dark:hover:text-slate-200" @onclick="() => SortBy(AuditSortColumn.Change)">
+                                Ändring @(SortArrow(AuditSortColumn.Change))
+                            </button>
+                        </th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                    @foreach (var entry in Entries)
+                <tbody>
+                    @foreach (var entry in SortedEntries)
                     {
+                        var change = GetChangeText(entry);
                         <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                            <td class="whitespace-nowrap px-3 py-2 font-medium text-slate-800 dark:text-slate-100">@GetActionLabel(entry.Action)</td>
-                            <td class="px-3 py-2 text-slate-700 dark:text-slate-200">@entry.TargetDisplayName</td>
-                            <td class="px-3 py-2 text-slate-600 dark:text-slate-300">@entry.ActorDisplayName</td>
-                            <td class="max-w-sm truncate px-3 py-2 text-slate-500 dark:text-slate-400" title="@entry.Details">@(entry.Details ?? "—")</td>
-                            <td class="whitespace-nowrap px-3 py-2 text-slate-500 dark:text-slate-400">@entry.CreatedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                            <td class="whitespace-nowrap border-b border-slate-100 px-3 py-2 text-slate-500 dark:border-slate-800 dark:text-slate-400">@entry.CreatedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                            <td class="whitespace-nowrap border-b border-slate-100 px-3 py-2 font-medium text-slate-800 dark:border-slate-800 dark:text-slate-100">@GetActionLabel(entry.Action)</td>
+                            <td class="border-b border-slate-100 px-3 py-2 text-slate-700 dark:border-slate-800 dark:text-slate-200">@entry.TargetDisplayName</td>
+                            <td class="border-b border-slate-100 px-3 py-2 text-slate-600 dark:border-slate-800 dark:text-slate-300">@entry.ActorDisplayName</td>
+                            <td class="max-w-sm truncate border-b border-slate-100 px-3 py-2 text-slate-500 dark:border-slate-800 dark:text-slate-400" title="@change">@change</td>
                         </tr>
                     }
                 </tbody>
@@ -65,12 +102,52 @@
 </div>
 
 @code {
+    private enum AuditSortColumn { Time, Action, Target, Actor, Change }
+
+    private const string HeaderClass =
+        "border-b border-slate-200 bg-slate-50 px-3 py-2 text-left text-xs font-semibold text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400";
+
     private IReadOnlyList<UserManagementAuditItem> Entries { get; set; } = [];
+    private Dictionary<int, string> DepartmentNames { get; set; } = [];
     private bool IsLoading = true;
     private string? LoadError;
 
+    private AuditSortColumn SortColumn = AuditSortColumn.Time;
+    private bool SortDescending = true;
+
+    private bool _justRefreshed;
+    private CancellationTokenSource? _statusCts;
+
     protected override async Task OnInitializedAsync()
         => await LoadAsync();
+
+    /// <summary>Reloads the log and shows a short "Uppdaterat!" confirmation next to the button.</summary>
+    private async Task RefreshAsync()
+    {
+        await LoadAsync();
+
+        if (!string.IsNullOrWhiteSpace(LoadError))
+            return;
+
+        // Show "Uppdaterat!" for 10 seconds, then fade it away. No modal for the happy path.
+        _statusCts?.Cancel();
+        _statusCts?.Dispose();
+        _statusCts = new CancellationTokenSource();
+        var token = _statusCts.Token;
+
+        _justRefreshed = true;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            await Task.Delay(TimeSpan.FromSeconds(10), token);
+            _justRefreshed = false;
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (TaskCanceledException)
+        {
+        }
+    }
 
     private async Task LoadAsync()
     {
@@ -80,6 +157,19 @@
 
         try
         {
+            // Department names are needed to translate legacy "Department: <id>" details.
+            try
+            {
+                var departments = await Dispatcher.Send(new GetDepartmentsAsListQuery());
+                DepartmentNames = (departments ?? [])
+                    .Where(d => !string.IsNullOrWhiteSpace(d.Name))
+                    .ToDictionary(d => d.Id, d => d.Name!);
+            }
+            catch
+            {
+                // The log itself is still useful without name resolution.
+            }
+
             Entries = await UserAuditService.GetRecentAsync(50);
         }
         catch (Exception ex)
@@ -93,6 +183,49 @@
             await InvokeAsync(StateHasChanged);
         }
     }
+
+    private IReadOnlyList<UserManagementAuditItem> SortedEntries
+    {
+        get
+        {
+            IEnumerable<UserManagementAuditItem> ordered = SortColumn switch
+            {
+                AuditSortColumn.Action => Order(e => GetActionLabel(e.Action)),
+                AuditSortColumn.Target => Order(e => e.TargetDisplayName ?? string.Empty),
+                AuditSortColumn.Actor => Order(e => e.ActorDisplayName ?? string.Empty),
+                AuditSortColumn.Change => Order(e => GetChangeText(e)),
+                _ => SortDescending
+                    ? Entries.OrderByDescending(e => e.CreatedAtUtc)
+                    : Entries.OrderBy(e => e.CreatedAtUtc),
+            };
+
+            return ordered.ToList();
+        }
+    }
+
+    private IEnumerable<UserManagementAuditItem> Order(Func<UserManagementAuditItem, string> key)
+        => SortDescending
+            ? Entries.OrderByDescending(key, StringComparer.CurrentCultureIgnoreCase)
+            : Entries.OrderBy(key, StringComparer.CurrentCultureIgnoreCase);
+
+    private void SortBy(AuditSortColumn column)
+    {
+        if (SortColumn == column)
+        {
+            SortDescending = !SortDescending;
+        }
+        else
+        {
+            SortColumn = column;
+            // Time defaults to newest-first; text columns default to A→Z.
+            SortDescending = column == AuditSortColumn.Time;
+        }
+    }
+
+    private MarkupString SortArrow(AuditSortColumn column)
+        => SortColumn == column
+            ? (MarkupString)(SortDescending ? "▼" : "▲")
+            : (MarkupString)string.Empty;
 
     private string GetActionLabel(string action) => action switch
     {
@@ -111,4 +244,93 @@
         "user.role-changed" => WebLoc["AuditRoleChanged"].Value,
         _ => action
     };
+
+    /// <summary>
+    /// Human-readable Swedish change text. New entries are already written in Swedish with
+    /// names; legacy entries such as "Role: TenantUser; Department: 3" are translated here so
+    /// no technical role values or department ids ever reach the UI.
+    /// </summary>
+    private string GetChangeText(UserManagementAuditItem entry)
+    {
+        if (string.IsNullOrWhiteSpace(entry.Details))
+            return entry.Action switch
+            {
+                "user.locked" => "Användaren spärrades tills vidare",
+                "user.unlocked" => "Användaren låstes upp",
+                "user.deleted" => "Användaren togs bort",
+                "user.unregistered" => "Inloggningen togs bort",
+                "user.password-reset" => "Nytt tillfälligt lösenord skickades",
+                "user.deactivated" => "Kontot inaktiverades",
+                "user.activated" => "Kontot aktiverades",
+                "user.registered" => "Bekräftelsemail skickades",
+                _ => "—"
+            };
+
+        var parts = entry.Details
+            .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(part => HumanizePart(part, entry.Action))
+            .Where(part => !string.IsNullOrWhiteSpace(part));
+
+        var text = string.Join("; ", parts);
+        return string.IsNullOrWhiteSpace(text) ? "—" : text;
+    }
+
+    private string HumanizePart(string part, string action)
+    {
+        // Role — both the English legacy prefix ("Role:") and the Swedish one ("Roll:").
+        foreach (var prefix in new[] { "Role:", "Roll:" })
+        {
+            if (part.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                var label = RoleLabel(part[prefix.Length..].Trim());
+                return action == "user.role-changed" ? $"Ny roll: {label}" : $"Roll: {label}";
+            }
+        }
+
+        // Department id from the English legacy prefix ("Department: 3" / "Department: None").
+        if (part.StartsWith("Department:", StringComparison.OrdinalIgnoreCase))
+        {
+            var value = part["Department:".Length..].Trim();
+
+            if (string.Equals(value, "None", StringComparison.OrdinalIgnoreCase))
+                return action == "user.department-changed"
+                    ? "Flyttad till Användare utan avdelning"
+                    : "Ingen avdelning";
+
+            var name = int.TryParse(value, out var id) && DepartmentNames.TryGetValue(id, out var resolved)
+                ? resolved
+                : null;
+
+            if (name is null)
+                return "Avdelning ändrad";
+
+            return action == "user.department-changed" ? $"Flyttad till {name}" : $"Ny avdelning: {name}";
+        }
+
+        // Swedish "Avdelning: Kalkyl" (no old value) → clearer "Ny avdelning: Kalkyl".
+        if (part.StartsWith("Avdelning:", StringComparison.OrdinalIgnoreCase))
+        {
+            var value = part["Avdelning:".Length..].Trim();
+            return string.IsNullOrWhiteSpace(value) ? part : $"Ny avdelning: {value}";
+        }
+
+        // Already-Swedish full sentences (e.g. "Flyttad från Ledning till Kalkyl") pass through.
+        return part;
+    }
+
+    /// <summary>Swedish role label for legacy technical role values, matching the rest of the UI.</summary>
+    private static string RoleLabel(string role) => role switch
+    {
+        PMRolesConst.Tenant.Admin => "Admin",
+        PMRolesConst.Tenant.Manger => "Användare",
+        PMRolesConst.Tenant.User => "Visare",
+        PMRolesConst.Tenant.Viewer => "Visare",
+        _ => role
+    };
+
+    public void Dispose()
+    {
+        _statusCts?.Cancel();
+        _statusCts?.Dispose();
+    }
 }

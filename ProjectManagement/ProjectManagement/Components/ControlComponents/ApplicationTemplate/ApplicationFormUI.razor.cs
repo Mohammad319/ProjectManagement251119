@@ -3,6 +3,7 @@ using Application.Feature.Application.Commands;
 using Application.Feature.Identity.Department.Queries;
 using Microsoft.AspNetCore.Components;
 using ProjectManagement.Client.Shared.ResourceFiles.APP;
+using ProjectManagement.Shared.Base.Application;
 using ProjectManagement.Shared.DTO.App;
 using ProjectManagement.Shared.DTO.General;
 
@@ -16,6 +17,12 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
         private List<ListDTO> Departments = [];
         private RowDTO? RowForm;
         private bool IsLoading;
+        private static readonly IReadOnlyList<string> TemplateTypes =
+        [
+            SelfInspectionTemplateTypes.Checklist,
+            SelfInspectionTemplateTypes.Handover,
+            SelfInspectionTemplateTypes.RiskAnalysis
+        ];
 
         protected override async Task OnParametersSetAsync()
         {
@@ -23,6 +30,10 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
 
             ApplicationUpdate.Data ??= new ApplicationDataDTO();
             ApplicationUpdate.Data.Rows ??= [];
+            if (string.IsNullOrWhiteSpace(ApplicationUpdate.Data.TemplateType))
+                ApplicationUpdate.Data.TemplateType = SelfInspectionTemplateTypes.Checklist;
+            if (string.IsNullOrWhiteSpace(ApplicationUpdate.Data.Purpose))
+                ApplicationUpdate.Data.Purpose = ApplicationUpdate.Data.Description ?? string.Empty;
 
             if (ApplicationUpdate.Id == 0 && ApplicationUpdate.DepartmentId <= 0)
             {
@@ -34,10 +45,39 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
 
         private void OpenNewRow() => RowForm = new RowDTO();
 
+        private void OnTemplateTypeChanged(string value)
+        {
+            if (string.Equals(ApplicationUpdate.Data.TemplateType, value, StringComparison.OrdinalIgnoreCase))
+                return;
+
+            var departmentId = ApplicationUpdate.DepartmentId;
+            ApplicationDTO template = value switch
+            {
+                SelfInspectionTemplateTypes.RiskAnalysis => SelfInspectionStandardTemplates.CreateRiskAnalysis(departmentId),
+                SelfInspectionTemplateTypes.Handover => SelfInspectionStandardTemplates.CreateHandover(departmentId),
+                _ => SelfInspectionStandardTemplates.CreateChecklist(departmentId)
+            };
+
+            var keepName = ApplicationUpdate.Name;
+            var keepVisible = ApplicationUpdate.IsVisible;
+            var keepDepartment = ApplicationUpdate.DepartmentId;
+
+            ApplicationUpdate.Data = template.Data;
+            ApplicationUpdate.DepartmentId = keepDepartment;
+            ApplicationUpdate.IsVisible = keepVisible;
+            if (!string.IsNullOrWhiteSpace(keepName))
+                ApplicationUpdate.Name = keepName;
+        }
+
         private async Task HandleSubmitAsync()
         {
             if (IsLoading)
                 return;
+            if (ApplicationUpdate.Data.IsSystemTemplate)
+            {
+                MHD.Notifications(ApplicationUpdate.Id == 0 ? ToastType.Add : ToastType.Update, false);
+                return;
+            }
 
             IsLoading = true;
             var isSuccess = false;
@@ -47,6 +87,7 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
                 ApplicationUpdate.Name = (ApplicationUpdate.Name ?? string.Empty).Trim();
                 ApplicationUpdate.Data ??= new ApplicationDataDTO();
                 ApplicationUpdate.Data.Rows ??= [];
+                ApplicationUpdate.Data.Description = ApplicationUpdate.Data.Purpose ?? ApplicationUpdate.Data.Description ?? string.Empty;
 
                 if (ApplicationUpdate.Id == 0)
                     isSuccess = await Dispatcher.Send(new CreateApplicationCommand(ApplicationUpdate)) > 0;

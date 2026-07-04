@@ -125,66 +125,70 @@ else if (Form is not null)
 
             <!-- Lockout -->
             <div class="rounded-lg border border-slate-200 bg-slate-50/60 p-2.5 dark:border-slate-700 dark:bg-slate-800/40">
-                <div class="mb-2 flex flex-wrap items-center gap-4">
-                    <label class="inline-flex cursor-pointer items-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-200">
-                        <InputCheckbox class="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900"
-                                       @bind-Value="Form.LockoutEnabled"
-                                       disabled="@IsBusy" />
-                        <span>@WebLoc["Lockout"]</span>
-                    </label>
+                <label class="inline-flex cursor-pointer items-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-200">
+                    <InputCheckbox class="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900"
+                                   @bind-Value="Form.LockoutEnabled"
+                                   disabled="@IsBusy" />
+                    <span>Spärrad</span>
+                </label>
 
-                    <label class="inline-flex cursor-pointer items-center gap-1.5 text-xs text-slate-700 dark:text-slate-200">
-                        <input type="checkbox"
-                               class="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900"
-                               checked="@LockIndefinitely"
-                               disabled="@IsBusy"
-                               @onchange="e => ToggleIndefinite((bool)(e.Value ?? false))" />
-                        <span>Tills vidare</span>
-                    </label>
-                </div>
+                @* Spärrinställningar visas endast när kontot är spärrat. *@
+                @if (Form.LockoutEnabled)
+                {
+                    <div class="mt-2 border-t border-slate-200 pt-2 dark:border-slate-700">
+                        <label class="mb-2 inline-flex cursor-pointer items-center gap-1.5 text-xs text-slate-700 dark:text-slate-200">
+                            <input type="checkbox"
+                                   class="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900"
+                                   checked="@LockIndefinitely"
+                                   disabled="@IsBusy"
+                                   @onchange="e => ToggleIndefinite((bool)(e.Value ?? false))" />
+                            <span>Tills vidare</span>
+                        </label>
 
-                <div class="grid gap-2.5 sm:grid-cols-2">
-                    <div>
-                        <label class="mb-0.5 block text-xs font-medium text-slate-700 dark:text-slate-200">Spärr startar</label>
-                        <div class="flex items-center gap-1.5">
-                            <InputDate class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
-                                       @bind-Value="Form.LockoutStart"
-                                       disabled="@IsBusy" />
-                            <button class="inline-flex items-center justify-center rounded-lg border border-rose-300 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300 dark:hover:bg-rose-950/50"
-                                    type="button"
-                                    disabled="@IsBusy"
-                                    title="@AppLoc[nameof(ResourceApp.delete)]"
-                                    @onclick="ClearLockoutStart">
-                                @((MarkupString)Icons.DeleteSVG)
-                            </button>
+                        <div class="grid gap-2.5 sm:grid-cols-2">
+                            <div>
+                                <label class="mb-0.5 block text-xs font-medium text-slate-700 dark:text-slate-200">Spärr startar</label>
+                                <div class="flex items-center gap-1.5">
+                                    <InputDate class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                                               @bind-Value="Form.LockoutStart"
+                                               disabled="@IsBusy" />
+                                    <button class="inline-flex items-center justify-center rounded-lg border border-rose-300 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300 dark:hover:bg-rose-950/50"
+                                            type="button"
+                                            disabled="@IsBusy"
+                                            title="@AppLoc[nameof(ResourceApp.delete)]"
+                                            @onclick="ClearLockoutStart">
+                                        @((MarkupString)Icons.DeleteSVG)
+                                    </button>
+                                </div>
+                            </div>
+
+                            @if (!LockIndefinitely)
+                            {
+                                <div>
+                                    <label class="mb-0.5 block text-xs font-medium text-slate-700 dark:text-slate-200">Spärr slutar</label>
+                                    <div class="flex items-center gap-1.5">
+                                        <InputDate class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                                                   @bind-Value="Form.LockoutEnd"
+                                                   disabled="@IsBusy" />
+                                        <button class="inline-flex items-center justify-center rounded-lg border border-rose-300 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300 dark:hover:bg-rose-950/50"
+                                                type="button"
+                                                disabled="@IsBusy"
+                                                title="@AppLoc[nameof(ResourceApp.delete)]"
+                                                @onclick="ClearLockoutEnd">
+                                            @((MarkupString)Icons.DeleteSVG)
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="flex items-end pb-1 text-[11px] text-slate-500 dark:text-slate-400">
+                                    Användaren är spärrad utan slutdatum.
+                                </div>
+                            }
                         </div>
                     </div>
-
-                    @if (!LockIndefinitely)
-                    {
-                        <div>
-                            <label class="mb-0.5 block text-xs font-medium text-slate-700 dark:text-slate-200">Spärr slutar</label>
-                            <div class="flex items-center gap-1.5">
-                                <InputDate class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
-                                           @bind-Value="Form.LockoutEnd"
-                                           disabled="@IsBusy" />
-                                <button class="inline-flex items-center justify-center rounded-lg border border-rose-300 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300 dark:hover:bg-rose-950/50"
-                                        type="button"
-                                        disabled="@IsBusy"
-                                        title="@AppLoc[nameof(ResourceApp.delete)]"
-                                        @onclick="ClearLockoutEnd">
-                                    @((MarkupString)Icons.DeleteSVG)
-                                </button>
-                            </div>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="flex items-end pb-1 text-[11px] text-slate-500 dark:text-slate-400">
-                            Användaren är spärrad utan slutdatum.
-                        </div>
-                    }
-                </div>
+                }
             </div>
         </EditForm>
 

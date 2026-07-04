@@ -20,12 +20,9 @@
                        disabled="@PostStatus.IsSystemDefault" />
         </div>
 
-        <div class="flex w-20 flex-col gap-1">
-            <label class="pm-label">@Loc[nameof(ResourceLoc.color)]</label>
-            <InputText type="color"
-                       class="h-9 w-full rounded-lg border border-slate-300 bg-white p-1 shadow-sm dark:border-slate-700 dark:bg-slate-950"
-                       @bind-Value="@PostStatus.Color" />
-        </div>
+        <StatusColorPalette @bind-Value="PostStatus.Color"
+                            StatusName="@PostStatus.Name"
+                            Label="@Loc[nameof(ResourceLoc.color)]" />
 
         <label for="taskStatusVisible"
                class="flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 dark:border-slate-700 dark:bg-slate-800/50">

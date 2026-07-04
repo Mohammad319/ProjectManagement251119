@@ -80,6 +80,11 @@ namespace Application.Mapping.App
             return new ApplicationDataDTO
             {
                 Description = entity.Description ?? string.Empty,
+                TemplateType = entity.TemplateType ?? SelfInspectionTemplateTypes.Checklist,
+                Purpose = entity.Purpose ?? string.Empty,
+                IsSystemTemplate = entity.IsSystemTemplate,
+                SystemTemplateKey = entity.SystemTemplateKey ?? string.Empty,
+                CopiedFromSystemTemplateKey = entity.CopiedFromSystemTemplateKey ?? string.Empty,
                 Rows = entity.Rows?.Select(ToDto).ToList() ?? []
             };
         }
@@ -91,6 +96,11 @@ namespace Application.Mapping.App
             return new ApplicationDataEntity
             {
                 Description = dto.Description ?? string.Empty,
+                TemplateType = dto.TemplateType ?? SelfInspectionTemplateTypes.Checklist,
+                Purpose = dto.Purpose ?? string.Empty,
+                IsSystemTemplate = dto.IsSystemTemplate,
+                SystemTemplateKey = dto.SystemTemplateKey ?? string.Empty,
+                CopiedFromSystemTemplateKey = dto.CopiedFromSystemTemplateKey ?? string.Empty,
                 Rows = dto.Rows?.Select(ToEntity).ToList() ?? []
             };
         }

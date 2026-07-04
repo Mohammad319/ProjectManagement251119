@@ -228,4 +228,41 @@ namespace ProjectManagement.Shared.DTO.Organisation
         public string Type { get; set; } = string.Empty;
         public string Contacts { get; set; } = string.Empty;
     }
+
+    /// <summary>
+    /// Flat "Kunder &amp; leverantörer" table row: one company/person with the columns shown in the
+    /// admin list (namn, huvudgrupp, underkategori, kontaktuppgifter, status, senast ändrad).
+    /// <see cref="MainGroup"/> is the top-level category (huvudgrupp) and <see cref="SubCategory"/> the
+    /// child category (underkategori); <see cref="IsUsed"/> is true when the post is referenced by a
+    /// projekt/kalkyl/anbud so the UI offers Arkivera instead of Ta bort.
+    /// </summary>
+    public class OrganisationRowDTO
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+
+        public int? MainGroupId { get; set; }
+        public string MainGroup { get; set; } = string.Empty;
+
+        public int? SubCategoryId { get; set; }
+        public string SubCategory { get; set; } = string.Empty;
+
+        public int? TypeId { get; set; }
+        public string Type { get; set; } = string.Empty;
+
+        public string OrganisationNumber { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Phone { get; set; } = string.Empty;
+        public string City { get; set; } = string.Empty;
+        public string Country { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+
+        /// <summary>false = arkiverad (visas inte som standard i nya val).</summary>
+        public bool IsVisible { get; set; } = true;
+
+        /// <summary>Refererad av projekt/kalkyl/anbud → får inte tas bort, endast arkiveras.</summary>
+        public bool IsUsed { get; set; }
+
+        public DateTime? UpdatedAt { get; set; }
+    }
 }

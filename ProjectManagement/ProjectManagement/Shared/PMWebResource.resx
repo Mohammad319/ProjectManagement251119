@@ -29,7 +29,7 @@
   <data name="AdminUsersDescription" xml:space="preserve"><value>Shows tenant users who do not belong to any department.</value></data>
   <data name="AllUsersLabel" xml:space="preserve"><value>All tenant users</value></data>
   <data name="OpenUsersWithoutDepartment" xml:space="preserve"><value>Open users without a department</value></data>
-  <data name="UsersWithoutDepartmentLabel" xml:space="preserve"><value>Without department</value></data>
+  <data name="UsersWithoutDepartmentLabel" xml:space="preserve"><value>Users without department</value></data>
   <data name="UsersLabel" xml:space="preserve"><value>Users</value></data>
   <data name="OpenUsers" xml:space="preserve"><value>Open users</value></data>
   <data name="NoDepartmentsMessage" xml:space="preserve"><value>No departments have been created yet.</value></data>

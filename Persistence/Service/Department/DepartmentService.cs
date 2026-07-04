@@ -133,7 +133,11 @@ namespace Persistence.Service.Department
                     LastModified = x.UpdatedAt,
                     UsersCount = x.Users.Count,
                     FoldersCount = x.Folders.Count,
-                    ProjectsCount = x.Folders.SelectMany(f => f.FolderProjects).Count()
+                    ProjectsCount = x.Folders.SelectMany(f => f.FolderProjects).Count(),
+                    CalculationsCount = x.Folders
+                        .SelectMany(f => f.FolderProjects)
+                        .SelectMany(p => p.Calculations)
+                        .Count()
                 })
                 .ToListAsync(ct);
         }

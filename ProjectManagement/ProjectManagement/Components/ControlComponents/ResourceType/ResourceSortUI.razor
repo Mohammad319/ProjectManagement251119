@@ -7,11 +7,11 @@
         <div class="flex items-center gap-2">
             <button @onclick="Callback"
                     class="pm-icon-btn"
-                    title="@AppLoc[nameof(ResourceApp.cancel)]">
+                    title="Tillbaka till resurstyp">
                 @((MarkupString)Icons.Back)
             </button>
             <span class="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                Resurssort – @TypeName
+                Resurssort – @TypeName@(ResourceSorts.Count > 0 ? $" ({ResourceSorts.Count})" : "")
             </span>
         </div>
         <div class="flex items-center gap-2">
@@ -24,10 +24,6 @@
                     <span>Lägg till resurssort</span>
                 </span>
             </button>
-            @if (ResourceSorts.Count > 0)
-            {
-                <span class="pm-subtitle">@ResourceSorts.Count</span>
-            }
         </div>
     </div>
 

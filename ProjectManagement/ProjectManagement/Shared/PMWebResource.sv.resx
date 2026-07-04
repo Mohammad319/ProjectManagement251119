@@ -29,7 +29,7 @@
   <data name="AdminUsersDescription" xml:space="preserve"><value>Visar användare som inte tillhör någon avdelning.</value></data>
   <data name="AllUsersLabel" xml:space="preserve"><value>Alla tenant-användare</value></data>
   <data name="OpenUsersWithoutDepartment" xml:space="preserve"><value>Öppna användare utan avdelning</value></data>
-  <data name="UsersWithoutDepartmentLabel" xml:space="preserve"><value>Utan avdelning</value></data>
+  <data name="UsersWithoutDepartmentLabel" xml:space="preserve"><value>Användare utan avdelning</value></data>
   <data name="UsersLabel" xml:space="preserve"><value>Användare</value></data>
   <data name="OpenUsers" xml:space="preserve"><value>Öppna användare</value></data>
   <data name="NoDepartmentsMessage" xml:space="preserve"><value>Inga avdelningar har skapats ännu.</value></data>

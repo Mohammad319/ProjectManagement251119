@@ -38,4 +38,16 @@ namespace Application.Feature.Organisation.Organisation.Commands
         public Task<bool> Handle(DeleteOrganisationCommand request, CancellationToken ct)
             => service.DeleteAsync(request.Id, ct);
     }
+
+    // -------------------------
+    // ARCHIVE / RESTORE (arkivera istället för ta bort)
+    // -------------------------
+    public sealed record ArchiveOrganisationCommand(int Id, bool Archive) : IRequest<bool>;
+
+    public sealed class ArchiveOrganisationCommandHandler(IOrganisationService service)
+        : IRequestHandler<ArchiveOrganisationCommand, bool>
+    {
+        public Task<bool> Handle(ArchiveOrganisationCommand request, CancellationToken ct)
+            => service.SetVisibilityAsync(request.Id, !request.Archive, ct);
+    }
 }

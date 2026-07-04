@@ -187,7 +187,7 @@ public sealed class TenantUserService(
                 localUser.Id,
                 identityUser.Id,
                 DisplayName(request.Firstname, request.Lastname, request.Email),
-                $"Role: {normalizedRole}; Department: {request.DepartmentId?.ToString() ?? "None"}",
+                $"Roll: {TenantRoleLabelSv(normalizedRole)}; Avdelning: {await DepartmentNameAsync(context, request.DepartmentId, ct)}",
                 ct: ct);
             return true;
         }
@@ -250,7 +250,7 @@ public sealed class TenantUserService(
             userEntity.Id,
             authUser.Id,
             DisplayName(tenantUser.Firstname, tenantUser.Lastname, tenantUser.Email),
-            $"Role: {normalizedRole}",
+            $"Roll: {TenantRoleLabelSv(normalizedRole)}",
             ct: ct);
         return true;
     }
@@ -302,6 +302,7 @@ public sealed class TenantUserService(
         await using var context = await dbFactory.CreateDbContextAsync(ct);
 
         var userEntity = await context.User.FirstOrDefaultAsync(x => x.Id == user.Id, ct);
+        var previousDepartmentId = userEntity?.DepartmentId;
         if (userEntity != null)
         {
             IdentityUserSyncHelper.ApplyToLocalUser(
@@ -323,15 +324,52 @@ public sealed class TenantUserService(
             return false;
 
         await userManager.UpdateSecurityStampAsync(oldUser);
+
+        // Build a human-readable change summary in Swedish with department NAMES (never raw ids),
+        // and highlight a department move explicitly (e.g. "Flyttad från Ledning till Kalkyl").
+        var newDepartmentId = user.DepartmentId;
+        var oldDepartmentName = await DepartmentNameAsync(context, previousDepartmentId, ct);
+        var newDepartmentName = await DepartmentNameAsync(context, newDepartmentId, ct);
+
+        var departmentPart = previousDepartmentId == newDepartmentId
+            ? $"Avdelning: {newDepartmentName}"
+            : $"Flyttad från {oldDepartmentName} till {newDepartmentName}";
+
         await auditService.WriteAsync(
             "user.updated",
             user.Id,
             oldUser.Id,
             DisplayName(user.Firstname, user.Lastname, user.Email),
-            $"Role: {normalizedRole}; Department: {user.DepartmentId?.ToString() ?? "None"}",
+            $"Roll: {TenantRoleLabelSv(normalizedRole)}; {departmentPart}",
             ct: ct);
         return true;
     }
+
+    /// <summary>Resolves a department id to its display name (Swedish "Ingen avdelning" when unset).</summary>
+    private static async Task<string> DepartmentNameAsync(
+        Persistence.Context.ShardingSingleDbContext context, int? departmentId, CancellationToken ct)
+    {
+        if (!departmentId.HasValue)
+            return "Ingen avdelning";
+
+        var name = await context.Department
+            .AsNoTracking()
+            .Where(d => d.Id == departmentId.Value)
+            .Select(d => d.Name)
+            .FirstOrDefaultAsync(ct);
+
+        return string.IsNullOrWhiteSpace(name) ? "Ingen avdelning" : name;
+    }
+
+    /// <summary>Swedish label for a tenant role value, matching the UI's role labels.</summary>
+    private static string TenantRoleLabelSv(string? role) => role switch
+    {
+        PMRolesConst.Tenant.Admin => "Admin",
+        PMRolesConst.Tenant.Manger => "Användare",
+        PMRolesConst.Tenant.User => "Visare",
+        PMRolesConst.Tenant.Viewer => "Visare",
+        _ => string.IsNullOrWhiteSpace(role) ? "—" : role
+    };
 
     private async Task<bool> DeleteUserFromAuthAsync(string authId)
     {
@@ -507,6 +545,7 @@ public sealed class TenantUserService(
             user.UserId,
             user.Id,
             DisplayName(user.Firstname, user.Lastname, user.Email),
+            locked ? "Användaren spärrades tills vidare" : "Spärren togs bort",
             ct: ct);
         return true;
     }
@@ -567,6 +606,9 @@ public sealed class TenantUserService(
         if (localUsers.Count == 0)
             return 0;
 
+        // Remember where each user came from so the audit log can say "Flyttad från X till Y".
+        var previousDepartmentIds = localUsers.ToDictionary(x => x.Id, x => x.DepartmentId);
+
         foreach (var localUser in localUsers)
         {
             localUser.SetDepartment(normalizedDepartmentId);
@@ -597,14 +639,20 @@ public sealed class TenantUserService(
         logger.LogInformation(
             "Tenant users moved. TenantId={TenantId} UserCount={UserCount} DepartmentId={DepartmentId}",
             currentTenant.TenantId, localUsers.Count, normalizedDepartmentId);
+        var newDepartmentName = await DepartmentNameAsync(context, normalizedDepartmentId, ct);
         foreach (var localUser in localUsers)
         {
+            var previousDepartmentId = previousDepartmentIds.GetValueOrDefault(localUser.Id);
+            var details = previousDepartmentId == normalizedDepartmentId
+                ? $"Avdelning: {newDepartmentName}"
+                : $"Flyttad från {await DepartmentNameAsync(context, previousDepartmentId, ct)} till {newDepartmentName}";
+
             await auditService.WriteAsync(
                 "user.department-changed",
                 localUser.Id,
                 localUser.ExternalAuthId,
                 DisplayName(localUser.FirstName, localUser.LastName, localUser.Email),
-                $"Department: {normalizedDepartmentId?.ToString() ?? "None"}",
+                details,
                 ct: ct);
         }
         return localUsers.Count;
@@ -626,6 +674,9 @@ public sealed class TenantUserService(
         // Block demoting the last administrator out of the Admin role.
         if (normalizedRole != PMRolesConst.Tenant.Admin && await IsLastTenantAdminAsync(user))
             return false;
+
+        // Read the current role before it changes so the log can say "Roll ändrad från X till Y".
+        var previousRole = (await userManager.GetRolesAsync(user)).FirstOrDefault();
 
         if (!await IdentityUserSyncHelper.EnsureSingleRoleAsync(userManager, user, normalizedRole))
             return false;
@@ -658,12 +709,16 @@ public sealed class TenantUserService(
         logger.LogInformation(
             "Tenant user role changed. TenantId={TenantId} AuthUserId={AuthUserId} Role={Role}",
             currentTenant.TenantId, user.Id, normalizedRole);
+        var previousRoleLabel = TenantRoleLabelSv(previousRole);
+        var newRoleLabel = TenantRoleLabelSv(normalizedRole);
         await auditService.WriteAsync(
             "user.role-changed",
             user.UserId,
             user.Id,
             DisplayName(user.Firstname, user.Lastname, user.Email),
-            $"Role: {normalizedRole}",
+            previousRole is not null && previousRoleLabel != newRoleLabel
+                ? $"Roll ändrad från {previousRoleLabel} till {newRoleLabel}"
+                : $"Roll: {newRoleLabel}",
             ct: ct);
         return true;
     }

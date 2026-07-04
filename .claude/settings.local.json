@@ -394,7 +394,9 @@
       "Bash(curl -sk --max-time 8 -o /dev/null -w \"https 7xxx? trying...\\\\n\" https://localhost:5286/)",
       "Bash(curl -s --max-time 8 -o /dev/null -w \"http 5286 status: %{http_code}\\\\n\" http://localhost:5286/)",
       "Bash(taskkill //PID 7116 //T //F)",
-      "Bash(perl -0pi -e ' *)"
+      "Bash(perl -0pi -e ' *)",
+      "PowerShell(sqlcmd *)",
+      "Bash(grep -o \"min-h-\\\\\\\\\\\\\\\\\\\\[16rem\\\\\\\\\\\\\\\\\\\\]\" /c/Users/Administrator/Desktop/PM/b07/ProjectManagement251119/ProjectManagement/ProjectManagement/wwwroot/css/app.css)"
     ]
   }
 }

@@ -1,22 +1,17 @@
-using Domain.DTO.User;
 using BlazorMHD.UI.Core.Services;
 using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Services.MHDBlazor;
 using ProjectManagement.Client.Shared.Constants;
-using ProjectManagement.Client.Shared.ResourceFiles.APP;
-using ProjectManagement.Shared;
 using Application.Feature.Identity.Department.Commands;
 using Application.Feature.Identity.Department.Queries;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using ProjectManagement.Shared.DTO.Identity;
-using ProjectManagement.Shared.Models.Account;
 using ProjectManagement.Client.Shared.ResourceFiles.Calculation;
-using ProjectManagement.Client.Shared.ResourceFiles;
 
 namespace ProjectManagement.Components.ControlComponents.Department;
 
-public partial class Index
+public partial class DepartmentsTab
 {
     private enum ViewMode
     {
@@ -25,11 +20,30 @@ public partial class Index
         Users = 2
     }
 
-    protected enum DeptSortColumn { Name, Users, Projects }
+    protected enum DeptSortColumn { Name, Users, Projects, Calculations }
 
-    private const int PageSize = 10;
+    protected int PageSize { get; private set; } = 10;
+
+    protected static readonly IReadOnlyList<AppSelect<int>.Option> PageSizeOptions =
+    [
+        new(10, "10"),
+        new(25, "25"),
+        new(50, "50"),
+    ];
+
+    protected void SetPageSize(int size)
+    {
+        if (size <= 0 || size == PageSize)
+            return;
+
+        PageSize = size;
+        CurrentPage = 1;
+    }
 
     [Inject] private IJSRuntime JS { get; set; } = default!;
+
+    /// <summary>Raised when the user clicks the total-users card so the host can switch to the Användare tab.</summary>
+    [Parameter] public EventCallback OnOpenAllUsers { get; set; }
 
     private List<DepartmentDetailsDTO>? Departments;
     private DepartmentDetailsDTO? SelectedDepartment;
@@ -80,6 +94,7 @@ public partial class Index
         {
             DeptSortColumn.Users => d => d.UsersCount,
             DeptSortColumn.Projects => d => d.ProjectsCount,
+            DeptSortColumn.Calculations => d => d.CalculationsCount,
             _ => d => d.Name ?? string.Empty
         };
 
@@ -120,6 +135,7 @@ public partial class Index
 
     protected int TotalUsersCount { get; private set; }
     protected int TotalProjectsCount => Departments?.Sum(d => d.ProjectsCount) ?? 0;
+    protected int TotalCalculationsCount => Departments?.Sum(d => d.CalculationsCount) ?? 0;
     protected bool IsLoadingDepartments { get; private set; }
     protected string? DepartmentLoadError { get; private set; }
 
@@ -158,15 +174,17 @@ public partial class Index
             d.Description,
             d.UsersCount,
             d.ProjectsCount,
+            d.CalculationsCount,
             d.FoldersCount
         });
 
         var columns = new[]
         {
             CalcResource.name,
-            AppLoc[nameof(ResourceLoc.description)].Value,
+            "Intern notering",
             WebLoc["UsersLabel"].Value,
             CalcResource.project,
+            CalcResource.calculation,
             WebLoc["FoldersLabel"].Value
         };
 
@@ -185,38 +203,11 @@ public partial class Index
         _ = InvokeAsync(StateHasChanged);
     }
 
-    private void OpenAuditLog()
-        => MHD.Modal.ShowComponent<UserAuditLogUI>(
-            "Användaraktivitetslogg",
-            new Dictionary<string, object>(),
-            MhdDialogSize.ExtraLarge);
-
-    private void OpenRegisterUser()
-    {
-        var user = new TenantUserDto();
-
-        MHD.Modal.ShowComponent<UpdateUserUI>(
-            PMResourceIdentity.register,
-            new Dictionary<string, object>
-            {
-                [nameof(UpdateUserUI.UserForm)] = user,
-                [nameof(UpdateUserUI.Callback)] = EventCallback.Factory.Create<bool>(this, OnModalResultAsync),
-            },
-            MhdDialogSize.ExtraLarge,
-            DialogButtonsHelper.CreateSaveCancelButtons(UpdateUserUI.DialogFormId));
-    }
-
     private void OpenCreateDepartment()
         => OpenDepartmentModal(new DepartmentDetailsDTO { Id = 0 });
 
     private void OpenEditDepartment(DepartmentDetailsDTO department)
         => OpenDepartmentModal(department);
-
-    private void OpenDepartmentDetails(DepartmentDetailsDTO department)
-    {
-        SelectedDepartment = department;
-        Mode = ViewMode.Details;
-    }
 
     private void OpenDepartmentModal(DepartmentDetailsDTO department)
     {
@@ -240,13 +231,9 @@ public partial class Index
             MhdDialogSize.ExtraLarge);
     }
 
-    private void OpenAllUsers()
-    {
-        SelectedDepartment = null;
-        SelectedDepartmentIdForUsers = null;
-        WithoutDepartmentOnly = false;
-        Mode = ViewMode.Users;
-    }
+    /// <summary>The Användare tab now owns the all-users list; delegate to the tab host.</summary>
+    private async Task OpenAllUsers()
+        => await OnOpenAllUsers.InvokeAsync();
 
     private void OpenUsersWithoutDepartment()
     {

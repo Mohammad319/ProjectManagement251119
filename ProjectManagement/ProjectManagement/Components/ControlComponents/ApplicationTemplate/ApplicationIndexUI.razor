@@ -39,8 +39,12 @@ else
                 <table class="min-w-full divide-y divide-slate-200 overflow-hidden rounded-lg border border-slate-200 text-sm dark:divide-slate-700 dark:border-slate-700">
                     <thead class="bg-slate-50 dark:bg-slate-800/80">
                         <tr>
-                            <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:250px;"></th>
+                            <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:280px;">Åtgärder</th>
                             <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:170px;">@ResourceApp.lastUpdate</th>
+                            <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:170px;">Typ</th>
+                            <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:110px;">Sektioner</th>
+                            <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:140px;">Kontrollpunkter</th>
+                            <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:110px;">Status</th>
                             <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200">@CalcResource.name</th>
                         </tr>
                     </thead>
@@ -52,17 +56,38 @@ else
                                     <div class="flex items-center gap-2">
                                         <button @onclick="() => OpenApplication(application)"
                                                 class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-amber-300 bg-amber-50 text-amber-600 transition hover:bg-amber-100 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-300 dark:hover:bg-amber-900/50"
-                                                type="button">
+                                                type="button"
+                                                title="@(application.Data.IsSystemTemplate ? "Standardmallar kan inte redigeras direkt. Kopiera mallen för att skapa en egen version." : ResourceApp.update)">
                                             @Icons.Edit
+                                        </button>
+                                        <button @onclick="() => CopyApplicationAsync(application)"
+                                                class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-sky-300 bg-sky-50 text-sky-600 transition hover:bg-sky-100 dark:border-sky-700 dark:bg-sky-900/30 dark:text-sky-300 dark:hover:bg-sky-900/50"
+                                                type="button"
+                                                title="Kopiera mall">
+                                            @((MarkupString)Icons.Copy)
                                         </button>
                                         <button @onclick="() => Remove(application)"
                                                 class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-red-300 bg-red-50 text-red-600 transition hover:bg-red-100 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50"
-                                                type="button">
+                                                type="button"
+                                                title="@(application.Data.IsSystemTemplate ? "Standardmallar kan inte tas bort." : ResourceApp.delete)">
                                             @((MarkupString)Icons.DeleteSVG)
                                         </button>
                                     </div>
                                 </td>
                                 <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200">@application.LastUpdate.ToString("dd.MM.yyyy HH.mm")</td>
+                                <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200">@application.Data.TemplateType</td>
+                                <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200">@SectionCount(application)</td>
+                                <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200">@application.Data.Rows.Count</td>
+                                <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200">
+                                    @if (application.Data.IsSystemTemplate)
+                                    {
+                                        <span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">Standardmall</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">Egen mall</span>
+                                    }
+                                </td>
                                 <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200">@application.Name</td>
                             </tr>
                         }
@@ -75,12 +100,18 @@ else
                 {
                     <div class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
                         <div class="text-sm font-semibold text-slate-800 dark:text-slate-100">@application.Name</div>
+                        <div class="mt-1 text-xs text-slate-500 dark:text-slate-400">@application.Data.TemplateType · @(application.Data.IsSystemTemplate ? "Standardmall" : "Egen mall")</div>
                         <div class="mt-1 text-xs text-slate-500 dark:text-slate-400">@ResourceApp.lastUpdate: @application.LastUpdate.ToString("dd.MM.yyyy HH.mm")</div>
                         <div class="mt-2 flex items-center gap-2">
                             <button @onclick="() => OpenApplication(application)"
                                     class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-amber-300 bg-amber-50 text-amber-600 transition hover:bg-amber-100 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-300 dark:hover:bg-amber-900/50"
                                     type="button">
                                 @Icons.Edit
+                            </button>
+                            <button @onclick="() => CopyApplicationAsync(application)"
+                                    class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-sky-300 bg-sky-50 text-sky-600 transition hover:bg-sky-100 dark:border-sky-700 dark:bg-sky-900/30 dark:text-sky-300 dark:hover:bg-sky-900/50"
+                                    type="button">
+                                @((MarkupString)Icons.Copy)
                             </button>
                             <button @onclick="() => Remove(application)"
                                     class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-red-300 bg-red-50 text-red-600 transition hover:bg-red-100 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50"

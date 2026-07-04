@@ -44,10 +44,10 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
         {
             Tabs =
             [
-                new(1, WebLoc[nameof(PMWebResource.BasicInformation)]),
-                new(2, ResourceApp.Assessment),
-                new(3, WebLoc[nameof(PMWebResource.Category)]),
-                new(4, ResourceIdentity.contact),
+                new(1, "Grundinformation"),
+                new(2, "Värdering"),
+                new(3, "Kategori"),
+                new(4, "Kontakter"),
             ];
 
             Categories = await MicroBus.Send(new GetOrganisationCategoryQuery()) ?? [];
@@ -121,7 +121,14 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
             PostCompany.CategoryId = 0;
         }
 
-        private async Task HandleSubmitAsync(EditContext editContext)
+        // Dubblettkontroll: liknande namn som redan finns, plus ett flagga när användaren
+        // uttryckligen valt att skapa ändå.
+        private List<ListDTO>? SimilarOrganisations;
+        private bool DuplicateConfirmed;
+
+        private async Task HandleSubmitAsync(EditContext editContext) => await TrySaveAsync();
+
+        private async Task TrySaveAsync()
         {
             if (IsLoading) return;
 
@@ -129,6 +136,29 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
             if (!string.IsNullOrWhiteSpace(NameValidationError))
                 return;
 
+            // Endast vid nyskapande, och bara tills användaren bekräftat att det är ett annat företag.
+            if (ID == 0 && !DuplicateConfirmed)
+            {
+                var similar = await MicroBus.Send(new FindSimilarOrganisationsQuery(PostCompany.Name)) ?? [];
+                if (similar.Count > 0)
+                {
+                    SimilarOrganisations = similar;
+                    return;
+                }
+            }
+
+            await PersistAsync();
+        }
+
+        private async Task CreateAnywayAsync()
+        {
+            DuplicateConfirmed = true;
+            SimilarOrganisations = null;
+            await PersistAsync();
+        }
+
+        private async Task PersistAsync()
+        {
             IsLoading = true;
             try
             {

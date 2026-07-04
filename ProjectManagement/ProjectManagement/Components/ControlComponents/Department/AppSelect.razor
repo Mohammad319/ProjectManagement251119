@@ -1,0 +1,70 @@
+@typeparam TValue
+@* Compact single-choice dropdown matching the app's filter/batch controls.
+   Uses the same styling and click-outside behaviour as FilterMultiSelect so that
+   no raw browser <select> appears in the admin settings screens. *@
+
+<div class="relative @(FullWidth ? "w-full" : "")">
+    <button type="button"
+            disabled="@Disabled"
+            class="flex h-8 items-center justify-between gap-2 rounded-lg border border-slate-300 bg-white px-2.5 text-left text-xs text-slate-900 shadow-sm outline-none transition hover:bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:hover:bg-slate-800 @(FullWidth ? "w-full" : "min-w-[10rem]")"
+            @onclick="Toggle">
+        <span class="truncate @(HasValue ? "" : "text-slate-500 dark:text-slate-400")">@TriggerLabel</span>
+        <svg class="h-3.5 w-3.5 shrink-0 text-slate-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+    </button>
+
+    @if (_open)
+    {
+        <div class="fixed inset-0 z-[60]" @onclick="Close"></div>
+        <div class="absolute left-0 top-full z-[61] mt-1 max-h-64 w-max min-w-full overflow-auto rounded-lg border border-slate-200 bg-white p-1 shadow-xl ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
+             @onclick:stopPropagation="true">
+            @foreach (var opt in Options)
+            {
+                var selected = EqualityComparer<TValue>.Default.Equals(opt.Value, Value);
+                <button type="button"
+                        class="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition @(selected ? "bg-blue-50 font-medium text-blue-700 dark:bg-blue-950/40 dark:text-blue-300" : "text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800")"
+                        @onclick="() => SelectAsync(opt.Value)">
+                    <span class="flex-1 truncate">@opt.Label</span>
+                    @if (selected)
+                    {
+                        <svg class="h-3.5 w-3.5 shrink-0 text-blue-600 dark:text-blue-300" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                    }
+                </button>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    public sealed record Option(TValue Value, string Label);
+
+    [Parameter, EditorRequired] public IReadOnlyList<Option> Options { get; set; } = [];
+    [Parameter] public TValue? Value { get; set; }
+    [Parameter] public EventCallback<TValue?> ValueChanged { get; set; }
+    [Parameter] public string Placeholder { get; set; } = string.Empty;
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public bool FullWidth { get; set; }
+
+    private bool _open;
+
+    private void Toggle()
+    {
+        if (Disabled) return;
+        _open = !_open;
+    }
+
+    private void Close() => _open = false;
+
+    private bool HasValue => Options.Any(o => EqualityComparer<TValue>.Default.Equals(o.Value, Value));
+
+    private string TriggerLabel
+        => HasValue
+            ? Options.First(o => EqualityComparer<TValue>.Default.Equals(o.Value, Value)).Label
+            : Placeholder;
+
+    private async Task SelectAsync(TValue value)
+    {
+        _open = false;
+        Value = value;
+        await ValueChanged.InvokeAsync(value);
+    }
+}

@@ -1,0 +1,89 @@
+@namespace ProjectManagement.Components.ControlComponents
+
+<div class="flex min-w-[260px] flex-1 flex-col gap-2">
+    <label class="pm-label">@Label</label>
+
+    <div class="grid w-fit grid-cols-6 gap-1.5" role="radiogroup" aria-label="@Label">
+        @foreach (var color in Colors)
+        {
+            var selected = IsSelected(color.Hex);
+
+            <button type="button"
+                    class="@ColorButtonClass(selected)"
+                    style="background-color:@color.Hex"
+                    title="@color.Name"
+                    aria-label="@($"Välj {color.Name}")"
+                    aria-checked="@selected"
+                    role="radio"
+                    @onclick="() => SelectColorAsync(color.Hex)">
+                @if (selected)
+                {
+                    <span class="inline-flex h-4 w-4 items-center justify-center rounded-full bg-white/95 text-slate-900 shadow-sm ring-1 ring-slate-900/10 dark:bg-slate-950/95 dark:text-white">
+                        @((MarkupString)Icons.Check)
+                    </span>
+                }
+            </button>
+        }
+    </div>
+
+    <div class="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-sm dark:border-slate-700 dark:bg-slate-800/50">
+        <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Förhandsvisning:</span>
+        <span class="inline-flex min-w-0 items-center gap-2">
+            <span class="inline-block h-3 w-3 shrink-0 rounded-full border border-slate-200 dark:border-slate-700"
+                  style="background-color:@SelectedColor"></span>
+            <span class="truncate font-medium text-slate-800 dark:text-slate-100">@PreviewName</span>
+        </span>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public EventCallback<string?> ValueChanged { get; set; }
+    [Parameter] public string? StatusName { get; set; }
+    [Parameter] public string Label { get; set; } = "Färg";
+
+    private string SelectedColor => string.IsNullOrWhiteSpace(Value) ? Colors[0].Hex : Value;
+    private string PreviewName => string.IsNullOrWhiteSpace(StatusName) ? "Statusnamn" : StatusName;
+
+    private static readonly IReadOnlyList<PaletteColor> Colors =
+    [
+        new("Grå", "#6B7280"),
+        new("Blå", "#2563EB"),
+        new("Grön", "#16A34A"),
+        new("Gul", "#EAB308"),
+        new("Orange", "#F97316"),
+        new("Röd", "#DC2626"),
+        new("Ljusgrå", "#D1D5DB"),
+        new("Ljusblå", "#93C5FD"),
+        new("Ljusgrön", "#86EFAC"),
+        new("Ljusgul", "#FEF08A"),
+        new("Ljusorange", "#FDBA74"),
+        new("Ljusröd", "#FCA5A5"),
+        new("Lila", "#7C3AED"),
+        new("Turkos", "#14B8A6"),
+        new("Mörkblå", "#1E3A8A"),
+        new("Mörkgrön", "#166534"),
+        new("Brun", "#92400E"),
+        new("Svart", "#111827")
+    ];
+
+    private bool IsSelected(string color) =>
+        string.Equals(SelectedColor, color, StringComparison.OrdinalIgnoreCase);
+
+    private static string ColorButtonClass(bool selected) =>
+        "inline-flex h-8 w-8 items-center justify-center rounded border transition focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-1 focus:ring-offset-white dark:focus:ring-offset-slate-900 " +
+        (selected
+            ? "border-slate-900 ring-2 ring-slate-900 dark:border-white dark:ring-white"
+            : "border-slate-300 hover:scale-105 hover:border-slate-500 dark:border-slate-600 dark:hover:border-slate-300");
+
+    private async Task SelectColorAsync(string color)
+    {
+        if (IsSelected(color) && !string.IsNullOrWhiteSpace(Value))
+            return;
+
+        Value = color;
+        await ValueChanged.InvokeAsync(color);
+    }
+
+    private sealed record PaletteColor(string Name, string Hex);
+}

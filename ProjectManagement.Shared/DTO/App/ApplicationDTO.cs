@@ -49,6 +49,11 @@ namespace ProjectManagement.Shared.DTO.App
             return new ApplicationDataDTO
             {
                 Description = Description ?? string.Empty,
+                TemplateType = TemplateType ?? SelfInspectionTemplateTypes.Checklist,
+                Purpose = Purpose ?? string.Empty,
+                IsSystemTemplate = IsSystemTemplate,
+                SystemTemplateKey = SystemTemplateKey ?? string.Empty,
+                CopiedFromSystemTemplateKey = CopiedFromSystemTemplateKey ?? string.Empty,
                 Rows = Rows?.Select(x => x.Clone()).ToList() ?? []
             };
         }

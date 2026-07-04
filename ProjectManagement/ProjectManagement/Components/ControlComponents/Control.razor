@@ -39,25 +39,24 @@
         var user = authState.User;
 
         var isAdmin = user.IsInRole(PMRolesConst.Tenant.Admin);
-        var isSuperManager = user.IsInRole(PMRolesConst.Tenant.AdminManger)
-                             || user.IsInRole(PMRolesConst.Tenant.Manger);
 
         if (isAdmin)
         {
-            AddTab("department", ResourceApp.department, "fa fa-building", @<ProjectManagement.Components.ControlComponents.Department.Index />);
+            // Full admininställningsmeny. "Konto" (nu "Kontoplan") och "Mallar" ligger som flikar
+            // under Kalkyl (CalculationControl), inte som egna huvudmenyer.
+            AddTab("department", "Avdelningar & användare", "fa fa-building", @<ProjectManagement.Components.ControlComponents.Department.Index />);
             AddTab("project", CalcResource.project, "fa fa-diagram-project", @<ProjectManagement.Components.ControlComponents.Project.ProjectPages.ProjectControl />);
             AddTab("calculation", CalcResource.calculation, "fa fa-calculator", @<ProjectManagement.Components.ControlComponents.Calculation.CalculationControl />);
-            AddTab("organisation", ResourceApp.organisation, "fa fa-sitemap", @<ProjectManagement.Components.ControlComponents.Organisation.OrganisationCategory.CategoriesUI />);
-        }
-
-        if (isSuperManager)
-            AddTab("templates-super", ResourceLoc.templates, "fa fa-layer-group", @<TemplateIndex />);
-
-        if (isAdmin || isSuperManager)
-        {
+            AddTab("organisation", "Kunder & leverantörer", "fa fa-address-book", @<ProjectManagement.Components.ControlComponents.Organisation.OrganisationCategory.CategoriesUI />);
             AddTab("selfInspection", ResourceLoc.selfInspection, "fa fa-clipboard-check", @<ApplicationIndexUI />);
-            AddTab("accounts", CalcResource.account, "fa fa-file-invoice-dollar", @<ProjectManagement.Components.ControlComponents.Accounts.AccountGroupsUI />);
             AddTab("storage", CalcResource.StorageSort, "fa fa-boxes-stacked", @<StorageIndex />);
+        }
+        else
+        {
+            // Vanliga användare/visare: inga admininställningar. Endast egna mallar och kund-/
+            // leverantörsregistret (skriv-/ändra-åtgärder är gated längre in för visare/gäst).
+            AddTab("templates-user", "Mina mallar", "fa fa-layer-group", @<TemplateIndex />);
+            AddTab("organisation", "Kunder & leverantörer", "fa fa-address-book", @<ProjectManagement.Components.ControlComponents.Organisation.OrganisationCategory.CategoriesUI />);
         }
 
         EnsureActiveKey();

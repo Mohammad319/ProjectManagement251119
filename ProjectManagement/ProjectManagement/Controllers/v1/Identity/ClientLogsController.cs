@@ -21,11 +21,13 @@ public class ClientLogsController : ControllerBase
         {
             "fatal" => LogEventLevel.Fatal,
             "error" => LogEventLevel.Error,
+            "warn" => LogEventLevel.Warning,
             "warning" => LogEventLevel.Warning,
+            "info" => LogEventLevel.Information,
             "information" => LogEventLevel.Information,
             "debug" => LogEventLevel.Debug,
             "verbose" => LogEventLevel.Verbose,
-            _ => LogEventLevel.Error
+            _ => LogEventLevel.Information
         };
 
         // اختياري: خذها من claims إن وجدت

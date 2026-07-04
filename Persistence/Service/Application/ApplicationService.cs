@@ -24,6 +24,7 @@ namespace Persistence.Service.Application
         public async Task<List<ApplicationDTO>> GetApplicationQueryAsync(bool withNoneVisible, CancellationToken ct)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
+            await EnsureStandardTemplatesAsync(context, ct);
 
             var query = context.Applications.AsNoTracking().AsQueryable();
             if (!withNoneVisible)
@@ -40,6 +41,7 @@ namespace Persistence.Service.Application
         public async Task<IReadOnlyList<ApplicationListItemDto>> GetApplicationListAsync(bool withNoneVisible, CancellationToken ct)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
+            await EnsureStandardTemplatesAsync(context, ct);
 
             var query = context.Applications.AsNoTracking().AsQueryable();
             if (!withNoneVisible)
@@ -98,6 +100,8 @@ namespace Persistence.Service.Application
                 return 0;
 
             var payload = dto.ToEntity();
+            payload.Data.IsSystemTemplate = false;
+            payload.Data.SystemTemplateKey = string.Empty;
             var entity = Domain.Entities.Application.ApplicationEntity.Create(
                 payload.DepartmentId,
                 payload.IsVisible,
@@ -164,6 +168,8 @@ namespace Persistence.Service.Application
                 .FirstOrDefaultAsync(x => x.Id == id, ct);
             if (entity is null)
                 return false;
+            if (entity.Data.IsSystemTemplate)
+                return false;
 
             context.Applications.Remove(entity);
             await context.SaveChangesAsync(ct);
@@ -192,6 +198,8 @@ namespace Persistence.Service.Application
                 .FirstOrDefaultAsync(x => x.Id == dto.Id, ct);
             if (entity is null)
                 return false;
+            if (entity.Data.IsSystemTemplate)
+                return false;
 
             entity.UpdateFrom(dto.ToEntity());
             await context.SaveChangesAsync(ct);
@@ -210,6 +218,47 @@ namespace Persistence.Service.Application
             entity.UpdateFrom(dto.ToEntity());
             await context.SaveChangesAsync(ct);
             return true;
+        }
+
+        private static async Task EnsureStandardTemplatesAsync(ShardingSingleDbContext context, CancellationToken ct)
+        {
+            var departmentId = await context.Department
+                .AsNoTracking()
+                .OrderBy(x => x.Id)
+                .Select(x => (int?)x.Id)
+                .FirstOrDefaultAsync(ct);
+
+            if (!departmentId.HasValue)
+                return;
+
+            var existingKeys = (await context.Applications
+                    .AsNoTracking()
+                    .ToListAsync(ct))
+                .Where(x => x.Data.IsSystemTemplate && !string.IsNullOrWhiteSpace(x.Data.SystemTemplateKey))
+                .Select(x => x.Data.SystemTemplateKey)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            var missingTemplates = SelfInspectionStandardTemplates
+                .CreateSystemTemplates(departmentId.Value)
+                .Where(x => !existingKeys.Contains(x.Data.SystemTemplateKey))
+                .ToList();
+
+            if (missingTemplates.Count == 0)
+                return;
+
+            foreach (var template in missingTemplates)
+            {
+                var payload = template.ToEntity();
+                var entity = Domain.Entities.Application.ApplicationEntity.Create(
+                    payload.DepartmentId,
+                    payload.IsVisible,
+                    payload.UserId,
+                    payload.Name,
+                    payload.Data);
+                context.Applications.Add(entity);
+            }
+
+            await context.SaveChangesAsync(ct);
         }
     }
 }

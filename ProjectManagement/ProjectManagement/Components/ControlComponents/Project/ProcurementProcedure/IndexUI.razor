@@ -7,8 +7,8 @@
 }
 else
 {
-    <div class="space-y-2">
-        <div class="pm-toolbar sticky top-0 z-10 -mx-2 bg-white px-2 pb-2 pt-1 dark:bg-slate-900">
+    <div class="pm-admin-panel">
+        <div class="pm-toolbar shrink-0">
             <div class="flex items-center gap-2">
                 <button @onclick="CreateNewAsync"
                         class="pm-btn pm-btn-success"
@@ -36,6 +36,7 @@ else
             }
         </div>
 
+        <div class="pm-admin-scroll">
         @{ var items = VisibleItems; }
         @if (items.Count > 0)
         {
@@ -92,5 +93,6 @@ else
                 @(IsVisible ? AppLoc[nameof(ResourceApp.ThereAreNoItemsToDisplay)] : CalcLoc[nameof(CalcResource.noHiddenStatusesToShow)])
             </div>
         }
+        </div>
     </div>
 }

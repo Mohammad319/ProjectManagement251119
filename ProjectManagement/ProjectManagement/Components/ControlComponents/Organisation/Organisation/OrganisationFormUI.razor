@@ -10,6 +10,32 @@
 @if (PostCompany is not null)
 {
     <div class="space-y-1 px-2 text-sm">
+
+        @if (SimilarOrganisations is { Count: > 0 })
+        {
+            <div class="mb-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-amber-800 dark:border-amber-800/60 dark:bg-amber-950/30 dark:text-amber-200">
+                <div class="font-semibold">Det finns redan ett liknande företag. Vill du ändå skapa ett nytt?</div>
+                <ul class="mt-1 list-disc pl-5 text-xs">
+                    @foreach (var similar in SimilarOrganisations)
+                    {
+                        <li>@similar.Name</li>
+                    }
+                </ul>
+                <div class="mt-2 flex flex-wrap gap-2">
+                    <button type="button"
+                            class="rounded-md bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-amber-700"
+                            @onclick="CreateAnywayAsync">
+                        Skapa ändå
+                    </button>
+                    <button type="button"
+                            class="rounded-md border border-amber-400 px-3 py-1.5 text-xs font-medium text-amber-800 transition hover:bg-amber-100 dark:text-amber-200 dark:hover:bg-amber-900/30"
+                            @onclick="() => SimilarOrganisations = null">
+                        Avbryt
+                    </button>
+                </div>
+            </div>
+        }
+
         <EditForm Model="@PostCompany" OnSubmit="HandleSubmitAsync" id="@DialogFormId">
 
             <div class="flex justify-between">

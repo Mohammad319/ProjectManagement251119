@@ -20,6 +20,11 @@ namespace Application.Feature.Organisation.Organisation
         Task<List<ShortListOrganisationDTO>> GetByCategoryAsync(int categoryId, bool isVisible, CancellationToken ct = default);
         Task<List<ListDTO>> GetVisibleOrIdAsync(int? id, CancellationToken ct = default);
         Task<List<ListDTO>> GetAsListAsync(CancellationToken ct = default);
+
+        // Flat "Kunder & leverantörer" table + archive/restore + dubblettkontroll
+        Task<List<OrganisationRowDTO>> GetRowsAsync(bool includeArchived, CancellationToken ct = default);
+        Task<bool> SetVisibilityAsync(int id, bool visible, CancellationToken ct = default);
+        Task<List<ListDTO>> FindSimilarByNameAsync(string name, CancellationToken ct = default);
     }
 
 }
