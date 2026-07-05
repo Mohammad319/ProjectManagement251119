@@ -37,6 +37,7 @@
         }
 
         <EditForm Model="@PostCompany" OnSubmit="HandleSubmitAsync" id="@DialogFormId">
+            <DataAnnotationsValidator />
 
             <div class="flex justify-between">
                 <ul class="mb-2 flex flex-wrap gap-1 border-b border-slate-200 pb-2 dark:border-slate-700" role="tablist">
@@ -81,21 +82,37 @@
                     {
                         <div>
                             <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.PersonOrganisationType</label>
-                            <InputSelect class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="PostCompany.OrganisationTypeID">
-                                <option value="0"></option>
-                                @foreach (var group in CustomerGroups)
-                                {
-                                    <option value="@group.Id">@group.Name</option>
-                                }
-                            </InputSelect>
+                            <MhdFormSelect TValue="int?"
+                                           @bind-Value="PostCompany.OrganisationTypeID"
+                                           Options="OrganisationTypeOptions"
+                                           Placeholder="Välj person-/organisationstyp" />
                         </div>
                     }
 
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.status</label>
-                        <InputText class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="PostCompany.Status" />
+                        <MhdFormSelect TValue="string"
+                                       Value="PostCompany.Status"
+                                       ValueChanged="OnStatusChanged"
+                                       Options="StatusOptions"
+                                       Placeholder="Välj status"
+                                       ShowColorDot="true" />
                         <ValidationMessage For="@(() => PostCompany.Status)" />
                     </div>
+
+                    @if (IsWarningStatus)
+                    {
+                        <div class="md:col-span-2">
+                            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Orsak till varning</label>
+                            <InputTextArea class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900"
+                                           @bind-Value="PostCompany.WarningReason"
+                                           placeholder="Skriv varför denna kund/leverantör har varning..." />
+                            @if (!string.IsNullOrWhiteSpace(WarningReasonValidationError))
+                            {
+                                <div class="mt-1 text-sm text-red-600 dark:text-red-400">@WarningReasonValidationError</div>
+                            }
+                        </div>
+                    }
 
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.website</label>
@@ -177,11 +194,10 @@
 
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceLoc.collectiveLabourAgreement</label>
-                        <InputSelect @bind-Value="PostCompany.SocialLaborAgreement" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900">
-                            <option value="@YesNoUnkown.yes">@ResourceApp.yes</option>
-                            <option value="@YesNoUnkown.no">@ResourceApp.no</option>
-                            <option value="@YesNoUnkown.unkown">@ResourceApp.unkown</option>
-                        </InputSelect>
+                        <MhdFormSelect TValue="YesNoUnkown"
+                                       @bind-Value="PostCompany.SocialLaborAgreement"
+                                       Options="ReviewOptions"
+                                       Placeholder="Ej angivet" />
                         <ValidationMessage For="@(() => PostCompany.SocialLaborAgreement)" />
                     </div>
 
@@ -199,21 +215,19 @@
 
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceApp.qualitySystems</label>
-                        <InputSelect @bind-Value="PostCompany.QualitySystems" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900">
-                            <option value="@YesNoUnkown.yes">@ResourceApp.yes</option>
-                            <option value="@YesNoUnkown.no">@ResourceApp.no</option>
-                            <option value="@YesNoUnkown.unkown">@ResourceApp.unkown</option>
-                        </InputSelect>
+                        <MhdFormSelect TValue="YesNoUnkown"
+                                       @bind-Value="PostCompany.QualitySystems"
+                                       Options="ReviewOptions"
+                                       Placeholder="Ej angivet" />
                         <ValidationMessage For="@(() => PostCompany.QualitySystems)" />
                     </div>
 
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceApp.environmentalSystems</label>
-                        <InputSelect @bind-Value="PostCompany.EnvironmentalSystems" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900">
-                            <option value="@YesNoUnkown.yes">@ResourceApp.yes</option>
-                            <option value="@YesNoUnkown.no">@ResourceApp.no</option>
-                            <option value="@YesNoUnkown.unkown">@ResourceApp.unkown</option>
-                        </InputSelect>
+                        <MhdFormSelect TValue="YesNoUnkown"
+                                       @bind-Value="PostCompany.EnvironmentalSystems"
+                                       Options="ReviewOptions"
+                                       Placeholder="Ej angivet" />
                         <ValidationMessage For="@(() => PostCompany.EnvironmentalSystems)" />
                     </div>
                 </div>
@@ -227,30 +241,21 @@
                     </div>
 
                     <div>
-                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceLoc.baseCategory</label>
-                        <select class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @onchange="CategoryChange">
-                            <option value="0"></option>
-                            @if (Categories is not null)
-                            {
-                                foreach (var category in Categories.Where(x => x.ParentCategoryId == null))
-                                {
-                                    <option value="@category.Id" selected="@(CategorySelected?.Id == category.Id)">@category.Name</option>
-                                }
-                            }
-                        </select>
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Huvudgrupp</label>
+                        <MhdFormSelect TValue="int?"
+                                       @bind-Value="SelectedMainGroupId"
+                                       Options="MainGroupOptions"
+                                       Placeholder="Välj huvudgrupp" />
                     </div>
 
                     @if (CategorySelected is not null)
                     {
                         <div>
-                            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceLoc.category</label>
-                            <InputSelect class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="PostCompany.CategoryId">
-                                <option value="0"></option>
-                                @foreach (var category in (Categories?.Where(x => x.ParentCategoryId == CategorySelected.Id) ?? Enumerable.Empty<ListOrganisationCategoryDTO>()))
-                                {
-                                    <option value="@category.Id">@category.Name</option>
-                                }
-                            </InputSelect>
+                            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Undergrupp</label>
+                            <MhdFormSelect TValue="int"
+                                           @bind-Value="PostCompany.CategoryId"
+                                           Options="SubGroupOptions"
+                                           Placeholder="Välj undergrupp" />
                             <ValidationMessage For="@(() => PostCompany.CategoryId)" />
                         </div>
                     }

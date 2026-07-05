@@ -10,8 +10,12 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
     {
         private bool IsVisible = true;
         private bool Loading = true;
+        private bool _isOpeningCreateDialog;
+        private string? _createDialogError;
         private List<ApplicationDTO> Applications = [];
         private ApplicationDTO? ApplicationForm;
+
+        [Inject] private ILogger<ApplicationIndexUI> Logger { get; set; } = default!;
 
         private List<ApplicationDTO> VisibleApplications
             => Applications.Where(x => x.IsVisible == IsVisible).ToList();
@@ -29,11 +33,56 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
             ApplicationForm = application;
         }
 
-        private void NewApp()
+        private async Task NewAppAsync()
         {
-            var departmentId = Applications.FirstOrDefault(x => x.DepartmentId > 0)?.DepartmentId ?? 0;
-            ApplicationForm = SelfInspectionStandardTemplates.CreateChecklist(departmentId);
-            ApplicationForm.Name = string.Empty;
+            if (_isOpeningCreateDialog)
+                return;
+
+            _isOpeningCreateDialog = true;
+            _createDialogError = null;
+            await InvokeAsync(StateHasChanged);
+
+            try
+            {
+                var departmentId = Applications.FirstOrDefault(x => x.DepartmentId > 0)?.DepartmentId ?? 0;
+                var template = SelfInspectionStandardTemplates.CreateChecklist(departmentId);
+                PrepareNewApplicationTemplate(template);
+                ApplicationForm = template;
+            }
+            catch (Exception ex)
+            {
+                const string message = "Det gick inte att öppna formuläret för ny egenkontroll. Försök igen eller kontakta administratör.";
+                Logger.LogError(ex, "Failed to open create self-inspection template dialog.");
+                _createDialogError = message;
+                MHD.MessageOk("Fel", message);
+            }
+            finally
+            {
+                _isOpeningCreateDialog = false;
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+
+        private static void PrepareNewApplicationTemplate(ApplicationDTO template)
+        {
+            template.Id = 0;
+            template.Name = "Ny egenkontrollmall";
+            template.IsVisible = true;
+            template.LastUpdate = DateTime.Now;
+            template.Data ??= new ApplicationDataDTO();
+            template.Data.Rows ??= [];
+            template.Data.Sections ??= [];
+            template.Data.IsSystemTemplate = false;
+            template.Data.SystemTemplateKey = string.Empty;
+            template.Data.CopiedFromSystemTemplateKey = string.Empty;
+            template.Data.TemplateType = string.IsNullOrWhiteSpace(template.Data.TemplateType)
+                ? SelfInspectionTemplateTypes.Checklist
+                : template.Data.TemplateType;
+            template.Data.LinkType = string.IsNullOrWhiteSpace(template.Data.LinkType)
+                ? "Kalkyl"
+                : template.Data.LinkType;
+            template.Data.Purpose = template.Data.Purpose ?? string.Empty;
+            template.Data.Description = template.Data.Description ?? template.Data.Purpose;
         }
 
         private void Remove(ApplicationDTO application)
@@ -71,7 +120,11 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
         private async Task BtnUpdateAsync(bool isSuccess)
         {
             if (!isSuccess)
+            {
+                ApplicationForm = null;
+                await InvokeAsync(StateHasChanged);
                 return;
+            }
 
             await GetApplicationsAsync();
             ApplicationForm = null;

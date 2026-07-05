@@ -90,6 +90,9 @@ public partial class UpdateUserUI : AppComponentBase
                 Form.LockoutEnd = null;
             }
 
+            if (Form is { LockoutEnabled: true } && sourceUser.Id == 0)
+                ApplyNewUserLockDefaults();
+
             await InitDefaultsAsync();
         }
         finally
@@ -166,6 +169,34 @@ public partial class UpdateUserUI : AppComponentBase
 
         if (value)
             Form.LockoutEnd = null;
+    }
+
+    protected void ToggleLockout(bool value)
+    {
+        if (Form is null)
+            return;
+
+        Form.LockoutEnabled = value;
+
+        if (value)
+        {
+            ApplyNewUserLockDefaults();
+            return;
+        }
+
+        LockIndefinitely = false;
+        Form.LockoutStart = null;
+        Form.LockoutEnd = null;
+    }
+
+    private void ApplyNewUserLockDefaults()
+    {
+        if (Form is null)
+            return;
+
+        LockIndefinitely = true;
+        Form.LockoutStart ??= DateTimeOffset.Now.Date;
+        Form.LockoutEnd = null;
     }
 
     protected void ClearLockoutStart()

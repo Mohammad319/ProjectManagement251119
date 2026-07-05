@@ -17,8 +17,14 @@ else
 {
     <div class="space-y-2">
         <div class="flex items-center justify-end gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-800/50">
-            <button @onclick="NewApp" class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-emerald-300 bg-emerald-50 text-emerald-600 transition hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50" type="button">
+            <button @onclick="NewAppAsync"
+                    class="pm-btn pm-btn-success"
+                    type="button"
+                    title="@(_isOpeningCreateDialog ? "Öppnar..." : "Ny egenkontrollmall")"
+                    aria-label="Ny egenkontrollmall"
+                    disabled="@_isOpeningCreateDialog">
                 @((MarkupString)Icons.Plus2)
+                <span class="ml-1.5">@(_isOpeningCreateDialog ? "Öppnar..." : "Ny egenkontrollmall")</span>
             </button>
 
             <button @onclick="ToggleVisibility"
@@ -28,6 +34,14 @@ else
                 @((MarkupString)Icons.GetVisibleIcon(IsVisible))
             </button>
         </div>
+
+        @if (!string.IsNullOrWhiteSpace(_createDialogError))
+        {
+            <div class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-800/70 dark:bg-red-950/30 dark:text-red-200"
+                 role="alert">
+                @_createDialogError
+            </div>
+        }
 
         @if (VisibleApplications.Count == 0)
         {

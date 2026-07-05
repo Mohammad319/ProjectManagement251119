@@ -7,7 +7,7 @@ namespace ProjectManagement.Shared.Base.Organisation
 {
     //# ID Number, Person/Organisation nr., Person/Organisation Type (a droplist,
     //admin can add the values CustomerGroup), Address (street, post number, city, country), 
-    public enum YesNoUnkown { yes, no, unkown }
+    public enum YesNoUnkown { notSpecified = -1, yes = 0, no = 1, unkown = 2, notRelevant = 3 }
     public class OrganisationBase
     {
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]

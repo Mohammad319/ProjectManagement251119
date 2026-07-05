@@ -95,7 +95,7 @@
     }
 
     .pm-btn {
-        @apply inline-flex h-9 items-center justify-center rounded-lg border px-3 text-sm font-medium transition;
+        @apply inline-flex h-8 items-center justify-center rounded-md border px-2.5 text-xs font-medium leading-none transition;
     }
 
     .pm-btn-neutral {
@@ -115,7 +115,7 @@
     }
 
     .pm-icon-btn {
-        @apply inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800;
+        @apply inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 [&>svg]:h-4 [&>svg]:w-4;
     }
 
     /* Clickable text actions: any text that acts as a button/link. They always show the hand
@@ -213,11 +213,11 @@
     .department-users-table th {
         /* Sticky header row: stays visible while only the user rows scroll below it.
            Solid background because each th paints its own cell once pinned. */
-        @apply sticky top-0 z-20 whitespace-nowrap border-b border-slate-200 bg-slate-50 px-2.5 py-2 text-left text-xs font-semibold text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400;
+        @apply sticky top-0 z-20 whitespace-nowrap border-b border-slate-200 bg-slate-50 px-2.5 py-1.5 text-left text-xs font-semibold text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400;
     }
 
     .department-users-table td {
-        @apply whitespace-nowrap border-b border-slate-100 px-2.5 py-2 text-xs text-slate-700 dark:border-slate-800 dark:text-slate-200;
+        @apply whitespace-nowrap border-b border-slate-100 px-2.5 py-1.5 text-xs text-slate-700 dark:border-slate-800 dark:text-slate-200;
     }
 
     .department-users-table tbody tr {
@@ -226,7 +226,7 @@
 
     .department-users-table td button,
     .department-users-table td summary {
-        @apply min-h-8 px-2.5 text-xs;
+        @apply min-h-7 px-2 text-xs leading-none;
     }
 
     /* Keep the pagination row pinned to the bottom of the scrolling table container. */
@@ -266,5 +266,85 @@
 
     .pm-admin-scroll {
         @apply min-h-0 flex-1 overflow-y-auto;
+    }
+
+    /* Admin/settings control surface. Many older settings components used their own
+       button/icon/table sizes, which made rows feel large while icons looked tiny.
+       Keep normalization scoped to the settings shell so the rest of the app is untouched. */
+    .pm-control-shell {
+        @apply text-sm leading-normal text-slate-800 dark:text-slate-100;
+    }
+
+    .pm-control-shell :where(button) {
+        @apply inline-flex items-center justify-center gap-1.5 leading-none;
+    }
+
+    .pm-control-shell :where(.mhd-tab-vertical) {
+        @apply justify-start text-left;
+    }
+
+    .pm-control-shell :where(.mhd-tab-vertical .mhd-tab-truncate) {
+        @apply text-left;
+    }
+
+    .pm-control-shell :where(.user-action-menu-item) {
+        @apply justify-start text-left;
+    }
+
+    .pm-control-shell :where(button > svg, button > span > svg, button [aria-hidden="true"] > svg) {
+        width: 1rem;
+        height: 1rem;
+        flex-shrink: 0;
+    }
+
+    .pm-control-shell :where(.pm-btn) {
+        @apply h-8 rounded-md px-2.5 text-xs;
+    }
+
+    .pm-control-shell :where(.pm-icon-btn),
+    .pm-control-shell :where(button[class*="h-9"][class*="w-9"]),
+    .pm-control-shell :where(button[class*="h-8"][class*="w-8"]),
+    .pm-control-shell :where(button[class*="h-7"][class*="w-7"]) {
+        @apply h-8 w-8 rounded-md p-0;
+    }
+
+    .pm-control-shell :where(button[class*="h-5"][class*="w-5"]) {
+        @apply h-6 w-6 rounded;
+    }
+
+    .pm-control-shell :where(input:not([type="checkbox"]):not([type="radio"]), select) {
+        @apply h-8 text-sm;
+    }
+
+    .pm-control-shell :where(textarea) {
+        @apply text-sm;
+    }
+
+    .pm-control-shell :where(input[type="checkbox"]) {
+        @apply h-4 w-4 shrink-0;
+    }
+
+    .pm-control-shell :where(table) {
+        @apply text-sm;
+    }
+
+    .pm-control-shell :where(th) {
+        @apply px-2.5 py-1.5 text-xs font-semibold leading-tight;
+    }
+
+    .pm-control-shell :where(td) {
+        @apply px-2.5 py-1.5 text-sm leading-snug;
+    }
+
+    .pm-control-shell :where(.pm-toolbar) {
+        @apply rounded-lg px-2.5 py-1.5;
+    }
+
+    .pm-control-shell :where(.pm-admin-scroll > .space-y-1 > div) {
+        @apply min-h-11 px-2.5 py-1.5;
+    }
+
+    .pm-control-shell :where([role="tooltip"]) {
+        z-index: 120;
     }
 }

@@ -60,8 +60,8 @@ else
                     <tr>
                         <th class="px-1 py-1 text-start text-sm font-semibold text-slate-600 dark:text-slate-200">@CalcResource.name</th>
                         <th class="px-1 py-1 text-start text-sm font-semibold text-slate-600 dark:text-slate-200">@CalcResource.status</th>
-                        <th class="px-1 py-1 text-start text-sm font-semibold text-slate-600 dark:text-slate-200">@ResourceLoc.category</th>
-                        <th class="px-1 py-1 text-start text-sm font-semibold text-slate-600 dark:text-slate-200">@ResourceLoc.baseCategory</th>
+                        <th class="px-1 py-1 text-start text-sm font-semibold text-slate-600 dark:text-slate-200">Undergrupp</th>
+                        <th class="px-1 py-1 text-start text-sm font-semibold text-slate-600 dark:text-slate-200">Huvudgrupp</th>
                     </tr>
                 </thead>
 
@@ -78,7 +78,7 @@ else
                                 </button>
                             </td>
 
-                            <td class="px-1 py-1 text-start text-sm text-slate-700 dark:text-slate-200">@organistion.Type</td>
+                            <td class="px-1 py-1 text-start text-sm text-slate-700 dark:text-slate-200">@StatusBadge(organistion.Status)</td>
                             <td class="px-1 py-1 text-start text-sm text-slate-700 dark:text-slate-200">@organistion.SubCategory</td>
                             <td class="px-1 py-1 text-start text-sm text-slate-700 dark:text-slate-200">@organistion.Category</td>
                         </tr>
@@ -104,16 +104,24 @@ else
                             <dd class="text-slate-700 dark:text-slate-200">@organistion.Type</dd>
                         </div>
                         <div class="flex items-center justify-between gap-2">
-                            <dt class="text-slate-500 dark:text-slate-400">@ResourceLoc.category</dt>
+                            <dt class="text-slate-500 dark:text-slate-400">Undergrupp</dt>
                             <dd class="text-slate-700 dark:text-slate-200">@organistion.SubCategory</dd>
                         </div>
                         <div class="flex items-center justify-between gap-2">
-                            <dt class="text-slate-500 dark:text-slate-400">@ResourceLoc.baseCategory</dt>
+                            <dt class="text-slate-500 dark:text-slate-400">Huvudgrupp</dt>
                             <dd class="text-slate-700 dark:text-slate-200">@organistion.Category</dd>
                         </div>
                     </dl>
                 </div>
             }
         </div>
+    }
+}
+
+@code {
+    private static MarkupString StatusBadge(string? status)
+    {
+        var label = string.IsNullOrWhiteSpace(status) ? OrganisationStatusCatalog.NotSpecified : OrganisationStatusCatalog.Normalize(status);
+        return (MarkupString)$"<span class=\"inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ring-inset {OrganisationStatusCatalog.BadgeClasses(label)}\">{System.Net.WebUtility.HtmlEncode(label)}</span>";
     }
 }

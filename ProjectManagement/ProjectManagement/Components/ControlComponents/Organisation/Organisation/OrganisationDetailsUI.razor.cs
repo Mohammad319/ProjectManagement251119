@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components;
 using ProjectManagement.Client.Shared.ResourceFiles.APP;
 using ProjectManagement.Client.Shared.ResourceFiles.Identity;
 using ProjectManagement.Shared;
+using ProjectManagement.Shared.Base.Organisation;
 using ProjectManagement.Shared.DTO.App.List;
 using ProjectManagement.Shared.DTO.Organisation;
 
@@ -31,8 +32,8 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
             [
                 new(1, WebLoc[nameof(PMWebResource.BasicInformation)]),
                 new(2, ResourceApp.Assessment),
-                new(3, WebLoc[nameof(PMWebResource.Category)]),
-                new(4, ResourceIdentity.contact),
+                new(3, "Grupp"),
+                new(4, "Kontakt"),
             ];
 
             if (CompanyId <= 0) return;
@@ -40,5 +41,23 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
         }
 
         private void Close() => MHD.Modal.CloseAsync();
+
+        private static string Dash(string? value) => string.IsNullOrWhiteSpace(value) ? "—" : value;
+
+        private static string ReviewLabel(YesNoUnkown value) => value switch
+        {
+            YesNoUnkown.notSpecified => "Ej angivet",
+            YesNoUnkown.yes => "Ja",
+            YesNoUnkown.no => "Nej",
+            YesNoUnkown.notRelevant => "Ej relevant",
+            YesNoUnkown.unkown => "Okänd",
+            _ => "Ej angivet"
+        };
+
+        private static MarkupString StatusBadge(string? status)
+        {
+            var label = string.IsNullOrWhiteSpace(status) ? OrganisationStatusCatalog.NotSpecified : OrganisationStatusCatalog.Normalize(status);
+            return (MarkupString)$"<span class=\"inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ring-inset {OrganisationStatusCatalog.BadgeClasses(label)}\">{System.Net.WebUtility.HtmlEncode(label)}</span>";
+        }
     }
 }

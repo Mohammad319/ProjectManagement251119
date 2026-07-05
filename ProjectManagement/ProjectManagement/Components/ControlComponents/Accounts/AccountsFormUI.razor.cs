@@ -1,7 +1,9 @@
 ﻿using Application.Feature.Account.Commands;
 using BlazorMHD.UI.Core.Services;
 using Microsoft.AspNetCore.Components;
+using ProjectManagement.Components.ControlComponents.Department;
 using ProjectManagement.Shared.DTO.Account;
+using ProjectManagement.Shared.DTO.General;
 
 namespace ProjectManagement.Components.ControlComponents.Accounts;
 
@@ -13,6 +15,12 @@ public partial class AccountsFormUI
     [Parameter, EditorRequired]
     public required PostAccountDTO Model { get; set; }
     [Parameter] public EventCallback<bool> OnSaved { get; set; }
+
+    /// <summary>Account groups available for the "Kontogrupp" dropdown.</summary>
+    [Parameter] public List<ListDTO> Groups { get; set; } = [];
+
+    private IReadOnlyList<AppSelect<int>.Option> GroupOptions =>
+        Groups.Select(g => new AppSelect<int>.Option(g.Id, g.Name)).ToList();
 
     [Inject] private ILogger<AccountsFormUI> Logger { get; set; } = default!;
 

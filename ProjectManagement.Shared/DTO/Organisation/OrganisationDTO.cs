@@ -31,9 +31,10 @@ namespace ProjectManagement.Shared.DTO.Organisation
         [Range(0, int.MaxValue, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public int? NumberOfWorkersCards { get; set; }
 
-        public YesNoUnkown SocialLaborAgreement { get; set; }
-        public YesNoUnkown QualitySystems { get; set; }
-        public YesNoUnkown EnvironmentalSystems { get; set; }
+        public YesNoUnkown SocialLaborAgreement { get; set; } = YesNoUnkown.notSpecified;
+        public YesNoUnkown QualitySystems { get; set; } = YesNoUnkown.notSpecified;
+        public YesNoUnkown EnvironmentalSystems { get; set; } = YesNoUnkown.notSpecified;
+        public string WarningReason { get; set; } = string.Empty;
         public string PIDNumber { get; set; } = string.Empty;
         public string IDNumber { get; set; } = string.Empty;
 
@@ -63,6 +64,7 @@ namespace ProjectManagement.Shared.DTO.Organisation
                 SocialLaborAgreement = SocialLaborAgreement,
                 QualitySystems = QualitySystems,
                 EnvironmentalSystems = EnvironmentalSystems,
+                WarningReason = MetadataCloneHelper.CopyText(WarningReason),
                 PIDNumber = MetadataCloneHelper.CopyText(PIDNumber),
                 IDNumber = MetadataCloneHelper.CopyText(IDNumber),
                 Phone = MetadataCloneHelper.CopyText(Phone),
@@ -129,6 +131,13 @@ namespace ProjectManagement.Shared.DTO.Organisation
         {
             get => Data.Status;
             set => Data.Status = MetadataCloneHelper.CopyText(value);
+        }
+
+        [MaxLength(500, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        public string WarningReason
+        {
+            get => Data.WarningReason;
+            set => Data.WarningReason = MetadataCloneHelper.CopyText(value);
         }
 
         [Range(0, int.MaxValue, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
@@ -226,6 +235,7 @@ namespace ProjectManagement.Shared.DTO.Organisation
         public string Category { get; set; } = string.Empty;
         public string SubCategory { get; set; } = string.Empty;
         public string Type { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
         public string Contacts { get; set; } = string.Empty;
     }
 

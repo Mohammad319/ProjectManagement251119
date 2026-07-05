@@ -1,5 +1,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
+@using ProjectManagement.Components.ControlComponents.Department
 @using ProjectManagement.Shared.Constant
+@using ProjectManagement.Shared.DTO.Organisation
 @inherits AppComponentBase
 
 @* "Kunder & leverantörer" — fixed toolbar + sticky table header, only the rows scroll. *@
@@ -21,9 +23,9 @@
 
                 <button type="button"
                         class="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-800"
-                        title="Lägg till, ändra eller arkivera kategorier"
+                        title="Lägg till, ändra eller arkivera grupper"
                         @onclick="OpenCategoryManager">
-                    Hantera kategorier
+                    Hantera grupper
                 </button>
             </AuthorizeView>
 
@@ -41,50 +43,31 @@
 
         <!-- Rad 2: filter + visa/dölj kolumner -->
         <div class="flex flex-wrap items-center gap-1.5">
-            <select @onchange="OnMainGroupChanged"
-                    title="Filtrera på huvudgrupp"
-                    class="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-700 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
-                <option value="" selected="@(_mainGroupFilter is null)">Alla huvudgrupper</option>
-                @foreach (var g in MainGroups)
-                {
-                    <option value="@g.Id" selected="@(_mainGroupFilter == g.Id)">@g.Name</option>
-                }
-            </select>
-
-            <select @onchange="OnSubCategoryChanged"
-                    title="Filtrera på underkategori"
-                    class="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-700 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
-                <option value="" selected="@(_subCategoryFilter is null)">Alla underkategorier</option>
-                @foreach (var c in SubCategoriesForFilter)
-                {
-                    <option value="@c.Id" selected="@(_subCategoryFilter == c.Id)">@c.Name</option>
-                }
-            </select>
-
-            @if (StatusOptions.Any())
-            {
-                <select @onchange="OnStatusChanged"
-                        title="Filtrera på status"
-                        class="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-700 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
-                    <option value="" selected="@(_statusFilter is null)">Alla statusar</option>
-                    @foreach (var s in StatusOptions)
-                    {
-                        <option value="@s" selected="@(_statusFilter == s)">@s</option>
-                    }
-                </select>
-            }
-
-            <!-- Aktiv / Arkiverad -->
-            <div class="inline-flex overflow-hidden rounded-lg border border-slate-300 dark:border-slate-700">
-                @foreach (var (val, label) in new[] { (ActiveFilter.Active, "Aktiva"), (ActiveFilter.Archived, "Arkiverade"), (ActiveFilter.All, "Alla") })
-                {
-                    <button type="button"
-                            @onclick="() => SetActiveFilter(val)"
-                            class="@($"px-2.5 py-1.5 text-xs font-medium transition {(_activeFilter == val ? "bg-slate-800 text-white dark:bg-slate-200 dark:text-slate-900" : "bg-white text-slate-600 hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-800")}")">
-                        @label
-                    </button>
-                }
+            <div class="w-full sm:w-52">
+                <FilterMultiSelect TValue="int"
+                                   Options="MainGroupOptions"
+                                   Selected="_mainGroupFilters"
+                                   Placeholder="Alla huvudgrupper"
+                                   OnChanged="OnMainGroupFiltersChanged" />
             </div>
+
+            <div class="w-full sm:w-52">
+                <FilterMultiSelect TValue="int"
+                                   Options="SubCategoryOptions"
+                                   Selected="_subCategoryFilters"
+                                   Placeholder="Alla undergrupper"
+                                   OnChanged="OnFilterChanged" />
+            </div>
+
+            <div class="w-full sm:w-52">
+                <FilterMultiSelect TValue="string"
+                                   Options="StatusFilterOptions"
+                                   Selected="_statusFilters"
+                                   Placeholder="Alla statusar"
+                                   OnChanged="OnFilterChanged" />
+            </div>
+
+            <span class="text-xs text-slate-500 dark:text-slate-400">@ResultCountText</span>
 
             <!-- Visa/dölj kolumner -->
             <div class="relative ml-auto">
@@ -144,7 +127,7 @@
                             </th>
                             <th class="@ThClass">
                                 <button type="button" class="inline-flex items-center gap-1 hover:text-slate-700 dark:hover:text-slate-200" @onclick="() => SortBy(OrgSortColumn.SubCategory)">
-                                    Underkategori @(SortIcon(OrgSortColumn.SubCategory))
+                                    Undergrupp @(SortIcon(OrgSortColumn.SubCategory))
                                 </button>
                             </th>
                             @if (IsColumnVisible(OrgColumn.OrgNr))
@@ -272,7 +255,7 @@
                                     </button>
                                     @if (!row.IsVisible)
                                     {
-                                        <span class="ml-1.5 rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">Arkiverad</span>
+                                        <span class="ml-1.5 rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">Arkiverad post</span>
                                     }
                                 </td>
 
@@ -301,7 +284,7 @@
                                 }
                                 @if (IsColumnVisible(OrgColumn.Status))
                                 {
-                                    <td class="@TdClass">@Dash(row.Status)</td>
+                                    <td class="@TdClass">@StatusBadge(row.Status)</td>
                                 }
                                 @if (IsColumnVisible(OrgColumn.UpdatedAt))
                                 {
@@ -344,6 +327,12 @@
     private const string TdClass = "whitespace-nowrap border-b border-slate-100 px-3 py-1.5 text-slate-700 dark:border-slate-800 dark:text-slate-200";
 
     private static string Dash(string? value) => string.IsNullOrWhiteSpace(value) ? "—" : value!;
+
+    private static MarkupString StatusBadge(string? status)
+    {
+        var label = string.IsNullOrWhiteSpace(status) ? OrganisationStatusCatalog.NotSpecified : OrganisationStatusCatalog.Normalize(status);
+        return (MarkupString)$"<span class=\"inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ring-inset {OrganisationStatusCatalog.BadgeClasses(label)}\">{System.Net.WebUtility.HtmlEncode(label)}</span>";
+    }
 
     private MarkupString SortIcon(OrgSortColumn column)
         => _sort == column

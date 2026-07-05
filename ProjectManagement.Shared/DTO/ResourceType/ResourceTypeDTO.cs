@@ -23,6 +23,18 @@ namespace ProjectManagement.Shared.DTO.ResourceType
         public decimal CapWaste { get; set; }
         public double? CO2 { get; set; }
 
+        /// <summary>
+        /// Account ids the admin allows for this resource type/sort. Empty = no restriction.
+        /// Stored in the JSON metadata column, so no schema migration is required.
+        /// </summary>
+        public List<int> AllowedAccountIds { get; set; } = [];
+
+        /// <summary>
+        /// Resource sort only: when true the sort defines its own allowed accounts,
+        /// otherwise it inherits the allowed accounts from its resource type.
+        /// </summary>
+        public bool UseOwnAccountSettings { get; set; }
+
         public void Normalize()
         {
             Cost = RoundMoney(Cost);
@@ -45,7 +57,9 @@ namespace ProjectManagement.Shared.DTO.ResourceType
                 ChangeFactor2 = ChangeFactor2,
                 BaseCost = BaseCost,
                 CapWaste = CapWaste,
-                CO2 = CO2
+                CO2 = CO2,
+                AllowedAccountIds = AllowedAccountIds is { Count: > 0 } ? new List<int>(AllowedAccountIds) : [],
+                UseOwnAccountSettings = UseOwnAccountSettings
             };
 
             copy.Normalize();
@@ -128,6 +142,18 @@ namespace ProjectManagement.Shared.DTO.ResourceType
         {
             get => Data.CO2;
             set => Data.CO2 = value;
+        }
+
+        public List<int> AllowedAccountIds
+        {
+            get => Data.AllowedAccountIds;
+            set => Data.AllowedAccountIds = value ?? [];
+        }
+
+        public bool UseOwnAccountSettings
+        {
+            get => Data.UseOwnAccountSettings;
+            set => Data.UseOwnAccountSettings = value;
         }
     }
 

@@ -55,7 +55,7 @@
 
     @* Fixed upper part (summary + filters) and a table container that owns the scrolling;
        the settings window itself must not move when the user list scrolls. *@
-    <div class="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto">
+    <div class="flex min-h-0 flex-1 flex-col gap-1.5 overflow-hidden">
     @if (IsLoading)
     {
         <div class="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
@@ -89,13 +89,14 @@
                         {
                             <span class="group relative inline-flex" @onclick:stopPropagation="true">
                                 <svg tabindex="0" role="img" aria-label="Antal skapade / max antal användare i abonnemanget"
+                                     title="Visar skapade användare och max antal användare i abonnemanget."
                                      class="h-3.5 w-3.5 cursor-help text-slate-400 outline-none transition-colors hover:text-sky-600 focus-visible:text-sky-600 dark:hover:text-sky-400"
                                      viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                                 <span role="tooltip"
-                                      class="pointer-events-none absolute left-1/2 top-full z-[80] mt-1 w-64 -translate-x-1/2 rounded-md bg-slate-800 px-2.5 py-1.5 text-left text-xs font-normal leading-snug text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 dark:bg-slate-700">
-                                    @TotalCount är antal skapade användare. @TenantMaxUsers är max antal användare som ingår i nuvarande abonnemang/licens.
+                                      class="pointer-events-none absolute left-0 top-full z-[120] mt-1 w-72 rounded-md bg-slate-800 px-2.5 py-1.5 text-left text-xs font-normal leading-snug text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 dark:bg-slate-700">
+                                    @TotalCount skapade användare av @TenantMaxUsers tillgängliga användare i nuvarande abonnemang/licens.
                                 </span>
                             </span>
                         }
@@ -126,7 +127,7 @@
                 <button type="button" aria-pressed="@StatusFilters.Contains("locked")"
                         class="flex items-center justify-between gap-2 rounded-xl border px-2.5 py-1.5 text-left shadow-sm transition focus:outline-none focus:ring-2 focus:ring-rose-500/30 @(StatusFilters.Contains("locked") ? "border-rose-400 bg-rose-50 ring-1 ring-rose-300 dark:border-rose-600 dark:bg-rose-950/40" : "border-rose-200 bg-rose-50/40 hover:bg-rose-50 dark:border-rose-900/60 dark:bg-rose-950/20")"
                         @onclick='() => SetStatusFilter("locked")'>
-                    <span class="text-[11px] font-semibold tracking-wide text-rose-700 dark:text-rose-300">@WebLoc["Lockout"]</span>
+                    <span class="text-[11px] font-semibold tracking-wide text-rose-700 dark:text-rose-300">Inloggningsspärr</span>
                     <span class="text-lg font-bold leading-none text-rose-800 dark:text-rose-200">@LockedCount</span>
                 </button>
             </div>
@@ -141,8 +142,8 @@
 
         <!-- Search / filter toolbar -->
         <div class="shrink-0 rounded-xl border border-slate-200 bg-white p-2.5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-            <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-[minmax(16rem,1fr)_12rem_12rem_12rem]">
-                <div class="relative sm:col-span-2 lg:col-span-1">
+            <div class="flex flex-wrap items-center gap-2">
+                <div class="relative min-w-[16rem] flex-1">
                     <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
                     </span>
@@ -153,26 +154,30 @@
                            class="h-9 w-full rounded-lg border border-slate-300 bg-white pl-9 pr-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" />
                 </div>
 
-                <FilterMultiSelect TValue="string"
-                                   Placeholder='@WebLoc["AllRoles"]'
-                                   Options="RoleFilterOptions"
-                                   Selected="RoleFilters"
-                                   OnChanged="OnFilterChangedAsync" />
+                <div class="w-full sm:w-48">
+                    <FilterMultiSelect TValue="string"
+                                       Placeholder='@WebLoc["AllRoles"]'
+                                       Options="RoleFilterOptions"
+                                       Selected="RoleFilters"
+                                       OnChanged="OnFilterChangedAsync" />
+                </div>
 
-                <FilterMultiSelect TValue="string"
-                                   Placeholder='@WebLoc["AllStatuses"]'
-                                   Options="StatusFilterOptions"
-                                   Selected="StatusFilters"
-                                   OnChanged="OnFilterChangedAsync" />
+                <div class="w-full sm:w-48">
+                    <FilterMultiSelect TValue="string"
+                                       Placeholder='@WebLoc["AllStatuses"]'
+                                       Options="StatusFilterOptions"
+                                       Selected="StatusFilters"
+                                       OnChanged="OnFilterChangedAsync" />
+                </div>
 
-                <FilterMultiSelect TValue="int"
-                                   Placeholder="Alla avdelningar"
-                                   Options="DepartmentFilterOptions"
-                                   Selected="DepartmentFilters"
-                                   OnChanged="OnFilterChangedAsync" />
-            </div>
+                <div class="w-full sm:w-48">
+                    <FilterMultiSelect TValue="int"
+                                       Placeholder="Alla avdelningar"
+                                       Options="DepartmentFilterOptions"
+                                       Selected="DepartmentFilters"
+                                       OnChanged="OnFilterChangedAsync" />
+                </div>
 
-            <div class="mt-2 flex flex-wrap items-center justify-end gap-2 border-t border-slate-100 pt-2 dark:border-slate-800">
                 <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-200">
                     @(string.Format(WebLoc["ShowingCountFormat"].Value, FilteredUsers.Count, TotalCount))
                 </span>
@@ -282,7 +287,7 @@
         {
         @* The rows scroll inside this container; the sticky thead and the sticky pager
            (see .department-users-table in app.tailwind.css) stay pinned top/bottom. *@
-        <div class="department-users-table min-h-[16rem] overflow-auto rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+        <div class="department-users-table min-h-0 flex-1 overflow-auto rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
             <MhdTable TItem="TenantUserDto"
                       Items="FilteredUsers"
                       EnablePaging="true"
@@ -293,22 +298,15 @@
                       ColumnWidths="_userColumnWidths"
                       Localization="TableLocalization"
                       OnColumnResized="OnUserColumnResized">
-                <MhdTableColumn Title="" ColumnKey="select" Frozen="true"
-                                HeaderClass="bg-white dark:bg-slate-900"
-                                CellClass="mhd-table-cell bg-white dark:bg-slate-900">
-                    <Template Context="user">
-                        <input type="checkbox"
-                               checked="@IsSelected(user.Id)"
-                               @onchange="e => ToggleSelected(user.Id, (bool)(e.Value ?? false))"
-                               class="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900" />
-                    </Template>
-                </MhdTableColumn>
-
                 <MhdTableColumn Title='@WebLoc["Actions"]' ColumnKey="actions" Frozen="true"
                                 HeaderClass="bg-white dark:bg-slate-900"
                                 CellClass="mhd-table-cell bg-white dark:bg-slate-900">
                     <Template Context="user">
                         <div class="flex items-center gap-1.5">
+                            <input type="checkbox"
+                                   checked="@IsSelected(user.Id)"
+                                   @onchange="e => ToggleSelected(user.Id, (bool)(e.Value ?? false))"
+                                   class="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900" />
                             <button type="button"
                                     class="inline-flex items-center gap-1 rounded-md border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
                                     aria-expanded="@IsActionMenuOpen(user)"
@@ -324,24 +322,12 @@
                 <MhdTableColumn Title="@CalcResource.name" ColumnKey="name" ValueSelector="u => GetDisplayName(u)" Sortable="true" />
                 <MhdTableColumn Title='@WebLoc["Role"]' ColumnKey="role" ValueSelector='u => GetRoleName(u)' Sortable="true" />
                 <MhdTableColumn Title="Avdelningar" ColumnKey="departments" ValueSelector='u => GetDepartmentName(u)' Sortable="true" />
-                <MhdTableColumn Title='@WebLoc["AuthStatus"]' ColumnKey="authStatus" Sortable="true" SortKeySelector='u => GetStatusLabel(u)'>
+                <MhdTableColumn Title="Kontostatus" ColumnKey="accountStatus" Sortable="true" SortKeySelector='u => GetAccountStatusLabel(u)'>
                     <Template Context="user">
-                        @if (!user.IsInAuth)
-                        {
-                            <span class="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
-                                @WebLoc["UserMissingAuth"]
-                            </span>
-                        }
-                        else if (IsDeactivated(user))
+                        @if (IsDeactivated(user))
                         {
                             <span class="inline-flex rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-medium text-slate-700 dark:bg-slate-700 dark:text-slate-200">
                                 @WebLoc["StatusInactive"]
-                            </span>
-                        }
-                        else if (IsLocked(user))
-                        {
-                            <span class="inline-flex rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-medium text-rose-700 dark:bg-rose-900/40 dark:text-rose-300">
-                                @WebLoc["Lockout"]
                             </span>
                         }
                         else if (IsPending(user))
@@ -353,13 +339,28 @@
                         else
                         {
                             <span class="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
-                                @(IsStale(user) ? WebLoc["StatusStale"] : WebLoc["StatusActive"])
+                                @WebLoc["StatusActive"]
+                            </span>
+                        }
+                    </Template>
+                </MhdTableColumn>
+                <MhdTableColumn Title="Inloggningsspärr" ColumnKey="lockout" Sortable="true" SortKeySelector='u => GetLockoutStatus(u)'>
+                    <Template Context="user">
+                        @if (IsLocked(user))
+                        {
+                            <span class="inline-flex rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-700 dark:bg-rose-900/40 dark:text-rose-300">
+                                @GetLockoutStatus(user)
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                                @GetLockoutStatus(user)
                             </span>
                         }
                     </Template>
                 </MhdTableColumn>
                 <MhdTableColumn Title='@WebLoc["LastLogin"]' ColumnKey="lastLogin" Sortable="true" SortKeySelector='u => u.LastLoginAt' ValueSelector='u => FormatDateTime(u.LastLoginAt)' />
-                <MhdTableColumn Title='@WebLoc["Lockout"]' ColumnKey="lockout" Sortable="true" ValueSelector='u => u.LockoutEnabled ? WebLoc["Enabled"].Value : WebLoc["Disabled"].Value' />
                 <MhdTableColumn Title='@WebLoc["LockoutStart"]' ColumnKey="lockoutStart" Sortable="true" SortKeySelector='u => u.LockoutStart' ValueSelector='u => FormatDate(u.LockoutStart)' />
                 <MhdTableColumn Title='@WebLoc["LockoutEnd"]' ColumnKey="lockoutEnd" Sortable="true" SortKeySelector='u => u.LockoutEnd' ValueSelector='u => FormatDate(u.LockoutEnd)' />
             </MhdTable>
@@ -369,82 +370,50 @@
         {
             var actionUser = ActionMenuUser;
             <div class="fixed inset-0 z-[70]" aria-hidden="true" @onclick="CloseActionMenu"></div>
-            <section class="fixed z-[71] w-80 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
+            <section class="fixed z-[71] w-64 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
                      style="@ActionMenuStyle"
                      role="menu"
                      aria-label='@WebLoc["Actions"]'
                      @onclick:stopPropagation="true">
-                <div class="border-b border-slate-200 px-2.5 py-2 dark:border-slate-700">
-                    <div class="text-[11px] font-semibold tracking-wide text-slate-500 dark:text-slate-400">@WebLoc["Actions"]</div>
-                    <div class="mt-0.5 truncate text-sm font-semibold text-slate-900 dark:text-slate-100">@GetDisplayName(actionUser)</div>
-                    <div class="truncate text-xs text-slate-500 dark:text-slate-400">@(actionUser.Email ?? actionUser.Username ?? "—")</div>
-                </div>
+                <div class="max-h-[calc(100vh-12rem)] overflow-y-auto p-1">
+                    <button class="@ActionMenuItemClass" disabled="@(!CanEdit(actionUser))" title='@ActionDisabledTitle(actionUser, CanEdit(actionUser), "Redigera användaren.")' @onclick="() => RunUserAction(actionUser, EditUser)">
+                        <span class="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center text-slate-400 [&>svg]:h-3.5 [&>svg]:w-3.5" aria-hidden="true">@((MarkupString)Icons.Edit)</span>
+                        <span>Redigera</span>
+                    </button>
 
-                <div class="max-h-[60vh] overflow-y-auto p-1">
-                    <button class="@ActionMenuItemClass" @onclick="() => RunUserAction(actionUser, ShowDetails)">
-                        <svg class="h-3.5 w-3.5 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
-                        <span>Visa detaljer</span>
+                    <button class="@ActionMenuItemClass" disabled="@(!CanSendConfirmation(actionUser))" title='@ActionDisabledTitle(actionUser, CanSendConfirmation(actionUser), "Skickar bekräftelsemail till användaren.")' @onclick="() => RunUserAction(actionUser, AskSendConfirmation)">
+                        <svg class="h-3.5 w-3.5 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>
+                        <span>Skicka bekräftelsemail</span>
+                    </button>
+
+                    <button class="@ActionMenuItemClass" disabled="@(!CanResetPassword(actionUser))" title='@ActionDisabledTitle(actionUser, CanResetPassword(actionUser), "Skickar ett nytt tillfälligt lösenord till användaren.")' @onclick="() => RunUserAction(actionUser, AskResetPassword)">
+                        <svg class="h-3.5 w-3.5 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="8" cy="15" r="4" /><path d="m10.9 12.1 9.1-9.1M15 4l3 3M18 7l3-3" /></svg>
+                        <span>Återställ lösenord</span>
+                    </button>
+
+                    <button class="@ActionMenuDangerClass" disabled="@(!CanLock(actionUser))" title='@ActionDisabledTitle(actionUser, CanLock(actionUser), "Spärrar användaren så att inloggning inte längre är möjlig.")' @onclick="() => RunUserAction(actionUser, AskToggleLock)">
+                        <span class="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center [&>svg]:h-3.5 [&>svg]:w-3.5" aria-hidden="true">@((MarkupString)Icons.IsLocked(true))</span>
+                        <span>Spärra inloggning</span>
+                    </button>
+
+                    <button class="@ActionMenuItemClass" disabled="@(!CanUnlock(actionUser))" title='@ActionDisabledTitle(actionUser, CanUnlock(actionUser), "Tar bort spärren så att användaren kan logga in igen.")' @onclick="() => RunUserAction(actionUser, AskToggleLock)">
+                        <span class="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center [&>svg]:h-3.5 [&>svg]:w-3.5" aria-hidden="true">@((MarkupString)Icons.IsLocked(false))</span>
+                        <span>Ta bort spärr</span>
                     </button>
 
                     <div class="my-1 border-t border-slate-200 dark:border-slate-700"></div>
 
-                    @if (actionUser.IsInAuth)
-                    {
-                        <button class="@ActionMenuItemClass" disabled="@IsBusy" @onclick="() => RunUserAction(actionUser, EditUser)">
-                            <span class="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center text-slate-400 [&>svg]:h-3.5 [&>svg]:w-3.5" aria-hidden="true">@((MarkupString)Icons.Edit)</span>
-                            <span>Redigera</span>
-                        </button>
+                    <button class="@ActionMenuDangerClass" disabled="@(!CanDeactivate(actionUser))" title='@ActionDisabledTitle(actionUser, CanDeactivate(actionUser), "Inaktiverar kontot utan att ta bort användaren.")' @onclick="() => RunUserAction(actionUser, AskToggleActive)">
+                        <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18.36 6.64a9 9 0 1 1-12.73 0M12 2v10" /></svg>
+                        <span>Inaktivera</span>
+                    </button>
 
-                        <button class="@ActionMenuItemClass" disabled="@IsBusy" @onclick="() => RunUserAction(actionUser, AskSendConfirmation)">
-                            <svg class="h-3.5 w-3.5 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>
-                            <span>Skicka bekräftelsemail</span>
-                        </button>
-                    }
-                    else
-                    {
-                        <button class="@ActionMenuItemClass" disabled="@IsBusy" @onclick="() => RunUserActionAsync(actionUser, RecreateUserAsync)">
-                            <svg class="h-3.5 w-3.5 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 4v16m8-8H4" /></svg>
-                            <span>@WebLoc["RecreateAuthUser"]</span>
-                        </button>
-                    }
+                    <button class="@ActionMenuDangerClass" disabled="@(!CanRemoveAuth(actionUser))" title='@ActionDisabledTitle(actionUser, CanRemoveAuth(actionUser), "Tar bort användarens inloggningskonto.")' @onclick="() => RunUserAction(actionUser, AskRemoveOnlyFromRegister)">
+                        <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M16 17l5-5-5-5M21 12H9M12 19H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h7" /></svg>
+                        <span>Ta bort inloggning</span>
+                    </button>
 
-                    @if (IsPending(actionUser))
-                    {
-                        <button class="@ActionMenuItemClass" disabled="@IsBusy" @onclick="() => RunUserAction(actionUser, AskResendInvitation)">
-                            <svg class="h-3.5 w-3.5 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>
-                            <span>@WebLoc["ResendInvite"]</span>
-                        </button>
-                    }
-
-                    @if (actionUser.IsInAuth)
-                    {
-                        <button class="@ActionMenuItemClass" disabled="@IsBusy" title="Skickar ett nytt tillfälligt lösenord till användaren." @onclick="() => RunUserAction(actionUser, AskResetPassword)">
-                            <svg class="h-3.5 w-3.5 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="8" cy="15" r="4" /><path d="m10.9 12.1 9.1-9.1M15 4l3 3M18 7l3-3" /></svg>
-                            <span>Återställ lösenord</span>
-                        </button>
-
-                        <button class="@(IsLocked(actionUser) ? ActionMenuItemClass : ActionMenuDangerClass)" disabled="@IsBusy" title="Låser användaren så att inloggning inte längre är möjlig." @onclick="() => RunUserAction(actionUser, AskToggleLock)">
-                            <span class="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center [&>svg]:h-3.5 [&>svg]:w-3.5" aria-hidden="true">@((MarkupString)Icons.IsLocked(!IsLocked(actionUser)))</span>
-                            <span>@(IsLocked(actionUser) ? "Lås upp" : "Lås")</span>
-                        </button>
-
-                        <button class="@(IsDeactivated(actionUser) ? ActionMenuItemClass : ActionMenuDangerClass)" disabled="@IsBusy" title="Inaktiverar kontot så att användaren inte kan logga in." @onclick="() => RunUserAction(actionUser, AskToggleActive)">
-                            <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18.36 6.64a9 9 0 1 1-12.73 0M12 2v10" /></svg>
-                            <span>@(IsDeactivated(actionUser) ? "Aktivera" : "Inaktivera")</span>
-                        </button>
-                    }
-
-                    <div class="my-1 border-t border-slate-200 dark:border-slate-700"></div>
-
-                    @if (actionUser.IsInAuth || !string.IsNullOrWhiteSpace(actionUser.IdAuth))
-                    {
-                        <button class="@ActionMenuDangerClass" disabled="@IsBusy" title="Tar bort inloggningskontot men behåller användarhistorik om det behövs." @onclick="() => RunUserAction(actionUser, AskRemoveOnlyFromRegister)">
-                            <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M16 17l5-5-5-5M21 12H9M12 19H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h7" /></svg>
-                            <span>Ta bort inloggning</span>
-                        </button>
-                    }
-
-                    <button class="@ActionMenuDangerClass" disabled="@IsBusy" title="Tar bort användaren permanent." @onclick="() => RunUserAction(actionUser, AskDeleteUser)">
+                    <button class="@ActionMenuDangerClass" disabled="@(!CanDelete(actionUser))" title='@ActionDisabledTitle(actionUser, CanDelete(actionUser), "Tar bort användaren om det är tillåtet.")' @onclick="() => RunUserAction(actionUser, AskDeleteUser)">
                         <span class="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center [&>svg]:h-3.5 [&>svg]:w-3.5" aria-hidden="true">@((MarkupString)Icons.DeleteSVG)</span>
                         <span>@AppLoc[nameof(ResourceApp.delete)]</span>
                     </button>
@@ -463,7 +432,7 @@
                         <div class="text-xs font-semibold tracking-wide text-blue-600 dark:text-blue-300">@WebLoc["UserDetails"]</div>
                         <h4 class="truncate text-lg font-semibold text-slate-900 dark:text-slate-100">@GetDisplayName(DetailsUser)</h4>
                         <span class="mt-1 inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
-                            @GetStatusLabel(DetailsUser)
+                            @GetAccountStatusLabel(DetailsUser)
                         </span>
                     </div>
                     <button type="button"
@@ -492,15 +461,15 @@
                         <dd class="font-medium text-slate-900 dark:text-slate-100">@GetDepartmentName(DetailsUser)</dd>
                     </div>
                     <div class="rounded-lg border border-slate-200 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-950">
-                        <dt class="text-xs text-slate-500 dark:text-slate-400">@WebLoc["AuthStatus"]</dt>
-                        <dd class="font-medium text-slate-900 dark:text-slate-100">@GetStatusLabel(DetailsUser)</dd>
+                        <dt class="text-xs text-slate-500 dark:text-slate-400">Kontostatus</dt>
+                        <dd class="font-medium text-slate-900 dark:text-slate-100">@GetAccountStatusLabel(DetailsUser)</dd>
                     </div>
                     <div class="rounded-lg border border-slate-200 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-950">
                         <dt class="text-xs text-slate-500 dark:text-slate-400">@WebLoc["LastLogin"]</dt>
                         <dd class="font-medium text-slate-900 dark:text-slate-100">@FormatDateTime(DetailsUser.LastLoginAt)</dd>
                     </div>
                     <div class="rounded-lg border border-slate-200 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-950">
-                        <dt class="text-xs text-slate-500 dark:text-slate-400">Spärrstatus</dt>
+                        <dt class="text-xs text-slate-500 dark:text-slate-400">Inloggningsspärr</dt>
                         <dd class="font-medium text-slate-900 dark:text-slate-100">@GetLockoutStatus(DetailsUser)</dd>
                     </div>
                     <div class="rounded-lg border border-slate-200 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-950">

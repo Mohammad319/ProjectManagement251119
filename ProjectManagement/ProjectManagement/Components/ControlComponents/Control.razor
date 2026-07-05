@@ -5,13 +5,12 @@
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
 @using ProjectManagement.Components.ControlComponents.ApplicationTemplate
-@using ProjectManagement.Components.ControlComponents.Project.Storage
 @using ProjectManagement.Components.ControlComponents.Template
 @attribute [Authorize(Roles = PMRolesConst.Tenant.Users)]
 
 @inject AuthenticationStateProvider AuthStateProvider
 
-<div class="space-y-2">
+<div class="pm-control-shell space-y-2">
     <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
         <div class="pointer-events-auto h-[min(78vh,960px)] overflow-hidden">
             <MhdTabs Items="@Tabs"
@@ -49,7 +48,8 @@
             AddTab("calculation", CalcResource.calculation, "fa fa-calculator", @<ProjectManagement.Components.ControlComponents.Calculation.CalculationControl />);
             AddTab("organisation", "Kunder & leverantörer", "fa fa-address-book", @<ProjectManagement.Components.ControlComponents.Organisation.OrganisationCategory.CategoriesUI />);
             AddTab("selfInspection", ResourceLoc.selfInspection, "fa fa-clipboard-check", @<ApplicationIndexUI />);
-            AddTab("storage", CalcResource.StorageSort, "fa fa-boxes-stacked", @<StorageIndex />);
+            // "Bibliotek" (StorageIndex) removed from the settings left menu — the library belongs
+            // to calculation work and is used contextually inside the calculation view instead.
         }
         else
         {

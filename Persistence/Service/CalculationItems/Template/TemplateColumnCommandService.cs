@@ -73,6 +73,33 @@ namespace Persistence.Service.CalculationItems.Template
             return true;
         }
 
+        public async Task<TemplateColumnModelDTO?> CopyAsync(int id, int? sourceDepartmentId, int? targetDepartmentId, CancellationToken ct)
+        {
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            var source = await context.TemplateColumns
+                .AsNoTracking()
+                .FirstOrDefaultAsync(
+                    x => x.Id == id &&
+                         (sourceDepartmentId.HasValue
+                             ? (x.DepartmentId == sourceDepartmentId.Value || !x.DepartmentId.HasValue)
+                             : !x.DepartmentId.HasValue),
+                    ct);
+
+            if (source is null)
+                return null;
+
+            if (targetDepartmentId.HasValue &&
+                !await context.Department.AsNoTracking().AnyAsync(x => x.Id == targetDepartmentId.Value, ct))
+                return null;
+
+            var copy = new TemplateColumnEntity($"Kopia av {source.Name}", true, targetDepartmentId, source.GetColumnsSnapshot());
+            context.TemplateColumns.Add(copy);
+            await context.SaveChangesAsync(ct);
+
+            return copy.ToModel();
+        }
+
         public async Task<TemplateColumnModelDTO?> SetDefaultAsync(int calculationId, int? templateColumnId, int? departmentId, CancellationToken ct)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);

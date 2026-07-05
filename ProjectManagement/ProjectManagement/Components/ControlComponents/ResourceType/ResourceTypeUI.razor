@@ -4,7 +4,7 @@
 
 @if (Sort is not null)
 {
-    <ResourceSortUI ResourceTypeId="Sort.Id" TypeName="@Sort.Name" Callback="CloseSortAsync" />
+    <ResourceSortUI ResourceTypeId="Sort.Id" TypeName="@Sort.Name" ParentAllowedAccountIds="Sort.AllowedAccountIds" Callback="CloseSortAsync" />
 }
 else
 {

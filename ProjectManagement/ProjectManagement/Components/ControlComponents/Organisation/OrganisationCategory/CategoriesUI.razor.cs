@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.JSInterop;
 using ProjectManagement.Client.Constant;
 using ProjectManagement.Client.Helper;
+using ProjectManagement.Components.ControlComponents.Department;
 using ProjectManagement.Components.ControlComponents.Organisation.Organisation;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Organisation;
@@ -32,10 +33,9 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
 
         // Filters
         private string _search = string.Empty;
-        private int? _mainGroupFilter;
-        private int? _subCategoryFilter;
-        private string? _statusFilter;
-        private ActiveFilter _activeFilter = ActiveFilter.Active;
+        private HashSet<int> _mainGroupFilters = [];
+        private HashSet<int> _subCategoryFilters = [];
+        private HashSet<string> _statusFilters = new(StringComparer.OrdinalIgnoreCase);
 
         // Sorting
         private OrgSortColumn _sort = OrgSortColumn.Name;
@@ -124,36 +124,46 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
         private IEnumerable<ListOrganisationCategoryDTO> MainGroups
             => _categories.Where(x => x.ParentCategoryId is null).OrderBy(x => x.Name);
 
-        private IEnumerable<ListOrganisationCategoryDTO> SubCategoriesForFilter
-            => _mainGroupFilter is null
-                ? _categories.Where(x => x.ParentCategoryId is not null).OrderBy(x => x.Name)
-                : _categories.Where(x => x.ParentCategoryId == _mainGroupFilter).OrderBy(x => x.Name);
+        private IReadOnlyList<FilterMultiSelect<int>.Option> MainGroupOptions
+            => MainGroups.Select(x => new FilterMultiSelect<int>.Option(x.Id, x.Name)).ToList();
 
-        private IEnumerable<string> StatusOptions
-            => _all.Where(x => !string.IsNullOrWhiteSpace(x.Status))
-                   .Select(x => x.Status.Trim())
-                   .Distinct(StringComparer.OrdinalIgnoreCase)
-                   .OrderBy(x => x);
+        private IEnumerable<ListOrganisationCategoryDTO> SubCategoriesForFilter
+            => _mainGroupFilters.Count == 0
+                ? _categories.Where(x => x.ParentCategoryId is not null).OrderBy(x => x.Name)
+                : _categories.Where(x => x.ParentCategoryId is int parentId && _mainGroupFilters.Contains(parentId)).OrderBy(x => x.Name);
+
+        private IReadOnlyList<FilterMultiSelect<int>.Option> SubCategoryOptions
+            => SubCategoriesForFilter.Select(x => new FilterMultiSelect<int>.Option(x.Id, x.Name)).ToList();
+
+        private IReadOnlyList<FilterMultiSelect<string>.Option> StatusFilterOptions
+            => OrganisationStatusCatalog.FixedStatuses
+                .Select(x => new FilterMultiSelect<string>.Option(x, x))
+                .ToList();
+
+        private string ResultCountText
+        {
+            get
+            {
+                var count = Filtered().Count;
+                if (count == _all.Count)
+                    return $"{count} poster";
+
+                return count == 0 ? "0 träffar" : $"Visar {count} av {_all.Count}";
+            }
+        }
 
         private List<OrganisationRowDTO> Filtered()
         {
             IEnumerable<OrganisationRowDTO> q = _all;
 
-            q = _activeFilter switch
-            {
-                ActiveFilter.Active => q.Where(x => x.IsVisible),
-                ActiveFilter.Archived => q.Where(x => !x.IsVisible),
-                _ => q
-            };
+            if (_mainGroupFilters.Count > 0)
+                q = q.Where(x => x.MainGroupId is int id && _mainGroupFilters.Contains(id));
 
-            if (_mainGroupFilter is not null)
-                q = q.Where(x => x.MainGroupId == _mainGroupFilter);
+            if (_subCategoryFilters.Count > 0)
+                q = q.Where(x => x.SubCategoryId is int id && _subCategoryFilters.Contains(id));
 
-            if (_subCategoryFilter is not null)
-                q = q.Where(x => x.SubCategoryId == _subCategoryFilter);
-
-            if (!string.IsNullOrWhiteSpace(_statusFilter))
-                q = q.Where(x => string.Equals(x.Status?.Trim(), _statusFilter, StringComparison.OrdinalIgnoreCase));
+            if (_statusFilters.Count > 0)
+                q = q.Where(x => _statusFilters.Contains(OrganisationStatusCatalog.Normalize(x.Status, x.IsVisible)));
 
             if (!string.IsNullOrWhiteSpace(_search))
             {
@@ -171,7 +181,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
                 OrgSortColumn.MainGroup => Order(q, x => x.MainGroup),
                 OrgSortColumn.SubCategory => Order(q, x => x.SubCategory),
                 OrgSortColumn.City => Order(q, x => x.City),
-                OrgSortColumn.Status => Order(q, x => x.Status),
+                OrgSortColumn.Status => Order(q, x => OrganisationStatusCatalog.Normalize(x.Status, x.IsVisible)),
                 OrgSortColumn.UpdatedAt => _sortDesc
                     ? q.OrderByDescending(x => x.UpdatedAt)
                     : q.OrderBy(x => x.UpdatedAt),
@@ -222,31 +232,14 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
             _page = 1;
         }
 
-        private void OnMainGroupChanged(ChangeEventArgs e)
+        private void OnMainGroupFiltersChanged()
         {
-            _mainGroupFilter = ParseNullableInt(e.Value?.ToString());
-            _subCategoryFilter = null;
+            var allowedSubCategories = SubCategoriesForFilter.Select(x => x.Id).ToHashSet();
+            _subCategoryFilters.RemoveWhere(x => !allowedSubCategories.Contains(x));
             _page = 1;
         }
 
-        private void OnSubCategoryChanged(ChangeEventArgs e)
-        {
-            _subCategoryFilter = ParseNullableInt(e.Value?.ToString());
-            _page = 1;
-        }
-
-        private void OnStatusChanged(ChangeEventArgs e)
-        {
-            var v = e.Value?.ToString();
-            _statusFilter = string.IsNullOrWhiteSpace(v) ? null : v;
-            _page = 1;
-        }
-
-        private void SetActiveFilter(ActiveFilter filter)
-        {
-            _activeFilter = filter;
-            _page = 1;
-        }
+        private void OnFilterChanged() => _page = 1;
 
         private void OnSearchInput(ChangeEventArgs e)
         {
@@ -310,7 +303,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
                 new Dictionary<string, object>
                 {
                     [nameof(OrganisationFormUI.ID)] = id,
-                    [nameof(OrganisationFormUI.CategoryID)] = _subCategoryFilter ?? 0,
+                    [nameof(OrganisationFormUI.CategoryID)] = _subCategoryFilters.Count == 1 ? _subCategoryFilters.Single() : 0,
                     [nameof(OrganisationFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, OnFormClosed)
                 },
                 BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge,
@@ -329,7 +322,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
         private void OpenCategoryManager()
         {
             MHD.Modal.ShowComponent<CategoryManagerUI>(
-                "Hantera kategorier",
+                "Hantera grupper",
                 new Dictionary<string, object>
                 {
                     [nameof(CategoryManagerUI.OnChanged)] = EventCallback.Factory.Create(this, LoadAsync)
@@ -343,6 +336,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
             if (result)
             {
                 row.IsVisible = !archive;
+                row.Status = archive ? OrganisationStatusCatalog.Archived : OrganisationStatusCatalog.Active;
                 MHD.Notifications(ToastType.Update, true);
             }
             else
@@ -371,11 +365,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
             await InvokeAsync(StateHasChanged);
         }
 
-        private static int? ParseNullableInt(string? value)
-            => int.TryParse(value, out var parsed) && parsed > 0 ? parsed : null;
-
         public enum OrgSortColumn { Name, MainGroup, SubCategory, City, Status, UpdatedAt }
         public enum OrgColumn { OrgNr, Email, Phone, City, Country, Status, UpdatedAt }
-        public enum ActiveFilter { Active, Archived, All }
     }
 }

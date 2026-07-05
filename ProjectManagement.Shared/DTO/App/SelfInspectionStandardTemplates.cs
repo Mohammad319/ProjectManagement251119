@@ -90,7 +90,11 @@ public static class SelfInspectionStandardTemplates
             "Kontrollera viktiga steg från förfrågan till anbud, överlämning och avslut.",
             systemTemplate ? ChecklistKey : string.Empty,
             systemTemplate,
-            sections.SelectMany(x => x.Points.Select(point => CreateRow(point, x.Section, ChecklistColumns()))).ToList());
+            sections.SelectMany((x, sectionIndex) =>
+            {
+                var section = CreateSection(x.Section, sectionIndex);
+                return x.Points.Select((point, pointIndex) => CreateRow(point, section, pointIndex, ChecklistColumns()));
+            }).ToList());
     }
 
     public static ApplicationDTO CreateHandover(int departmentId, bool systemTemplate = false)
@@ -117,7 +121,11 @@ public static class SelfInspectionStandardTemplates
             "Stöd för överlämningsmöte mellan kalkyl och produktion.",
             systemTemplate ? HandoverKey : string.Empty,
             systemTemplate,
-            sections.Select(section => CreateRow(section, section, HandoverColumns())).ToList());
+            sections.Select((sectionTitle, index) =>
+            {
+                var section = CreateSection(sectionTitle, index);
+                return CreateRow(sectionTitle, section, index, HandoverColumns());
+            }).ToList());
     }
 
     public static ApplicationDTO CreateRiskAnalysis(int departmentId, bool systemTemplate = false)
@@ -130,7 +138,7 @@ public static class SelfInspectionStandardTemplates
             systemTemplate ? RiskAnalysisKey : string.Empty,
             systemTemplate,
             [
-                CreateRow("Riskrad", "Riskanalys", RiskAnalysisColumns())
+                CreateRow("Riskrad", CreateSection("Riskanalys", 0), 0, RiskAnalysisColumns())
             ]);
     }
 
@@ -157,18 +165,53 @@ public static class SelfInspectionStandardTemplates
                 TemplateType = type,
                 IsSystemTemplate = systemTemplate,
                 SystemTemplateKey = systemTemplateKey,
+                Sections = CreateSectionsFromRows(rows),
                 Rows = rows
             }
         };
     }
 
-    private static RowDTO CreateRow(string name, string section, IReadOnlyList<AttributeDTO> columns)
+    private static List<SelfInspectionSectionData> CreateSectionsFromRows(List<RowDTO> rows)
+    {
+        var sections = new List<SelfInspectionSectionData>();
+        foreach (var row in rows)
+        {
+            if (sections.Any(x => x.Id == row.SectionId))
+                continue;
+
+            sections.Add(new SelfInspectionSectionData
+            {
+                Id = row.SectionId,
+                Title = row.SectionTitle,
+                SortOrder = sections.Count + 1,
+                IsVisible = true
+            });
+        }
+
+        return sections;
+    }
+
+    private static SelfInspectionSectionData CreateSection(string title, int sortOrder)
+    {
+        return new SelfInspectionSectionData
+        {
+            Id = Guid.NewGuid(),
+            Title = title,
+            SortOrder = sortOrder,
+            IsVisible = true
+        };
+    }
+
+    private static RowDTO CreateRow(string name, SelfInspectionSectionData section, int sortOrder, IReadOnlyList<AttributeDTO> columns)
     {
         return new RowDTO
         {
             ID = Guid.NewGuid(),
             Name = name,
-            Description = section,
+            Description = section.Title,
+            SectionId = section.Id,
+            SectionTitle = section.Title,
+            SortOrder = sortOrder,
             IsVisible = true,
             Attributes = columns.Select(CloneColumn).ToList()
         };
@@ -216,11 +259,26 @@ public static class SelfInspectionStandardTemplates
             AttributeType = type,
             Required = required,
             Validation = validation,
+            Label = label,
+            FieldKey = key,
+            FieldTypeLabel = ToFieldTypeLabel(type),
+            IsComputed = key is RiskAnalysisFieldKeys.RiskValue or RiskAnalysisFieldKeys.RiskLevel,
             Style = string.IsNullOrWhiteSpace(key)
                 ? $"label:{label}"
                 : $"key:{key};label:{label}"
         };
     }
+
+    private static string ToFieldTypeLabel(AttributeType type) => type switch
+    {
+        AttributeType.TextArea => "Lång text",
+        AttributeType.Int or AttributeType.Double => "Tal",
+        AttributeType.Date => "Datum",
+        AttributeType.DateTime => "Datum och tid",
+        AttributeType.Bool => "Checkbox",
+        AttributeType.Select => "Dropdown",
+        _ => "Text"
+    };
 
     private static AttributeDTO CloneColumn(AttributeDTO source)
     {
@@ -245,9 +303,15 @@ public static class SelfInspectionStandardTemplates
 
     private static void ResetIds(ApplicationDTO template)
     {
+        var sectionIdMap = template.Data.Sections.ToDictionary(x => x.Id, _ => Guid.NewGuid());
+        foreach (var section in template.Data.Sections)
+            section.Id = sectionIdMap[section.Id];
+
         foreach (var row in template.Data.Rows)
         {
             row.ID = Guid.NewGuid();
+            if (sectionIdMap.TryGetValue(row.SectionId, out var newSectionId))
+                row.SectionId = newSectionId;
             foreach (var attr in row.Attributes)
                 attr.ID = Guid.NewGuid();
         }

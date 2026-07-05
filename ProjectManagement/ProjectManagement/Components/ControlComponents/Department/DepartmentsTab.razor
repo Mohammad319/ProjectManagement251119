@@ -156,7 +156,7 @@ else
 
             @* Desktop table: sticky header + only the rows scroll + sticky pager at the bottom.
                table-fixed with the column widths below keeps it inside the viewport (no horizontal scroll). *@
-            <section class="hidden min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:flex">
+            <section class="hidden min-h-[18rem] flex-1 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:flex">
                 <div class="min-h-0 flex-1 overflow-auto">
                     <table class="w-full table-fixed border-separate border-spacing-0">
                         <colgroup>
@@ -172,10 +172,7 @@ else
                                 <th class="border-b border-slate-200 bg-slate-50 px-3 py-1.5 text-left text-[11px] font-semibold text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
                                     <button type="button" class="inline-flex items-center gap-1 hover:text-slate-700 dark:hover:text-slate-200" @onclick="() => SortBy(DeptSortColumn.Name)">
                                         Namn
-                                        @if (SortColumn == DeptSortColumn.Name)
-                                        {
-                                            <span>@(SortDescending ? "▼" : "▲")</span>
-                                        }
+                                        <span class='text-[10px] @(SortColumn == DeptSortColumn.Name ? "text-slate-700 dark:text-slate-200" : "text-slate-300 dark:text-slate-500")'>@SortArrow(DeptSortColumn.Name)</span>
                                     </button>
                                 </th>
                                 <th class="border-b border-slate-200 bg-slate-50 px-3 py-1.5 text-left text-[11px] font-semibold text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
@@ -184,28 +181,19 @@ else
                                 <th class="border-b border-slate-200 bg-slate-50 px-3 py-1.5 text-left text-[11px] font-semibold text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
                                     <button type="button" class="inline-flex items-center gap-1 hover:text-slate-700 dark:hover:text-slate-200" @onclick="() => SortBy(DeptSortColumn.Users)">
                                         Användare
-                                        @if (SortColumn == DeptSortColumn.Users)
-                                        {
-                                            <span>@(SortDescending ? "▼" : "▲")</span>
-                                        }
+                                        <span class='text-[10px] @(SortColumn == DeptSortColumn.Users ? "text-slate-700 dark:text-slate-200" : "text-slate-300 dark:text-slate-500")'>@SortArrow(DeptSortColumn.Users)</span>
                                     </button>
                                 </th>
                                 <th class="border-b border-slate-200 bg-slate-50 px-3 py-1.5 text-left text-[11px] font-semibold text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
                                     <button type="button" class="inline-flex items-center gap-1 hover:text-slate-700 dark:hover:text-slate-200" @onclick="() => SortBy(DeptSortColumn.Projects)">
                                         Projekt
-                                        @if (SortColumn == DeptSortColumn.Projects)
-                                        {
-                                            <span>@(SortDescending ? "▼" : "▲")</span>
-                                        }
+                                        <span class='text-[10px] @(SortColumn == DeptSortColumn.Projects ? "text-slate-700 dark:text-slate-200" : "text-slate-300 dark:text-slate-500")'>@SortArrow(DeptSortColumn.Projects)</span>
                                     </button>
                                 </th>
                                 <th class="border-b border-slate-200 bg-slate-50 px-3 py-1.5 text-left text-[11px] font-semibold text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
                                     <button type="button" class="inline-flex items-center gap-1 hover:text-slate-700 dark:hover:text-slate-200" @onclick="() => SortBy(DeptSortColumn.Calculations)">
                                         Kalkyl
-                                        @if (SortColumn == DeptSortColumn.Calculations)
-                                        {
-                                            <span>@(SortDescending ? "▼" : "▲")</span>
-                                        }
+                                        <span class='text-[10px] @(SortColumn == DeptSortColumn.Calculations ? "text-slate-700 dark:text-slate-200" : "text-slate-300 dark:text-slate-500")'>@SortArrow(DeptSortColumn.Calculations)</span>
                                     </button>
                                 </th>
                                 <th class="border-b border-slate-200 bg-slate-50 px-3 py-1.5 text-right text-[11px] font-semibold text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">

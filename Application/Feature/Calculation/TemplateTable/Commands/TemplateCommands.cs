@@ -57,6 +57,19 @@ namespace Application.Feature.Calculation.TemplateTable.Commands
     }
 
     // ----------------------------------------------------------
+    // COPY TEMPLATE (creates an editable "Kopia av …")
+    // ----------------------------------------------------------
+    public sealed record CopyTemplateCommand(int Id, int? SourceDepartmentId, int? TargetDepartmentId)
+        : IRequest<TemplateModelDTO?>;
+
+    public sealed class CopyTemplateCommandHandler(ITemplateCommandService service)
+                : IRequestHandler<CopyTemplateCommand, TemplateModelDTO?>
+    {
+        public Task<TemplateModelDTO?> Handle(CopyTemplateCommand request, CancellationToken ct)
+            => service.CopyAsync(request.Id, request.SourceDepartmentId, request.TargetDepartmentId, ct);
+    }
+
+    // ----------------------------------------------------------
     // SET DEFAULT TEMPLATE
     // ----------------------------------------------------------
     public sealed record SetDefaultTemplateCommand(int CalculationId, int? TemplateId, int? DepartmentId)

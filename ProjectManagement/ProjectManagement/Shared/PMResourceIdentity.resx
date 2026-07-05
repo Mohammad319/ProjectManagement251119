@@ -142,10 +142,10 @@
     <value>Forgot password?</value>
   </data>
   <data name="Label_PersonalData" xml:space="preserve">
-    <value>Personal data</value>
+    <value>Personuppgifter</value>
   </data>
   <data name="Label_ThirdParty" xml:space="preserve">
-    <value>Third-Party</value>
+    <value>Tredje part</value>
   </data>
   <data name="lockout" xml:space="preserve">
     <value>Lockout</value>
@@ -160,13 +160,13 @@
     <value>Login</value>
   </data>
   <data name="logout" xml:space="preserve">
-    <value>Logout</value>
+    <value>Logga ut</value>
   </data>
   <data name="logoutConfirmMsg" xml:space="preserve">
     <value>Are you sure you want to logout?</value>
   </data>
   <data name="Menu_Profile" xml:space="preserve">
-    <value>Profile</value>
+    <value>Min profil</value>
   </data>
   <data name="Nav_BackToHome" xml:space="preserve">
     <value>Back to Home</value>
@@ -181,7 +181,7 @@
     <value>Old password</value>
   </data>
   <data name="password" xml:space="preserve">
-    <value>Password</value>
+    <value>Lösenord</value>
   </data>
   <data name="passwordForget" xml:space="preserve">
     <value>Forgot password?</value>
@@ -215,7 +215,7 @@
     <value>Role</value>
   </data>
   <data name="Security_TwoFactorAuthentication" xml:space="preserve">
-    <value>Two-factor authentication</value>
+    <value>Tvåfaktorsautentisering</value>
   </data>
   <data name="SuperManger" xml:space="preserve">
     <value>Super Manger</value>

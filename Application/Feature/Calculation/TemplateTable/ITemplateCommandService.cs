@@ -7,6 +7,7 @@ namespace Application.Services.CalculationItems.TemplateTable
         Task<TemplateModelDTO> CreateAsync(TemplateListPostDTO dto, int? departmentId, CancellationToken ct);
         Task<bool> UpdateAsync(int id, TemplateListPostDTO dto, int? departmentId, CancellationToken ct);
         Task<bool> DeleteAsync(int id, int? departmentId, CancellationToken ct);
+        Task<TemplateModelDTO?> CopyAsync(int id, int? sourceDepartmentId, int? targetDepartmentId, CancellationToken ct);
         Task<TemplateModelDTO?> SetDefaultAsync(int calculationId, int? templateId, int? departmentId, CancellationToken ct);
     }
 
@@ -15,6 +16,7 @@ namespace Application.Services.CalculationItems.TemplateTable
         Task<TemplateColumnModelDTO> CreateAsync(TemplateColumnPostDTO dto, int? departmentId, CancellationToken ct);
         Task<bool> UpdateAsync(int id, TemplateColumnPostDTO dto, int? departmentId, CancellationToken ct);
         Task<bool> DeleteAsync(int id, int? departmentId, CancellationToken ct);
+        Task<TemplateColumnModelDTO?> CopyAsync(int id, int? sourceDepartmentId, int? targetDepartmentId, CancellationToken ct);
         Task<TemplateColumnModelDTO?> SetDefaultAsync(int calculationId, int? templateColumnId, int? departmentId, CancellationToken ct);
     }
 }

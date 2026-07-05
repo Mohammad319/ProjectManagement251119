@@ -1,3 +1,4 @@
+using System.Linq;
 using ProjectManagement.Shared.DTO.ResourceType;
 
 namespace Domain.Entities.ResourceType
@@ -17,7 +18,11 @@ namespace Domain.Entities.ResourceType
                 ChangeFactor2 = metadata.ChangeFactor2,
                 BaseCost = metadata.BaseCost,
                 CapWaste = metadata.CapWaste,
-                CO2 = metadata.CO2
+                CO2 = metadata.CO2,
+                AllowedAccountIds = metadata.AllowedAccountIds is { Count: > 0 }
+                    ? metadata.AllowedAccountIds.Where(id => id > 0).Distinct().ToList()
+                    : [],
+                UseOwnAccountSettings = metadata.UseOwnAccountSettings
             };
 
             copy.Normalize();

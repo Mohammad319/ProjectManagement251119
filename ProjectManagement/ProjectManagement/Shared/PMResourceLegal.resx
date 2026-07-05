@@ -68,10 +68,10 @@
     <value>Impressum</value>
   </data>
   <data name="legalTabPrivacy" xml:space="preserve">
-    <value>Privacy Policy</value>
+    <value>Integritetspolicy</value>
   </data>
   <data name="legalTabTerms" xml:space="preserve">
-    <value>Terms of Use</value>
+    <value>Användarvillkor</value>
   </data>
   <data name="legalTabLicenses" xml:space="preserve">
     <value>Third-Party Licenses</value>

@@ -4,6 +4,7 @@ using ProjectManagement.Client.Shared.Components;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Client.Shared.ResourceFiles.Calculation;
 using ProjectManagement.Shared.Base.Calculation;
+using ProjectManagement.Shared.DTO.Account;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.ResourceType;
 
@@ -145,6 +146,48 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
         AccountGroupsListDto? AccountGroupSelected = new();
         ListResourceTypeDTO? ResTypeSelected;
 
+        // The resource sort currently selected on the post (if any).
+        private ListResourceSortDTO? SelectedSort =>
+            ResourceUpdate.ResourceSortId.HasValue
+                ? ResTypeSelected?.ResourcesSort?.FirstOrDefault(x => x.Id == ResourceUpdate.ResourceSortId)
+                : null;
+
+        // Accounts the admin allows for the chosen type/sort. A sort with its own
+        // settings overrides the type; otherwise the type's allowed accounts apply.
+        // Empty result means no restriction (legacy behaviour: all accounts).
+        private IReadOnlyList<int> EffectiveAllowedAccountIds
+        {
+            get
+            {
+                var sort = SelectedSort;
+                if (sort is not null && sort.UseOwnAccountSettings && sort.AllowedAccountIds.Count > 0)
+                    return sort.AllowedAccountIds;
+
+                return ResTypeSelected?.AllowedAccountIds ?? [];
+            }
+        }
+
+        private bool HasAllowedAccountRestriction => EffectiveAllowedAccountIds.Count > 0;
+
+        private List<ListAccountDTO> AllowedAccountsFlat =>
+            (Config.AccountGroups ?? [])
+                .SelectMany(g => g.Accounts ?? [])
+                .Where(a => EffectiveAllowedAccountIds.Contains(a.Id))
+                .ToList();
+
+        // Keep the picked account within the allowed set; auto-select when only one is allowed.
+        private void ApplyAllowedAccountDefault()
+        {
+            var allowed = EffectiveAllowedAccountIds;
+            if (allowed.Count == 0)
+                return;
+
+            if (ResourceUpdate.AccountId is > 0 && allowed.Contains(ResourceUpdate.AccountId.Value))
+                return;
+
+            ResourceUpdate.AccountId = allowed.Count == 1 ? allowed[0] : null;
+        }
+
         ResourceFormDTO Config = new();
         void NewSP()
         {
@@ -179,6 +222,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
 
             //ResourceUpdate.ResType = ty;
             await SetNewAccountAsync(AccountId);
+            ApplyAllowedAccountDefault();
             StateHasChanged();
         }
         async Task ChangeResType(ListResourceTypeDTO rt)
@@ -202,6 +246,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
                 ResourceUpdate.ResourceSortId = null;
                 NormalizeCapFromTaskState();
                 SyncResolvedResourceAndTimes();
+                ApplyAllowedAccountDefault();
             }
             else await ChangeResType(ResTypeSelected);
 
@@ -209,7 +254,11 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
         }
         async Task ChangeResSort2(int? id)
         {
-            if (Resource?.Id > 0) ResourceUpdate.ResourceSortId = id;
+            if (Resource?.Id > 0)
+            {
+                ResourceUpdate.ResourceSortId = id;
+                ApplyAllowedAccountDefault();
+            }
             else if (id.HasValue)
             {
                 ListResourceSortDTO? ResourceSort = ResTypeSelected?.ResourcesSort?.FirstOrDefault(x => x.Id == id);

@@ -5,6 +5,7 @@ using Application.Feature.Organisation.OrganisationType.Queries;
 using Domain.DTO.Category;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using ProjectManagement.Client.Shared.SharedComponent;
 using ProjectManagement.Client.Shared.ResourceFiles.APP;
 using ProjectManagement.Client.Shared.ResourceFiles.Identity;
 using ProjectManagement.Shared;
@@ -33,6 +34,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
 
         private bool IsLoading;
         private string? NameValidationError;
+        private string? WarningReasonValidationError;
         private PostOrganisationDTO PostCompany { get; set; } = new();
         private List<ListOrganisationCategoryDTO> Categories { get; set; } = [];
         private ListOrganisationCategoryDTO? CategorySelected { get; set; }
@@ -46,8 +48,8 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
             [
                 new(1, "Grundinformation"),
                 new(2, "Värdering"),
-                new(3, "Kategori"),
-                new(4, "Kontakter"),
+                new(3, "Grupp"),
+                new(4, "Kontakt"),
             ];
 
             Categories = await MicroBus.Send(new GetOrganisationCategoryQuery()) ?? [];
@@ -55,9 +57,10 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
             if (ID > 0)
                 PostCompany = await MicroBus.Send(new GetOrganisationToPostQuery(ID)) ?? new PostOrganisationDTO();
             else
-                PostCompany = new PostOrganisationDTO { CategoryId = CategoryID };
+                PostCompany = new PostOrganisationDTO { CategoryId = CategoryID, Status = OrganisationStatusCatalog.Active };
 
             EnsureCollections();
+            EnsureDefaults();
             ResolveSelectedBaseCategory();
 
             CustomerGroups = await MicroBus.Send(new GetListOrganisationsTypeQuery(PostCompany.OrganisationTypeID, ID > 0 ? ID : null)) ?? [];
@@ -68,6 +71,79 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
             PostCompany.Notes ??= [];
             PostCompany.Contacts ??= [];
             PostCompany.Address ??= new();
+        }
+
+        private void EnsureDefaults()
+        {
+            if (string.IsNullOrWhiteSpace(PostCompany.Status))
+                PostCompany.Status = OrganisationStatusCatalog.Active;
+        }
+
+        private int? SelectedMainGroupId
+        {
+            get => CategorySelected?.Id;
+            set
+            {
+                CategorySelected = value is int id && id > 0
+                    ? Categories.FirstOrDefault(x => x.Id == id)
+                    : null;
+                PostCompany.CategoryId = 0;
+            }
+        }
+
+        private bool IsWarningStatus =>
+            string.Equals(PostCompany.Status, OrganisationStatusCatalog.Warning, StringComparison.OrdinalIgnoreCase);
+
+        private IReadOnlyList<MhdSelectItem<int?>> OrganisationTypeOptions =>
+            CustomerGroups.Select(x => new MhdSelectItem<int?> { Value = x.Id, Label = x.Name }).ToList();
+
+        private IReadOnlyList<MhdSelectItem<string>> StatusOptions =>
+            OrganisationStatusCatalog.FixedStatuses
+                .Select(x => new MhdSelectItem<string> { Value = x, Label = x, Color = StatusColor(x) })
+                .ToList();
+
+        private IReadOnlyList<MhdSelectItem<YesNoUnkown>> ReviewOptions =>
+        [
+            new() { Value = YesNoUnkown.notSpecified, Label = "Ej angivet" },
+            new() { Value = YesNoUnkown.yes, Label = "Ja" },
+            new() { Value = YesNoUnkown.no, Label = "Nej" },
+            new() { Value = YesNoUnkown.notRelevant, Label = "Ej relevant" },
+            new() { Value = YesNoUnkown.unkown, Label = "Okänd" }
+        ];
+
+        private IReadOnlyList<MhdSelectItem<int?>> MainGroupOptions =>
+            Categories
+                .Where(x => x.ParentCategoryId is null)
+                .OrderBy(x => x.Name)
+                .Select(x => new MhdSelectItem<int?> { Value = x.Id, Label = x.Name })
+                .ToList();
+
+        private IReadOnlyList<MhdSelectItem<int>> SubGroupOptions =>
+            CategorySelected is null
+                ? []
+                : Categories
+                    .Where(x => x.ParentCategoryId == CategorySelected.Id)
+                    .OrderBy(x => x.Name)
+                    .Select(x => new MhdSelectItem<int> { Value = x.Id, Label = x.Name })
+                    .ToList();
+
+        private static string StatusColor(string status) => status switch
+        {
+            OrganisationStatusCatalog.Active => "#16a34a",
+            OrganisationStatusCatalog.UnderReview => "#0284c7",
+            OrganisationStatusCatalog.Approved => "#15803d",
+            OrganisationStatusCatalog.NotApproved => "#dc2626",
+            OrganisationStatusCatalog.Paused => "#f97316",
+            OrganisationStatusCatalog.Archived => "#64748b",
+            OrganisationStatusCatalog.Warning => "#f59e0b",
+            _ => "#94a3b8"
+        };
+
+        private void OnStatusChanged(string status)
+        {
+            PostCompany.Status = OrganisationStatusCatalog.Normalize(status);
+            if (!IsWarningStatus)
+                WarningReasonValidationError = null;
         }
 
         private void ResolveSelectedBaseCategory()
@@ -101,26 +177,6 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
             PostCompany.Notes.RemoveAt(noteIndex);
         }
 
-        private void CategoryChange(ChangeEventArgs e)
-        {
-            if (e.Value is null)
-            {
-                CategorySelected = null;
-                PostCompany.CategoryId = 0;
-                return;
-            }
-
-            if (!int.TryParse(e.Value.ToString(), out var id) || id <= 0)
-            {
-                CategorySelected = null;
-                PostCompany.CategoryId = 0;
-                return;
-            }
-
-            CategorySelected = Categories.FirstOrDefault(x => x.Id == id);
-            PostCompany.CategoryId = 0;
-        }
-
         // Dubblettkontroll: liknande namn som redan finns, plus ett flagga när användaren
         // uttryckligen valt att skapa ändå.
         private List<ListDTO>? SimilarOrganisations;
@@ -133,7 +189,8 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
             if (IsLoading) return;
 
             ValidateNameOnly();
-            if (!string.IsNullOrWhiteSpace(NameValidationError))
+            ValidateWarningReason();
+            if (!string.IsNullOrWhiteSpace(NameValidationError) || !string.IsNullOrWhiteSpace(WarningReasonValidationError))
                 return;
 
             // Endast vid nyskapande, och bara tills användaren bekräftat att det är ett annat företag.
@@ -183,6 +240,14 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
             NameValidationError = string.IsNullOrWhiteSpace(PostCompany.Name)
                 ? string.Format(ResLocalize.FieldIsRequred, nameof(PostCompany.Name))
                 : null;
+        }
+
+        private void ValidateWarningReason()
+        {
+            WarningReasonValidationError =
+                IsWarningStatus && string.IsNullOrWhiteSpace(PostCompany.WarningReason)
+                    ? "Orsak till varning är obligatorisk när status är Varning."
+                    : null;
         }
     }
 }

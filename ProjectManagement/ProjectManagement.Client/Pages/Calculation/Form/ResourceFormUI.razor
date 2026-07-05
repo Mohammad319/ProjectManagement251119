@@ -209,7 +209,24 @@
     <MhdCard Elevated="true" Compact="true" Class="mb-1.5">
         <div class="grid gap-x-2 gap-y-1.5 md:grid-cols-12">
             
-            @if (!Refresh && Config.AccountGroups != null)
+            @if (!Refresh && HasAllowedAccountRestriction)
+            {
+                @* Admin has restricted which accounts are allowed for this type/sort. *@
+                <div class="min-w-0 md:col-span-4">
+                    <label class="@LabelClass">@CalcResource.account</label>
+                    <InputSelect @bind-Value="ResourceUpdate.AccountId" class="@InputClass">
+                        <option></option>
+                        @foreach (var item in AllowedAccountsFlat)
+                        {
+                            <option selected="@(item.Id == ResourceUpdate.AccountId)"
+                                    value="@item.Id">
+                                @($"{item.Account} ({item.Name})")
+                            </option>
+                        }
+                    </InputSelect>
+                </div>
+            }
+            else if (!Refresh && Config.AccountGroups != null)
             {
                 <div class="min-w-0 md:col-span-4">
                     <label class="@LabelClass">@CalcResource.accountGroups</label>

@@ -96,19 +96,31 @@ namespace Persistence.Service.Organisation
         {
             await using var db = await dbFactory.CreateDbContextAsync(ct);
 
-            return await db.Organisation
+            var rows = await db.Organisation
                 .AsNoTracking()
                 .Where(x => x.OrganisationCategoryId == categoryId && x.IsVisible == isVisible)
                 .OrderBy(x => x.Name)
-                .Select(x => new ShortListOrganisationDTO
+                .Select(x => new
                 {
-                    Id = x.Id,
-                    Name = x.Name,
+                    x.Id,
+                    x.Name,
                     Category = x.OrganisationCategory != null && x.OrganisationCategory.ParentCategory != null ? x.OrganisationCategory.ParentCategory.Name : string.Empty,
                     SubCategory = x.OrganisationCategory != null ? x.OrganisationCategory.Name : string.Empty,
-                    Type = x.OrganisationType != null ? x.OrganisationType.Name : string.Empty
+                    Type = x.OrganisationType != null ? x.OrganisationType.Name : string.Empty,
+                    x.IsVisible,
+                    Metadata = x.Metadata
                 })
                 .ToListAsync(ct);
+
+            return rows.Select(x => new ShortListOrganisationDTO
+            {
+                Id = x.Id,
+                Name = x.Name,
+                Category = x.Category,
+                SubCategory = x.SubCategory,
+                Type = x.Type,
+                Status = OrganisationStatusCatalog.Normalize(x.Metadata.Status, x.IsVisible)
+            }).ToList();
         }
 
         public async Task<List<ListDTO>> GetVisibleOrIdAsync(int? id, CancellationToken ct = default)
@@ -183,7 +195,7 @@ namespace Persistence.Service.Organisation
                     Phone = string.IsNullOrWhiteSpace(md.Phone) ? md.Mobile : md.Phone,
                     City = address?.City ?? string.Empty,
                     Country = address?.Country ?? string.Empty,
-                    Status = md.Status,
+                    Status = OrganisationStatusCatalog.Normalize(md.Status, x.IsVisible),
                     IsVisible = x.IsVisible,
                     IsUsed = used.Contains(x.Id),
                     UpdatedAt = x.UpdatedAt ?? x.CreatedAt
@@ -202,6 +214,7 @@ namespace Persistence.Service.Organisation
                 return false;
 
             entity.SetVisibility(visible);
+            entity.UpdateMetadata(md => md.Status = visible ? OrganisationStatusCatalog.Active : OrganisationStatusCatalog.Archived);
             await db.SaveChangesAsync(ct);
             return true;
         }

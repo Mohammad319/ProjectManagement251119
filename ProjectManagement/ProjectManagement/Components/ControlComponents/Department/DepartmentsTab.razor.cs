@@ -128,6 +128,11 @@ public partial class DepartmentsTab
         InvalidateFilterCache();
     }
 
+    protected string SortArrow(DeptSortColumn column)
+        => SortColumn == column
+            ? (SortDescending ? "↓" : "↑")
+            : "↕";
+
     protected void GoToPage(int page)
     {
         CurrentPage = Math.Min(Math.Max(page, 1), TotalPages);

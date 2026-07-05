@@ -13,6 +13,7 @@ public partial class ResourceSortUI
     [Parameter] public EventCallback Callback { get; set; }
     [Parameter] public int ResourceTypeId { get; set; }
     [Parameter] public string TypeName { get; set; } = string.Empty;
+    [Parameter] public List<int> ParentAllowedAccountIds { get; set; } = [];
 
     private List<ResourceSortModel> ResourceSorts = [];
     private bool IsLoading;
@@ -92,6 +93,7 @@ public partial class ResourceSortUI
             new Dictionary<string, object>
             {
                 [nameof(ResourceSortFormUI.ResourceSort)] = model,
+                [nameof(ResourceSortFormUI.ParentAllowedAccountIds)] = ParentAllowedAccountIds ?? [],
                 [nameof(ResourceSortFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, OnSavedAsync)
             },
             MhdDialogSize.ExtraLarge,

@@ -126,9 +126,11 @@ else if (Form is not null)
             <!-- Lockout -->
             <div class="rounded-lg border border-slate-200 bg-slate-50/60 p-2.5 dark:border-slate-700 dark:bg-slate-800/40">
                 <label class="inline-flex cursor-pointer items-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-200">
-                    <InputCheckbox class="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900"
-                                   @bind-Value="Form.LockoutEnabled"
-                                   disabled="@IsBusy" />
+                    <input type="checkbox"
+                           class="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900"
+                           checked="@Form.LockoutEnabled"
+                           disabled="@IsBusy"
+                           @onchange="e => ToggleLockout((bool)(e.Value ?? false))" />
                     <span>Spärrad</span>
                 </label>
 

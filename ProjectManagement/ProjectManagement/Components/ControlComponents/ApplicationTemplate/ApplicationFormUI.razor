@@ -1,107 +1,203 @@
 @using Microsoft.AspNetCore.Authorization
-@using ProjectManagement.Client.Shared.Model.Application
 @using ProjectManagement.Shared.Base.Application
 @attribute [Authorize(Roles = PMRolesConst.Tenant.Users)]
 @inherits AppComponentBase
-@inject ICommandDispatcher MicroBus
 
-@if (RowForm is null)
-{
-    <EditForm id="appForm" Model="@ApplicationUpdate" OnValidSubmit="HandleSubmitAsync">
-        <DataAnnotationsValidator />
+<EditForm id="appForm" Model="@ApplicationUpdate" OnValidSubmit="HandleSubmitAsync">
+    <DataAnnotationsValidator />
 
-        <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-            <div>
-                <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.name:</label>
-                <InputText class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="ApplicationUpdate.Name" />
-                <ValidationMessage For="() => ApplicationUpdate.Name" />
+    <div class="space-y-3">
+        <section class="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
+            <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+                <div class="xl:col-span-2">
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Namn</label>
+                    <InputText class="pm-input" @bind-Value="ApplicationUpdate.Name" />
+                    <ValidationMessage For="() => ApplicationUpdate.Name" class="text-xs text-rose-600 dark:text-rose-400" />
+                </div>
+
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Typ</label>
+                    <InputSelect class="pm-input"
+                                 Value="@ApplicationUpdate.Data.TemplateType"
+                                 ValueChanged="@((string value) => OnTemplateTypeChanged(value))"
+                                 ValueExpression="@(() => ApplicationUpdate.Data.TemplateType)">
+                        @foreach (var templateType in TemplateTypes)
+                        {
+                            <option value="@templateType">@templateType</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Koppling</label>
+                    <InputSelect class="pm-input" @bind-Value="ApplicationUpdate.Data.LinkType">
+                        @foreach (var linkType in LinkTypes)
+                        {
+                            <option value="@linkType">@linkType</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <div class="xl:col-span-2">
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Beskrivning / syfte</label>
+                    <InputTextArea class="pm-input min-h-20" @bind-Value="ApplicationUpdate.Data.Purpose" />
+                </div>
+
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Avdelning</label>
+                    <InputSelect class="pm-input" @bind-Value="ApplicationUpdate.DepartmentId" disabled="@ApplicationUpdate.Data.AllDepartments">
+                        @foreach (var item in Departments)
+                        {
+                            <option value="@item.Id">@item.Name</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Sorteringsordning</label>
+                    <InputNumber class="pm-input" @bind-Value="ApplicationUpdate.Data.SortOrder" />
+                </div>
             </div>
 
-            <div>
-                <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Typ:</label>
-                <InputSelect class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900"
-                             Value="@ApplicationUpdate.Data.TemplateType"
-                             ValueChanged="@((string value) => OnTemplateTypeChanged(value))"
-                             ValueExpression="@(() => ApplicationUpdate.Data.TemplateType)">
-                    @foreach (var templateType in TemplateTypes)
-                    {
-                        <option value="@templateType">@templateType</option>
-                    }
-                </InputSelect>
+            <div class="mt-3 flex flex-wrap items-center gap-2">
+                <label class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800/50">
+                    <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 dark:border-slate-600 dark:bg-slate-800" @bind-Value="ApplicationUpdate.Data.AllDepartments" />
+                    <span>Alla avdelningar</span>
+                </label>
+                <label class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800/50">
+                    <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 dark:border-slate-600 dark:bg-slate-800" @bind-Value="ApplicationUpdate.IsVisible" />
+                    <span>Visa</span>
+                </label>
+                <label class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800/50">
+                    <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 dark:border-slate-600 dark:bg-slate-800" @bind-Value="ApplicationUpdate.Data.RequiredBeforeOffer" />
+                    <span>Obligatorisk före anbud/offert</span>
+                </label>
+            </div>
+        </section>
+
+        <section class="rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+            <div class="flex items-center justify-between border-b border-slate-200 px-3 py-2 dark:border-slate-700">
+                <div>
+                    <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100">Struktur</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Sektioner med kontrollpunkter/rader.</p>
+                </div>
+                <button type="button" class="pm-btn pm-btn-success" @onclick="AddSection">+ Lägg till sektion</button>
             </div>
 
-            <div>
-                <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceApp.department:</label>
-                <InputSelect class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="ApplicationUpdate.DepartmentId">
-                    @foreach (var item in Departments)
-                    {
-                        <option value="@item.Id">@item.Name</option>
-                    }
-                </InputSelect>
-                <ValidationMessage For="() => ApplicationUpdate.DepartmentId" />
-            </div>
-
-            <div>
-                <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Syfte:</label>
-                <InputText class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900"
-                           @bind-Value="ApplicationUpdate.Data.Purpose" />
-            </div>
-
-            <div class="flex items-center gap-2 py-1">
-                <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 dark:border-slate-600 dark:bg-slate-800" @bind-Value="ApplicationUpdate.IsVisible" />
-                <label class="text-sm text-slate-700 dark:text-slate-200">@ResourceApp.isVisible</label>
-            </div>
-
-            <div>
-                <button class="inline-flex items-center justify-center rounded-md border border-emerald-400 px-3 py-1.5 text-sm font-medium text-emerald-600 transition hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-900/30 mt-3" type="button" @onclick="OpenNewRow">
-                    @AppLoc[LocalizerConst.New, ResourceLoc.row]
-                </button>
-            </div>
-        </div>
-    </EditForm>
-
-    <table class="min-w-full divide-y divide-slate-200 overflow-hidden rounded-lg border border-slate-200 text-sm dark:divide-slate-700 dark:border-slate-700 mt-2">
-        <thead class="bg-slate-50 dark:bg-slate-800/80">
-            <tr>
-                <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200">@CalcResource.name</th>
-                <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:100px;">@ResourceApp.lastUpdate</th>
-                <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:100px;">@ResourceApp.isVisible</th>
-                <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200">@ResourceLoc.description</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
-            @if (ApplicationUpdate.Data.Rows.Count == 0)
-            {
-                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60">
-                    <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200" colspan="4">@ResourceApp.notFoundData</td>
-                </tr>
-            }
-            else
-            {
-                @foreach (var row in ApplicationUpdate.Data.Rows)
+            <div class="max-h-[48vh] space-y-2 overflow-y-auto p-3">
+                @foreach (var section in SectionsForUi)
                 {
-                    <tr class="min-w-full divide-y divide-slate-200 overflow-hidden rounded-lg border border-slate-200 text-sm dark:divide-slate-700 dark:border-slate-700">
-                        <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200">
-                            <button type="button" @onclick="() => Remove(row)" class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-red-300 bg-red-50 text-red-600 transition hover:bg-red-100 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50">@((MarkupString)Icons.DeleteSVG)</button>
-                            <button type="button" @onclick="() => RowForm = row" class="text-sky-600 hover:text-sky-700 underline-offset-2 hover:underline dark:text-sky-300 dark:hover:text-sky-200">@row.Name</button>
-                        </td>
-                        <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200"></td>
-                        <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200"><input type="checkbox" disabled checked="@row.IsVisible" /></td>
-                        <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200">@row.Description</td>
-                    </tr>
-                }
-            }
-        </tbody>
-    </table>
+                    var rows = RowsForSection(section).ToList();
+                    <div @key="section.Id" class="rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/40">
+                        <div class="grid grid-cols-1 gap-2 border-b border-slate-200 p-2 dark:border-slate-700 lg:grid-cols-[1fr_1fr_120px_auto]">
+                            <InputText class="pm-input" @bind-Value="section.Title" placeholder="Rubrik" />
+                            <InputText class="pm-input" @bind-Value="section.Description" placeholder="Beskrivning, valfritt" />
+                            <InputNumber class="pm-input" @bind-Value="section.SortOrder" />
+                            <div class="flex flex-wrap items-center gap-2">
+                                <label class="inline-flex items-center gap-1 text-xs text-slate-600 dark:text-slate-300">
+                                    <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-sky-600" @bind-Value="section.IsVisible" />
+                                    Visa
+                                </label>
+                                <label class="inline-flex items-center gap-1 text-xs text-slate-600 dark:text-slate-300">
+                                    <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-sky-600" @bind-Value="section.CollapsedByDefault" />
+                                    Kollapsad
+                                </label>
+                                <button type="button" class="pm-icon-btn" title="Lägg till kontrollpunkt" @onclick="() => AddCheckpoint(section)">+</button>
+                                <button type="button" class="pm-icon-btn" title="Ta bort sektion" @onclick="() => RemoveSection(section)">@((MarkupString)Icons.DeleteSVG)</button>
+                            </div>
+                        </div>
 
-    <div class="mt-3 flex items-center justify-end gap-2 border-t border-slate-200 pt-3 dark:border-slate-700">
-        <button type="submit" form="appForm" class="inline-flex items-center justify-center rounded-md border border-emerald-400 px-3 py-1.5 text-sm font-medium text-emerald-600 transition hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-900/30" disabled="@IsLoading">
-            @ResourceApp.save
-        </button>
-        <button type="button" class="inline-flex items-center justify-center rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800" @onclick="CancelAsync" disabled="@IsLoading">@ResourceApp.cancel</button>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full text-sm">
+                                <thead class="bg-white dark:bg-slate-900">
+                                    <tr>
+                                        <th class="px-2 py-2 text-left font-semibold text-slate-600 dark:text-slate-200">Kontrollpunkt / rad</th>
+                                        <th class="px-2 py-2 text-left font-semibold text-slate-600 dark:text-slate-200">Hjälptext</th>
+                                        <th class="w-28 px-2 py-2 text-left font-semibold text-slate-600 dark:text-slate-200">Sortering</th>
+                                        <th class="w-28 px-2 py-2 text-left font-semibold text-slate-600 dark:text-slate-200">Obligatorisk</th>
+                                        <th class="w-24 px-2 py-2 text-left font-semibold text-slate-600 dark:text-slate-200">Visa</th>
+                                        <th class="w-24 px-2 py-2 text-left font-semibold text-slate-600 dark:text-slate-200">Åtgärder</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                                    @if (rows.Count == 0)
+                                    {
+                                        <tr>
+                                            <td colspan="6" class="px-2 py-3 text-sm text-slate-500 dark:text-slate-400">Inga kontrollpunkter i sektionen.</td>
+                                        </tr>
+                                    }
+                                    else
+                                    {
+                                        @foreach (var row in rows)
+                                        {
+                                            <tr @key="row.ID">
+                                                <td class="px-2 py-2"><InputText class="pm-input" @bind-Value="row.Name" /></td>
+                                                <td class="px-2 py-2"><InputText class="pm-input" @bind-Value="row.HelpText" /></td>
+                                                <td class="px-2 py-2"><InputNumber class="pm-input" @bind-Value="row.SortOrder" /></td>
+                                                <td class="px-2 py-2"><InputCheckbox class="h-4 w-4 rounded border-slate-300 text-sky-600" @bind-Value="row.IsRequired" /></td>
+                                                <td class="px-2 py-2"><InputCheckbox class="h-4 w-4 rounded border-slate-300 text-sky-600" @bind-Value="row.IsVisible" /></td>
+                                                <td class="px-2 py-2">
+                                                    <button type="button" class="pm-icon-btn" title="Ta bort kontrollpunkt" @onclick="() => RemoveCheckpoint(row)">@((MarkupString)Icons.DeleteSVG)</button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                }
+            </div>
+        </section>
+
+        <section class="rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+            <div class="flex items-center justify-between border-b border-slate-200 px-3 py-2 dark:border-slate-700">
+                <div>
+                    <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100">Svarskolumner</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Välj vilka fält användaren fyller i.</p>
+                </div>
+                <button type="button" class="pm-btn pm-btn-success" @onclick="AddResponseColumn">+ Lägg till svarskolumn</button>
+            </div>
+
+            <div class="overflow-x-auto p-3">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-slate-50 dark:bg-slate-800/80">
+                        <tr>
+                            <th class="px-2 py-2 text-left font-semibold text-slate-600 dark:text-slate-200">Namn</th>
+                            <th class="px-2 py-2 text-left font-semibold text-slate-600 dark:text-slate-200">Fälttyp</th>
+                            <th class="w-28 px-2 py-2 text-left font-semibold text-slate-600 dark:text-slate-200">Obligatorisk</th>
+                            <th class="w-28 px-2 py-2 text-left font-semibold text-slate-600 dark:text-slate-200">Sortering</th>
+                            <th class="w-24 px-2 py-2 text-left font-semibold text-slate-600 dark:text-slate-200">Åtgärder</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                        @foreach (var column in ResponseColumns)
+                        {
+                            <tr @key="column.ID">
+                                <td class="px-2 py-2"><InputText class="pm-input" @bind-Value="column.Label" /></td>
+                                <td class="px-2 py-2">
+                                    <select class="pm-input" value="@DisplayFieldType(column)" @onchange="e => SetColumnFieldType(column, e.Value?.ToString())">
+                                        @foreach (var fieldType in FieldTypes)
+                                        {
+                                            <option value="@fieldType">@fieldType</option>
+                                        }
+                                    </select>
+                                </td>
+                                <td class="px-2 py-2"><InputCheckbox class="h-4 w-4 rounded border-slate-300 text-sky-600" @bind-Value="column.Required" /></td>
+                                <td class="px-2 py-2"><InputNumber class="pm-input" @bind-Value="column.Order" /></td>
+                                <td class="px-2 py-2">
+                                    <button type="button" class="pm-icon-btn" title="Ta bort svarskolumn" @onclick="() => RemoveResponseColumn(column)">@((MarkupString)Icons.DeleteSVG)</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
     </div>
-}
-else
-{
-    <RowFormUI RowParameter="@RowForm" Callback="CallBackRowForm"></RowFormUI>
-}
+</EditForm>
+
+<div class="sticky bottom-0 z-10 mt-3 flex items-center justify-end gap-2 border-t border-slate-200 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900">
+    <button type="submit" form="appForm" class="pm-btn pm-btn-success" disabled="@IsLoading">@ResourceApp.save</button>
+    <button type="button" class="pm-btn pm-btn-neutral" @onclick="CancelAsync" disabled="@IsLoading">@ResourceApp.cancel</button>
+</div>

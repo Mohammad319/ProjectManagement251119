@@ -59,6 +59,10 @@ namespace ProjectManagement.Shared.DTO.Account
         public string Code { get; init; } = string.Empty;
         public bool IsVisible { get; init; } = true;
 
+        // Populated by the account-overview query (whole Kontoplan in one table).
+        public int AccountGroupId { get; init; }
+        public string AccountGroupName { get; init; } = string.Empty;
+
         private AccountData? metadata;
 
         public AccountData Metadata

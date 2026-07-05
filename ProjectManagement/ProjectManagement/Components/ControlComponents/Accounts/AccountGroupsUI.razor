@@ -1,102 +1,144 @@
-﻿@inherits AppComponentBase
+@using ProjectManagement.Components.ControlComponents.Department
+@inherits AppComponentBase
 
-<div class="grid h-full min-h-0 grid-cols-[minmax(0,1fr)_minmax(240px,280px)] gap-2">
-    <aside class="order-2 w-full min-w-0 overflow-hidden rounded-2xl border border-slate-200/90 bg-white/95 shadow-sm dark:border-slate-800 dark:bg-slate-950/90">
-        <div class="flex h-full flex-col">
-            <div class="flex items-center justify-between gap-1 border-b border-slate-200/80 bg-slate-50/80 px-2.5 py-2.5 dark:border-slate-800 dark:bg-slate-900/80">
-                <div>
-                    <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">@CalcResource.accountGroups</div>
-                    <div class="text-xs text-slate-500 dark:text-slate-400">@AppLoc[nameof(ResourceApp.selectAccountGroupHint)]</div>
-                </div>
+<section class="pm-admin-panel">
+    <!-- Fixed toolbar -->
+    <div class="shrink-0 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+        <div class="flex flex-wrap items-center gap-2">
+            <button type="button" @onclick="CreateAccount"
+                    class="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200">
+                <span class="text-base leading-none">+</span>
+                <span>Nytt konto</span>
+            </button>
 
-                <div class="flex items-center gap-1">
-                    <button type="button"
-                            class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-800/70 dark:bg-emerald-950/60 dark:text-emerald-300 dark:hover:bg-emerald-950/80"
-                            @onclick="CreateForm"
-                            title="@AppLoc[nameof(ResourceApp.newItem)]"
-                            aria-label="@AppLoc[nameof(ResourceApp.newItem)]">
-                        @((MarkupString)Icons.Plus)
-                    </button>
+            <button type="button" @onclick="ManageGroups"
+                    class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-800 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100 dark:hover:bg-slate-800">
+                Hantera kontogrupper
+            </button>
 
-                    <button type="button"
-                            class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-blue-300 bg-blue-50 text-blue-700 transition hover:bg-blue-100 dark:border-blue-800/70 dark:bg-blue-950/60 dark:text-blue-300 dark:hover:bg-blue-950/80"
-                            @onclick="ImportForm"
-                            title="@AppLoc[nameof(ResourceApp.importFromFile)]"
-                            aria-label="@AppLoc[nameof(ResourceApp.importFromFile)]">
-                        @((MarkupString)Icons.ImportFromFile)
-                    </button>
-                </div>
+            <div class="mx-1 h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
+
+            <AppSelect TValue="int?"
+                       Placeholder="Alla kontogrupper"
+                       Options="GroupFilterOptions"
+                       @bind-Value="GroupFilter" />
+
+            <button type="button" @onclick="CycleVisibleFilter"
+                    class="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-2.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-800"
+                    title="@AppLoc[nameof(ResourceApp.isVisible)]">
+                @((MarkupString)Icons.GetVisibleIcon(VisibleState != VisibleFilter.Hidden))
+                <span>@VisibleFilterLabel</span>
+            </button>
+
+            <label class="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-2.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-800"
+                   title="Visa eller dölj kommentarkolumnen.">
+                <input type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900"
+                       @bind="ShowCommentColumn" />
+                <span>Visa kommentarer</span>
+            </label>
+
+            <button type="button" @onclick="ImportForm"
+                    class="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-blue-300 bg-blue-50 px-2.5 text-xs font-medium text-blue-700 transition hover:bg-blue-100 dark:border-blue-800/70 dark:bg-blue-950/50 dark:text-blue-300 dark:hover:bg-blue-950/70"
+                    title="Importera konton från fil.">
+                Importera
+            </button>
+
+            <div class="relative ml-auto">
+                <input type="search" @bind="SearchText" @bind:event="oninput" placeholder="Sök konto..."
+                       class="h-9 w-56 rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100" />
             </div>
-
-            <nav class="flex-1 space-y-1 overflow-y-auto bg-slate-50/40 px-1.5 py-1.5 dark:bg-slate-950/40">
-                @if (Groups is { Count: > 0 })
-                {
-                    @foreach (var item in Groups)
-                    {
-                        var isSelected = GroupSelected.HasValue && GroupSelected.Value == item.Id;
-                        var finalClass = isSelected
-                        ? "group flex w-full items-center justify-between rounded-xl bg-blue-600 px-2.5 py-2 text-sm font-medium text-white shadow-sm ring-1 ring-blue-500/30 transition dark:bg-blue-500/20 dark:text-blue-100 dark:ring-blue-400/30"
-                            : "group flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-sm font-medium text-slate-700 transition hover:bg-white active:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-900/80 dark:active:bg-slate-900";
-
-                        <button class="@finalClass"
-                                @onclick="() => ChangeAccountGroupSelectedAsync(item)"
-                                @oncontextmenu="() => GroupContextM(item)"
-                                @oncontextmenu:preventDefault
-                                aria-current="@(isSelected ? "page" : null)">
-                            <span class="flex items-center gap-1 truncate">
-                                <span class="h-2 w-2 rounded-full @(isSelected ? "bg-white" : "bg-slate-300 dark:bg-slate-600")"></span>
-                                <span class="truncate">@item.Name</span>
-                            </span>
-
-                            <span class="opacity-70 group-hover:opacity-100">
-                                @((MarkupString)Icons.DotsVertical)
-                            </span>
-                        </button>
-                    }
-                }
-                else
-                {
-                    <div class="px-1 py-2 text-center">
-                        <div class="mx-auto mb-1 flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
-                            @((MarkupString)Icons.Folder)
-                        </div>
-
-                        <div class="text-sm font-semibold text-slate-700 dark:text-slate-100">
-                            @AppLoc[nameof(ResourceApp.ThereAreNoItemsToDisplay)]
-                        </div>
-
-                        <div class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                            @AppLoc[nameof(ResourceApp.useTheButtonAboveToAddNewItem)]
-                        </div>
-
-                        <button type="button"
-                                class="mt-1 inline-flex h-8 items-center justify-center rounded-lg border border-blue-300 bg-blue-50 px-3 text-sm font-medium text-blue-700 transition hover:bg-blue-100 dark:border-blue-800/70 dark:bg-blue-950/60 dark:text-blue-300 dark:hover:bg-blue-950/80"
-                                @onclick="CreateForm">
-                            @AppLoc[nameof(ResourceApp.newItem)]
-                        </button>
-                    </div>
-                }
-            </nav>
         </div>
-    </aside>
+    </div>
 
-    <section class="order-1 min-w-0">
-        @if (GroupSelected.HasValue)
+    <div class="pm-admin-scroll">
+        @if (IsLoading)
         {
-            <AccountUI GroupSelected="GroupSelected.Value" />
+            <div class="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <MhdLoading />
+            </div>
+        }
+        else if (!HasAnyAccounts)
+        {
+            <div class="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <h3 class="text-base font-semibold text-slate-900 dark:text-slate-100">Det finns inga konton ännu.</h3>
+                <button type="button" @onclick="CreateAccount"
+                        class="mt-3 inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200">
+                    <span class="text-base leading-none">+</span>
+                    <span>Nytt konto</span>
+                </button>
+            </div>
+        }
+        else if (!VisibleRows.Any())
+        {
+            <div class="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <h3 class="text-base font-semibold text-slate-900 dark:text-slate-100">Inga konton matchar filtret.</h3>
+            </div>
         }
         else
         {
-            <div class="flex h-full items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white/80 px-1 text-sm text-slate-500 shadow-sm dark:border-slate-800 dark:bg-slate-950/70 dark:text-slate-400">
-                <div class="text-center">
-                    <div class="mx-auto mb-1 flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
-                        @((MarkupString)Icons.Mouse)
-                    </div>
-                    <div class="font-medium text-slate-700 dark:text-slate-100">
-                        @AppLoc[nameof(ResourceApp.selectAccountGroupHint)]
-                    </div>
-                </div>
+            <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <table class="min-w-full text-sm">
+                    <thead class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-800/80">
+                        <tr class="text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                            <th class="px-3 py-2">
+                                <button type="button" class="inline-flex items-center gap-1 hover:text-slate-800 dark:hover:text-slate-100" @onclick='() => SortBy("code")'>@CalcLoc[nameof(CalcResource.code)] <span>@SortIndicator("code")</span></button>
+                            </th>
+                            <th class="px-3 py-2">
+                                <button type="button" class="inline-flex items-center gap-1 hover:text-slate-800 dark:hover:text-slate-100" @onclick='() => SortBy("name")'>@CalcLoc[nameof(CalcResource.name)] <span>@SortIndicator("name")</span></button>
+                            </th>
+                            <th class="px-3 py-2">
+                                <button type="button" class="inline-flex items-center gap-1 hover:text-slate-800 dark:hover:text-slate-100" @onclick='() => SortBy("group")'>@CalcLoc[nameof(CalcResource.accountGroups)] <span>@SortIndicator("group")</span></button>
+                            </th>
+                            <th class="px-3 py-2">
+                                <button type="button" class="inline-flex items-center gap-1 hover:text-slate-800 dark:hover:text-slate-100" @onclick='() => SortBy("visible")'>@AppLoc[nameof(ResourceApp.isVisible)] <span>@SortIndicator("visible")</span></button>
+                            </th>
+                            @if (ShowCommentColumn)
+                            {
+                                <th class="px-3 py-2">@CalcLoc[nameof(CalcResource.comment)]</th>
+                            }
+                            <th class="px-3 py-2 text-right">@AppLoc[nameof(ResourceApp.actions)]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var account in VisibleRows)
+                        {
+                            <tr class="border-t border-slate-100 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40">
+                                <td class="px-3 py-2 font-medium text-slate-800 dark:text-slate-100">@account.Code</td>
+                                <td class="px-3 py-2 text-slate-700 dark:text-slate-200">@account.Name</td>
+                                <td class="px-3 py-2 text-slate-500 dark:text-slate-400">@account.AccountGroupName</td>
+                                <td class="px-3 py-2">
+                                    <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium @(account.IsVisible ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300")">
+                                        @(account.IsVisible ? AppLoc[nameof(ResourceApp.visible)] : AppLoc[nameof(ResourceApp.hiddenItems)])
+                                    </span>
+                                </td>
+                                @if (ShowCommentColumn)
+                                {
+                                    <td class="max-w-xs truncate px-3 py-2 text-slate-500 dark:text-slate-400">
+                                        @{
+                                            var comment = FirstComment(account);
+                                        }
+                                        @(string.IsNullOrWhiteSpace(comment) ? "—" : comment)
+                                    </td>
+                                }
+                                <td class="px-3 py-2">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <button @onclick="() => EditAccount(account)" type="button"
+                                                class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-amber-300 bg-amber-50 text-amber-700 transition hover:bg-amber-100 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-200 dark:hover:bg-amber-900/60"
+                                                title="@AppLoc[nameof(ResourceApp.update)]">
+                                            @Icons.Edit
+                                        </button>
+                                        <button @onclick="() => RemoveAccount(account)" type="button"
+                                                class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-rose-300 bg-rose-50 text-rose-700 transition hover:bg-rose-100 dark:border-rose-700 dark:bg-rose-950/50 dark:text-rose-200 dark:hover:bg-rose-900/60"
+                                                title="@AppLoc[nameof(ResourceApp.delete)]">
+                                            @((MarkupString)Icons.DeleteSVG)
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
         }
-    </section>
-</div>
+    </div>
+</section>

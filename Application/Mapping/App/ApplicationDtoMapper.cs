@@ -82,9 +82,14 @@ namespace Application.Mapping.App
                 Description = entity.Description ?? string.Empty,
                 TemplateType = entity.TemplateType ?? SelfInspectionTemplateTypes.Checklist,
                 Purpose = entity.Purpose ?? string.Empty,
+                LinkType = entity.LinkType ?? "Kalkyl",
+                AllDepartments = entity.AllDepartments,
+                RequiredBeforeOffer = entity.RequiredBeforeOffer,
+                SortOrder = entity.SortOrder,
                 IsSystemTemplate = entity.IsSystemTemplate,
                 SystemTemplateKey = entity.SystemTemplateKey ?? string.Empty,
                 CopiedFromSystemTemplateKey = entity.CopiedFromSystemTemplateKey ?? string.Empty,
+                Sections = entity.Sections?.Select(x => x.Clone()).ToList() ?? [],
                 Rows = entity.Rows?.Select(ToDto).ToList() ?? []
             };
         }
@@ -98,9 +103,14 @@ namespace Application.Mapping.App
                 Description = dto.Description ?? string.Empty,
                 TemplateType = dto.TemplateType ?? SelfInspectionTemplateTypes.Checklist,
                 Purpose = dto.Purpose ?? string.Empty,
+                LinkType = dto.LinkType ?? "Kalkyl",
+                AllDepartments = dto.AllDepartments,
+                RequiredBeforeOffer = dto.RequiredBeforeOffer,
+                SortOrder = dto.SortOrder,
                 IsSystemTemplate = dto.IsSystemTemplate,
                 SystemTemplateKey = dto.SystemTemplateKey ?? string.Empty,
                 CopiedFromSystemTemplateKey = dto.CopiedFromSystemTemplateKey ?? string.Empty,
+                Sections = dto.Sections?.Select(x => x.Clone()).ToList() ?? [],
                 Rows = dto.Rows?.Select(ToEntity).ToList() ?? []
             };
         }
@@ -112,6 +122,11 @@ namespace Application.Mapping.App
                 ID = entity.ID,
                 Name = entity.Name ?? string.Empty,
                 Description = entity.Description ?? string.Empty,
+                SectionId = entity.SectionId,
+                SectionTitle = entity.SectionTitle ?? string.Empty,
+                HelpText = entity.HelpText ?? string.Empty,
+                SortOrder = entity.SortOrder,
+                IsRequired = entity.IsRequired,
                 Style = entity.Style ?? string.Empty,
                 StyleRow = entity.StyleRow ?? string.Empty,
                 IsVisible = entity.IsVisible,
@@ -126,6 +141,11 @@ namespace Application.Mapping.App
                 ID = dto.ID,
                 Name = dto.Name ?? string.Empty,
                 Description = dto.Description ?? string.Empty,
+                SectionId = dto.SectionId,
+                SectionTitle = dto.SectionTitle ?? string.Empty,
+                HelpText = dto.HelpText ?? string.Empty,
+                SortOrder = dto.SortOrder,
+                IsRequired = dto.IsRequired,
                 Style = dto.Style ?? string.Empty,
                 StyleRow = dto.StyleRow ?? string.Empty,
                 IsVisible = dto.IsVisible,
@@ -141,6 +161,10 @@ namespace Application.Mapping.App
                 AttributeType = entity.AttributeType,
                 Required = entity.Required,
                 Order = entity.Order,
+                Label = entity.Label ?? string.Empty,
+                FieldKey = entity.FieldKey ?? string.Empty,
+                FieldTypeLabel = entity.FieldTypeLabel ?? string.Empty,
+                IsComputed = entity.IsComputed,
                 Validation = entity.Validation ?? string.Empty,
                 Style = entity.Style ?? string.Empty,
                 Value = string.Empty
@@ -155,6 +179,10 @@ namespace Application.Mapping.App
                 AttributeType = dto.AttributeType,
                 Required = dto.Required,
                 Order = dto.Order,
+                Label = dto.Label ?? string.Empty,
+                FieldKey = dto.FieldKey ?? string.Empty,
+                FieldTypeLabel = dto.FieldTypeLabel ?? string.Empty,
+                IsComputed = dto.IsComputed,
                 Validation = dto.Validation ?? string.Empty,
                 Style = dto.Style ?? string.Empty
             };

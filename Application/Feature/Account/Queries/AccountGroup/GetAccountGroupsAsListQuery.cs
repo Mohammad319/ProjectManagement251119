@@ -30,4 +30,13 @@ namespace Application.Feature.Account.Queries
             => service.GetAccountsByGroupAsync(request.GroupId, ct);
     }
 
+    public sealed record GetAccountsOverviewQuery() : IRequest<List<AccountManageDTO>>;
+
+    public sealed class GetAccountsOverviewQueryHandler(IAccountService service)
+        : IRequestHandler<GetAccountsOverviewQuery, List<AccountManageDTO>>
+    {
+        public Task<List<AccountManageDTO>> Handle(GetAccountsOverviewQuery request, CancellationToken ct)
+            => service.GetAccountsOverviewAsync(ct);
+    }
+
 }

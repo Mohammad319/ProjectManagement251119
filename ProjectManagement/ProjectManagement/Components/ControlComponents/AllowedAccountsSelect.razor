@@ -1,0 +1,164 @@
+@namespace ProjectManagement.Components.ControlComponents
+@using ProjectManagement.Shared.DTO.Account
+
+@* Grouped multi-choice dropdown for "Tillåtna konton": account groups render as
+   headers, accounts as checkboxes underneath. A whole group can be toggled at once.
+   Optionally restrict the selectable set (RestrictToIds) so a resource sort can only
+   pick within its resource type's allowed accounts. *@
+
+<div class="flex min-w-[260px] flex-1 flex-col gap-1.5">
+    <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" title="@Tooltip">@Label</label>
+
+    <div class="relative">
+        <button type="button"
+                disabled="@Disabled"
+                title="@Tooltip"
+                class="flex h-9 w-full items-center justify-between gap-2 rounded-xl border border-slate-300 bg-white px-3 text-left text-sm text-slate-900 shadow-sm outline-none transition hover:bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:hover:bg-slate-800"
+                @onclick="Toggle">
+            <span class="truncate @(SelectedCount == 0 ? "text-slate-500 dark:text-slate-400" : "")">@TriggerLabel</span>
+            <span class="flex shrink-0 items-center gap-1">
+                @if (SelectedCount > 0)
+                {
+                    <span class="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-semibold text-white">@SelectedCount</span>
+                }
+                <svg class="h-3.5 w-3.5 text-slate-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+            </span>
+        </button>
+
+        @if (_open)
+        {
+            <div class="fixed inset-0 z-[60]" @onclick="Close"></div>
+            <div class="absolute left-0 top-full z-[61] mt-1 max-h-72 w-full min-w-[15rem] overflow-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
+                 @onclick:stopPropagation="true">
+                @if (SelectedCount > 0)
+                {
+                    <button type="button"
+                            class="mb-1 w-full rounded-md px-2 py-1 text-left text-[11px] font-medium text-slate-500 transition hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+                            @onclick="ClearAsync">
+                        Rensa val
+                    </button>
+                }
+
+                @foreach (var group in Groups)
+                {
+                    var accounts = VisibleAccounts(group);
+                    if (accounts.Count == 0)
+                        continue;
+
+                    var groupChecked = accounts.All(a => _selected.Contains(a.Id));
+
+                    <div class="mb-1">
+                        <label class="flex cursor-pointer items-center gap-2 rounded-md bg-slate-50 px-2 py-1.5 text-xs font-semibold text-slate-800 dark:bg-slate-800/60 dark:text-slate-100">
+                            <input type="checkbox"
+                                   class="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900"
+                                   checked="@groupChecked"
+                                   @onchange="e => ToggleGroupAsync(group, (bool)(e.Value ?? false))" />
+                            <span class="flex-1 truncate">@group.Name</span>
+                        </label>
+
+                        @foreach (var account in accounts)
+                        {
+                            var selected = _selected.Contains(account.Id);
+                            <label class="ml-4 flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-xs transition @(selected ? "bg-blue-50 font-medium text-blue-700 dark:bg-blue-950/40 dark:text-blue-300" : "text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800")">
+                                <input type="checkbox"
+                                       class="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900"
+                                       checked="@selected"
+                                       @onchange="e => ToggleAccountAsync(account.Id, (bool)(e.Value ?? false))" />
+                                <span class="flex-1 truncate">@AccountLabel(account)</span>
+                            </label>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<ListAccountGroupIncludeAccountDTO> Groups { get; set; } = [];
+    [Parameter] public List<int> Selected { get; set; } = [];
+    [Parameter] public EventCallback<List<int>> SelectedChanged { get; set; }
+    [Parameter] public string Label { get; set; } = "Tillåtna konton";
+    [Parameter] public string Tooltip { get; set; } = "Välj vilka konton användaren får välja för denna resurstyp/resurssort i kalkylen.";
+    [Parameter] public bool Disabled { get; set; }
+
+    /// <summary>When set, only these account ids can be selected (e.g. a sort limited to its type's allowed accounts).</summary>
+    [Parameter] public IReadOnlyCollection<int>? RestrictToIds { get; set; }
+
+    private bool _open;
+    private HashSet<int> _selected = [];
+
+    protected override void OnParametersSet()
+        => _selected = Selected is null ? [] : new HashSet<int>(Selected);
+
+    private void Toggle()
+    {
+        if (Disabled) return;
+        _open = !_open;
+    }
+
+    private void Close() => _open = false;
+
+    private List<ListAccountDTO> VisibleAccounts(ListAccountGroupIncludeAccountDTO group)
+        => (group.Accounts ?? [])
+            .Where(a => RestrictToIds is null || RestrictToIds.Contains(a.Id))
+            .ToList();
+
+    private int SelectedCount => _selected.Count;
+
+    private static string AccountLabel(ListAccountDTO account)
+        => string.IsNullOrWhiteSpace(account.Account) ? account.Name : $"{account.Account} ({account.Name})";
+
+    private string TriggerLabel
+    {
+        get
+        {
+            if (SelectedCount == 0)
+                return "Välj konton…";
+
+            if (SelectedCount == 1)
+            {
+                var id = _selected.First();
+                var account = Groups.SelectMany(g => g.Accounts ?? []).FirstOrDefault(a => a.Id == id);
+                return account is null ? "1 konto" : AccountLabel(account);
+            }
+
+            return $"{SelectedCount} konton valda";
+        }
+    }
+
+    private async Task ToggleAccountAsync(int id, bool on)
+    {
+        if (on)
+            _selected.Add(id);
+        else
+            _selected.Remove(id);
+
+        await EmitAsync();
+    }
+
+    private async Task ToggleGroupAsync(ListAccountGroupIncludeAccountDTO group, bool on)
+    {
+        foreach (var account in VisibleAccounts(group))
+        {
+            if (on)
+                _selected.Add(account.Id);
+            else
+                _selected.Remove(account.Id);
+        }
+
+        await EmitAsync();
+    }
+
+    private async Task ClearAsync()
+    {
+        _selected.Clear();
+        await EmitAsync();
+    }
+
+    private async Task EmitAsync()
+    {
+        Selected = _selected.ToList();
+        await SelectedChanged.InvokeAsync(Selected);
+    }
+}

@@ -1,0 +1,156 @@
+@using Application.Feature.Account.Commands
+@using Application.Feature.Account.Queries
+@using ProjectManagement.Shared.DTO.Account
+@using ProjectManagement.Shared.DTO.General
+@inherits AppComponentBase
+
+<div class="space-y-3">
+    <!-- Ny kontogrupp -->
+    <div class="flex items-end gap-2">
+        <div class="min-w-0 flex-1">
+            <label class="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-200">Ny kontogrupp</label>
+            <input @bind="NewName" @bind:event="oninput" placeholder="@CalcResource.name"
+                   class="h-9 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" />
+        </div>
+        <button type="button" @onclick="AddAsync" disabled="@(string.IsNullOrWhiteSpace(NewName) || Busy)"
+                class="inline-flex h-9 items-center justify-center rounded-lg bg-emerald-600 px-3 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50">
+            @AppLoc[nameof(ResourceApp.newItem)]
+        </button>
+    </div>
+
+    <div class="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
+        <table class="min-w-full text-sm">
+            <thead class="bg-slate-50 dark:bg-slate-800/70">
+                <tr class="text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    <th class="px-3 py-2">@CalcResource.name</th>
+                    <th class="px-3 py-2 w-28">Antal konton</th>
+                    <th class="px-3 py-2 text-right">@AppLoc[nameof(ResourceApp.actions)]</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Rows.Count == 0)
+                {
+                    <tr><td colspan="3" class="px-3 py-6 text-center text-slate-500 dark:text-slate-400">@AppLoc[nameof(ResourceApp.ThereAreNoItemsToDisplay)]</td></tr>
+                }
+                else
+                {
+                    @foreach (var row in Rows)
+                    {
+                        <tr class="border-t border-slate-100 dark:border-slate-800">
+                            <td class="px-3 py-2">
+                                <input @bind="row.Name"
+                                       class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" />
+                            </td>
+                            <td class="px-3 py-2 text-slate-500 dark:text-slate-400">@row.Count</td>
+                            <td class="px-3 py-2">
+                                <div class="flex items-center justify-end gap-1.5">
+                                    <button type="button" @onclick="() => SaveAsync(row)" disabled="@Busy"
+                                            class="inline-flex h-8 items-center justify-center rounded-md border border-emerald-300 bg-emerald-50 px-2 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100 disabled:opacity-50 dark:border-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 dark:hover:bg-emerald-900/60">
+                                        @AppLoc[nameof(ResourceApp.save)]
+                                    </button>
+                                    <button type="button" @onclick="() => DeleteAsync(row)" disabled="@Busy"
+                                            class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-rose-300 bg-rose-50 text-rose-700 transition hover:bg-rose-100 disabled:opacity-50 dark:border-rose-700 dark:bg-rose-950/50 dark:text-rose-200 dark:hover:bg-rose-900/60"
+                                            title="@AppLoc[nameof(ResourceApp.delete)]">
+                                        @((MarkupString)Icons.DeleteSVG)
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    [Parameter] public EventCallback OnChanged { get; set; }
+
+    private sealed class GroupRow
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public int Count { get; set; }
+    }
+
+    private readonly List<GroupRow> Rows = [];
+    private string NewName = string.Empty;
+    private bool Busy;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        var groups = await Dispatcher.Send(new GetAccountGroupsQuery()) ?? [];
+        var accounts = await Dispatcher.Send(new GetAccountsOverviewQuery()) ?? [];
+        var counts = accounts.GroupBy(a => a.AccountGroupId).ToDictionary(g => g.Key, g => g.Count());
+
+        Rows.Clear();
+        foreach (var g in groups)
+            Rows.Add(new GroupRow { Id = g.Id, Name = g.Name, Count = counts.GetValueOrDefault(g.Id) });
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task NotifyChangedAsync()
+    {
+        if (OnChanged.HasDelegate)
+            await OnChanged.InvokeAsync();
+    }
+
+    private async Task AddAsync()
+    {
+        if (Busy || string.IsNullOrWhiteSpace(NewName))
+            return;
+
+        Busy = true;
+        try
+        {
+            var ok = await Dispatcher.Send(new CreateAccountGroupCommand(new PostAccountGroupDTO { Name = NewName.Trim() })) > 0;
+            MHD.Notifications(ToastType.Add, ok);
+            if (ok)
+            {
+                NewName = string.Empty;
+                await LoadAsync();
+                await NotifyChangedAsync();
+            }
+        }
+        finally { Busy = false; }
+    }
+
+    private async Task SaveAsync(GroupRow row)
+    {
+        if (Busy || string.IsNullOrWhiteSpace(row.Name))
+            return;
+
+        Busy = true;
+        try
+        {
+            var ok = await Dispatcher.Send(new UpdateAccountGroupCommand(new PostAccountGroupDTO { Name = row.Name.Trim() }, row.Id));
+            MHD.Notifications(ToastType.Update, ok);
+            if (ok)
+                await NotifyChangedAsync();
+        }
+        finally { Busy = false; }
+    }
+
+    private async Task DeleteAsync(GroupRow row)
+    {
+        if (Busy)
+            return;
+
+        Busy = true;
+        try
+        {
+            var ok = await Dispatcher.Send(new DeleteAccountGroupCommand(row.Id));
+            // The service refuses deletion when the group is still in use.
+            MHD.Notifications(ok ? ToastType.Delete : ToastType.Danger, ok);
+            if (ok)
+            {
+                Rows.Remove(row);
+                await NotifyChangedAsync();
+            }
+        }
+        finally { Busy = false; }
+    }
+}

@@ -2,9 +2,12 @@ using Application.Feature.Account.Queries;
 using Application.Feature.Calculation.ResourceType.Commands;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using ProjectManagement.Client.Shared.ResourceFiles;
 using ProjectManagement.Client.Shared.ResourceFiles.Calculation;
+using ProjectManagement.Components.ControlComponents.Department;
 using ProjectManagement.Shared.DTO.Account;
 using ProjectManagement.Shared.DTO.ResourceType;
+using ProjectManagement.Shared.Enums;
 namespace ProjectManagement.Components.ControlComponents.ResourceType;
 
 public partial class ResourceTypeFormUI
@@ -16,10 +19,24 @@ public partial class ResourceTypeFormUI
     private readonly PostResourceTypeDTO ResourceTypeUpdate = new();
     private bool IsLoading;
     private List<ListAccountGroupIncludeAccountDTO>? AccountGroups;
-    private ListAccountGroupIncludeAccountDTO? AccountGroupSelected;
     private EditContext? editContext;
     private ResourceTypeModel? loadedResourceType;
     private int loadedResourceTypeId = -1;
+
+    private static readonly IReadOnlyList<AppSelect<ResourceTypesEnum>.Option> ResourceTypeOptions =
+        Enum.GetValues<ResourceTypesEnum>()
+            .Select(level => new AppSelect<ResourceTypesEnum>.Option(level, ResourceLocalize.GetResourceType(level)))
+            .ToList();
+
+    // Standardkonto options are limited to the accounts the admin has marked as allowed.
+    private IReadOnlyList<AppSelect<int?>.Option> AllowedAccountOptions =>
+        (AccountGroups ?? [])
+            .SelectMany(g => g.Accounts ?? [])
+            .Where(a => ResourceTypeUpdate.AllowedAccountIds.Contains(a.Id))
+            .Select(a => new AppSelect<int?>.Option(
+                a.Id,
+                string.IsNullOrWhiteSpace(a.Account) ? a.Name : $"{a.Account} ({a.Name})"))
+            .ToList();
 
     protected override void OnInitialized()
     {
@@ -41,27 +58,15 @@ public partial class ResourceTypeFormUI
             loadedResourceType = ResourceType;
             loadedResourceTypeId = ResourceType.Id;
         }
-
-        if (ResourceType.Id > 0)
-        {
-            AccountGroupSelected = AccountGroups?.FirstOrDefault(x => x.Accounts.Any(a => a.Id == ResourceTypeUpdate.AccountId));
-        }
-        else if (ResourceTypeUpdate.AccountId is null or 0)
-        {
-            AccountGroupSelected = null;
-        }
     }
 
-    private async Task ChangeGroupAccount(ChangeEventArgs e)
+    private void OnAllowedAccountsChanged(List<int> allowed)
     {
-        AccountGroupSelected = null;
-        ResourceTypeUpdate.AccountId = null;
+        ResourceTypeUpdate.AllowedAccountIds = allowed;
 
-        if (!int.TryParse(e.Value?.ToString(), out var id) || id == 0)
-            return;
-
-        await Task.Yield();
-        AccountGroupSelected = AccountGroups?.FirstOrDefault(x => x.Id == id);
+        // A default account must remain within the allowed set.
+        if (ResourceTypeUpdate.AccountId is > 0 && !allowed.Contains(ResourceTypeUpdate.AccountId.Value))
+            ResourceTypeUpdate.AccountId = null;
     }
 
     private void CloseModal() => MHD.Modal.CloseAsync();

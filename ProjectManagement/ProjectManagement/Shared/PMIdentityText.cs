@@ -41,7 +41,7 @@ public static class PMIdentityText
     public static string LoginWithPasskeyAction => GetString(nameof(LoginWithPasskeyAction), "Log in with a passkey");
     public static string RecoveryDeviceUnavailable => GetString(nameof(RecoveryDeviceUnavailable), "Do not have access to your authenticator device? You can");
     public static string LoginWithRecoveryCodeAction => GetString(nameof(LoginWithRecoveryCodeAction), "log in with a recovery code");
-    public static string ChangePasswordTitle => GetString(nameof(ChangePasswordTitle), "Change password");
+    public static string ChangePasswordTitle => GetString(nameof(ChangePasswordTitle), "Lösenord");
     public static string CurrentPasswordLabel => GetString(nameof(CurrentPasswordLabel), "Current password");
     public static string NewPasswordLabel => GetString(nameof(NewPasswordLabel), "New password");
     public static string ConfirmNewPasswordLabel => GetString(nameof(ConfirmNewPasswordLabel), "Confirm new password");
@@ -57,7 +57,7 @@ public static class PMIdentityText
     public static string ResetAuthenticatorKeysAction => GetString(nameof(ResetAuthenticatorKeysAction), "reset your authenticator keys.");
     public static string Disable2faAction => GetString(nameof(Disable2faAction), "Disable 2FA");
     public static string Disable2faSuccessStatus => GetString(nameof(Disable2faSuccessStatus), "2FA has been disabled. You can re-enable 2FA when you set up an authenticator app.");
-    public static string ManageEmailTitle => GetString(nameof(ManageEmailTitle), "Manage email");
+    public static string ManageEmailTitle => GetString(nameof(ManageEmailTitle), "E-post");
     public static string ManageEmailDescription => GetString(nameof(ManageEmailDescription), "Email confirmations now use the active UI language template.");
     public static string CurrentEmailLabel => GetString(nameof(CurrentEmailLabel), "Current email");
     public static string NewEmailLabel => GetString(nameof(NewEmailLabel), "New email");
@@ -82,13 +82,13 @@ public static class PMIdentityText
     public static string RecoveryCodesDoNotChangeAuthenticatorKeys => GetString(nameof(RecoveryCodesDoNotChangeAuthenticatorKeys), "Generating new recovery codes does not change the keys used in authenticator apps. If you wish to change the key used in an authenticator app you should");
     public static string GenerateRecoveryCodesAction => GetString(nameof(GenerateRecoveryCodesAction), "Generate recovery codes");
     public static string RecoveryCodesGenerated => GetString(nameof(RecoveryCodesGenerated), "You have generated new recovery codes.");
-    public static string ProfileTitle => GetString(nameof(ProfileTitle), "Profile");
+    public static string ProfileTitle => GetString(nameof(ProfileTitle), "Min profil");
     public static string UsernameLabel => GetString(nameof(UsernameLabel), "Username");
     public static string PhoneNumberLabel => GetString(nameof(PhoneNumberLabel), "Phone number");
     public static string FailedToSetPhoneNumber => GetString(nameof(FailedToSetPhoneNumber), "Failed to set phone number.");
     public static string ProfileUpdated => GetString(nameof(ProfileUpdated), "Your profile has been updated.");
-    public static string ManagePasskeysTitle => GetString(nameof(ManagePasskeysTitle), "Manage your passkeys");
-    public static string PasskeysLabel => GetString(nameof(PasskeysLabel), "Passkeys");
+    public static string ManagePasskeysTitle => GetString(nameof(ManagePasskeysTitle), "Inloggningsnycklar / Passkeys");
+    public static string PasskeysLabel => GetString(nameof(PasskeysLabel), "Inloggningsnycklar / Passkeys");
     public static string UnnamedPasskey => GetString(nameof(UnnamedPasskey), "Unnamed passkey");
     public static string RenamePasskeyHint => GetString(nameof(RenamePasskeyHint), "Rename this passkey");
     public static string RenameAction => GetString(nameof(RenameAction), "Rename");
@@ -113,7 +113,7 @@ public static class PMIdentityText
     public static string PasskeyCouldNotBeUpdated => GetString(nameof(PasskeyCouldNotBeUpdated), "The passkey could not be updated.");
     public static string PasskeyUpdatedSuccessfully => GetString(nameof(PasskeyUpdatedSuccessfully), "Passkey updated successfully.");
     public static string PasskeyNameTooLong => GetString(nameof(PasskeyNameTooLong), "Passkey names must be no longer than {1} characters.");
-    public static string PersonalDataTitle => GetString(nameof(PersonalDataTitle), "Personal data");
+    public static string PersonalDataTitle => GetString(nameof(PersonalDataTitle), "Personuppgifter");
     public static string PersonalDataDescription => GetString(nameof(PersonalDataDescription), "Your account contains personal data that you have given us. This page allows you to download or delete that data.");
     public static string PersonalDataDeleteWarning => GetString(nameof(PersonalDataDeleteWarning), "Deleting this data will permanently remove your account, and this cannot be recovered.");
     public static string DownloadAction => GetString(nameof(DownloadAction), "Download");
@@ -122,7 +122,7 @@ public static class PMIdentityText
     public static string ResetAuthenticatorDescription => GetString(nameof(ResetAuthenticatorDescription), "This process disables 2FA until you verify your authenticator app. If you do not complete your authenticator app configuration, you may lose access to your account.");
     public static string ResetAuthenticatorAction => GetString(nameof(ResetAuthenticatorAction), "Reset authenticator key");
     public static string AuthenticatorKeyReset => GetString(nameof(AuthenticatorKeyReset), "Your authenticator app key has been reset. You will need to configure your authenticator app using the new key.");
-    public static string TwoFactorAuthenticationTitleWithSuffix => GetString(nameof(TwoFactorAuthenticationTitleWithSuffix), "Two-factor authentication (2FA)");
+    public static string TwoFactorAuthenticationTitleWithSuffix => GetString(nameof(TwoFactorAuthenticationTitleWithSuffix), "Tvåfaktorsautentisering");
     public static string NoRecoveryCodesLeft => GetString(nameof(NoRecoveryCodesLeft), "You have no recovery codes left.");
     public static string OneRecoveryCodeLeft => GetString(nameof(OneRecoveryCodeLeft), "You have 1 recovery code left.");
     public static string RecoveryCodesLeftFormat => GetString(nameof(RecoveryCodesLeftFormat), "You have {0} recovery codes left.");

@@ -21,6 +21,26 @@ namespace Persistence.Service.ResourceAccount
                 .ToListAsync(ct);
         }
 
+        public async Task<List<AccountManageDTO>> GetAccountsOverviewAsync(CancellationToken ct = default)
+        {
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+            return await context.Accounts
+                .AsNoTracking()
+                .OrderBy(x => x.AccountGroup.Name)
+                .ThenBy(x => x.Code)
+                .Select(x => new AccountManageDTO
+                {
+                    Id = x.Id,
+                    Code = x.Code,
+                    Name = x.Name,
+                    IsVisible = x.IsVisible,
+                    Metadata = x.Metadata,
+                    AccountGroupId = x.AccountGroupId,
+                    AccountGroupName = x.AccountGroup.Name
+                })
+                .ToListAsync(ct);
+        }
+
         public async Task<List<ListDTO>> GetAccountsAsListAsync(int groupId, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);

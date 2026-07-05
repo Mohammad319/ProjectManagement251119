@@ -69,13 +69,13 @@ public partial class UsersIndex : IAsyncDisposable
     protected double ActionMenuLeftPx { get; set; } = 16;
     protected double ActionMenuTopPx { get; set; } = 96;
     protected string ActionMenuStyle => FormattableString.Invariant(
-        $"left: clamp(1rem, {ActionMenuLeftPx}px, calc(100vw - 21rem)); top: clamp(4rem, {ActionMenuTopPx}px, calc(100vh - 24rem)); max-width: calc(100vw - 2rem);");
+        $"left: clamp(1rem, {ActionMenuLeftPx}px, calc(100vw - 17rem)); top: clamp(4rem, {ActionMenuTopPx}px, max(4rem, calc(100vh - 28rem))); max-width: calc(100vw - 2rem); max-height: calc(100vh - 5rem);");
 
     protected const string ActionMenuItemClass =
-        "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:text-slate-200 dark:hover:bg-slate-800";
+        "user-action-menu-item flex w-full items-center justify-start gap-2 rounded-md px-2 py-1.5 text-left text-xs text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:text-slate-200 dark:hover:bg-slate-800";
 
     protected const string ActionMenuDangerClass =
-        "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-rose-600 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60 dark:text-rose-300 dark:hover:bg-rose-950/40";
+        "user-action-menu-item flex w-full items-center justify-start gap-2 rounded-md px-2 py-1.5 text-left text-xs text-rose-600 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60 dark:text-rose-300 dark:hover:bg-rose-950/40";
 
     private int? _lastDepartmentId;
     private bool _lastWithoutDepartmentOnly;
@@ -120,7 +120,7 @@ public partial class UsersIndex : IAsyncDisposable
     [
         new("active", WebLoc["StatusActive"].Value),
         new("pending", WebLoc["InvitePending"].Value),
-        new("locked", WebLoc["Lockout"].Value),
+        new("locked", "Inloggningsspärr"),
         new("inactive", WebLoc["StatusInactive"].Value),
         new("noauth", WebLoc["UserMissingAuth"].Value),
     ];
@@ -416,7 +416,7 @@ public partial class UsersIndex : IAsyncDisposable
                 TenantMaxUsers = await DepartmentUsersViewService.GetTenantMaxUsersAsync(ct);
             DetailsUser = DetailsUser is null ? null : Users.FirstOrDefault(x => x.Id == DetailsUser.Id);
             ActionMenuUser = ActionMenuUser is null ? null : Users.FirstOrDefault(x => x.Id == ActionMenuUser.Id);
-            SelectedIds.Clear();
+            ResetBatchState();
             InvalidateFilteredUsers();
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
@@ -478,7 +478,7 @@ public partial class UsersIndex : IAsyncDisposable
         }
 
         ActionMenuLeftPx = Math.Max(16, args.ClientX - 8);
-        ActionMenuTopPx = Math.Max(64, args.ClientY + 32);
+        ActionMenuTopPx = Math.Max(64, args.ClientY + 8);
         ActionMenuUser = user;
     }
 
@@ -505,24 +505,21 @@ public partial class UsersIndex : IAsyncDisposable
             ? DepartmentsList?.FirstOrDefault(d => d.Id == user.DepartmentId.Value)?.Name ?? "—"
             : "—";
 
-    /// <summary>Same status text as the table's Inloggningsstatus badge.</summary>
-    protected string GetStatusLabel(TenantUserDto user)
-        => !user.IsInAuth ? WebLoc["UserMissingAuth"].Value
-            : IsDeactivated(user) ? WebLoc["StatusInactive"].Value
-            : IsLocked(user) ? WebLoc["Lockout"].Value
+    /// <summary>Account status only; lockout is displayed separately in the Inloggningsspärr column.</summary>
+    protected string GetAccountStatusLabel(TenantUserDto user)
+        => IsDeactivated(user) ? WebLoc["StatusInactive"].Value
             : IsPending(user) ? WebLoc["InvitePending"].Value
-            : IsStale(user) ? WebLoc["StatusStale"].Value
             : WebLoc["StatusActive"].Value;
 
     protected string GetLockoutStatus(TenantUserDto user)
     {
         if (!IsLocked(user))
-            return "Inte spärrad";
+            return "Ej spärrad";
 
         // An indefinite lockout ("Tills vidare") is stored as a far-future end date.
         return user.LockoutEnd!.Value.Year >= 3000
             ? "Spärrad tills vidare"
-            : $"Spärrad till {FormatDate(user.LockoutEnd)}";
+            : "Spärrad";
     }
 
     protected static bool IsLocked(TenantUserDto user)
@@ -534,11 +531,11 @@ public partial class UsersIndex : IAsyncDisposable
 
     /// <summary>Invited (has a sign-in account) but has never logged in, not locked, not deactivated.</summary>
     protected static bool IsPending(TenantUserDto user)
-        => user.IsInAuth && user.IsActive && user.LastLoginAt is null && !IsLocked(user);
+        => (!user.IsInAuth || user.LastLoginAt is null) && user.IsActive;
 
     /// <summary>Registered, signed in at least once, not locked and not deactivated.</summary>
     protected static bool IsActive(TenantUserDto user)
-        => user.IsInAuth && user.IsActive && user.LastLoginAt is not null && !IsLocked(user);
+        => user.IsInAuth && user.IsActive && user.LastLoginAt is not null;
 
     /// <summary>Active but with no sign-in for <see cref="StaleDays"/> days.</summary>
     protected static bool IsStale(TenantUserDto user)
@@ -565,6 +562,37 @@ public partial class UsersIndex : IAsyncDisposable
 
     /// <summary>True when this user is an admin and the only one left, so admin-removing actions must be blocked.</summary>
     protected bool IsLastAdmin(TenantUserDto user) => IsAdmin(user) && AdminCount <= 1;
+
+    private const string LastAdminBlockedTooltip = "Kan inte utföras eftersom detta är sista administratören.";
+
+    protected bool CanEdit(TenantUserDto user)
+        => !IsBusy && user.IsInAuth;
+
+    protected bool CanSendConfirmation(TenantUserDto user)
+        => !IsBusy && user.IsInAuth && !string.IsNullOrWhiteSpace(user.Email);
+
+    protected bool CanResetPassword(TenantUserDto user)
+        => !IsBusy && !string.IsNullOrWhiteSpace(user.IdAuth);
+
+    protected bool CanLock(TenantUserDto user)
+        => !IsBusy && !string.IsNullOrWhiteSpace(user.IdAuth) && !IsLocked(user) && !IsLastAdmin(user);
+
+    protected bool CanUnlock(TenantUserDto user)
+        => !IsBusy && !string.IsNullOrWhiteSpace(user.IdAuth) && IsLocked(user);
+
+    protected bool CanDeactivate(TenantUserDto user)
+        => !IsBusy && !string.IsNullOrWhiteSpace(user.IdAuth) && !IsDeactivated(user) && !IsLastAdmin(user);
+
+    protected bool CanRemoveAuth(TenantUserDto user)
+        => !IsBusy && !IsLastAdmin(user) && (user.IsInAuth || !string.IsNullOrWhiteSpace(user.IdAuth));
+
+    protected bool CanDelete(TenantUserDto user)
+        => !IsBusy && !IsLastAdmin(user);
+
+    protected string ActionDisabledTitle(TenantUserDto user, bool enabled, string enabledTitle)
+        => enabled ? enabledTitle
+            : IsLastAdmin(user) ? LastAdminBlockedTooltip
+            : string.Empty;
 
     private void ShowLastAdminBlocked()
         => MHD.MessageOk(WebLoc["LastAdminTitle"].Value, WebLoc["LastAdminMessage"].Value);
@@ -615,6 +643,12 @@ public partial class UsersIndex : IAsyncDisposable
 
     protected void AskRemoveOnlyFromRegister(TenantUserDto user)
     {
+        if (IsLastAdmin(user))
+        {
+            ShowLastAdminBlocked();
+            return;
+        }
+
         var label = user.Email ?? user.Username ?? "User";
         MHD.DeleteMessage(label, EventCallback.Factory.Create(this, () => ConfirmRemoveOnlyFromRegisterAsync(user)));
     }
@@ -711,7 +745,14 @@ public partial class UsersIndex : IAsyncDisposable
         }
     }
 
-    protected void ClearSelection() => SelectedIds.Clear();
+    protected void ClearSelection() => ResetBatchState();
+
+    private void ResetBatchState()
+    {
+        SelectedIds.Clear();
+        BulkDeptValue = string.Empty;
+        BulkRole = string.Empty;
+    }
 
     protected IReadOnlyList<TenantUserDto> SelectedUsers
         => (Users ?? Enumerable.Empty<TenantUserDto>()).Where(u => SelectedIds.Contains(u.Id)).ToList();
@@ -949,9 +990,11 @@ public partial class UsersIndex : IAsyncDisposable
             u.Email,
             GetDisplayName(u),
             GetRoleName(u),
-            u.IsInAuth ? WebLoc["UserRegistered"].Value : WebLoc["UserMissingAuth"].Value,
+            GetDepartmentName(u),
+            GetAccountStatusLabel(u),
+            GetLockoutStatus(u),
             FormatDateTime(u.LastLoginAt),
-            IsLocked(u) ? WebLoc["Enabled"].Value : WebLoc["Disabled"].Value,
+            FormatDate(u.LockoutStart),
             FormatDate(u.LockoutEnd),
             u.PhoneNumber
         });
@@ -961,9 +1004,11 @@ public partial class UsersIndex : IAsyncDisposable
             ResourceIdentity.email,
             CalcResource.name,
             WebLoc["Role"].Value,
-            WebLoc["AuthStatus"].Value,
+            "Avdelningar",
+            "Kontostatus",
+            "Inloggningsspärr",
             WebLoc["LastLogin"].Value,
-            WebLoc["Lockout"].Value,
+            WebLoc["LockoutStart"].Value,
             WebLoc["LockoutEnd"].Value,
             ResourceIdentity.phone
         };

@@ -1,5 +1,6 @@
 @using Application.Feature.Account.Queries
 @using Application.Feature.Calculation.ResourceType.Commands
+@using ProjectManagement.Components.ControlComponents.Department
 @using ProjectManagement.Shared.DTO.Account
 @using ProjectManagement.Shared.DTO.ResourceType
 @inherits AppComponentBase
@@ -16,28 +17,43 @@
 
         @if (AccountGroups is not null)
         {
-            <div class="space-y-2">
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcLoc[nameof(CalcResource.accountGroups)]</label>
-                <select @onchange="ChangeGroupAccount" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
-                    <option value="0"></option>
-                    @foreach (var item in AccountGroups)
-                    {
-                        <option value="@item.Id" selected="@(AccountGroupSelected is not null && AccountGroupSelected.Id == item.Id)">@item.Name</option>
-                    }
-                </select>
-            </div>
+            @if (HasParentAllowedAccounts)
+            {
+                <label class="flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900 lg:col-span-3"
+                       title="Om detta är av använder resurssorten resurstypens tillåtna konton.">
+                    <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-950"
+                                   @bind-Value:get="EditModel.UseOwnAccountSettings"
+                                   @bind-Value:set="OnUseOwnChanged" />
+                    <span class="font-medium text-slate-700 dark:text-slate-200">Använd egna kontoinställningar för denna resurssort</span>
+                </label>
+            }
 
-            @if (AccountGroupSelected?.Accounts is { Count: > 0 })
+            @if (EditModel.UseOwnAccountSettings || !HasParentAllowedAccounts)
+            {
+                <AllowedAccountsSelect Groups="AccountGroups"
+                                       Selected="EditModel.AllowedAccountIds"
+                                       SelectedChanged="OnAllowedAccountsChanged"
+                                       RestrictToIds="ParentRestrictIds" />
+            }
+            else
+            {
+                <div class="space-y-2 lg:col-span-2">
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">Tillåtna konton</label>
+                    <div class="flex h-9 items-center rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-400">
+                        Ärver från resurstypen (@ParentAllowedAccountIds.Count konton)
+                    </div>
+                </div>
+            }
+
+            @if (EffectiveAllowedOptions.Count > 0)
             {
                 <div class="space-y-2">
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcLoc[nameof(CalcResource.account)]</label>
-                    <InputSelect @bind-Value="EditModel.AccountId" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
-                        <option></option>
-                        @foreach (var item in AccountGroupSelected.Accounts)
-                        {
-                            <option value="@item.Id">@item.Name</option>
-                        }
-                    </InputSelect>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">Standardkonto</label>
+                    <AppSelect TValue="int?"
+                               FullWidth="true"
+                               Placeholder="Välj standardkonto"
+                               Options="EffectiveAllowedOptions"
+                               @bind-Value="EditModel.AccountId" />
                     <ValidationMessage For="@(() => EditModel.AccountId)" class="text-sm text-rose-600 dark:text-rose-400" />
                 </div>
             }
@@ -61,11 +77,29 @@
     [Parameter] public EventCallback<bool> Callback { get; set; }
     [Parameter] public ResourceSortModel ResourceSort { get; set; } = new();
 
+    /// <summary>Allowed account ids inherited from the parent resource type (empty = unrestricted).</summary>
+    [Parameter] public List<int> ParentAllowedAccountIds { get; set; } = [];
+
     private bool IsLoading;
     private readonly PostResourceSortDTO EditModel = new();
     private List<ListAccountGroupIncludeAccountDTO>? AccountGroups;
-    private ListAccountGroupIncludeAccountDTO? AccountGroupSelected;
     private ResourceSortModel? PreviousResourceSort;
+
+    private bool HasParentAllowedAccounts => ParentAllowedAccountIds is { Count: > 0 };
+    private IReadOnlyCollection<int>? ParentRestrictIds => HasParentAllowedAccounts ? ParentAllowedAccountIds : null;
+
+    // The set of accounts the calculation user will be able to pick for this sort.
+    private List<int> EffectiveAllowedIds =>
+        EditModel.UseOwnAccountSettings ? EditModel.AllowedAccountIds : (ParentAllowedAccountIds ?? []);
+
+    private IReadOnlyList<AppSelect<int?>.Option> EffectiveAllowedOptions =>
+        (AccountGroups ?? [])
+            .SelectMany(g => g.Accounts ?? [])
+            .Where(a => EffectiveAllowedIds.Contains(a.Id))
+            .Select(a => new AppSelect<int?>.Option(
+                a.Id,
+                string.IsNullOrWhiteSpace(a.Account) ? a.Name : $"{a.Account} ({a.Name})"))
+            .ToList();
 
     protected override async Task OnParametersSetAsync()
     {
@@ -76,21 +110,24 @@
             PropertyCopier.CopyPropertiesTo(ResourceSort, EditModel);
             PreviousResourceSort = ResourceSort;
         }
-
-        if (ResourceSort.Id > 0)
-            AccountGroupSelected = AccountGroups?.FirstOrDefault(x => x.Accounts?.Any(a => a.Id == EditModel.AccountId) == true);
     }
 
-    private async Task ChangeGroupAccount(ChangeEventArgs e)
+    private void OnUseOwnChanged(bool value)
     {
-        AccountGroupSelected = null;
-        EditModel.AccountId = null;
+        EditModel.UseOwnAccountSettings = value;
+        PruneDefaultAccount();
+    }
 
-        if (!int.TryParse(e.Value?.ToString(), out var id) || id == 0)
-            return;
+    private void OnAllowedAccountsChanged(List<int> allowed)
+    {
+        EditModel.AllowedAccountIds = allowed;
+        PruneDefaultAccount();
+    }
 
-        await Task.Yield();
-        AccountGroupSelected = AccountGroups?.FirstOrDefault(x => x.Id == id);
+    private void PruneDefaultAccount()
+    {
+        if (EditModel.AccountId is > 0 && !EffectiveAllowedIds.Contains(EditModel.AccountId.Value))
+            EditModel.AccountId = null;
     }
 
     private void CloseModal() => MHD.Modal.CloseAsync();

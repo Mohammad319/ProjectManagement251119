@@ -11,8 +11,8 @@
 @inject IJSRuntime JS
 @inject SignInManager<ApplicationUser> SignInManager
 
-<nav>
-    <div class="w-full flex flex-wrap items-center justify-between p-0.5">
+<nav class="relative z-[1000] overflow-visible">
+    <div class="w-full flex flex-wrap items-center justify-between overflow-visible p-0.5">
         <a class="flex items-center" href="/" aria-label="@PMWebResource.ProjectManagementHome">
             <img src="Icons/Logo.png" alt="Logo" class="h-8 w-auto" />
         </a>
@@ -43,7 +43,7 @@
                     </li>
                 </AuthorizeView>
                 <li class="text-right md:text-left md:flex-none">
-                    <button class="btn nav-link" @onclick="OpenControlDialog" title="@PMWebResource.Settings" aria-label="@PMWebResource.Settings">
+                    <button class="btn nav-link" @onclick="OpenControlDialog" title="Inställningar" aria-label="Inställningar">
                         <span aria-hidden="true">@((MarkupString)Icons.Settings)</span>
                     </button>
                 </li>
@@ -60,8 +60,14 @@
                 <li class="text-right md:text-left md:flex-none">
                     <NotificationBell />
                 </li>
-                <li class="text-right md:text-left md:flex-none">
-                    <button class="btn nav-link" @onclick="PersonalSettingFun" title="@PMResourceIdentity.Menu_Profile" aria-label="@PMResourceIdentity.Menu_Profile">
+                <li class="relative text-right md:text-left md:flex-none">
+                    <button class="btn nav-link"
+                            @ref="_profileButtonRef"
+                            @onclick="ToggleProfileMenu"
+                            title="Min profil"
+                            aria-label="Min profil"
+                            aria-haspopup="menu"
+                            aria-expanded="@isProfileMenuOpen">
                         <span aria-hidden="true">@((MarkupString)Icons.Person)</span>
                     </button>
                 </li>
@@ -74,25 +80,59 @@
                         </svg>
                     </button>
                 </li>
-                <li class="text-right md:text-left md:flex-none">
-                    <form action="/Account/Logout" method="post" class="inline">
-                        <AntiforgeryToken />
-                        <input type="hidden" name="ReturnUrl" value="@currentUrl" />
-                        <button type="submit" class="btn nav-link flex items-center space-x-2" title="@PMResourceIdentity.logout" aria-label="@PMResourceIdentity.logout">
-                            <span aria-hidden="true">@((MarkupString)Icons.Logout)</span>
-                        </button>
-                    </form>
-                </li>
             </ul>
         </div>
     </div>
 </nav>
+
+@if (isProfileMenuOpen)
+{
+    <div class="fixed inset-0 z-[2147483646]" @onclick="CloseProfileMenu" aria-hidden="true"></div>
+    <div class="fixed z-[2147483647] overflow-hidden rounded-lg border border-slate-200 bg-white py-1 text-left shadow-2xl ring-1 ring-black/5 dark:border-slate-700 dark:bg-slate-900 dark:ring-white/10"
+         style="@ProfileMenuStyle"
+         role="menu"
+         aria-label="Användarmeny">
+        <button type="button"
+                class="block w-full px-3 py-2 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-100 focus:bg-slate-100 focus:outline-none dark:text-slate-200 dark:hover:bg-slate-800 dark:focus:bg-slate-800"
+                role="menuitem"
+                @onclick="PersonalSettingFun">
+            Min profil
+        </button>
+        <button type="button"
+                class="block w-full px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-100 focus:bg-slate-100 focus:outline-none dark:text-slate-200 dark:hover:bg-slate-800 dark:focus:bg-slate-800"
+                role="menuitem"
+                @onclick="ToggleTheme">
+            Byt tema
+        </button>
+        <form action="/Account/Logout" method="post">
+            <AntiforgeryToken />
+            <input type="hidden" name="ReturnUrl" value="@currentUrl" />
+            <button type="submit"
+                    class="block w-full px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-100 focus:bg-slate-100 focus:outline-none dark:text-slate-200 dark:hover:bg-slate-800 dark:focus:bg-slate-800"
+                    role="menuitem"
+                    @onclick="CloseProfileMenu">
+                Logga ut
+            </button>
+        </form>
+    </div>
+}
 
 
 @code {
     private string? currentUrl;
     private bool IsDark;
     private bool isNavOpen;
+    private bool isProfileMenuOpen;
+    private bool _profileMenuPositionPending;
+    private bool _profileMenuPositioned;
+    private ElementReference _profileButtonRef;
+    private DotNetObjectReference<NavMenu>? _dotNetRef;
+    private UserMenuPosition _profileMenuPosition = new(44, 8, 176, 320);
+
+    private string ProfileMenuStyle
+        => _profileMenuPositioned
+            ? $"top:{_profileMenuPosition.Top}px;left:{_profileMenuPosition.Left}px;width:{_profileMenuPosition.Width}px;max-height:{_profileMenuPosition.MaxHeight}px;"
+            : "top:2.75rem;right:0.5rem;width:11rem;max-height:calc(100vh - 3.5rem);";
 
     [Parameter] public EventCallback<string> OnMenuClick { get; set; }
 
@@ -126,6 +166,7 @@
 
     private async Task ToggleTheme()
     {
+        await CloseProfileMenuAsync();
         var newTheme = await JS.InvokeAsync<string>("toggleDarkClass");
         IsDark = newTheme == "dark";
         await InvokeAsync(StateHasChanged);
@@ -134,54 +175,134 @@
     private void OpenControlDialog()
     {
         isNavOpen = false;
+        isProfileMenuOpen = false;
         MHD.Modal.ShowComponent<Components.ControlComponents.Control>(
-            PMWebResource.Settings, null, MhdDialogSize.FullScreen);
+            "Inställningar", null, MhdDialogSize.FullScreen);
     }
 
     private void OpenOrgDialog()
     {
         isNavOpen = false;
+        isProfileMenuOpen = false;
         MHD.Modal.ShowComponent<Components.ControlComponents.Control>(
             PMWebResource.AdminSettings,
             new Dictionary<string, object> { ["ActiveKey"] = "organisation" },
             MhdDialogSize.FullScreen);
     }
 
-    private void PersonalSettingFun() => _navigationManager.NavigateTo("Account/Manage", true);
+    private void ToggleProfileMenu()
+    {
+        isProfileMenuOpen = !isProfileMenuOpen;
+        isNavOpen = false;
+        _profileMenuPositioned = false;
+        _profileMenuPositionPending = isProfileMenuOpen;
+
+        if (isProfileMenuOpen)
+        {
+            _dotNetRef ??= DotNetObjectReference.Create(this);
+            _ = JS.InvokeVoidAsync("projectManagementUserMenu.enableEscape", _dotNetRef);
+        }
+        else
+        {
+            _ = JS.InvokeVoidAsync("projectManagementUserMenu.disableEscape");
+        }
+    }
+
+    private async Task PersonalSettingFun()
+    {
+        await CloseProfileMenuAsync();
+        _navigationManager.NavigateTo("Account/Manage", true);
+    }
+
+    private void CloseProfileMenu()
+    {
+        _ = CloseProfileMenuAsync();
+    }
+
+    [JSInvokable]
+    public async Task CloseProfileMenuFromJs()
+    {
+        await CloseProfileMenuAsync();
+    }
+
+    private async Task CloseProfileMenuAsync()
+    {
+        if (!isProfileMenuOpen)
+        {
+            return;
+        }
+
+        isProfileMenuOpen = false;
+        _profileMenuPositionPending = false;
+        _profileMenuPositioned = false;
+
+        try
+        {
+            await JS.InvokeVoidAsync("projectManagementUserMenu.disableEscape");
+        }
+        catch
+        {
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
     private void OpenSupport()
     {
         isNavOpen = false;
+        isProfileMenuOpen = false;
         MHD.Modal.ShowComponent<Components.Support.SupportUI>(
             PMWebResource.SupportNavTitle, null, MhdDialogSize.Large);
     }
 
-    private void ToggleNavMenu() => isNavOpen = !isNavOpen;
+    private void ToggleNavMenu()
+    {
+        isNavOpen = !isNavOpen;
+        isProfileMenuOpen = false;
+    }
 
     void PriceList()
     {
+        isProfileMenuOpen = false;
         MHD.Modal.ShowComponent<Components.ControlComponents.PriceImport.PriceImportJobsPage>(
             "Price List", null, MhdDialogSize.FullScreen);
     }
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!firstRender)
+        if (firstRender)
         {
-            return;
+            try
+            {
+                var currentTheme = await JS.InvokeAsync<string>("getCurrentTheme");
+                IsDark = currentTheme == "dark";
+                await InvokeAsync(StateHasChanged);
+            }
+            catch
+            {
+            }
         }
 
-        try
+        if (isProfileMenuOpen && _profileMenuPositionPending)
         {
-            var currentTheme = await JS.InvokeAsync<string>("getCurrentTheme");
-            IsDark = currentTheme == "dark";
-            await InvokeAsync(StateHasChanged);
-        }
-        catch
-        {
+            _profileMenuPositionPending = false;
+
+            try
+            {
+                _profileMenuPosition = await JS.InvokeAsync<UserMenuPosition>(
+                    "projectManagementUserMenu.getPosition",
+                    _profileButtonRef,
+                    192);
+                _profileMenuPositioned = true;
+                await InvokeAsync(StateHasChanged);
+            }
+            catch
+            {
+            }
         }
     }
 
     private async Task ChangeLanguage()
     {
+        isProfileMenuOpen = false;
         var newCulture = CultureInfo.CurrentUICulture.Name == "sv-SE" || string.IsNullOrEmpty(CultureInfo.CurrentUICulture.Name)
             ? "en-US"
             : "sv-SE";
@@ -193,5 +314,9 @@
     public void Dispose()
     {
         _navigationManager.LocationChanged -= OnLocationChanged;
+        _dotNetRef?.Dispose();
+        _ = JS.InvokeVoidAsync("projectManagementUserMenu.disableEscape");
     }
+
+    private sealed record UserMenuPosition(double Top, double Left, double Width, double MaxHeight);
 }

@@ -34,6 +34,16 @@ namespace Application.Feature.Calculation.TemplateTable.Commands
             => service.DeleteAsync(request.Id, request.DepartmentId, ct);
     }
 
+    public sealed record CopyTemplateColumnCommand(int Id, int? SourceDepartmentId, int? TargetDepartmentId)
+        : IRequest<TemplateColumnModelDTO?>;
+
+    public sealed class CopyTemplateColumnCommandHandler(ITemplateColumnCommandService service)
+        : IRequestHandler<CopyTemplateColumnCommand, TemplateColumnModelDTO?>
+    {
+        public Task<TemplateColumnModelDTO?> Handle(CopyTemplateColumnCommand request, CancellationToken ct)
+            => service.CopyAsync(request.Id, request.SourceDepartmentId, request.TargetDepartmentId, ct);
+    }
+
     public sealed record SetDefaultTemplateColumnCommand(int CalculationId, int? TemplateColumnId, int? DepartmentId)
         : IRequest<TemplateColumnModelDTO?>;
 

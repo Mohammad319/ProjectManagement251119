@@ -14,6 +14,10 @@ namespace ProjectManagement.Shared.DTO.App
                 AttributeType = AttributeType,
                 Required = Required,
                 Order = Order,
+                Label = Label ?? string.Empty,
+                FieldKey = FieldKey ?? string.Empty,
+                FieldTypeLabel = FieldTypeLabel ?? string.Empty,
+                IsComputed = IsComputed,
                 Validation = Validation ?? string.Empty,
                 Style = Style ?? string.Empty,
                 Value = Value ?? string.Empty
@@ -32,6 +36,11 @@ namespace ProjectManagement.Shared.DTO.App
                 ID = ID,
                 Name = Name ?? string.Empty,
                 Description = Description ?? string.Empty,
+                SectionId = SectionId,
+                SectionTitle = SectionTitle ?? string.Empty,
+                HelpText = HelpText ?? string.Empty,
+                SortOrder = SortOrder,
+                IsRequired = IsRequired,
                 Style = Style ?? string.Empty,
                 StyleRow = StyleRow ?? string.Empty,
                 IsVisible = IsVisible,
@@ -51,9 +60,14 @@ namespace ProjectManagement.Shared.DTO.App
                 Description = Description ?? string.Empty,
                 TemplateType = TemplateType ?? SelfInspectionTemplateTypes.Checklist,
                 Purpose = Purpose ?? string.Empty,
+                LinkType = LinkType ?? "Kalkyl",
+                AllDepartments = AllDepartments,
+                RequiredBeforeOffer = RequiredBeforeOffer,
+                SortOrder = SortOrder,
                 IsSystemTemplate = IsSystemTemplate,
                 SystemTemplateKey = SystemTemplateKey ?? string.Empty,
                 CopiedFromSystemTemplateKey = CopiedFromSystemTemplateKey ?? string.Empty,
+                Sections = Sections?.Select(x => x.Clone()).ToList() ?? [],
                 Rows = Rows?.Select(x => x.Clone()).ToList() ?? []
             };
         }

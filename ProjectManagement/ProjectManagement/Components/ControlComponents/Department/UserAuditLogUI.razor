@@ -224,8 +224,8 @@
 
     private MarkupString SortArrow(AuditSortColumn column)
         => SortColumn == column
-            ? (MarkupString)(SortDescending ? "▼" : "▲")
-            : (MarkupString)string.Empty;
+            ? (MarkupString)(SortDescending ? "↓" : "↑")
+            : (MarkupString)"<span class=\"text-slate-300 dark:text-slate-500\">↕</span>";
 
     private string GetActionLabel(string action) => action switch
     {
@@ -256,9 +256,10 @@
             return entry.Action switch
             {
                 "user.locked" => "Användaren spärrades tills vidare",
-                "user.unlocked" => "Användaren låstes upp",
+                "user.unlocked" => "Användaren kan logga in igen",
                 "user.deleted" => "Användaren togs bort",
                 "user.unregistered" => "Inloggningen togs bort",
+                "user.auth-recreated" => "Ny inloggning skapades",
                 "user.password-reset" => "Nytt tillfälligt lösenord skickades",
                 "user.deactivated" => "Kontot inaktiverades",
                 "user.activated" => "Kontot aktiverades",
@@ -277,6 +278,30 @@
 
     private string HumanizePart(string part, string action)
     {
+        const string roleChangedPrefix = "Roll ändrad från ";
+        if (part.StartsWith(roleChangedPrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            var value = part[roleChangedPrefix.Length..].Trim();
+            var pieces = value.Split(" till ", 2, StringSplitOptions.TrimEntries);
+            if (pieces.Length == 2)
+                return $"Från: {RoleLabel(pieces[0])} → Till: {RoleLabel(pieces[1])}";
+        }
+
+        const string movedPrefix = "Flyttad från ";
+        if (part.StartsWith(movedPrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            var value = part[movedPrefix.Length..].Trim();
+            var pieces = value.Split(" till ", 2, StringSplitOptions.TrimEntries);
+            if (pieces.Length == 2)
+                return $"Från: {pieces[0]} → Till: {pieces[1]}";
+        }
+
+        if (string.Equals(part, "Spärren togs bort", StringComparison.OrdinalIgnoreCase))
+            return "Användaren kan logga in igen";
+
+        if (string.Equals(part, "Användaren spärrades tills vidare", StringComparison.OrdinalIgnoreCase))
+            return "Spärrad tills vidare";
+
         // Role — both the English legacy prefix ("Role:") and the Swedish one ("Roll:").
         foreach (var prefix in new[] { "Role:", "Roll:" })
         {

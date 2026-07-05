@@ -31,31 +31,43 @@
         {
             <dl class="grid grid-cols-2 gap-x-4 gap-y-2 p-2 text-sm md:grid-cols-4">
                 <dt class="font-medium text-gray-700 dark:text-gray-300">@CalcResource.name</dt>
-                <dd class="text-gray-900 dark:text-gray-100">@Company.Name</dd>
+                <dd class="text-gray-900 dark:text-gray-100">@Dash(Company.Name)</dd>
 
                 <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceIdentity.IDNumber</dt>
-                <dd class="text-gray-900 dark:text-gray-100">@Company.IDNumber</dd>
+                <dd class="text-gray-900 dark:text-gray-100">@Dash(Company.IDNumber)</dd>
 
                 <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceIdentity.PersonOrganisationNr</dt>
-                <dd class="text-gray-900 dark:text-gray-100">@Company.PIDNumber</dd>
+                <dd class="text-gray-900 dark:text-gray-100">@Dash(Company.PIDNumber)</dd>
 
                 <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceIdentity.PersonOrganisationType</dt>
-                <dd class="text-gray-900 dark:text-gray-100">@Company.Type</dd>
+                <dd class="text-gray-900 dark:text-gray-100">@Dash(Company.Type)</dd>
+
+                <dt class="font-medium text-gray-700 dark:text-gray-300">Huvudgrupp</dt>
+                <dd class="text-gray-900 dark:text-gray-100">@Dash(Company.Category)</dd>
+
+                <dt class="font-medium text-gray-700 dark:text-gray-300">Undergrupp</dt>
+                <dd class="text-gray-900 dark:text-gray-100">@Dash(Company.SubCategory)</dd>
 
                 <dt class="font-medium text-gray-700 dark:text-gray-300">@CalcResource.status</dt>
-                <dd class="text-gray-900 dark:text-gray-100">@Company.Status</dd>
+                <dd class="text-gray-900 dark:text-gray-100">@StatusBadge(Company.Status)</dd>
+
+                @if (string.Equals(Company.Status, OrganisationStatusCatalog.Warning, StringComparison.OrdinalIgnoreCase))
+                {
+                    <dt class="font-medium text-gray-700 dark:text-gray-300">Orsak till varning</dt>
+                    <dd class="text-gray-900 dark:text-gray-100">@Dash(Company.WarningReason)</dd>
+                }
 
                 <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceIdentity.website</dt>
-                <dd class="text-gray-900 dark:text-gray-100">@Company.URL</dd>
+                <dd class="text-gray-900 dark:text-gray-100">@Dash(Company.URL)</dd>
 
                 <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceIdentity.email</dt>
-                <dd class="text-gray-900 dark:text-gray-100">@Company.Email</dd>
+                <dd class="text-gray-900 dark:text-gray-100">@Dash(Company.Email)</dd>
 
                 <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceIdentity.mobile</dt>
-                <dd class="text-gray-900 dark:text-gray-100">@Company.Mobile</dd>
+                <dd class="text-gray-900 dark:text-gray-100">@Dash(Company.Mobile)</dd>
 
                 <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceIdentity.phone</dt>
-                <dd class="text-gray-900 dark:text-gray-100">@Company.Phone</dd>
+                <dd class="text-gray-900 dark:text-gray-100">@Dash(Company.Phone)</dd>
 
                 @if (Company.Notes is not null)
                 {
@@ -77,7 +89,7 @@
                 <dd class="text-gray-900 dark:text-gray-100">@Company.NumberOfWorkersCards</dd>
 
                 <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceLoc.collectiveLabourAgreement</dt>
-                <dd class="text-gray-900 dark:text-gray-100">@Company.SocialLaborAgreement</dd>
+                <dd class="text-gray-900 dark:text-gray-100">@ReviewLabel(Company.SocialLaborAgreement)</dd>
 
                 <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceLoc.InvoiceVerificationDate</dt>
                 <dd class="text-gray-900 dark:text-gray-100">@Company.InvoiceVerificationDate</dd>
@@ -86,17 +98,20 @@
                 <dd class="text-gray-900 dark:text-gray-100">@Company.VerificationDate</dd>
 
                 <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceApp.qualitySystems</dt>
-                <dd class="text-gray-900 dark:text-gray-100">@Company.QualitySystems</dd>
+                <dd class="text-gray-900 dark:text-gray-100">@ReviewLabel(Company.QualitySystems)</dd>
 
                 <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceApp.environmentalSystems</dt>
-                <dd class="text-gray-900 dark:text-gray-100">@Company.EnvironmentalSystems</dd>
+                <dd class="text-gray-900 dark:text-gray-100">@ReviewLabel(Company.EnvironmentalSystems)</dd>
             </dl>
         }
         else if (Part == 3)
         {
             <dl class="grid grid-cols-1 gap-y-2 p-2 text-sm md:grid-cols-4">
-                <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceLoc.baseCategory</dt>
-                <dd class="text-gray-900 dark:text-gray-100 md:col-span-3">@Company.Category</dd>
+                <dt class="font-medium text-gray-700 dark:text-gray-300">Huvudgrupp</dt>
+                <dd class="text-gray-900 dark:text-gray-100 md:col-span-3">@Dash(Company.Category)</dd>
+
+                <dt class="font-medium text-gray-700 dark:text-gray-300">Undergrupp</dt>
+                <dd class="text-gray-900 dark:text-gray-100 md:col-span-3">@Dash(Company.SubCategory)</dd>
             </dl>
         }
         else if (Part == 4)
