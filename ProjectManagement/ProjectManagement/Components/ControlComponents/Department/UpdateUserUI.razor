@@ -93,7 +93,7 @@ else if (Form is not null)
                 </div>
             </div>
 
-            @if (Departments?.Any() == true && Form.Role != PMRolesConst.Tenant.Admin)
+            @if (Departments?.Any() == true)
             {
                 <div>
                     <label class="mb-0.5 block text-xs font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.department <span class="text-rose-500">*</span></label>

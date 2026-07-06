@@ -16,6 +16,38 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
         private List<ListDTO> Departments = [];
         private bool IsLoading;
         private bool _isEnsuringTemplateShape;
+        private string? _saveError;
+
+        // Local, editor-only UI state (not persisted): collapsible major panels + per-section collapse.
+        private bool _infoOpen = true;
+        private bool _structureOpen = true;
+        private bool _columnsOpen = true;
+        private readonly HashSet<Guid> _collapsedSections = [];
+        private bool _collapseInitialized;
+
+        private bool IsSectionExpanded(SelfInspectionSectionData section) => !_collapsedSections.Contains(section.Id);
+
+        private void ToggleSection(SelfInspectionSectionData section)
+        {
+            if (!_collapsedSections.Remove(section.Id))
+                _collapsedSections.Add(section.Id);
+        }
+
+        // Seed the editor's collapse state once from each section's "Kollapsad som standard" flag.
+        private void InitCollapseState()
+        {
+            if (_collapseInitialized)
+                return;
+
+            foreach (var section in ApplicationUpdate.Data.Sections)
+                if (section.CollapsedByDefault)
+                    _collapsedSections.Add(section.Id);
+
+            _collapseInitialized = true;
+        }
+
+        private const string SaveFailedMessage =
+            "Det gick inte att spara egenkontrollmallen. Kontrollera obligatoriska fält och försök igen.";
 
         private static readonly IReadOnlyList<string> TemplateTypes =
         [
@@ -92,6 +124,7 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
             }
 
             EnsureTemplateShape();
+            InitCollapseState();
         }
 
         private void OnTemplateTypeChanged(string value)
@@ -232,9 +265,28 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
         {
             if (IsLoading)
                 return;
+
+            _saveError = null;
+
             if (ApplicationUpdate.Data.IsSystemTemplate)
             {
+                _saveError = "Standardmallar kan inte ändras. Kopiera mallen för att skapa en egen version.";
                 MHD.Notifications(ApplicationUpdate.Id == 0 ? ToastType.Add : ToastType.Update, false);
+                return;
+            }
+
+            // A template must belong to a department (unless it applies to all departments), otherwise the
+            // backend rejects it silently — validate here so the user sees why nothing was saved.
+            if (!ApplicationUpdate.Data.AllDepartments && ApplicationUpdate.DepartmentId <= 0)
+            {
+                _saveError = "Välj en avdelning eller markera \"Alla avdelningar\" innan du sparar.";
+                return;
+            }
+
+            var validationErrors = ValidateTemplate();
+            if (validationErrors.Count > 0)
+            {
+                _saveError = string.Join(" ", validationErrors.Distinct());
                 return;
             }
 
@@ -255,6 +307,11 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
                 else
                     isSuccess = await Dispatcher.Send(new UpdateApplicationCommand(ApplicationUpdate));
             }
+            catch (Exception)
+            {
+                // Never let a backend/transport failure surface as a raw error page — show it in the form.
+                isSuccess = false;
+            }
             finally
             {
                 IsLoading = false;
@@ -263,6 +320,8 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
             MHD.Notifications(ApplicationUpdate.Id == 0 ? ToastType.Add : ToastType.Update, isSuccess);
             if (isSuccess)
                 await Callback.InvokeAsync(true);
+            else
+                _saveError = SaveFailedMessage;
         }
 
         private void EnsureTemplateShape()
@@ -528,6 +587,143 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
             var part = style.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                 .FirstOrDefault(x => x.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
             return part is null ? null : part[prefix.Length..].Trim();
+        }
+
+        // ---- Ordering via buttons (admin never edits sort numbers by hand) ----
+
+        private bool CanMoveSection(SelfInspectionSectionData section, int direction)
+        {
+            var ordered = SectionsForUi;
+            var index = ordered.ToList().FindIndex(x => x.Id == section.Id);
+            var target = index + direction;
+            return index >= 0 && target >= 0 && target < ordered.Count;
+        }
+
+        private void MoveSection(SelfInspectionSectionData section, int direction)
+        {
+            var ordered = ApplicationUpdate.Data.Sections
+                .OrderBy(x => x.SortOrder)
+                .ThenBy(x => x.Title)
+                .ToList();
+
+            if (!Swap(ordered, section, direction))
+                return;
+
+            for (var i = 0; i < ordered.Count; i++)
+                ordered[i].SortOrder = i + 1;
+        }
+
+        private bool CanMoveRow(RowDTO row, int direction)
+        {
+            var section = ResolveSection(row);
+            var ordered = RowsForSection(section).ToList();
+            var index = ordered.FindIndex(x => x.ID == row.ID);
+            var target = index + direction;
+            return index >= 0 && target >= 0 && target < ordered.Count;
+        }
+
+        private void MoveRow(RowDTO row, int direction)
+        {
+            var section = ResolveSection(row);
+            var ordered = RowsForSection(section).ToList();
+
+            if (!Swap(ordered, row, direction))
+                return;
+
+            for (var i = 0; i < ordered.Count; i++)
+                ordered[i].SortOrder = i + 1;
+        }
+
+        private bool CanMoveColumn(AttributeDTO column, int direction)
+        {
+            var ordered = ResponseColumns;
+            var index = ordered.FindIndex(x => x.ID == column.ID);
+            var target = index + direction;
+            return index >= 0 && target >= 0 && target < ordered.Count;
+        }
+
+        private void MoveColumn(AttributeDTO column, int direction)
+        {
+            var index = ResponseColumns.FindIndex(x => x.ID == column.ID);
+            var target = index + direction;
+            if (index < 0 || target < 0 || target >= ResponseColumns.Count)
+                return;
+
+            // Columns are mirrored across every row (kept in sync by Order), so the same positional swap
+            // must be applied to each row's attribute list.
+            foreach (var row in ApplicationUpdate.Data.Rows)
+            {
+                var attrs = row.Attributes.OrderBy(x => x.Order).ToList();
+                if (index < attrs.Count && target < attrs.Count)
+                    (attrs[index], attrs[target]) = (attrs[target], attrs[index]);
+                for (var i = 0; i < attrs.Count; i++)
+                    attrs[i].Order = i;
+            }
+        }
+
+        private static bool Swap<T>(List<T> list, T item, int direction)
+        {
+            var index = list.IndexOf(item);
+            var target = index + direction;
+            if (index < 0 || target < 0 || target >= list.Count)
+                return false;
+
+            (list[index], list[target]) = (list[target], list[index]);
+            return true;
+        }
+
+        // Swedish, human-readable validation so a broken/empty template is stopped in the form instead of
+        // being auto-"fixed" silently or bounced back as an HTTP 400.
+        private List<string> ValidateTemplate()
+        {
+            var errors = new List<string>();
+
+            if (string.IsNullOrWhiteSpace(ApplicationUpdate.Name))
+                errors.Add("Namn är obligatoriskt.");
+
+            if (string.IsNullOrWhiteSpace(ApplicationUpdate.Data.TemplateType))
+                errors.Add("Typ är obligatoriskt.");
+
+            if (string.IsNullOrWhiteSpace(ApplicationUpdate.Data.LinkType))
+                errors.Add("Koppling är obligatorisk.");
+
+            if (ApplicationUpdate.Data.Sections.Count == 0)
+                errors.Add("Minst en sektion krävs.");
+
+            if (ApplicationUpdate.Data.Sections.Any(s => string.IsNullOrWhiteSpace(s.Title)))
+                errors.Add("Sektionen saknar namn.");
+
+            if (ApplicationUpdate.Data.Rows.Any(r => string.IsNullOrWhiteSpace(r.Name)))
+                errors.Add("Kontrollpunkten saknar text.");
+
+            if (ResponseColumns.Any(c => string.IsNullOrWhiteSpace(c.Label)))
+                errors.Add("Svarskolumnen saknar namn.");
+
+            if (ResponseColumns.Any(c => string.IsNullOrWhiteSpace(DisplayFieldType(c))))
+                errors.Add("Svarskolumnen saknar fälttyp.");
+
+            return errors;
+        }
+
+        private void Preview()
+        {
+            // Preview a snapshot (Data setter clones) so the read-only preview never mutates the working
+            // copy the admin is still editing.
+            var snapshot = new ApplicationDTO
+            {
+                Id = ApplicationUpdate.Id,
+                DepartmentId = ApplicationUpdate.DepartmentId,
+                Name = ApplicationUpdate.Name,
+                IsVisible = ApplicationUpdate.IsVisible,
+                UserId = ApplicationUpdate.UserId,
+                LastUpdate = ApplicationUpdate.LastUpdate,
+                Data = ApplicationUpdate.Data
+            };
+
+            MHD.Modal.ShowComponent<ApplicationPreviewUI>(
+                $"Förhandsgranskning – {(string.IsNullOrWhiteSpace(snapshot.Name) ? "Namnlös mall" : snapshot.Name)}",
+                new Dictionary<string, object> { [nameof(ApplicationPreviewUI.Application)] = snapshot },
+                BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
         }
 
         private Task CancelAsync() => Callback.InvokeAsync(false);

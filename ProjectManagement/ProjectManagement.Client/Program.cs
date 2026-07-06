@@ -58,7 +58,7 @@ try
     CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("sv-SE");
     CultureInfo.DefaultThreadCurrentUICulture = !string.IsNullOrWhiteSpace(uiCultureName)
         ? new CultureInfo(uiCultureName)
-        : new CultureInfo("en-US");
+        : new CultureInfo("sv-SE");
 }
 catch
 {

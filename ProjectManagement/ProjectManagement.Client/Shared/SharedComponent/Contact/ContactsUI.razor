@@ -1,4 +1,4 @@
-﻿@using ProjectManagement.Client.Shared.Repositories.Offer;
+@using ProjectManagement.Client.Shared.Repositories.Offer;
 @using ProjectManagement.Client.Shared.Repositories.Organisation
 @using ProjectManagement.Shared.Base.Organisation
 @using ProjectManagement.Shared.DTO.Offer
@@ -6,49 +6,68 @@
 @using ProjectManagement.Shared.DTO.Organisation
 @inherits AppComponentBase
 
-@if (Form != null)
+@if (Contacts != null)
 {
-    <ContactFormUI underContact="Form" Callback="CallBack"></ContactFormUI>
-}
-else if (Contacts != null)
-{
+    <div class="mb-2 flex items-center justify-between gap-2">
+        <p class="text-sm text-slate-500 dark:text-slate-400">Kontaktpersoner hos kunden/leverantören.</p>
+        <button type="button"
+                class="inline-flex items-center gap-1.5 rounded-md bg-sky-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-400"
+                @onclick="AddContact">
+            @((MarkupString)Icons.Plus)
+            <span>Lägg till kontakt</span>
+        </button>
+    </div>
+
     <div class="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
         <table class="min-w-full text-sm text-slate-700 dark:text-slate-200">
             <thead class="bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-100">
                 <tr>
-                    <th class="px-3 py-2 text-start font-semibold">
-                        <button type="button"
-                                class="me-2 inline-flex h-7 w-7 items-center justify-center rounded-md bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-400"
-                                @onclick="()=> SetForm(-1)">
-                            @((MarkupString)Icons.Plus)
-                        </button>
-                        @CalcResource.name
-                    </th>
-                    <th class="px-3 py-2 text-start font-semibold" style="width:105px;">@ResourceIdentity.mobile </th>
-                    <th class="px-3 py-2 text-start font-semibold" style="width:105px;">@ResourceIdentity.phone </th>
-                    <th class="px-3 py-2 text-start font-semibold" style="width:120px;">@CalcResource.status </th>
+                    <th class="px-3 py-2 text-start font-semibold">@CalcResource.name</th>
+                    <th class="px-3 py-2 text-start font-semibold">@ResourceIdentity.email</th>
+                    <th class="px-3 py-2 text-start font-semibold">@ResourceIdentity.mobile</th>
+                    <th class="px-3 py-2 text-start font-semibold">@ResourceIdentity.phone</th>
+                    <th class="px-3 py-2 text-start font-semibold">@ResourceApp.department</th>
+                    <th class="px-3 py-2 text-start font-semibold">@CalcResource.status</th>
+                    <th class="px-3 py-2 text-end font-semibold">@ResourceApp.actions</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-200 bg-white dark:divide-slate-700 dark:bg-slate-900">
-                @for (int i = 0; i < Contacts.Count; i++)
+                @if (Contacts.Count == 0)
                 {
-                    int x = i;
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/70">
-                        <td class="px-3 py-2">
-                            <button class="me-1 inline-flex h-7 w-7 items-center justify-center rounded-md bg-rose-600 text-white hover:bg-rose-700 dark:bg-rose-500 dark:hover:bg-rose-400"
-                                    @onclick="()=> Remove(Contacts[x])">
-                                @((MarkupString)@Icons.DeleteSVG)
-                            </button>
-                            <button class="me-2 inline-flex h-7 w-7 items-center justify-center rounded-md bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-400"
-                                    @onclick="()=> SetForm(x)">
-                                @Icons.Edit
-                            </button>
-                            @Contacts[x].FirstName @Contacts[x].LastName
+                    <tr>
+                        <td colspan="7" class="px-3 py-4 text-center text-sm text-slate-500 dark:text-slate-400">
+                            Inga kontaktpersoner tillagda ännu.
                         </td>
-                        <td class="px-3 py-2">@Contacts[x].Mobile</td>
-                        <td class="px-3 py-2">@Contacts[x].Telefone</td>
-                        <td class="px-3 py-2">@Contacts[x].Status</td>
                     </tr>
+                }
+                else
+                {
+                    @for (int i = 0; i < Contacts.Count; i++)
+                    {
+                        int x = i;
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/70">
+                            <td class="px-3 py-2 font-medium">@Contacts[x].GetFullName()</td>
+                            <td class="px-3 py-2">@Contacts[x].Email</td>
+                            <td class="px-3 py-2">@Contacts[x].Mobile</td>
+                            <td class="px-3 py-2">@Contacts[x].Telefone</td>
+                            <td class="px-3 py-2">@Contacts[x].Department</td>
+                            <td class="px-3 py-2">@Contacts[x].Status.ToSwedish()</td>
+                            <td class="px-3 py-2">
+                                <div class="flex items-center justify-end gap-1">
+                                    <button type="button" title="@ResourceApp.edit"
+                                            class="inline-flex h-7 w-7 items-center justify-center rounded-md bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+                                            @onclick="() => EditContact(x)">
+                                        @Icons.Edit
+                                    </button>
+                                    <button type="button" title="@ResourceApp.delete"
+                                            class="inline-flex h-7 w-7 items-center justify-center rounded-md bg-rose-600 text-white hover:bg-rose-700 dark:bg-rose-500 dark:hover:bg-rose-400"
+                                            @onclick="() => Remove(Contacts[x])">
+                                        @((MarkupString)Icons.DeleteSVG)
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
                 }
             </tbody>
         </table>
@@ -57,28 +76,48 @@ else if (Contacts != null)
 
 @code {
     [Parameter] public List<UnderContactOrganisationBase> Contacts { get; set; } = [];
-    UnderContactOrganisationBase? Form;
-    int IndexForm = -1;
-    void CallBack(UnderContactOrganisationBase? f)
-    {
-        if (f is not null && IndexForm == -1)
-        {
-            Contacts.Add(f);
-        }
 
-        Form = null;
+    // -1 = a new contact is being created (added to the list on save); >= 0 = editing that row in place.
+    private int _editIndex = -1;
+
+    private void AddContact()
+    {
+        _editIndex = -1;
+        OpenDialog("Ny kontaktperson", new UnderContactOrganisationBase());
+    }
+
+    private void EditContact(int index)
+    {
+        _editIndex = index;
+        OpenDialog("Redigera kontaktperson", Contacts[index]);
+    }
+
+    // Opens the contact form in its own small dialog so no empty placeholder rows are created in the
+    // table before the user has filled anything in.
+    private void OpenDialog(string title, UnderContactOrganisationBase contact)
+    {
+        Modal.ShowComponent<ContactFormUI>(
+            title,
+            new Dictionary<string, object>
+            {
+                [nameof(ContactFormUI.underContact)] = contact,
+                [nameof(ContactFormUI.Callback)] =
+                    EventCallback.Factory.Create<UnderContactOrganisationBase>(this, OnContactSavedAsync)
+            },
+            BlazorMHD.UI.Core.Services.MhdDialogSize.Medium);
+    }
+
+    private async Task OnContactSavedAsync(UnderContactOrganisationBase? contact)
+    {
+        // A new contact is only appended once the form is saved (contact != null); editing mutates the
+        // existing reference in place. Cancel passes null and just closes the dialog.
+        if (contact is not null && _editIndex == -1)
+            Contacts.Add(contact);
+
+        _editIndex = -1;
+        await Modal.CloseAsync();
         StateHasChanged();
     }
-    void SetForm(int i = -1)
-    {
-        IndexForm = i;
-        if (i > -1)
-            Form = Contacts[i];
-        else Form = new UnderContactOrganisationBase();
-    }
 
-    void Remove(UnderContactOrganisationBase Company)
-    {
-        Contacts.Remove(Company);
-    }
+    private void Remove(UnderContactOrganisationBase contact) => Contacts.Remove(contact);
 }

@@ -10,6 +10,8 @@
         @for (int i = 0; i < Items.Count; i++)
         {
             var item = Items[i];
+            if (ItemFilter is not null && !ItemFilter(item))
+                continue;
 
             <tr class="@RowClass"
                 draggable="true"
@@ -25,6 +27,7 @@
 
 @code {
     [Parameter] public IList<TItem>? Items { get; set; }
+    [Parameter] public Func<TItem, bool>? ItemFilter { get; set; }
     [Parameter] public RenderFragment<TItem>? RowTemplate { get; set; }
     [Parameter] public string RowClass { get; set; } = "";
     [Parameter] public RenderFragment? ChildContent { get; set; }

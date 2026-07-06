@@ -232,4 +232,67 @@
   <data name="users" xml:space="preserve">
     <value>Användare</value>
   </data>
+  <data name="UsernameLabel" xml:space="preserve">
+    <value>Användarnamn</value>
+  </data>
+  <data name="PhoneNumberLabel" xml:space="preserve">
+    <value>Telefonnummer</value>
+  </data>
+  <data name="CurrentEmailLabel" xml:space="preserve">
+    <value>Nuvarande e-post</value>
+  </data>
+  <data name="NewEmailLabel" xml:space="preserve">
+    <value>Ny e-post</value>
+  </data>
+  <data name="ChangeEmailAction" xml:space="preserve">
+    <value>Ändra e-post</value>
+  </data>
+  <data name="SendVerificationEmail" xml:space="preserve">
+    <value>Skicka verifieringsmejl</value>
+  </data>
+  <data name="CurrentPasswordLabel" xml:space="preserve">
+    <value>Nuvarande lösenord</value>
+  </data>
+  <data name="NewPasswordLabel" xml:space="preserve">
+    <value>Nytt lösenord</value>
+  </data>
+  <data name="ConfirmNewPasswordLabel" xml:space="preserve">
+    <value>Bekräfta nytt lösenord</value>
+  </data>
+  <data name="UpdatePasswordAction" xml:space="preserve">
+    <value>Uppdatera lösenord</value>
+  </data>
+  <data name="AuthenticatorApp" xml:space="preserve">
+    <value>Autentiseringsapp</value>
+  </data>
+  <data name="AddAuthenticatorApp" xml:space="preserve">
+    <value>Lägg till autentiseringsapp</value>
+  </data>
+  <data name="SetUpAuthenticatorApp" xml:space="preserve">
+    <value>Konfigurera autentiseringsapp</value>
+  </data>
+  <data name="ResetAuthenticatorApp" xml:space="preserve">
+    <value>Återställ autentiseringsapp</value>
+  </data>
+  <data name="NoPasskeysRegistered" xml:space="preserve">
+    <value>Inga passkeys är registrerade.</value>
+  </data>
+  <data name="AddNewPasskey" xml:space="preserve">
+    <value>Lägg till ny passkey</value>
+  </data>
+  <data name="DownloadAction" xml:space="preserve">
+    <value>Ladda ner</value>
+  </data>
+  <data name="DeleteAction" xml:space="preserve">
+    <value>Radera</value>
+  </data>
+  <data name="RenameAction" xml:space="preserve">
+    <value>Byt namn</value>
+  </data>
+  <data name="VerifyAction" xml:space="preserve">
+    <value>Verifiera</value>
+  </data>
+  <data name="VerificationCodeLabel" xml:space="preserve">
+    <value>Verifieringskod</value>
+  </data>
 </root>

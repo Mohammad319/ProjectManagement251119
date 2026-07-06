@@ -72,6 +72,7 @@ public partial class UpdateUserUI : AppComponentBase
                 Firstname = sourceUser.Firstname,
                 Lastname = sourceUser.Lastname,
                 DepartmentId = DepartmentId ?? sourceUser.DepartmentId,
+                DepartmentIds = sourceUser.DepartmentIds.ToList(),
                 LockoutEnabled = sourceUser.LockoutEnabled,
                 IdAuth = sourceUser.IdAuth,
                 LockoutStart = sourceUser.LockoutStart,
@@ -107,7 +108,10 @@ public partial class UpdateUserUI : AppComponentBase
         if (Form is null)
             return;
 
-        if (Form.DepartmentId.HasValue)
+        foreach (var departmentId in Form.DepartmentIds.Where(id => id > 0).Distinct())
+            SelectedDepartmentIds.Add(departmentId);
+
+        if (SelectedDepartmentIds.Count == 0 && Form.DepartmentId.HasValue)
             SelectedDepartmentIds.Add(Form.DepartmentId.Value);
 
         var resolvedRole = await ResolveExistingRoleAsync();
@@ -273,6 +277,7 @@ public partial class UpdateUserUI : AppComponentBase
             return;
         }
 
+        Form.DepartmentIds = SelectedDepartmentIds.ToList();
         Form.DepartmentId = Form.Role == PMRolesConst.Tenant.Admin ? null : PrimaryDepartmentId;
 
         // "Tills vidare" — lockout with no end date is stored as a far-future timestamp.
@@ -293,7 +298,10 @@ public partial class UpdateUserUI : AppComponentBase
                 ? await TenantUserService.RegisterAsync(Form)
                 : await TenantUserService.UpdateUserAsync(Form);
 
-            MHD.Notifications(UserForm.Id == 0 ? ToastType.Add : ToastType.Update, ok);
+            if (ok && UserForm.Id > 0)
+                MHD.ToastInfo("Användaren har uppdaterats.");
+            else
+                MHD.Notifications(UserForm.Id == 0 ? ToastType.Add : ToastType.Update, ok);
 
             if (Callback.HasDelegate)
                 await Callback.InvokeAsync(ok);

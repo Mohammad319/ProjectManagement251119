@@ -1,0 +1,8 @@
+/* Shared, tab-independent content area so the "Ny kund/leverantör" dialog keeps the same
+   height on every tab. Only this region scrolls; the tab row above and the modal footer
+   below stay fixed. Viewport-based height keeps it stable regardless of a tab's content,
+   and the max-height caps it on short screens so the modal never overflows. */
+.org-form-content {
+    height: 60vh;
+    max-height: calc(100dvh - 17rem);
+}

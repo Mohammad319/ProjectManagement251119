@@ -3,6 +3,8 @@
 @using Application.Feature.Identity.Department.Queries
 @using ProjectManagement.Client.Constant
 @using ProjectManagement.Client.Shared.Model.Project.Calculation
+@using ProjectManagement.Components.ControlComponents.Department
+@using ProjectManagement.Shared.Constants
 @using ProjectManagement.Shared.DTO.Calculation.Template
 @using ProjectManagement.Shared.DTO.General
 @using System.Security.Claims
@@ -25,9 +27,11 @@ else if (ColumnForm is not null)
 }
 else
 {
-    <section class="pm-admin-panel">
-        <div class="shrink-0 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-            <!-- Fixed sub-tab row: Utseendemallar / Kolumnmallar -->
+    var rowsCount = ActiveTab == TemplateTab.Appearance ? AppearanceRows.Count() : ColumnRows.Count();
+    var totalCount = ActiveTab == TemplateTab.Appearance ? VisibleTemplates.Count() : VisibleColumnTemplates.Count();
+
+    <section class="pm-admin-panel overflow-hidden">
+        <div class="sticky top-0 z-30 shrink-0 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
             <div class="flex items-center gap-1 border-b border-slate-200 pb-2 dark:border-slate-700">
                 <button type="button" @onclick="() => SetTab(TemplateTab.Appearance)" class="@TabClass(TemplateTab.Appearance)">
                     Utseendemallar
@@ -37,8 +41,9 @@ else
                 </button>
             </div>
 
-            <!-- Fixed toolbar -->
-            <div class="mt-2 flex flex-wrap items-center gap-2">
+            <p class="px-1 py-2 text-sm text-slate-500 dark:text-slate-400">@ActiveTabDescription</p>
+
+            <div class="flex flex-wrap items-center gap-2">
                 @if (ActiveTab == TemplateTab.Appearance)
                 {
                     <button @onclick="OpenCreate"
@@ -60,27 +65,43 @@ else
 
                 @if (CanChooseDepartment && Departments.Any())
                 {
-                    <select @onchange="ChangeDepartmentAsync"
-                            class="min-w-[200px] rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100">
-                        <option value="">Alla avdelningar</option>
-                        @foreach (var department in Departments)
-                        {
-                            <option value="@department.Id" selected="@(department.Id == SelectedDepartmentId)">@department.Name</option>
-                        }
-                    </select>
+                    <AppSelect TValue="int?"
+                               Placeholder="Alla avdelningar"
+                               Options="DepartmentOptions"
+                               Value="SelectedDepartmentId"
+                               ValueChanged="ChangeDepartmentAsync"
+                               Disabled="@Loading" />
                 }
+
+                <AppSelect TValue="TemplateKindFilter"
+                           Placeholder="Alla typer"
+                           Options="KindFilterOptions"
+                           Value="KindFilter"
+                           ValueChanged="ChangeKindFilter"
+                           Disabled="@Loading" />
+
+                <AppSelect TValue="TemplateStatusFilter"
+                           Placeholder="Alla statusar"
+                           Options="StatusFilterOptions"
+                           Value="StatusFilter"
+                           ValueChanged="ChangeStatusFilter"
+                           Disabled="@Loading" />
+
+                <span class="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                    Visar @rowsCount av @totalCount
+                </span>
 
                 <div class="relative ml-auto">
                     <input type="search"
                            @bind="SearchText"
                            @bind:event="oninput"
-                           placeholder="Sök mall…"
+                           placeholder="Sök mall..."
                            class="h-9 w-56 rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100" />
                 </div>
             </div>
         </div>
 
-        <div class="pm-admin-scroll">
+        <div class="min-h-0 flex-1 overflow-hidden">
             @if (Loading)
             {
                 <div class="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
@@ -93,127 +114,197 @@ else
             }
             else if (ActiveTab == TemplateTab.Appearance)
             {
-                @if (!AppearanceRows.Any())
+                var appearanceRows = AppearanceRows.ToList();
+                if (!appearanceRows.Any())
                 {
-                    <div class="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                        <h3 class="text-base font-semibold text-slate-900 dark:text-slate-100">@ResourceApp.notFoundData</h3>
-                        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Utseendemallar</p>
-                    </div>
+                    <TemplateEmptyState Title="Utseendemallar" />
                 }
                 else
                 {
-                    <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                        <table class="min-w-full text-sm">
-                            <thead class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-800/80">
-                                <tr class="text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                                    <th class="px-3 py-2">@CalcResource.name</th>
-                                    <th class="px-3 py-2">Visas för</th>
-                                    <th class="px-3 py-2 text-right">Åtgärder</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var item in AppearanceRows)
-                                {
-                                    <tr class="border-t border-slate-100 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40">
-                                        <td class="px-3 py-2 font-medium text-slate-800 dark:text-slate-100">@item.Name</td>
-                                        <td class="px-3 py-2 text-slate-500 dark:text-slate-400">@DepartmentLabel(item.DepartmentId)</td>
-                                        <td class="px-3 py-2">
-                                            <div class="flex items-center justify-end gap-1.5">
-                                                <button @onclick="() => CopyAppearanceAsync(item)" disabled="@Loading" type="button"
-                                                        class="inline-flex h-8 items-center justify-center gap-1 rounded-md border border-sky-300 bg-sky-50 px-2 text-xs font-medium text-sky-700 transition hover:bg-sky-100 disabled:opacity-50 dark:border-sky-700 dark:bg-sky-950/50 dark:text-sky-300 dark:hover:bg-sky-900/60"
-                                                        title="Kopiera mallen till en redigerbar kopia">
-                                                    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                                                    <span>Kopiera</span>
-                                                </button>
-                                                @if (CanEditTemplate(item.DepartmentId))
+                    <div class="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                        <div class="min-h-0 flex-1 overflow-auto">
+                            <table class="min-w-full border-separate border-spacing-0 text-sm">
+                                <thead class="sticky top-0 z-20 bg-slate-50 shadow-sm dark:bg-slate-800">
+                                    <tr class="text-left text-xs font-semibold text-slate-500 dark:text-slate-400">
+                                        <th class="border-b border-slate-200 px-3 py-2 dark:border-slate-700">Namn</th>
+                                        <th class="border-b border-slate-200 px-3 py-2 dark:border-slate-700">Visas för</th>
+                                        <th class="border-b border-slate-200 px-3 py-2 dark:border-slate-700">Typ</th>
+                                        <th class="border-b border-slate-200 px-3 py-2 dark:border-slate-700">Status</th>
+                                        <th class="border-b border-slate-200 px-3 py-2 dark:border-slate-700" title="Den mall som används automatiskt när en ny kalkyl skapas.">Standardval</th>
+                                        <th class="border-b border-slate-200 px-3 py-2 dark:border-slate-700">Förhandsvisning</th>
+                                        <th class="border-b border-slate-200 px-3 py-2 text-right dark:border-slate-700">Åtgärder</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in appearanceRows)
+                                    {
+                                        var isStandard = IsStandardAppearance(item);
+                                        <tr class="border-t border-slate-100 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40">
+                                            <td class="max-w-[18rem] px-3 py-2">
+                                                <div class="truncate font-medium text-slate-800 dark:text-slate-100" title="@DisplayName(item.Name, TemplateTab.Appearance)">@DisplayName(item.Name, TemplateTab.Appearance)</div>
+                                            </td>
+                                            <td class="px-3 py-2 text-slate-600 dark:text-slate-300">
+                                                <span title="@DepartmentLabel(item.DepartmentId)">@DepartmentLabel(item.DepartmentId)</span>
+                                            </td>
+                                            <td class="px-3 py-2"><TemplateBadge Text="@TemplateTypeLabel(item.DepartmentId, isStandard)" Tone="blue" /></td>
+                                            <td class="px-3 py-2">
+                                                <div class="flex flex-wrap items-center gap-1">
+                                                    <TemplateBadge Text="@(item.IsVisible ? "Synlig" : "Dold")" Tone="@(item.IsVisible ? "emerald" : "rose")" />
+                                                    @if (isStandard)
+                                                    {
+                                                        <TemplateBadge Text="Skrivskyddad" Tone="amber" />
+                                                    }
+                                                </div>
+                                            </td>
+                                            <td class="px-3 py-2">
+                                                @if (item.IsDefault)
                                                 {
-                                                    <button @onclick="() => FormUI(item)" disabled="@Loading" type="button"
-                                                            class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-amber-300 bg-amber-50 text-amber-700 transition hover:bg-amber-100 disabled:opacity-50 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-200 dark:hover:bg-amber-900/60"
-                                                            title="@ResourceApp.update">
-                                                        @Icons.Edit
-                                                    </button>
-                                                    <button @onclick="() => Remove(item)" disabled="@Loading" type="button"
-                                                            class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-rose-300 bg-rose-50 text-rose-700 transition hover:bg-rose-100 disabled:opacity-50 dark:border-rose-700 dark:bg-rose-950/50 dark:text-rose-200 dark:hover:bg-rose-900/60"
-                                                            title="@ResourceApp.delete">
-                                                        @((MarkupString)Icons.DeleteSVG)
+                                                    <span class="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400" title="Den mall som används automatiskt när en ny kalkyl skapas.">★ Standard</span>
+                                                }
+                                                else if (CanChooseDepartment)
+                                                {
+                                                    <button type="button" @onclick="() => SetDefaultAsync(item.Id, item.DepartmentId)" disabled="@Loading"
+                                                            class="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2 py-0.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-800"
+                                                            title="Använd som standardval — används automatiskt för nya kalkyler i denna avdelning/företag.">
+                                                        Välj som standard
                                                     </button>
                                                 }
                                                 else
                                                 {
-                                                    <span class="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-500"
-                                                          title="Standardmallar kan inte redigeras direkt. Kopiera mallen för att skapa en egen version.">
-                                                        @PMWebResource.ReadOnly
-                                                    </span>
+                                                    <span class="text-xs text-slate-400">Nej</span>
                                                 }
-                                            </div>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
+                                            </td>
+                                            <td class="px-3 py-2">
+                                                <AppearancePreview />
+                                            </td>
+                                            <td class="px-3 py-2">
+                                                <div class="flex items-center justify-end gap-1.5">
+                                                    <button @onclick="() => CopyAppearanceAsync(item)" disabled="@Loading" type="button"
+                                                            class="@ActionButtonClass("sky")"
+                                                            title="Skapa en redigerbar kopia av mallen.">
+                                                        @((MarkupString)CopyIcon)
+                                                        <span>Kopiera</span>
+                                                    </button>
+                                                    <button @onclick="() => FormUI(item)" disabled="@(Loading || isStandard || !CanEditTemplate(item.DepartmentId))" type="button"
+                                                            class="@IconActionButtonClass("amber")"
+                                                            title="@(isStandard ? "Standardmallar kan inte redigeras direkt. Kopiera mallen för att skapa en egen version." : "Redigera mallen.")">
+                                                        @Icons.Edit
+                                                    </button>
+                                                    <button @onclick="() => ToggleAppearanceVisibilityAsync(item)" disabled="@(Loading || isStandard || !CanEditTemplate(item.DepartmentId))" type="button"
+                                                            class="@IconActionButtonClass(item.IsVisible ? "slate" : "emerald")"
+                                                            title="@(item.IsVisible ? "Dölj mallen för användare." : "Gör mallen synlig för användare.")">
+                                                        @((MarkupString)Icons.GetVisibleIcon(!item.IsVisible))
+                                                    </button>
+                                                    <button @onclick="() => Remove(item)" disabled="@(Loading || isStandard || !CanEditTemplate(item.DepartmentId))" type="button"
+                                                            class="@IconActionButtonClass("rose")"
+                                                            title="@(isStandard ? "Standardmallar kan inte tas bort." : "Ta bort mallen.")">
+                                                        @((MarkupString)Icons.DeleteSVG)
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 }
             }
             else
             {
-                @if (!ColumnRows.Any())
+                var columnRows = ColumnRows.ToList();
+                if (!columnRows.Any())
                 {
-                    <div class="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                        <h3 class="text-base font-semibold text-slate-900 dark:text-slate-100">@ResourceApp.notFoundData</h3>
-                        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Kolumnmallar</p>
-                    </div>
+                    <TemplateEmptyState Title="Kolumnmallar" />
                 }
                 else
                 {
-                    <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                        <table class="min-w-full text-sm">
-                            <thead class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-800/80">
-                                <tr class="text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                                    <th class="px-3 py-2">@CalcResource.name</th>
-                                    <th class="px-3 py-2">Visas för</th>
-                                    <th class="px-3 py-2 text-right">Åtgärder</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var item in ColumnRows)
-                                {
-                                    <tr class="border-t border-slate-100 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40">
-                                        <td class="px-3 py-2 font-medium text-slate-800 dark:text-slate-100">@item.Name</td>
-                                        <td class="px-3 py-2 text-slate-500 dark:text-slate-400">@DepartmentLabel(item.DepartmentId)</td>
-                                        <td class="px-3 py-2">
-                                            <div class="flex items-center justify-end gap-1.5">
-                                                <button @onclick="() => CopyColumnAsync(item)" disabled="@Loading" type="button"
-                                                        class="inline-flex h-8 items-center justify-center gap-1 rounded-md border border-sky-300 bg-sky-50 px-2 text-xs font-medium text-sky-700 transition hover:bg-sky-100 disabled:opacity-50 dark:border-sky-700 dark:bg-sky-950/50 dark:text-sky-300 dark:hover:bg-sky-900/60"
-                                                        title="Kopiera mallen till en redigerbar kopia">
-                                                    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                                                    <span>Kopiera</span>
-                                                </button>
-                                                @if (CanEditTemplate(item.DepartmentId))
+                    <div class="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                        <div class="min-h-0 flex-1 overflow-auto">
+                            <table class="min-w-full border-separate border-spacing-0 text-sm">
+                                <thead class="sticky top-0 z-20 bg-slate-50 shadow-sm dark:bg-slate-800">
+                                    <tr class="text-left text-xs font-semibold text-slate-500 dark:text-slate-400">
+                                        <th class="border-b border-slate-200 px-3 py-2 dark:border-slate-700">Namn</th>
+                                        <th class="border-b border-slate-200 px-3 py-2 dark:border-slate-700">Visas för</th>
+                                        <th class="border-b border-slate-200 px-3 py-2 dark:border-slate-700">Typ</th>
+                                        <th class="border-b border-slate-200 px-3 py-2 dark:border-slate-700">Status</th>
+                                        <th class="border-b border-slate-200 px-3 py-2 dark:border-slate-700" title="Den mall som används automatiskt när en ny kalkyl skapas.">Standardval</th>
+                                        <th class="border-b border-slate-200 px-3 py-2 dark:border-slate-700">Förhandsvisning</th>
+                                        <th class="border-b border-slate-200 px-3 py-2 text-right dark:border-slate-700">Åtgärder</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in columnRows)
+                                    {
+                                        var isStandard = IsStandardColumn(item);
+                                        <tr class="border-t border-slate-100 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40">
+                                            <td class="max-w-[18rem] px-3 py-2">
+                                                <div class="truncate font-medium text-slate-800 dark:text-slate-100" title="@DisplayName(item.Name, TemplateTab.Column)">@DisplayName(item.Name, TemplateTab.Column)</div>
+                                            </td>
+                                            <td class="px-3 py-2 text-slate-600 dark:text-slate-300">
+                                                <span title="@DepartmentLabel(item.DepartmentId)">@DepartmentLabel(item.DepartmentId)</span>
+                                            </td>
+                                            <td class="px-3 py-2"><TemplateBadge Text="@TemplateTypeLabel(item.DepartmentId, isStandard)" Tone="blue" /></td>
+                                            <td class="px-3 py-2">
+                                                <div class="flex flex-wrap items-center gap-1">
+                                                    <TemplateBadge Text="@(item.IsVisible ? "Synlig" : "Dold")" Tone="@(item.IsVisible ? "emerald" : "rose")" />
+                                                    @if (isStandard)
+                                                    {
+                                                        <TemplateBadge Text="Skrivskyddad" Tone="amber" />
+                                                    }
+                                                </div>
+                                            </td>
+                                            <td class="px-3 py-2">
+                                                @if (item.IsDefault)
                                                 {
-                                                    <button @onclick="() => ColumnFormUI(item)" disabled="@Loading" type="button"
-                                                            class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-amber-300 bg-amber-50 text-amber-700 transition hover:bg-amber-100 disabled:opacity-50 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-200 dark:hover:bg-amber-900/60"
-                                                            title="@ResourceApp.update">
-                                                        @Icons.Edit
-                                                    </button>
-                                                    <button @onclick="() => RemoveColumn(item)" disabled="@Loading" type="button"
-                                                            class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-rose-300 bg-rose-50 text-rose-700 transition hover:bg-rose-100 disabled:opacity-50 dark:border-rose-700 dark:bg-rose-950/50 dark:text-rose-200 dark:hover:bg-rose-900/60"
-                                                            title="@ResourceApp.delete">
-                                                        @((MarkupString)Icons.DeleteSVG)
+                                                    <span class="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400" title="Den mall som används automatiskt när en ny kalkyl skapas.">★ Standard</span>
+                                                }
+                                                else if (CanChooseDepartment)
+                                                {
+                                                    <button type="button" @onclick="() => SetDefaultAsync(item.Id, item.DepartmentId)" disabled="@Loading"
+                                                            class="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2 py-0.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-800"
+                                                            title="Använd som standardval — används automatiskt för nya kalkyler i denna avdelning/företag.">
+                                                        Välj som standard
                                                     </button>
                                                 }
                                                 else
                                                 {
-                                                    <span class="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-500"
-                                                          title="Standardmallar kan inte redigeras direkt. Kopiera mallen för att skapa en egen version.">
-                                                        @PMWebResource.ReadOnly
-                                                    </span>
+                                                    <span class="text-xs text-slate-400">Nej</span>
                                                 }
-                                            </div>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
+                                            </td>
+                                            <td class="px-3 py-2">
+                                                <ColumnPreview />
+                                            </td>
+                                            <td class="px-3 py-2">
+                                                <div class="flex items-center justify-end gap-1.5">
+                                                    <button @onclick="() => CopyColumnAsync(item)" disabled="@Loading" type="button"
+                                                            class="@ActionButtonClass("sky")"
+                                                            title="Skapa en redigerbar kopia av mallen.">
+                                                        @((MarkupString)CopyIcon)
+                                                        <span>Kopiera</span>
+                                                    </button>
+                                                    <button @onclick="() => ColumnFormUI(item)" disabled="@(Loading || isStandard || !CanEditTemplate(item.DepartmentId))" type="button"
+                                                            class="@IconActionButtonClass("amber")"
+                                                            title="@(isStandard ? "Standardmallar kan inte redigeras direkt. Kopiera mallen för att skapa en egen version." : "Redigera mallen.")">
+                                                        @Icons.Edit
+                                                    </button>
+                                                    <button @onclick="() => ToggleColumnVisibilityAsync(item)" disabled="@(Loading || isStandard || !CanEditTemplate(item.DepartmentId))" type="button"
+                                                            class="@IconActionButtonClass(item.IsVisible ? "slate" : "emerald")"
+                                                            title="@(item.IsVisible ? "Dölj mallen för användare." : "Gör mallen synlig för användare.")">
+                                                        @((MarkupString)Icons.GetVisibleIcon(!item.IsVisible))
+                                                    </button>
+                                                    <button @onclick="() => RemoveColumn(item)" disabled="@(Loading || isStandard || !CanEditTemplate(item.DepartmentId))" type="button"
+                                                            class="@IconActionButtonClass("rose")"
+                                                            title="@(isStandard ? "Standardmallar kan inte tas bort." : "Ta bort mallen.")">
+                                                        @((MarkupString)Icons.DeleteSVG)
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 }
             }
@@ -222,7 +313,23 @@ else
 }
 
 @code {
-    private enum TemplateTab { Appearance, Column }
+    public enum TemplateTab { Appearance, Column }
+    public enum TemplateKindFilter { All, Standard, Company, Own }
+    public enum TemplateStatusFilter { All, Visible, Hidden, Default }
+
+    private static readonly string[] LegacyAppearanceNames = ["Mall01", "Mall02", "Mall03"];
+    private static readonly string[] AppearanceStandardNames = ["Standard ljus", "Standard mörk", "Utskrift / PDF"];
+    private static readonly string[] LegacyColumnNames = ["Mall C01", "Mall C02", "Mall C03", "Mall C04", "Mall C05"];
+    // Display names for the legacy Mall C0x rows (index-aligned to LegacyColumnNames).
+    private static readonly string[] LegacyColumnDisplayNames = ["Kompakt nettokalkyl", "Kalkyl ekonomi", "Anbud", "Produktion", "Resurs & CO2"];
+    // The seeded, read-only standard column templates (must match TenantSeedCatalog.StandardColumnTemplates names).
+    private static readonly string[] ColumnStandardNames =
+    [
+        "Kompakt nettokalkyl", "Standard nettokalkyl", "Ekonomi", "Anbud",
+        "Produktion", "CO2 / miljö", "Granskning / uppföljning", "Import / avstämning"
+    ];
+
+    private const string CopyIcon = """<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>""";
 
     private List<TemplateListDTO> List = [];
     private List<TemplateColumnListDTO> ColumnList = [];
@@ -237,6 +344,8 @@ else
     private int? ColumnFormDepartmentId;
 
     private TemplateTab ActiveTab = TemplateTab.Appearance;
+    private TemplateKindFilter KindFilter = TemplateKindFilter.All;
+    private TemplateStatusFilter StatusFilter = TemplateStatusFilter.All;
     private string SearchText = string.Empty;
 
     private bool CanCreateTemplate => CanChooseDepartment || CurrentDepartmentId.HasValue;
@@ -245,27 +354,155 @@ else
     private IEnumerable<TemplateListDTO> VisibleTemplates => ShowDepartmentTemplates ? List : List.Where(x => !x.DepartmentId.HasValue);
     private IEnumerable<TemplateColumnListDTO> VisibleColumnTemplates => ShowDepartmentTemplates ? ColumnList : ColumnList.Where(x => !x.DepartmentId.HasValue);
 
-    private IEnumerable<TemplateListDTO> AppearanceRows => VisibleTemplates.Where(x => MatchesSearch(x.Name));
-    private IEnumerable<TemplateColumnListDTO> ColumnRows => VisibleColumnTemplates.Where(x => MatchesSearch(x.Name));
+    private IEnumerable<TemplateListDTO> AppearanceRows => VisibleTemplates
+        .Where(x => MatchesSearch(DisplayName(x.Name, TemplateTab.Appearance)))
+        .Where(x => MatchesKind(x.DepartmentId, IsStandardAppearance(x)))
+        .Where(x => MatchesStatus(x.IsVisible, x.IsDefault));
+
+    private IEnumerable<TemplateColumnListDTO> ColumnRows => VisibleColumnTemplates
+        .Where(x => MatchesSearch(DisplayName(x.Name, TemplateTab.Column)))
+        .Where(x => MatchesKind(x.DepartmentId, IsStandardColumn(x)))
+        .Where(x => MatchesStatus(x.IsVisible, x.IsDefault));
+
+    private string ActiveTabDescription => ActiveTab == TemplateTab.Appearance
+        ? "Styr färger, linjer och tabellutseende i kalkyl, slutsida och export."
+        : "Styr vilka kolumner som visas, deras ordning och bredd i kalkylvyn.";
+
+    private IReadOnlyList<AppSelect<int?>.Option> DepartmentOptions
+    {
+        get
+        {
+            var options = new List<AppSelect<int?>.Option> { new(null, "Alla avdelningar") };
+            options.AddRange(Departments.Select(d => new AppSelect<int?>.Option(d.Id, d.Name)));
+            return options;
+        }
+    }
+
+    private static readonly IReadOnlyList<AppSelect<TemplateKindFilter>.Option> KindFilterOptions =
+    [
+        new(TemplateKindFilter.All, "Alla typer"),
+        new(TemplateKindFilter.Standard, "Standardmall"),
+        new(TemplateKindFilter.Company, "Företagsmall"),
+        new(TemplateKindFilter.Own, "Egen mall")
+    ];
+
+    private static readonly IReadOnlyList<AppSelect<TemplateStatusFilter>.Option> StatusFilterOptions =
+    [
+        new(TemplateStatusFilter.All, "Alla statusar"),
+        new(TemplateStatusFilter.Visible, "Synlig"),
+        new(TemplateStatusFilter.Hidden, "Dold"),
+        new(TemplateStatusFilter.Default, "Standardval")
+    ];
 
     private bool MatchesSearch(string name)
-        => string.IsNullOrWhiteSpace(SearchText) || (name?.Contains(SearchText.Trim(), StringComparison.OrdinalIgnoreCase) ?? false);
+        => string.IsNullOrWhiteSpace(SearchText) || name.Contains(SearchText.Trim(), StringComparison.OrdinalIgnoreCase);
 
-    private void SetTab(TemplateTab tab) => ActiveTab = tab;
+    private bool MatchesKind(int? departmentId, bool isStandard)
+        => KindFilter switch
+        {
+            TemplateKindFilter.Standard => isStandard,
+            TemplateKindFilter.Company => !isStandard && (CanChooseDepartment || !departmentId.HasValue),
+            TemplateKindFilter.Own => !isStandard && !CanChooseDepartment && departmentId.HasValue,
+            _ => true
+        };
+
+    private bool MatchesStatus(bool isVisible, bool isDefault)
+        => StatusFilter switch
+        {
+            TemplateStatusFilter.Visible => isVisible,
+            TemplateStatusFilter.Hidden => !isVisible,
+            TemplateStatusFilter.Default => isDefault,
+            _ => true
+        };
+
+    private void SetTab(TemplateTab tab)
+    {
+        ActiveTab = tab;
+        SearchText = string.Empty;
+        KindFilter = TemplateKindFilter.All;
+        StatusFilter = TemplateStatusFilter.All;
+    }
+
+    private Task ChangeDepartmentAsync(int? departmentId)
+    {
+        SelectedDepartmentId = departmentId;
+        return LoadTemplatesAsync();
+    }
+
+    private Task ChangeKindFilter(TemplateKindFilter filter)
+    {
+        KindFilter = filter;
+        return Task.CompletedTask;
+    }
+
+    private Task ChangeStatusFilter(TemplateStatusFilter filter)
+    {
+        StatusFilter = filter;
+        return Task.CompletedTask;
+    }
 
     private string TabClass(TemplateTab tab)
         => ActiveTab == tab
             ? "rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-900 bg-slate-100 dark:bg-slate-800 dark:text-slate-100"
             : "rounded-lg px-3 py-1.5 text-sm font-medium text-slate-500 transition hover:bg-slate-50 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/60 dark:hover:text-slate-200";
 
-    // A department template is always editable by whoever sees it; common (global) templates
-    // are only editable by an admin working in the "Alla avdelningar" scope.
     private bool CanEditTemplate(int? departmentId) => departmentId.HasValue || CanEditGlobalTemplates;
 
     private string DepartmentLabel(int? departmentId)
         => departmentId.HasValue
             ? (Departments.FirstOrDefault(d => d.Id == departmentId)?.Name ?? "Avdelning")
             : "Alla avdelningar";
+
+    private string TemplateTypeLabel(int? departmentId, bool isStandard)
+    {
+        if (isStandard)
+            return "Standardmall";
+
+        return CanChooseDepartment || !departmentId.HasValue
+            ? "Företagsmall"
+            : "Egen mall";
+    }
+
+    private static bool IsStandardAppearance(TemplateListDTO item)
+        => IsKnownStandardName(item.Name, LegacyAppearanceNames, AppearanceStandardNames);
+
+    private static bool IsStandardColumn(TemplateColumnListDTO item)
+        => IsKnownStandardName(item.Name, LegacyColumnNames, ColumnStandardNames);
+
+    private static bool IsKnownStandardName(string name, IReadOnlyList<string> legacyNames, IReadOnlyList<string> standardNames)
+    {
+        var normalized = name.Trim();
+        return legacyNames.Any(x => string.Equals(x, normalized, StringComparison.OrdinalIgnoreCase))
+            || standardNames.Any(x => string.Equals(x, normalized, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static string DisplayName(string name, TemplateTab tab)
+    {
+        if (name.StartsWith("Kopia av ", StringComparison.OrdinalIgnoreCase))
+        {
+            var sourceName = name["Kopia av ".Length..];
+            return $"Kopia av {DisplayName(sourceName, tab)}";
+        }
+
+        var legacy = tab == TemplateTab.Appearance ? LegacyAppearanceNames : LegacyColumnNames;
+        var replacement = tab == TemplateTab.Appearance ? AppearanceStandardNames : LegacyColumnDisplayNames;
+        var index = Array.FindIndex(legacy, x => string.Equals(x, name.Trim(), StringComparison.OrdinalIgnoreCase));
+        return index >= 0 ? replacement[index] : name;
+    }
+
+    private static string ActionButtonClass(string tone) => tone switch
+    {
+        "sky" => "inline-flex h-8 items-center justify-center gap-1 rounded-md border border-sky-300 bg-sky-50 px-2 text-xs font-medium text-sky-700 transition hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-sky-700 dark:bg-sky-950/50 dark:text-sky-300 dark:hover:bg-sky-900/60",
+        _ => "inline-flex h-8 items-center justify-center gap-1 rounded-md border border-slate-300 bg-white px-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-800"
+    };
+
+    private static string IconActionButtonClass(string tone) => tone switch
+    {
+        "amber" => "inline-flex h-8 w-8 items-center justify-center rounded-md border border-amber-300 bg-amber-50 text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-200 dark:hover:bg-amber-900/60",
+        "rose" => "inline-flex h-8 w-8 items-center justify-center rounded-md border border-rose-300 bg-rose-50 text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-rose-700 dark:bg-rose-950/50 dark:text-rose-200 dark:hover:bg-rose-900/60",
+        "emerald" => "inline-flex h-8 w-8 items-center justify-center rounded-md border border-emerald-300 bg-emerald-50 text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-200 dark:hover:bg-emerald-900/60",
+        _ => "inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-800"
+    };
 
     protected override async Task OnInitializedAsync()
     {
@@ -285,7 +522,7 @@ else
 
     private async Task FormUI(TemplateListDTO template)
     {
-        if (Loading)
+        if (Loading || IsStandardAppearance(template) || !CanEditTemplate(template.DepartmentId))
             return;
 
         Loading = true;
@@ -310,7 +547,7 @@ else
 
     private async Task ColumnFormUI(TemplateColumnListDTO templateColumn)
     {
-        if (Loading)
+        if (Loading || IsStandardColumn(templateColumn) || !CanEditTemplate(templateColumn.DepartmentId))
             return;
 
         Loading = true;
@@ -333,12 +570,6 @@ else
         }
     }
 
-    private async Task ChangeDepartmentAsync(ChangeEventArgs e)
-    {
-        SelectedDepartmentId = ParseNullableInt(e.Value?.ToString());
-        await LoadTemplatesAsync();
-    }
-
     private async Task LoadTemplatesAsync()
     {
         Loading = true;
@@ -357,7 +588,7 @@ else
         ColumnForm = null;
         ColumnFormDepartmentId = null;
         FormDepartmentId = EffectiveDepartmentId;
-        Form = new TemplateModelDTO();
+        Form = new TemplateModelDTO { IsVisible = true };
     }
 
     private void OpenCreateColumn()
@@ -368,14 +599,24 @@ else
         Form = null;
         FormDepartmentId = null;
         ColumnFormDepartmentId = EffectiveDepartmentId;
-        ColumnForm = new TemplateColumnModelDTO();
+        ColumnForm = new TemplateColumnModelDTO { IsVisible = true };
     }
 
     private void Remove(TemplateListDTO template)
-        => MHD.DeleteMessage(template.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(template)));
+    {
+        if (IsStandardAppearance(template) || !CanEditTemplate(template.DepartmentId))
+            return;
+
+        MHD.DeleteMessage(DisplayName(template.Name, TemplateTab.Appearance), EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(template)));
+    }
 
     private void RemoveColumn(TemplateColumnListDTO templateColumn)
-        => MHD.DeleteMessage(templateColumn.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveColumnAsync(templateColumn)));
+    {
+        if (IsStandardColumn(templateColumn) || !CanEditTemplate(templateColumn.DepartmentId))
+            return;
+
+        MHD.DeleteMessage(DisplayName(templateColumn.Name, TemplateTab.Column), EventCallback.Factory.Create(this, () => ConfirmRemoveColumnAsync(templateColumn)));
+    }
 
     private async Task ConfirmRemoveAsync(TemplateListDTO template)
     {
@@ -401,6 +642,65 @@ else
         MHD.Notifications(ToastType.Delete, deleted);
     }
 
+    private async Task ToggleAppearanceVisibilityAsync(TemplateListDTO item)
+    {
+        if (Loading || IsStandardAppearance(item) || !CanEditTemplate(item.DepartmentId))
+            return;
+
+        var model = await Dispatcher.Send(new GetTemplateByIdQuery(item.Id, item.DepartmentId));
+        if (model is null)
+        {
+            MHD.Notifications(ToastType.Update, false);
+            return;
+        }
+
+        var update = new TemplateListPostDTO();
+        model.CopyPropertiesTo(update);
+        update.Active = !item.IsVisible;
+
+        var ok = await Dispatcher.Send(new UpdateTemplateCommand(update, item.Id, item.DepartmentId));
+        if (ok)
+        {
+            MHD.ToastInfo(item.IsVisible ? "Mallen har dolts." : "Mallen visas igen.", string.Empty, true);
+            await LoadTemplatesAsync();
+        }
+        else
+        {
+            MHD.Notifications(ToastType.Update, false);
+        }
+    }
+
+    private async Task ToggleColumnVisibilityAsync(TemplateColumnListDTO item)
+    {
+        if (Loading || IsStandardColumn(item) || !CanEditTemplate(item.DepartmentId))
+            return;
+
+        var model = await Dispatcher.Send(new GetTemplateColumnByIdQuery(item.Id, item.DepartmentId));
+        if (model is null)
+        {
+            MHD.Notifications(ToastType.Update, false);
+            return;
+        }
+
+        var update = new TemplateColumnPostDTO
+        {
+            Name = model.Name,
+            Active = !item.IsVisible,
+            Columns = TemplateDefaults.EnsureNetCalcColumns(model.Columns)
+        };
+
+        var ok = await Dispatcher.Send(new UpdateTemplateColumnCommand(update, item.Id, item.DepartmentId));
+        if (ok)
+        {
+            MHD.ToastInfo(item.IsVisible ? "Mallen har dolts." : "Mallen visas igen.", string.Empty, true);
+            await LoadTemplatesAsync();
+        }
+        else
+        {
+            MHD.Notifications(ToastType.Update, false);
+        }
+    }
+
     private async Task CopyAppearanceAsync(TemplateListDTO item)
     {
         if (Loading)
@@ -408,10 +708,15 @@ else
 
         var created = await Dispatcher.Send(new CopyTemplateCommand(item.Id, item.DepartmentId, EffectiveDepartmentId));
         var ok = created is not null && created.Id > 0;
-        MHD.Notifications(ToastType.Add, ok);
-
         if (ok)
+        {
+            MHD.ToastInfo("Mallen har kopierats.", string.Empty, true);
             await LoadTemplatesAsync();
+        }
+        else
+        {
+            MHD.Notifications(ToastType.Add, false);
+        }
     }
 
     private async Task CopyColumnAsync(TemplateColumnListDTO item)
@@ -421,10 +726,37 @@ else
 
         var created = await Dispatcher.Send(new CopyTemplateColumnCommand(item.Id, item.DepartmentId, EffectiveDepartmentId));
         var ok = created is not null && created.Id > 0;
-        MHD.Notifications(ToastType.Add, ok);
+        if (ok)
+        {
+            MHD.ToastInfo("Mallen har kopierats.", string.Empty, true);
+            await LoadTemplatesAsync();
+        }
+        else
+        {
+            MHD.Notifications(ToastType.Add, false);
+        }
+    }
+
+    // Admin marks a template as the standardval for its scope (company when DepartmentId is null, else the
+    // department). The tab decides whether it is an appearance or a column template.
+    private async Task SetDefaultAsync(int id, int? departmentId)
+    {
+        if (Loading || !CanChooseDepartment)
+            return;
+
+        var ok = ActiveTab == TemplateTab.Appearance
+            ? await Dispatcher.Send(new SetScopeDefaultTemplateCommand(id, departmentId))
+            : await Dispatcher.Send(new SetScopeDefaultTemplateColumnCommand(id, departmentId));
 
         if (ok)
+        {
+            MHD.ToastInfo("Standardvalet har uppdaterats.", string.Empty, true);
             await LoadTemplatesAsync();
+        }
+        else
+        {
+            MHD.Notifications(ToastType.Update, false);
+        }
     }
 
     private async Task CallBack(bool refresh)

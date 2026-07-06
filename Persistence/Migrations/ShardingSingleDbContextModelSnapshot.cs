@@ -1263,6 +1263,9 @@ namespace Persistence.Migrations
                     b.Property<int?>("DepartmentId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsVisible")
                         .HasColumnType("bit");
 
@@ -1322,6 +1325,9 @@ namespace Persistence.Migrations
 
                     b.Property<int?>("DepartmentId")
                         .HasColumnType("int");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsVisible")
                         .HasColumnType("bit");
@@ -3534,6 +3540,64 @@ namespace Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Domain.Entities.Users.UserDepartmentAccessEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("bit");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("DepartmentId");
+
+                    b.HasIndex("UpdatedBy");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("TenantId", "DepartmentId")
+                        .HasDatabaseName("IX_UserDepartmentAccesses_Tenant_Department");
+
+                    b.HasIndex("TenantId", "UserId", "DepartmentId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_UserDepartmentAccesses_Tenant_User_Department");
+
+                    b.ToTable("UserDepartmentAccesses", (string)null);
+                });
+
             modelBuilder.Entity("Domain.Entities.Users.UserEntity", b =>
                 {
                     b.Property<int>("Id")
@@ -4818,6 +4882,39 @@ namespace Persistence.Migrations
                     b.Navigation("UpdatedByUser");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Users.UserDepartmentAccessEntity", b =>
+                {
+                    b.HasOne("Domain.Entities.Users.UserEntity", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Entities.Users.DepartmentEntity", "Department")
+                        .WithMany("UserAccesses")
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Users.UserEntity", "UpdatedByUser")
+                        .WithMany()
+                        .HasForeignKey("UpdatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Entities.Users.UserEntity", "User")
+                        .WithMany("DepartmentAccesses")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("Department");
+
+                    b.Navigation("UpdatedByUser");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Domain.Entities.Users.UserEntity", b =>
                 {
                     b.HasOne("Domain.Entities.Users.UserEntity", "CreatedByUser")
@@ -5048,7 +5145,14 @@ namespace Persistence.Migrations
                 {
                     b.Navigation("Folders");
 
+                    b.Navigation("UserAccesses");
+
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Users.UserEntity", b =>
+                {
+                    b.Navigation("DepartmentAccesses");
                 });
 #pragma warning restore 612, 618
         }

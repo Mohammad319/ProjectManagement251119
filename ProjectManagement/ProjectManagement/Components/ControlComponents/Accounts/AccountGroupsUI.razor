@@ -1,9 +1,9 @@
 @using ProjectManagement.Components.ControlComponents.Department
 @inherits AppComponentBase
 
-<section class="pm-admin-panel">
-    <!-- Fixed toolbar -->
-    <div class="shrink-0 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+<section class="pm-admin-panel overflow-hidden">
+    <!-- Sticky toolbar -->
+    <div class="sticky top-0 z-30 shrink-0 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
         <div class="flex flex-wrap items-center gap-2">
             <button type="button" @onclick="CreateAccount"
                     class="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200">
@@ -43,6 +43,38 @@
                 Importera
             </button>
 
+            <!-- Column chooser (optional comment columns) -->
+            <div class="relative">
+                <button type="button" @onclick="ToggleColumnsMenu"
+                        class="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-2.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-800"
+                        title="Välj vilka kolumner som visas.">
+                    Kolumner
+                </button>
+                @if (_columnsMenuOpen)
+                {
+                    <div class="fixed inset-0 z-40" @onclick="ToggleColumnsMenu"></div>
+                    <div class="absolute right-0 z-50 mt-1 w-52 rounded-xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+                        <div class="px-1 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">Valfria kolumner</div>
+                        <label class="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800">
+                            <input type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500" @bind="ShowComment1" />
+                            <span>Kommentar 1</span>
+                        </label>
+                        <label class="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800">
+                            <input type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500" @bind="ShowComment2" />
+                            <span>Kommentar 2</span>
+                        </label>
+                        <p class="px-2 pt-1 text-[11px] text-slate-400 dark:text-slate-500">Kräver att "Visa kommentarer" är på.</p>
+                    </div>
+                }
+            </div>
+
+            <!-- Clear filters: always present, disabled when nothing is filtered so the toolbar never jumps -->
+            <button type="button" @onclick="ClearFilters" disabled="@(!HasActiveFilters)"
+                    class="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-2.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white dark:border-slate-600 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-800 dark:disabled:hover:bg-slate-950"
+                    title="Rensa sök och filter.">
+                Rensa filter
+            </button>
+
             <div class="relative ml-auto">
                 <input type="search" @bind="SearchText" @bind:event="oninput" placeholder="Sök konto..."
                        class="h-9 w-56 rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100" />
@@ -50,7 +82,7 @@
         </div>
     </div>
 
-    <div class="pm-admin-scroll">
+    <div class="min-h-0 flex-1 overflow-hidden">
         @if (IsLoading)
         {
             <div class="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
@@ -68,59 +100,73 @@
                 </button>
             </div>
         }
-        else if (!VisibleRows.Any())
-        {
-            <div class="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                <h3 class="text-base font-semibold text-slate-900 dark:text-slate-100">Inga konton matchar filtret.</h3>
-            </div>
-        }
         else
         {
-            <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                <table class="min-w-full text-sm">
-                    <thead class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-800/80">
-                        <tr class="text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                            <th class="px-3 py-2">
+            <div class="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <div class="min-h-0 flex-1 overflow-auto">
+                <table class="min-w-full border-separate border-spacing-0 text-sm">
+                    <thead class="sticky top-0 z-20 bg-slate-50 shadow-sm dark:bg-slate-800">
+                        <tr class="text-left text-xs font-semibold text-slate-500 dark:text-slate-400">
+                            <th class="border-b border-slate-200 px-3 py-2 dark:border-slate-700">
                                 <button type="button" class="inline-flex items-center gap-1 hover:text-slate-800 dark:hover:text-slate-100" @onclick='() => SortBy("code")'>@CalcLoc[nameof(CalcResource.code)] <span>@SortIndicator("code")</span></button>
                             </th>
-                            <th class="px-3 py-2">
+                            <th class="border-b border-slate-200 px-3 py-2 dark:border-slate-700">
                                 <button type="button" class="inline-flex items-center gap-1 hover:text-slate-800 dark:hover:text-slate-100" @onclick='() => SortBy("name")'>@CalcLoc[nameof(CalcResource.name)] <span>@SortIndicator("name")</span></button>
                             </th>
-                            <th class="px-3 py-2">
+                            <th class="border-b border-slate-200 px-3 py-2 dark:border-slate-700">
                                 <button type="button" class="inline-flex items-center gap-1 hover:text-slate-800 dark:hover:text-slate-100" @onclick='() => SortBy("group")'>@CalcLoc[nameof(CalcResource.accountGroups)] <span>@SortIndicator("group")</span></button>
                             </th>
-                            <th class="px-3 py-2">
+                            <th class="border-b border-slate-200 px-3 py-2 dark:border-slate-700">
                                 <button type="button" class="inline-flex items-center gap-1 hover:text-slate-800 dark:hover:text-slate-100" @onclick='() => SortBy("visible")'>@AppLoc[nameof(ResourceApp.isVisible)] <span>@SortIndicator("visible")</span></button>
                             </th>
-                            @if (ShowCommentColumn)
+                            @if (ShowComment1Column)
                             {
-                                <th class="px-3 py-2">@CalcLoc[nameof(CalcResource.comment)]</th>
+                                <th class="border-b border-slate-200 px-3 py-2 dark:border-slate-700">Kommentar 1</th>
                             }
-                            <th class="px-3 py-2 text-right">@AppLoc[nameof(ResourceApp.actions)]</th>
+                            @if (ShowComment2Column)
+                            {
+                                <th class="border-b border-slate-200 px-3 py-2 dark:border-slate-700">Kommentar 2</th>
+                            }
+                            <th class="border-b border-slate-200 px-3 py-2 text-right dark:border-slate-700">@AppLoc[nameof(ResourceApp.actions)]</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var account in VisibleRows)
+                        @if (FilteredCount == 0)
                         {
-                            <tr class="border-t border-slate-100 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40">
-                                <td class="px-3 py-2 font-medium text-slate-800 dark:text-slate-100">@account.Code</td>
-                                <td class="px-3 py-2 text-slate-700 dark:text-slate-200">@account.Name</td>
-                                <td class="px-3 py-2 text-slate-500 dark:text-slate-400">@account.AccountGroupName</td>
-                                <td class="px-3 py-2">
+                            <tr>
+                                <td colspan="@ColumnCount" class="border-t border-slate-100 px-3 py-8 text-center text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
+                                    Inga konton matchar filtret.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var account in PagedRows)
+                            {
+                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                                <td class="border-t border-slate-100 px-3 py-2 font-medium text-slate-800 dark:border-slate-800 dark:text-slate-100">@account.Code</td>
+                                <td class="border-t border-slate-100 px-3 py-2 text-slate-700 dark:border-slate-800 dark:text-slate-200">@account.Name</td>
+                                <td class="border-t border-slate-100 px-3 py-2 text-slate-500 dark:border-slate-800 dark:text-slate-400">@account.AccountGroupName</td>
+                                <td class="border-t border-slate-100 px-3 py-2 dark:border-slate-800">
                                     <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium @(account.IsVisible ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300")">
                                         @(account.IsVisible ? AppLoc[nameof(ResourceApp.visible)] : AppLoc[nameof(ResourceApp.hiddenItems)])
                                     </span>
                                 </td>
-                                @if (ShowCommentColumn)
+                                @if (ShowComment1Column)
                                 {
-                                    <td class="max-w-xs truncate px-3 py-2 text-slate-500 dark:text-slate-400">
-                                        @{
-                                            var comment = FirstComment(account);
-                                        }
-                                        @(string.IsNullOrWhiteSpace(comment) ? "—" : comment)
+                                    <td class="max-w-xs truncate border-t border-slate-100 px-3 py-2 text-slate-500 dark:border-slate-800 dark:text-slate-400">
+                                        @{ var c1 = Comment1(account); }
+                                        @(string.IsNullOrWhiteSpace(c1) ? "—" : c1)
                                     </td>
                                 }
-                                <td class="px-3 py-2">
+                                @if (ShowComment2Column)
+                                {
+                                    <td class="max-w-xs truncate border-t border-slate-100 px-3 py-2 text-slate-500 dark:border-slate-800 dark:text-slate-400">
+                                        @{ var c2 = Comment2(account); }
+                                        @(string.IsNullOrWhiteSpace(c2) ? "—" : c2)
+                                    </td>
+                                }
+                                <td class="border-t border-slate-100 px-3 py-2 dark:border-slate-800">
                                     <div class="flex items-center justify-end gap-1.5">
                                         <button @onclick="() => EditAccount(account)" type="button"
                                                 class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-amber-300 bg-amber-50 text-amber-700 transition hover:bg-amber-100 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-200 dark:hover:bg-amber-900/60"
@@ -135,9 +181,38 @@
                                     </div>
                                 </td>
                             </tr>
+                            }
                         }
                     </tbody>
                 </table>
+                </div>
+
+                <!-- Sticky footer: result count on the left, pagination on the right. Only the table body
+                     above scrolls; this footer stays put via the flex column layout. -->
+                <div class="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300">
+                    <div>@ResultSummary</div>
+                    <div class="flex items-center gap-2">
+                        <label class="flex items-center gap-1">
+                            <span class="text-slate-500 dark:text-slate-400">Rader per sida</span>
+                            <select class="h-7 rounded-lg border border-slate-300 bg-white px-1.5 text-xs text-slate-700 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-200"
+                                    value="@PageSize" @onchange="OnPageSizeChanged">
+                                @foreach (var size in PageSizeOptions)
+                                {
+                                    <option value="@size">@size</option>
+                                }
+                            </select>
+                        </label>
+                        <button type="button" @onclick="PrevPage" disabled="@(SafePage <= 1)"
+                                class="inline-flex h-7 items-center rounded-lg border border-slate-300 bg-white px-2 font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-800">
+                            Föregående
+                        </button>
+                        <span class="whitespace-nowrap">Sida @SafePage av @PageCount</span>
+                        <button type="button" @onclick="NextPage" disabled="@(SafePage >= PageCount)"
+                                class="inline-flex h-7 items-center rounded-lg border border-slate-300 bg-white px-2 font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-800">
+                            Nästa
+                        </button>
+                    </div>
+                </div>
             </div>
         }
     </div>

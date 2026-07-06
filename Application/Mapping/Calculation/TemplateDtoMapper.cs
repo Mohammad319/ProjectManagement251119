@@ -33,6 +33,7 @@ namespace Application.Mapping.Calculation
                 Id = entity.Id,
                 Name = entity.Name,
                 DepartmentId = entity.DepartmentId,
+                IsVisible = entity.IsVisible,
                 Data = entity.GetMetadataSnapshot()
             };
         }
@@ -46,6 +47,7 @@ namespace Application.Mapping.Calculation
                 Id = entity.Id,
                 Name = entity.Name,
                 DepartmentId = entity.DepartmentId,
+                IsVisible = entity.IsVisible,
                 Columns = entity.GetColumnsSnapshot()
             };
         }

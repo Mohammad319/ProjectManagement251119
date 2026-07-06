@@ -11,26 +11,41 @@
 
 @* User activity log rendered as the Aktivitetslogg tab under "Avdelningar & användare". *@
 <div class="flex h-full min-h-0 flex-col gap-2 p-0.5">
-    <div class="flex shrink-0 items-start justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <div>
+    <div class="relative flex shrink-0 flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div class="min-w-0">
             <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Aktivitetslogg</h3>
             <p class="text-xs text-slate-500 dark:text-slate-400">Senaste administrativa ändringar för företagsanvändare.</p>
         </div>
-        <div class="flex shrink-0 items-center gap-2">
-            @if (_justRefreshed)
-            {
-                <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
-                    <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
-                    Uppdaterat!
+        <div class="ml-auto flex min-w-[18rem] flex-1 items-center justify-end gap-2">
+            <div class="relative min-w-0 flex-1 sm:max-w-sm">
+                <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
                 </span>
-            }
+                <input type="search"
+                       placeholder="Sök i aktivitetslogg..."
+                       @bind="SearchTerm"
+                       @bind:event="oninput"
+                       class="h-8 w-full rounded-lg border border-slate-300 bg-white pl-9 pr-3 text-xs text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" />
+            </div>
+            <span class="hidden whitespace-nowrap rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300 sm:inline-flex">
+                Visar @FilteredEntries.Count av @Entries.Count
+            </span>
             <button type="button"
                     disabled="@IsLoading"
-                    class="inline-flex shrink-0 items-center rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-60 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+                    title="Uppdatera aktivitetslogg"
+                    aria-label="Uppdatera aktivitetslogg"
+                    class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-300 text-slate-700 transition hover:bg-slate-50 disabled:opacity-60 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
                     @onclick="RefreshAsync">
-                @WebLoc["Refresh"]
+                <svg class="h-4 w-4 @(IsLoading ? "animate-spin" : string.Empty)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12a9 9 0 0 1-15.5 6.2"/><path d="M3 12A9 9 0 0 1 18.5 5.8"/><path d="M18 2v4h4"/><path d="M6 22v-4H2"/></svg>
             </button>
         </div>
+        @if (_justRefreshed)
+        {
+            <div class="pointer-events-none absolute right-3 top-full z-20 mt-1 inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700 shadow-sm dark:border-emerald-900/60 dark:bg-emerald-950 dark:text-emerald-300">
+                <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                Uppdaterat!
+            </div>
+        }
     </div>
 
     @if (IsLoading)
@@ -47,6 +62,12 @@
     {
         <div class="rounded-lg border border-dashed border-slate-300 px-4 py-6 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
             @WebLoc["NoAuditEntries"]
+        </div>
+    }
+    else if (FilteredEntries.Count == 0)
+    {
+        <div class="rounded-lg border border-dashed border-slate-300 px-4 py-6 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+            Inga resultat matchar din sökning.
         </div>
     }
     else
@@ -111,6 +132,7 @@
     private Dictionary<int, string> DepartmentNames { get; set; } = [];
     private bool IsLoading = true;
     private string? LoadError;
+    private string SearchTerm { get; set; } = string.Empty;
 
     private AuditSortColumn SortColumn = AuditSortColumn.Time;
     private bool SortDescending = true;
@@ -129,7 +151,7 @@
         if (!string.IsNullOrWhiteSpace(LoadError))
             return;
 
-        // Show "Uppdaterat!" for 10 seconds, then fade it away. No modal for the happy path.
+        // Show "Uppdaterat!" briefly, then fade it away. No modal for the happy path.
         _statusCts?.Cancel();
         _statusCts?.Dispose();
         _statusCts = new CancellationTokenSource();
@@ -140,7 +162,7 @@
 
         try
         {
-            await Task.Delay(TimeSpan.FromSeconds(10), token);
+            await Task.Delay(TimeSpan.FromSeconds(3), token);
             _justRefreshed = false;
             await InvokeAsync(StateHasChanged);
         }
@@ -184,6 +206,24 @@
         }
     }
 
+    private IReadOnlyList<UserManagementAuditItem> FilteredEntries
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(SearchTerm))
+                return Entries;
+
+            var term = SearchTerm.Trim();
+            return Entries.Where(e =>
+                    e.CreatedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm").Contains(term, StringComparison.OrdinalIgnoreCase)
+                    || GetActionLabel(e.Action).Contains(term, StringComparison.OrdinalIgnoreCase)
+                    || (!string.IsNullOrWhiteSpace(e.TargetDisplayName) && e.TargetDisplayName.Contains(term, StringComparison.OrdinalIgnoreCase))
+                    || (!string.IsNullOrWhiteSpace(e.ActorDisplayName) && e.ActorDisplayName.Contains(term, StringComparison.OrdinalIgnoreCase))
+                    || GetChangeText(e).Contains(term, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+    }
+
     private IReadOnlyList<UserManagementAuditItem> SortedEntries
     {
         get
@@ -195,8 +235,8 @@
                 AuditSortColumn.Actor => Order(e => e.ActorDisplayName ?? string.Empty),
                 AuditSortColumn.Change => Order(e => GetChangeText(e)),
                 _ => SortDescending
-                    ? Entries.OrderByDescending(e => e.CreatedAtUtc)
-                    : Entries.OrderBy(e => e.CreatedAtUtc),
+                    ? FilteredEntries.OrderByDescending(e => e.CreatedAtUtc)
+                    : FilteredEntries.OrderBy(e => e.CreatedAtUtc),
             };
 
             return ordered.ToList();
@@ -205,8 +245,8 @@
 
     private IEnumerable<UserManagementAuditItem> Order(Func<UserManagementAuditItem, string> key)
         => SortDescending
-            ? Entries.OrderByDescending(key, StringComparer.CurrentCultureIgnoreCase)
-            : Entries.OrderBy(key, StringComparer.CurrentCultureIgnoreCase);
+            ? FilteredEntries.OrderByDescending(key, StringComparer.CurrentCultureIgnoreCase)
+            : FilteredEntries.OrderBy(key, StringComparer.CurrentCultureIgnoreCase);
 
     private void SortBy(AuditSortColumn column)
     {

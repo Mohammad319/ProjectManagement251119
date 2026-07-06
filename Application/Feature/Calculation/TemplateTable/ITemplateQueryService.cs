@@ -15,6 +15,10 @@
         Task<List<TemplateListDTO>> GetByUserAsync(
             int? departmentId,
             CancellationToken ct = default);
+
+        /// <summary>Resolves the effective default appearance template id using the priority
+        /// department default → company default → system default → none.</summary>
+        Task<int?> ResolveDefaultIdAsync(int? departmentId, CancellationToken ct = default);
     }
 
     public interface ITemplateColumnQueryService
@@ -27,5 +31,9 @@
         Task<List<TemplateColumnListDTO>> GetByUserAsync(
             int? departmentId,
             CancellationToken ct = default);
+
+        /// <summary>Resolves the effective default column template id using the priority
+        /// department default → company default → system default → none.</summary>
+        Task<int?> ResolveDefaultIdAsync(int? departmentId, CancellationToken ct = default);
     }
 }

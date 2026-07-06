@@ -71,7 +71,8 @@ namespace Persistence.Service.Organisation
                 {
                     Id = x.Id,
                     Name = x.Name,
-                    ParentCategoryId = x.ParentCategoryId
+                    ParentCategoryId = x.ParentCategoryId,
+                    OrganisationCount = x.Organisations.Count
                 })
                 .ToListAsync(ct);
         }

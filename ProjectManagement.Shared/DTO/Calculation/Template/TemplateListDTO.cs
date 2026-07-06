@@ -214,6 +214,7 @@ namespace ProjectManagement.Shared.DTO.Calculation.Template
     {
         public int Id { get; set; }
         public int? DepartmentId { get; set; }
+        public bool IsVisible { get; set; } = true;
     }
 
     public class TemplateListDTO
@@ -222,6 +223,8 @@ namespace ProjectManagement.Shared.DTO.Calculation.Template
         public string Name { get; set; } = string.Empty;
         public int? DepartmentId { get; set; }
         public int? TemplateId { get; set; }
+        public bool IsVisible { get; set; } = true;
+        public bool IsDefault { get; set; }
     }
 
     public class TemplateColumnBaseData : TemplateBase
@@ -250,6 +253,7 @@ namespace ProjectManagement.Shared.DTO.Calculation.Template
     {
         public int Id { get; set; }
         public int? DepartmentId { get; set; }
+        public bool IsVisible { get; set; } = true;
     }
 
     public class TemplateColumnListDTO
@@ -257,5 +261,7 @@ namespace ProjectManagement.Shared.DTO.Calculation.Template
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public int? DepartmentId { get; set; }
+        public bool IsVisible { get; set; } = true;
+        public bool IsDefault { get; set; }
     }
 }

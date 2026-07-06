@@ -1,5 +1,28 @@
 namespace ProjectManagement.Shared.DTO.Organisation
 {
+    /// <summary>Fixed person-/organisationstyp options for the kund/leverantör form. Replaces the old
+    /// free-form OrganisationType lookup table (which let tenants seed nonsense values such as city names).
+    /// The chosen value is stored as text in the organisation metadata.</summary>
+    public static class OrganisationTypeCatalog
+    {
+        public const string Company = "Företag";
+        public const string Private = "Privatperson";
+        public const string Municipality = "Kommun";
+        public const string Authority = "Myndighet";
+        public const string Organisation = "Organisation";
+        public const string Other = "Annat";
+
+        public static readonly string[] FixedTypes =
+        [
+            Company,
+            Private,
+            Municipality,
+            Authority,
+            Organisation,
+            Other
+        ];
+    }
+
     public static class OrganisationStatusCatalog
     {
         public const string Active = "Aktiv";

@@ -28,6 +28,9 @@ namespace Domain.Entities.Users
         [JsonIgnore]
         public ICollection<UserEntity> Users { get; private set; } = [];
 
+        [JsonIgnore]
+        public ICollection<UserDepartmentAccessEntity> UserAccesses { get; private set; } = [];
+
         private DepartmentEntity() { }
 
         public static DepartmentEntity Create(DepartmentBase dto)

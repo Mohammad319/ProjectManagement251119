@@ -51,6 +51,7 @@ public partial class ShardingSingleDbContext
     public DbSet<DepartmentEntity> Department { get; set; } = default!;
     public DbSet<StatusResourcesEntity> ResourceStatus { get; set; } = default!;
     public DbSet<UserEntity> User { get; set; } = default!;
+    public DbSet<UserDepartmentAccessEntity> UserDepartmentAccesses { get; set; } = default!;
     public DbSet<UserListSettingEntity> UserListSettings { get; set; } = default!;
     public DbSet<DropdownSettingEntity> DropdownSettings { get; set; } = default!;
     public DbSet<UserManagementAuditEntity> UserManagementAuditLogs { get; set; } = default!;

@@ -81,4 +81,17 @@ namespace Application.Feature.Calculation.TemplateTable.Commands
         public Task<TemplateModelDTO?> Handle(SetDefaultTemplateCommand request, CancellationToken ct)
             => service.SetDefaultAsync(request.CalculationId, request.TemplateId, request.DepartmentId, ct);
     }
+
+    // ----------------------------------------------------------
+    // SET SCOPE DEFAULT (standardval for company/department)
+    // ----------------------------------------------------------
+    public sealed record SetScopeDefaultTemplateCommand(int Id, int? DepartmentId)
+        : IRequest<bool>;
+
+    public sealed class SetScopeDefaultTemplateCommandHandler(ITemplateCommandService service)
+                : IRequestHandler<SetScopeDefaultTemplateCommand, bool>
+    {
+        public Task<bool> Handle(SetScopeDefaultTemplateCommand request, CancellationToken ct)
+            => service.SetScopeDefaultAsync(request.Id, request.DepartmentId, ct);
+    }
 }

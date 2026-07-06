@@ -26,9 +26,19 @@ public partial class AccountGroupsUI
     private VisibleFilter VisibleState = VisibleFilter.All;
     private bool ShowCommentColumn = true;
 
+    // Column chooser (which optional comment columns are shown while "Visa kommentarer" is on).
+    private bool _columnsMenuOpen;
+    private bool ShowComment1 = true;
+    private bool ShowComment2 = false;
+
     // Sorting
     private string SortColumn = "group";
     private bool SortAscending = true;
+
+    // Pagination
+    private int PageSize = 25;
+    private int CurrentPage = 1;
+    private static readonly int[] PageSizeOptions = [10, 25, 50, 100];
 
     protected override async Task OnInitializedAsync() => await LoadAsync();
 
@@ -62,10 +72,17 @@ public partial class AccountGroupsUI
         }
     }
 
-    private static string FirstComment(AccountManageDTO account)
-        => account.Metadata?.Comments?.FirstOrDefault(c => !string.IsNullOrWhiteSpace(c)) ?? string.Empty;
+    private static string CommentAt(AccountManageDTO account, int index)
+    {
+        var comments = account.Metadata?.Comments;
+        return comments is not null && index < comments.Count ? comments[index] ?? string.Empty : string.Empty;
+    }
 
-    private IEnumerable<AccountManageDTO> VisibleRows
+    private static string Comment1(AccountManageDTO account) => CommentAt(account, 0);
+    private static string Comment2(AccountManageDTO account) => CommentAt(account, 1);
+
+    // Filtered + sorted, materialised so pagination and the result counter agree.
+    private List<AccountManageDTO> FilteredRows
     {
         get
         {
@@ -88,7 +105,8 @@ public partial class AccountGroupsUI
                     Contains(x.Code, term) ||
                     Contains(x.Name, term) ||
                     Contains(x.AccountGroupName, term) ||
-                    Contains(FirstComment(x), term));
+                    Contains(Comment1(x), term) ||
+                    Contains(Comment2(x), term));
             }
 
             query = (SortColumn, SortAscending) switch
@@ -103,9 +121,66 @@ public partial class AccountGroupsUI
                 (_, false) => query.OrderByDescending(x => x.AccountGroupName).ThenBy(x => x.Code),
             };
 
-            return query;
+            return query.ToList();
         }
     }
+
+    private int PageCount => Math.Max(1, (int)Math.Ceiling(FilteredRows.Count / (double)PageSize));
+
+    // Clamp the current page to the available range (filter/search may have shrunk the result set).
+    private int SafePage => Math.Min(Math.Max(1, CurrentPage), PageCount);
+
+    private IEnumerable<AccountManageDTO> PagedRows
+        => FilteredRows.Skip((SafePage - 1) * PageSize).Take(PageSize);
+
+    private int FilteredCount => FilteredRows.Count;
+
+    private bool HasActiveFilters
+        => GroupFilter.HasValue
+           || VisibleState != VisibleFilter.All
+           || !string.IsNullOrWhiteSpace(SearchText);
+
+    private string ResultSummary
+        => FilteredCount == 0
+            ? "0 träffar"
+            : $"Visar {FilteredCount} av {AllAccounts.Count}";
+
+    private void ClearFilters()
+    {
+        GroupFilter = null;
+        VisibleState = VisibleFilter.All;
+        SearchText = string.Empty;
+        CurrentPage = 1;
+    }
+
+    private void PrevPage()
+    {
+        if (SafePage > 1)
+            CurrentPage = SafePage - 1;
+    }
+
+    private void NextPage()
+    {
+        if (SafePage < PageCount)
+            CurrentPage = SafePage + 1;
+    }
+
+    private void OnPageSizeChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var size) && size > 0)
+        {
+            PageSize = size;
+            CurrentPage = 1;
+        }
+    }
+
+    private void ToggleColumnsMenu() => _columnsMenuOpen = !_columnsMenuOpen;
+
+    private bool ShowComment1Column => ShowCommentColumn && ShowComment1;
+    private bool ShowComment2Column => ShowCommentColumn && ShowComment2;
+
+    // Kod, Namn, Kontogrupp, Synlig, Åtgärder + optional comment columns.
+    private int ColumnCount => 5 + (ShowComment1Column ? 1 : 0) + (ShowComment2Column ? 1 : 0);
 
     private bool HasAnyAccounts => AllAccounts.Count > 0;
 
@@ -203,9 +278,12 @@ public partial class AccountGroupsUI
         {
             AllAccounts.RemoveAll(x => x.Id == account.Id);
             await InvokeAsync(StateHasChanged);
+            MHD.ToastInfo("Kontot har tagits bort.", string.Empty, true);
         }
-
-        MHD.Notifications(ToastType.Delete, result);
+        else
+        {
+            MHD.Notifications(ToastType.Delete, false);
+        }
     }
 
     // ---------------------------------------------------------------

@@ -1,152 +1,236 @@
 @using Microsoft.Extensions.Localization
 @using ProjectManagement.Client.Pages.Calculation.Template
 @using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Components.ControlComponents.Department
 @using ProjectManagement.Shared.Constant
 @using ProjectManagement.Shared.Constants
 @using ProjectManagement.Shared.DTO.Calculation.Template
 @inherits AppComponentBase
 
-<div class="overflow-x-auto">
-    <div class="flex min-w-[760px] items-start gap-1">
-        <section class="w-[500px] flex-none overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
-            <div class="border-b border-slate-200 px-3 py-1 dark:border-slate-700">
-                <div class="flex items-center justify-between gap-3">
-                    <div>
-                        <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">@ResourceApp.visibleItems</h3>
-                        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">@AppLoc["visibleColumnsCount", Columns.Count]</p>
-                    </div>
+<div class="flex h-full min-h-0 flex-col gap-2 overflow-hidden">
+    <div class="shrink-0 rounded-xl border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+        <div class="flex flex-wrap items-center gap-2">
+            <div class="relative">
+                <input type="search"
+                       @bind="ColumnSearch"
+                       @bind:event="oninput"
+                       placeholder="Sök kolumn..."
+                       class="h-8 w-56 rounded-lg border border-slate-300 bg-white px-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100" />
+            </div>
 
-                    <div class="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                        @AppLoc["dragAndReorder"]
+            <AppSelect TValue="ColumnFilter"
+                       Placeholder="Alla"
+                       Options="FilterOptions"
+                       Value="ActiveFilter"
+                       ValueChanged="ChangeFilter" />
+
+            <button type="button" class="@ToolbarButtonClass" title="Återställ standardordning" @onclick="ResetDefaultOrder">
+                Återställ standardordning
+            </button>
+            <button type="button" class="@ToolbarButtonClass" title="Dölj alla valfria kolumner" @onclick="HideOptionalColumns">
+                Dölj alla valfria
+            </button>
+            <button type="button" class="@ToolbarButtonClass" title="Visa alla kolumner" @onclick="ShowAllColumnsAsync">
+                Visa alla
+            </button>
+
+            <span class="ml-auto rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                @FilteredVisibleColumns.Count synliga, @FilteredHiddenIds.Count dolda
+            </span>
+        </div>
+    </div>
+
+    <div class="grid min-h-0 flex-1 grid-cols-1 gap-2 overflow-hidden xl:grid-cols-[minmax(0,1.8fr)_minmax(260px,.85fr)_minmax(240px,.7fr)]">
+        @if (ActiveFilter is not ColumnFilter.Hidden)
+        {
+            <section class="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <div class="shrink-0 border-b border-slate-200 px-3 py-2 dark:border-slate-700">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Synliga kolumner</h3>
+                            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">@AppLoc["visibleColumnsCount", Columns.Count]</p>
+                        </div>
+
+                        <div class="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                            Dra och ändra ordning
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="max-h-[65vh] overflow-auto">
-                <table class="min-w-[480px] table-fixed border-collapse text-[12px]">
-                    <colgroup>
-                        <col style="width:42px;" />
-                        <col style="width:290px;" />
-                        <col style="width:148px;" />
-                    </colgroup>
-                    <thead class="sticky top-0 z-10">
-                        <tr class="bg-slate-100 text-[11px] font-semibold text-slate-800 dark:bg-slate-800 dark:text-slate-100">
-                            <th class="border border-slate-200 px-1 py-0.5 text-center dark:border-slate-700">#</th>
-                            <th class="border border-slate-200 px-1 py-0.5 text-start dark:border-slate-700">@CalcResource.name</th>
-                            <th class="border border-slate-200 px-1 py-0.5 text-center dark:border-slate-700">@AppLoc["settings"]</th>
-                        </tr>
-                    </thead>
+                <div class="min-h-0 flex-1 overflow-auto">
+                    <table class="min-w-[720px] table-fixed border-collapse text-[12px]">
+                        <colgroup>
+                            <col style="width:42px;" />
+                            <col style="width:410px;" />
+                            <col style="width:268px;" />
+                        </colgroup>
+                        <thead class="sticky top-0 z-20 bg-slate-100 shadow-sm dark:bg-slate-800">
+                            <tr class="text-[11px] font-semibold text-slate-800 dark:text-slate-100">
+                                <th class="border border-slate-200 px-1 py-1 text-center dark:border-slate-700">#</th>
+                                <th class="border border-slate-200 px-1 py-1 text-start dark:border-slate-700">Namn</th>
+                                <th class="border border-slate-200 px-1 py-1 text-center dark:border-slate-700">Inställningar</th>
+                            </tr>
+                        </thead>
 
-                    <DragReorderTBody TItem="NetColumnState"
-                                      Items="Columns"
-                                      RowClass="bg-white transition-colors hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800/70">
-                        <RowTemplate Context="col">
-                            @{
-                                var row = Columns.IndexOf(col);
-                                var isFirst = row <= 0;
-                                var isLast = row >= Columns.Count - 1;
-                                var title = CalcLoc[NetColumnLoc.Key[col.Id]];
-                            }
+                        <DragReorderTBody TItem="NetColumnState"
+                                          Items="Columns"
+                                          ItemFilter="IsVisibleEditorRow"
+                                          RowClass="bg-white transition-colors hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800/70">
+                            <RowTemplate Context="col">
+                                @{
+                                    var row = Columns.IndexOf(col);
+                                    var isFirst = row <= 0;
+                                    var isLast = row >= Columns.Count - 1;
+                                    var title = CalcLoc[NetColumnLoc.Key[col.Id]];
+                                }
 
-                            <td class="border border-slate-200 px-1 py-0.5 text-center align-middle dark:border-slate-700">
-                                <div class="flex items-center justify-center gap-1">
-                                    <span class="cursor-grab select-none text-slate-400 dark:text-slate-500">::</span>
-                                    <span class="tabular-nums text-slate-700 dark:text-slate-200">@(row + 1)</span>
-                                </div>
-                            </td>
-
-                            <td class="border border-slate-200 px-1 py-0.5 align-middle dark:border-slate-700">
-                                <div class="flex items-center gap-2">
-                                    <div class="flex shrink-0 items-center gap-1">
-                                        <button type="button" class="@IconButtonSecondaryClass" disabled="@isFirst" title="@AppLoc["moveToTop"]" @onclick="() => MoveToTop(col)">T</button>
-                                        <button type="button" class="@IconButtonSecondaryClass" disabled="@isFirst" title="@AppLoc["moveUp"]" @onclick="() => MoveUp(col)">^</button>
+                                <td class="border border-slate-200 px-1 py-0.5 text-center align-middle dark:border-slate-700">
+                                    <div class="flex items-center justify-center gap-1">
+                                        <span class="cursor-grab select-none text-slate-400 dark:text-slate-500" title="Dra för att ändra ordning">::</span>
+                                        <span class="tabular-nums text-slate-700 dark:text-slate-200">@(row + 1)</span>
                                     </div>
+                                </td>
 
-                                    <div class="min-w-0 flex-1">
-                                        <div class="truncate font-medium text-slate-800 dark:text-slate-100" title="@title">@title</div>
-                                        <div class="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">@col.Id</div>
+                                <td class="border border-slate-200 px-1 py-0.5 align-middle dark:border-slate-700">
+                                    <div class="flex items-center gap-2">
+                                        <div class="flex shrink-0 items-center gap-1">
+                                            <button type="button" class="@IconButtonSecondaryClass" disabled="@isFirst" title="Flytta kolumn överst" @onclick="() => MoveToTop(col)">T</button>
+                                            <button type="button" class="@IconButtonSecondaryClass" disabled="@isFirst" title="Flytta kolumn upp" @onclick="() => MoveUp(col)">^</button>
+                                        </div>
+
+                                        <div class="min-w-0 flex-1">
+                                            <div class="truncate font-medium text-slate-800 dark:text-slate-100" title="@title">@title</div>
+                                            <div class="mt-0.5 flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400">
+                                                <span>@col.Id</span>
+                                                <span class="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-600 dark:bg-slate-800 dark:text-slate-300">@ColumnGroup(col.Id)</span>
+                                                @if (col.Frozen)
+                                                {
+                                                    <span class="rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] text-amber-700 dark:bg-amber-950/40 dark:text-amber-200">Fryst</span>
+                                                }
+                                            </div>
+                                        </div>
+
+                                        <div class="flex shrink-0 items-center gap-1">
+                                            <button type="button" class="@IconButtonSecondaryClass" disabled="@isLast" title="Flytta kolumn ned" @onclick="() => MoveDown(col)">v</button>
+                                            <button type="button" class="@IconButtonSecondaryClass" disabled="@isLast" title="Flytta kolumn nederst" @onclick="() => MoveToBottom(col)">B</button>
+                                        </div>
                                     </div>
+                                </td>
 
-                                    <div class="flex shrink-0 items-center gap-1">
-                                        <button type="button" class="@IconButtonSecondaryClass" disabled="@isLast" title="@AppLoc["moveDown"]" @onclick="() => MoveDown(col)">v</button>
-                                        <button type="button" class="@IconButtonSecondaryClass" disabled="@isLast" title="@AppLoc["moveToBottom"]" @onclick="() => MoveToBottom(col)">B</button>
-                                    </div>
-                                </div>
-                            </td>
+                                <td class="border border-slate-200 px-0.5 py-0.5 align-middle dark:border-slate-700">
+                                    <div class="flex items-center justify-center gap-1 whitespace-nowrap">
+                                        <input class="w-[58px] rounded-lg border border-slate-300 bg-white px-1.5 py-1 text-center text-[11px] text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+                                               type="number"
+                                               title="Kolumnbredd"
+                                               @bind="col.Width" />
 
-                            <td class="border border-slate-200 px-0.5 py-0.5 align-middle dark:border-slate-700">
-                                <div class="flex items-center justify-center gap-1 whitespace-nowrap">
-                                    <input class="w-[50px] rounded-lg border border-slate-300 bg-white px-1.5 py-1 text-center text-[11px] text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
-                                           type="number"
-                                           title="@AppLoc["width"]"
-                                           @bind="col.Width" />
+                                        <button type="button"
+                                                class="@(col.Frozen ? IconButtonWarningActiveClass : IconButtonWarningClass)"
+                                                title="Frys/fixera kolumn"
+                                                @onclick="() => col.Frozen = !col.Frozen">
+                                            F
+                                        </button>
 
-                                    <button type="button"
-                                            class="@(col.Frozen ? IconButtonWarningActiveClass : IconButtonWarningClass)"
-                                            title="@AppLoc["freezeColumn"]"
-                                            @onclick="() => col.Frozen = !col.Frozen">
-                                        F
-                                    </button>
-
-                                    <button type="button"
-                                            class="@IconButtonPrimaryClass"
-                                            title="@AppLoc["hideColumn"]"
-                                            @onclick="async () => await RemoveAsync(col)">
-                                        <span>@((MarkupString)Icons.ChevronRight)</span>
-                                    </button>
-                                </div>
-                            </td>
-                        </RowTemplate>
-                    </DragReorderTBody>
-                </table>
-            </div>
-        </section>
-
-        <section class="w-[260px] flex-none overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
-            <div class="border-b border-slate-200 px-3 py-1 dark:border-slate-700">
-                <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">@ResourceApp.hiddenItems</h3>
-                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">@AppLoc["hiddenColumnsCount", HiddenIds.Count()]</p>
-            </div>
-
-            <div class="max-h-[65vh] overflow-auto">
-                <table class="w-full text-[12px]">
-                    <thead class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900">
-                        <tr class="text-[11px] text-slate-700 dark:text-slate-200">
-                            <th class="w-[56px] px-1 py-0.5 text-center"></th>
-                            <th class="px-1 py-0.5 text-start font-medium">@CalcResource.name</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (TableVisible)
-                        {
-                            @foreach (var id in HiddenIds)
-                            {
-                                <tr class="border-t border-slate-200 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800/70">
-                                    <td class="px-1 py-0.5 text-center align-middle">
                                         <button type="button"
                                                 class="@IconButtonPrimaryClass"
-                                                title="@AppLoc["showColumn"]"
-                                                @onclick="async () => await AddAsync(id)">
-                                            <span>@((MarkupString)Icons.ChevronLeft)</span>
+                                                title="Dölj kolumn"
+                                                @onclick="async () => await RemoveAsync(col)">
+                                            <span>@((MarkupString)Icons.ChevronRight)</span>
                                         </button>
-                                    </td>
-                                    <td class="px-1 py-0.5 align-middle">
-                                        <div class="font-medium text-slate-800 dark:text-slate-100">@CalcLoc[NetColumnLoc.Key[id]]</div>
-                                        <div class="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">@id</div>
-                                    </td>
-                                </tr>
+                                    </div>
+                                </td>
+                            </RowTemplate>
+                        </DragReorderTBody>
+                    </table>
+                </div>
+            </section>
+        }
+
+        @if (ActiveFilter is not ColumnFilter.Visible and not ColumnFilter.Frozen)
+        {
+            <section class="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <div class="shrink-0 border-b border-slate-200 px-3 py-2 dark:border-slate-700">
+                    <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Dolda kolumner</h3>
+                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">@AppLoc["hiddenColumnsCount", HiddenIds.Count()]</p>
+                </div>
+
+                <div class="min-h-0 flex-1 overflow-auto">
+                    <table class="w-full text-[12px]">
+                        <thead class="sticky top-0 z-20 bg-slate-50 shadow-sm dark:bg-slate-900">
+                            <tr class="text-[11px] text-slate-700 dark:text-slate-200">
+                                <th class="w-[56px] px-1 py-1 text-center"></th>
+                                <th class="px-1 py-1 text-start font-medium">Namn</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (TableVisible)
+                            {
+                                @foreach (var id in FilteredHiddenIds)
+                                {
+                                    <tr class="border-t border-slate-200 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800/70">
+                                        <td class="px-1 py-0.5 text-center align-middle">
+                                            <button type="button"
+                                                    class="@IconButtonPrimaryClass"
+                                                    title="Visa kolumn"
+                                                    @onclick="async () => await AddAsync(id)">
+                                                <span>@((MarkupString)Icons.ChevronLeft)</span>
+                                            </button>
+                                        </td>
+                                        <td class="px-1 py-0.5 align-middle">
+                                            <div class="font-medium text-slate-800 dark:text-slate-100">@CalcLoc[NetColumnLoc.Key[id]]</div>
+                                            <div class="mt-0.5 flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400">
+                                                <span>@id</span>
+                                                <span class="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-600 dark:bg-slate-800 dark:text-slate-300">@ColumnGroup(id)</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
                             }
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        }
+
+        <section class="hidden min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900 xl:flex">
+            <div class="shrink-0 border-b border-slate-200 px-3 py-2 dark:border-slate-700">
+                <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Förhandsvisning</h3>
+                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Synliga kolumner och ungefärliga bredder.</p>
+            </div>
+            <div class="min-h-0 flex-1 overflow-auto p-3">
+                <div class="min-w-full overflow-hidden rounded-lg border border-slate-200 text-[11px] dark:border-slate-700">
+                    <div class="flex bg-slate-100 font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-100">
+                        @foreach (var col in Columns.Take(6))
+                        {
+                            <div class="truncate border-r border-slate-200 px-2 py-1 last:border-r-0 dark:border-slate-700"
+                                 style="width:@PreviewWidth(col.Width); min-width:48px;"
+                                 title="@CalcLoc[NetColumnLoc.Key[col.Id]]">
+                                @CalcLoc[NetColumnLoc.Key[col.Id]]
+                            </div>
                         }
-                    </tbody>
-                </table>
+                    </div>
+                    <div class="flex border-t border-slate-200 dark:border-slate-700">
+                        @foreach (var col in Columns.Take(6))
+                        {
+                            <div class="truncate border-r border-slate-200 px-2 py-1 last:border-r-0 dark:border-slate-700"
+                                 style="width:@PreviewWidth(col.Width); min-width:48px;">
+                                @PreviewValue(col.Id)
+                            </div>
+                        }
+                    </div>
+                </div>
             </div>
         </section>
     </div>
 </div>
 
 @code {
+    public enum ColumnFilter { All, Visible, Hidden, Frozen, Important }
+
+    private const string ToolbarButtonClass = "inline-flex h-8 items-center justify-center rounded-lg border border-slate-300 bg-white px-2.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-800";
+
     private const string IconButtonBaseClass =
-        "inline-flex h-7 w-7 items-center justify-center rounded-lg border text-[11px] transition duration-150 hover:scale-[1.03] active:scale-95";
+        "inline-flex h-7 w-7 items-center justify-center rounded-lg border text-[11px] transition duration-150 hover:scale-[1.03] active:scale-95 disabled:cursor-not-allowed disabled:opacity-50";
 
     private const string IconButtonSecondaryClass =
         IconButtonBaseClass + " border-slate-300 bg-white text-slate-600 hover:bg-slate-100 hover:border-slate-400 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800";
@@ -160,16 +244,105 @@
     private const string IconButtonWarningActiveClass =
         IconButtonBaseClass + " border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-400 dark:border-emerald-500/60 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-900/50";
 
+    private static readonly IReadOnlyList<AppSelect<ColumnFilter>.Option> FilterOptions =
+    [
+        new(ColumnFilter.All, "Alla"),
+        new(ColumnFilter.Visible, "Synliga"),
+        new(ColumnFilter.Hidden, "Dolda"),
+        new(ColumnFilter.Frozen, "Frysta"),
+        new(ColumnFilter.Important, "Viktiga")
+    ];
+
     [Parameter] public List<NetColumnState> Columns { get; set; } = TemplateDefaults.NetCalc();
 
     private bool TableVisible = true;
+    private string ColumnSearch = string.Empty;
+    private ColumnFilter ActiveFilter = ColumnFilter.All;
 
     private static readonly IReadOnlyDictionary<NetColumnId, NetColumnState> Defaults =
         TemplateDefaults.NetCalc().ToDictionary(x => x.Id, x => x);
 
+    private List<NetColumnState> FilteredVisibleColumns =>
+        Columns
+            .Where(MatchesSearch)
+            .Where(MatchesVisibleFilter)
+            .ToList();
+
+    private List<NetColumnId> FilteredHiddenIds =>
+        HiddenIds
+            .Where(MatchesSearch)
+            .Where(MatchesHiddenFilter)
+            .ToList();
+
     private IEnumerable<NetColumnId> HiddenIds =>
         Enum.GetValues<NetColumnId>()
             .Where(id => !Columns.Any(c => c.Id == id));
+
+    private Task ChangeFilter(ColumnFilter filter)
+    {
+        ActiveFilter = filter;
+        return Task.CompletedTask;
+    }
+
+    private bool MatchesSearch(NetColumnState col) => MatchesSearch(col.Id);
+
+    private bool MatchesSearch(NetColumnId id)
+        => string.IsNullOrWhiteSpace(ColumnSearch)
+            || id.ToString().Contains(ColumnSearch.Trim(), StringComparison.OrdinalIgnoreCase)
+            || CalcLoc[NetColumnLoc.Key[id]].Value.Contains(ColumnSearch.Trim(), StringComparison.OrdinalIgnoreCase)
+            || ColumnGroup(id).Contains(ColumnSearch.Trim(), StringComparison.OrdinalIgnoreCase);
+
+    private bool MatchesVisibleFilter(NetColumnState col)
+        => ActiveFilter switch
+        {
+            ColumnFilter.Hidden => false,
+            ColumnFilter.Frozen => col.Frozen,
+            ColumnFilter.Important => IsImportant(col.Id),
+            _ => true
+        };
+
+    private bool IsVisibleEditorRow(NetColumnState col)
+        => MatchesSearch(col) && MatchesVisibleFilter(col);
+
+    private bool MatchesHiddenFilter(NetColumnId id)
+        => ActiveFilter switch
+        {
+            ColumnFilter.Visible or ColumnFilter.Frozen => false,
+            ColumnFilter.Important => IsImportant(id),
+            _ => true
+        };
+
+    private static bool IsImportant(NetColumnId id)
+        => id is NetColumnId.Code
+            or NetColumnId.Account
+            or NetColumnId.Name
+            or NetColumnId.Quantity
+            or NetColumnId.Unit
+            or NetColumnId.Cost
+            or NetColumnId.PriceQ
+            or NetColumnId.PriceTotaly
+            or NetColumnId.Co2
+            or NetColumnId.Note;
+
+    private static string ColumnGroup(NetColumnId id)
+    {
+        var name = id.ToString();
+        if (id is NetColumnId.Code or NetColumnId.Active or NetColumnId.Account or NetColumnId.Name or NetColumnId.Status or NetColumnId.Responsible)
+            return "Grund";
+        if (name.Contains("Quantity", StringComparison.OrdinalIgnoreCase) || id is NetColumnId.Unit or NetColumnId.WorkedQ or NetColumnId.WorkedQPercent)
+            return "Mängd";
+        if (name.Contains("Cost", StringComparison.OrdinalIgnoreCase) || id is NetColumnId.Waste or NetColumnId.Cap)
+            return "Kostnad";
+        if (name.Contains("Price", StringComparison.OrdinalIgnoreCase) || id is NetColumnId.Factor or NetColumnId.MinPrice or NetColumnId.CeilingPrice or NetColumnId.Diff)
+            return "Pris";
+        if (name.Contains("Production", StringComparison.OrdinalIgnoreCase) || id is NetColumnId.ResourceSort or NetColumnId.ResourceType or NetColumnId.ResourceTypeSystem)
+            return "Produktion";
+        if (name.Contains("Co2", StringComparison.OrdinalIgnoreCase))
+            return "CO2";
+        if (name.Contains("Note", StringComparison.OrdinalIgnoreCase) || name.Contains("Comment", StringComparison.OrdinalIgnoreCase))
+            return "Kommentarer";
+        return "System";
+    }
 
     private async Task AddAsync(NetColumnId id)
     {
@@ -241,4 +414,54 @@
         Columns.RemoveAt(index);
         Columns.Add(col);
     }
+
+    private void ResetDefaultOrder()
+    {
+        var current = Columns.ToDictionary(x => x.Id, x => x);
+        Columns.Clear();
+
+        foreach (var def in TemplateDefaults.NetCalc())
+        {
+            if (!current.TryGetValue(def.Id, out var existing))
+                continue;
+
+            existing.Width = existing.Width > 0 ? existing.Width : def.Width;
+            Columns.Add(existing);
+        }
+    }
+
+    private void HideOptionalColumns()
+    {
+        for (var i = Columns.Count - 1; i >= 0; i--)
+        {
+            if (IsImportant(Columns[i].Id))
+                continue;
+
+            Columns[i].Frozen = false;
+            Columns.RemoveAt(i);
+        }
+    }
+
+    private async Task ShowAllColumnsAsync()
+    {
+        foreach (var id in HiddenIds.ToList())
+            await AddAsync(id);
+    }
+
+    private static string PreviewWidth(int width)
+        => $"{Math.Clamp(width, 60, 150)}px";
+
+    private static string PreviewValue(NetColumnId id)
+        => id switch
+        {
+            NetColumnId.Code => "1.01",
+            NetColumnId.Name => "Arbete",
+            NetColumnId.Account => "4010",
+            NetColumnId.Quantity => "12",
+            NetColumnId.Unit => "h",
+            NetColumnId.Cost => "450",
+            NetColumnId.PriceQ => "620",
+            NetColumnId.Co2 => "18",
+            _ => "..."
+        };
 }

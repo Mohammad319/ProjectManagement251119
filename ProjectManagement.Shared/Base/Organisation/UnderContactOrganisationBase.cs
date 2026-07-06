@@ -36,4 +36,19 @@ namespace ProjectManagement.Shared.Base.Organisation
     {
         Aktive, Resigned, OutOfService, Retired, Vacation
     }
+
+    /// <summary>Swedish display labels for <see cref="UnderContactStatus"/> (enum members are kept for
+    /// backward-compatible serialization; only the shown text is translated).</summary>
+    public static class UnderContactStatusLabels
+    {
+        public static string ToSwedish(this UnderContactStatus status) => status switch
+        {
+            UnderContactStatus.Aktive => "Aktiv",
+            UnderContactStatus.Resigned => "Slutat",
+            UnderContactStatus.OutOfService => "Ej i tjänst",
+            UnderContactStatus.Retired => "Pensionerad",
+            UnderContactStatus.Vacation => "Semester",
+            _ => status.ToString()
+        };
+    }
 }

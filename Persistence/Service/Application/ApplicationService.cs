@@ -97,7 +97,21 @@ namespace Persistence.Service.Application
                 .AnyAsync(x => x.Id == dto.DepartmentId, ct);
 
             if (!departmentExists)
-                return 0;
+            {
+                // The chosen department is missing/stale (e.g. an "Alla avdelningar" template or a 0 id).
+                // Fall back to any existing department so a valid template is never silently dropped;
+                // only fail if the tenant genuinely has no departments at all.
+                var fallbackDepartmentId = await context.Department
+                    .AsNoTracking()
+                    .OrderBy(x => x.Id)
+                    .Select(x => (int?)x.Id)
+                    .FirstOrDefaultAsync(ct);
+
+                if (!fallbackDepartmentId.HasValue)
+                    return 0;
+
+                dto.DepartmentId = fallbackDepartmentId.Value;
+            }
 
             var payload = dto.ToEntity();
             payload.Data.IsSystemTemplate = false;

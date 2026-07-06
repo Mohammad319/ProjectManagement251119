@@ -1,6 +1,12 @@
+using ProjectManagement.Shared.Constants;
+using ProjectManagement.Shared.DTO.Calculation.Template;
 using ProjectManagement.Shared.Enums;
+using static ProjectManagement.Shared.DTO.Calculation.Template.NetColumnId;
 
 namespace Persistence.Seeding;
+
+/// <summary>A read-only standard column template: a name + the ordered net-calc columns it shows.</summary>
+public readonly record struct ColumnTemplateSeed(string Name, NetColumnId[] Columns);
 
 public readonly record struct LookupSeed(
     string Name,
@@ -152,6 +158,95 @@ public static class TenantSeedCatalog
         new("Internt projekt",          "#6366f1", 1500),
         new("Annat",                    "#9ca3af", 1600),
     ];
+
+    // ---------------------------------------------------------------------------------------------
+    // Standard (read-only) column templates seeded for every new tenant. Names match the display names
+    // detected as "standard" in TemplateIndex; each lists the ordered net-calc columns it shows.
+    // ---------------------------------------------------------------------------------------------
+    public static readonly ColumnTemplateSeed[] StandardColumnTemplates =
+    [
+        new("Kompakt nettokalkyl",
+            [Code, Name, Quantity, Unit, Cost, TotalNetCost]),
+
+        new("Standard nettokalkyl",
+            [Code, Name, ResourceType, ResourceSort, Quantity, Unit, ChangeFactor1, Cost, TotalNetCost, Note]),
+
+        new("Ekonomi",
+            [Code, Name, Account, Cost, TotalNetCost, MinPrice, CeilingPrice, Diff, ChangeFactor1, Note]),
+
+        new("Anbud",
+            [Code, Name, Account, Quantity, Unit, PriceQ, PriceTotaly, PriceTotallyTax]),
+
+        new("Produktion",
+            [Code, Name, ResourceType, ResourceSort, Quantity, Unit, PriceProduction, WorkedQ, ActuallyQuantity, Responsible, Note]),
+
+        new("CO2 / miljö",
+            [Code, Name, ResourceType, Quantity, Unit, Co2, TotalCo2, Note]),
+
+        new("Granskning / uppföljning",
+            [Code, Name, Status, Responsible, Diff, CeilingPrice, MinPrice, Note]),
+
+        new("Import / avstämning",
+            [Code, Name, Account, Status, ImportInfo, Quantity, Unit, TotalNetCost, Note]),
+    ];
+
+    /// <summary>Standard appearance templates (name + whether it is the dark variant).</summary>
+    public static readonly (string Name, bool Dark)[] StandardAppearanceTemplates =
+    [
+        ("Standard ljus", false),
+        ("Standard mörk", true),
+    ];
+
+    /// <summary>Builds an ordered <see cref="NetColumnState"/> list, reusing the default widths.</summary>
+    public static List<NetColumnState> BuildColumns(NetColumnId[] ids)
+    {
+        var defaults = TemplateDefaults.NetCalc().ToDictionary(x => x.Id, x => x);
+        return ids
+            .Select(id => defaults.TryGetValue(id, out var d)
+                ? new NetColumnState { Id = id, Width = d.Width, Frozen = false }
+                : new NetColumnState { Id = id, Width = 80, Frozen = false })
+            .ToList();
+    }
+
+    /// <summary>Light template keeps the defaults; the dark one uses a genuinely dark palette so the two
+    /// standard appearance templates look clearly different in the preview.</summary>
+    public static TemplateData BuildAppearance(bool dark)
+    {
+        var data = new TemplateData();
+        if (!dark)
+            return data;
+
+        data.NetCalc.Color = new NetColor
+        {
+            Header = "#1f2937",
+            Note = "#374151",
+            Border = "#475569",
+            BorderStyle = "solid",
+            Text = "#e5e7eb",
+            Task = "#111827",
+            SubTask = "#1f2937",
+            Resource = "#0f172a",
+            TaskCodeName = "#374151",
+            TaskDetailBaseQuantity = "#1e293b",
+            ResourceParameter = "#334155",
+            ResourceAttachment = "#3f3f46",
+            ResourceTime = "#292524",
+            InactiveText = "#9ca3af",
+        };
+
+        data.SummarySheet.Color = new SummarySheetColor
+        {
+            Header = "#1f2937",
+            Note = "#374151",
+            Border = "#475569",
+            BorderStyle = "solid",
+            Text = "#e5e7eb",
+            Sum = "#3730a3",
+            Factor = "#3730a3",
+        };
+
+        return data;
+    }
 
     public static IEnumerable<(ResourceTypesEnum Kind, string Name, int SortOrder)> ResourceTypes()
     {

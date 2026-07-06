@@ -124,7 +124,7 @@
     <value>Administration</value>
   </data>
   <data name="build" xml:space="preserve">
-    <value>byggnr</value>
+    <value>Byggnummer</value>
   </data>
   <data name="city" xml:space="preserve">
     <value>Stad</value>

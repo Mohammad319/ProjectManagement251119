@@ -35,7 +35,7 @@ public sealed class DepartmentUsersViewService(
     {
         var users = await tenantUserService.GetAllTenantUsersAsync(departmentId, ct);
         if (withoutDepartmentOnly && !departmentId.HasValue)
-            users = users.Where(x => !x.DepartmentId.HasValue).ToList();
+            users = users.Where(x => x.DepartmentIds.Count == 0 && !x.DepartmentId.HasValue).ToList();
 
         var authIds = users
             .Select(x => x.IdAuth)

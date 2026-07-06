@@ -41,6 +41,8 @@ namespace Domain.Entities.Users
         /// </summary>
         public DepartmentEntity? Department { get; private set; }
 
+        public ICollection<UserDepartmentAccessEntity> DepartmentAccesses { get; private set; } = [];
+
         private UserEntity() { }
 
         public static UserEntity Create(

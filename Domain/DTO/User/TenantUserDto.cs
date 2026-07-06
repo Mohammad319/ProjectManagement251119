@@ -10,6 +10,7 @@ namespace Domain.DTO.User
         public string? Email { get; set; }
         public string? Username { get; set; }
         public int? DepartmentId { get; set; }
+        public List<int> DepartmentIds { get; set; } = [];
         public string? Firstname { get; set; }
         public string? Lastname { get; set; }
         public bool IsInAuth { get; set; }

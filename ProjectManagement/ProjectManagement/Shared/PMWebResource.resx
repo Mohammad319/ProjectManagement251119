@@ -22,7 +22,7 @@
   <data name="ResumeFailed" xml:space="preserve"><value>Failed to resume the session. Please reload the page.</value></data>
   <data name="SettingsMenu" xml:space="preserve"><value>Settings menu</value></data>
   <data name="DepartmentsTitle" xml:space="preserve"><value>Departments</value></data>
-  <data name="DepartmentsDescription" xml:space="preserve"><value>Manage departments, tenant users, and access structure.</value></data>
+  <data name="DepartmentsDescription" xml:space="preserve"><value>Create and maintain departments, and see user, project, and calculation counts per department.</value></data>
   <data name="NewDepartment" xml:space="preserve"><value>New department</value></data>
   <data name="QuickAction" xml:space="preserve"><value>Quick action</value></data>
   <data name="OpenAllUsers" xml:space="preserve"><value>Open all users</value></data>
@@ -153,17 +153,17 @@
   <data name="LevelManager" xml:space="preserve"><value>Admin</value></data>
   <data name="LevelUser" xml:space="preserve"><value>User</value></data>
   <data name="LevelGuest" xml:space="preserve"><value>Viewer</value></data>
-  <data name="LockUser" xml:space="preserve"><value>Lock</value></data>
-  <data name="UnlockUser" xml:space="preserve"><value>Unlock</value></data>
+  <data name="LockUser" xml:space="preserve"><value>Block sign-in</value></data>
+  <data name="UnlockUser" xml:space="preserve"><value>Remove sign-in block</value></data>
   <data name="LockConfirmFormat" xml:space="preserve"><value>Lock sign-in for {0}? The user will be signed out and unable to log in.</value></data>
-  <data name="UnlockConfirmFormat" xml:space="preserve"><value>Unlock {0}? The user will be able to sign in again.</value></data>
+  <data name="UnlockConfirmFormat" xml:space="preserve"><value>Remove the sign-in block for {0}? The user will be able to sign in again.</value></data>
   <data name="SelectAll" xml:space="preserve"><value>Select all</value></data>
   <data name="SelectedCountFormat" xml:space="preserve"><value>{0} selected</value></data>
   <data name="ClearSelection" xml:space="preserve"><value>Clear selection</value></data>
   <data name="BulkMoveToDepartment" xml:space="preserve"><value>Move to department</value></data>
   <data name="BulkChangeRole" xml:space="preserve"><value>Change role…</value></data>
-  <data name="BulkLock" xml:space="preserve"><value>Lock</value></data>
-  <data name="BulkUnlock" xml:space="preserve"><value>Unlock</value></data>
+  <data name="BulkLock" xml:space="preserve"><value>Block</value></data>
+  <data name="BulkUnlock" xml:space="preserve"><value>Remove block</value></data>
   <data name="BulkDelete" xml:space="preserve"><value>Delete</value></data>
   <data name="Apply" xml:space="preserve"><value>Apply</value></data>
   <data name="BulkConfirmFormat" xml:space="preserve"><value>Apply this action to {0} user(s)?</value></data>

@@ -22,7 +22,7 @@
   <data name="ResumeFailed" xml:space="preserve"><value>Det gick inte att återuppta sessionen. Ladda om sidan.</value></data>
   <data name="SettingsMenu" xml:space="preserve"><value>Inställningsmeny</value></data>
   <data name="DepartmentsTitle" xml:space="preserve"><value>Avdelningar</value></data>
-  <data name="DepartmentsDescription" xml:space="preserve"><value>Hantera avdelningar, användare och åtkomststruktur.</value></data>
+  <data name="DepartmentsDescription" xml:space="preserve"><value>Här skapar och underhåller du avdelningar samt ser antal användare, projekt och kalkyler per avdelning.</value></data>
   <data name="NewDepartment" xml:space="preserve"><value>Ny avdelning</value></data>
   <data name="QuickAction" xml:space="preserve"><value>Snabbåtgärd</value></data>
   <data name="OpenAllUsers" xml:space="preserve"><value>Visa alla användare</value></data>
@@ -153,17 +153,17 @@
   <data name="LevelManager" xml:space="preserve"><value>Admin</value></data>
   <data name="LevelUser" xml:space="preserve"><value>Användare</value></data>
   <data name="LevelGuest" xml:space="preserve"><value>Visare</value></data>
-  <data name="LockUser" xml:space="preserve"><value>Lås</value></data>
-  <data name="UnlockUser" xml:space="preserve"><value>Lås upp</value></data>
-  <data name="LockConfirmFormat" xml:space="preserve"><value>Lås inloggning för {0}? Användaren loggas ut och kan inte logga in.</value></data>
-  <data name="UnlockConfirmFormat" xml:space="preserve"><value>Lås upp {0}? Användaren kan logga in igen.</value></data>
+  <data name="LockUser" xml:space="preserve"><value>Spärra inloggning</value></data>
+  <data name="UnlockUser" xml:space="preserve"><value>Ta bort inloggningsspärr</value></data>
+  <data name="LockConfirmFormat" xml:space="preserve"><value>Spärra inloggning för {0}? Användaren loggas ut och kan inte logga in.</value></data>
+  <data name="UnlockConfirmFormat" xml:space="preserve"><value>Ta bort inloggningsspärr för {0}? Användaren kan logga in igen.</value></data>
   <data name="SelectAll" xml:space="preserve"><value>Markera alla</value></data>
   <data name="SelectedCountFormat" xml:space="preserve"><value>{0} markerade</value></data>
   <data name="ClearSelection" xml:space="preserve"><value>Rensa markering</value></data>
   <data name="BulkMoveToDepartment" xml:space="preserve"><value>Flytta till avdelning</value></data>
   <data name="BulkChangeRole" xml:space="preserve"><value>Ändra roll…</value></data>
-  <data name="BulkLock" xml:space="preserve"><value>Lås</value></data>
-  <data name="BulkUnlock" xml:space="preserve"><value>Lås upp</value></data>
+  <data name="BulkLock" xml:space="preserve"><value>Spärra</value></data>
+  <data name="BulkUnlock" xml:space="preserve"><value>Ta bort spärr</value></data>
   <data name="BulkDelete" xml:space="preserve"><value>Ta bort</value></data>
   <data name="Apply" xml:space="preserve"><value>Tillämpa</value></data>
   <data name="BulkConfirmFormat" xml:space="preserve"><value>Tillämpa åtgärden på {0} användare?</value></data>

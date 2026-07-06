@@ -96,6 +96,8 @@ public sealed class TenantUserService(
         if (normalizedRole is null)
             return false;
 
+        NormalizeDepartmentSelection(request, normalizedRole);
+
         var password = IdentityUserSyncHelper.GenerateTemporaryPassword();
         var (identityUser, createdNew) = await EnsureAuthUserAsync(request, password);
         if (identityUser is null)
@@ -148,6 +150,9 @@ public sealed class TenantUserService(
 
             await context.SaveChangesAsync(ct);
 
+            await SyncUserDepartmentAccessesAsync(context, localUser, request.DepartmentIds, ct);
+            await context.SaveChangesAsync(ct);
+
             identityUser.UserId = localUser.Id;
             var syncResult = await userManager.UpdateAsync(identityUser);
             if (!syncResult.Succeeded)
@@ -187,7 +192,7 @@ public sealed class TenantUserService(
                 localUser.Id,
                 identityUser.Id,
                 DisplayName(request.Firstname, request.Lastname, request.Email),
-                $"Roll: {TenantRoleLabelSv(normalizedRole)}; Avdelning: {await DepartmentNameAsync(context, request.DepartmentId, ct)}",
+                $"Roll: {TenantRoleLabelSv(normalizedRole)}; Avdelningar: {await DepartmentNamesTextAsync(context, request.DepartmentIds, ct)}",
                 ct: ct);
             return true;
         }
@@ -208,6 +213,8 @@ public sealed class TenantUserService(
         var normalizedRole = IdentityUserSyncHelper.NormalizeRoleForUserScope(tenantUser.Role, isAppUser: false);
         if (normalizedRole is null)
             return false;
+
+        NormalizeDepartmentSelection(tenantUser, normalizedRole);
 
         var password = IdentityUserSyncHelper.GenerateTemporaryPassword();
         var (authUser, createdNew) = await EnsureAuthUserAsync(tenantUser, password);
@@ -239,6 +246,9 @@ public sealed class TenantUserService(
         context.User.Update(userEntity);
         await context.SaveChangesAsync(ct);
 
+        await SyncUserDepartmentAccessesAsync(context, userEntity, tenantUser.DepartmentIds, ct);
+        await context.SaveChangesAsync(ct);
+
         authUser.UserId = userEntity.Id;
         var updateResult = await userManager.UpdateAsync(authUser);
         if (!updateResult.Succeeded)
@@ -263,6 +273,8 @@ public sealed class TenantUserService(
         var normalizedRole = IdentityUserSyncHelper.NormalizeRoleForUserScope(user.Role, isAppUser: false);
         if (normalizedRole is null)
             return false;
+
+        NormalizeDepartmentSelection(user, normalizedRole);
 
         ApplicationUser? oldUser = null;
         if (!string.IsNullOrWhiteSpace(user.IdAuth))
@@ -302,7 +314,9 @@ public sealed class TenantUserService(
         await using var context = await dbFactory.CreateDbContextAsync(ct);
 
         var userEntity = await context.User.FirstOrDefaultAsync(x => x.Id == user.Id, ct);
-        var previousDepartmentId = userEntity?.DepartmentId;
+        var previousDepartmentIds = userEntity is null
+            ? new List<int>()
+            : await GetUserDepartmentIdsAsync(context, userEntity.Id, userEntity.DepartmentId, ct);
         if (userEntity != null)
         {
             IdentityUserSyncHelper.ApplyToLocalUser(
@@ -316,6 +330,8 @@ public sealed class TenantUserService(
 
             context.User.Update(userEntity);
             await context.SaveChangesAsync(ct);
+            await SyncUserDepartmentAccessesAsync(context, userEntity, user.DepartmentIds, ct);
+            await context.SaveChangesAsync(ct);
             oldUser.UserId = userEntity.Id;
             await userManager.UpdateAsync(oldUser);
         }
@@ -325,15 +341,7 @@ public sealed class TenantUserService(
 
         await userManager.UpdateSecurityStampAsync(oldUser);
 
-        // Build a human-readable change summary in Swedish with department NAMES (never raw ids),
-        // and highlight a department move explicitly (e.g. "Flyttad från Ledning till Kalkyl").
-        var newDepartmentId = user.DepartmentId;
-        var oldDepartmentName = await DepartmentNameAsync(context, previousDepartmentId, ct);
-        var newDepartmentName = await DepartmentNameAsync(context, newDepartmentId, ct);
-
-        var departmentPart = previousDepartmentId == newDepartmentId
-            ? $"Avdelning: {newDepartmentName}"
-            : $"Flyttad från {oldDepartmentName} till {newDepartmentName}";
+        var departmentPart = await DepartmentChangeTextAsync(context, previousDepartmentIds, user.DepartmentIds, ct);
 
         await auditService.WriteAsync(
             "user.updated",
@@ -343,6 +351,112 @@ public sealed class TenantUserService(
             $"Roll: {TenantRoleLabelSv(normalizedRole)}; {departmentPart}",
             ct: ct);
         return true;
+    }
+
+    private static void NormalizeDepartmentSelection(TenantUserDto user, string normalizedRole)
+    {
+        var selected = user.DepartmentIds
+            .Where(id => id > 0)
+            .Distinct()
+            .ToList();
+
+        if (selected.Count == 0 && user.DepartmentId is > 0)
+            selected.Add(user.DepartmentId.Value);
+
+        user.DepartmentIds = selected;
+        user.DepartmentId = normalizedRole == PMRolesConst.Tenant.Admin
+            ? null
+            : selected.FirstOrDefault() is var first && first > 0 ? first : null;
+    }
+
+    private static async Task<List<int>> GetUserDepartmentIdsAsync(
+        Persistence.Context.ShardingSingleDbContext context,
+        int userId,
+        int? primaryDepartmentId,
+        CancellationToken ct)
+    {
+        var ids = await context.UserDepartmentAccesses
+            .AsNoTracking()
+            .Where(x => x.UserId == userId)
+            .OrderByDescending(x => x.IsPrimary)
+            .ThenBy(x => x.DepartmentId)
+            .Select(x => x.DepartmentId)
+            .ToListAsync(ct);
+
+        if (ids.Count == 0 && primaryDepartmentId is > 0)
+            ids.Add(primaryDepartmentId.Value);
+
+        return ids;
+    }
+
+    private static async Task SyncUserDepartmentAccessesAsync(
+        Persistence.Context.ShardingSingleDbContext context,
+        UserEntity user,
+        IReadOnlyCollection<int> selectedDepartmentIds,
+        CancellationToken ct)
+    {
+        var selected = selectedDepartmentIds
+            .Where(id => id > 0)
+            .Distinct()
+            .ToList();
+
+        var existing = await context.UserDepartmentAccesses
+            .Where(x => x.UserId == user.Id)
+            .ToListAsync(ct);
+
+        foreach (var access in existing.Where(x => !selected.Contains(x.DepartmentId)).ToList())
+            context.UserDepartmentAccesses.Remove(access);
+
+        for (var index = 0; index < selected.Count; index++)
+        {
+            var departmentId = selected[index];
+            var isPrimary = index == 0;
+            var access = existing.FirstOrDefault(x => x.DepartmentId == departmentId);
+            if (access is null)
+            {
+                context.UserDepartmentAccesses.Add(UserDepartmentAccessEntity.Create(user.Id, departmentId, isPrimary));
+                continue;
+            }
+
+            access.SetPrimary(isPrimary);
+        }
+    }
+
+    private static async Task<string> DepartmentChangeTextAsync(
+        Persistence.Context.ShardingSingleDbContext context,
+        IReadOnlyCollection<int> previousDepartmentIds,
+        IReadOnlyCollection<int> newDepartmentIds,
+        CancellationToken ct)
+    {
+        var previous = previousDepartmentIds.Where(id => id > 0).Distinct().ToList();
+        var current = newDepartmentIds.Where(id => id > 0).Distinct().ToList();
+
+        if (previous.SequenceEqual(current))
+            return $"Avdelningar: {await DepartmentNamesTextAsync(context, current, ct)}";
+
+        return $"Avdelningar ändrade: {await DepartmentNamesTextAsync(context, previous, ct)} → {await DepartmentNamesTextAsync(context, current, ct)}";
+    }
+
+    private static async Task<string> DepartmentNamesTextAsync(
+        Persistence.Context.ShardingSingleDbContext context,
+        IReadOnlyCollection<int> departmentIds,
+        CancellationToken ct)
+    {
+        var ids = departmentIds.Where(id => id > 0).Distinct().ToList();
+        if (ids.Count == 0)
+            return "Ingen avdelning";
+
+        var namesById = await context.Department
+            .AsNoTracking()
+            .Where(d => ids.Contains(d.Id))
+            .Select(d => new { d.Id, d.Name })
+            .ToDictionaryAsync(x => x.Id, x => x.Name, ct);
+
+        var names = ids
+            .Select(id => namesById.TryGetValue(id, out var name) && !string.IsNullOrWhiteSpace(name) ? name : "Okänd avdelning")
+            .ToList();
+
+        return string.Join(", ", names);
     }
 
     /// <summary>Resolves a department id to its display name (Swedish "Ingen avdelning" when unset).</summary>
@@ -617,6 +731,16 @@ public sealed class TenantUserService(
 
         await context.SaveChangesAsync(ct);
 
+        foreach (var localUser in localUsers)
+        {
+            var departmentIds = normalizedDepartmentId.HasValue
+                ? new[] { normalizedDepartmentId.Value }
+                : Array.Empty<int>();
+            await SyncUserDepartmentAccessesAsync(context, localUser, departmentIds, ct);
+        }
+
+        await context.SaveChangesAsync(ct);
+
         // A user that leaves a department must not stay registered as that department's head.
         var movedIds = localUsers.Select(x => x.Id).ToList();
         await context.Department
@@ -695,6 +819,7 @@ public sealed class TenantUserService(
                 {
                     localUser.SetDepartment(null);
                     context.User.Update(localUser);
+                    await SyncUserDepartmentAccessesAsync(context, localUser, [], ct);
                     await context.SaveChangesAsync(ct);
                 }
 
@@ -821,13 +946,12 @@ public sealed class TenantUserService(
             return default;
 
         var (adminIds, _) = await GetTenantAdminSetsAsync();
-        var remainingAdmins = adminIds.Count;
 
         int ok = 0, fail = 0, skipped = 0;
         foreach (var (authId, userId) in users)
         {
             var isAdmin = !string.IsNullOrWhiteSpace(authId) && adminIds.Contains(authId!);
-            if (isAdmin && remainingAdmins <= 1)
+            if (isAdmin)
             {
                 skipped++;
                 continue;
@@ -836,7 +960,6 @@ public sealed class TenantUserService(
             if (await RemoveAsync(authId ?? string.Empty, false, userId, ct))
             {
                 ok++;
-                if (isAdmin) remainingAdmins--;
             }
             else fail++;
         }
@@ -850,9 +973,11 @@ public sealed class TenantUserService(
 
         var tenantUsersQuery = context.User.AsNoTracking();
         if (department.HasValue)
-            tenantUsersQuery = tenantUsersQuery.Where(x => x.DepartmentId == department.Value);
+            tenantUsersQuery = tenantUsersQuery.Where(x =>
+                x.DepartmentId == department.Value
+                || x.DepartmentAccesses.Any(a => a.DepartmentId == department.Value));
 
-        return await tenantUsersQuery
+        var users = await tenantUsersQuery
             .Select(x => new TenantUserDto
             {
                 Id = x.Id,
@@ -864,5 +989,32 @@ public sealed class TenantUserService(
                 Lastname = x.LastName
             })
             .ToListAsync(ct);
+
+        var userIds = users.Select(u => u.Id).ToList();
+        if (userIds.Count > 0)
+        {
+            var accessRows = await context.UserDepartmentAccesses
+                .AsNoTracking()
+                .Where(x => userIds.Contains(x.UserId))
+                .OrderByDescending(x => x.IsPrimary)
+                .ThenBy(x => x.DepartmentId)
+                .Select(x => new { x.UserId, x.DepartmentId })
+                .ToListAsync(ct);
+
+            var accessByUser = accessRows
+                .GroupBy(x => x.UserId)
+                .ToDictionary(g => g.Key, g => g.Select(x => x.DepartmentId).ToList());
+
+            foreach (var user in users)
+            {
+                if (accessByUser.TryGetValue(user.Id, out var departmentIds))
+                    user.DepartmentIds = departmentIds;
+            }
+        }
+
+        foreach (var user in users.Where(u => u.DepartmentIds.Count == 0 && u.DepartmentId is > 0))
+            user.DepartmentIds.Add(user.DepartmentId!.Value);
+
+        return users;
     }
 }

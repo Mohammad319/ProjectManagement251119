@@ -21,6 +21,16 @@ namespace Application.Feature.Account.Commands
             => service.CreateRangeAsync(request.Items, ct);
     }
 
+    public sealed record ImportAccountGroupsCommand(List<PostAccountGroupWithAccountsDTO> Items, bool UpdateExisting)
+        : IRequest<AccountImportResultDTO>;
+
+    public sealed class ImportAccountGroupsCommandHandler(IAccountGroupService service)
+        : IRequestHandler<ImportAccountGroupsCommand, AccountImportResultDTO>
+    {
+        public Task<AccountImportResultDTO> Handle(ImportAccountGroupsCommand request, CancellationToken ct)
+            => service.ImportAsync(request.Items, request.UpdateExisting, ct);
+    }
+
     public sealed record UpdateAccountGroupCommand(PostAccountGroupDTO Dto, int Id) : IRequest<bool>;
 
     public sealed class UpdateAccountGroupCommandHandler(IAccountGroupService service)

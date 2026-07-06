@@ -18,6 +18,11 @@ namespace Domain.Entities.Calculation
         [JsonIgnore]
         public int? DepartmentId { get; private set; }
 
+        /// <summary>Standardval within its scope: when true this is the default column template for its
+        /// company (DepartmentId = null) or department. At most one per scope.</summary>
+        [JsonIgnore]
+        public bool IsDefault { get; private set; }
+
         [JsonIgnore]
         public DepartmentEntity? Department { get; private set; }
 
@@ -60,6 +65,11 @@ namespace Domain.Entities.Calculation
         public void SetDepartment(int? departmentId)
         {
             DepartmentId = departmentId;
+        }
+
+        public void SetDefault(bool isDefault)
+        {
+            IsDefault = isDefault;
         }
 
         public void SetColumns(IEnumerable<NetColumnState>? columns)

@@ -146,7 +146,7 @@ namespace Persistence.Service.Department
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            return await context.User
+            var users = await context.User
                 .AsNoTracking()
                 .Where(x => x.DepartmentId == departmentId)
                 .OrderBy(x => x.FirstName)
@@ -163,6 +163,14 @@ namespace Persistence.Service.Department
                     IdAuth = x.ExternalAuthId,
                 })
                 .ToListAsync(ct);
+
+            if (departmentId.HasValue)
+            {
+                foreach (var user in users)
+                    user.DepartmentIds.Add(departmentId.Value);
+            }
+
+            return users;
         }
     }
 }

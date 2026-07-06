@@ -32,22 +32,6 @@
                     <ValidationMessage For="() => departmentPost!.Name" class="mt-0.5 block text-[11px] text-rose-600 dark:text-rose-300" />
                 </div>
 
-                @if (DepartmentUsers?.Any() == true)
-                {
-                    <div>
-                        <label class="mb-0.5 block text-xs font-medium text-slate-700 dark:text-slate-200">@WebLoc["DepartmentHead"]</label>
-                        <InputSelect class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
-                                     @bind-Value="departmentPost!.HeadUserId"
-                                     disabled="@IsSaving">
-                            <option value="">@WebLoc["NoHead"]</option>
-                            @foreach (var user in DepartmentUsers)
-                            {
-                                <option value="@user.Id">@HeadUserDisplay(user)</option>
-                            }
-                        </InputSelect>
-                    </div>
-                }
-
                 <div class="sm:col-span-2">
                     <label class="mb-0.5 block text-xs font-medium text-slate-700 dark:text-slate-200">Intern notering</label>
                     <InputTextArea class="min-h-20 w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"

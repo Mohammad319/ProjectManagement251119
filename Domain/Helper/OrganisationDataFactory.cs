@@ -33,6 +33,7 @@ namespace Domain.Helper.Organisation
                 Rating = data.Rating,
                 SocialLaborAgreement = data.SocialLaborAgreement,
                 Status = Normalize(data.Status),
+                OrganisationType = Normalize(data.OrganisationType),
                 URL = Normalize(data.URL),
                 WarningReason = Normalize(data.WarningReason)
             };

@@ -1,24 +1,28 @@
 @using Application.Feature.Calculation.TemplateTable.Commands
+@using Microsoft.JSInterop
 @using ProjectManagement.Client.Constant
 @using ProjectManagement.Shared.Constants
 @using ProjectManagement.Shared.DTO.Calculation.Template
+@using System.Text.Json
 @inherits AppComponentBase
+@inject IJSRuntime JS
 
 @if (TemplateColumnUpdate is not null)
 {
-    <section class="space-y-2">
+    <section class="pm-admin-panel overflow-hidden">
         <EditForm Model="@TemplateColumnUpdate"
                   id="@FormId"
                   FormName="@FormId"
                   OnValidSubmit="HandleSubmitAsync"
-                  OnInvalidSubmit="HandleInvalidSubmit">
+                  OnInvalidSubmit="HandleInvalidSubmit"
+                  class="flex h-full min-h-0 flex-col gap-2">
             <DataAnnotationsValidator />
             <FormValidationSummary />
 
-            <div class="rounded-xl border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div class="sticky top-0 z-30 shrink-0 rounded-xl border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
                 <div class="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
                     <div class="min-w-0">
-                        <label class="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-200">@CalcResource.name</label>
+                        <label class="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-200">Namn</label>
                         <InputText class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100" @bind-Value="TemplateColumnUpdate.Name" />
                     </div>
 
@@ -33,6 +37,7 @@
                         <button type="button"
                                 @onclick="BackAsync"
                                 class="inline-flex h-8 w-9 items-center justify-center rounded-md border border-slate-300 bg-white text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-800"
+                                title="Gå tillbaka till mallistan"
                                 disabled="@btnSubmitDisabled">
                             @((MarkupString)Icons.Back)
                         </button>
@@ -40,7 +45,9 @@
                 </div>
             </div>
 
-            <TemplateColumnEditor Columns="TemplateColumnUpdate.Columns" />
+            <div class="min-h-0 flex-1 overflow-hidden">
+                <TemplateColumnEditor Columns="TemplateColumnUpdate.Columns" />
+            </div>
         </EditForm>
     </section>
 }
@@ -54,15 +61,18 @@
 
     private readonly string FormId = $"template-column-control-form-{Guid.NewGuid():N}";
     private bool btnSubmitDisabled;
+    private string InitialSnapshot = string.Empty;
 
     protected override void OnParametersSet()
     {
         TemplateColumnUpdate = new TemplateColumnPostDTO
         {
             Name = TempForm.Name ?? string.Empty,
-            Active = true,
+            Active = TempForm.IsVisible,
             Columns = TemplateDefaults.EnsureNetCalcColumns(TempForm.Columns)
         };
+
+        InitialSnapshot = BuildSnapshot();
     }
 
     private async Task HandleSubmitAsync()
@@ -102,5 +112,21 @@
     private void HandleInvalidSubmit(EditContext _)
         => MHD.Notifications(TempForm.Id > 0 ? ToastType.Update : ToastType.Add, false);
 
-    private Task BackAsync() => Callback.InvokeAsync(false);
+    private async Task BackAsync()
+    {
+        if (HasUnsavedChanges && !await JS.InvokeAsync<bool>("confirm", "Du har osparade ändringar. Vill du lämna utan att spara?"))
+            return;
+
+        await Callback.InvokeAsync(false);
+    }
+
+    private bool HasUnsavedChanges => InitialSnapshot != BuildSnapshot();
+
+    private string BuildSnapshot()
+        => JsonSerializer.Serialize(new
+        {
+            TemplateColumnUpdate.Name,
+            TemplateColumnUpdate.Active,
+            TemplateColumnUpdate.Columns
+        });
 }

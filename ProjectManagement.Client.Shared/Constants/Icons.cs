@@ -16,6 +16,17 @@
         public const string ImportFromCloud = @$"<svg {SVGHeader} fill='none' stroke='currentColor' stroke-width='2'
              stroke-linecap='round' stroke-linejoin='round'><path d='M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 4 16.29' />
                 <line x1='12' y1='12' x2='12' y2='21' /><polyline points='8 17 12 21 16 17' /></svg>";
+
+        // Price lists: a price-tag glyph (no cloud/sync/upload connotations).
+        public const string PriceTag = @$"<svg {SVGHeader} fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
+                <path d='M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z' />
+                <line x1='7' y1='7' x2='7.01' y2='7' /></svg>";
+
+        // Support / help (question mark in a circle).
+        public const string Support = @$"<svg {SVGHeader} fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
+                <circle cx='12' cy='12' r='10' />
+                <path d='M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3' />
+                <line x1='12' y1='17' x2='12.01' y2='17' /></svg>";
         // Permissions
         public const string PermissionKey = "🔑";      // U+1F511
         public const string PermissionShield = "🛡️";  // U+1F6E1

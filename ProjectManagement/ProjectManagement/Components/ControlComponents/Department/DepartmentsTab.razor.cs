@@ -2,10 +2,13 @@ using BlazorMHD.UI.Core.Services;
 using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Services.MHDBlazor;
 using ProjectManagement.Client.Shared.Constants;
+using Domain.DTO.User;
 using Application.Feature.Identity.Department.Commands;
 using Application.Feature.Identity.Department.Queries;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
+using ProjectManagement.Services.UI;
+using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Identity;
 using ProjectManagement.Client.Shared.ResourceFiles.Calculation;
 
@@ -41,11 +44,13 @@ public partial class DepartmentsTab
     }
 
     [Inject] private IJSRuntime JS { get; set; } = default!;
+    [Inject] private IDepartmentUsersViewService DepartmentUsersViewService { get; set; } = default!;
 
     /// <summary>Raised when the user clicks the total-users card so the host can switch to the Användare tab.</summary>
     [Parameter] public EventCallback OnOpenAllUsers { get; set; }
 
     private List<DepartmentDetailsDTO>? Departments;
+    private List<TenantUserDto>? TenantUsers;
     private DepartmentDetailsDTO? SelectedDepartment;
     private int? SelectedDepartmentIdForUsers;
     private bool WithoutDepartmentOnly;
@@ -138,11 +143,33 @@ public partial class DepartmentsTab
         CurrentPage = Math.Min(Math.Max(page, 1), TotalPages);
     }
 
-    protected int TotalUsersCount { get; private set; }
-    protected int TotalProjectsCount => Departments?.Sum(d => d.ProjectsCount) ?? 0;
-    protected int TotalCalculationsCount => Departments?.Sum(d => d.CalculationsCount) ?? 0;
+    protected int FilteredUsersCount => FilteredDepartments.Sum(d => d.UsersCount);
+    protected int FilteredProjectsCount => FilteredDepartments.Sum(d => d.ProjectsCount);
+    protected int FilteredCalculationsCount => FilteredDepartments.Sum(d => d.CalculationsCount);
+    protected int FilteredAdminCount => FilteredDepartmentUsers.Count(u => u.Role == PMRolesConst.Tenant.Admin);
+    protected int FilteredMemberCount => FilteredDepartmentUsers.Count(u => u.Role == PMRolesConst.Tenant.Manger);
+    protected int FilteredViewerCount => FilteredDepartmentUsers.Count(u => u.Role is PMRolesConst.Tenant.User or PMRolesConst.Tenant.Viewer);
     protected bool IsLoadingDepartments { get; private set; }
     protected string? DepartmentLoadError { get; private set; }
+
+    private IReadOnlyList<TenantUserDto> FilteredDepartmentUsers
+    {
+        get
+        {
+            var departmentIds = FilteredDepartments.Select(d => d.Id).ToHashSet();
+            return (TenantUsers ?? Enumerable.Empty<TenantUserDto>())
+                .Where(u => UserDepartmentIds(u).Any(departmentIds.Contains))
+                .ToList();
+        }
+    }
+
+    private static IReadOnlyList<int> UserDepartmentIds(TenantUserDto user)
+    {
+        if (user.DepartmentIds.Count > 0)
+            return user.DepartmentIds;
+
+        return user.DepartmentId.HasValue ? [user.DepartmentId.Value] : [];
+    }
 
     protected override async Task OnInitializedAsync()
         => await ReloadDepartmentsAsync();
@@ -154,7 +181,7 @@ public partial class DepartmentsTab
             IsLoadingDepartments = true;
             DepartmentLoadError = null;
             Departments = await Dispatcher.Send(new GetDepartmentsQuery());
-            TotalUsersCount = await Dispatcher.Send(new GetTenantUsersCountQuery());
+            TenantUsers = await DepartmentUsersViewService.GetUsersAsync(null);
         }
         catch (Exception ex)
         {

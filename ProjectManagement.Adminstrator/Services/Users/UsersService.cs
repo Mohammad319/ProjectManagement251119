@@ -181,6 +181,8 @@ namespace ProjectManagement.Adminstrator.Services.Users
                 await SeedProjectLookupsAsync(dataAccess);
                 await SeedCalculationStatusesAsync(dataAccess);
                 await SeedProjectStatusesAsync(dataAccess);
+                await SeedTemplatesAsync(dataAccess);
+                await SeedTemplateColumnsAsync(dataAccess);
                 await SaveCountingAsync(dataAccess, result);
 
                 await transaction.CommitAsync();
@@ -479,6 +481,34 @@ namespace ProjectManagement.Adminstrator.Services.Users
                     string.IsNullOrWhiteSpace(match.Code) ? d.Code : match.Code,
                     d.IsDefault,
                     d.IsSystemDefault || match.IsSystemDefault);
+            }
+        }
+
+        // Standard, read-only appearance templates (company-level, DepartmentId = null). Idempotent by name.
+        private static async Task SeedTemplatesAsync(ShardingSingleDbContext ctx)
+        {
+            var existing = await ctx.Templates.Where(x => !x.DepartmentId.HasValue).ToListAsync();
+            foreach (var (name, dark) in TenantSeedCatalog.StandardAppearanceTemplates)
+            {
+                if (existing.Any(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase)))
+                    continue;
+
+                var entity = new TemplateEntity(name, true, null);
+                entity.UpdateMetadata(TenantSeedCatalog.BuildAppearance(dark));
+                ctx.Templates.Add(entity);
+            }
+        }
+
+        // Standard, read-only column templates (company-level, DepartmentId = null). Idempotent by name.
+        private static async Task SeedTemplateColumnsAsync(ShardingSingleDbContext ctx)
+        {
+            var existing = await ctx.TemplateColumns.Where(x => !x.DepartmentId.HasValue).ToListAsync();
+            foreach (var seed in TenantSeedCatalog.StandardColumnTemplates)
+            {
+                if (existing.Any(x => string.Equals(x.Name, seed.Name, StringComparison.OrdinalIgnoreCase)))
+                    continue;
+
+                ctx.TemplateColumns.Add(new TemplateColumnEntity(seed.Name, true, null, TenantSeedCatalog.BuildColumns(seed.Columns)));
             }
         }
 

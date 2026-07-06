@@ -45,7 +45,17 @@ else
 
         @if (VisibleApplications.Count == 0)
         {
-            <div class="rounded-lg border border-dashed border-slate-300 px-3 py-6 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300">@ResourceApp.notFoundData</div>
+            <div class="flex flex-col items-center gap-2 rounded-lg border border-dashed border-slate-300 px-4 py-10 text-center dark:border-slate-700">
+                <div class="text-sm font-semibold text-slate-700 dark:text-slate-200">Det finns inga egenkontrollmallar ännu.</div>
+                <div class="max-w-md text-sm text-slate-500 dark:text-slate-400">Skapa checklistor för kalkyl, anbud, överlämning eller riskanalys.</div>
+                <button @onclick="NewAppAsync"
+                        class="pm-btn pm-btn-success mt-2"
+                        type="button"
+                        disabled="@_isOpeningCreateDialog">
+                    @((MarkupString)Icons.Plus2)
+                    <span class="ml-1.5">Skapa första egenkontrollmallen</span>
+                </button>
+            </div>
         }
         else
         {
@@ -55,8 +65,10 @@ else
                         <tr>
                             <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:280px;">Åtgärder</th>
                             <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:170px;">@ResourceApp.lastUpdate</th>
-                            <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:170px;">Typ</th>
-                            <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:110px;">Sektioner</th>
+                            <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:150px;">Typ</th>
+                            <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:120px;">Koppling</th>
+                            <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:150px;">Avdelning</th>
+                            <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:100px;">Sektioner</th>
                             <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:140px;">Kontrollpunkter</th>
                             <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:110px;">Status</th>
                             <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200">@CalcResource.name</th>
@@ -68,6 +80,12 @@ else
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60">
                                 <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200">
                                     <div class="flex items-center gap-2">
+                                        <button @onclick="() => PreviewApplication(application)"
+                                                class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 transition hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                                                type="button"
+                                                title="Förhandsgranska som användare">
+                                            @((MarkupString)Icons.EyeIcon)
+                                        </button>
                                         <button @onclick="() => OpenApplication(application)"
                                                 class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-amber-300 bg-amber-50 text-amber-600 transition hover:bg-amber-100 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-300 dark:hover:bg-amber-900/50"
                                                 type="button"
@@ -90,6 +108,8 @@ else
                                 </td>
                                 <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200">@application.LastUpdate.ToString("dd.MM.yyyy HH.mm")</td>
                                 <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200">@application.Data.TemplateType</td>
+                                <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200">@application.Data.LinkType</td>
+                                <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200">@DepartmentName(application)</td>
                                 <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200">@SectionCount(application)</td>
                                 <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200">@application.Data.Rows.Count</td>
                                 <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200">
@@ -117,6 +137,12 @@ else
                         <div class="mt-1 text-xs text-slate-500 dark:text-slate-400">@application.Data.TemplateType · @(application.Data.IsSystemTemplate ? "Standardmall" : "Egen mall")</div>
                         <div class="mt-1 text-xs text-slate-500 dark:text-slate-400">@ResourceApp.lastUpdate: @application.LastUpdate.ToString("dd.MM.yyyy HH.mm")</div>
                         <div class="mt-2 flex items-center gap-2">
+                            <button @onclick="() => PreviewApplication(application)"
+                                    class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 transition hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                                    type="button"
+                                    title="Förhandsgranska som användare">
+                                @((MarkupString)Icons.EyeIcon)
+                            </button>
                             <button @onclick="() => OpenApplication(application)"
                                     class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-amber-300 bg-amber-50 text-amber-600 transition hover:bg-amber-100 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-300 dark:hover:bg-amber-900/50"
                                     type="button">

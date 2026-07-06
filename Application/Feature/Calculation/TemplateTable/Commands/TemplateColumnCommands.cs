@@ -53,4 +53,14 @@ namespace Application.Feature.Calculation.TemplateTable.Commands
         public Task<TemplateColumnModelDTO?> Handle(SetDefaultTemplateColumnCommand request, CancellationToken ct)
             => service.SetDefaultAsync(request.CalculationId, request.TemplateColumnId, request.DepartmentId, ct);
     }
+
+    public sealed record SetScopeDefaultTemplateColumnCommand(int Id, int? DepartmentId)
+        : IRequest<bool>;
+
+    public sealed class SetScopeDefaultTemplateColumnCommandHandler(ITemplateColumnCommandService service)
+        : IRequestHandler<SetScopeDefaultTemplateColumnCommand, bool>
+    {
+        public Task<bool> Handle(SetScopeDefaultTemplateColumnCommand request, CancellationToken ct)
+            => service.SetScopeDefaultAsync(request.Id, request.DepartmentId, ct);
+    }
 }

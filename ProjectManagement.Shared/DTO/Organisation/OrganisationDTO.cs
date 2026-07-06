@@ -38,6 +38,11 @@ namespace ProjectManagement.Shared.DTO.Organisation
         public string PIDNumber { get; set; } = string.Empty;
         public string IDNumber { get; set; } = string.Empty;
 
+        /// <summary>Person-/organisationstyp as a fixed catalog value (see <see cref="OrganisationTypeCatalog"/>).
+        /// Stored in the metadata JSON so no schema change is needed; replaces the legacy free-form
+        /// <c>OrganisationTypeId</c> lookup that let tenants seed nonsense values like city names.</summary>
+        public string OrganisationType { get; set; } = string.Empty;
+
         [Phone(ErrorMessage = ErrorsMessages.Phone), DataType(DataType.PhoneNumber, ErrorMessage = ErrorsMessages.Phone)]
         [MaxLength(30, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string Phone { get; set; } = string.Empty;
@@ -67,6 +72,7 @@ namespace ProjectManagement.Shared.DTO.Organisation
                 WarningReason = MetadataCloneHelper.CopyText(WarningReason),
                 PIDNumber = MetadataCloneHelper.CopyText(PIDNumber),
                 IDNumber = MetadataCloneHelper.CopyText(IDNumber),
+                OrganisationType = MetadataCloneHelper.CopyText(OrganisationType),
                 Phone = MetadataCloneHelper.CopyText(Phone),
                 Mobile = MetadataCloneHelper.CopyText(Mobile),
                 Notes = MetadataCloneHelper.CloneStrings(Notes),
@@ -175,6 +181,12 @@ namespace ProjectManagement.Shared.DTO.Organisation
         {
             get => Data.IDNumber;
             set => Data.IDNumber = MetadataCloneHelper.CopyText(value);
+        }
+
+        public string OrganisationType
+        {
+            get => Data.OrganisationType;
+            set => Data.OrganisationType = MetadataCloneHelper.CopyText(value);
         }
 
         [Phone(ErrorMessage = ErrorsMessages.Phone), DataType(DataType.PhoneNumber, ErrorMessage = ErrorsMessages.Phone)]

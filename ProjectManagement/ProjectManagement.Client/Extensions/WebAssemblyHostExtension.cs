@@ -15,7 +15,7 @@ namespace ProjectManagement.Client.Extensions
 
             CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("sv-SE");
             CultureInfo.DefaultThreadCurrentUICulture = string.IsNullOrWhiteSpace(uiCultureCode)
-                ? new CultureInfo("en-US")
+                ? new CultureInfo("sv-SE")
                 : new CultureInfo(uiCultureCode);
         }
     }

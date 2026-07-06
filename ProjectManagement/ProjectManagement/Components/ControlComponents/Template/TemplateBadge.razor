@@ -1,0 +1,17 @@
+<span class="@BadgeClass">@Text</span>
+
+@code {
+    [Parameter] public string Text { get; set; } = string.Empty;
+    [Parameter] public string Tone { get; set; } = "slate";
+
+    private string BadgeClass => Tone switch
+    {
+        "amber" => BaseClass + " border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-200",
+        "blue" => BaseClass + " border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-200",
+        "emerald" => BaseClass + " border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-200",
+        "rose" => BaseClass + " border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-200",
+        _ => BaseClass + " border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+    };
+
+    private const string BaseClass = "inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium";
+}

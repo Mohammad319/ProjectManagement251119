@@ -9,7 +9,7 @@
 
 @if (PostCompany is not null)
 {
-    <div class="space-y-1 px-2 text-sm">
+    <div class="flex flex-col text-sm">
 
         @if (SimilarOrganisations is { Count: > 0 })
         {
@@ -36,30 +36,45 @@
             </div>
         }
 
-        <EditForm Model="@PostCompany" OnSubmit="HandleSubmitAsync" id="@DialogFormId">
-            <DataAnnotationsValidator />
+        <div class="shrink-0">
+            <ul class="mb-2 flex flex-wrap gap-1 border-b border-slate-200 pb-2 dark:border-slate-700" role="tablist">
+                @foreach (var tab in Tabs)
+                {
+                    <li class="mr-2" role="presentation">
+                        <button type="button"
+                                class="@(Part == tab.Id ? "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition bg-sky-600 text-white dark:bg-sky-500" : "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700")"
+                                @onclick="() => Part = tab.Id">
+                            @tab.Label
+                            @if (TabHasError(tab.Id))
+                            {
+                                <span class="inline-flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white"
+                                      title="Fliken har obligatoriska fält som saknas">!</span>
+                            }
+                        </button>
+                    </li>
+                }
+            </ul>
 
-            <div class="flex justify-between">
-                <ul class="mb-2 flex flex-wrap gap-1 border-b border-slate-200 pb-2 dark:border-slate-700" role="tablist">
-                    @foreach (var tab in Tabs)
-                    {
-                        <li class="mr-2" role="presentation">
-                            <button type="button"
-                                    class="@(Part == tab.Id ? "rounded-md px-3 py-1.5 text-sm font-medium transition bg-sky-600 text-white dark:bg-sky-500" : "rounded-md px-3 py-1.5 text-sm font-medium transition bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700")"
-                                    @onclick="() => Part = tab.Id">
-                                @tab.Label
-                            </button>
-                        </li>
-                    }
-                </ul>
-            </div>
+            @if (!string.IsNullOrWhiteSpace(SaveError))
+            {
+                <div class="mb-2 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-800/60 dark:bg-red-950/30 dark:text-red-300">
+                    @SaveError
+                </div>
+            }
+        </div>
+
+        <div class="org-form-content overflow-y-auto pr-1">
+            @* ContactsUI (Part 4) hosts its own EditForm, so it must stay a sibling of this EditForm
+               — nesting <form> elements is invalid HTML. The footer Save button submits via form=id. *@
+            <EditForm Model="@PostCompany" OnSubmit="HandleSubmitAsync" id="@DialogFormId">
+                <DataAnnotationsValidator />
 
             @if (Part == 1)
             {
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div class="md:col-span-2">
-                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.name</label>
-                        <InputText class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="PostCompany.Name" />
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.name <span class="text-red-500">*</span></label>
+                        <InputText class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="PostCompany.Name" @ref="NameInputRef" />
                         @if (!string.IsNullOrWhiteSpace(NameValidationError))
                         {
                             <div class="mt-1 text-sm text-red-600 dark:text-red-400">@NameValidationError</div>
@@ -78,32 +93,34 @@
                         <ValidationMessage For="@(() => PostCompany.PIDNumber)" />
                     </div>
 
-                    @if (CustomerGroups is not null)
-                    {
-                        <div>
-                            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.PersonOrganisationType</label>
-                            <MhdFormSelect TValue="int?"
-                                           @bind-Value="PostCompany.OrganisationTypeID"
-                                           Options="OrganisationTypeOptions"
-                                           Placeholder="Välj person-/organisationstyp" />
-                        </div>
-                    }
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.PersonOrganisationType</label>
+                        <MhdFormSelect TValue="string"
+                                       @bind-Value="PostCompany.OrganisationType"
+                                       Options="OrganisationTypeOptions"
+                                       Placeholder="Välj person-/organisationstyp"
+                                       FixedPopup="true" />
+                    </div>
 
                     <div>
-                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.status</label>
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.status <span class="text-red-500">*</span></label>
                         <MhdFormSelect TValue="string"
                                        Value="PostCompany.Status"
                                        ValueChanged="OnStatusChanged"
                                        Options="StatusOptions"
                                        Placeholder="Välj status"
-                                       ShowColorDot="true" />
-                        <ValidationMessage For="@(() => PostCompany.Status)" />
+                                       ShowColorDot="true"
+                                       FixedPopup="true" />
+                        @if (!string.IsNullOrWhiteSpace(StatusValidationError))
+                        {
+                            <div class="mt-1 text-sm text-red-600 dark:text-red-400">@StatusValidationError</div>
+                        }
                     </div>
 
                     @if (IsWarningStatus)
                     {
                         <div class="md:col-span-2">
-                            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Orsak till varning</label>
+                            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Orsak till varning <span class="text-red-500">*</span></label>
                             <InputTextArea class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900"
                                            @bind-Value="PostCompany.WarningReason"
                                            placeholder="Skriv varför denna kund/leverantör har varning..." />
@@ -115,9 +132,31 @@
                     }
 
                     <div>
-                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.website</label>
-                        <InputText class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="PostCompany.URL" />
-                        <ValidationMessage For="@(() => PostCompany.URL)" />
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Huvudgrupp <span class="text-red-500">*</span></label>
+                        <MhdFormSelect TValue="int?"
+                                       @bind-Value="SelectedMainGroupId"
+                                       Options="MainGroupOptions"
+                                       Placeholder="Välj huvudgrupp"
+                                       FixedPopup="true" />
+                        @if (!string.IsNullOrWhiteSpace(GroupValidationError))
+                        {
+                            <div class="mt-1 text-sm text-red-600 dark:text-red-400">@GroupValidationError</div>
+                        }
+                    </div>
+
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Undergrupp</label>
+                        <MhdFormSelect TValue="int"
+                                       @bind-Value="PostCompany.CategoryId"
+                                       Options="SubGroupOptions"
+                                       Placeholder="@(CategorySelected is null ? "Välj huvudgrupp först" : "Välj undergrupp")"
+                                       Disabled="@(CategorySelected is null)"
+                                       FixedPopup="true" />
+                    </div>
+
+                    <div class="flex items-center gap-2 py-1 md:col-span-2">
+                        <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 dark:border-slate-600 dark:bg-slate-800" @bind-Value="PostCompany.IsVisible" />
+                        <label class="text-sm text-slate-700 dark:text-slate-200">Visa i listor</label>
                     </div>
 
                     <div>
@@ -136,6 +175,12 @@
                         <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.mobile</label>
                         <InputText class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="PostCompany.Mobile" />
                         <ValidationMessage For="@(() => PostCompany.Mobile)" />
+                    </div>
+
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.website</label>
+                        <InputText class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="PostCompany.URL" />
+                        <ValidationMessage For="@(() => PostCompany.URL)" />
                     </div>
                 </div>
 
@@ -202,12 +247,6 @@
                     </div>
 
                     <div>
-                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceLoc.dateInvoiceControl</label>
-                        <InputDate class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="PostCompany.InvoiceVerificationDate" />
-                        <ValidationMessage For="@(() => PostCompany.InvoiceVerificationDate)" />
-                    </div>
-
-                    <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceLoc.dateOfControl</label>
                         <InputDate class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="PostCompany.VerificationDate" />
                         <ValidationMessage For="@(() => PostCompany.VerificationDate)" />
@@ -234,44 +273,22 @@
             }
             else if (Part == 3)
             {
-                <div class="mb-1 grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div class="flex items-center gap-2 py-1 md:col-span-2">
-                        <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 dark:border-slate-600 dark:bg-slate-800" @bind-Value="PostCompany.IsVisible" />
-                        <label class="text-sm text-slate-700 dark:text-slate-200">@ResourceApp.isVisible</label>
-                    </div>
-
-                    <div>
-                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Huvudgrupp</label>
-                        <MhdFormSelect TValue="int?"
-                                       @bind-Value="SelectedMainGroupId"
-                                       Options="MainGroupOptions"
-                                       Placeholder="Välj huvudgrupp" />
-                    </div>
-
-                    @if (CategorySelected is not null)
-                    {
-                        <div>
-                            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Undergrupp</label>
-                            <MhdFormSelect TValue="int"
-                                           @bind-Value="PostCompany.CategoryId"
-                                           Options="SubGroupOptions"
-                                           Placeholder="Välj undergrupp" />
-                            <ValidationMessage For="@(() => PostCompany.CategoryId)" />
-                        </div>
-                    }
-                </div>
+                <p class="mb-3 text-sm text-slate-500 dark:text-slate-400">
+                    Adressuppgifter för kunden/leverantören. Lägg till en eller flera adresser.
+                </p>
 
                 @if (PostCompany.Address is not null)
                 {
                     <SharedAddressUI Address="PostCompany.Address" />
                 }
             }
-        </EditForm>
+            </EditForm>
 
-        @if (Part == 4)
-        {
-            <ContactsUI Contacts="PostCompany.Contacts" />
-        }
+            @if (Part == 4)
+            {
+                <ContactsUI Contacts="PostCompany.Contacts" />
+            }
+        </div>
     </div>
 
 }

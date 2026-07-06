@@ -99,7 +99,7 @@ namespace Persistence.Service.CalculationItems.Template
                 !await context.Department.AsNoTracking().AnyAsync(x => x.Id == targetDepartmentId.Value, ct))
                 return null;
 
-            var copy = new TemplateEntity($"Kopia av {source.Name}", true, targetDepartmentId);
+            var copy = new TemplateEntity($"Kopia av {DisplayStandardName(source.Name)}", true, targetDepartmentId);
             copy.UpdateMetadata(source.GetMetadataSnapshot());
 
             context.Templates.Add(copy);
@@ -139,5 +139,45 @@ namespace Persistence.Service.CalculationItems.Template
                 ? template.ToModel()
                 : new TemplateModelDTO { Id = 0, Name = calc.Name };
         }
+
+        public async Task<bool> SetScopeDefaultAsync(int id, int? departmentId, CancellationToken ct)
+        {
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            var target = await context.Templates
+                .FirstOrDefaultAsync(
+                    x => x.Id == id &&
+                         (departmentId.HasValue
+                             ? x.DepartmentId == departmentId.Value
+                             : !x.DepartmentId.HasValue),
+                    ct);
+
+            if (target is null)
+                return false;
+
+            // Only one standardval per scope: clear the flag on the current default(s) in the same scope.
+            var siblings = await context.Templates
+                .Where(x => x.IsDefault && x.Id != id &&
+                            (departmentId.HasValue
+                                ? x.DepartmentId == departmentId.Value
+                                : !x.DepartmentId.HasValue))
+                .ToListAsync(ct);
+
+            foreach (var sibling in siblings)
+                sibling.SetDefault(false);
+
+            target.SetDefault(true);
+            await context.SaveChangesAsync(ct);
+            return true;
+        }
+
+        private static string DisplayStandardName(string name)
+            => name.Trim() switch
+            {
+                "Mall01" => "Standard ljus",
+                "Mall02" => "Standard mörk",
+                "Mall03" => "Utskrift / PDF",
+                _ => name
+            };
     }
 }

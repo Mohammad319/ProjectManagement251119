@@ -1,8 +1,6 @@
 using ProjectManagement.Client.Services.MHDBlazor;
 using ProjectManagement.Shared;
 using Application.Feature.Identity.Department.Commands;
-using Application.Feature.Identity.Department.Queries;
-using Domain.DTO.User;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.Extensions.Localization;
@@ -25,14 +23,11 @@ public partial class CreateDepartment : AppComponentBase
     protected EditContext? editContext;
     protected bool IsSaving;
 
-    // Users of the department being edited, used to pick a department head.
-    protected List<TenantUserDto>? DepartmentUsers;
-
     private int _loadedId;
     private string? _loadedName;
     private string? _loadedDesc;
 
-    protected override async Task OnParametersSetAsync()
+    protected override Task OnParametersSetAsync()
     {
         var id = DepartmentList?.Id ?? 0;
         var name = DepartmentList?.Name ?? string.Empty;
@@ -43,7 +38,7 @@ public partial class CreateDepartment : AppComponentBase
             _loadedName == name &&
             _loadedDesc == desc)
         {
-            return;
+            return Task.CompletedTask;
         }
 
         _loadedId = id;
@@ -60,16 +55,7 @@ public partial class CreateDepartment : AppComponentBase
 
         editContext = new EditContext(departmentPost);
 
-        // The head can only be one of the department's own users, available when editing.
-        DepartmentUsers = id > 0
-            ? await Dispatcher.Send(new GetUserssQuery(id))
-            : null;
-    }
-
-    protected string HeadUserDisplay(TenantUserDto user)
-    {
-        var fullName = string.Join(' ', new[] { user.Firstname, user.Lastname }.Where(x => !string.IsNullOrWhiteSpace(x)));
-        return string.IsNullOrWhiteSpace(fullName) ? user.Email ?? user.Username ?? "—" : fullName;
+        return Task.CompletedTask;
     }
 
     protected async Task Close()

@@ -92,6 +92,15 @@ public static class ServiceCollectionExtensions
             options.SupportedCultures = [.. supportedCultures.Select(CultureInfo.GetCultureInfo)];
             options.SupportedUICultures = [.. supportedCultures.Select(CultureInfo.GetCultureInfo)];
             options.ApplyCurrentCultureToResponseHeaders = true;
+
+            // Default to Swedish. Only an explicit user choice (query string or the culture cookie set
+            // by the language toggle) switches away from it — the browser's Accept-Language header must
+            // NOT silently force English, otherwise SSR + interactive-server pages render in English.
+            options.RequestCultureProviders =
+            [
+                new QueryStringRequestCultureProvider(),
+                new CookieRequestCultureProvider()
+            ];
         });
 
         // Response compression

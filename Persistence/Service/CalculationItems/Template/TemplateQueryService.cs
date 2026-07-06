@@ -40,9 +40,47 @@ namespace Application.Services.CalculationItems.TemplateTable
                 {
                     Id = x.Id,
                     Name = x.Name,
-                    DepartmentId = x.DepartmentId
+                    DepartmentId = x.DepartmentId,
+                    IsVisible = x.IsVisible,
+                    IsDefault = x.IsDefault
                 })
                 .ToListAsync(ct);
+        }
+
+        // Standardval used for a new calculation when it has no own choice: department default first, then
+        // the company (no-department) default, then the seeded system default, then none.
+        private const string SystemDefaultName = "Standard ljus";
+
+        public async Task<int?> ResolveDefaultIdAsync(int? departmentId, CancellationToken ct = default)
+        {
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            if (departmentId.HasValue)
+            {
+                var deptDefault = await context.Templates
+                    .AsNoTracking()
+                    .Where(x => x.DepartmentId == departmentId.Value && x.IsDefault && x.IsVisible)
+                    .Select(x => (int?)x.Id)
+                    .FirstOrDefaultAsync(ct);
+
+                if (deptDefault.HasValue)
+                    return deptDefault;
+            }
+
+            var companyDefault = await context.Templates
+                .AsNoTracking()
+                .Where(x => !x.DepartmentId.HasValue && x.IsDefault && x.IsVisible)
+                .Select(x => (int?)x.Id)
+                .FirstOrDefaultAsync(ct);
+
+            if (companyDefault.HasValue)
+                return companyDefault;
+
+            return await context.Templates
+                .AsNoTracking()
+                .Where(x => !x.DepartmentId.HasValue && x.Name == SystemDefaultName)
+                .Select(x => (int?)x.Id)
+                .FirstOrDefaultAsync(ct);
         }
     }
 }

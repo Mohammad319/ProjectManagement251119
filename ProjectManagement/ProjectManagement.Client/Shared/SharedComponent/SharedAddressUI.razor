@@ -1,45 +1,62 @@
-﻿@using ProjectManagement.Shared.DTO.App
+@using ProjectManagement.Shared.DTO.App
 @inherits AppComponentBase
 
 @if (Address != null)
 {
+    <div class="mb-2 flex items-center justify-end">
+        <button type="button"
+                class="inline-flex items-center gap-1.5 rounded-md bg-sky-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-400"
+                @onclick="() => Address.Add(new AddressDTO())">
+            @((MarkupString)Icons.Plus)
+            <span>Lägg till adress</span>
+        </button>
+    </div>
+
     <div class="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
         <table class="min-w-full text-sm text-slate-700 dark:text-slate-200">
             <thead class="bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-100">
                 <tr>
-                    <th class="px-3 py-2 text-start font-semibold">
-                        <button type="button"
-                                class="inline-flex h-7 w-7 items-center justify-center rounded-md bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-400"
-                                @onclick="() => Address.Add(new AddressDTO())">
-                            @((MarkupString)Icons.Plus)
-                        </button>
-                    </th>
+                    <th class="px-3 py-2 text-start font-semibold">@ResourceIdentity.street</th>
+                    <th class="px-3 py-2 text-start font-semibold">@ResourceIdentity.zipCode</th>
+                    <th class="px-3 py-2 text-start font-semibold">@ResourceIdentity.city</th>
                     <th class="px-3 py-2 text-start font-semibold">@ResourceIdentity.country</th>
                     <th class="px-3 py-2 text-start font-semibold">@ResourceIdentity.region</th>
-                    <th class="px-3 py-2 text-start font-semibold">@ResourceIdentity.city</th>
-                    <th class="px-3 py-2 text-start font-semibold">@ResourceIdentity.zipCode</th>
-                    <th class="px-3 py-2 text-start font-semibold">@ResourceIdentity.street</th>
                     <th class="px-3 py-2 text-start font-semibold">@ResourceIdentity.build</th>
+                    <th class="px-3 py-2 text-end font-semibold"></th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-200 bg-white dark:divide-slate-700 dark:bg-slate-900">
-                @foreach (var add in Address)
+                @if (Address.Count == 0)
                 {
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/70">
-                        <td class="px-3 py-2">
-                            <button type="button"
-                                    class="inline-flex h-7 w-7 items-center justify-center rounded-md bg-rose-600 text-white hover:bg-rose-700 dark:bg-rose-500 dark:hover:bg-rose-400"
-                                    @onclick="() => Remove(add)">
-                                @((MarkupString)@Icons.DeleteSVG)
-                            </button>
+                    <tr>
+                        <td colspan="7" class="px-3 py-4 text-center text-sm text-slate-500 dark:text-slate-400">
+                            Ingen adress tillagd ännu.
                         </td>
-                        <td class="px-3 py-2"><input class="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" type="text" @bind="add.Country" /></td>
-                        <td class="px-3 py-2"><input class="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" type="text" @bind="add.Region" /></td>
-                        <td class="px-3 py-2"><input class="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" type="text" @bind="add.City" /></td>
-                        <td class="px-3 py-2"><input class="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" type="text" @bind="add.ZIPCode" /></td>
-                        <td class="px-3 py-2"><input class="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" type="text" @bind="add.Street" /></td>
-                        <td class="px-3 py-2"><input class="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" type="text" @bind="add.Nr" /></td>
                     </tr>
+                }
+                else
+                {
+                    @foreach (var add in Address)
+                    {
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/70">
+                            <td class="px-3 py-2"><input class="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" type="text" @bind="add.Street" /></td>
+                            <td class="px-3 py-2"><input class="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" type="text" @bind="add.ZIPCode" /></td>
+                            <td class="px-3 py-2"><input class="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" type="text" @bind="add.City" /></td>
+                            <td class="px-3 py-2"><input class="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" type="text" @bind="add.Country" /></td>
+                            <td class="px-3 py-2"><input class="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" type="text" @bind="add.Region" /></td>
+                            <td class="px-3 py-2"><input class="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" type="text" @bind="add.Nr" /></td>
+                            <td class="px-3 py-2">
+                                <div class="flex items-center justify-end">
+                                    <button type="button"
+                                            class="inline-flex h-7 w-7 items-center justify-center rounded-md bg-rose-600 text-white transition hover:bg-rose-700 dark:bg-rose-500 dark:hover:bg-rose-400"
+                                            title="Ta bort adressrad"
+                                            @onclick="() => Remove(add)">
+                                        @((MarkupString)@Icons.DeleteSVG)
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
                 }
             </tbody>
         </table>

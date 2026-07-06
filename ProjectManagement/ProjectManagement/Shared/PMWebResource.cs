@@ -54,7 +54,7 @@ public class PMWebResource
     public static string SelectOrganisationCategoryHint => GetString(nameof(SelectOrganisationCategoryHint), "Select a category to view organisations.");
 
     public static string DepartmentsTitle => GetString(nameof(DepartmentsTitle), "Departments");
-    public static string DepartmentsDescription => GetString(nameof(DepartmentsDescription), "Manage departments and their users.");
+    public static string DepartmentsDescription => GetString(nameof(DepartmentsDescription), "Create and maintain departments, and see user, project, and calculation counts per department.");
     public static string NewDepartment => GetString(nameof(NewDepartment), "New department");
     public static string AllUsersHint => GetString(nameof(AllUsersHint), "Open the full tenant-wide user list.");
     public static string QuickAction => GetString(nameof(QuickAction), "Quick action");

@@ -1,4 +1,5 @@
 ﻿@using ProjectManagement.Client.Pages
+@using ProjectManagement.Client.Shared.SharedComponent
 @using ProjectManagement.Shared.DTO.Offer;
 @using ProjectManagement.Shared.DTO.Organisation
 @using ProjectManagement.Shared.Base.Organisation
@@ -36,12 +37,9 @@
 
         <div>
             <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.status</label>
-            <InputSelect @bind-Value="@underContact.Status" class="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
-                @foreach (var level in Enum.GetValues(typeof(UnderContactStatus)))
-                {
-                    <option value="@level">@level.ToString()</option>
-                }
-            </InputSelect>
+            <MhdFormSelect TValue="UnderContactStatus"
+                           @bind-Value="underContact.Status"
+                           Options="ContactStatusOptions" />
         </div>
         <div class="md:col-span-2">
             <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.note</label>
@@ -60,6 +58,11 @@
 @code {
     [Parameter] public UnderContactOrganisationBase underContact { get; set; } = new();
     [Parameter] public EventCallback<UnderContactOrganisationBase> Callback { get; set; }
+
+    private static readonly IReadOnlyList<MhdSelectItem<UnderContactStatus>> ContactStatusOptions =
+        Enum.GetValues<UnderContactStatus>()
+            .Select(s => new MhdSelectItem<UnderContactStatus> { Value = s, Label = s.ToSwedish() })
+            .ToList();
     private async Task SubmitAsync()
     {
         await Callback.InvokeAsync(underContact);

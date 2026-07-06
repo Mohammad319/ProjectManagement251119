@@ -46,6 +46,11 @@ namespace Persistence.Service.CalculationItems.Calculation
 
             dto.StatusId ??= await GetDefaultCalculationStatusIdAsync(db, cancellationToken);
 
+            // Template priority for a brand-new calc: the calc's own choice wins (already on the dto); when
+            // absent, fall back to the department default, then the company default, then the system default.
+            dto.TemplateColumnId ??= await ResolveDefaultColumnTemplateIdAsync(db, effectiveDepartmentId, cancellationToken);
+            dto.TemplateId ??= await ResolveDefaultAppearanceTemplateIdAsync(db, effectiveDepartmentId, cancellationToken);
+
             if (!await ValidateCalculationReferencesAsync(db, dto, projectId, effectiveDepartmentId, null, cancellationToken))
                 return 0;
 
@@ -911,6 +916,57 @@ namespace Persistence.Service.CalculationItems.Calculation
                 .OrderBy(x => x.SortOrder)
                 .Select(x => (int?)x.Id)
                 .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        // Standardval fallbacks for a new calc, in priority order: department default → company default →
+        // seeded system default. The names must match TenantSeedCatalog's standard templates.
+        private const string SystemDefaultColumnTemplateName = "Standard nettokalkyl";
+        private const string SystemDefaultAppearanceTemplateName = "Standard ljus";
+
+        private static async Task<int?> ResolveDefaultColumnTemplateIdAsync(
+            ShardingSingleDbContext db, int? departmentId, CancellationToken ct)
+        {
+            if (departmentId.HasValue)
+            {
+                var dept = await db.TemplateColumns.AsNoTracking()
+                    .Where(x => x.DepartmentId == departmentId.Value && x.IsDefault && x.IsVisible)
+                    .Select(x => (int?)x.Id).FirstOrDefaultAsync(ct);
+                if (dept.HasValue)
+                    return dept;
+            }
+
+            var company = await db.TemplateColumns.AsNoTracking()
+                .Where(x => !x.DepartmentId.HasValue && x.IsDefault && x.IsVisible)
+                .Select(x => (int?)x.Id).FirstOrDefaultAsync(ct);
+            if (company.HasValue)
+                return company;
+
+            return await db.TemplateColumns.AsNoTracking()
+                .Where(x => !x.DepartmentId.HasValue && x.Name == SystemDefaultColumnTemplateName)
+                .Select(x => (int?)x.Id).FirstOrDefaultAsync(ct);
+        }
+
+        private static async Task<int?> ResolveDefaultAppearanceTemplateIdAsync(
+            ShardingSingleDbContext db, int? departmentId, CancellationToken ct)
+        {
+            if (departmentId.HasValue)
+            {
+                var dept = await db.Templates.AsNoTracking()
+                    .Where(x => x.DepartmentId == departmentId.Value && x.IsDefault && x.IsVisible)
+                    .Select(x => (int?)x.Id).FirstOrDefaultAsync(ct);
+                if (dept.HasValue)
+                    return dept;
+            }
+
+            var company = await db.Templates.AsNoTracking()
+                .Where(x => !x.DepartmentId.HasValue && x.IsDefault && x.IsVisible)
+                .Select(x => (int?)x.Id).FirstOrDefaultAsync(ct);
+            if (company.HasValue)
+                return company;
+
+            return await db.Templates.AsNoTracking()
+                .Where(x => !x.DepartmentId.HasValue && x.Name == SystemDefaultAppearanceTemplateName)
+                .Select(x => (int?)x.Id).FirstOrDefaultAsync(ct);
         }
 
         private static string? NormalizeCode(string? code)

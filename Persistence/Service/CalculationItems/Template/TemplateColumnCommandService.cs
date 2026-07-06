@@ -93,7 +93,7 @@ namespace Persistence.Service.CalculationItems.Template
                 !await context.Department.AsNoTracking().AnyAsync(x => x.Id == targetDepartmentId.Value, ct))
                 return null;
 
-            var copy = new TemplateColumnEntity($"Kopia av {source.Name}", true, targetDepartmentId, source.GetColumnsSnapshot());
+            var copy = new TemplateColumnEntity($"Kopia av {DisplayStandardName(source.Name)}", true, targetDepartmentId, source.GetColumnsSnapshot());
             context.TemplateColumns.Add(copy);
             await context.SaveChangesAsync(ct);
 
@@ -129,5 +129,47 @@ namespace Persistence.Service.CalculationItems.Template
 
             return templateColumn?.ToModel();
         }
+
+        public async Task<bool> SetScopeDefaultAsync(int id, int? departmentId, CancellationToken ct)
+        {
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            var target = await context.TemplateColumns
+                .FirstOrDefaultAsync(
+                    x => x.Id == id &&
+                         (departmentId.HasValue
+                             ? x.DepartmentId == departmentId.Value
+                             : !x.DepartmentId.HasValue),
+                    ct);
+
+            if (target is null)
+                return false;
+
+            // Only one standardval per scope: clear the flag on the current default(s) in the same scope.
+            var siblings = await context.TemplateColumns
+                .Where(x => x.IsDefault && x.Id != id &&
+                            (departmentId.HasValue
+                                ? x.DepartmentId == departmentId.Value
+                                : !x.DepartmentId.HasValue))
+                .ToListAsync(ct);
+
+            foreach (var sibling in siblings)
+                sibling.SetDefault(false);
+
+            target.SetDefault(true);
+            await context.SaveChangesAsync(ct);
+            return true;
+        }
+
+        private static string DisplayStandardName(string name)
+            => name.Trim() switch
+            {
+                "Mall C01" => "Kompakt nettokalkyl",
+                "Mall C02" => "Kalkyl ekonomi",
+                "Mall C03" => "Anbud",
+                "Mall C04" => "Produktion",
+                "Mall C05" => "Resurs & CO2",
+                _ => name
+            };
     }
 }

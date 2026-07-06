@@ -1,0 +1,224 @@
+@using ProjectManagement.Shared.Base.Application
+@using ProjectManagement.Shared.DTO.App
+
+@* Read-only "as the user sees it" preview of a self-inspection template. Deliberately hides all
+   admin-only affordances (sort order, visible/collapsed checkboxes, field-type pickers, delete
+   buttons) and shows the clean fill-in view. Nothing here is interactive — every field is disabled. *@
+
+@if (Application is null)
+{
+    <div class="p-4 text-sm text-slate-500 dark:text-slate-400">Ingen mall att förhandsgranska.</div>
+}
+else
+{
+    <div class="space-y-4 text-sm">
+        <div class="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/40">
+            <div class="flex flex-wrap items-center gap-2">
+                <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">@DisplayName</h2>
+                <span class="rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-700 dark:bg-sky-900/40 dark:text-sky-300">@Application.Data.TemplateType</span>
+            </div>
+            @if (!string.IsNullOrWhiteSpace(Purpose))
+            {
+                <p class="mt-2 whitespace-pre-line text-sm text-slate-600 dark:text-slate-300">@Purpose</p>
+            }
+        </div>
+
+        @if (VisibleSections.Count == 0)
+        {
+            <div class="rounded-lg border border-dashed border-slate-300 px-4 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                Mallen innehåller inga sektioner att fylla i ännu.
+            </div>
+        }
+        else
+        {
+            @foreach (var section in VisibleSections)
+            {
+                var rows = VisibleRows(section);
+                var columns = ColumnsFor(rows);
+                <section class="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700">
+                    <div class="border-b border-slate-200 bg-slate-100 px-3 py-2 dark:border-slate-700 dark:bg-slate-800/70">
+                        <div class="font-semibold text-slate-800 dark:text-slate-100">@section.Title</div>
+                        @if (!string.IsNullOrWhiteSpace(section.Description))
+                        {
+                            <div class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">@section.Description</div>
+                        }
+                    </div>
+
+                    @if (rows.Count == 0)
+                    {
+                        <div class="px-3 py-3 text-sm text-slate-500 dark:text-slate-400">Inga kontrollpunkter i sektionen.</div>
+                    }
+                    else
+                    {
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full text-sm">
+                                <thead class="bg-white dark:bg-slate-900">
+                                    <tr>
+                                        <th class="px-3 py-2 text-left font-semibold text-slate-600 dark:text-slate-200">Kontrollpunkt</th>
+                                        @foreach (var col in columns)
+                                        {
+                                            <th class="px-3 py-2 text-left font-semibold text-slate-600 dark:text-slate-200">
+                                                @ColumnLabel(col)@if (col.Required) {<span class="text-red-500"> *</span>}
+                                            </th>
+                                        }
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                                    @foreach (var row in rows)
+                                    {
+                                        var rowColumns = OrderedAttributes(row);
+                                        <tr class="align-top">
+                                            <td class="px-3 py-2 text-slate-800 dark:text-slate-100">
+                                                <div class="font-medium">
+                                                    @row.Name@if (row.IsRequired) {<span class="text-red-500"> *</span>}
+                                                </div>
+                                                @if (!string.IsNullOrWhiteSpace(row.HelpText))
+                                                {
+                                                    <div class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">@row.HelpText</div>
+                                                }
+                                            </td>
+                                            @for (var i = 0; i < columns.Count; i++)
+                                            {
+                                                var col = i < rowColumns.Count ? rowColumns[i] : null;
+                                                <td class="px-3 py-2">
+                                                    @if (col is not null)
+                                                    {
+                                                        @RenderField(col)
+                                                    }
+                                                </td>
+                                            }
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </section>
+            }
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public ApplicationDTO? Application { get; set; }
+
+    private string DisplayName => string.IsNullOrWhiteSpace(Application?.Name) ? "Namnlös mall" : Application!.Name;
+    private string Purpose => !string.IsNullOrWhiteSpace(Application?.Data.Purpose)
+        ? Application!.Data.Purpose
+        : (Application?.Data.Description ?? string.Empty);
+
+    private List<SelfInspectionSectionData> VisibleSections
+        => Application is null
+            ? []
+            : Application.Data.Sections
+                .Where(s => s.IsVisible)
+                .OrderBy(s => s.SortOrder)
+                .ThenBy(s => s.Title)
+                .ToList();
+
+    private List<RowDTO> VisibleRows(SelfInspectionSectionData section)
+        => Application is null
+            ? []
+            : Application.Data.Rows
+                .Where(r => r.IsVisible && BelongsToSection(r, section))
+                .OrderBy(r => r.SortOrder)
+                .ThenBy(r => r.Name)
+                .ToList();
+
+    private static bool BelongsToSection(RowDTO row, SelfInspectionSectionData section)
+    {
+        if (row.SectionId != Guid.Empty)
+            return row.SectionId == section.Id;
+
+        // Legacy rows without a section id fall back to matching by title/description.
+        var title = !string.IsNullOrWhiteSpace(row.SectionTitle) ? row.SectionTitle : row.Description;
+        return string.Equals(title?.Trim(), section.Title?.Trim(), StringComparison.OrdinalIgnoreCase);
+    }
+
+    // Header columns are taken from the row that defines the most answer fields so nothing is missed.
+    private static List<AttributeDTO> ColumnsFor(List<RowDTO> rows)
+        => rows
+            .OrderByDescending(r => r.Attributes?.Count ?? 0)
+            .FirstOrDefault()?
+            .Attributes?
+            .OrderBy(a => a.Order)
+            .ToList() ?? [];
+
+    private static List<AttributeDTO> OrderedAttributes(RowDTO row)
+        => row.Attributes?.OrderBy(a => a.Order).ToList() ?? [];
+
+    private static string ColumnLabel(AttributeDTO col)
+        => !string.IsNullOrWhiteSpace(col.Label)
+            ? col.Label
+            : (!string.IsNullOrWhiteSpace(col.FieldTypeLabel) ? col.FieldTypeLabel : "Fält");
+
+    private const string FieldClass =
+        "w-full rounded-md border border-slate-300 bg-slate-50 px-2 py-1 text-sm text-slate-500 dark:border-slate-600 dark:bg-slate-800/60 dark:text-slate-400";
+
+    private RenderFragment RenderField(AttributeDTO col) => builder =>
+    {
+        if (col.IsComputed || string.Equals(col.FieldTypeLabel, "Beräknat fält", StringComparison.OrdinalIgnoreCase))
+        {
+            builder.OpenElement(0, "div");
+            builder.AddAttribute(1, "class", FieldClass + " italic");
+            builder.AddContent(2, "Beräknas automatiskt");
+            builder.CloseElement();
+            return;
+        }
+
+        switch (col.AttributeType)
+        {
+            case AttributeType.Bool:
+                builder.OpenElement(0, "input");
+                builder.AddAttribute(1, "type", "checkbox");
+                builder.AddAttribute(2, "disabled", true);
+                builder.AddAttribute(3, "class", "h-4 w-4 rounded border-slate-300 text-sky-600 dark:border-slate-600");
+                builder.CloseElement();
+                break;
+
+            case AttributeType.TextArea:
+                builder.OpenElement(0, "textarea");
+                builder.AddAttribute(1, "disabled", true);
+                builder.AddAttribute(2, "rows", "2");
+                builder.AddAttribute(3, "placeholder", ColumnLabel(col));
+                builder.AddAttribute(4, "class", FieldClass);
+                builder.CloseElement();
+                break;
+
+            case AttributeType.Select:
+                builder.OpenElement(0, "select");
+                builder.AddAttribute(1, "disabled", true);
+                builder.AddAttribute(2, "class", FieldClass);
+                builder.OpenElement(3, "option");
+                builder.AddContent(4, "Välj…");
+                builder.CloseElement();
+                builder.CloseElement();
+                break;
+
+            default:
+                builder.OpenElement(0, "input");
+                builder.AddAttribute(1, "type", InputType(col.AttributeType));
+                builder.AddAttribute(2, "disabled", true);
+                builder.AddAttribute(3, "placeholder", Placeholder(col));
+                builder.AddAttribute(4, "class", FieldClass);
+                builder.CloseElement();
+                break;
+        }
+    };
+
+    private static string InputType(AttributeType type) => type switch
+    {
+        AttributeType.Int or AttributeType.Double => "number",
+        AttributeType.Date => "date",
+        AttributeType.DateTime => "datetime-local",
+        AttributeType.Time => "time",
+        _ => "text"
+    };
+
+    private static string Placeholder(AttributeDTO col) => col.AttributeType switch
+    {
+        AttributeType.Int or AttributeType.Double => "0",
+        AttributeType.Date => "åååå-mm-dd",
+        _ => ColumnLabel(col)
+    };
+}

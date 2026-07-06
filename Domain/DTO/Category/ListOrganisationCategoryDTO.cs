@@ -14,6 +14,10 @@ namespace Domain.DTO.Category
 
         public int? ParentCategoryId { get; set; }
 
+        /// <summary>Number of customers/suppliers attached directly to this category (huvudgrupp or undergrupp).
+        /// Used by "Hantera grupper" to show usage and to block deletion of groups that are in use.</summary>
+        public int OrganisationCount { get; set; }
+
         [JsonIgnore]
         public OrganisationCategoryEntity? ParentCategory { get; private set; }
 

@@ -1,6 +1,13 @@
 ﻿window.blazorCulture = {
     get: () => localStorage['BlazorCulture'],
-    set: (value) => localStorage['BlazorCulture'] = value
+    set: (value) => {
+        localStorage['BlazorCulture'] = value;
+        // Keep the server culture (SSR + interactive-server components) in sync with the client
+        // toggle by writing the ASP.NET Core culture cookie the CookieRequestCultureProvider reads.
+        document.cookie = '.AspNetCore.Culture=' +
+            encodeURIComponent('c=' + value + '|uic=' + value) +
+            ';path=/;max-age=31536000;samesite=lax';
+    }
 };
 
 window.handleDragOver = function (event) {

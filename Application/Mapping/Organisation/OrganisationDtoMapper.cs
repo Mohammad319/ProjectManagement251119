@@ -23,13 +23,19 @@ namespace Application.Mapping.Organisation
         {
             ArgumentNullException.ThrowIfNull(entity);
 
+            var snapshot = entity.GetMetadataSnapshot();
+
             return new OrganisationDetailsDTO
             {
                 Name = entity.Name,
                 Category = entity.OrganisationCategory?.ParentCategory?.Name ?? string.Empty,
                 SubCategory = entity.OrganisationCategory?.Name ?? string.Empty,
-                Type = entity.OrganisationType?.Name ?? string.Empty,
-                Data = entity.GetMetadataSnapshot()
+                // Prefer the fixed catalog value stored in metadata; fall back to the legacy
+                // OrganisationType lookup name for records created before the switch.
+                Type = !string.IsNullOrWhiteSpace(snapshot.OrganisationType)
+                    ? snapshot.OrganisationType
+                    : entity.OrganisationType?.Name ?? string.Empty,
+                Data = snapshot
             };
         }
     }

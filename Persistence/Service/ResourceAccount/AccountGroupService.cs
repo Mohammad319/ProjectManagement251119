@@ -103,6 +103,88 @@ namespace Persistence.Service.ResourceAccount
             return groups.Select(x => x.Id).ToList();
         }
 
+        public async Task<AccountImportResultDTO> ImportAsync(List<PostAccountGroupWithAccountsDTO> items, bool updateExisting, CancellationToken ct = default)
+        {
+            var result = new AccountImportResultDTO();
+            if (items is null || items.Count == 0)
+            {
+                result.Success = true;
+                return result;
+            }
+
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            // Phase 1 — reuse existing groups by name (tenant scoped by the global query filter) and create
+            // any that are missing, then save so new groups get their Ids before accounts reference them.
+            var groupByName = new Dictionary<string, AccountGroupEntity>(StringComparer.OrdinalIgnoreCase);
+            foreach (var existing in await context.AccountGroup.ToListAsync(ct))
+                groupByName.TryAdd(existing.Name.Trim(), existing);
+
+            foreach (var item in items)
+            {
+                var name = (item.Name ?? string.Empty).Trim();
+                if (name.Length == 0 || groupByName.ContainsKey(name))
+                    continue;
+
+                var group = new AccountGroupEntity(name);
+                context.AccountGroup.Add(group);
+                groupByName[name] = group;
+                result.GroupsCreated++;
+            }
+
+            if (result.GroupsCreated > 0)
+                await context.SaveChangesAsync(ct);
+
+            // Phase 2 — create/skip/update accounts by code within their group.
+            var groupIds = groupByName.Values.Select(g => g.Id).ToList();
+            var seen = new Dictionary<(int GroupId, string Code), AccountEntity>();
+            foreach (var acc in await context.Accounts.Where(a => groupIds.Contains(a.AccountGroupId)).ToListAsync(ct))
+                seen.TryAdd((acc.AccountGroupId, acc.Code.Trim().ToLowerInvariant()), acc);
+
+            foreach (var item in items)
+            {
+                var name = (item.Name ?? string.Empty).Trim();
+                if (name.Length == 0 || !groupByName.TryGetValue(name, out var group))
+                    continue;
+
+                foreach (var acc in item.Accounts ?? [])
+                {
+                    var code = (acc.Account ?? string.Empty).Trim();
+                    var accName = (acc.Name ?? string.Empty).Trim();
+                    if (code.Length == 0 || accName.Length == 0)
+                    {
+                        result.AccountsSkipped++;
+                        continue;
+                    }
+
+                    var key = (group.Id, code.ToLowerInvariant());
+                    if (seen.TryGetValue(key, out var existingAccount))
+                    {
+                        if (updateExisting)
+                        {
+                            existingAccount.Update(code, accName, group.Id, acc.IsVisible, acc.Data);
+                            result.AccountsUpdated++;
+                        }
+                        else
+                        {
+                            result.AccountsSkipped++;
+                        }
+
+                        continue;
+                    }
+
+                    var created = new AccountEntity(code, accName, group.Id, acc.IsVisible, acc.Data);
+                    context.Accounts.Add(created);
+                    seen[key] = created;
+                    result.AccountsCreated++;
+                }
+            }
+
+            await context.SaveChangesAsync(ct);
+            result.Success = true;
+            return result;
+        }
+
         public async Task<bool> UpdateAsync(int id, PostAccountGroupDTO dto, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);

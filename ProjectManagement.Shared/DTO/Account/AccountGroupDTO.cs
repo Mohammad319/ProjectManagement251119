@@ -16,4 +16,14 @@ namespace ProjectManagement.Shared.DTO.Account
         public string Name { get; set; } = string.Empty;
         public List<ListAccountDTO> Accounts { get; set; } = [];
     }
+
+    /// <summary>Outcome of a Kontoplan import (upsert). Used to give the admin a clear summary after Save.</summary>
+    public class AccountImportResultDTO
+    {
+        public bool Success { get; set; }
+        public int GroupsCreated { get; set; }
+        public int AccountsCreated { get; set; }
+        public int AccountsUpdated { get; set; }
+        public int AccountsSkipped { get; set; }
+    }
 }

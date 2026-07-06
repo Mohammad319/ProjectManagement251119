@@ -42,8 +42,6 @@ public partial class UsersIndex : IAsyncDisposable
         ["RowsPerPage"] = "Rader per sida",
         ["SearchPlaceholder"] = "Sök...",
         ["Export"] = "Exportera",
-        ["SelectAll"] = "Markera alla",
-        ["SelectRow"] = "Markera rad",
         ["NoData"] = "Inga rader",
         ["Loading"] = "Laddar",
         ["SortAsc"] = "Sortera stigande",
@@ -136,22 +134,6 @@ public partial class UsersIndex : IAsyncDisposable
             .Select(d => new FilterMultiSelect<int>.Option(d.Id, d.Name ?? "—")),
     ];
 
-    // Batch "Flytta till avdelning" dropdown: "none" removes the department, otherwise the id.
-    protected IReadOnlyList<AppSelect<string>.Option> BulkDepartmentOptions =>
-    [
-        new("none", WebLoc["UsersWithoutDepartmentLabel"].Value),
-        .. (DepartmentsList ?? [])
-            .Select(d => new AppSelect<string>.Option(d.Id.ToString(), d.Name ?? "—")),
-    ];
-
-    // Batch "Ändra roll" dropdown.
-    protected IReadOnlyList<AppSelect<string>.Option> BulkRoleOptions =>
-    [
-        new(PMRolesConst.Tenant.Admin, WebLoc["LevelManager"].Value),
-        new(PMRolesConst.Tenant.Manger, WebLoc["LevelUser"].Value),
-        new(PMRolesConst.Tenant.User, WebLoc["LevelGuest"].Value),
-    ];
-
     /// <summary>Invoked by the filter dropdowns after they mutate a selection set in place.</summary>
     protected async Task OnFilterChangedAsync()
     {
@@ -160,43 +142,21 @@ public partial class UsersIndex : IAsyncDisposable
         await InvokeAsync(StateHasChanged);
     }
 
-    // Bulk-selection state
-    protected HashSet<int> SelectedIds { get; } = new();
     protected List<ListDTO>? DepartmentsList { get; set; }
-
-    // Batch selectors: "" = not chosen. Dept "none" = remove department, otherwise the id as text.
-    protected string BulkDeptValue { get; set; } = string.Empty;
-    protected string BulkRole { get; set; } = string.Empty;
-
-    protected bool BulkMoveChosen => !string.IsNullOrEmpty(BulkDeptValue);
-    protected bool BulkRoleChosen => !string.IsNullOrEmpty(BulkRole);
-
-    /// <summary>Apply is enabled only when exactly one batch action is configured with its value.</summary>
-    protected bool CanApplyBatch => BulkMoveChosen ^ BulkRoleChosen;
-
-    protected async Task ApplyBatchAsync()
-    {
-        if (IsBusy || !CanApplyBatch)
-            return;
-
-        if (BulkMoveChosen)
-            await BulkMoveAsync();
-        else
-            AskBulkRole();
-    }
 
     /// <summary>Accounts considered inactive when their last sign-in is older than this many days.</summary>
     private const int StaleDays = 90;
 
     protected int TotalCount => Users?.Count ?? 0;
+    protected int FilteredCount => FilteredUsers.Count;
     protected int RegisteredCount => Users?.Count(x => x.IsInAuth) ?? 0;
-    protected int LockedCount => Users?.Count(IsLocked) ?? 0;
-    protected int WithoutDepartmentCount => Users?.Count(x => !x.DepartmentId.HasValue) ?? 0;
-    protected int ActiveCount => Users?.Count(IsActive) ?? 0;
-    protected int PendingCount => Users?.Count(IsPending) ?? 0;
-    protected int StaleCount => Users?.Count(IsStale) ?? 0;
-    protected int NoAuthCount => Users?.Count(x => !x.IsInAuth) ?? 0;
-    protected int InactiveCount => Users?.Count(IsDeactivated) ?? 0;
+    protected int LockedCount => FilteredUsers.Count(IsLocked);
+    protected int WithoutDepartmentCount => FilteredUsers.Count(x => GetDepartmentIds(x).Count == 0);
+    protected int ActiveCount => FilteredUsers.Count(IsActive);
+    protected int PendingCount => FilteredUsers.Count(IsPending);
+    protected int StaleCount => FilteredUsers.Count(IsStale);
+    protected int NoAuthCount => FilteredUsers.Count(x => !x.IsInAuth);
+    protected int InactiveCount => FilteredUsers.Count(IsDeactivated);
 
     /// <summary>The tenant's licensed user limit (0 = unknown/not enforced in the UI).</summary>
     protected int TenantMaxUsers { get; private set; }
@@ -208,9 +168,9 @@ public partial class UsersIndex : IAsyncDisposable
     // table shows. Note the "Visare" bucket covers BOTH the Guest tier (Tenant.User) and the
     // separate Viewer role (Tenant.Viewer); the old count only looked at Tenant.User and so
     // reported 0 for tenants whose viewers are on the Tenant.Viewer role.
-    protected int ManagerCount => Users?.Count(x => x.Role == PMRolesConst.Tenant.Admin) ?? 0;
-    protected int MemberCount => Users?.Count(x => x.Role == PMRolesConst.Tenant.Manger) ?? 0;
-    protected int GuestCount => Users?.Count(x => x.Role is PMRolesConst.Tenant.User or PMRolesConst.Tenant.Viewer) ?? 0;
+    protected int ManagerCount => FilteredUsers.Count(x => x.Role == PMRolesConst.Tenant.Admin);
+    protected int MemberCount => FilteredUsers.Count(x => x.Role == PMRolesConst.Tenant.Manger);
+    protected int GuestCount => FilteredUsers.Count(x => x.Role is PMRolesConst.Tenant.User or PMRolesConst.Tenant.Viewer);
 
     protected bool HasActiveFilters =>
         !string.IsNullOrWhiteSpace(SearchTerm)
@@ -233,8 +193,8 @@ public partial class UsersIndex : IAsyncDisposable
         {
             var includeNoDept = DepartmentFilters.Contains(NoDepartmentFilterKey);
             query = query.Where(u =>
-                (u.DepartmentId.HasValue && DepartmentFilters.Contains(u.DepartmentId.Value))
-                || (includeNoDept && !u.DepartmentId.HasValue));
+                GetDepartmentIds(u).Any(DepartmentFilters.Contains)
+                || (includeNoDept && GetDepartmentIds(u).Count == 0));
         }
 
         // Any selected status matches (OR within the dimension).
@@ -249,7 +209,8 @@ public partial class UsersIndex : IAsyncDisposable
                 || MatchesTerm(u.Username, term)
                 || MatchesTerm(u.Firstname, term)
                 || MatchesTerm(u.Lastname, term)
-                || MatchesTerm(u.PhoneNumber, term));
+                || MatchesTerm(u.PhoneNumber, term)
+                || MatchesTerm(GetDepartmentName(u), term));
         }
 
         return query.ToList();
@@ -269,7 +230,7 @@ public partial class UsersIndex : IAsyncDisposable
         "auth" => u.IsInAuth,
         "noauth" => !u.IsInAuth,
         "locked" => IsLocked(u),
-        "nodept" => !u.DepartmentId.HasValue,
+        "nodept" => GetDepartmentIds(u).Count == 0,
         _ => true
     };
 
@@ -416,7 +377,6 @@ public partial class UsersIndex : IAsyncDisposable
                 TenantMaxUsers = await DepartmentUsersViewService.GetTenantMaxUsersAsync(ct);
             DetailsUser = DetailsUser is null ? null : Users.FirstOrDefault(x => x.Id == DetailsUser.Id);
             ActionMenuUser = ActionMenuUser is null ? null : Users.FirstOrDefault(x => x.Id == ActionMenuUser.Id);
-            ResetBatchState();
             InvalidateFilteredUsers();
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
@@ -500,10 +460,30 @@ public partial class UsersIndex : IAsyncDisposable
         await action(user);
     }
 
+    protected IReadOnlyList<int> GetDepartmentIds(TenantUserDto user)
+    {
+        if (user.DepartmentIds.Count > 0)
+            return user.DepartmentIds;
+
+        return user.DepartmentId.HasValue ? [user.DepartmentId.Value] : [];
+    }
+
     protected string GetDepartmentName(TenantUserDto user)
-        => user.DepartmentId.HasValue
-            ? DepartmentsList?.FirstOrDefault(d => d.Id == user.DepartmentId.Value)?.Name ?? "—"
-            : "—";
+    {
+        var names = GetDepartmentIds(user)
+            .Select(id => DepartmentsList?.FirstOrDefault(d => d.Id == id)?.Name)
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .Select(name => name!)
+            .ToList();
+
+        return names.Count == 0 ? "—" : string.Join(", ", names);
+    }
+
+    protected string GetDepartmentDisplayText(TenantUserDto user)
+    {
+        var count = GetDepartmentIds(user).Count;
+        return count > 2 ? $"{count} avdelningar" : GetDepartmentName(user);
+    }
 
     /// <summary>Account status only; lockout is displayed separately in the Inloggningsspärr column.</summary>
     protected string GetAccountStatusLabel(TenantUserDto user)
@@ -589,9 +569,29 @@ public partial class UsersIndex : IAsyncDisposable
     protected bool CanDelete(TenantUserDto user)
         => !IsBusy && !IsLastAdmin(user);
 
-    protected string ActionDisabledTitle(TenantUserDto user, bool enabled, string enabledTitle)
+    protected string ActionDisabledTitle(
+        TenantUserDto user,
+        bool enabled,
+        string enabledTitle,
+        string? disabledTitle = null,
+        string? lastAdminTitle = null)
         => enabled ? enabledTitle
-            : IsLastAdmin(user) ? LastAdminBlockedTooltip
+            : IsLastAdmin(user) ? lastAdminTitle ?? LastAdminBlockedTooltip
+            : disabledTitle ?? string.Empty;
+
+    protected string LockDisabledTitle(TenantUserDto user)
+        => string.IsNullOrWhiteSpace(user.IdAuth) ? "Användaren saknar inloggning."
+            : IsLocked(user) ? "Användaren är redan spärrad."
+            : string.Empty;
+
+    protected string UnlockDisabledTitle(TenantUserDto user)
+        => string.IsNullOrWhiteSpace(user.IdAuth) ? "Användaren saknar inloggning."
+            : !IsLocked(user) ? "Användaren är inte spärrad."
+            : string.Empty;
+
+    protected string DeactivateDisabledTitle(TenantUserDto user)
+        => string.IsNullOrWhiteSpace(user.IdAuth) ? "Användaren saknar inloggning."
+            : IsDeactivated(user) ? "Kontot är redan inaktivt."
             : string.Empty;
 
     private void ShowLastAdminBlocked()
@@ -718,46 +718,6 @@ public partial class UsersIndex : IAsyncDisposable
 
         await InvokeAsync(StateHasChanged);
     }
-
-    #region Selection
-
-    protected bool IsSelected(int id) => SelectedIds.Contains(id);
-
-    protected void ToggleSelected(int id, bool selected)
-    {
-        if (selected)
-            SelectedIds.Add(id);
-        else
-            SelectedIds.Remove(id);
-    }
-
-    protected bool AllFilteredSelected
-        => FilteredUsers.Count > 0 && FilteredUsers.All(u => SelectedIds.Contains(u.Id));
-
-    protected void ToggleSelectAll(bool selected)
-    {
-        foreach (var user in FilteredUsers)
-        {
-            if (selected)
-                SelectedIds.Add(user.Id);
-            else
-                SelectedIds.Remove(user.Id);
-        }
-    }
-
-    protected void ClearSelection() => ResetBatchState();
-
-    private void ResetBatchState()
-    {
-        SelectedIds.Clear();
-        BulkDeptValue = string.Empty;
-        BulkRole = string.Empty;
-    }
-
-    protected IReadOnlyList<TenantUserDto> SelectedUsers
-        => (Users ?? Enumerable.Empty<TenantUserDto>()).Where(u => SelectedIds.Contains(u.Id)).ToList();
-
-    #endregion
 
     #region Lock / unlock (single)
 
@@ -980,9 +940,6 @@ public partial class UsersIndex : IAsyncDisposable
     protected async Task ExportUsersAsync()
         => await ExportUsersAsync(FilteredUsers, "users");
 
-    protected async Task ExportSelectedUsersAsync()
-        => await ExportUsersAsync(SelectedUsers, "selected-users");
-
     private async Task ExportUsersAsync(IEnumerable<TenantUserDto> source, string fileName)
     {
         var rows = source.Select(u => new object?[]
@@ -1014,167 +971,6 @@ public partial class UsersIndex : IAsyncDisposable
         };
 
         await ReportExportInterop.ExportExcelAsync(JS, fileName, PageTitle, columns, rows);
-    }
-
-    #endregion
-
-    #region Bulk actions
-
-    protected void AskBulkLock(bool locked)
-    {
-        var targets = SelectedUsers.Where(u => !string.IsNullOrWhiteSpace(u.IdAuth)).ToList();
-        if (targets.Count == 0)
-        {
-            MHD.Notifications(ToastType.Update, false);
-            return;
-        }
-
-        var message = string.Format(WebLoc["BulkConfirmFormat"].Value, targets.Count);
-        MHD.MessageYesNo(locked ? WebLoc["BulkLock"].Value : WebLoc["BulkUnlock"].Value, message,
-            onYes: EventCallback.Factory.Create(this, () => BulkLockAsync(locked)));
-    }
-
-    protected async Task BulkLockAsync(bool locked)
-    {
-        if (IsBusy)
-            return;
-
-        IsBusy = true;
-        try
-        {
-            await MHD.Modal.CloseAsync();
-            var ids = SelectedUsers
-                .Where(u => !string.IsNullOrWhiteSpace(u.IdAuth))
-                .Select(u => u.IdAuth!)
-                .ToList();
-
-            var result = await TenantUserService.SetLockoutBulkAsync(ids, locked);
-            ShowBulkResult(locked ? WebLoc["BulkLock"].Value : WebLoc["BulkUnlock"].Value, result);
-            await LoadAsync();
-        }
-        finally
-        {
-            IsBusy = false;
-            await InvokeAsync(StateHasChanged);
-        }
-    }
-
-    protected async Task BulkMoveAsync()
-    {
-        if (IsBusy)
-            return;
-
-        var ids = SelectedUsers.Select(u => u.Id).Where(id => id > 0).ToList();
-        if (ids.Count == 0)
-            return;
-
-        int? departmentId = string.Equals(BulkDeptValue, "none", StringComparison.Ordinal)
-            ? null
-            : int.TryParse(BulkDeptValue, out var parsed) ? parsed : (int?)null;
-
-        IsBusy = true;
-        try
-        {
-            var count = await TenantUserService.SetDepartmentAsync(ids, departmentId);
-            MHD.Notifications(ToastType.Update, count > 0);
-            BulkDeptValue = string.Empty;
-            await LoadAsync();
-        }
-        finally
-        {
-            IsBusy = false;
-            await InvokeAsync(StateHasChanged);
-        }
-    }
-
-    protected void AskBulkRole()
-    {
-        if (string.IsNullOrEmpty(BulkRole))
-            return;
-
-        var targets = SelectedUsers.Where(u => !string.IsNullOrWhiteSpace(u.IdAuth)).ToList();
-        if (targets.Count == 0)
-        {
-            MHD.Notifications(ToastType.Update, false);
-            return;
-        }
-
-        var message = string.Format(WebLoc["BulkRoleConfirmFormat"].Value, targets.Count);
-        MHD.MessageYesNo(WebLoc["BulkChangeRole"].Value, message,
-            onYes: EventCallback.Factory.Create(this, BulkRoleAsync));
-    }
-
-    protected async Task BulkRoleAsync()
-    {
-        if (IsBusy || string.IsNullOrEmpty(BulkRole))
-            return;
-
-        IsBusy = true;
-        try
-        {
-            await MHD.Modal.CloseAsync();
-            var ids = SelectedUsers
-                .Where(u => !string.IsNullOrWhiteSpace(u.IdAuth))
-                .Select(u => u.IdAuth!)
-                .ToList();
-
-            var result = await TenantUserService.SetRoleBulkAsync(ids, BulkRole);
-            ShowBulkResult(WebLoc["BulkChangeRole"].Value, result);
-            BulkRole = string.Empty;
-            await LoadAsync();
-        }
-        finally
-        {
-            IsBusy = false;
-            await InvokeAsync(StateHasChanged);
-        }
-    }
-
-    protected void AskBulkDelete()
-    {
-        var targets = SelectedUsers;
-        if (targets.Count == 0)
-            return;
-
-        var message = string.Format(WebLoc["BulkDeleteConfirmFormat"].Value, targets.Count);
-        MHD.MessageYesNo(WebLoc["BulkDelete"].Value, message,
-            onYes: EventCallback.Factory.Create(this, BulkDeleteAsync));
-    }
-
-    protected async Task BulkDeleteAsync()
-    {
-        if (IsBusy)
-            return;
-
-        IsBusy = true;
-        try
-        {
-            await MHD.Modal.CloseAsync();
-            var targets = SelectedUsers
-                .Select(u => (u.IdAuth, u.Id))
-                .ToList();
-
-            var result = await TenantUserService.RemoveBulkAsync(targets);
-            ShowBulkResult(WebLoc["BulkDelete"].Value, result, ToastType.Delete);
-            await LoadAsync();
-        }
-        finally
-        {
-            IsBusy = false;
-            await InvokeAsync(StateHasChanged);
-        }
-    }
-
-    /// <summary>Toast for the overall outcome, plus a detail dialog when some users failed or were protected.</summary>
-    private void ShowBulkResult(string title, BulkUserActionResult result, ToastType toast = ToastType.Update)
-    {
-        MHD.Notifications(toast, result.Succeeded > 0);
-
-        if (result.Failed > 0 || result.SkippedProtected > 0)
-        {
-            MHD.MessageOk(title,
-                string.Format(WebLoc["BulkResultFormat"].Value, result.Succeeded, result.Failed, result.SkippedProtected));
-        }
     }
 
     #endregion
