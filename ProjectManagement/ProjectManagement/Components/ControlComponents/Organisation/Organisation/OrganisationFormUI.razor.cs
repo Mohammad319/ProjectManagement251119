@@ -45,14 +45,25 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
 
         private List<TabItem> Tabs { get; set; } = [];
 
+        // Shared input styling for the form fields.
+        private const string FieldCls =
+            "w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900";
+
+        internal enum ContactAddressTab { Contacts, Addresses }
+        private ContactAddressTab _contactAddressTab = ContactAddressTab.Contacts;
+
+        private string SubTabClass(ContactAddressTab tab)
+            => _contactAddressTab == tab
+                ? "rounded-md px-3 py-1.5 text-sm font-semibold transition bg-slate-200 text-slate-900 dark:bg-slate-700 dark:text-slate-100"
+                : "rounded-md px-3 py-1.5 text-sm font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200";
+
         protected override async Task OnInitializedAsync()
         {
             Tabs =
             [
                 new(1, "Grundinformation"),
                 new(2, "Värdering"),
-                new(3, "Adress"),
-                new(4, "Kontakt"),
+                new(3, "Kontakt & adress"),
             ];
 
             Categories = await MicroBus.Send(new GetOrganisationCategoryQuery()) ?? [];
@@ -71,7 +82,47 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
         {
             PostCompany.Notes ??= [];
             PostCompany.Contacts ??= [];
-            PostCompany.Address ??= new();
+            PostCompany.Address ??= [];
+            NormalizeAddresses();
+        }
+
+        // The UI shows one simple address line (Beskrivning + Adress). Older posts stored
+        // structured fields (gata/postnr/stad/land) — merge them into the single line once;
+        // the structured fields are kept in the model but no longer edited separately.
+        private void NormalizeAddresses()
+        {
+            foreach (var addr in PostCompany.Address)
+            {
+                var composed = ComposeAddressLine(addr);
+                addr.Street = composed;
+                addr.Nr = string.Empty;
+                addr.ZIPCode = string.Empty;
+                addr.City = string.Empty;
+                addr.Region = string.Empty;
+                addr.Country = string.Empty;
+            }
+        }
+
+        private static string ComposeAddressLine(ProjectManagement.Shared.DTO.App.AddressDTO a)
+        {
+            var parts = new[]
+                {
+                    $"{a.Street} {a.Nr}".Trim(),
+                    $"{a.ZIPCode} {a.City}".Trim(),
+                    a.Region?.Trim() ?? string.Empty,
+                    a.Country?.Trim() ?? string.Empty
+                }
+                .Where(p => !string.IsNullOrWhiteSpace(p));
+
+            return string.Join(", ", parts);
+        }
+
+        private void AddAddress() => PostCompany.Address.Add(new ProjectManagement.Shared.DTO.App.AddressDTO());
+
+        private void RemoveAddress(int index)
+        {
+            if (index >= 0 && index < PostCompany.Address.Count)
+                PostCompany.Address.RemoveAt(index);
         }
 
         private void EnsureDefaults()
@@ -101,7 +152,8 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
             !string.IsNullOrWhiteSpace(NameValidationError)
             || !string.IsNullOrWhiteSpace(StatusValidationError)
             || !string.IsNullOrWhiteSpace(WarningReasonValidationError)
-            || !string.IsNullOrWhiteSpace(GroupValidationError);
+            || !string.IsNullOrWhiteSpace(GroupValidationError)
+            || !string.IsNullOrWhiteSpace(EmailValidationError);
 
         private bool TabHasError(int tabId) => tabId == 1 && Tab1HasError;
 
@@ -206,6 +258,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
             ValidateStatus();
             ValidateWarningReason();
             ValidateGroup();
+            ValidateEmail();
 
             // All required fields (Namn, Status, Orsak till varning, Huvudgrupp/Undergrupp) live on the
             // Grundinformation tab now, so on any error we move the user there, flag the tab and focus the
@@ -277,8 +330,20 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
         private void ValidateNameOnly()
         {
             NameValidationError = string.IsNullOrWhiteSpace(PostCompany.Name)
-                ? string.Format(ResLocalize.FieldIsRequred, nameof(PostCompany.Name))
+                ? "Namn är obligatoriskt."
                 : null;
+        }
+
+        private string? EmailValidationError;
+
+        // Email is optional, but when provided it must be a valid address.
+        private void ValidateEmail()
+        {
+            EmailValidationError =
+                !string.IsNullOrWhiteSpace(PostCompany.Email)
+                && !new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(PostCompany.Email)
+                    ? "Ange en giltig e-postadress."
+                    : null;
         }
 
         private void ValidateStatus()
@@ -294,7 +359,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
             // main group actually has sub-groups to pick from.
             if (CategorySelected is null)
             {
-                GroupValidationError = "Huvudgrupp är obligatoriskt.";
+                GroupValidationError = "Huvudgrupp är obligatorisk.";
                 return;
             }
 

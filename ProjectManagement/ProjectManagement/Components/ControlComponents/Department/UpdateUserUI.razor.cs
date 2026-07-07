@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Localization;
 using ProjectManagement.Services;
+using ProjectManagement.Services.UI;
 using ProjectManagement.Shared.DTO.General;
 
 namespace ProjectManagement.Components.ControlComponents.Department;
@@ -49,10 +50,27 @@ public partial class UpdateUserUI : AppComponentBase
 
     protected IEnumerable<MhdSelectItem<string>> RoleOptions =>
     [
-        new MhdSelectItem<string> { Value = PMRolesConst.Tenant.Admin, Label = WebLoc["LevelManager"].Value },
-        new MhdSelectItem<string> { Value = PMRolesConst.Tenant.Manger, Label = WebLoc["LevelUser"].Value },
-        new MhdSelectItem<string> { Value = PMRolesConst.Tenant.User, Label = WebLoc["LevelGuest"].Value }
+        new MhdSelectItem<string>
+        {
+            Value = PMRolesConst.Tenant.Admin,
+            Label = PermissionDisplay.Administrator,
+            Title = PermissionDisplay.AdministratorDescription
+        },
+        new MhdSelectItem<string>
+        {
+            Value = PMRolesConst.Tenant.Manger,
+            Label = PermissionDisplay.CalculationUser,
+            Title = PermissionDisplay.CalculationUserDescription
+        },
+        new MhdSelectItem<string>
+        {
+            Value = PMRolesConst.Tenant.User,
+            Label = PermissionDisplay.Reader,
+            Title = PermissionDisplay.ReaderDescription
+        }
     ];
+
+    protected string SelectedRoleTooltip => PermissionDisplay.Description(Form?.Role);
 
     protected override async Task OnInitializedAsync()
     {
@@ -252,7 +270,7 @@ public partial class UpdateUserUI : AppComponentBase
             AddError("email", "Email har ogiltigt format.");
 
         if (string.IsNullOrWhiteSpace(Form.Role))
-            AddError("role", "Roll är obligatorisk.");
+            AddError("role", "Behörighet är obligatorisk.");
         else if (Form.Role != PMRolesConst.Tenant.Admin && SelectedDepartmentIds.Count == 0)
             AddError("department", "Minst en avdelning måste väljas.");
 

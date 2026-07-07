@@ -2,8 +2,6 @@
 @using ProjectManagement.Shared.DTO.Calculation.Template
 @inherits AppComponentBase
 
-@inject IStringLocalizer<ResourceLoc> Localizer
-
 @if (Temp != null)
 {
     <style>
@@ -24,19 +22,13 @@
     </style>
 
     <div id="summarySheet" class="rounded-lg border border-slate-200 bg-white p-3 text-xs shadow-sm dark:border-slate-700 dark:bg-slate-900 md:text-sm">
-        <div class="flex flex-col gap-2 border-b border-slate-200 pb-3 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-                <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100">
-                    Slutsida / Sammanställning
-                </h3>
-                <p class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-                    Färger och linjer för slutsidan
-                </p>
-            </div>
-
-            <span class="text-[11px] text-slate-500 dark:text-slate-400">
-                @Localizer["preview"]
-            </span>
+        <div class="border-b border-slate-200 pb-3 dark:border-slate-700">
+            <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                Slutsida / Sammanställning
+            </h3>
+            <p class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                Färger och linjer för slutsidan.
+            </p>
         </div>
 
         <div class="mt-3 grid gap-3 lg:grid-cols-[minmax(220px,320px)_minmax(0,1fr)]">
@@ -48,7 +40,7 @@
                         class="h-9 w-full rounded-md border border-slate-300 bg-white px-2 text-[12px] text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-400 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">
                     @foreach (var item in TemplateConst.BorderStyles)
                     {
-                        <option value="@item">@Localizer[item]</option>
+                        <option value="@item">@TemplateConst.BorderStyleLabel(item)</option>
                     }
                 </select>
             </div>
@@ -57,7 +49,7 @@
                 <div class="@ColorRowClass">
                     <label class="@ColorLabelClass">@AppFormatResource.bolder</label>
                     <div class="flex items-center gap-2">
-                        <input type="color" class="@ColorInputClass" @bind="Temp.SummarySheet.Color.Border" />
+                        <input type="color" class="@ColorInputClass" @bind:event="oninput" @bind="Temp.SummarySheet.Color.Border" />
                         <span class="truncate text-[11px] text-slate-500 dark:text-slate-400">@Temp.SummarySheet.Color.Border</span>
                     </div>
                 </div>
@@ -65,7 +57,7 @@
                 <div class="@ColorRowClass">
                     <label class="@ColorLabelClass">@AppFormatResource.font</label>
                     <div class="flex items-center gap-2">
-                        <input type="color" class="@ColorInputClass" @bind="Temp.SummarySheet.Color.Text" />
+                        <input type="color" class="@ColorInputClass" @bind:event="oninput" @bind="Temp.SummarySheet.Color.Text" />
                         <span class="truncate text-[11px] text-slate-500 dark:text-slate-400">@Temp.SummarySheet.Color.Text</span>
                     </div>
                 </div>
@@ -73,7 +65,7 @@
                 <div class="@ColorRowClass">
                     <label class="@ColorLabelClass">@ResourceApp.header</label>
                     <div class="flex items-center gap-2">
-                        <input type="color" class="@ColorInputClass" @bind="Temp.SummarySheet.Color.Header" />
+                        <input type="color" class="@ColorInputClass" @bind:event="oninput" @bind="Temp.SummarySheet.Color.Header" />
                         <span class="truncate text-[11px] text-slate-500 dark:text-slate-400">@Temp.SummarySheet.Color.Header</span>
                     </div>
                 </div>
@@ -81,7 +73,7 @@
                 <div class="@ColorRowClass">
                     <label class="@ColorLabelClass">@CalcResource.factor</label>
                     <div class="flex items-center gap-2">
-                        <input type="color" class="@ColorInputClass" @bind="Temp.SummarySheet.Color.Factor" />
+                        <input type="color" class="@ColorInputClass" @bind:event="oninput" @bind="Temp.SummarySheet.Color.Factor" />
                         <span class="truncate text-[11px] text-slate-500 dark:text-slate-400">@Temp.SummarySheet.Color.Factor</span>
                     </div>
                 </div>
@@ -89,7 +81,7 @@
                 <div class="@ColorRowClass">
                     <label class="@ColorLabelClass">@CalcResource.sum</label>
                     <div class="flex items-center gap-2">
-                        <input type="color" class="@ColorInputClass" @bind="Temp.SummarySheet.Color.Sum" />
+                        <input type="color" class="@ColorInputClass" @bind:event="oninput" @bind="Temp.SummarySheet.Color.Sum" />
                         <span class="truncate text-[11px] text-slate-500 dark:text-slate-400">@Temp.SummarySheet.Color.Sum</span>
                     </div>
                 </div>
@@ -108,7 +100,7 @@
                             <tr>
                                 @foreach (var item in Temp.SummarySheet.Columns)
                                 {
-                                    <th class="whitespace-nowrap px-2 py-1.5 text-left font-semibold">
+                                    <th class="whitespace-nowrap px-2 py-1.5 text-left font-semibold" title="@HeaderTooltip(item.Id)">
                                         @CalcLoc[NetColumnLoc.SummaryKey[item.Id]]
                                     </th>
                                 }
@@ -155,7 +147,7 @@
                             <tr>
                                 @foreach (var item in Temp.SummarySheet.Columns)
                                 {
-                                    <th class="whitespace-nowrap px-2 py-1 text-left font-semibold">
+                                    <th class="whitespace-nowrap px-2 py-1 text-left font-semibold" title="@HeaderTooltip(item.Id)">
                                         @CalcLoc[NetColumnLoc.SummaryKey[item.Id]]
                                     </th>
                                 }
@@ -199,29 +191,24 @@
 
     [Parameter] public TemplateListPostDTO Temp { get; set; } = new TemplateListPostDTO();
 
-    private string GetPreviewCellContent(SummarySheetColumnId titleKey, bool isSumRow)
+    // Tooltip for abbreviated column headers so admins always get the full Swedish meaning.
+    private static string? HeaderTooltip(SummarySheetColumnId id) => id switch
     {
-        var title = NetColumnLoc.SummaryKey[titleKey];
+        SummarySheetColumnId.Kv => "KV = Nyckelvärde",
+        SummarySheetColumnId.OH => "Omkostnadspåslag",
+        SummarySheetColumnId.Ev => "Entreprenadvärde",
+        _ => null
+    };
 
-        if (isSumRow)
-        {
-            if (title.Contains("Name", StringComparison.OrdinalIgnoreCase))
-                return $"{title} (Total)";
-            if (title.Contains("Cost", StringComparison.OrdinalIgnoreCase))
-                return "123 456.00";
-            if (title.Contains("Factor", StringComparison.OrdinalIgnoreCase))
-                return "1.23";
-
-            return "…";
-        }
-
-        if (title.Contains("Name", StringComparison.OrdinalIgnoreCase))
-            return $"{title} A";
-        if (title.Contains("Cost", StringComparison.OrdinalIgnoreCase))
-            return "12 345.00";
-        if (title.Contains("Factor", StringComparison.OrdinalIgnoreCase))
-            return "1.10";
-
-        return "Sample";
-    }
+    // Neutral Swedish example content — never real customer data, never English test words.
+    private static string GetPreviewCellContent(SummarySheetColumnId id, bool isSumRow) => id switch
+    {
+        SummarySheetColumnId.Name => isSumRow ? "Summa" : "Kalkylpost",
+        SummarySheetColumnId.Sort => isSumRow ? "" : "10",
+        SummarySheetColumnId.Unit => isSumRow ? "" : "m²",
+        SummarySheetColumnId.Factor => isSumRow ? "1,23" : "1,10",
+        SummarySheetColumnId.Kv or SummarySheetColumnId.KeyValue => isSumRow ? "—" : "2,5",
+        SummarySheetColumnId.Empty => "",
+        _ => isSumRow ? "123 456,00" : "12 345,00"
+    };
 }

@@ -1,4 +1,4 @@
-﻿@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Localization
 @using ProjectManagement.Client.Shared.MVVM.Calculation
 @using ProjectManagement.Client.Shared.SharedComponent
 @using ProjectManagement.Shared.Constant
@@ -8,18 +8,17 @@
 
 @if (Temp != null)
 {
- 
     <div class="overflow-x-auto">
-        <div class="flex @(ShowColumnSettings ? "min-w-[1100px]" : "min-w-full") items-start gap-2">
-    
+        <div class="flex @(ShowColumnSettings ? "min-w-[1100px] items-start" : "min-w-full flex-col") gap-2">
+
             <!-- Settings -->
             <section class="@SettingsSectionClass">
                 <div class="border-b border-slate-200 px-2 py-1 dark:border-slate-700">
                     <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                        @AppLoc["appearance"]
+                        Nettokalkyl
                     </h3>
                     <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                        @AppLoc["tableColorsAndBorderStyle"]
+                        Färger och linjer för kalkylvyn.
                     </p>
                 </div>
 
@@ -33,135 +32,126 @@
                                 class="@SelectInputClass">
                             @foreach (var item in TemplateConst.BorderStyles)
                             {
-                                <option value="@item">@item</option>
+                                <option value="@item">@TemplateConst.BorderStyleLabel(item)</option>
                             }
                         </select>
                     </div>
 
                     <div class="@ColorGridClass">
-                        <div class="@ColorRowClass">
-                            <label class="@ColorLabelClass">@AppFormatResource.bolder</label>
-                            <input type="color"
-                                   class="@ColorInputClass"
-                                   @bind="Temp.NetCalc.Color.Border" />
-                        </div>
-
-                        <div class="@ColorRowClass">
-                            <label class="@ColorLabelClass">@AppFormatResource.font</label>
-                            <input type="color"
-                                   class="@ColorInputClass"
-                                   @bind="Temp.NetCalc.Color.Text" />
-                        </div>
-
-                        <div class="@ColorRowClass">
-                            <label class="@ColorLabelClass">Inaktiv text</label>
-                            <input type="color"
-                                   class="@ColorInputClass"
-                                   @bind="Temp.NetCalc.Color.InactiveText" />
-                        </div>
-
-                        <div class="@ColorRowClass">
-                            <label class="@ColorLabelClass">@ResourceApp.header</label>
-                            <input type="color"
-                                   class="@ColorInputClass"
-                                   @bind="Temp.NetCalc.Color.Header" />
-                        </div>
-
-                        <div class="@ColorRowClass">
-                            <label class="@ColorLabelClass">@ResourceLoc.task</label>
-                            <input type="color"
-                                   class="@ColorInputClass"
-                                   @bind="Temp.NetCalc.Color.Task" />
-                        </div>
-
-                        <div class="@ColorRowClass">
-                            <label class="@ColorLabelClass">Endast kodtext</label>
-                            <input type="color"
-                                   class="@ColorInputClass"
-                                   @bind="Temp.NetCalc.Color.TaskCodeName" />
-                        </div>
-
-                        <div class="@ColorRowClass">
-                            <label class="@ColorLabelClass">@ResourceLoc.SubTask</label>
-                            <input type="color"
-                                   class="@ColorInputClass"
-                                   @bind="Temp.NetCalc.Color.SubTask" />
-                        </div>
-
-                        <div class="@ColorRowClass">
-                            <label class="@ColorLabelClass">Grundmängdsrad</label>
-                            <input type="color"
-                                   class="@ColorInputClass"
-                                   @bind="Temp.NetCalc.Color.TaskDetailBaseQuantity" />
-                        </div>
-
-                        <div class="@ColorRowClass">
-                            <label class="@ColorLabelClass">@ResourceLoc.resource</label>
-                            <input type="color"
-                                   class="@ColorInputClass"
-                                   @bind="Temp.NetCalc.Color.Resource" />
-                        </div>
-
-                        <div class="@ColorRowClass">
-                            <label class="@ColorLabelClass">Mängdstyrande faktor</label>
-                            <input type="color"
-                                   class="@ColorInputClass"
-                                   @bind="Temp.NetCalc.Color.ResourceParameter" />
-                        </div>
-
-                        <div class="@ColorRowClass">
-                            <label class="@ColorLabelClass">Tillägg / bilagor</label>
-                            <input type="color"
-                                   class="@ColorInputClass"
-                                   @bind="Temp.NetCalc.Color.ResourceAttachment" />
-                        </div>
-
-                        <div class="@ColorRowClass">
-                            <label class="@ColorLabelClass">Timfördelning</label>
-                            <input type="color"
-                                   class="@ColorInputClass"
-                                   @bind="Temp.NetCalc.Color.ResourceTime" />
-                        </div>
-
-                        <div class="@ColorRowClass">
-                            <label class="@ColorLabelClass">@CalcResource.note</label>
-                            <input type="color"
-                                   class="@ColorInputClass"
-                                   @bind="Temp.NetCalc.Color.Note" />
-                        </div>
+                        @ColorField(AppFormatResource.bolder, Temp.NetCalc.Color.Border, v => Temp.NetCalc.Color.Border = v)
+                        @ColorField(AppFormatResource.font, Temp.NetCalc.Color.Text, v => Temp.NetCalc.Color.Text = v)
+                        @ColorField("Inaktiv text", Temp.NetCalc.Color.InactiveText, v => Temp.NetCalc.Color.InactiveText = v)
+                        @ColorField(ResourceApp.header, Temp.NetCalc.Color.Header, v => Temp.NetCalc.Color.Header = v)
+                        @ColorField(ResourceLoc.task, Temp.NetCalc.Color.Task, v => Temp.NetCalc.Color.Task = v)
+                        @ColorField("Endast kodtext", Temp.NetCalc.Color.TaskCodeName, v => Temp.NetCalc.Color.TaskCodeName = v)
+                        @ColorField(ResourceLoc.SubTask, Temp.NetCalc.Color.SubTask, v => Temp.NetCalc.Color.SubTask = v)
+                        @ColorField("Grundmängdsrad", Temp.NetCalc.Color.TaskDetailBaseQuantity, v => Temp.NetCalc.Color.TaskDetailBaseQuantity = v)
+                        @ColorField(ResourceLoc.resource, Temp.NetCalc.Color.Resource, v => Temp.NetCalc.Color.Resource = v)
+                        @ColorField("Mängdstyrande faktor", Temp.NetCalc.Color.ResourceParameter, v => Temp.NetCalc.Color.ResourceParameter = v)
+                        @ColorField("Tillägg / bilagor", Temp.NetCalc.Color.ResourceAttachment, v => Temp.NetCalc.Color.ResourceAttachment = v)
+                        @ColorField("Timfördelning", Temp.NetCalc.Color.ResourceTime, v => Temp.NetCalc.Color.ResourceTime = v)
+                        @ColorField(CalcResource.note, Temp.NetCalc.Color.Note, v => Temp.NetCalc.Color.Note = v)
                     </div>
                     </div>
                 </div>
             </section>
+
+            @if (!ShowColumnSettings)
+            {
+                <!-- Live preview: updates immediately as colors/border style change (no save needed). -->
+                <section class="min-w-0 flex-1 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                    <div class="border-b border-slate-200 px-2 py-1 dark:border-slate-700">
+                        <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                            Förhandsvisning
+                        </h3>
+                        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                            Exempel på kalkylrader med valda färger och linjer. Uppdateras direkt — Spara sparar mallen.
+                        </p>
+                    </div>
+
+                    <div class="overflow-x-auto p-2">
+                        <table class="w-full min-w-[560px] text-[11px]" style="color:@Temp.NetCalc.Color.Text; border-collapse:collapse;">
+                            <thead>
+                                <tr style="background-color:@Temp.NetCalc.Color.Header;">
+                                    <th style="@PreviewCellStyle" class="px-2 py-1 text-left font-semibold">Namn</th>
+                                    <th style="@PreviewCellStyle" class="px-2 py-1 text-right font-semibold">Mängd</th>
+                                    <th style="@PreviewCellStyle" class="px-2 py-1 text-left font-semibold">Enhet</th>
+                                    <th style="@PreviewCellStyle" class="px-2 py-1 text-right font-semibold">À-pris/enhet</th>
+                                    <th style="@PreviewCellStyle" class="px-2 py-1 text-right font-semibold">Totalt</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="background-color:@Temp.NetCalc.Color.Task;">
+                                    <td style="@PreviewCellStyle" class="px-2 py-1 font-semibold">
+                                        <span style="color:@Temp.NetCalc.Color.TaskCodeName;">1.1</span> Kalkylpost
+                                    </td>
+                                    <td style="@PreviewCellStyle" class="px-2 py-1 text-right">100</td>
+                                    <td style="@PreviewCellStyle" class="px-2 py-1">m²</td>
+                                    <td style="@PreviewCellStyle" class="px-2 py-1 text-right">125,00</td>
+                                    <td style="@PreviewCellStyle" class="px-2 py-1 text-right">12 500,00</td>
+                                </tr>
+                                <tr style="background-color:@Temp.NetCalc.Color.SubTask;">
+                                    <td style="@PreviewCellStyle" class="px-2 py-1 pl-5">Underpost</td>
+                                    <td style="@PreviewCellStyle" class="px-2 py-1 text-right">40</td>
+                                    <td style="@PreviewCellStyle" class="px-2 py-1">m²</td>
+                                    <td style="@PreviewCellStyle" class="px-2 py-1 text-right">90,00</td>
+                                    <td style="@PreviewCellStyle" class="px-2 py-1 text-right">3 600,00</td>
+                                </tr>
+                                <tr style="background-color:@Temp.NetCalc.Color.TaskDetailBaseQuantity;">
+                                    <td style="@PreviewCellStyle" class="px-2 py-1 pl-5">Grundmängdsrad</td>
+                                    <td style="@PreviewCellStyle" class="px-2 py-1 text-right">100</td>
+                                    <td style="@PreviewCellStyle" class="px-2 py-1">m²</td>
+                                    <td style="@PreviewCellStyle" class="px-2 py-1 text-right">—</td>
+                                    <td style="@PreviewCellStyle" class="px-2 py-1 text-right">—</td>
+                                </tr>
+                                <tr style="background-color:@Temp.NetCalc.Color.Resource;">
+                                    <td style="@PreviewCellStyle" class="px-2 py-1 pl-8">Resurs — Arbete</td>
+                                    <td style="@PreviewCellStyle" class="px-2 py-1 text-right">8</td>
+                                    <td style="@PreviewCellStyle" class="px-2 py-1">tim</td>
+                                    <td style="@PreviewCellStyle" class="px-2 py-1 text-right">450,00</td>
+                                    <td style="@PreviewCellStyle" class="px-2 py-1 text-right">3 600,00</td>
+                                </tr>
+                                <tr style="background-color:@Temp.NetCalc.Color.ResourceParameter;">
+                                    <td style="@PreviewCellStyle" class="px-2 py-1 pl-8">Mängdstyrande faktor</td>
+                                    <td style="@PreviewCellStyle" class="px-2 py-1 text-right">1,10</td>
+                                    <td style="@PreviewCellStyle" class="px-2 py-1">—</td>
+                                    <td style="@PreviewCellStyle" class="px-2 py-1 text-right">—</td>
+                                    <td style="@PreviewCellStyle" class="px-2 py-1 text-right">—</td>
+                                </tr>
+                                <tr style="background-color:@Temp.NetCalc.Color.ResourceAttachment;">
+                                    <td style="@PreviewCellStyle" class="px-2 py-1 pl-8">Tillägg / bilagor</td>
+                                    <td style="@PreviewCellStyle" class="px-2 py-1 text-right">1</td>
+                                    <td style="@PreviewCellStyle" class="px-2 py-1">st</td>
+                                    <td style="@PreviewCellStyle" class="px-2 py-1 text-right">250,00</td>
+                                    <td style="@PreviewCellStyle" class="px-2 py-1 text-right">250,00</td>
+                                </tr>
+                                <tr style="background-color:@Temp.NetCalc.Color.ResourceTime;">
+                                    <td style="@PreviewCellStyle" class="px-2 py-1 pl-8">Timfördelning</td>
+                                    <td style="@PreviewCellStyle" class="px-2 py-1 text-right">8</td>
+                                    <td style="@PreviewCellStyle" class="px-2 py-1">tim</td>
+                                    <td style="@PreviewCellStyle" class="px-2 py-1 text-right">—</td>
+                                    <td style="@PreviewCellStyle" class="px-2 py-1 text-right">—</td>
+                                </tr>
+                                <tr style="background-color:@Temp.NetCalc.Color.Note;">
+                                    <td style="@PreviewCellStyle" class="px-2 py-1" colspan="5">
+                                        Anteckning: Exempeltext för en anteckningsrad.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="@PreviewCellStyle" class="px-2 py-1" colspan="5">
+                                        <span style="color:@Temp.NetCalc.Color.InactiveText;">Inaktiv text — så här visas en inaktiverad rad.</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            }
         </div>
     </div>
 }
 
 @code {
-    private const string IconButtonBaseClass =
-        "inline-flex h-7 w-7 items-center justify-center rounded-lg border text-[11px] " +
-        "transition duration-150 hover:scale-[1.03] active:scale-95";
-
-    private const string IconButtonSecondaryClass =
-        IconButtonBaseClass + " border-slate-300 bg-white text-slate-600 " +
-        "hover:bg-slate-100 hover:border-slate-400 " +
-        "dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800";
-
-    private const string IconButtonPrimaryClass =
-        IconButtonBaseClass + " border-blue-300 bg-blue-50 text-blue-700 " +
-        "hover:bg-blue-100 hover:border-blue-400 " +
-        "dark:border-blue-500/60 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/50";
-
-    private const string IconButtonWarningClass =
-        IconButtonBaseClass + " border-amber-300 bg-amber-50 text-amber-700 " +
-        "hover:bg-amber-100 hover:border-amber-400 " +
-        "dark:border-amber-500/60 dark:bg-amber-950/40 dark:text-amber-300 dark:hover:bg-amber-900/50";
-
-    private const string IconButtonWarningActiveClass =
-        IconButtonBaseClass + " border-emerald-300 bg-emerald-50 text-emerald-700 " +
-        "hover:bg-emerald-100 hover:border-emerald-400 " +
-        "dark:border-emerald-500/60 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-900/50";
-
     private const string SelectInputClass =
         "h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-[12px] text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white";
 
@@ -172,7 +162,7 @@
         "truncate text-[11px] font-medium text-slate-700 dark:text-slate-200";
 
     private const string ColorInputClass =
-        "h-7 w-10 shrink-0 rounded border border-slate-300 bg-transparent p-0.5 dark:border-slate-600";
+        "h-8 w-10 shrink-0 cursor-pointer rounded border border-slate-300 bg-transparent p-0.5 dark:border-slate-600";
 
     [Parameter] public TemplateListPostDTO Temp { get; set; } = new();
     [Parameter] public bool ShowColumnSettings { get; set; } = true;
@@ -191,85 +181,26 @@
             ? "grid grid-cols-2 gap-1"
             : "grid grid-cols-2 gap-1 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-6";
 
-    private static readonly IReadOnlyDictionary<NetColumnId, NetColumnState> _defaults =
-        TemplateDefaults.NetCalc().ToDictionary(x => x.Id, x => x);
-
-    private IEnumerable<NetColumnId> HiddenIds =>
-        Enum.GetValues<NetColumnId>()
-            .Where(id => !Temp.NetCalc.Columns.Any(c => c.Id == id));
-
-    private async Task AddAsync(NetColumnId id)
+    // One color setting: clickable swatch (≥32px) + the hex code next to it.
+    // Uses oninput so the preview updates live while the picker is open.
+    private RenderFragment ColorField(string label, string value, Action<string> setter) => __builder =>
     {
-        await Task.Delay(1);
+        <div class="@ColorRowClass" title="@label">
+            <label class="@ColorLabelClass">@label</label>
+            <div class="flex shrink-0 items-center gap-1.5">
+                <input type="color"
+                       class="@ColorInputClass"
+                       value="@value"
+                       @oninput="e => setter(e.Value?.ToString() ?? value)" />
+                <span class="w-14 text-[10px] text-slate-500 dark:text-slate-400">@value</span>
+            </div>
+        </div>
+    };
 
-        if (_defaults.TryGetValue(id, out var def))
-        {
-            Temp.NetCalc.Columns.Add(new NetColumnState
-            {
-                Id = def.Id,
-                Width = def.Width,
-                Frozen = def.Frozen
-            });
-        }
-        else
-        {
-            Temp.NetCalc.Columns.Add(new NetColumnState
-            {
-                Id = id,
-                Width = 80,
-                Frozen = false
-            });
-        }
+    // "mix" is an app-specific value, not valid CSS — the preview falls back to solid.
+    private string PreviewBorderStyle =>
+        Temp.NetCalc.Color.BorderStyle == "mix" ? "solid" : Temp.NetCalc.Color.BorderStyle;
 
-    }
-
-    private async Task RemoveAsync(NetColumnState col)
-    {
-        await Task.Delay(1);
-
-        if (col != null)
-        {
-            col.Frozen = false;
-            Temp.NetCalc.Columns.Remove(col);
-        }
-
-        await Task.Delay(1);
-    }
-
-    private void MoveUp(NetColumnState col)
-    {
-        var list = Temp.NetCalc.Columns;
-        var index = list.IndexOf(col);
-        if (index <= 0) return;
-        list.RemoveAt(index);
-        list.Insert(index - 1, col);
-    }
-
-    private void MoveDown(NetColumnState col)
-    {
-        var list = Temp.NetCalc.Columns;
-        var index = list.IndexOf(col);
-        if (index < 0 || index >= list.Count - 1) return;
-        list.RemoveAt(index);
-        list.Insert(index + 1, col);
-    }
-
-    private void MoveToTop(NetColumnState col)
-    {
-        var list = Temp.NetCalc.Columns;
-        var index = list.IndexOf(col);
-        if (index <= 0) return;
-        list.RemoveAt(index);
-        list.Insert(0, col);
-    }
-
-    private void MoveToBottom(NetColumnState col)
-    {
-        var list = Temp.NetCalc.Columns;
-        var index = list.IndexOf(col);
-        if (index < 0 || index >= list.Count - 1) return;
-        list.RemoveAt(index);
-        list.Add(col);
-    }
-
+    private string PreviewCellStyle =>
+        $"border:1px {PreviewBorderStyle} {Temp.NetCalc.Color.Border};";
 }

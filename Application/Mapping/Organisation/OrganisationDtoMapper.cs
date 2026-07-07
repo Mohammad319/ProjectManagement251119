@@ -35,8 +35,21 @@ namespace Application.Mapping.Organisation
                 Type = !string.IsNullOrWhiteSpace(snapshot.OrganisationType)
                     ? snapshot.OrganisationType
                     : entity.OrganisationType?.Name ?? string.Empty,
-                Data = snapshot
+                Data = snapshot,
+                CreatedAt = entity.CreatedAt == default ? null : entity.CreatedAt,
+                CreatedByName = DisplayName(entity.CreatedByUser),
+                UpdatedAt = entity.UpdatedAt,
+                UpdatedByName = DisplayName(entity.UpdatedByUser)
             };
+        }
+
+        private static string DisplayName(Domain.Entities.Users.UserEntity? user)
+        {
+            if (user is null)
+                return string.Empty;
+
+            var name = $"{user.FirstName} {user.LastName}".Trim();
+            return name.Length > 0 ? name : user.Email;
         }
     }
 }

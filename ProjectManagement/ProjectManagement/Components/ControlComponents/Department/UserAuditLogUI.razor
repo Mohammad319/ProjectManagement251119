@@ -318,9 +318,12 @@
 
     private string HumanizePart(string part, string action)
     {
-        const string roleChangedPrefix = "Roll ändrad från ";
-        if (part.StartsWith(roleChangedPrefix, StringComparison.OrdinalIgnoreCase))
+        // Both the current prefix ("Behörighet ändrad från …") and the legacy one ("Roll ändrad från …").
+        foreach (var roleChangedPrefix in new[] { "Behörighet ändrad från ", "Roll ändrad från " })
         {
+            if (!part.StartsWith(roleChangedPrefix, StringComparison.OrdinalIgnoreCase))
+                continue;
+
             var value = part[roleChangedPrefix.Length..].Trim();
             var pieces = value.Split(" till ", 2, StringSplitOptions.TrimEntries);
             if (pieces.Length == 2)
@@ -342,13 +345,13 @@
         if (string.Equals(part, "Användaren spärrades tills vidare", StringComparison.OrdinalIgnoreCase))
             return "Spärrad tills vidare";
 
-        // Role — both the English legacy prefix ("Role:") and the Swedish one ("Roll:").
-        foreach (var prefix in new[] { "Role:", "Roll:" })
+        // Role — the English legacy prefix ("Role:") and the older Swedish ones ("Roll:", "Behörighet:").
+        foreach (var prefix in new[] { "Role:", "Roll:", "Behörighet:" })
         {
             if (part.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
             {
                 var label = RoleLabel(part[prefix.Length..].Trim());
-                return action == "user.role-changed" ? $"Ny roll: {label}" : $"Roll: {label}";
+                return action == "user.role-changed" ? $"Ny behörighet: {label}" : $"Behörighet: {label}";
             }
         }
 
@@ -383,15 +386,8 @@
         return part;
     }
 
-    /// <summary>Swedish role label for legacy technical role values, matching the rest of the UI.</summary>
-    private static string RoleLabel(string role) => role switch
-    {
-        PMRolesConst.Tenant.Admin => "Admin",
-        PMRolesConst.Tenant.Manger => "Användare",
-        PMRolesConst.Tenant.User => "Visare",
-        PMRolesConst.Tenant.Viewer => "Visare",
-        _ => role
-    };
+    /// <summary>Swedish permission label for legacy technical role values, matching the rest of the UI.</summary>
+    private static string RoleLabel(string role) => PermissionDisplay.Label(role);
 
     public void Dispose()
     {

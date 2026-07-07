@@ -254,7 +254,7 @@
     <value>Remember me.</value>
   </data>
   <data name="role" xml:space="preserve">
-    <value>Role</value>
+    <value>Permission</value>
   </data>
   <data name="street" xml:space="preserve">
     <value>Street</value>
@@ -272,13 +272,13 @@
     <value>User</value>
   </data>
   <data name="LevelManager" xml:space="preserve">
-    <value>Admin</value>
+    <value>Administrator</value>
   </data>
   <data name="LevelUser" xml:space="preserve">
-    <value>User</value>
+    <value>Calculation user</value>
   </data>
   <data name="LevelGuest" xml:space="preserve">
-    <value>Viewer</value>
+    <value>Reader</value>
   </data>
   <data name="UserDataIsUpdated" xml:space="preserve">
     <value>User data is updated</value>
@@ -311,7 +311,7 @@
     <value>Reset the password for {0}? A new temporary password will be generated and e-mailed to the user.</value>
   </data>
   <data name="AllRoles" xml:space="preserve">
-    <value>All roles</value>
+    <value>All permissions</value>
   </data>
   <data name="AllStatuses" xml:space="preserve">
     <value>All statuses</value>

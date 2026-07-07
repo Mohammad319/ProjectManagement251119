@@ -1,10 +1,11 @@
+@using ProjectManagement.Components.ControlComponents.Department
 @inherits AppComponentBase
 
-<div class="space-y-3 p-3 text-sm">
+<div class="flex flex-col gap-2 text-sm">
 
     @* Step 1 — file picker -------------------------------------------------- *@
-    <div class="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900/60">
-        <div class="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">1. Välj fil</div>
+    <div class="rounded-lg border border-slate-200 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-900/60">
+        <div class="mb-1 text-xs font-semibold text-slate-500 dark:text-slate-400">1. Välj fil</div>
         <div class="flex flex-wrap items-center gap-3">
             <label class="inline-flex cursor-pointer items-center gap-2 rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200">
                 <span>Välj fil</span>
@@ -13,6 +14,21 @@
             <span class="text-sm @(string.IsNullOrEmpty(FileName) ? "text-slate-400 dark:text-slate-500" : "text-slate-700 dark:text-slate-200")">
                 @(string.IsNullOrEmpty(FileName) ? "Ingen fil vald" : $"Vald fil: {FileName}")
             </span>
+
+            @if (_isExcel && SheetNames.Count > 0)
+            {
+                <div class="flex items-center gap-2">
+                    <label class="text-xs font-medium text-slate-700 dark:text-slate-200">Blad</label>
+                    <select class="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                            @bind="SelectedSheet">
+                        @for (var i = 0; i < SheetNames.Count; i++)
+                        {
+                            var index = i + 1;
+                            <option value="@index">@index. @SheetNames[i]</option>
+                        }
+                    </select>
+                </div>
+            }
         </div>
 
         @if (!string.IsNullOrWhiteSpace(_fileError))
@@ -21,111 +37,144 @@
                 @_fileError
             </div>
         }
-
-        @if (_isExcel && SheetNames.Count > 1)
-        {
-            <div class="mt-3 max-w-xs">
-                <label class="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-200">Blad</label>
-                <select class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                        @bind="SelectedSheet">
-                    @for (var i = 0; i < SheetNames.Count; i++)
-                    {
-                        var index = i + 1;
-                        <option value="@index">@index. @SheetNames[i]</option>
-                    }
-                </select>
-            </div>
-        }
     </div>
 
-    @* Step 2 — format ------------------------------------------------------- *@
-    <div class="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900/60">
-        <div class="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">2. Importformat</div>
+    @* Step 2 — import type --------------------------------------------------- *@
+    <div class="rounded-lg border border-slate-200 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-900/60">
+        <div class="mb-1 text-xs font-semibold text-slate-500 dark:text-slate-400">2. Importtyp</div>
         <div class="flex flex-wrap gap-2">
             <label class="inline-flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm @(Format == ImportFormat.Table ? "border-sky-400 bg-sky-50 text-sky-800 dark:border-sky-600 dark:bg-sky-950/40 dark:text-sky-200" : "border-slate-300 dark:border-slate-600")">
-                <input type="radio" name="importFormat" checked="@(Format == ImportFormat.Table)" @onchange="() => Format = ImportFormat.Table" />
+                <input type="radio" name="importFormat" checked="@(Format == ImportFormat.Table)" @onchange="() => SetFormat(ImportFormat.Table)" />
                 <span>Vanligt tabellformat</span>
+                <button type="button"
+                        class="inline-flex h-5 w-5 items-center justify-center rounded-full border border-sky-300 text-[11px] font-semibold text-sky-600 transition hover:bg-sky-100 dark:border-sky-700 dark:text-sky-300 dark:hover:bg-sky-900/40"
+                        title="Visa hjälp och exempel för Vanligt tabellformat"
+                        @onclick="() => OpenHelp(false)" @onclick:stopPropagation="true" @onclick:preventDefault="true">
+                    i
+                </button>
             </label>
-            <label class="inline-flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm @(Format == ImportFormat.WideGroup ? "border-sky-400 bg-sky-50 text-sky-800 dark:border-sky-600 dark:bg-sky-950/40 dark:text-sky-200" : "border-slate-300 dark:border-slate-600")">
-                <input type="radio" name="importFormat" checked="@(Format == ImportFormat.WideGroup)" @onchange="() => Format = ImportFormat.WideGroup" />
-                <span>Brett gruppformat</span>
+            <label class="inline-flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm @(Format == ImportFormat.PairColumns ? "border-sky-400 bg-sky-50 text-sky-800 dark:border-sky-600 dark:bg-sky-950/40 dark:text-sky-200" : "border-slate-300 dark:border-slate-600")">
+                <input type="radio" name="importFormat" checked="@(Format == ImportFormat.PairColumns)" @onchange="() => SetFormat(ImportFormat.PairColumns)" />
+                <span>Rubrikbaserat kolumnpar</span>
+                <button type="button"
+                        class="inline-flex h-5 w-5 items-center justify-center rounded-full border border-sky-300 text-[11px] font-semibold text-sky-600 transition hover:bg-sky-100 dark:border-sky-700 dark:text-sky-300 dark:hover:bg-sky-900/40"
+                        title="Visa hjälp och exempel för Rubrikbaserat kolumnpar"
+                        @onclick="() => OpenHelp(true)" @onclick:stopPropagation="true" @onclick:preventDefault="true">
+                    i
+                </button>
             </label>
         </div>
+        @* Format descriptions live behind the (i) icons — the form itself stays clean. *@
     </div>
 
-    @* Step 3 — column settings --------------------------------------------- *@
-    <div class="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900/60">
-        <div class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">3. Rad- och kolumnnummer</div>
+    @* Step 3 — row/column settings ------------------------------------------ *@
+    <div class="rounded-lg border border-slate-200 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-900/60">
+        <div class="mb-2 text-xs font-semibold text-slate-500 dark:text-slate-400">3. Rad- och kolumnnummer</div>
 
         @if (Format == ImportFormat.Table)
         {
-            <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                @NumberField("Börja från rad nummer", RowStart, v => RowStart = v)
-                @NumberField("Kontogrupp kolumnnummer", GroupCol, v => GroupCol = v)
-                @NumberField("Kod kolumnnummer", CodeCol, v => CodeCol = v)
-                @NumberField("Namn kolumnnummer", NameCol, v => NameCol = v)
-                @NumberField("Kommentar 1 kolumnnummer (valfritt)", Comment1Col, v => Comment1Col = v)
-                @NumberField("Kommentar 2 kolumnnummer (valfritt)", Comment2Col, v => Comment2Col = v)
+            <div class="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-4">
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-200">Börja från rad nummer</label>
+                    <input type="number" min="1" step="1" class="w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind="RowStart" />
+                </div>
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-200">Till rad nummer (valfritt)</label>
+                    <input type="number" min="1" step="1" placeholder="Tomt = till sista raden"
+                           class="w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind="RowEnd" />
+                </div>
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-200">Kontogrupp kolumnnummer (valfritt)</label>
+                    <input type="number" min="0" step="1" placeholder="0 eller tomt = används inte"
+                           class="w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind="GroupCol" />
+                </div>
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-200">Kod kolumnnummer</label>
+                    <input type="number" min="1" step="1" class="w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind="CodeCol" />
+                </div>
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-200">Namn kolumnnummer</label>
+                    <input type="number" min="1" step="1" class="w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind="NameCol" />
+                </div>
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-200">Kommentar 1 kolumnnummer (valfritt)</label>
+                    <input type="number" min="0" step="1" placeholder="0 eller tomt = används inte"
+                           class="w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind="Comment1Col" />
+                </div>
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-200">Kommentar 2 kolumnnummer (valfritt)</label>
+                    <input type="number" min="0" step="1" placeholder="0 eller tomt = används inte"
+                           class="w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind="Comment2Col" />
+                </div>
                 @if (_isCsv)
                 {
                     <div>
                         <label class="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-200">Avgränsare</label>
-                        <input type="text" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" placeholder="," @bind="Separator" />
+                        <input type="text" class="w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" placeholder="," @bind="Separator" />
                     </div>
                 }
             </div>
         }
         else
         {
-            <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                @NumberField("Rubrikrad för kontogrupper", HeaderRow, v => HeaderRow = v)
-                @NumberField("Börja från rad nummer", WideRowStart, v => WideRowStart = v)
-                @NumberField("Första kodkolumn", FirstCodeCol, v => FirstCodeCol = v)
-                @NumberField("Första namnkolumn", FirstNameCol, v => FirstNameCol = v)
-                @NumberField("Antal kolumner per grupp", ColsPerGroup, v => ColsPerGroup = v)
+            <div class="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-4">
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-200">Börja från rad nummer</label>
+                    <input type="number" min="1" step="1" class="w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind="PairRowStart" />
+                </div>
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-200">Till rad nummer (valfritt)</label>
+                    <input type="number" min="1" step="1" placeholder="Tomt = till sista raden"
+                           class="w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind="PairRowEnd" />
+                </div>
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-200">Första kodkolumn</label>
+                    <input type="number" min="1" step="1" class="w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind="FirstCodeCol" />
+                </div>
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-200">Första namnkolumn</label>
+                    <input type="number" min="1" step="1" class="w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind="FirstNameCol" />
+                </div>
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-200">Antal kolumner per par</label>
+                    <input type="number" min="1" step="1" class="w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind="ColsPerPair" />
+                </div>
                 @if (_isCsv)
                 {
                     <div>
                         <label class="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-200">Avgränsare</label>
-                        <input type="text" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" placeholder="," @bind="Separator" />
+                        <input type="text" class="w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" placeholder="," @bind="Separator" />
                     </div>
                 }
             </div>
-            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Varje kolumnpar (Kod + Namn) under en rubrik läses som en egen kontogrupp.</p>
+
+            <div class="mt-3 flex flex-wrap gap-4">
+                <label class="inline-flex cursor-pointer items-center gap-2 text-sm text-slate-700 dark:text-slate-200"
+                       title="Systemet läser A+B, C+D, E+F osv. automatiskt. Avmarkera för att endast läsa valt kolumnpar.">
+                    <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900" @bind="ReadAllPairs" />
+                    <span>Läs alla kolumnpar automatiskt</span>
+                </label>
+                <label class="inline-flex cursor-pointer items-center gap-2 text-sm text-slate-700 dark:text-slate-200"
+                       title="Rad där kod saknas men namn finns tolkas som en ny kontogrupp.">
+                    <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900" @bind="NameOnlyIsGroup" />
+                    <span>Tolka rad utan kod men med namn som kontogrupp</span>
+                </label>
+            </div>
         }
 
-        <div class="mt-3 max-w-xs">
+        <div class="mt-3 max-w-md">
             <label class="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-200">Vid befintliga konton</label>
-            <select class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind="Strategy">
-                <option value="@DuplicateStrategy.Skip">Hoppa över befintliga konton</option>
-                <option value="@DuplicateStrategy.Update">Uppdatera befintliga konton</option>
-            </select>
+            <AppSelect TValue="DuplicateStrategy"
+                       Options="StrategyOptions"
+                       Value="Strategy"
+                       ValueChanged="OnStrategyChanged"
+                       FullWidth="true" />
+            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                @(Strategy == DuplicateStrategy.Skip
+                    ? "Om kontot redan finns lämnas det oförändrat."
+                    : "Om kontot redan finns uppdateras namn, kontogrupp och kommentarer.")
+            </p>
         </div>
-    </div>
-
-    @* Actions -------------------------------------------------------------- *@
-    <div class="flex flex-wrap items-center gap-2">
-        <button class="inline-flex items-center justify-center rounded-md bg-sky-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-sky-500 dark:hover:bg-sky-400"
-                @onclick="BuildPreview" disabled="@(!CanImport)"
-                title="@(CanImport ? "Läs filen och skapa förhandsgranskning." : "Välj fil och fyll i obligatoriska importinställningar.")">
-            Importera
-        </button>
-
-        <button class="inline-flex items-center justify-center rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-emerald-500 dark:hover:bg-emerald-400"
-                @onclick="Save" disabled="@(!CanSave)"
-                title="@(CanSave ? "Spara giltiga rader." : "Kör importen och granska förhandsgranskningen först.")">
-            @AppLoc[nameof(ResourceApp.save)]
-        </button>
-
-        <button class="inline-flex items-center justify-center rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
-                @onclick="CloseModal" disabled="@IsBusy">
-            @AppLoc[nameof(ResourceApp.cancel)]
-        </button>
-
-        @if (IsBusy)
-        {
-            <MhdLoading />
-        }
     </div>
 
     @if (!string.IsNullOrWhiteSpace(_importError))
@@ -139,46 +188,124 @@
     @if (_previewDone)
     {
         <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
-            <div class="font-medium text-slate-700 dark:text-slate-200">@SavableGroupCount kontogrupper / @SavableCount konton</div>
-            @if (ErrorCount > 0)
+            @if (Format == ImportFormat.PairColumns && PairSummaries.Count > 0)
             {
-                <div class="text-rose-600 dark:text-rose-400">@ErrorCount rader har fel och kan inte sparas.</div>
+                <div class="mb-1 space-y-0.5">
+                    @foreach (var s in PairSummaries)
+                    {
+                        <div class="text-slate-600 dark:text-slate-300">@s.Pair: @s.Groups kontogrupper, @s.Accounts konton</div>
+                    }
+                </div>
             }
-            @if (DuplicateCount > 0 && Strategy == DuplicateStrategy.Skip)
+
+            <div class="font-medium text-slate-700 dark:text-slate-200">
+                Totalt: @SavableGroupCount kontogrupper, @SavableCount konton
+                (@NewCount nya, @UpdateCount uppdateras, @(ExistsCount + IgnoredCount) hoppas över),
+                @BlockingCount blockerande fel
+            </div>
+            @if (BlockingCount > 0)
             {
-                <div class="text-amber-600 dark:text-amber-400">@DuplicateCount rader hoppas över (finns redan).</div>
+                <div class="text-rose-600 dark:text-rose-400">
+                    Det finns blockerande fel. Korrigera eller ta bort raderna innan du sparar.
+                </div>
+            }
+            @if (ExistsCount > 0 && Strategy == DuplicateStrategy.Skip)
+            {
+                <div class="text-amber-600 dark:text-amber-400">@ExistsCount rader hoppas över (finns redan).</div>
+            }
+            @if (IgnoredCount > 0)
+            {
+                <div class="text-slate-500 dark:text-slate-400">@IgnoredCount rader ignoreras (dubbletter i filen).</div>
             }
             @if (NewGroupNames.Count > 0)
             {
                 <div class="text-slate-600 dark:text-slate-300">Nya kontogrupper skapas: @string.Join(", ", NewGroupNames)</div>
             }
+            <div class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                Du kan redigera fälten nedan eller ta bort rader innan du sparar. Ändringarna påverkar bara importen, inte originalfilen.
+            </div>
         </div>
 
-        <div class="max-h-[40vh] overflow-auto rounded-lg border border-slate-200 dark:border-slate-700">
+        <div class="max-h-[48vh] overflow-auto rounded-lg border border-slate-200 dark:border-slate-700">
             <table class="min-w-full text-sm">
-                <thead class="sticky top-0 bg-slate-50 dark:bg-slate-800/90">
+                <thead class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-800/90">
                     <tr class="text-left text-xs font-semibold text-slate-500 dark:text-slate-300">
-                        <th class="px-3 py-2">Kontogrupp</th>
-                        <th class="px-3 py-2">Kod</th>
-                        <th class="px-3 py-2">Namn</th>
-                        <th class="px-3 py-2">Kommentar 1</th>
-                        <th class="px-3 py-2">Kommentar 2</th>
-                        <th class="px-3 py-2">Status</th>
+                        <th class="px-2 py-2">Rad</th>
+                        @if (Format == ImportFormat.PairColumns)
+                        {
+                            <th class="px-2 py-2">Kolumnpar</th>
+                        }
+                        <th class="px-2 py-2">Kontogrupp</th>
+                        <th class="px-2 py-2">Kod</th>
+                        <th class="px-2 py-2">Namn</th>
+                        <th class="px-2 py-2">Kommentar 1</th>
+                        <th class="px-2 py-2">Kommentar 2</th>
+                        <th class="px-2 py-2">Status</th>
+                        <th class="px-2 py-2"></th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
                     @foreach (var row in Preview)
                     {
-                        <tr class="@(row.Status == PreviewStatus.Error ? "bg-rose-50/60 dark:bg-rose-950/20" : "hover:bg-slate-50 dark:hover:bg-slate-800/40")">
-                            <td class="px-3 py-1.5 text-slate-700 dark:text-slate-200">@row.Group</td>
-                            <td class="px-3 py-1.5 font-medium text-slate-800 dark:text-slate-100">@row.Code</td>
-                            <td class="px-3 py-1.5 text-slate-700 dark:text-slate-200">@row.Name</td>
-                            <td class="px-3 py-1.5 text-slate-500 dark:text-slate-400">@row.Comment1</td>
-                            <td class="px-3 py-1.5 text-slate-500 dark:text-slate-400">@row.Comment2</td>
-                            <td class="px-3 py-1.5">
-                                <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium @StatusClass(row.Status)">
+                        <tr class="@RowClass(row)">
+                            <td class="px-2 py-1 text-xs text-slate-400 dark:text-slate-500">@row.SourceRow</td>
+                            @if (Format == ImportFormat.PairColumns)
+                            {
+                                <td class="px-2 py-1 text-xs text-slate-400 dark:text-slate-500">@row.PairLabel</td>
+                            }
+
+                            @if (row.IsGroupRow)
+                            {
+                                <td class="px-2 py-1" colspan="5">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs font-semibold text-indigo-500 dark:text-indigo-300">Kontogrupp</span>
+                                        <input type="text" value="@row.Name"
+                                               class="w-64 rounded-md border border-slate-300 bg-white px-2 py-1 text-sm font-medium dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                                               @onchange="e => OnGroupRowNameChanged(row, e)" />
+                                    </div>
+                                </td>
+                            }
+                            else
+                            {
+                                <td class="px-2 py-1">
+                                    <input type="text" value="@row.Group"
+                                           class="w-full min-w-[8rem] rounded-md border border-slate-300 bg-white px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                                           @onchange="e => { row.Group = e.Value?.ToString() ?? string.Empty; OnAccountGroupEdited(row); }" />
+                                </td>
+                                <td class="px-2 py-1">
+                                    <input type="text" value="@row.Code"
+                                           class="w-24 rounded-md border border-slate-300 bg-white px-2 py-1 text-sm font-medium dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                                           @onchange="e => { row.Code = e.Value?.ToString() ?? string.Empty; OnRowEdited(); }" />
+                                </td>
+                                <td class="px-2 py-1">
+                                    <input type="text" value="@row.Name"
+                                           class="w-full min-w-[10rem] rounded-md border border-slate-300 bg-white px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                                           @onchange="e => { row.Name = e.Value?.ToString() ?? string.Empty; OnRowEdited(); }" />
+                                </td>
+                                <td class="px-2 py-1">
+                                    <input type="text" value="@row.Comment1"
+                                           class="w-full min-w-[6rem] rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                                           @onchange="e => { row.Comment1 = e.Value?.ToString() ?? string.Empty; OnRowEdited(); }" />
+                                </td>
+                                <td class="px-2 py-1">
+                                    <input type="text" value="@row.Comment2"
+                                           class="w-full min-w-[6rem] rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                                           @onchange="e => { row.Comment2 = e.Value?.ToString() ?? string.Empty; OnRowEdited(); }" />
+                                </td>
+                            }
+
+                            <td class="px-2 py-1">
+                                <span class="inline-flex items-center whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium @StatusClass(row.Status)">
                                     @StatusText(row)
                                 </span>
+                            </td>
+                            <td class="px-2 py-1 text-right">
+                                <button type="button"
+                                        class="rounded-md px-2 py-1 text-xs font-medium text-rose-600 transition hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40"
+                                        title="Raden tas bort från denna import. Originalfilen ändras inte."
+                                        @onclick="() => RemoveRow(row)">
+                                    Ta bort
+                                </button>
                             </td>
                         </tr>
                     }
@@ -186,32 +313,175 @@
             </table>
         </div>
     }
+
+    @* Latest imports --------------------------------------------------------- *@
+    <div class="rounded-lg border border-slate-200 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-900/60">
+        <div class="mb-2 text-xs font-semibold text-slate-500 dark:text-slate-400">Senaste importer</div>
+
+        @if (Batches.Count == 0)
+        {
+            <div class="text-sm text-slate-400 dark:text-slate-500">Inga tidigare importer.</div>
+        }
+        else
+        {
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm">
+                    <thead>
+                        <tr class="text-left text-xs font-semibold text-slate-500 dark:text-slate-300">
+                            <th class="px-2 py-1.5">Datum</th>
+                            <th class="px-2 py-1.5">Fil</th>
+                            <th class="px-2 py-1.5">Importtyp</th>
+                            <th class="px-2 py-1.5">Importerad av</th>
+                            <th class="px-2 py-1.5">Skapade</th>
+                            <th class="px-2 py-1.5">Uppdaterade</th>
+                            <th class="px-2 py-1.5">Hoppade över</th>
+                            <th class="px-2 py-1.5"></th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                        @foreach (var batch in Batches)
+                        {
+                            <tr class="@(batch.IsUndone ? "opacity-60" : "")">
+                                <td class="px-2 py-1.5 whitespace-nowrap text-slate-600 dark:text-slate-300">@batch.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td class="px-2 py-1.5 text-slate-700 dark:text-slate-200">@batch.FileName</td>
+                                <td class="px-2 py-1.5 text-slate-600 dark:text-slate-300">@ImportTypeName(batch.ImportType)</td>
+                                <td class="px-2 py-1.5 text-slate-600 dark:text-slate-300">@batch.ImportedBy</td>
+                                <td class="px-2 py-1.5 text-slate-600 dark:text-slate-300">@batch.GroupsCreated grupper, @batch.AccountsCreated konton</td>
+                                <td class="px-2 py-1.5 text-slate-600 dark:text-slate-300">@batch.AccountsUpdated</td>
+                                <td class="px-2 py-1.5 text-slate-600 dark:text-slate-300">@batch.AccountsSkipped</td>
+                                <td class="px-2 py-1.5">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        @if (batch.IsUndone)
+                                        {
+                                            <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">Ångrad</span>
+                                        }
+                                        <button type="button"
+                                                class="rounded-md border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+                                                @onclick="() => ToggleBatchRowsAsync(batch)">
+                                            @(_expandedBatchId == batch.Id ? "Dölj rader" : "Visa importerade rader")
+                                        </button>
+                                        @if (!batch.IsUndone)
+                                        {
+                                            <button type="button"
+                                                    class="rounded-md border border-rose-300 px-2 py-1 text-xs font-medium text-rose-600 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-rose-800 dark:text-rose-400 dark:hover:bg-rose-950/40"
+                                                    disabled="@(!batch.CanUndo || IsBusy)"
+                                                    title="@UndoTooltip(batch)"
+                                                    @onclick="() => UndoBatch(batch)">
+                                                Ångra import
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                            @if (_expandedBatchId == batch.Id)
+                            {
+                                <tr>
+                                    <td colspan="8" class="px-2 py-2">
+                                        @if (_batchRows.Count == 0)
+                                        {
+                                            <div class="text-xs text-slate-400 dark:text-slate-500">Inga sparade rader för denna import.</div>
+                                        }
+                                        else
+                                        {
+                                            <div class="max-h-52 overflow-auto rounded-md border border-slate-200 dark:border-slate-700">
+                                                <table class="min-w-full text-xs">
+                                                    <thead class="sticky top-0 bg-slate-50 dark:bg-slate-800/90">
+                                                        <tr class="text-left font-semibold text-slate-500 dark:text-slate-300">
+                                                            <th class="px-2 py-1">Kontogrupp</th>
+                                                            <th class="px-2 py-1">Kod</th>
+                                                            <th class="px-2 py-1">Namn</th>
+                                                            <th class="px-2 py-1">Åtgärd</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                                                        @foreach (var r in _batchRows)
+                                                        {
+                                                            <tr>
+                                                                <td class="px-2 py-1 text-slate-600 dark:text-slate-300">@r.Group</td>
+                                                                <td class="px-2 py-1 font-medium text-slate-700 dark:text-slate-200">@r.Code</td>
+                                                                <td class="px-2 py-1 text-slate-600 dark:text-slate-300">@r.Name</td>
+                                                                <td class="px-2 py-1 text-slate-500 dark:text-slate-400">@r.Action</td>
+                                                            </tr>
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+
+    @* Fixed action footer ---------------------------------------------------- *@
+    <div class="sticky bottom-0 z-20 -mx-4 -mb-3 mt-1 flex flex-wrap items-center gap-2 border-t border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900">
+        <button class="inline-flex items-center justify-center rounded-md bg-sky-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-sky-500 dark:hover:bg-sky-400"
+                @onclick="BuildPreview" disabled="@(!CanPreview)"
+                title="@(CanPreview ? "Läser filen och visar förhandsgranskning. Inget sparas ännu." : "Välj fil och fyll i obligatoriska importinställningar.")">
+            Förhandsgranska import
+        </button>
+
+        <button class="inline-flex items-center justify-center rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-emerald-500 dark:hover:bg-emerald-400"
+                @onclick="Save" disabled="@(!CanSave)"
+                title="@SaveTooltip">
+            Spara import
+        </button>
+
+        <button class="inline-flex items-center justify-center rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+                @onclick="CloseModal" disabled="@IsBusy">
+            @AppLoc[nameof(ResourceApp.cancel)]
+        </button>
+
+        @if (_previewDone)
+        {
+            <span class="text-xs text-slate-500 dark:text-slate-400">
+                @SavableCount rader sparas@(BlockingCount > 0 ? $" · {BlockingCount} blockerande fel" : "")
+            </span>
+        }
+
+        @if (IsBusy)
+        {
+            <MhdLoading />
+        }
+    </div>
 </div>
 
 @code {
-    private RenderFragment NumberField(string label, int value, Action<int> setter) => builder =>
+    private IReadOnlyList<AppSelect<DuplicateStrategy>.Option> StrategyOptions =>
+    [
+        new(DuplicateStrategy.Skip, "Hoppa över befintliga konton"),
+        new(DuplicateStrategy.Update, "Uppdatera befintliga konton")
+    ];
+
+    private void SetFormat(ImportFormat format)
     {
-        builder.OpenElement(0, "div");
-        builder.OpenElement(1, "label");
-        builder.AddAttribute(2, "class", "mb-1 block text-xs font-medium text-slate-700 dark:text-slate-200");
-        builder.AddContent(3, label);
-        builder.CloseElement();
-        builder.OpenElement(4, "input");
-        builder.AddAttribute(5, "type", "number");
-        builder.AddAttribute(6, "min", "0");
-        builder.AddAttribute(7, "step", "1");
-        builder.AddAttribute(8, "class", "w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100");
-        builder.AddAttribute(9, "value", value);
-        builder.AddAttribute(10, "onchange", EventCallback.Factory.CreateBinder<int>(this, v => setter(v), value));
-        builder.CloseElement();
-        builder.CloseElement();
+        if (Format == format)
+            return;
+
+        Format = format;
+        _importError = null;
+        ResetPreview();
+    }
+
+    private static string RowClass(PreviewRow row) => row switch
+    {
+        { IsGroupRow: true } => "bg-indigo-50/50 dark:bg-indigo-950/20",
+        { Status: PreviewStatus.Error } => "bg-rose-50/60 dark:bg-rose-950/20",
+        _ => "hover:bg-slate-50 dark:hover:bg-slate-800/40"
     };
 
     private static string StatusClass(PreviewStatus status) => status switch
     {
         PreviewStatus.New => "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
         PreviewStatus.Update => "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300",
-        PreviewStatus.Duplicate => "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+        PreviewStatus.Exists => "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+        PreviewStatus.Ignored => "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
+        PreviewStatus.GroupNew => "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300",
+        PreviewStatus.GroupExisting => "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-300",
         _ => "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
     };
 
@@ -219,7 +489,10 @@
     {
         PreviewStatus.New => "Ny",
         PreviewStatus.Update => "Uppdateras",
-        PreviewStatus.Duplicate => string.IsNullOrWhiteSpace(row.Error) ? "Dubblett" : row.Error,
+        PreviewStatus.Exists => "Finns redan",
+        PreviewStatus.Ignored => string.IsNullOrWhiteSpace(row.Error) ? "Ignoreras" : $"Ignoreras: {row.Error}",
+        PreviewStatus.GroupNew => "Ny kontogrupp",
+        PreviewStatus.GroupExisting => "Kontogrupp",
         _ => string.IsNullOrWhiteSpace(row.Error) ? "Fel" : $"Fel: {row.Error}"
     };
 }

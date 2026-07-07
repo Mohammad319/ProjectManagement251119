@@ -1,5 +1,6 @@
 ﻿using ProjectManagement.Shared.Constant;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace ProjectManagement.Shared.Base.Application
@@ -22,6 +23,13 @@ namespace ProjectManagement.Shared.Base.Application
         public bool IsComputed { get; set; }
         public string Validation { get; set; } = "";
         public string Style { get; set; } = string.Empty;
+
+        /// <summary>Admin-defined alternatives when the field type is Dropdown.</summary>
+        public List<string> Options { get; set; } = [];
+
+        /// <summary>Links a row attribute back to the section-level column definition it mirrors
+        /// (used by the simple visibility conditions to find answers for a column).</summary>
+        public Guid TemplateColumnId { get; set; }
     }
     public class RowBase
     {
@@ -38,5 +46,8 @@ namespace ProjectManagement.Shared.Base.Application
         public string Style { get; set; } = string.Empty;
         public string StyleRow { get; set; } = string.Empty;
         public bool IsVisible { get; set; } = true;
+
+        /// <summary>Null = always visible (simple visibility condition, see <see cref="SelfInspectionVisibilityCondition"/>).</summary>
+        public SelfInspectionVisibilityCondition? VisibleWhen { get; set; }
     }
 }

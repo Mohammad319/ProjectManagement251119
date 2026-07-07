@@ -350,7 +350,7 @@
                                             var blockedByDeptAccess = DeptAccessCoversNewShare(user);
                                             var disabled = user.AlreadyDirect || blockedAsViewer || blockedByDeptAccess;
                                             var tip = user.AlreadyDirect ? user.AccessNote
-                                                : blockedAsViewer ? "Personen har systemrollen Visare och kan bara få åtkomstnivån Kan visa."
+                                                : blockedAsViewer ? "Personen har behörigheten Läsare och kan bara få åtkomstnivån Kan visa."
                                                 : user.AccessNote;
                                             <label class="flex items-center gap-2 rounded px-1.5 py-1 text-sm @(disabled ? "opacity-50" : "hover:bg-slate-50 dark:hover:bg-slate-800")"
                                                    title="@tip">
@@ -363,7 +363,7 @@
                                                 @if (user.IsViewer)
                                                 {
                                                     <span class="shrink-0 cursor-help rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-400"
-                                                          title="Personen har systemrollen Visare och kan bara få åtkomstnivån Kan visa.">Visare</span>
+                                                          title="Personen har behörigheten Läsare och kan bara få åtkomstnivån Kan visa.">Läsare</span>
                                                 }
                                                 @if (!string.IsNullOrWhiteSpace(user.ShortStatus))
                                                 {
@@ -464,7 +464,7 @@
                                        Value="_role"
                                        ValueChanged="OnRoleChanged"
                                        Options="RoleItems"
-                                       Title="@(DisableEditOption ? "Personen har systemrollen Visare och kan bara få åtkomstnivån Kan visa." : null)" />
+                                       Title="@(DisableEditOption ? "Personen har behörigheten Läsare och kan bara få åtkomstnivån Kan visa." : null)" />
                     </div>
 
                     @* Delningsomfattning – två tydliga lägen: alla kalkyler (inkl. nya) eller bara valda.
@@ -820,7 +820,7 @@
             Value = PMRolesConst.Tenant.Manger,
             Label = "Kan ändra",
             Disabled = DisableEditOption,
-            Title = DisableEditOption ? "Personen har systemrollen Visare och kan bara få åtkomstnivån Kan visa." : null,
+            Title = DisableEditOption ? "Personen har behörigheten Läsare och kan bara få åtkomstnivån Kan visa." : null,
         },
     };
 

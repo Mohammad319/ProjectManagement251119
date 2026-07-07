@@ -24,10 +24,11 @@ public partial class AccountGroupsUI
     private string SearchText = string.Empty;
     private int? GroupFilter;
     private VisibleFilter VisibleState = VisibleFilter.All;
-    private bool ShowCommentColumn = true;
 
-    // Column chooser (which optional comment columns are shown while "Visa kommentarer" is on).
+    // Column chooser. Standard columns: Kod, Namn, Kontogrupp, Synlig, Kommentar 1, Åtgärder.
     private bool _columnsMenuOpen;
+    private bool ShowGroupColumn = true;
+    private bool ShowVisibleColumn = true;
     private bool ShowComment1 = true;
     private bool ShowComment2 = false;
 
@@ -176,11 +177,15 @@ public partial class AccountGroupsUI
 
     private void ToggleColumnsMenu() => _columnsMenuOpen = !_columnsMenuOpen;
 
-    private bool ShowComment1Column => ShowCommentColumn && ShowComment1;
-    private bool ShowComment2Column => ShowCommentColumn && ShowComment2;
+    private bool ShowComment1Column => ShowComment1;
+    private bool ShowComment2Column => ShowComment2;
 
-    // Kod, Namn, Kontogrupp, Synlig, Åtgärder + optional comment columns.
-    private int ColumnCount => 5 + (ShowComment1Column ? 1 : 0) + (ShowComment2Column ? 1 : 0);
+    // Kod, Namn, Åtgärder always + the toggleable columns.
+    private int ColumnCount => 3
+        + (ShowGroupColumn ? 1 : 0)
+        + (ShowVisibleColumn ? 1 : 0)
+        + (ShowComment1Column ? 1 : 0)
+        + (ShowComment2Column ? 1 : 0);
 
     private bool HasAnyAccounts => AllAccounts.Count > 0;
 
@@ -211,8 +216,8 @@ public partial class AccountGroupsUI
 
     private string VisibleFilterLabel => VisibleState switch
     {
-        VisibleFilter.Visible => AppLoc[nameof(ResourceApp.visible)],
-        VisibleFilter.Hidden => AppLoc[nameof(ResourceApp.hiddenItems)],
+        VisibleFilter.Visible => "Synliga",
+        VisibleFilter.Hidden => "Dolda",
         _ => "Alla"
     };
 
@@ -307,7 +312,7 @@ public partial class AccountGroupsUI
             {
                 [nameof(AccountImportFromFile.OnSaved)] = EventCallback.Factory.Create<bool>(this, OnImportSavedAsync)
             },
-            MhdDialogSize.ExtraLarge);
+            MhdDialogSize.FullScreen);
 
     private async Task OnImportSavedAsync(bool refresh)
     {

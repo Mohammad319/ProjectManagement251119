@@ -351,4 +351,20 @@
     .pm-control-shell :where([role="tooltip"]) {
         z-index: 120;
     }
+
+    /* Number inputs inside the settings shell / dialogs shouldn't show browser spinner arrows;
+       typing numeric values still works and the value binds as before. */
+    .pm-control-shell input[type="number"]::-webkit-outer-spin-button,
+    .pm-control-shell input[type="number"]::-webkit-inner-spin-button,
+    .mhd-dialog-body input[type="number"]::-webkit-outer-spin-button,
+    .mhd-dialog-body input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    .pm-control-shell input[type="number"],
+    .mhd-dialog-body input[type="number"] {
+        -moz-appearance: textfield;
+        appearance: textfield;
+    }
 }

@@ -475,15 +475,9 @@ public sealed class TenantUserService(
         return string.IsNullOrWhiteSpace(name) ? "Ingen avdelning" : name;
     }
 
-    /// <summary>Swedish label for a tenant role value, matching the UI's role labels.</summary>
-    private static string TenantRoleLabelSv(string? role) => role switch
-    {
-        PMRolesConst.Tenant.Admin => "Admin",
-        PMRolesConst.Tenant.Manger => "Användare",
-        PMRolesConst.Tenant.User => "Visare",
-        PMRolesConst.Tenant.Viewer => "Visare",
-        _ => string.IsNullOrWhiteSpace(role) ? "—" : role
-    };
+    /// <summary>Swedish label for a tenant role value, matching the UI's permission labels.</summary>
+    private static string TenantRoleLabelSv(string? role)
+        => string.IsNullOrWhiteSpace(role) ? "—" : UI.PermissionDisplay.Label(role);
 
     private async Task<bool> DeleteUserFromAuthAsync(string authId)
     {
@@ -842,8 +836,8 @@ public sealed class TenantUserService(
             user.Id,
             DisplayName(user.Firstname, user.Lastname, user.Email),
             previousRole is not null && previousRoleLabel != newRoleLabel
-                ? $"Roll ändrad från {previousRoleLabel} till {newRoleLabel}"
-                : $"Roll: {newRoleLabel}",
+                ? $"Behörighet ändrad från {previousRoleLabel} till {newRoleLabel}"
+                : $"Behörighet: {newRoleLabel}",
             ct: ct);
         return true;
     }

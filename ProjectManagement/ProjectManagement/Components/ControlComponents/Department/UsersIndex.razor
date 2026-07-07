@@ -2,6 +2,7 @@
 @using Domain.DTO.User
 @using ProjectManagement.Client.Shared.Constants
 @using ProjectManagement.Shared
+@using ProjectManagement.Services.UI
 
 @inherits AppComponentBase
 
@@ -133,10 +134,10 @@
             </div>
 
             <div class="mt-1.5 flex flex-wrap items-center gap-1.5 px-1 text-[11px] text-slate-500 dark:text-slate-400">
-                <span class="font-semibold tracking-wide">@WebLoc["RoleDistribution"]:</span>
-                <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 dark:bg-slate-800">@WebLoc["LevelManager"] <b class="text-slate-700 dark:text-slate-200">@ManagerCount</b></span>
-                <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 dark:bg-slate-800">@WebLoc["LevelUser"] <b class="text-slate-700 dark:text-slate-200">@MemberCount</b></span>
-                <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 dark:bg-slate-800">@WebLoc["LevelGuest"] <b class="text-slate-700 dark:text-slate-200">@GuestCount</b></span>
+                <span class="font-semibold tracking-wide">Behörigheter:</span>
+                <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 dark:bg-slate-800" title="@PermissionDisplay.AdministratorDescription">@PermissionDisplay.Administrators <b class="text-slate-700 dark:text-slate-200">@ManagerCount</b></span>
+                <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 dark:bg-slate-800" title="@PermissionDisplay.CalculationUserDescription">@PermissionDisplay.CalculationUsers <b class="text-slate-700 dark:text-slate-200">@MemberCount</b></span>
+                <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 dark:bg-slate-800" title="@PermissionDisplay.ReaderDescription">@PermissionDisplay.Readers <b class="text-slate-700 dark:text-slate-200">@GuestCount</b></span>
             </div>
         </section>
 
@@ -156,7 +157,7 @@
 
                 <div class="min-w-[11rem] flex-1 sm:max-w-48">
                     <FilterMultiSelect TValue="string"
-                                       Placeholder='@WebLoc["AllRoles"]'
+                                       Placeholder="@PermissionDisplay.AllPermissionsLabel"
                                        Options="RoleFilterOptions"
                                        Selected="RoleFilters"
                                        OnChanged="OnFilterChangedAsync" />
@@ -228,7 +229,14 @@
 
                 <MhdTableColumn Title="@ResourceIdentity.email" ColumnKey="email" ValueSelector="u => u.Email" Sortable="true" />
                 <MhdTableColumn Title="@CalcResource.name" ColumnKey="name" ValueSelector="u => GetDisplayName(u)" Sortable="true" />
-                <MhdTableColumn Title='@WebLoc["Role"]' ColumnKey="role" ValueSelector='u => GetRoleName(u)' Sortable="true" />
+                <MhdTableColumn Title="@PermissionDisplay.PermissionLabel" ColumnKey="role" ValueSelector='u => GetRoleName(u)' Sortable="true">
+                    <Template Context="user">
+                        <span class="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                              title="@GetRoleTooltip(user)">
+                            @GetRoleName(user)
+                        </span>
+                    </Template>
+                </MhdTableColumn>
                 <MhdTableColumn Title="Avdelningar" ColumnKey="departments" ValueSelector='u => GetDepartmentDisplayText(u)' Sortable="true">
                     <Template Context="user">
                         <span title="@GetDepartmentName(user)">@GetDepartmentDisplayText(user)</span>
@@ -365,8 +373,8 @@
                         <dd class="break-all font-medium text-slate-900 dark:text-slate-100">@(DetailsUser.Email ?? "—")</dd>
                     </div>
                     <div class="rounded-lg border border-slate-200 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-950">
-                        <dt class="text-xs text-slate-500 dark:text-slate-400">@WebLoc["Role"]</dt>
-                        <dd class="font-medium text-slate-900 dark:text-slate-100">@GetRoleName(DetailsUser)</dd>
+                        <dt class="text-xs text-slate-500 dark:text-slate-400">@PermissionDisplay.PermissionLabel</dt>
+                        <dd class="font-medium text-slate-900 dark:text-slate-100" title="@GetRoleTooltip(DetailsUser)">@GetRoleName(DetailsUser)</dd>
                     </div>
                     <div class="rounded-lg border border-slate-200 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-950">
                         <dt class="text-xs text-slate-500 dark:text-slate-400">@ResourceIdentity.department</dt>

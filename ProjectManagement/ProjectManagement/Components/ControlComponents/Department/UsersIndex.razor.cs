@@ -101,14 +101,14 @@ public partial class UsersIndex : IAsyncDisposable
     protected HashSet<int> DepartmentFilters { get; } = new();
 
     // Options carry the DISPLAY label as their value; filtering compares GetRoleName(user).
-    // This is deliberate: both the Guest tier and the separate Viewer role render as "Visare",
-    // so a single "Visare" option must match users of either underlying role (the old
+    // This is deliberate: both the Guest tier and the separate Viewer role render as "Läsare",
+    // so a single "Läsare" option must match users of either underlying role (the old
     // role-value filter only matched TenantGuest and returned nothing for TenantViewer users).
     protected IReadOnlyList<FilterMultiSelect<string>.Option> RoleFilterOptions =>
     [
-        new(WebLoc["LevelManager"].Value, WebLoc["LevelManager"].Value),
-        new(WebLoc["LevelUser"].Value, WebLoc["LevelUser"].Value),
-        new(WebLoc["LevelGuest"].Value, WebLoc["LevelGuest"].Value),
+        new(PermissionDisplay.Administrator, PermissionDisplay.Administrator),
+        new(PermissionDisplay.CalculationUser, PermissionDisplay.CalculationUser),
+        new(PermissionDisplay.Reader, PermissionDisplay.Reader),
     ];
 
     // Status filter is deliberately limited to the five states that are distinct and actionable.
@@ -164,8 +164,8 @@ public partial class UsersIndex : IAsyncDisposable
     protected bool CapacityReached => ShowCapacity && RegisteredCount >= TenantMaxUsers;
     protected bool CapacityNearLimit => ShowCapacity && !CapacityReached && RegisteredCount >= TenantMaxUsers - 1;
 
-    // Role distribution — counted through GetRoleName so the totals match exactly what the
-    // table shows. Note the "Visare" bucket covers BOTH the Guest tier (Tenant.User) and the
+    // Permission distribution — counted through GetRoleName so the totals match exactly what the
+    // table shows. Note the "Läsare" bucket covers BOTH the Guest tier (Tenant.User) and the
     // separate Viewer role (Tenant.Viewer); the old count only looked at Tenant.User and so
     // reported 0 for tenants whose viewers are on the Tenant.Viewer role.
     protected int ManagerCount => FilteredUsers.Count(x => x.Role == PMRolesConst.Tenant.Admin);
@@ -283,14 +283,9 @@ public partial class UsersIndex : IAsyncDisposable
         }
     }
 
-    protected string GetRoleName(TenantUserDto user) => user.Role switch
-    {
-        PMRolesConst.Tenant.Admin => WebLoc["LevelManager"].Value,
-        PMRolesConst.Tenant.Manger => WebLoc["LevelUser"].Value,
-        PMRolesConst.Tenant.User => WebLoc["LevelGuest"].Value,
-        PMRolesConst.Tenant.Viewer => "Visare",
-        _ => string.IsNullOrWhiteSpace(user.Role) ? "—" : user.Role
-    };
+    protected string GetRoleName(TenantUserDto user) => PermissionDisplay.Label(user.Role);
+
+    protected string GetRoleTooltip(TenantUserDto user) => PermissionDisplay.Tooltip(user.Role);
 
     protected string PageTitle => DepartmentId.HasValue
         ? WebLoc["DepartmentUsersTitle"]
@@ -329,7 +324,7 @@ public partial class UsersIndex : IAsyncDisposable
 
                 RoleFilters.Clear();
                 foreach (var r in saved.Roles ?? [])
-                    RoleFilters.Add(r);
+                    RoleFilters.Add(PermissionDisplay.Label(r));
 
                 StatusFilters.Clear();
                 foreach (var s in saved.Statuses ?? [])
@@ -960,7 +955,7 @@ public partial class UsersIndex : IAsyncDisposable
         {
             ResourceIdentity.email,
             CalcResource.name,
-            WebLoc["Role"].Value,
+            PermissionDisplay.PermissionLabel,
             "Avdelningar",
             "Kontostatus",
             "Inloggningsspärr",

@@ -8,6 +8,12 @@
 <EditForm id="UnderContactForm" class="space-y-3" Model="@underContact" OnValidSubmit=" ()=> SubmitAsync()">
     <DataAnnotationsValidator />
     <FormValidationSummary />
+    @if (!string.IsNullOrWhiteSpace(_nameError))
+    {
+        <div class="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-800/60 dark:bg-red-950/30 dark:text-red-300" role="alert">
+            @_nameError
+        </div>
+    }
     <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
         <div>
             <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.firstname</label>
@@ -63,8 +69,27 @@
         Enum.GetValues<UnderContactStatus>()
             .Select(s => new MhdSelectItem<UnderContactStatus> { Value = s, Label = s.ToSwedish() })
             .ToList();
+
+    private string? _nameError;
+
     private async Task SubmitAsync()
     {
+        // At least one of the name fields must be filled in; everything else is optional.
+        if (string.IsNullOrWhiteSpace(underContact.FirstName) && string.IsNullOrWhiteSpace(underContact.LastName))
+        {
+            _nameError = "Ange förnamn eller efternamn.";
+            return;
+        }
+
+        // Email is optional, but must be valid when provided.
+        if (!string.IsNullOrWhiteSpace(underContact.Email)
+            && !new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(underContact.Email))
+        {
+            _nameError = "Ange en giltig e-postadress.";
+            return;
+        }
+
+        _nameError = null;
         await Callback.InvokeAsync(underContact);
     }
 }

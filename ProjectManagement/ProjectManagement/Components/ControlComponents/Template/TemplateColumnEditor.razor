@@ -44,17 +44,8 @@
         @if (ActiveFilter is not ColumnFilter.Hidden)
         {
             <section class="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                <div class="shrink-0 border-b border-slate-200 px-3 py-2 dark:border-slate-700">
-                    <div class="flex items-center justify-between gap-3">
-                        <div>
-                            <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Synliga kolumner</h3>
-                            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">@AppLoc["visibleColumnsCount", Columns.Count]</p>
-                        </div>
-
-                        <div class="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                            Dra och ändra ordning
-                        </div>
-                    </div>
+                <div class="shrink-0 border-b border-slate-200 px-3 py-1.5 dark:border-slate-700">
+                    <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Synliga kolumner (@Columns.Count)</h3>
                 </div>
 
                 <div class="min-h-0 flex-1 overflow-auto">
@@ -93,9 +84,12 @@
 
                                 <td class="border border-slate-200 px-1 py-0.5 align-middle dark:border-slate-700">
                                     <div class="flex items-center gap-2">
-                                        <div class="flex shrink-0 items-center gap-1">
-                                            <button type="button" class="@IconButtonSecondaryClass" disabled="@isFirst" title="Flytta kolumn överst" @onclick="() => MoveToTop(col)">T</button>
-                                            <button type="button" class="@IconButtonSecondaryClass" disabled="@isFirst" title="Flytta kolumn upp" @onclick="() => MoveUp(col)">^</button>
+                                        @* Order buttons together at the left: ⇈ överst, ↑ upp, ↓ ned, ⇊ nederst. *@
+                                        <div class="flex shrink-0 items-center gap-0.5">
+                                            <button type="button" class="@IconButtonSecondaryClass" disabled="@isFirst" title="Flytta överst" @onclick="() => MoveToTop(col)">⇈</button>
+                                            <button type="button" class="@IconButtonSecondaryClass" disabled="@isFirst" title="Flytta upp" @onclick="() => MoveUp(col)">↑</button>
+                                            <button type="button" class="@IconButtonSecondaryClass" disabled="@isLast" title="Flytta ned" @onclick="() => MoveDown(col)">↓</button>
+                                            <button type="button" class="@IconButtonSecondaryClass" disabled="@isLast" title="Flytta nederst" @onclick="() => MoveToBottom(col)">⇊</button>
                                         </div>
 
                                         <div class="min-w-0 flex-1">
@@ -105,14 +99,9 @@
                                                 <span class="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-600 dark:bg-slate-800 dark:text-slate-300">@ColumnGroup(col.Id)</span>
                                                 @if (col.Frozen)
                                                 {
-                                                    <span class="rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] text-amber-700 dark:bg-amber-950/40 dark:text-amber-200">Fryst</span>
+                                                    <span class="rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] text-amber-700 dark:bg-amber-950/40 dark:text-amber-200" title="Fryst kolumn — ligger kvar vid horisontell scroll">Fryst</span>
                                                 }
                                             </div>
-                                        </div>
-
-                                        <div class="flex shrink-0 items-center gap-1">
-                                            <button type="button" class="@IconButtonSecondaryClass" disabled="@isLast" title="Flytta kolumn ned" @onclick="() => MoveDown(col)">v</button>
-                                            <button type="button" class="@IconButtonSecondaryClass" disabled="@isLast" title="Flytta kolumn nederst" @onclick="() => MoveToBottom(col)">B</button>
                                         </div>
                                     </div>
                                 </td>
@@ -121,14 +110,15 @@
                                     <div class="flex items-center justify-center gap-1 whitespace-nowrap">
                                         <input class="w-[58px] rounded-lg border border-slate-300 bg-white px-1.5 py-1 text-center text-[11px] text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
                                                type="number"
-                                               title="Kolumnbredd"
+                                               inputmode="numeric"
+                                               title="Kolumnbredd (px)"
                                                @bind="col.Width" />
 
                                         <button type="button"
                                                 class="@(col.Frozen ? IconButtonWarningActiveClass : IconButtonWarningClass)"
-                                                title="Frys/fixera kolumn"
+                                                title="@(col.Frozen ? "Fryst kolumn — klicka för att låsa upp" : "Frys kolumnen så att den ligger kvar vid horisontell scroll")"
                                                 @onclick="() => col.Frozen = !col.Frozen">
-                                            F
+                                            ❄
                                         </button>
 
                                         <button type="button"
@@ -149,9 +139,8 @@
         @if (ActiveFilter is not ColumnFilter.Visible and not ColumnFilter.Frozen)
         {
             <section class="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                <div class="shrink-0 border-b border-slate-200 px-3 py-2 dark:border-slate-700">
-                    <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Dolda kolumner</h3>
-                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">@AppLoc["hiddenColumnsCount", HiddenIds.Count()]</p>
+                <div class="shrink-0 border-b border-slate-200 px-3 py-1.5 dark:border-slate-700">
+                    <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Dolda kolumner (@HiddenIds.Count())</h3>
                 </div>
 
                 <div class="min-h-0 flex-1 overflow-auto">

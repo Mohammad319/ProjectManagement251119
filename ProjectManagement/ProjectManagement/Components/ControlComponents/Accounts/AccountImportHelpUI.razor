@@ -1,0 +1,119 @@
+@* Help window for the Kontoplan import formats. Opened from the (i) icons in AccountImportFromFile.
+   All examples are neutral demo data — never real customer data. *@
+
+<div class="space-y-4 p-1 text-sm text-slate-700 dark:text-slate-200">
+    @if (!IsPairFormat)
+    {
+        <p>
+            <strong>Vanligt tabellformat</strong> används när varje rad är ett konto och kontogruppen
+            ligger i en egen kolumn.
+        </p>
+
+        <div>
+            <div class="mb-1 text-xs font-semibold text-slate-500 dark:text-slate-400">Exempel på Excel-struktur</div>
+            <div class="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
+                <table class="min-w-full text-xs">
+                    <thead class="bg-slate-50 dark:bg-slate-800/80">
+                        <tr class="text-left font-semibold text-slate-500 dark:text-slate-300">
+                            <th class="px-2 py-1.5">Rad</th>
+                            <th class="px-2 py-1.5">A — Kontogrupp</th>
+                            <th class="px-2 py-1.5">B — Kod</th>
+                            <th class="px-2 py-1.5">C — Namn</th>
+                            <th class="px-2 py-1.5">D — Kommentar 1</th>
+                            <th class="px-2 py-1.5">E — Kommentar 2</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                        <tr><td class="px-2 py-1 text-slate-400">1</td><td class="px-2 py-1 italic">Kontogrupp</td><td class="px-2 py-1 italic">Kod</td><td class="px-2 py-1 italic">Namn</td><td class="px-2 py-1 italic">Kommentar 1</td><td class="px-2 py-1 italic">Kommentar 2</td></tr>
+                        <tr><td class="px-2 py-1 text-slate-400">2</td><td class="px-2 py-1">Material</td><td class="px-2 py-1">4010</td><td class="px-2 py-1">Inköp material</td><td class="px-2 py-1">Exempelkommentar</td><td class="px-2 py-1"></td></tr>
+                        <tr><td class="px-2 py-1 text-slate-400">3</td><td class="px-2 py-1">Material</td><td class="px-2 py-1">4020</td><td class="px-2 py-1">Transport material</td><td class="px-2 py-1"></td><td class="px-2 py-1"></td></tr>
+                        <tr><td class="px-2 py-1 text-slate-400">4</td><td class="px-2 py-1">Underentreprenörer</td><td class="px-2 py-1">4510</td><td class="px-2 py-1">UE markarbete</td><td class="px-2 py-1"></td><td class="px-2 py-1"></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Rad 1 = rubriker. Rad 2 och nedåt = konton.</p>
+        </div>
+
+        <div>
+            <div class="mb-1 text-xs font-semibold text-slate-500 dark:text-slate-400">Exempel på inställningar</div>
+            <ul class="list-inside list-disc space-y-0.5">
+                <li>Börja från rad nummer: <strong>2</strong></li>
+                <li>Till rad nummer: <strong>tomt</strong> eller sista raden</li>
+                <li>Kontogrupp kolumnnummer: <strong>1</strong></li>
+                <li>Kod kolumnnummer: <strong>2</strong></li>
+                <li>Namn kolumnnummer: <strong>3</strong></li>
+                <li>Kommentar 1 kolumnnummer: <strong>4</strong></li>
+                <li>Kommentar 2 kolumnnummer: <strong>5</strong></li>
+            </ul>
+        </div>
+
+        <div class="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-200">
+            I vanligt tabellformat ligger kontogruppen i en egen kolumn, koden i en egen kolumn och
+            namnet i en egen kolumn. Varje rad är ett konto.
+        </div>
+    }
+    else
+    {
+        <p>
+            <strong>Rubrikbaserat kolumnpar</strong> används när konton ligger i par av kolumner —
+            till exempel A+B, C+D och E+F. Samma namnkolumn används för både kontogrupp och kontonamn.
+        </p>
+
+        <div>
+            <div class="mb-1 text-xs font-semibold text-slate-500 dark:text-slate-400">Regler</div>
+            <ul class="list-inside list-disc space-y-0.5">
+                <li>Om kod <strong>saknas</strong> men namn finns: raden är en <strong>kontogrupp</strong>.</li>
+                <li>Om kod <strong>finns</strong> och namn finns: raden är ett <strong>konto</strong> under senaste kontogrupp.</li>
+                <li>Om både kod och namn saknas: raden hoppas över.</li>
+            </ul>
+        </div>
+
+        <div>
+            <div class="mb-1 text-xs font-semibold text-slate-500 dark:text-slate-400">Exempel på Excel-struktur (kolumn A + B)</div>
+            <div class="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
+                <table class="min-w-full text-xs">
+                    <thead class="bg-slate-50 dark:bg-slate-800/80">
+                        <tr class="text-left font-semibold text-slate-500 dark:text-slate-300">
+                            <th class="px-2 py-1.5">Rad</th>
+                            <th class="px-2 py-1.5">A — Kod</th>
+                            <th class="px-2 py-1.5">B — Namn / Kontogrupp</th>
+                            <th class="px-2 py-1.5">Tolkning</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                        <tr><td class="px-2 py-1 text-slate-400">1</td><td class="px-2 py-1"></td><td class="px-2 py-1 font-medium">Material</td><td class="px-2 py-1 text-slate-500">Kontogrupp: Material</td></tr>
+                        <tr><td class="px-2 py-1 text-slate-400">2</td><td class="px-2 py-1">4010</td><td class="px-2 py-1">Inköp material</td><td class="px-2 py-1 text-slate-500">Konto 4010 under Material</td></tr>
+                        <tr><td class="px-2 py-1 text-slate-400">3</td><td class="px-2 py-1">4020</td><td class="px-2 py-1">Transport material</td><td class="px-2 py-1 text-slate-500">Konto 4020 under Material</td></tr>
+                        <tr><td class="px-2 py-1 text-slate-400">4</td><td class="px-2 py-1"></td><td class="px-2 py-1 font-medium">Underentreprenörer</td><td class="px-2 py-1 text-slate-500">Ny kontogrupp: Underentreprenörer</td></tr>
+                        <tr><td class="px-2 py-1 text-slate-400">5</td><td class="px-2 py-1">4510</td><td class="px-2 py-1">UE markarbete</td><td class="px-2 py-1 text-slate-500">Konto 4510 under Underentreprenörer</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                Systemet kan läsa alla kolumnpar automatiskt: A+B, C+D, E+F, G+H osv.
+            </p>
+        </div>
+
+        <div>
+            <div class="mb-1 text-xs font-semibold text-slate-500 dark:text-slate-400">Exempel på inställningar</div>
+            <ul class="list-inside list-disc space-y-0.5">
+                <li>Börja från rad nummer: <strong>1</strong></li>
+                <li>Till rad nummer: <strong>tomt</strong> eller sista raden</li>
+                <li>Första kodkolumn: <strong>1</strong></li>
+                <li>Första namnkolumn: <strong>2</strong></li>
+                <li>Antal kolumner per par: <strong>2</strong></li>
+                <li>Läs alla kolumnpar automatiskt: <strong>Ja</strong></li>
+                <li>Tolka rad utan kod men med namn som kontogrupp: <strong>Ja</strong></li>
+            </ul>
+        </div>
+
+        <div class="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-200">
+            I detta format finns ingen separat kontogruppkolumn. Kontogruppen hämtas från namnkolumnen
+            när kod saknas.
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public bool IsPairFormat { get; set; }
+}

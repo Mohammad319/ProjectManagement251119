@@ -212,7 +212,7 @@
     <value>Remember me.</value>
   </data>
   <data name="role" xml:space="preserve">
-    <value>Role</value>
+    <value>Permission</value>
   </data>
   <data name="Security_TwoFactorAuthentication" xml:space="preserve">
     <value>Tvåfaktorsautentisering</value>

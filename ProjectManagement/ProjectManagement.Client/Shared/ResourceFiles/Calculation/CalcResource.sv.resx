@@ -175,7 +175,7 @@
     <value>Färdigställandetid</value>
   </data>
   <data name="ev" xml:space="preserve">
-    <value>EV</value>
+    <value>Entreprenadvärde</value>
   </data>
   <data name="factor" xml:space="preserve">
     <value>Faktor</value>
@@ -190,7 +190,7 @@
     <value>Granskare</value>
   </data>
   <data name="keyValue" xml:space="preserve">
-    <value>nyckelvärde</value>
+    <value>Nyckelvärde</value>
   </data>
   <data name="kv" xml:space="preserve">
     <value>KV</value>
@@ -208,7 +208,7 @@
     <value>Nettokalkyl</value>
   </data>
   <data name="netCalOH" xml:space="preserve">
-    <value>Nettokalkyl Omkostnader</value>
+    <value>Omkostnader</value>
   </data>
   <data name="netCostQ" xml:space="preserve">
     <value>Nettokostnad/ enhet</value>
@@ -235,10 +235,10 @@
     <value>Översiktlig information om objektet</value>
   </data>
   <data name="price" xml:space="preserve">
-    <value>Á-pris/ enhet</value>
+    <value>À-pris/enhet</value>
   </data>
   <data name="priceOG" xml:space="preserve">
-    <value>Pris OG</value>
+    <value>Pris</value>
   </data>
   <data name="priceQ" xml:space="preserve">
     <value>Pris/ enhet</value>
@@ -382,7 +382,7 @@
     <value>Risk</value>
   </data>
   <data name="sort" xml:space="preserve">
-    <value>sortering</value>
+    <value>Sortering</value>
   </data>
   <data name="startDate" xml:space="preserve">
     <value>Igångsättningstid</value>
@@ -562,4 +562,6 @@
   <data name="approvalBlockedNoResponsible" xml:space="preserve"><value>Kalkylen kan inte godkännas eftersom ingen kalkylansvarig eller granskare är angiven. Välj kalkylansvarig eller granskare först.</value></data>
   <data name="approvalBlockedInspectorOnly" xml:space="preserve"><value>Bara granskaren ({0}) eller admin får godkänna denna kalkyl.</value></data>
   <data name="approvalBlockedResponsibleOnly" xml:space="preserve"><value>Bara kalkylansvarig ({0}) eller admin får godkänna denna kalkyl.</value></data>
+  <data name="earnings" xml:space="preserve"><value>Intäkter</value></data>
+  <data name="OH" xml:space="preserve"><value>Omkostnadspåslag</value></data>
 </root>

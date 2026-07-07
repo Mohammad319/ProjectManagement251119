@@ -24,12 +24,26 @@ namespace ProjectManagement.Client.Shared.Repositories.Application.Implement
 
         public async Task<int> CreateAsync(ApplicationValuesModel model)
         {
-            return await httpRepository.PostAsync<int, ApplicationValuesDTO>(model.ToApplicationValuesDto(), ApplicationURLBase + URLConst.Application.AppCalculationValues);
+            return await httpRepository.PostAsync<int, ApplicationValuesDTO>(ToWriteDto(model), ApplicationURLBase + URLConst.Application.AppCalculationValues);
         }
 
         public async Task<bool> UpdateAsync(ApplicationValuesModel model)
         {
-            return await httpRepository.PutAsync(model.ToApplicationValuesDto(), ApplicationURLBase + URLConst.Application.AppCalculationValues);
+            return await httpRepository.PutAsync(ToWriteDto(model), ApplicationURLBase + URLConst.Application.AppCalculationValues);
+        }
+
+        // The API links via ApplicationId and never reads the nested template on writes;
+        // a default-constructed Application (empty Name) would fail server model validation.
+        private static ApplicationValuesDTO ToWriteDto(ApplicationValuesModel model)
+        {
+            var dto = model.ToApplicationValuesDto();
+            dto.Application = null;
+            return dto;
+        }
+
+        public async Task<bool> DeleteAsync(int id)
+        {
+            return await httpRepository.DeleteAsync(ApplicationURLBase + URLConst.Application.AppCalculationValues + $"/{id}");
         }
     }
 }

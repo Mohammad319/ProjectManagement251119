@@ -25,21 +25,14 @@
 
             <button type="button" @onclick="CycleVisibleFilter"
                     class="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-2.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-800"
-                    title="@AppLoc[nameof(ResourceApp.isVisible)]">
+                    title="Filtrera på synlighet: Alla / Synliga / Dolda.">
                 @((MarkupString)Icons.GetVisibleIcon(VisibleState != VisibleFilter.Hidden))
                 <span>@VisibleFilterLabel</span>
             </button>
 
-            <label class="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-2.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-800"
-                   title="Visa eller dölj kommentarkolumnen.">
-                <input type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900"
-                       @bind="ShowCommentColumn" />
-                <span>Visa kommentarer</span>
-            </label>
-
             <button type="button" @onclick="ImportForm"
                     class="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-blue-300 bg-blue-50 px-2.5 text-xs font-medium text-blue-700 transition hover:bg-blue-100 dark:border-blue-800/70 dark:bg-blue-950/50 dark:text-blue-300 dark:hover:bg-blue-950/70"
-                    title="Importera konton från fil.">
+                    title="Importera konton från Excel- eller CSV-fil.">
                 Importera
             </button>
 
@@ -54,7 +47,15 @@
                 {
                     <div class="fixed inset-0 z-40" @onclick="ToggleColumnsMenu"></div>
                     <div class="absolute right-0 z-50 mt-1 w-52 rounded-xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900">
-                        <div class="px-1 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">Valfria kolumner</div>
+                        <div class="px-1 pb-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400">Visa kolumner</div>
+                        <label class="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800">
+                            <input type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500" @bind="ShowGroupColumn" />
+                            <span>Kontogrupp</span>
+                        </label>
+                        <label class="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800">
+                            <input type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500" @bind="ShowVisibleColumn" />
+                            <span>Synlig</span>
+                        </label>
                         <label class="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800">
                             <input type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500" @bind="ShowComment1" />
                             <span>Kommentar 1</span>
@@ -63,7 +64,6 @@
                             <input type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500" @bind="ShowComment2" />
                             <span>Kommentar 2</span>
                         </label>
-                        <p class="px-2 pt-1 text-[11px] text-slate-400 dark:text-slate-500">Kräver att "Visa kommentarer" är på.</p>
                     </div>
                 }
             </div>
@@ -113,12 +113,18 @@
                             <th class="border-b border-slate-200 px-3 py-2 dark:border-slate-700">
                                 <button type="button" class="inline-flex items-center gap-1 hover:text-slate-800 dark:hover:text-slate-100" @onclick='() => SortBy("name")'>@CalcLoc[nameof(CalcResource.name)] <span>@SortIndicator("name")</span></button>
                             </th>
-                            <th class="border-b border-slate-200 px-3 py-2 dark:border-slate-700">
-                                <button type="button" class="inline-flex items-center gap-1 hover:text-slate-800 dark:hover:text-slate-100" @onclick='() => SortBy("group")'>@CalcLoc[nameof(CalcResource.accountGroups)] <span>@SortIndicator("group")</span></button>
-                            </th>
-                            <th class="border-b border-slate-200 px-3 py-2 dark:border-slate-700">
-                                <button type="button" class="inline-flex items-center gap-1 hover:text-slate-800 dark:hover:text-slate-100" @onclick='() => SortBy("visible")'>@AppLoc[nameof(ResourceApp.isVisible)] <span>@SortIndicator("visible")</span></button>
-                            </th>
+                            @if (ShowGroupColumn)
+                            {
+                                <th class="border-b border-slate-200 px-3 py-2 dark:border-slate-700">
+                                    <button type="button" class="inline-flex items-center gap-1 hover:text-slate-800 dark:hover:text-slate-100" @onclick='() => SortBy("group")'>@CalcLoc[nameof(CalcResource.accountGroups)] <span>@SortIndicator("group")</span></button>
+                                </th>
+                            }
+                            @if (ShowVisibleColumn)
+                            {
+                                <th class="border-b border-slate-200 px-3 py-2 dark:border-slate-700">
+                                    <button type="button" class="inline-flex items-center gap-1 hover:text-slate-800 dark:hover:text-slate-100" @onclick='() => SortBy("visible")'>Synlig <span>@SortIndicator("visible")</span></button>
+                                </th>
+                            }
                             @if (ShowComment1Column)
                             {
                                 <th class="border-b border-slate-200 px-3 py-2 dark:border-slate-700">Kommentar 1</th>
@@ -146,12 +152,18 @@
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
                                 <td class="border-t border-slate-100 px-3 py-2 font-medium text-slate-800 dark:border-slate-800 dark:text-slate-100">@account.Code</td>
                                 <td class="border-t border-slate-100 px-3 py-2 text-slate-700 dark:border-slate-800 dark:text-slate-200">@account.Name</td>
-                                <td class="border-t border-slate-100 px-3 py-2 text-slate-500 dark:border-slate-800 dark:text-slate-400">@account.AccountGroupName</td>
-                                <td class="border-t border-slate-100 px-3 py-2 dark:border-slate-800">
-                                    <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium @(account.IsVisible ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300")">
-                                        @(account.IsVisible ? AppLoc[nameof(ResourceApp.visible)] : AppLoc[nameof(ResourceApp.hiddenItems)])
-                                    </span>
-                                </td>
+                                @if (ShowGroupColumn)
+                                {
+                                    <td class="border-t border-slate-100 px-3 py-2 text-slate-500 dark:border-slate-800 dark:text-slate-400">@account.AccountGroupName</td>
+                                }
+                                @if (ShowVisibleColumn)
+                                {
+                                    <td class="border-t border-slate-100 px-3 py-2 dark:border-slate-800">
+                                        <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium @(account.IsVisible ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300")">
+                                            @(account.IsVisible ? "Synlig" : "Dold")
+                                        </span>
+                                    </td>
+                                }
                                 @if (ShowComment1Column)
                                 {
                                     <td class="max-w-xs truncate border-t border-slate-100 px-3 py-2 text-slate-500 dark:border-slate-800 dark:text-slate-400">

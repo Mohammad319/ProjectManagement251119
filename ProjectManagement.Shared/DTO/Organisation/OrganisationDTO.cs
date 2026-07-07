@@ -15,7 +15,8 @@ namespace ProjectManagement.Shared.DTO.Organisation
         [MaxLength(250, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string URL { get; set; } = string.Empty;
 
-        [EmailAddress(ErrorMessageResourceName = ErrorsMessages.EmailAddress, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        // Optional; validated in the form ("Ange en giltig e-postadress.") — [EmailAddress]
+        // rejected empty strings with an English message.
         [MaxLength(250, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string Email { get; set; } = string.Empty;
 
@@ -43,11 +44,11 @@ namespace ProjectManagement.Shared.DTO.Organisation
         /// <c>OrganisationTypeId</c> lookup that let tenants seed nonsense values like city names.</summary>
         public string OrganisationType { get; set; } = string.Empty;
 
-        [Phone(ErrorMessage = ErrorsMessages.Phone), DataType(DataType.PhoneNumber, ErrorMessage = ErrorsMessages.Phone)]
+        // Phone/mobile are optional free-form fields — [Phone] rejected empty strings and
+        // produced "The Phone field is required" in the UI.
         [MaxLength(30, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string Phone { get; set; } = string.Empty;
 
-        [Phone(ErrorMessage = ErrorsMessages.Phone), DataType(DataType.PhoneNumber, ErrorMessage = ErrorsMessages.Phone)]
         [MaxLength(30, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string Mobile { get; set; } = string.Empty;
 
@@ -105,7 +106,7 @@ namespace ProjectManagement.Shared.DTO.Organisation
             set => Data.URL = MetadataCloneHelper.CopyText(value);
         }
 
-        [EmailAddress(ErrorMessageResourceName = ErrorsMessages.EmailAddress, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        // Optional; the form shows "Ange en giltig e-postadress." when an invalid address is entered.
         [MaxLength(250, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string Email
         {
@@ -189,7 +190,7 @@ namespace ProjectManagement.Shared.DTO.Organisation
             set => Data.OrganisationType = MetadataCloneHelper.CopyText(value);
         }
 
-        [Phone(ErrorMessage = ErrorsMessages.Phone), DataType(DataType.PhoneNumber, ErrorMessage = ErrorsMessages.Phone)]
+        // Telefonnummer/mobilnummer är valfria fritextfält — inga formatkrav i UI.
         [MaxLength(30, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string Phone
         {
@@ -197,7 +198,6 @@ namespace ProjectManagement.Shared.DTO.Organisation
             set => Data.Phone = MetadataCloneHelper.CopyText(value);
         }
 
-        [Phone(ErrorMessage = ErrorsMessages.Phone), DataType(DataType.PhoneNumber, ErrorMessage = ErrorsMessages.Phone)]
         [MaxLength(30, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string Mobile
         {
@@ -238,6 +238,12 @@ namespace ProjectManagement.Shared.DTO.Organisation
         public string Category { get; set; } = string.Empty;
         public string SubCategory { get; set; } = string.Empty;
         public string Type { get; set; } = string.Empty;
+
+        // Systeminformation (audit trail) — shown collapsed at the bottom of the details window.
+        public DateTime? CreatedAt { get; set; }
+        public string CreatedByName { get; set; } = string.Empty;
+        public DateTime? UpdatedAt { get; set; }
+        public string UpdatedByName { get; set; } = string.Empty;
     }
 
     public class ShortListOrganisationDTO

@@ -6,6 +6,7 @@
 @using Project.ProjectPages
 @using Calculation.Table
 @using ProjectManagement.Client.Pages.Calculation.Chart
+@using ProjectManagement.Client.Pages.Calculation.SelfInspection
 @using ProjectManagement.Client.Services.Calculation.CalculationItems
 @using ProjectManagement.Client.Shared.Repositories.Calculation
 @using BlazorMHD.UI.Core.Navigation
@@ -98,6 +99,7 @@
                 "summary"      => typeof(SummarySheet),
                 "opportunity"  => typeof(OpportunityUI),
                 "chart"        => typeof(ChartCalcUI),
+                "selfInspection" => typeof(SelfInspectionTab),
                 _              => typeof(NelCalculationPage)
             };
         }
@@ -140,6 +142,11 @@
         {
             Key = "chart",
             Text = AppLoc["chart"]
+        },
+        new ()
+        {
+            Key = "selfInspection",
+            Text = "Egenkontroll"
         }
     };
 }

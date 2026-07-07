@@ -1,21 +1,54 @@
-<div class="w-36 overflow-hidden rounded-md border border-slate-200 bg-white text-[10px] shadow-sm dark:border-slate-700 dark:bg-slate-950" title="Preview av utseendemall">
-    <div class="grid grid-cols-[1.2fr_.8fr_.8fr] bg-emerald-100 text-slate-700 dark:bg-emerald-950 dark:text-emerald-100">
-        <span class="border-r border-emerald-200 px-1 py-0.5 dark:border-emerald-800">Rubrik</span>
-        <span class="border-r border-emerald-200 px-1 py-0.5 text-right dark:border-emerald-800">Mängd</span>
-        <span class="px-1 py-0.5 text-right">Summa</span>
+@* Mini preview shown in the template list. Dark=true renders the dark-theme variant so
+   "Standard mörk" and "Standard ljus" are visually distinguishable at a glance. *@
+@if (Dark)
+{
+    <div class="w-36 overflow-hidden rounded-md border border-slate-700 bg-slate-900 text-[10px] text-slate-200 shadow-sm" title="Förhandsvisning av utseendemall (mörk)">
+        <div class="grid grid-cols-[1.2fr_.8fr_.8fr] bg-emerald-950 text-emerald-100">
+            <span class="border-r border-emerald-800 px-1 py-0.5">Rubrik</span>
+            <span class="border-r border-emerald-800 px-1 py-0.5 text-right">Mängd</span>
+            <span class="px-1 py-0.5 text-right">Summa</span>
+        </div>
+        <div class="grid grid-cols-[1.2fr_.8fr_.8fr] border-t border-slate-700">
+            <span class="border-r border-slate-700 px-1 py-0.5">Kalkylpost</span>
+            <span class="border-r border-slate-700 px-1 py-0.5 text-right">12</span>
+            <span class="px-1 py-0.5 text-right">8 400</span>
+        </div>
+        <div class="grid grid-cols-[1.2fr_.8fr_.8fr] border-t border-slate-700 bg-sky-950/60">
+            <span class="border-r border-slate-700 px-1 py-0.5">Resurs</span>
+            <span class="border-r border-slate-700 px-1 py-0.5 text-right">3</span>
+            <span class="px-1 py-0.5 text-right">2 100</span>
+        </div>
+        <div class="grid grid-cols-[1.2fr_.8fr_.8fr] border-t border-slate-600 bg-slate-800 font-semibold">
+            <span class="col-span-2 px-1 py-0.5">Summa</span>
+            <span class="px-1 py-0.5 text-right">10 500</span>
+        </div>
     </div>
-    <div class="grid grid-cols-[1.2fr_.8fr_.8fr] border-t border-slate-200 dark:border-slate-800">
-        <span class="border-r border-slate-200 px-1 py-0.5 dark:border-slate-800">Kalkylpost</span>
-        <span class="border-r border-slate-200 px-1 py-0.5 text-right dark:border-slate-800">12</span>
-        <span class="px-1 py-0.5 text-right">8 400</span>
+}
+else
+{
+    <div class="w-36 overflow-hidden rounded-md border border-slate-200 bg-white text-[10px] text-slate-700 shadow-sm" title="Förhandsvisning av utseendemall (ljus)">
+        <div class="grid grid-cols-[1.2fr_.8fr_.8fr] bg-emerald-100 text-slate-700">
+            <span class="border-r border-emerald-200 px-1 py-0.5">Rubrik</span>
+            <span class="border-r border-emerald-200 px-1 py-0.5 text-right">Mängd</span>
+            <span class="px-1 py-0.5 text-right">Summa</span>
+        </div>
+        <div class="grid grid-cols-[1.2fr_.8fr_.8fr] border-t border-slate-200">
+            <span class="border-r border-slate-200 px-1 py-0.5">Kalkylpost</span>
+            <span class="border-r border-slate-200 px-1 py-0.5 text-right">12</span>
+            <span class="px-1 py-0.5 text-right">8 400</span>
+        </div>
+        <div class="grid grid-cols-[1.2fr_.8fr_.8fr] border-t border-slate-200 bg-sky-50">
+            <span class="border-r border-slate-200 px-1 py-0.5">Resurs</span>
+            <span class="border-r border-slate-200 px-1 py-0.5 text-right">3</span>
+            <span class="px-1 py-0.5 text-right">2 100</span>
+        </div>
+        <div class="grid grid-cols-[1.2fr_.8fr_.8fr] border-t border-slate-300 bg-slate-100 font-semibold">
+            <span class="col-span-2 px-1 py-0.5">Summa</span>
+            <span class="px-1 py-0.5 text-right">10 500</span>
+        </div>
     </div>
-    <div class="grid grid-cols-[1.2fr_.8fr_.8fr] border-t border-slate-200 bg-sky-50 dark:border-slate-800 dark:bg-sky-950/40">
-        <span class="border-r border-slate-200 px-1 py-0.5 dark:border-slate-800">Resurs</span>
-        <span class="border-r border-slate-200 px-1 py-0.5 text-right dark:border-slate-800">3</span>
-        <span class="px-1 py-0.5 text-right">2 100</span>
-    </div>
-    <div class="grid grid-cols-[1.2fr_.8fr_.8fr] border-t border-slate-300 bg-slate-100 font-semibold dark:border-slate-700 dark:bg-slate-800">
-        <span class="col-span-2 px-1 py-0.5">Summa</span>
-        <span class="px-1 py-0.5 text-right">10 500</span>
-    </div>
-</div>
+}
+
+@code {
+    [Parameter] public bool Dark { get; set; }
+}

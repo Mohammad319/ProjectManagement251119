@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet build *)",
+      "Bash(dotnet test *)",
+      "Bash(dotnet restore *)",
+      "Bash(dotnet run *)",
+      "Bash(dotnet publish *)",
+      "Bash(dotnet ef *)",
+      "Bash(dotnet format *)",
+      "Bash(dotnet list *)",
+      "Bash(curl -s *)",
+      "Bash(curl -sk *)",
+      "Bash(tasklist)",
+      "Bash(where *)",
+      "PowerShell(dotnet build *)",
+      "PowerShell(dotnet test *)",
+      "PowerShell(dotnet restore *)",
+      "PowerShell(dotnet run *)",
+      "PowerShell(dotnet ef *)",
+      "PowerShell(dotnet list *)",
+      "PowerShell(Get-Process *)",
+      "PowerShell(Get-ChildItem *)",
+      "PowerShell(Get-Content *)",
+      "PowerShell(Get-Command *)",
+      "PowerShell(Get-Item *)",
+      "PowerShell(Get-NetTCPConnection *)",
+      "PowerShell(Get-Service *)",
+      "PowerShell(Select-String *)",
+      "PowerShell(Select-Object *)",
+      "PowerShell(Test-Path *)",
+      "PowerShell(netstat *)",
+      "Read(//c/Library/**)",
+      "Read(//c/Users/Administrator/Desktop/PM/**)"
+    ]
+  }
+}

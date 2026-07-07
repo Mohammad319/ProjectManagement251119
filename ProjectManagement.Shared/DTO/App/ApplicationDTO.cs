@@ -20,7 +20,9 @@ namespace ProjectManagement.Shared.DTO.App
                 IsComputed = IsComputed,
                 Validation = Validation ?? string.Empty,
                 Style = Style ?? string.Empty,
-                Value = Value ?? string.Empty
+                Value = Value ?? string.Empty,
+                Options = Options?.ToList() ?? [],
+                TemplateColumnId = TemplateColumnId
             };
         }
     }
@@ -44,6 +46,7 @@ namespace ProjectManagement.Shared.DTO.App
                 Style = Style ?? string.Empty,
                 StyleRow = StyleRow ?? string.Empty,
                 IsVisible = IsVisible,
+                VisibleWhen = VisibleWhen?.Clone(),
                 Attributes = Attributes?.Select(x => x.Clone()).ToList() ?? []
             };
         }
@@ -68,6 +71,7 @@ namespace ProjectManagement.Shared.DTO.App
                 SystemTemplateKey = SystemTemplateKey ?? string.Empty,
                 CopiedFromSystemTemplateKey = CopiedFromSystemTemplateKey ?? string.Empty,
                 Sections = Sections?.Select(x => x.Clone()).ToList() ?? [],
+                DefaultColumns = DefaultColumns?.Select(x => x.Clone()).ToList() ?? [],
                 Rows = Rows?.Select(x => x.Clone()).ToList() ?? []
             };
         }

@@ -76,6 +76,8 @@ namespace Persistence.Service.Organisation
                 .AsNoTracking()
                 .Include(x => x.OrganisationCategory).ThenInclude(c => c.ParentCategory)
                 .Include(x => x.OrganisationType)
+                .Include(x => x.CreatedByUser)
+                .Include(x => x.UpdatedByUser)
                 .FirstOrDefaultAsync(x => x.Id == id, ct);
 
             return entity?.ToDetailsDto();

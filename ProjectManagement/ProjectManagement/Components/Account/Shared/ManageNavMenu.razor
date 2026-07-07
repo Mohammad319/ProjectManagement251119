@@ -1,14 +1,14 @@
 @using Microsoft.AspNetCore.Identity
 @using ProjectManagement.Shared
 @inject SignInManager<ApplicationUser> SignInManager
-@inject Microsoft.Extensions.Localization.IStringLocalizer<PMResourceLegal> L
+@inject NavigationManager Nav
 
 @{
-    // Shared item styling. Active state uses a distinct filled + ring look so hover (a plain
-    // slate wash) can never be mistaken for the current page.
+    // Only three main sections — the details live as internal tabs on each section page
+    // (see ManageSectionTabs). Active state uses a filled + ring look so hover can never
+    // be mistaken for the current page.
     const string ItemBase = "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100";
-    const string ItemActive = "bg-sky-50 text-sky-700 font-semibold ring-1 ring-inset ring-sky-200 dark:bg-sky-900/40 dark:text-sky-200 dark:ring-sky-800";
-    const string GroupLabel = "px-3 pb-1 pt-4 text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500";
+    const string ItemActive = "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-semibold bg-sky-50 text-sky-700 ring-1 ring-inset ring-sky-200 dark:bg-sky-900/40 dark:text-sky-200 dark:ring-sky-800";
 }
 
 <nav class="flex flex-col">
@@ -22,65 +22,49 @@
         @PMResourceIdentity.Nav_BackToHome
     </a>
 
-    <div class="@GroupLabel">Konto</div>
     <ul class="flex flex-col space-y-1">
         <li>
-            <NavLink class="@ItemBase" activeClass="@ItemActive" href="Account/Manage" Match="NavLinkMatch.All">
-                @PMResourceIdentity.Menu_Profile
-            </NavLink>
+            <a href="Account/Manage" class="@(ActiveSection == "konto" ? ItemActive : ItemBase)">
+                Konto
+            </a>
         </li>
         <li>
-            <NavLink class="@ItemBase" activeClass="@ItemActive" href="Account/Manage/Email">
-                E-post
-            </NavLink>
+            <a href="Account/Manage/TwoFactorAuthentication" class="@(ActiveSection == "sakerhet" ? ItemActive : ItemBase)">
+                Säkerhet
+            </a>
         </li>
         <li>
-            <NavLink class="@ItemBase" activeClass="@ItemActive" href="Account/Manage/ChangePassword">
-                @PMResourceIdentity.password
-            </NavLink>
-        </li>
-    </ul>
-
-    <div class="@GroupLabel">Säkerhet</div>
-    <ul class="flex flex-col space-y-1">
-        <li>
-            <NavLink class="@ItemBase" activeClass="@ItemActive" href="Account/Manage/TwoFactorAuthentication">
-                @PMResourceIdentity.Security_TwoFactorAuthentication
-            </NavLink>
-        </li>
-        <li>
-            <NavLink class="@ItemBase" activeClass="@ItemActive" href="Account/Manage/Passkeys">
-                @PMIdentityText.PasskeysLabel
-            </NavLink>
-        </li>
-    </ul>
-
-    <div class="@GroupLabel">Data &amp; juridik</div>
-    <ul class="flex flex-col space-y-1">
-        <li>
-            <NavLink class="@ItemBase" activeClass="@ItemActive" href="Account/Manage/PersonalData">
-                @PMResourceIdentity.Label_PersonalData
-            </NavLink>
-        </li>
-        <li>
-            <NavLink class="@ItemBase" activeClass="@ItemActive" href="Account/Manage/Privacy">
-                @L["legalTabPrivacy"]
-            </NavLink>
-        </li>
-        <li>
-            <NavLink class="@ItemBase" activeClass="@ItemActive" href="Account/Manage/Terms">
-                @L["legalTabTerms"]
-            </NavLink>
-        </li>
-        <li>
-            <NavLink class="@ItemBase" activeClass="@ItemActive" href="Account/Manage/Impressum">
-                Impressum
-            </NavLink>
-        </li>
-        <li>
-            <NavLink class="@ItemBase" activeClass="@ItemActive" href="Account/Manage/Libraries">
-                @PMResourceIdentity.Label_ThirdParty
-            </NavLink>
+            <a href="Account/Manage/PersonalData" class="@(ActiveSection == "juridik" ? ItemActive : ItemBase)">
+                Data &amp; juridik
+            </a>
         </li>
     </ul>
 </nav>
+
+@code {
+    private static readonly string[] SakerhetPaths =
+    [
+        "/account/manage/twofactorauthentication", "/account/manage/enableauthenticator",
+        "/account/manage/disable2fa", "/account/manage/resetauthenticator",
+        "/account/manage/generaterecoverycodes", "/account/manage/passkeys", "/account/manage/renamepasskey"
+    ];
+
+    private static readonly string[] JuridikPaths =
+    [
+        "/account/manage/personaldata", "/account/manage/privacy", "/account/manage/terms",
+        "/account/manage/impressum", "/account/manage/libraries"
+    ];
+
+    private string ActiveSection
+    {
+        get
+        {
+            var path = new Uri(Nav.Uri).AbsolutePath.TrimEnd('/').ToLowerInvariant();
+            if (SakerhetPaths.Contains(path))
+                return "sakerhet";
+            if (JuridikPaths.Contains(path))
+                return "juridik";
+            return "konto";
+        }
+    }
+}

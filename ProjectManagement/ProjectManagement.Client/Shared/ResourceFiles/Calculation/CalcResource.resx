@@ -562,4 +562,6 @@
   <data name="approvalBlockedNoResponsible" xml:space="preserve"><value>The calculation cannot be approved because no responsible person or reviewer has been specified. Please select a responsible person or reviewer first.</value></data>
   <data name="approvalBlockedInspectorOnly" xml:space="preserve"><value>Only the reviewer ({0}) or an admin may approve this calculation.</value></data>
   <data name="approvalBlockedResponsibleOnly" xml:space="preserve"><value>Only the responsible person ({0}) or an admin may approve this calculation.</value></data>
+  <data name="earnings" xml:space="preserve"><value>Earnings</value></data>
+  <data name="OH" xml:space="preserve"><value>Overhead surcharge</value></data>
 </root>

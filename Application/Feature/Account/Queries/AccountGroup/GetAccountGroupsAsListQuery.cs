@@ -39,4 +39,21 @@ namespace Application.Feature.Account.Queries
             => service.GetAccountsOverviewAsync(ct);
     }
 
+    public sealed record GetAccountImportBatchesQuery(int Take = 10) : IRequest<List<AccountImportBatchDTO>>;
+
+    public sealed class GetAccountImportBatchesQueryHandler(IAccountGroupService service)
+        : IRequestHandler<GetAccountImportBatchesQuery, List<AccountImportBatchDTO>>
+    {
+        public Task<List<AccountImportBatchDTO>> Handle(GetAccountImportBatchesQuery request, CancellationToken ct)
+            => service.GetImportBatchesAsync(request.Take, ct);
+    }
+
+    public sealed record GetAccountImportBatchRowsQuery(int BatchId) : IRequest<List<AccountImportBatchRowDTO>>;
+
+    public sealed class GetAccountImportBatchRowsQueryHandler(IAccountGroupService service)
+        : IRequestHandler<GetAccountImportBatchRowsQuery, List<AccountImportBatchRowDTO>>
+    {
+        public Task<List<AccountImportBatchRowDTO>> Handle(GetAccountImportBatchRowsQuery request, CancellationToken ct)
+            => service.GetImportBatchRowsAsync(request.BatchId, ct);
+    }
 }

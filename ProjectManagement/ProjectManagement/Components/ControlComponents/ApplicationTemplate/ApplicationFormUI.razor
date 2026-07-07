@@ -1,5 +1,6 @@
 @using Microsoft.AspNetCore.Authorization
 @using ProjectManagement.Shared.Base.Application
+@using ProjectManagement.Shared.DTO.App
 @attribute [Authorize(Roles = PMRolesConst.Tenant.Users)]
 @inherits AppComponentBase
 
@@ -9,12 +10,12 @@
     <div class="space-y-3">
         @* ---------- A. Mallinformation (collapsible) ---------- *@
         <section class="rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
-            <button type="button" class="flex w-full items-center justify-between gap-2 px-3 py-2 text-left" @onclick="() => _infoOpen = !_infoOpen">
+            <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-left" @onclick="() => _infoOpen = !_infoOpen">
+                <svg class="h-5 w-5 shrink-0 text-slate-500 transition-transform duration-150 @(_infoOpen ? "rotate-90" : "")" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
                 <div>
                     <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100">Mallinformation</h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Namn, typ och var mallen används.</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Namn, malltyp och avdelning.</p>
                 </div>
-                <svg class="h-4 w-4 shrink-0 text-slate-400 transition-transform duration-150 @(_infoOpen ? "rotate-90" : "")" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
             </button>
 
             @if (_infoOpen)
@@ -28,7 +29,7 @@
                         </div>
 
                         <div>
-                            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Typ <span class="text-rose-500">*</span></label>
+                            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Malltyp</label>
                             <InputSelect class="pm-input"
                                          Value="@ApplicationUpdate.Data.TemplateType"
                                          ValueChanged="@((string value) => OnTemplateTypeChanged(value))"
@@ -41,39 +42,26 @@
                         </div>
 
                         <div>
-                            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Koppling <span class="text-rose-500">*</span></label>
-                            <InputSelect class="pm-input" @bind-Value="ApplicationUpdate.Data.LinkType">
-                                @foreach (var linkType in LinkTypes)
-                                {
-                                    <option value="@linkType">@linkType</option>
-                                }
-                            </InputSelect>
-                        </div>
-
-                        <div class="xl:col-span-2">
-                            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Beskrivning / syfte</label>
-                            <InputTextArea class="pm-input min-h-20" @bind-Value="ApplicationUpdate.Data.Purpose" />
-                        </div>
-
-                        <div>
                             <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Avdelning</label>
-                            <InputSelect class="pm-input" @bind-Value="ApplicationUpdate.DepartmentId" disabled="@ApplicationUpdate.Data.AllDepartments">
+                            <InputSelect class="pm-input" @bind-Value="DepartmentSelection">
+                                <option value="0">Alla avdelningar</option>
                                 @foreach (var item in Departments)
                                 {
                                     <option value="@item.Id">@item.Name</option>
                                 }
                             </InputSelect>
                         </div>
+
+                        <div class="xl:col-span-4">
+                            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Beskrivning / syfte</label>
+                            <InputTextArea class="pm-input min-h-20" @bind-Value="ApplicationUpdate.Data.Purpose" />
+                        </div>
                     </div>
 
                     <div class="mt-3 flex flex-wrap items-center gap-2">
-                        <label class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800/50">
-                            <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 dark:border-slate-600 dark:bg-slate-800" @bind-Value="ApplicationUpdate.Data.AllDepartments" />
-                            <span>Alla avdelningar</span>
-                        </label>
-                        <label class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800/50">
+                        <label class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800/50" title="Visas för användare">
                             <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 dark:border-slate-600 dark:bg-slate-800" @bind-Value="ApplicationUpdate.IsVisible" />
-                            <span>Visa</span>
+                            <span>Synlig</span>
                         </label>
                         <label class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800/50">
                             <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 dark:border-slate-600 dark:bg-slate-800" @bind-Value="ApplicationUpdate.Data.RequiredBeforeOffer" />
@@ -88,10 +76,10 @@
         <section class="rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
             <div class="flex items-center justify-between gap-2 border-b border-slate-200 px-3 py-2 dark:border-slate-700">
                 <button type="button" class="flex min-w-0 flex-1 items-center gap-2 text-left" @onclick="() => _structureOpen = !_structureOpen">
-                    <svg class="h-4 w-4 shrink-0 text-slate-400 transition-transform duration-150 @(_structureOpen ? "rotate-90" : "")" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                    <svg class="h-5 w-5 shrink-0 text-slate-500 transition-transform duration-150 @(_structureOpen ? "rotate-90" : "")" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
                     <div>
                         <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100">Struktur</h3>
-                        <p class="text-xs text-slate-500 dark:text-slate-400">Sektioner med kontrollpunkter/rader.</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Sektioner med kontrollpunkter och egna svarskolumner.</p>
                     </div>
                 </button>
                 <button type="button" class="pm-btn pm-btn-success shrink-0" @onclick="AddSection">+ Lägg till sektion</button>
@@ -105,15 +93,19 @@
                         var rows = RowsForSection(section).ToList();
                         var expanded = IsSectionExpanded(section);
                         <div @key="section.Id" class="rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/40">
-                            @* Section header: name + counts + status + section actions. *@
+                            @* Section header: expand first, then name + count badge; actions on the right. *@
                             <div class="flex items-center justify-between gap-2 border-b border-slate-200 p-2 dark:border-slate-700">
                                 <button type="button" class="flex min-w-0 flex-1 items-center gap-2 text-left" @onclick="() => ToggleSection(section)">
-                                    <svg class="h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform duration-150 @(expanded ? "rotate-90" : "")" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                                    <svg class="h-4 w-4 shrink-0 text-slate-500 transition-transform duration-150 @(expanded ? "rotate-90" : "")" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
                                     <span class="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">@(string.IsNullOrWhiteSpace(section.Title) ? "Namnlös sektion" : section.Title)</span>
                                     <span class="shrink-0 rounded-full bg-slate-200 px-1.5 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-300">@rows.Count kontrollpunkter</span>
                                     @if (!section.IsVisible)
                                     {
                                         <span class="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">Dold</span>
+                                    }
+                                    @if (section.VisibleWhen is not null)
+                                    {
+                                        <span class="shrink-0 rounded-full bg-sky-100 px-1.5 py-0.5 text-[10px] font-medium text-sky-700 dark:bg-sky-950/40 dark:text-sky-300" title="@ConditionSummary(section.VisibleWhen)">Villkor</span>
                                     }
                                 </button>
                                 <div class="flex shrink-0 items-center gap-1">
@@ -130,9 +122,9 @@
                                     <InputText class="pm-input" @bind-Value="section.Title" placeholder="Sektionens namn" />
                                     <InputText class="pm-input" @bind-Value="section.Description" placeholder="Beskrivning, valfritt" />
                                     <div class="flex flex-wrap items-center gap-3">
-                                        <label class="inline-flex items-center gap-1 text-xs text-slate-600 dark:text-slate-300">
+                                        <label class="inline-flex items-center gap-1 text-xs text-slate-600 dark:text-slate-300" title="Visas för användare">
                                             <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-sky-600" @bind-Value="section.IsVisible" />
-                                            Visa
+                                            Synlig
                                         </label>
                                         <label class="inline-flex items-center gap-1 text-xs text-slate-600 dark:text-slate-300">
                                             <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-sky-600" @bind-Value="section.CollapsedByDefault" />
@@ -141,15 +133,41 @@
                                     </div>
                                 </div>
 
+                                @* Visningsvillkor för sektionen (enkel logik). *@
+                                <div class="border-b border-slate-200 p-2 dark:border-slate-700">
+                                    @ConditionEditor(section.VisibleWhen, c => section.VisibleWhen = c)
+                                </div>
+
+                                @* Svarskolumner för denna sektion. *@
+                                <div class="border-b border-slate-200 dark:border-slate-700">
+                                    <div class="flex items-center justify-between gap-2 px-2 py-1.5">
+                                        <button type="button" class="flex items-center gap-1.5 text-left text-xs font-semibold text-slate-600 dark:text-slate-300" @onclick="() => ToggleColumnsEditor(section)">
+                                            <svg class="h-3.5 w-3.5 shrink-0 text-slate-500 transition-transform duration-150 @(IsColumnsEditorOpen(section) ? "rotate-90" : "")" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                                            Svarskolumner för denna sektion
+                                            <span class="rounded-full bg-slate-200 px-1.5 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-300">@section.Columns.Count</span>
+                                        </button>
+                                        <button type="button" class="pm-btn pm-btn-neutral shrink-0" @onclick="() => AddColumn(section)">+ Lägg till svarskolumn</button>
+                                    </div>
+
+                                    @if (IsColumnsEditorOpen(section))
+                                    {
+                                        <div class="px-2 pb-2">
+                                            @ColumnsEditor(section)
+                                        </div>
+                                    }
+                                </div>
+
                                 <div class="overflow-x-auto">
                                     <table class="min-w-full text-sm">
                                         <thead class="bg-white dark:bg-slate-900">
                                             <tr>
                                                 <th class="px-2 py-2 text-left font-semibold text-slate-600 dark:text-slate-200">Kontrollpunkt / rad</th>
                                                 <th class="px-2 py-2 text-left font-semibold text-slate-600 dark:text-slate-200">Hjälptext</th>
-                                                <th class="w-24 px-2 py-2 text-left font-semibold text-slate-600 dark:text-slate-200">Obligatorisk</th>
-                                                <th class="w-20 px-2 py-2 text-left font-semibold text-slate-600 dark:text-slate-200">Visa</th>
-                                                <th class="w-32 px-2 py-2 text-left font-semibold text-slate-600 dark:text-slate-200">Åtgärder</th>
+                                                <th class="w-12 px-1 py-2 text-center font-semibold text-slate-600 dark:text-slate-200" title="Obligatorisk">Krävs</th>
+                                                <th class="w-12 px-1 py-2 text-center font-semibold text-slate-600 dark:text-slate-200" title="Synlig — visas för användare">
+                                                    <span class="inline-flex items-center" aria-label="Synlig">@((MarkupString)Icons.EyeIcon)</span>
+                                                </th>
+                                                <th class="w-36 px-2 py-2 text-left font-semibold text-slate-600 dark:text-slate-200">Åtgärder</th>
                                             </tr>
                                         </thead>
                                         <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
@@ -164,18 +182,33 @@
                                                 @foreach (var row in rows)
                                                 {
                                                     <tr @key="row.ID">
-                                                        <td class="px-2 py-2"><InputText class="pm-input" @bind-Value="row.Name" /></td>
+                                                        <td class="px-2 py-2">
+                                                            <InputText class="pm-input" @bind-Value="row.Name" />
+                                                            @if (row.VisibleWhen is not null)
+                                                            {
+                                                                <div class="mt-0.5 text-[10px] text-sky-600 dark:text-sky-400">@ConditionSummary(row.VisibleWhen)</div>
+                                                            }
+                                                        </td>
                                                         <td class="px-2 py-2"><InputText class="pm-input" @bind-Value="row.HelpText" /></td>
-                                                        <td class="px-2 py-2"><InputCheckbox class="h-4 w-4 rounded border-slate-300 text-sky-600" @bind-Value="row.IsRequired" /></td>
-                                                        <td class="px-2 py-2"><InputCheckbox class="h-4 w-4 rounded border-slate-300 text-sky-600" @bind-Value="row.IsVisible" /></td>
+                                                        <td class="px-1 py-2 text-center"><InputCheckbox class="h-4 w-4 rounded border-slate-300 text-sky-600" title="Obligatorisk" @bind-Value="row.IsRequired" /></td>
+                                                        <td class="px-1 py-2 text-center"><InputCheckbox class="h-4 w-4 rounded border-slate-300 text-sky-600" title="Synlig — visas för användare" @bind-Value="row.IsVisible" /></td>
                                                         <td class="px-2 py-2">
                                                             <div class="flex items-center gap-1">
                                                                 <button type="button" class="pm-icon-btn" title="Flytta upp" disabled="@(!CanMoveRow(row, -1))" @onclick="() => MoveRow(row, -1)">↑</button>
                                                                 <button type="button" class="pm-icon-btn" title="Flytta ned" disabled="@(!CanMoveRow(row, 1))" @onclick="() => MoveRow(row, 1)">↓</button>
+                                                                <button type="button" class="pm-icon-btn @(row.VisibleWhen is not null ? "!border-sky-400 !text-sky-600" : "")" title="Visningsvillkor" @onclick="() => ToggleRowCondition(row)">?</button>
                                                                 <button type="button" class="pm-icon-btn" title="Ta bort kontrollpunkt" @onclick="() => RemoveCheckpoint(row)">@((MarkupString)Icons.DeleteSVG)</button>
                                                             </div>
                                                         </td>
                                                     </tr>
+                                                    @if (_conditionEditRowId == row.ID)
+                                                    {
+                                                        <tr>
+                                                            <td colspan="5" class="bg-sky-50/40 px-2 py-2 dark:bg-sky-950/20">
+                                                                @ConditionEditor(row.VisibleWhen, c => row.VisibleWhen = c)
+                                                            </td>
+                                                        </tr>
+                                                    }
                                                 }
                                             }
                                         </tbody>
@@ -188,56 +221,23 @@
             }
         </section>
 
-        @* ---------- C. Svarskolumner (collapsible) ---------- *@
+        @* ---------- C. Svarskolumner (standard för nya sektioner, collapsible) ---------- *@
         <section class="rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
             <div class="flex items-center justify-between gap-2 border-b border-slate-200 px-3 py-2 dark:border-slate-700">
                 <button type="button" class="flex min-w-0 flex-1 items-center gap-2 text-left" @onclick="() => _columnsOpen = !_columnsOpen">
-                    <svg class="h-4 w-4 shrink-0 text-slate-400 transition-transform duration-150 @(_columnsOpen ? "rotate-90" : "")" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                    <svg class="h-5 w-5 shrink-0 text-slate-500 transition-transform duration-150 @(_columnsOpen ? "rotate-90" : "")" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
                     <div>
                         <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100">Svarskolumner</h3>
-                        <p class="text-xs text-slate-500 dark:text-slate-400">Välj vilka fält användaren fyller i.</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Standardkolumner som nya sektioner får. Varje sektion kan sedan ändra sina egna.</p>
                     </div>
                 </button>
-                <button type="button" class="pm-btn pm-btn-success shrink-0" @onclick="AddResponseColumn">+ Lägg till svarskolumn</button>
+                <button type="button" class="pm-btn pm-btn-success shrink-0" @onclick="() => AddColumn(null)">+ Lägg till svarskolumn</button>
             </div>
 
             @if (_columnsOpen)
             {
-                <div class="overflow-x-auto p-3">
-                    <table class="min-w-full text-sm">
-                        <thead class="bg-slate-50 dark:bg-slate-800/80">
-                            <tr>
-                                <th class="px-2 py-2 text-left font-semibold text-slate-600 dark:text-slate-200">Namn</th>
-                                <th class="px-2 py-2 text-left font-semibold text-slate-600 dark:text-slate-200">Fälttyp</th>
-                                <th class="w-28 px-2 py-2 text-left font-semibold text-slate-600 dark:text-slate-200">Obligatorisk</th>
-                                <th class="w-32 px-2 py-2 text-left font-semibold text-slate-600 dark:text-slate-200">Åtgärder</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
-                            @foreach (var column in ResponseColumns)
-                            {
-                                <tr @key="column.ID">
-                                    <td class="px-2 py-2"><InputText class="pm-input" @bind-Value="column.Label" /></td>
-                                    <td class="px-2 py-2">
-                                        <select class="pm-input" value="@DisplayFieldType(column)" @onchange="e => SetColumnFieldType(column, e.Value?.ToString())">
-                                            @foreach (var fieldType in FieldTypes)
-                                            {
-                                                <option value="@fieldType">@fieldType</option>
-                                            }
-                                        </select>
-                                    </td>
-                                    <td class="px-2 py-2"><InputCheckbox class="h-4 w-4 rounded border-slate-300 text-sky-600" @bind-Value="column.Required" /></td>
-                                    <td class="px-2 py-2">
-                                        <div class="flex items-center gap-1">
-                                            <button type="button" class="pm-icon-btn" title="Flytta upp" disabled="@(!CanMoveColumn(column, -1))" @onclick="() => MoveColumn(column, -1)">↑</button>
-                                            <button type="button" class="pm-icon-btn" title="Flytta ned" disabled="@(!CanMoveColumn(column, 1))" @onclick="() => MoveColumn(column, 1)">↓</button>
-                                            <button type="button" class="pm-icon-btn" title="Ta bort svarskolumn" @onclick="() => RemoveResponseColumn(column)">@((MarkupString)Icons.DeleteSVG)</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+                <div class="p-3">
+                    @ColumnsEditor(null)
                 </div>
             }
         </section>
@@ -259,3 +259,128 @@
         <button type="button" class="pm-btn pm-btn-neutral" @onclick="CancelAsync" disabled="@IsLoading">@ResourceApp.cancel</button>
     </div>
 </div>
+
+@code {
+    // Column editor table shared by the per-section editors (section != null) and the
+    // template-level default columns (section == null).
+    private RenderFragment ColumnsEditor(SelfInspectionSectionData? section) => __builder =>
+    {
+        var columns = (section?.Columns ?? DefaultColumns).OrderBy(x => x.Order).ToList();
+
+        <div class="overflow-x-auto rounded-md border border-slate-200 dark:border-slate-700">
+            <table class="min-w-full text-sm">
+                <thead class="bg-slate-50 dark:bg-slate-800/80">
+                    <tr>
+                        <th class="px-2 py-1.5 text-left font-semibold text-slate-600 dark:text-slate-200">Namn</th>
+                        <th class="w-44 px-2 py-1.5 text-left font-semibold text-slate-600 dark:text-slate-200">Fälttyp</th>
+                        <th class="w-12 px-1 py-1.5 text-center font-semibold text-slate-600 dark:text-slate-200" title="Obligatorisk">Krävs</th>
+                        <th class="w-32 px-2 py-1.5 text-left font-semibold text-slate-600 dark:text-slate-200">Åtgärder</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                    @if (columns.Count == 0)
+                    {
+                        <tr><td colspan="4" class="px-2 py-3 text-sm text-slate-500 dark:text-slate-400">Inga svarskolumner ännu.</td></tr>
+                    }
+                    @foreach (var column in columns)
+                    {
+                        <tr @key="column.ID">
+                            <td class="px-2 py-1.5"><InputText class="pm-input" @bind-Value="column.Label" /></td>
+                            <td class="px-2 py-1.5">
+                                <select class="pm-input" value="@DisplayFieldType(column)" @onchange="e => SetColumnFieldType(section, column, e.Value?.ToString())">
+                                    @foreach (var fieldType in FieldTypes)
+                                    {
+                                        <option value="@fieldType">@fieldType</option>
+                                    }
+                                </select>
+                            </td>
+                            <td class="px-1 py-1.5 text-center"><InputCheckbox class="h-4 w-4 rounded border-slate-300 text-sky-600" title="Obligatorisk" @bind-Value="column.Required" /></td>
+                            <td class="px-2 py-1.5">
+                                <div class="flex items-center gap-1">
+                                    <button type="button" class="pm-icon-btn" title="Flytta upp" disabled="@(!CanMoveColumn(section, column, -1))" @onclick="() => MoveColumn(section, column, -1)">↑</button>
+                                    <button type="button" class="pm-icon-btn" title="Flytta ned" disabled="@(!CanMoveColumn(section, column, 1))" @onclick="() => MoveColumn(section, column, 1)">↓</button>
+                                    <button type="button" class="pm-icon-btn" title="Ta bort svarskolumn" @onclick="() => RemoveColumn(section, column)">@((MarkupString)Icons.DeleteSVG)</button>
+                                </div>
+                            </td>
+                        </tr>
+                        @if (IsDropdown(column))
+                        {
+                            <tr>
+                                <td colspan="4" class="bg-slate-50/60 px-3 py-2 dark:bg-slate-800/40">
+                                    <div class="mb-1 flex items-center justify-between gap-2">
+                                        <span class="text-xs font-medium text-slate-600 dark:text-slate-300">Alternativ för "@column.Label"</span>
+                                        <button type="button" class="pm-btn pm-btn-neutral" @onclick="() => AddDropdownOption(section, column)">+ Lägg till alternativ</button>
+                                    </div>
+                                    @if (column.Options.Count == 0)
+                                    {
+                                        <div class="text-xs text-slate-500 dark:text-slate-400">Inga alternativ ännu.</div>
+                                    }
+                                    <div class="space-y-1">
+                                        @for (var i = 0; i < column.Options.Count; i++)
+                                        {
+                                            var optionIndex = i;
+                                            <div class="flex items-center gap-1">
+                                                <input class="pm-input max-w-xs" value="@column.Options[optionIndex]"
+                                                       @onchange="e => SetDropdownOption(column, optionIndex, e.Value?.ToString())" />
+                                                <button type="button" class="pm-icon-btn" title="Ta bort alternativ" @onclick="() => RemoveDropdownOption(section, column, optionIndex)">@((MarkupString)Icons.DeleteSVG)</button>
+                                            </div>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    };
+
+    // Simple visibility condition editor (Alltid synlig / Visa beroende på svar).
+    private RenderFragment ConditionEditor(SelfInspectionVisibilityCondition? condition, Action<SelfInspectionVisibilityCondition?> set) => __builder =>
+    {
+        var choices = ConditionColumnChoices();
+        var current = condition is null ? null : choices.FirstOrDefault(x => x.ColumnId == condition.ColumnId);
+
+        <div class="flex flex-wrap items-center gap-2 text-xs">
+            <span class="font-medium text-slate-600 dark:text-slate-300">Visningsvillkor</span>
+            <select class="pm-input !h-7 !w-auto text-xs" value="@(condition is null ? "always" : "conditional")"
+                    @onchange="e => SetConditionMode(set, e.Value?.ToString())">
+                <option value="always">Alltid synlig</option>
+                <option value="conditional" disabled="@(choices.Count == 0)">Visa beroende på svar</option>
+            </select>
+
+            @if (condition is not null)
+            {
+                <select class="pm-input !h-7 !w-auto text-xs" value="@condition.ColumnId"
+                        @onchange="e => SetConditionColumn(condition, e.Value?.ToString())">
+                    @foreach (var choice in choices)
+                    {
+                        <option value="@choice.ColumnId">@choice.Label</option>
+                    }
+                </select>
+
+                @if (current is { IsCheckboxColumn: true })
+                {
+                    <select class="pm-input !h-7 !w-auto text-xs" @bind="condition.Operator">
+                        <option value="checked">är markerad</option>
+                        <option value="notchecked">är inte markerad</option>
+                    </select>
+                }
+                else
+                {
+                    <span class="text-slate-500 dark:text-slate-400">är lika med</span>
+                    <select class="pm-input !h-7 !w-auto text-xs" @bind="condition.Value">
+                        @foreach (var option in current?.Options ?? [])
+                        {
+                            <option value="@option">@option</option>
+                        }
+                    </select>
+                }
+            }
+            else if (choices.Count == 0)
+            {
+                <span class="text-slate-400 dark:text-slate-500">Lägg till en Dropdown- eller Checkbox-kolumn för att kunna styra synlighet.</span>
+            }
+        </div>
+    };
+}

@@ -2,6 +2,7 @@
 @using ProjectManagement.Client.Shared.Constants
 @using ProjectManagement.Client.Shared.SharedComponent
 @using ProjectManagement.Shared
+@using ProjectManagement.Services.UI
 @inherits AppComponentBase
 
 @if (IsLoading)
@@ -16,7 +17,7 @@ else if (Form is not null)
         <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-300">
             @if (UserForm.Id == 0)
             {
-                <span>Skapa ett användarkonto och koppla användaren till rätt roll och avdelning.</span>
+                <span>Skapa ett användarkonto och koppla användaren till rätt behörighet och avdelning.</span>
             }
             else
             {
@@ -79,13 +80,15 @@ else if (Form is not null)
                 </div>
 
                 <div>
-                    <label class="mb-0.5 block text-xs font-medium text-slate-700 dark:text-slate-200">@PMResourceIdentity.role <span class="text-rose-500">*</span></label>
+                    <label class="mb-0.5 block text-xs font-medium text-slate-700 dark:text-slate-200">@PermissionDisplay.PermissionLabel <span class="text-rose-500">*</span></label>
                     <MhdFormSelect TValue="string"
                                    Value="@Form.Role"
                                    ValueChanged="OnRoleChanged"
                                    Options="RoleOptions"
-                                   Placeholder="Välj roll..."
+                                   Placeholder="@PermissionDisplay.ChoosePermissionLabel"
+                                   Title="@SelectedRoleTooltip"
                                    Disabled="@IsBusy" />
+                    <p class="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">@SelectedRoleTooltip</p>
                     @if (FieldError("role") is { } roleError)
                     {
                         <p class="mt-0.5 text-[11px] text-rose-600 dark:text-rose-300">@roleError</p>

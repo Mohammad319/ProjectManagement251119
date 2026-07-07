@@ -1,4 +1,5 @@
 @using Microsoft.AspNetCore.Authorization
+@using ProjectManagement.Shared.Base.Organisation
 @using ProjectManagement.Shared.DTO.App.List
 @using ProjectManagement.Shared.DTO.Organisation
 @using ProjectManagement.Shared
@@ -13,6 +14,7 @@
     }
     else
     {
+        @* Same main structure as the create/edit form, in read mode. *@
         <div class="flex justify-between">
             <ul class="mb-2 flex flex-wrap gap-1 border-b border-slate-200 pb-2 dark:border-slate-700" role="tablist">
                 @foreach (var tab in Tabs)
@@ -29,12 +31,11 @@
 
         @if (Part == 1)
         {
+            @* Same row order as the form: namn/orgnr — typ/status/id — grupp/undergrupp/visas —
+               email/telefon/mobil — webbplats. *@
             <dl class="grid grid-cols-2 gap-x-4 gap-y-2 p-2 text-sm md:grid-cols-4">
                 <dt class="font-medium text-gray-700 dark:text-gray-300">@CalcResource.name</dt>
                 <dd class="text-gray-900 dark:text-gray-100">@Dash(Company.Name)</dd>
-
-                <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceIdentity.IDNumber</dt>
-                <dd class="text-gray-900 dark:text-gray-100">@Dash(Company.IDNumber)</dd>
 
                 <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceIdentity.PersonOrganisationNr</dt>
                 <dd class="text-gray-900 dark:text-gray-100">@Dash(Company.PIDNumber)</dd>
@@ -42,39 +43,42 @@
                 <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceIdentity.PersonOrganisationType</dt>
                 <dd class="text-gray-900 dark:text-gray-100">@Dash(Company.Type)</dd>
 
+                <dt class="font-medium text-gray-700 dark:text-gray-300">@CalcResource.status</dt>
+                <dd class="text-gray-900 dark:text-gray-100">@StatusBadge(Company.Status)</dd>
+
+                <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceIdentity.IDNumber</dt>
+                <dd class="text-gray-900 dark:text-gray-100">@Dash(Company.IDNumber)</dd>
+
+                @if (string.Equals(Company.Status, OrganisationStatusCatalog.Warning, StringComparison.OrdinalIgnoreCase))
+                {
+                    <dt class="font-medium text-gray-700 dark:text-gray-300">Orsak till varning</dt>
+                    <dd class="text-gray-900 dark:text-gray-100 md:col-span-3">@Dash(Company.WarningReason)</dd>
+                }
+
                 <dt class="font-medium text-gray-700 dark:text-gray-300">Huvudgrupp</dt>
                 <dd class="text-gray-900 dark:text-gray-100">@Dash(Company.Category)</dd>
 
                 <dt class="font-medium text-gray-700 dark:text-gray-300">Undergrupp</dt>
                 <dd class="text-gray-900 dark:text-gray-100">@Dash(Company.SubCategory)</dd>
 
-                <dt class="font-medium text-gray-700 dark:text-gray-300">@CalcResource.status</dt>
-                <dd class="text-gray-900 dark:text-gray-100">@StatusBadge(Company.Status)</dd>
-
-                @if (string.Equals(Company.Status, OrganisationStatusCatalog.Warning, StringComparison.OrdinalIgnoreCase))
-                {
-                    <dt class="font-medium text-gray-700 dark:text-gray-300">Orsak till varning</dt>
-                    <dd class="text-gray-900 dark:text-gray-100">@Dash(Company.WarningReason)</dd>
-                }
-
-                <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceIdentity.website</dt>
-                <dd class="text-gray-900 dark:text-gray-100">@Dash(Company.URL)</dd>
-
                 <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceIdentity.email</dt>
                 <dd class="text-gray-900 dark:text-gray-100">@Dash(Company.Email)</dd>
+
+                <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceIdentity.phone</dt>
+                <dd class="text-gray-900 dark:text-gray-100">@Dash(Company.Phone)</dd>
 
                 <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceIdentity.mobile</dt>
                 <dd class="text-gray-900 dark:text-gray-100">@Dash(Company.Mobile)</dd>
 
-                <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceIdentity.phone</dt>
-                <dd class="text-gray-900 dark:text-gray-100">@Dash(Company.Phone)</dd>
+                <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceIdentity.website</dt>
+                <dd class="text-gray-900 dark:text-gray-100">@Dash(Company.URL)</dd>
 
                 @if (Company.Notes is not null)
                 {
                     foreach (var note in Company.Notes.Where(x => !string.IsNullOrWhiteSpace(x)))
                     {
                         <dt class="font-medium text-gray-700 dark:text-gray-300">@CalcResource.note</dt>
-                        <dd class="text-gray-900 dark:text-gray-100">@note</dd>
+                        <dd class="text-gray-900 dark:text-gray-100 md:col-span-3">@note</dd>
                     }
                 }
             </dl>
@@ -83,19 +87,16 @@
         {
             <dl class="grid grid-cols-2 gap-x-4 gap-y-2 p-2 text-sm md:grid-cols-4">
                 <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceLoc.rating</dt>
-                <dd class="text-gray-900 dark:text-gray-100">@Company.Rating</dd>
+                <dd class="text-gray-900 dark:text-gray-100">@(Company.Rating?.ToString() ?? "—")</dd>
 
                 <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceIdentity.numberIDCards</dt>
-                <dd class="text-gray-900 dark:text-gray-100">@Company.NumberOfWorkersCards</dd>
+                <dd class="text-gray-900 dark:text-gray-100">@(Company.NumberOfWorkersCards?.ToString() ?? "—")</dd>
 
                 <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceLoc.collectiveLabourAgreement</dt>
                 <dd class="text-gray-900 dark:text-gray-100">@ReviewLabel(Company.SocialLaborAgreement)</dd>
 
-                <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceLoc.InvoiceVerificationDate</dt>
-                <dd class="text-gray-900 dark:text-gray-100">@Company.InvoiceVerificationDate</dd>
-
                 <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceLoc.dateOfControl</dt>
-                <dd class="text-gray-900 dark:text-gray-100">@Company.VerificationDate</dd>
+                <dd class="text-gray-900 dark:text-gray-100">@DateOrDash(Company.VerificationDate)</dd>
 
                 <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceApp.qualitySystems</dt>
                 <dd class="text-gray-900 dark:text-gray-100">@ReviewLabel(Company.QualitySystems)</dd>
@@ -106,62 +107,115 @@
         }
         else if (Part == 3)
         {
-            <dl class="grid grid-cols-1 gap-y-2 p-2 text-sm md:grid-cols-4">
-                <dt class="font-medium text-gray-700 dark:text-gray-300">Huvudgrupp</dt>
-                <dd class="text-gray-900 dark:text-gray-100 md:col-span-3">@Dash(Company.Category)</dd>
+            <div class="mb-3 flex flex-wrap items-center gap-1 border-b border-slate-200 pb-2 dark:border-slate-700" role="tablist">
+                <button type="button" class="@SubTabClass(DetailSubTab.Contacts)" @onclick="() => _subTab = DetailSubTab.Contacts">
+                    Kontaktpersoner
+                </button>
+                <button type="button" class="@SubTabClass(DetailSubTab.Addresses)" @onclick="() => _subTab = DetailSubTab.Addresses">
+                    Adresser
+                </button>
+            </div>
 
-                <dt class="font-medium text-gray-700 dark:text-gray-300">Undergrupp</dt>
-                <dd class="text-gray-900 dark:text-gray-100 md:col-span-3">@Dash(Company.SubCategory)</dd>
-            </dl>
-        }
-        else if (Part == 4)
-        {
-            @if (Company.Contacts?.Any() == true)
+            @if (_subTab == DetailSubTab.Contacts)
             {
-                <table class="min-w-full divide-y divide-slate-200 overflow-hidden rounded-lg border border-slate-200 text-sm dark:divide-slate-700 dark:border-slate-700">
-                    <thead>
-                        <tr>
-                            <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200">@CalcResource.name</th>
-                            <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200">@ResourceIdentity.mobile / @ResourceIdentity.telefon</th>
-                            <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200">@CalcResource.status</th>
-                            <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200">@ResourceIdentity.email</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in Company.Contacts)
-                        {
-                            <tr class="border-b border-slate-100 text-slate-700 dark:border-slate-800 dark:text-slate-200">
-                                <th class="px-3 py-2 text-right font-medium">
-                                    @if (!string.IsNullOrEmpty(item.Note))
-                                    {
-                                        <span @onclick="() => item.CommentIsVisible = !item.CommentIsVisible">
-                                            @((MarkupString)Icons.TopBottom(item.CommentIsVisible))
-                                        </span>
-                                    }
-                                    @item.GetFullName()
-                                </th>
-                                <td class="px-3 py-2 text-right">@item.Mobile / @item.Telefone</td>
-                                <td class="px-3 py-2 text-right">@item.Status</td>
-                                <td class="px-3 py-2 text-right">@item.Email</td>
-                            </tr>
-
-                            @if (item.CommentIsVisible)
-                            {
-                                <tr class="bg-slate-50 text-slate-600 dark:bg-slate-800/60 dark:text-slate-300">
-                                    <td colspan="5" class="px-3 py-2 text-right">@CalcResource.note: @item.Note</td>
+                @if (Company.Contacts?.Any() == true)
+                {
+                    <div class="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
+                        <table class="min-w-full text-sm text-slate-700 dark:text-slate-200">
+                            <thead class="bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-100">
+                                <tr>
+                                    <th class="px-3 py-2 text-start font-semibold">@CalcResource.name</th>
+                                    <th class="px-3 py-2 text-start font-semibold">@ResourceIdentity.email</th>
+                                    <th class="px-3 py-2 text-start font-semibold">@ResourceIdentity.mobile</th>
+                                    <th class="px-3 py-2 text-start font-semibold">@ResourceIdentity.phone</th>
+                                    <th class="px-3 py-2 text-start font-semibold">@ResourceApp.department</th>
+                                    <th class="px-3 py-2 text-start font-semibold">@CalcResource.status</th>
                                 </tr>
-                            }
-                        }
-                    </tbody>
-                </table>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 bg-white dark:divide-slate-700 dark:bg-slate-900">
+                                @foreach (var item in Company.Contacts)
+                                {
+                                    <tr>
+                                        <td class="px-3 py-2 font-medium">
+                                            @item.GetFullName()
+                                            @if (!string.IsNullOrEmpty(item.Note))
+                                            {
+                                                <span class="ml-1 cursor-pointer text-slate-400" title="@item.Note"
+                                                      @onclick="() => item.CommentIsVisible = !item.CommentIsVisible">
+                                                    @((MarkupString)Icons.TopBottom(item.CommentIsVisible))
+                                                </span>
+                                            }
+                                        </td>
+                                        <td class="px-3 py-2">@Dash(item.Email)</td>
+                                        <td class="px-3 py-2">@Dash(item.Mobile)</td>
+                                        <td class="px-3 py-2">@Dash(item.Telefone)</td>
+                                        <td class="px-3 py-2">@Dash(item.Department)</td>
+                                        <td class="px-3 py-2">@item.Status.ToSwedish()</td>
+                                    </tr>
+                                    @if (item.CommentIsVisible)
+                                    {
+                                        <tr class="bg-slate-50 text-slate-600 dark:bg-slate-800/60 dark:text-slate-300">
+                                            <td colspan="6" class="px-3 py-2">@CalcResource.note: @item.Note</td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="rounded-xl border border-dashed border-slate-300 px-4 py-6 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300">
+                        @WebLoc[nameof(PMWebResource.NoContactsAvailable)]
+                    </div>
+                }
             }
             else
             {
-                <div class="rounded-xl border border-dashed border-slate-300 px-4 py-6 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300">
-                    @WebLoc[nameof(PMWebResource.NoContactsAvailable)]
-                </div>
+                @if (Company.Address?.Any() == true)
+                {
+                    <div class="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
+                        <table class="min-w-full text-sm text-slate-700 dark:text-slate-200">
+                            <thead class="bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-100">
+                                <tr>
+                                    <th class="w-56 px-3 py-2 text-start font-semibold">Beskrivning</th>
+                                    <th class="px-3 py-2 text-start font-semibold">Adress</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 bg-white dark:divide-slate-700 dark:bg-slate-900">
+                                @foreach (var addr in Company.Address)
+                                {
+                                    <tr>
+                                        <td class="px-3 py-2">@Dash(addr.Description)</td>
+                                        <td class="px-3 py-2">@Dash(AddressLine(addr))</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="rounded-xl border border-dashed border-slate-300 px-4 py-6 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300">
+                        Inga adresser tillagda.
+                    </div>
+                }
             }
         }
+
+        @* Compact, collapsed system information — not a main tab. *@
+        <details class="rounded-lg border border-slate-200 bg-slate-50/60 px-3 py-2 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-400">
+            <summary class="cursor-pointer select-none font-medium text-slate-600 dark:text-slate-300">
+                Systeminformation
+                <span class="ml-1 font-normal">@SystemInfoSummary()</span>
+            </summary>
+            <div class="mt-2 grid grid-cols-1 gap-x-6 gap-y-1 sm:grid-cols-2">
+                <div>Skapad av: <span class="text-slate-700 dark:text-slate-200">@Dash(Company.CreatedByName)</span></div>
+                <div>Skapad: <span class="text-slate-700 dark:text-slate-200">@DateTimeOrDash(Company.CreatedAt)</span></div>
+                <div>Senast ändrad av: <span class="text-slate-700 dark:text-slate-200">@Dash(Company.UpdatedByName)</span></div>
+                <div>Senast ändrad: <span class="text-slate-700 dark:text-slate-200">@DateTimeOrDash(Company.UpdatedAt)</span></div>
+            </div>
+        </details>
     }
 </div>
 

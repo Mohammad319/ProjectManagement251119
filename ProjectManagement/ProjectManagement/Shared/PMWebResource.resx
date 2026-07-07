@@ -36,7 +36,7 @@
   <data name="DepartmentUsersTitle" xml:space="preserve"><value>Department users</value></data>
   <data name="AllTenantUsersTitle" xml:space="preserve"><value>All tenant users</value></data>
   <data name="UsersWithoutDepartmentTitle" xml:space="preserve"><value>Users without a department</value></data>
-  <data name="DepartmentUsersDescription" xml:space="preserve"><value>Review sign-in status, roles, lockout information, and user maintenance actions.</value></data>
+  <data name="DepartmentUsersDescription" xml:space="preserve"><value>Review sign-in status, permissions, lockout information, and user maintenance actions.</value></data>
   <data name="BackToDepartments" xml:space="preserve"><value>Back to departments</value></data>
   <data name="Actions" xml:space="preserve"><value>Actions</value></data>
   <data name="RecreateAuthUser" xml:space="preserve"><value>Recreate sign-in</value></data>
@@ -50,7 +50,7 @@
   <data name="StatusStale" xml:space="preserve"><value>Inactive 90+ days</value></data>
   <data name="ResendInvite" xml:space="preserve"><value>Resend invitation</value></data>
   <data name="ResendInviteConfirmFormat" xml:space="preserve"><value>Resend the invitation email to {0} with a new temporary password?</value></data>
-  <data name="RoleDistribution" xml:space="preserve"><value>Roles</value></data>
+  <data name="RoleDistribution" xml:space="preserve"><value>Permissions</value></data>
   <data name="FilterByStatusHint" xml:space="preserve"><value>Click a card to filter</value></data>
   <data name="StatusInactive" xml:space="preserve"><value>Deactivated</value></data>
   <data name="Deactivate" xml:space="preserve"><value>Deactivate</value></data>
@@ -66,11 +66,11 @@
   <data name="Enabled" xml:space="preserve"><value>Enabled</value></data>
   <data name="Disabled" xml:space="preserve"><value>Disabled</value></data>
   <data name="NoUsersFound" xml:space="preserve"><value>No users were found for this selection.</value></data>
-  <data name="RegisterUserHint" xml:space="preserve"><value>Create a tenant user and its sign-in account in one step.</value></data>
+  <data name="RegisterUserHint" xml:space="preserve"><value>Create a user account and connect the user to the right permission and department.</value></data>
   <data name="EditUserHint" xml:space="preserve"><value>Update profile details, department assignment, and sign-in restrictions.</value></data>
   <data name="CreateDepartmentHint" xml:space="preserve"><value>Create a department to group users, folders, and projects.</value></data>
   <data name="EditDepartmentHint" xml:space="preserve"><value>Update the department name and description.</value></data>
-  <data name="Role" xml:space="preserve"><value>Role</value></data>
+  <data name="Role" xml:space="preserve"><value>Permission</value></data>
   <data name="AllUsersHint" xml:space="preserve"><value>Open the full tenant-wide user list.</value></data>
   <data name="OrganisationTypesTitle" xml:space="preserve"><value>Organisation types</value></data>
   <data name="OrganisationTypesDescription" xml:space="preserve"><value>Manage the reusable type list used by organisations.</value></data>
@@ -141,7 +141,7 @@
   <data name="SupportNavTitle" xml:space="preserve"><value>Support</value></data>
   <data name="SearchUsersPlaceholder" xml:space="preserve"><value>Search by name, email or phone…</value></data>
   <data name="SearchDepartmentsPlaceholder" xml:space="preserve"><value>Search departments…</value></data>
-  <data name="AllRoles" xml:space="preserve"><value>All roles</value></data>
+  <data name="AllRoles" xml:space="preserve"><value>All permissions</value></data>
   <data name="AllStatuses" xml:space="preserve"><value>All statuses</value></data>
   <data name="ShowingCountFormat" xml:space="preserve"><value>Showing {0} of {1}</value></data>
   <data name="NoResultsMatch" xml:space="preserve"><value>No results match your filters.</value></data>
@@ -150,9 +150,9 @@
   <data name="DepartmentBadge" xml:space="preserve"><value>Department</value></data>
   <data name="TotalUsers" xml:space="preserve"><value>Total users</value></data>
   <data name="TotalProjects" xml:space="preserve"><value>Total projects</value></data>
-  <data name="LevelManager" xml:space="preserve"><value>Admin</value></data>
-  <data name="LevelUser" xml:space="preserve"><value>User</value></data>
-  <data name="LevelGuest" xml:space="preserve"><value>Viewer</value></data>
+  <data name="LevelManager" xml:space="preserve"><value>Administrator</value></data>
+  <data name="LevelUser" xml:space="preserve"><value>Calculation user</value></data>
+  <data name="LevelGuest" xml:space="preserve"><value>Reader</value></data>
   <data name="LockUser" xml:space="preserve"><value>Block sign-in</value></data>
   <data name="UnlockUser" xml:space="preserve"><value>Remove sign-in block</value></data>
   <data name="LockConfirmFormat" xml:space="preserve"><value>Lock sign-in for {0}? The user will be signed out and unable to log in.</value></data>
@@ -161,14 +161,14 @@
   <data name="SelectedCountFormat" xml:space="preserve"><value>{0} selected</value></data>
   <data name="ClearSelection" xml:space="preserve"><value>Clear selection</value></data>
   <data name="BulkMoveToDepartment" xml:space="preserve"><value>Move to department</value></data>
-  <data name="BulkChangeRole" xml:space="preserve"><value>Change role…</value></data>
+  <data name="BulkChangeRole" xml:space="preserve"><value>Change permission…</value></data>
   <data name="BulkLock" xml:space="preserve"><value>Block</value></data>
   <data name="BulkUnlock" xml:space="preserve"><value>Remove block</value></data>
   <data name="BulkDelete" xml:space="preserve"><value>Delete</value></data>
   <data name="Apply" xml:space="preserve"><value>Apply</value></data>
   <data name="BulkConfirmFormat" xml:space="preserve"><value>Apply this action to {0} user(s)?</value></data>
   <data name="BulkDeleteConfirmFormat" xml:space="preserve"><value>Delete {0} selected user(s)? This cannot be undone.</value></data>
-  <data name="BulkRoleConfirmFormat" xml:space="preserve"><value>Change the role of {0} selected user(s)?</value></data>
+  <data name="BulkRoleConfirmFormat" xml:space="preserve"><value>Change the permission for {0} selected user(s)?</value></data>
   <data name="BulkResultFormat" xml:space="preserve"><value>{0} succeeded, {1} failed, {2} skipped (last administrator protected).</value></data>
   <data name="DepartmentInUseTitle" xml:space="preserve"><value>Cannot delete department</value></data>
   <data name="DepartmentInUseMessageFormat" xml:space="preserve"><value>'{0}' cannot be deleted because it still has {1} user(s), {2} project(s) and {3} folder(s). Reassign or remove them first.</value></data>
@@ -214,7 +214,7 @@
   <data name="AuditUserLocked" xml:space="preserve"><value>User locked</value></data>
   <data name="AuditUserUnlocked" xml:space="preserve"><value>User unlocked</value></data>
   <data name="AuditDepartmentChanged" xml:space="preserve"><value>Department changed</value></data>
-  <data name="AuditRoleChanged" xml:space="preserve"><value>Role changed</value></data>
+  <data name="AuditRoleChanged" xml:space="preserve"><value>Permission changed</value></data>
   <data name="NotificationsTitle" xml:space="preserve"><value>Notifications</value></data>
   <data name="NotificationsMarkAllRead" xml:space="preserve"><value>Mark all as read</value></data>
   <data name="NotificationsMarkRead" xml:space="preserve"><value>Mark as read</value></data>

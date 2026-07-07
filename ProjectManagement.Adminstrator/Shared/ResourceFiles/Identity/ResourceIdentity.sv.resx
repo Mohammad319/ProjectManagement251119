@@ -254,7 +254,7 @@
     <value>Kom ihåg me?</value>
   </data>
   <data name="role" xml:space="preserve">
-    <value>Roll</value>
+    <value>Behörighet</value>
   </data>
   <data name="street" xml:space="preserve">
     <value>Gata</value>
@@ -272,13 +272,13 @@
     <value>Användare</value>
   </data>
   <data name="LevelManager" xml:space="preserve">
-    <value>Admin</value>
+    <value>Administratör</value>
   </data>
   <data name="LevelUser" xml:space="preserve">
-    <value>Användare</value>
+    <value>Kalkylanvändare</value>
   </data>
   <data name="LevelGuest" xml:space="preserve">
-    <value>Visare</value>
+    <value>Läsare</value>
   </data>
   <data name="UserDataIsUpdated" xml:space="preserve">
     <value>Användardata uppdateras</value>
@@ -311,7 +311,7 @@
     <value>Återställ lösenordet för {0}? Ett nytt tillfälligt lösenord genereras och skickas till användaren.</value>
   </data>
   <data name="AllRoles" xml:space="preserve">
-    <value>Alla roller</value>
+    <value>Alla behörigheter</value>
   </data>
   <data name="AllStatuses" xml:space="preserve">
     <value>Alla statusar</value>

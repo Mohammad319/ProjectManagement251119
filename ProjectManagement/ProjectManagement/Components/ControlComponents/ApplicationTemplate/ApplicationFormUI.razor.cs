@@ -23,6 +23,8 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
         private bool _structureOpen = true;
         private bool _columnsOpen = true;
         private readonly HashSet<Guid> _collapsedSections = [];
+        private readonly HashSet<Guid> _openColumnEditors = [];
+        private Guid? _conditionEditRowId;
         private bool _collapseInitialized;
 
         private bool IsSectionExpanded(SelfInspectionSectionData section) => !_collapsedSections.Contains(section.Id);
@@ -32,6 +34,17 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
             if (!_collapsedSections.Remove(section.Id))
                 _collapsedSections.Add(section.Id);
         }
+
+        private bool IsColumnsEditorOpen(SelfInspectionSectionData section) => _openColumnEditors.Contains(section.Id);
+
+        private void ToggleColumnsEditor(SelfInspectionSectionData section)
+        {
+            if (!_openColumnEditors.Remove(section.Id))
+                _openColumnEditors.Add(section.Id);
+        }
+
+        private void ToggleRowCondition(RowDTO row)
+            => _conditionEditRowId = _conditionEditRowId == row.ID ? null : row.ID;
 
         // Seed the editor's collapse state once from each section's "Kollapsad som standard" flag.
         private void InitCollapseState()
@@ -56,14 +69,6 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
             SelfInspectionTemplateTypes.RiskAnalysis
         ];
 
-        private static readonly IReadOnlyList<string> LinkTypes =
-        [
-            "Projekt",
-            "Kalkyl",
-            "Anbud",
-            "Överlämning"
-        ];
-
         private static readonly IReadOnlyList<string> FieldTypes =
         [
             "Text",
@@ -78,6 +83,24 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
             "Beräknat fält"
         ];
 
+        // "Alla avdelningar" is the first choice in the department dropdown (value 0).
+        private int DepartmentSelection
+        {
+            get => ApplicationUpdate.Data.AllDepartments ? 0 : ApplicationUpdate.DepartmentId;
+            set
+            {
+                if (value <= 0)
+                {
+                    ApplicationUpdate.Data.AllDepartments = true;
+                }
+                else
+                {
+                    ApplicationUpdate.Data.AllDepartments = false;
+                    ApplicationUpdate.DepartmentId = value;
+                }
+            }
+        }
+
         private IReadOnlyList<SelfInspectionSectionData> SectionsForUi
         {
             get
@@ -88,17 +111,6 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
                     .OrderBy(x => x.SortOrder)
                     .ThenBy(x => x.Title)
                     .ToList();
-            }
-        }
-
-        private List<AttributeDTO> ResponseColumns
-        {
-            get
-            {
-                if (!_isEnsuringTemplateShape)
-                    EnsureTemplateShape();
-
-                return GetResponseColumnsForCurrentState();
             }
         }
 
@@ -113,6 +125,7 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
                 ApplicationUpdate.Data.TemplateType = SelfInspectionTemplateTypes.Checklist;
             if (string.IsNullOrWhiteSpace(ApplicationUpdate.Data.Purpose))
                 ApplicationUpdate.Data.Purpose = ApplicationUpdate.Data.Description ?? string.Empty;
+            // Koppling has been removed from the UI; keep a stable value for backward compatibility.
             if (string.IsNullOrWhiteSpace(ApplicationUpdate.Data.LinkType))
                 ApplicationUpdate.Data.LinkType = "Kalkyl";
 
@@ -167,6 +180,33 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
                 .OrderBy(x => x.SortOrder)
                 .ThenBy(x => x.Name);
 
+        // ---- Standard/default answer columns -------------------------------------------------
+
+        private static List<AttributeDTO> StandardDefaultColumns() =>
+        [
+            new() { ID = Guid.NewGuid(), Label = "Notering", FieldTypeLabel = "Text", AttributeType = AttributeType.Text, Order = 0 },
+            new() { ID = Guid.NewGuid(), Label = "Ansvarig", FieldTypeLabel = "Person / ansvarig", AttributeType = AttributeType.Text, Order = 1 },
+            new() { ID = Guid.NewGuid(), Label = "Datum", FieldTypeLabel = "Datum", AttributeType = AttributeType.Date, Order = 2 },
+            new() { ID = Guid.NewGuid(), Label = "Klart", FieldTypeLabel = "Checkbox", AttributeType = AttributeType.Bool, Order = 3 }
+        ];
+
+        private List<AttributeDTO> DefaultColumns
+        {
+            get
+            {
+                if (!_isEnsuringTemplateShape)
+                    EnsureTemplateShape();
+                return ApplicationUpdate.Data.DefaultColumns;
+            }
+        }
+
+        private List<AttributeDTO> SectionColumns(SelfInspectionSectionData section)
+        {
+            if (!_isEnsuringTemplateShape)
+                EnsureTemplateShape();
+            return section.Columns.OrderBy(x => x.Order).ToList();
+        }
+
         private void AddSection()
         {
             var next = ApplicationUpdate.Data.Sections.Count + 1;
@@ -175,7 +215,9 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
                 Id = Guid.NewGuid(),
                 Title = $"Ny sektion {next}",
                 SortOrder = next,
-                IsVisible = true
+                IsVisible = true,
+                // New sections start with the template's standard columns; admin can change them.
+                Columns = DefaultColumns.Select(CloneColumnDefinition).ToList()
             };
 
             ApplicationUpdate.Data.Sections.Add(section);
@@ -192,10 +234,6 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
 
         private void AddCheckpoint(SelfInspectionSectionData section)
         {
-            var columns = GetResponseColumnsForCurrentState().Select(CloneColumnForRow).ToList();
-            if (columns.Count == 0)
-                columns = DefaultColumnsForCurrentType().Select(CloneColumnForRow).ToList();
-
             ApplicationUpdate.Data.Rows.Add(new RowDTO
             {
                 ID = Guid.NewGuid(),
@@ -205,7 +243,7 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
                 Description = section.Title,
                 SortOrder = RowsForSection(section).Count() + 1,
                 IsVisible = true,
-                Attributes = columns
+                Attributes = section.Columns.Select(CloneColumnForRow).ToList()
             });
         }
 
@@ -214,52 +252,177 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
             ApplicationUpdate.Data.Rows.Remove(row);
         }
 
-        private void AddResponseColumn()
+        // ---- Column editing (per section, or the template defaults when section is null) ------
+
+        private void AddColumn(SelfInspectionSectionData? section)
         {
-            var index = ResponseColumns.Count;
-            var column = new AttributeDTO
+            var target = section?.Columns ?? ApplicationUpdate.Data.DefaultColumns;
+            target.Add(new AttributeDTO
             {
                 ID = Guid.NewGuid(),
                 Label = "Ny kolumn",
                 AttributeType = AttributeType.Text,
                 FieldTypeLabel = "Text",
-                Order = index
-            };
+                Order = target.Count
+            });
 
-            foreach (var row in ApplicationUpdate.Data.Rows)
-                row.Attributes.Add(CloneColumnForRow(column));
+            if (section is not null)
+                SyncSectionRows(section);
         }
 
-        private void RemoveResponseColumn(AttributeDTO column)
+        private void RemoveColumn(SelfInspectionSectionData? section, AttributeDTO column)
         {
-            var index = ResponseColumns.FindIndex(x => x.ID == column.ID);
-            if (index < 0)
-                index = ResponseColumns.FindIndex(x => SameColumn(x, column));
+            var target = section?.Columns ?? ApplicationUpdate.Data.DefaultColumns;
+            target.Remove(column);
+            ReorderColumns(target);
 
-            if (index < 0)
+            if (section is not null)
+                SyncSectionRows(section);
+        }
+
+        private void MoveColumn(SelfInspectionSectionData? section, AttributeDTO column, int direction)
+        {
+            var target = section?.Columns ?? ApplicationUpdate.Data.DefaultColumns;
+            var ordered = target.OrderBy(x => x.Order).ToList();
+            if (!Swap(ordered, column, direction))
                 return;
 
-            foreach (var row in ApplicationUpdate.Data.Rows)
-            {
-                var ordered = row.Attributes.OrderBy(x => x.Order).ToList();
-                if (index < ordered.Count)
-                    row.Attributes.Remove(ordered[index]);
-                ReorderColumns(row.Attributes);
-            }
+            for (var i = 0; i < ordered.Count; i++)
+                ordered[i].Order = i;
+
+            if (section is not null)
+                SyncSectionRows(section);
         }
 
-        private void SetColumnFieldType(AttributeDTO column, string? fieldType)
+        private bool CanMoveColumn(SelfInspectionSectionData? section, AttributeDTO column, int direction)
+        {
+            var target = (section?.Columns ?? ApplicationUpdate.Data.DefaultColumns).OrderBy(x => x.Order).ToList();
+            var index = target.FindIndex(x => x.ID == column.ID);
+            var t = index + direction;
+            return index >= 0 && t >= 0 && t < target.Count;
+        }
+
+        private void SetColumnFieldType(SelfInspectionSectionData? section, AttributeDTO column, string? fieldType)
         {
             fieldType = string.IsNullOrWhiteSpace(fieldType) ? "Text" : fieldType;
             column.FieldTypeLabel = fieldType;
             column.AttributeType = ToAttributeType(fieldType);
             column.IsComputed = fieldType == "Beräknat fält";
+
+            if (fieldType == "Dropdown" && column.Options.Count == 0)
+                column.Options = ["Alternativ A", "Alternativ B"];
+
+            if (section is not null)
+                SyncSectionRows(section);
+        }
+
+        private void AddDropdownOption(SelfInspectionSectionData? section, AttributeDTO column)
+        {
+            column.Options.Add($"Alternativ {(char)('A' + Math.Min(column.Options.Count, 25))}");
+            if (section is not null)
+                SyncSectionRows(section);
+        }
+
+        private void RemoveDropdownOption(SelfInspectionSectionData? section, AttributeDTO column, int index)
+        {
+            if (index >= 0 && index < column.Options.Count)
+                column.Options.RemoveAt(index);
+            if (section is not null)
+                SyncSectionRows(section);
+        }
+
+        private void SetDropdownOption(AttributeDTO column, int index, string? value)
+        {
+            if (index >= 0 && index < column.Options.Count)
+                column.Options[index] = value ?? string.Empty;
+        }
+
+        private static bool IsDropdown(AttributeDTO column)
+            => string.Equals(column.FieldTypeLabel, "Dropdown", StringComparison.OrdinalIgnoreCase)
+               || column.AttributeType == AttributeType.Select;
+
+        private static bool IsCheckbox(AttributeDTO column)
+            => column.AttributeType == AttributeType.Bool;
+
+        // Row attributes mirror the section's column definitions (by order).
+        private void SyncSectionRows(SelfInspectionSectionData section)
+        {
+            var columns = section.Columns.OrderBy(x => x.Order).ToList();
+            foreach (var row in RowsForSection(section).ToList())
+                row.Attributes = MergeColumns(row.Attributes, columns);
         }
 
         private static string DisplayFieldType(AttributeDTO column)
             => !string.IsNullOrWhiteSpace(column.FieldTypeLabel)
                 ? column.FieldTypeLabel
                 : ToFieldTypeLabel(column.AttributeType);
+
+        // ---- Visibility conditions (simple, first version) ------------------------------------
+
+        internal sealed record ConditionColumnChoice(Guid ColumnId, string Label, bool IsCheckboxColumn, List<string> Options);
+
+        // Candidate columns for conditions: every Dropdown/Checkbox column across all sections.
+        private List<ConditionColumnChoice> ConditionColumnChoices()
+        {
+            var result = new List<ConditionColumnChoice>();
+            foreach (var section in ApplicationUpdate.Data.Sections.OrderBy(x => x.SortOrder))
+            {
+                foreach (var col in section.Columns.OrderBy(x => x.Order))
+                {
+                    if (IsDropdown(col))
+                        result.Add(new ConditionColumnChoice(col.ID, $"{section.Title} — {col.Label}", false, col.Options.ToList()));
+                    else if (IsCheckbox(col))
+                        result.Add(new ConditionColumnChoice(col.ID, $"{section.Title} — {col.Label}", true, []));
+                }
+            }
+
+            return result;
+        }
+
+        private void SetConditionMode(Action<SelfInspectionVisibilityCondition?> setter, string? mode)
+        {
+            if (mode == "always")
+            {
+                setter(null);
+                return;
+            }
+
+            var first = ConditionColumnChoices().FirstOrDefault();
+            setter(new SelfInspectionVisibilityCondition
+            {
+                ColumnId = first?.ColumnId ?? Guid.Empty,
+                ColumnLabel = first?.Label ?? string.Empty,
+                Operator = first is { IsCheckboxColumn: true } ? "checked" : "equals",
+                Value = first?.Options.FirstOrDefault() ?? string.Empty
+            });
+        }
+
+        private void SetConditionColumn(SelfInspectionVisibilityCondition condition, string? columnId)
+        {
+            if (!Guid.TryParse(columnId, out var id))
+                return;
+
+            var choice = ConditionColumnChoices().FirstOrDefault(x => x.ColumnId == id);
+            if (choice is null)
+                return;
+
+            condition.ColumnId = choice.ColumnId;
+            condition.ColumnLabel = choice.Label;
+            condition.Operator = choice.IsCheckboxColumn ? "checked" : "equals";
+            condition.Value = choice.IsCheckboxColumn ? string.Empty : choice.Options.FirstOrDefault() ?? string.Empty;
+        }
+
+        private static string ConditionSummary(SelfInspectionVisibilityCondition? condition)
+            => condition is null
+                ? "Alltid synlig"
+                : condition.Operator switch
+                {
+                    "checked" => $"Visas om {condition.ColumnLabel} är markerad",
+                    "notchecked" => $"Visas om {condition.ColumnLabel} inte är markerad",
+                    _ => $"Visas om {condition.ColumnLabel} = {condition.Value}"
+                };
+
+        // ---- Save ------------------------------------------------------------------------------
 
         private async Task HandleSubmitAsync()
         {
@@ -275,11 +438,9 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
                 return;
             }
 
-            // A template must belong to a department (unless it applies to all departments), otherwise the
-            // backend rejects it silently — validate here so the user sees why nothing was saved.
             if (!ApplicationUpdate.Data.AllDepartments && ApplicationUpdate.DepartmentId <= 0)
             {
-                _saveError = "Välj en avdelning eller markera \"Alla avdelningar\" innan du sparar.";
+                _saveError = "Välj en avdelning (eller \"Alla avdelningar\") innan du sparar.";
                 return;
             }
 
@@ -332,49 +493,88 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
             _isEnsuringTemplateShape = true;
             try
             {
-            ApplicationUpdate.Data ??= new ApplicationDataDTO();
-            ApplicationUpdate.Data.Rows ??= [];
-            ApplicationUpdate.Data.Sections ??= [];
+                ApplicationUpdate.Data ??= new ApplicationDataDTO();
+                ApplicationUpdate.Data.Rows ??= [];
+                ApplicationUpdate.Data.Sections ??= [];
+                ApplicationUpdate.Data.DefaultColumns ??= [];
 
-            if (ApplicationUpdate.Data.Sections.Count == 0)
-                BuildSectionsFromRows();
+                if (ApplicationUpdate.Data.Sections.Count == 0)
+                    BuildSectionsFromRows();
 
-            if (ApplicationUpdate.Data.Sections.Count == 0)
-            {
-                ApplicationUpdate.Data.Sections.Add(new SelfInspectionSectionData
+                if (ApplicationUpdate.Data.Sections.Count == 0)
                 {
-                    Id = Guid.NewGuid(),
-                    Title = "Allmänt",
-                    SortOrder = 1,
-                    IsVisible = true
-                });
-            }
+                    ApplicationUpdate.Data.Sections.Add(new SelfInspectionSectionData
+                    {
+                        Id = Guid.NewGuid(),
+                        Title = "Allmänt",
+                        SortOrder = 1,
+                        IsVisible = true
+                    });
+                }
 
-            foreach (var section in ApplicationUpdate.Data.Sections)
-            {
-                if (section.Id == Guid.Empty)
-                    section.Id = Guid.NewGuid();
-                if (string.IsNullOrWhiteSpace(section.Title))
-                    section.Title = "Sektion";
-            }
+                foreach (var section in ApplicationUpdate.Data.Sections)
+                {
+                    if (section.Id == Guid.Empty)
+                        section.Id = Guid.NewGuid();
+                    if (string.IsNullOrWhiteSpace(section.Title))
+                        section.Title = "Sektion";
+                    section.Columns ??= [];
+                }
 
-            foreach (var row in ApplicationUpdate.Data.Rows)
-            {
-                if (row.ID == Guid.Empty)
-                    row.ID = Guid.NewGuid();
-                var section = ResolveSection(row);
-                row.SectionId = section.Id;
-                row.SectionTitle = section.Title;
-                row.Description = string.IsNullOrWhiteSpace(row.Description) ? section.Title : row.Description;
-                row.Attributes ??= [];
-                foreach (var attr in row.Attributes)
-                    NormalizeColumn(attr);
-            }
+                foreach (var row in ApplicationUpdate.Data.Rows)
+                {
+                    if (row.ID == Guid.Empty)
+                        row.ID = Guid.NewGuid();
+                    var section = ResolveSection(row);
+                    row.SectionId = section.Id;
+                    row.SectionTitle = section.Title;
+                    row.Description = string.IsNullOrWhiteSpace(row.Description) ? section.Title : row.Description;
+                    row.Attributes ??= [];
+                    foreach (var attr in row.Attributes)
+                        NormalizeColumn(attr);
+                }
 
-            if (ApplicationUpdate.Data.Rows.Count == 0)
-                AddCheckpoint(ApplicationUpdate.Data.Sections.OrderBy(x => x.SortOrder).First());
+                // Legacy templates: sections without column definitions inherit them from their rows
+                // (previously all rows mirrored one global column set).
+                foreach (var section in ApplicationUpdate.Data.Sections)
+                {
+                    if (section.Columns.Count > 0)
+                        continue;
 
-            EnsureRowsHaveColumns();
+                    var seed = RowsForSection(section).FirstOrDefault()?.Attributes
+                        ?? ApplicationUpdate.Data.Rows.OrderBy(x => x.SortOrder).FirstOrDefault()?.Attributes;
+
+                    section.Columns = seed is { Count: > 0 }
+                        ? seed.OrderBy(x => x.Order).Select(CloneColumnDefinition).ToList()
+                        : (ApplicationUpdate.Data.DefaultColumns.Count > 0
+                            ? ApplicationUpdate.Data.DefaultColumns.Select(CloneColumnDefinition).ToList()
+                            : StandardDefaultColumns());
+                }
+
+                if (ApplicationUpdate.Data.DefaultColumns.Count == 0)
+                {
+                    var firstSection = ApplicationUpdate.Data.Sections.OrderBy(x => x.SortOrder).First();
+                    ApplicationUpdate.Data.DefaultColumns = firstSection.Columns.Count > 0
+                        ? firstSection.Columns.Select(CloneColumnDefinition).ToList()
+                        : StandardDefaultColumns();
+                }
+
+                foreach (var section in ApplicationUpdate.Data.Sections)
+                {
+                    foreach (var col in section.Columns)
+                        NormalizeColumn(col);
+                    ReorderColumns(section.Columns);
+                }
+
+                foreach (var col in ApplicationUpdate.Data.DefaultColumns)
+                    NormalizeColumn(col);
+                ReorderColumns(ApplicationUpdate.Data.DefaultColumns);
+
+                if (ApplicationUpdate.Data.Rows.Count == 0)
+                    AddCheckpoint(ApplicationUpdate.Data.Sections.OrderBy(x => x.SortOrder).First());
+
+                foreach (var section in ApplicationUpdate.Data.Sections)
+                    SyncSectionRows(section);
             }
             finally
             {
@@ -402,32 +602,6 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
             }
         }
 
-        private void EnsureRowsHaveColumns()
-        {
-            var templateColumns = GetResponseColumnsForCurrentState();
-            if (templateColumns.Count == 0)
-                templateColumns = DefaultColumnsForCurrentType().Select(CloneColumnForRow).ToList();
-
-            foreach (var row in ApplicationUpdate.Data.Rows)
-            {
-                if (row.Attributes.Count == 0)
-                {
-                    row.Attributes = templateColumns.Select(CloneColumnForRow).ToList();
-                    continue;
-                }
-
-                foreach (var attr in row.Attributes)
-                    NormalizeColumn(attr);
-            }
-        }
-
-        private List<AttributeDTO> GetResponseColumnsForCurrentState()
-            => ApplicationUpdate.Data.Rows
-                .OrderBy(x => x.SortOrder)
-                .FirstOrDefault()?.Attributes
-                .OrderBy(x => x.Order)
-                .ToList() ?? [];
-
         private void NormalizeBeforeSave()
         {
             foreach (var section in ApplicationUpdate.Data.Sections)
@@ -435,16 +609,14 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
                 section.Title = (section.Title ?? string.Empty).Trim();
                 if (string.IsNullOrWhiteSpace(section.Title))
                     section.Title = "Sektion";
-            }
 
-            var templateColumns = ResponseColumns
-                .Select((x, index) =>
+                var columns = section.Columns.OrderBy(x => x.Order).ToList();
+                for (var i = 0; i < columns.Count; i++)
                 {
-                    NormalizeColumn(x);
-                    x.Order = index;
-                    return x;
-                })
-                .ToList();
+                    NormalizeColumn(columns[i]);
+                    columns[i].Order = i;
+                }
+            }
 
             foreach (var row in ApplicationUpdate.Data.Rows)
             {
@@ -453,7 +625,7 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
                 row.SectionId = section.Id;
                 row.SectionTitle = section.Title;
                 row.Description = section.Title;
-                row.Attributes = MergeColumns(row.Attributes, templateColumns);
+                row.Attributes = MergeColumns(row.Attributes, section.Columns.OrderBy(x => x.Order).ToList());
             }
         }
 
@@ -465,7 +637,9 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
             for (var i = 0; i < templateColumns.Count; i++)
             {
                 var template = templateColumns[i];
-                var target = i < orderedExisting.Count ? orderedExisting[i] : new AttributeDTO { ID = Guid.NewGuid() };
+                // Prefer matching by the column link so values follow their column when reordered.
+                var target = orderedExisting.FirstOrDefault(x => x.TemplateColumnId == template.ID && template.ID != Guid.Empty)
+                    ?? (i < orderedExisting.Count ? orderedExisting[i] : new AttributeDTO { ID = Guid.NewGuid() });
                 target.Label = template.Label;
                 target.FieldKey = template.FieldKey;
                 target.FieldTypeLabel = template.FieldTypeLabel;
@@ -474,6 +648,8 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
                 target.IsComputed = template.IsComputed;
                 target.Validation = template.Validation;
                 target.Style = template.Style;
+                target.Options = template.Options.ToList();
+                target.TemplateColumnId = template.ID;
                 target.Order = i;
                 merged.Add(target);
             }
@@ -499,21 +675,21 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
             return section;
         }
 
-        private IReadOnlyList<AttributeDTO> DefaultColumnsForCurrentType()
+        // Clone used for section/default column DEFINITIONS (keeps a fresh identity).
+        private static AttributeDTO CloneColumnDefinition(AttributeDTO source)
         {
-            var template = ApplicationUpdate.Data.TemplateType switch
-            {
-                SelfInspectionTemplateTypes.RiskAnalysis => SelfInspectionStandardTemplates.CreateRiskAnalysis(ApplicationUpdate.DepartmentId),
-                SelfInspectionTemplateTypes.Handover => SelfInspectionStandardTemplates.CreateHandover(ApplicationUpdate.DepartmentId),
-                _ => SelfInspectionStandardTemplates.CreateChecklist(ApplicationUpdate.DepartmentId)
-            };
-
-            return template.Data.Rows.FirstOrDefault()?.Attributes ?? [];
+            var clone = source.Clone();
+            clone.ID = Guid.NewGuid();
+            clone.TemplateColumnId = Guid.Empty;
+            NormalizeColumn(clone);
+            return clone;
         }
 
+        // Clone used for ROW attributes mirroring a section column (keeps the template link).
         private static AttributeDTO CloneColumnForRow(AttributeDTO source)
         {
             var clone = source.Clone();
+            clone.TemplateColumnId = source.ID;
             clone.ID = Guid.NewGuid();
             NormalizeColumn(clone);
             return clone;
@@ -523,6 +699,7 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
         {
             if (attr.ID == Guid.Empty)
                 attr.ID = Guid.NewGuid();
+            attr.Options ??= [];
             if (string.IsNullOrWhiteSpace(attr.Label))
                 attr.Label = TryReadStylePart(attr.Style, "label") ?? attr.AttributeType.ToString();
             if (string.IsNullOrWhiteSpace(attr.FieldKey))
@@ -564,11 +741,6 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
             AttributeType.Select => "Dropdown",
             _ => "Text"
         };
-
-        private static bool SameColumn(AttributeDTO left, AttributeDTO right)
-            => left.ID == right.ID
-               || (!string.IsNullOrWhiteSpace(left.FieldKey) && SameText(left.FieldKey, right.FieldKey))
-               || SameText(left.Label, right.Label);
 
         private static string GetLegacySectionTitle(RowDTO row)
             => !string.IsNullOrWhiteSpace(row.SectionTitle)
@@ -634,33 +806,6 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
                 ordered[i].SortOrder = i + 1;
         }
 
-        private bool CanMoveColumn(AttributeDTO column, int direction)
-        {
-            var ordered = ResponseColumns;
-            var index = ordered.FindIndex(x => x.ID == column.ID);
-            var target = index + direction;
-            return index >= 0 && target >= 0 && target < ordered.Count;
-        }
-
-        private void MoveColumn(AttributeDTO column, int direction)
-        {
-            var index = ResponseColumns.FindIndex(x => x.ID == column.ID);
-            var target = index + direction;
-            if (index < 0 || target < 0 || target >= ResponseColumns.Count)
-                return;
-
-            // Columns are mirrored across every row (kept in sync by Order), so the same positional swap
-            // must be applied to each row's attribute list.
-            foreach (var row in ApplicationUpdate.Data.Rows)
-            {
-                var attrs = row.Attributes.OrderBy(x => x.Order).ToList();
-                if (index < attrs.Count && target < attrs.Count)
-                    (attrs[index], attrs[target]) = (attrs[target], attrs[index]);
-                for (var i = 0; i < attrs.Count; i++)
-                    attrs[i].Order = i;
-            }
-        }
-
         private static bool Swap<T>(List<T> list, T item, int direction)
         {
             var index = list.IndexOf(item);
@@ -681,12 +826,6 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
             if (string.IsNullOrWhiteSpace(ApplicationUpdate.Name))
                 errors.Add("Namn är obligatoriskt.");
 
-            if (string.IsNullOrWhiteSpace(ApplicationUpdate.Data.TemplateType))
-                errors.Add("Typ är obligatoriskt.");
-
-            if (string.IsNullOrWhiteSpace(ApplicationUpdate.Data.LinkType))
-                errors.Add("Koppling är obligatorisk.");
-
             if (ApplicationUpdate.Data.Sections.Count == 0)
                 errors.Add("Minst en sektion krävs.");
 
@@ -696,19 +835,19 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
             if (ApplicationUpdate.Data.Rows.Any(r => string.IsNullOrWhiteSpace(r.Name)))
                 errors.Add("Kontrollpunkten saknar text.");
 
-            if (ResponseColumns.Any(c => string.IsNullOrWhiteSpace(c.Label)))
+            if (ApplicationUpdate.Data.Sections.Any(s => s.Columns.Any(c => string.IsNullOrWhiteSpace(c.Label))))
                 errors.Add("Svarskolumnen saknar namn.");
 
-            if (ResponseColumns.Any(c => string.IsNullOrWhiteSpace(DisplayFieldType(c))))
-                errors.Add("Svarskolumnen saknar fälttyp.");
+            if (ApplicationUpdate.Data.Sections.Any(s => s.Columns.Any(c => IsDropdown(c) && c.Options.All(string.IsNullOrWhiteSpace))))
+                errors.Add("Dropdown-kolumnen saknar alternativ.");
 
             return errors;
         }
 
         private void Preview()
         {
-            // Preview a snapshot (Data setter clones) so the read-only preview never mutates the working
-            // copy the admin is still editing.
+            // Preview a snapshot (Data setter clones) so the interactive preview never mutates the
+            // working copy the admin is still editing.
             var snapshot = new ApplicationDTO
             {
                 Id = ApplicationUpdate.Id,

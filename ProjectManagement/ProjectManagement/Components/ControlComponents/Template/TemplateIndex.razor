@@ -175,7 +175,7 @@ else
                                                 }
                                             </td>
                                             <td class="px-3 py-2">
-                                                <AppearancePreview />
+                                                <AppearancePreview Dark="@IsDarkAppearance(item)" />
                                             </td>
                                             <td class="px-3 py-2">
                                                 <div class="flex items-center justify-end gap-1.5">
@@ -465,6 +465,10 @@ else
 
     private static bool IsStandardAppearance(TemplateListDTO item)
         => IsKnownStandardName(item.Name, LegacyAppearanceNames, AppearanceStandardNames);
+
+    // "Standard mörk" (and copies of it) get the dark list preview so ljus/mörk differ visually.
+    private static bool IsDarkAppearance(TemplateListDTO item)
+        => DisplayName(item.Name, TemplateTab.Appearance).Contains("mörk", StringComparison.OrdinalIgnoreCase);
 
     private static bool IsStandardColumn(TemplateColumnListDTO item)
         => IsKnownStandardName(item.Name, LegacyColumnNames, ColumnStandardNames);

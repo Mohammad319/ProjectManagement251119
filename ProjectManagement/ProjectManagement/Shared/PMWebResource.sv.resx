@@ -36,7 +36,7 @@
   <data name="DepartmentUsersTitle" xml:space="preserve"><value>Avdelningsanvändare</value></data>
   <data name="AllTenantUsersTitle" xml:space="preserve"><value>Alla användare</value></data>
   <data name="UsersWithoutDepartmentTitle" xml:space="preserve"><value>Användare utan avdelning</value></data>
-  <data name="DepartmentUsersDescription" xml:space="preserve"><value>Granska inloggningsstatus, roller, spärrinformation och användaråtgärder.</value></data>
+  <data name="DepartmentUsersDescription" xml:space="preserve"><value>Granska inloggningsstatus, behörigheter, spärrinformation och användaråtgärder.</value></data>
   <data name="BackToDepartments" xml:space="preserve"><value>Tillbaka till avdelningar</value></data>
   <data name="Actions" xml:space="preserve"><value>Åtgärder</value></data>
   <data name="RecreateAuthUser" xml:space="preserve"><value>Skapa inloggning igen</value></data>
@@ -50,7 +50,7 @@
   <data name="StatusStale" xml:space="preserve"><value>Inaktiv 90+ dagar</value></data>
   <data name="ResendInvite" xml:space="preserve"><value>Skicka inbjudan igen</value></data>
   <data name="ResendInviteConfirmFormat" xml:space="preserve"><value>Skicka inbjudningsmejlet till {0} igen med ett nytt tillfälligt lösenord?</value></data>
-  <data name="RoleDistribution" xml:space="preserve"><value>Roller</value></data>
+  <data name="RoleDistribution" xml:space="preserve"><value>Behörigheter</value></data>
   <data name="FilterByStatusHint" xml:space="preserve"><value>Klicka på ett kort för att filtrera</value></data>
   <data name="StatusInactive" xml:space="preserve"><value>Inaktiverad</value></data>
   <data name="Deactivate" xml:space="preserve"><value>Inaktivera</value></data>
@@ -66,11 +66,11 @@
   <data name="Enabled" xml:space="preserve"><value>Aktiverad</value></data>
   <data name="Disabled" xml:space="preserve"><value>Inaktiverad</value></data>
   <data name="NoUsersFound" xml:space="preserve"><value>Inga användare hittades för detta val.</value></data>
-  <data name="RegisterUserHint" xml:space="preserve"><value>Skapa ett användarkonto och koppla användaren till rätt roll och avdelning.</value></data>
+  <data name="RegisterUserHint" xml:space="preserve"><value>Skapa ett användarkonto och koppla användaren till rätt behörighet och avdelning.</value></data>
   <data name="EditUserHint" xml:space="preserve"><value>Uppdatera profil, avdelningstilldelning och inloggningsbegränsningar.</value></data>
   <data name="CreateDepartmentHint" xml:space="preserve"><value>Skapa en avdelning för att gruppera användare, mappar och projekt.</value></data>
   <data name="EditDepartmentHint" xml:space="preserve"><value>Uppdatera avdelningens namn och beskrivning.</value></data>
-  <data name="Role" xml:space="preserve"><value>Roll</value></data>
+  <data name="Role" xml:space="preserve"><value>Behörighet</value></data>
   <data name="AllUsersHint" xml:space="preserve"><value>Öppna hela tenantens användarlista.</value></data>
   <data name="OrganisationTypesTitle" xml:space="preserve"><value>Organisationstyper</value></data>
   <data name="OrganisationTypesDescription" xml:space="preserve"><value>Hantera den återanvändbara typ-listan som används av organisationer.</value></data>
@@ -141,7 +141,7 @@
   <data name="SupportNavTitle" xml:space="preserve"><value>Support</value></data>
   <data name="SearchUsersPlaceholder" xml:space="preserve"><value>Sök på namn, e-post eller telefon…</value></data>
   <data name="SearchDepartmentsPlaceholder" xml:space="preserve"><value>Sök avdelningar…</value></data>
-  <data name="AllRoles" xml:space="preserve"><value>Alla roller</value></data>
+  <data name="AllRoles" xml:space="preserve"><value>Alla behörigheter</value></data>
   <data name="AllStatuses" xml:space="preserve"><value>Alla statusar</value></data>
   <data name="ShowingCountFormat" xml:space="preserve"><value>Visar {0} av {1}</value></data>
   <data name="NoResultsMatch" xml:space="preserve"><value>Inga resultat matchar dina filter.</value></data>
@@ -150,9 +150,9 @@
   <data name="DepartmentBadge" xml:space="preserve"><value>Avdelning</value></data>
   <data name="TotalUsers" xml:space="preserve"><value>Totalt antal användare</value></data>
   <data name="TotalProjects" xml:space="preserve"><value>Totalt antal projekt</value></data>
-  <data name="LevelManager" xml:space="preserve"><value>Admin</value></data>
-  <data name="LevelUser" xml:space="preserve"><value>Användare</value></data>
-  <data name="LevelGuest" xml:space="preserve"><value>Visare</value></data>
+  <data name="LevelManager" xml:space="preserve"><value>Administratör</value></data>
+  <data name="LevelUser" xml:space="preserve"><value>Kalkylanvändare</value></data>
+  <data name="LevelGuest" xml:space="preserve"><value>Läsare</value></data>
   <data name="LockUser" xml:space="preserve"><value>Spärra inloggning</value></data>
   <data name="UnlockUser" xml:space="preserve"><value>Ta bort inloggningsspärr</value></data>
   <data name="LockConfirmFormat" xml:space="preserve"><value>Spärra inloggning för {0}? Användaren loggas ut och kan inte logga in.</value></data>
@@ -161,14 +161,14 @@
   <data name="SelectedCountFormat" xml:space="preserve"><value>{0} markerade</value></data>
   <data name="ClearSelection" xml:space="preserve"><value>Rensa markering</value></data>
   <data name="BulkMoveToDepartment" xml:space="preserve"><value>Flytta till avdelning</value></data>
-  <data name="BulkChangeRole" xml:space="preserve"><value>Ändra roll…</value></data>
+  <data name="BulkChangeRole" xml:space="preserve"><value>Ändra behörighet…</value></data>
   <data name="BulkLock" xml:space="preserve"><value>Spärra</value></data>
   <data name="BulkUnlock" xml:space="preserve"><value>Ta bort spärr</value></data>
   <data name="BulkDelete" xml:space="preserve"><value>Ta bort</value></data>
   <data name="Apply" xml:space="preserve"><value>Tillämpa</value></data>
   <data name="BulkConfirmFormat" xml:space="preserve"><value>Tillämpa åtgärden på {0} användare?</value></data>
   <data name="BulkDeleteConfirmFormat" xml:space="preserve"><value>Ta bort {0} markerade användare? Detta kan inte ångras.</value></data>
-  <data name="BulkRoleConfirmFormat" xml:space="preserve"><value>Ändra rollen för {0} markerade användare?</value></data>
+  <data name="BulkRoleConfirmFormat" xml:space="preserve"><value>Ändra behörigheten för {0} markerade användare?</value></data>
   <data name="BulkResultFormat" xml:space="preserve"><value>{0} lyckades, {1} misslyckades, {2} hoppades över (sista administratören skyddad).</value></data>
   <data name="DepartmentInUseTitle" xml:space="preserve"><value>Kan inte ta bort avdelning</value></data>
   <data name="DepartmentInUseMessageFormat" xml:space="preserve"><value>'{0}' kan inte tas bort eftersom den fortfarande har {1} användare, {2} projekt och {3} mappar. Flytta eller ta bort dem först.</value></data>
@@ -214,7 +214,7 @@
   <data name="AuditUserLocked" xml:space="preserve"><value>Användare låst</value></data>
   <data name="AuditUserUnlocked" xml:space="preserve"><value>Användare upplåst</value></data>
   <data name="AuditDepartmentChanged" xml:space="preserve"><value>Avdelning ändrad</value></data>
-  <data name="AuditRoleChanged" xml:space="preserve"><value>Roll ändrad</value></data>
+  <data name="AuditRoleChanged" xml:space="preserve"><value>Behörighet ändrad</value></data>
   <data name="NotificationsTitle" xml:space="preserve"><value>Notiser</value></data>
   <data name="NotificationsMarkAllRead" xml:space="preserve"><value>Markera alla som lästa</value></data>
   <data name="NotificationsMarkRead" xml:space="preserve"><value>Markera som läst</value></data>

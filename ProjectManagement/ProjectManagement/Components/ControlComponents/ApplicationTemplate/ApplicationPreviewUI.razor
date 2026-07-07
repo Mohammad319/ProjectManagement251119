@@ -1,9 +1,9 @@
 @using ProjectManagement.Shared.Base.Application
 @using ProjectManagement.Shared.DTO.App
 
-@* Read-only "as the user sees it" preview of a self-inspection template. Deliberately hides all
-   admin-only affordances (sort order, visible/collapsed checkboxes, field-type pickers, delete
-   buttons) and shows the clean fill-in view. Nothing here is interactive — every field is disabled. *@
+@* "As the user sees it" preview of a self-inspection template. Admin-only affordances are hidden.
+   Dropdown- and checkbox-fields are INTERACTIVE (locally, nothing is saved) so the admin can try
+   the simple visibility conditions: picking a value shows/hides the dependent sections/checkpoints. *@
 
 @if (Application is null)
 {
@@ -21,12 +21,18 @@ else
             {
                 <p class="mt-2 whitespace-pre-line text-sm text-slate-600 dark:text-slate-300">@Purpose</p>
             }
+            @if (HasAnyCondition)
+            {
+                <p class="mt-2 text-xs text-sky-700 dark:text-sky-300">
+                    Mallen har visningsvillkor — välj värden i dropdown/checkbox nedan för att se hur sektioner och kontrollpunkter visas.
+                </p>
+            }
         </div>
 
         @if (VisibleSections.Count == 0)
         {
             <div class="rounded-lg border border-dashed border-slate-300 px-4 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
-                Mallen innehåller inga sektioner att fylla i ännu.
+                Inga sektioner är synliga just nu (kontrollera visningsvillkoren).
             </div>
         }
         else
@@ -34,7 +40,7 @@ else
             @foreach (var section in VisibleSections)
             {
                 var rows = VisibleRows(section);
-                var columns = ColumnsFor(rows);
+                var columns = ColumnsFor(section, rows);
                 <section class="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700">
                     <div class="border-b border-slate-200 bg-slate-100 px-3 py-2 dark:border-slate-700 dark:bg-slate-800/70">
                         <div class="font-semibold text-slate-800 dark:text-slate-100">@section.Title</div>
@@ -107,11 +113,16 @@ else
         ? Application!.Data.Purpose
         : (Application?.Data.Description ?? string.Empty);
 
+    private bool HasAnyCondition
+        => Application is not null
+           && (Application.Data.Sections.Any(s => s.VisibleWhen is not null)
+               || Application.Data.Rows.Any(r => r.VisibleWhen is not null));
+
     private List<SelfInspectionSectionData> VisibleSections
         => Application is null
             ? []
             : Application.Data.Sections
-                .Where(s => s.IsVisible)
+                .Where(s => s.IsVisible && ConditionSatisfied(s.VisibleWhen))
                 .OrderBy(s => s.SortOrder)
                 .ThenBy(s => s.Title)
                 .ToList();
@@ -120,10 +131,31 @@ else
         => Application is null
             ? []
             : Application.Data.Rows
-                .Where(r => r.IsVisible && BelongsToSection(r, section))
+                .Where(r => r.IsVisible && BelongsToSection(r, section) && ConditionSatisfied(r.VisibleWhen))
                 .OrderBy(r => r.SortOrder)
                 .ThenBy(r => r.Name)
                 .ToList();
+
+    // Simple condition evaluation: satisfied when ANY answer in the referenced column matches.
+    // (Answers live per row; the simple first version treats "any row" as a match.)
+    private bool ConditionSatisfied(SelfInspectionVisibilityCondition? condition)
+    {
+        if (condition is null || Application is null)
+            return true;
+
+        var answers = Application.Data.Rows
+            .SelectMany(r => r.Attributes ?? [])
+            .Where(a => a.TemplateColumnId == condition.ColumnId)
+            .Select(a => a.Value ?? string.Empty)
+            .ToList();
+
+        return condition.Operator switch
+        {
+            "checked" => answers.Any(v => string.Equals(v, "true", StringComparison.OrdinalIgnoreCase)),
+            "notchecked" => !answers.Any(v => string.Equals(v, "true", StringComparison.OrdinalIgnoreCase)),
+            _ => answers.Any(v => string.Equals(v?.Trim(), condition.Value?.Trim(), StringComparison.OrdinalIgnoreCase))
+        };
+    }
 
     private static bool BelongsToSection(RowDTO row, SelfInspectionSectionData section)
     {
@@ -135,14 +167,16 @@ else
         return string.Equals(title?.Trim(), section.Title?.Trim(), StringComparison.OrdinalIgnoreCase);
     }
 
-    // Header columns are taken from the row that defines the most answer fields so nothing is missed.
-    private static List<AttributeDTO> ColumnsFor(List<RowDTO> rows)
-        => rows
-            .OrderByDescending(r => r.Attributes?.Count ?? 0)
-            .FirstOrDefault()?
-            .Attributes?
-            .OrderBy(a => a.Order)
-            .ToList() ?? [];
+    // Prefer the section's own column definitions; fall back to the widest row for legacy data.
+    private static List<AttributeDTO> ColumnsFor(SelfInspectionSectionData section, List<RowDTO> rows)
+        => section.Columns is { Count: > 0 }
+            ? section.Columns.OrderBy(a => a.Order).ToList()
+            : rows
+                .OrderByDescending(r => r.Attributes?.Count ?? 0)
+                .FirstOrDefault()?
+                .Attributes?
+                .OrderBy(a => a.Order)
+                .ToList() ?? [];
 
     private static List<AttributeDTO> OrderedAttributes(RowDTO row)
         => row.Attributes?.OrderBy(a => a.Order).ToList() ?? [];
@@ -154,6 +188,15 @@ else
 
     private const string FieldClass =
         "w-full rounded-md border border-slate-300 bg-slate-50 px-2 py-1 text-sm text-slate-500 dark:border-slate-600 dark:bg-slate-800/60 dark:text-slate-400";
+
+    private const string LiveFieldClass =
+        "w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-800 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100";
+
+    private void SetValue(AttributeDTO col, string? value)
+        => col.Value = value ?? string.Empty;
+
+    private void ToggleBool(AttributeDTO col)
+        => col.Value = string.Equals(col.Value, "true", StringComparison.OrdinalIgnoreCase) ? string.Empty : "true";
 
     private RenderFragment RenderField(AttributeDTO col) => builder =>
     {
@@ -169,10 +212,12 @@ else
         switch (col.AttributeType)
         {
             case AttributeType.Bool:
+                // Interactive so visibility conditions can be tried out in the preview.
                 builder.OpenElement(0, "input");
                 builder.AddAttribute(1, "type", "checkbox");
-                builder.AddAttribute(2, "disabled", true);
-                builder.AddAttribute(3, "class", "h-4 w-4 rounded border-slate-300 text-sky-600 dark:border-slate-600");
+                builder.AddAttribute(2, "checked", string.Equals(col.Value, "true", StringComparison.OrdinalIgnoreCase));
+                builder.AddAttribute(3, "onchange", Microsoft.AspNetCore.Components.EventCallback.Factory.Create(this, () => ToggleBool(col)));
+                builder.AddAttribute(4, "class", "h-4 w-4 rounded border-slate-300 text-sky-600 dark:border-slate-600");
                 builder.CloseElement();
                 break;
 
@@ -186,12 +231,23 @@ else
                 break;
 
             case AttributeType.Select:
+                // Interactive dropdown with the admin-defined alternatives.
                 builder.OpenElement(0, "select");
-                builder.AddAttribute(1, "disabled", true);
-                builder.AddAttribute(2, "class", FieldClass);
-                builder.OpenElement(3, "option");
-                builder.AddContent(4, "Välj…");
+                builder.AddAttribute(1, "class", LiveFieldClass);
+                builder.AddAttribute(2, "value", col.Value ?? string.Empty);
+                builder.AddAttribute(3, "onchange", Microsoft.AspNetCore.Components.EventCallback.Factory.Create<Microsoft.AspNetCore.Components.ChangeEventArgs>(this, e => SetValue(col, e.Value?.ToString())));
+                builder.OpenElement(4, "option");
+                builder.AddAttribute(5, "value", "");
+                builder.AddContent(6, "Välj…");
                 builder.CloseElement();
+                var seq = 7;
+                foreach (var option in col.Options ?? [])
+                {
+                    builder.OpenElement(seq++, "option");
+                    builder.AddAttribute(seq++, "value", option);
+                    builder.AddContent(seq++, option);
+                    builder.CloseElement();
+                }
                 builder.CloseElement();
                 break;
 

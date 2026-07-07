@@ -1,0 +1,287 @@
+@using ProjectManagement.Client.Shared.Model.Application
+@using ProjectManagement.Shared.Base.Application
+@inherits AppComponentBase
+
+@* Ifyllnadsvyn för en egenkontroll i kalkylen — ett formulär (som förhandsgranskningen i
+   mallbyggaren), INTE en mallbyggare. Svaren sparas per kontrollpunkt/svarskolumn i
+   Instance.Data.Attributes (nyckel = radattributets ID). *@
+
+<div class="flex h-full min-h-0 flex-col text-sm">
+    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900">
+        <div class="flex min-w-0 items-center gap-2">
+            <button type="button"
+                    class="inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                    @onclick="() => OnBack.InvokeAsync()">
+                ← Tillbaka
+            </button>
+            <div class="min-w-0">
+                <div class="truncate font-semibold text-slate-800 dark:text-slate-100">@Instance.Name</div>
+                <div class="text-xs text-slate-500 dark:text-slate-400">
+                    @Progress.Status — @Progress.Done av @Progress.Total klara (@Progress.Percent %)
+                    @if (ReadOnly)
+                    {
+                        <span class="ml-1 rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">Läsläge</span>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            @if (!ReadOnly)
+            {
+                <button type="button"
+                        class="rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:opacity-50 dark:bg-emerald-500 dark:hover:bg-emerald-400"
+                        disabled="@_busy"
+                        @onclick="SaveAsync">
+                    Spara
+                </button>
+            }
+        </div>
+    </div>
+
+    <div class="min-h-0 flex-1 space-y-3 overflow-y-auto p-2">
+        <div class="grid grid-cols-1 gap-2 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900 md:grid-cols-2">
+            <div>
+                <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Namn</label>
+                <input class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                       value="@Instance.Name" disabled="@ReadOnly"
+                       @onchange="e => Instance.Name = e.Value?.ToString() ?? Instance.Name" />
+            </div>
+            <div>
+                <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Ansvarig</label>
+                <input class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                       value="@Instance.Responsible" disabled="@ReadOnly"
+                       @onchange="e => Instance.Responsible = e.Value?.ToString() ?? string.Empty" />
+            </div>
+        </div>
+
+        @if (VisibleSections.Count == 0)
+        {
+            <div class="rounded-lg border border-dashed border-slate-300 px-4 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                Inga sektioner är synliga just nu.
+            </div>
+        }
+        @foreach (var section in VisibleSections)
+        {
+            var rows = VisibleRows(section);
+            var columns = ColumnsFor(section, rows);
+            <section class="overflow-hidden rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+                <div class="border-b border-slate-200 bg-slate-100 px-3 py-2 dark:border-slate-700 dark:bg-slate-800/70">
+                    <div class="font-semibold text-slate-800 dark:text-slate-100">@section.Title</div>
+                    @if (!string.IsNullOrWhiteSpace(section.Description))
+                    {
+                        <div class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">@section.Description</div>
+                    }
+                </div>
+
+                @if (rows.Count == 0)
+                {
+                    <div class="px-3 py-3 text-sm text-slate-500 dark:text-slate-400">Inga kontrollpunkter i sektionen.</div>
+                }
+                else
+                {
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm">
+                            <thead>
+                                <tr class="text-left text-xs font-semibold text-slate-600 dark:text-slate-200">
+                                    <th class="px-3 py-2">Kontrollpunkt</th>
+                                    @foreach (var col in columns)
+                                    {
+                                        <th class="px-3 py-2">@col.Label@if (col.Required) {<span class="text-red-500"> *</span>}</th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                                @foreach (var row in rows)
+                                {
+                                    var attrs = row.Attributes.OrderBy(a => a.Order).ToList();
+                                    var done = SelfInspectionProgress.RowDone(row, Instance.Data.Attributes);
+                                    <tr class="align-top @(done ? "bg-emerald-50/40 dark:bg-emerald-950/10" : "")">
+                                        <td class="px-3 py-2 text-slate-800 dark:text-slate-100">
+                                            <div class="font-medium">
+                                                @row.Name@if (row.IsRequired) {<span class="text-red-500"> *</span>}
+                                            </div>
+                                            @if (!string.IsNullOrWhiteSpace(row.HelpText))
+                                            {
+                                                <div class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">@row.HelpText</div>
+                                            }
+                                        </td>
+                                        @for (var i = 0; i < columns.Count; i++)
+                                        {
+                                            var attr = i < attrs.Count ? attrs[i] : null;
+                                            <td class="px-3 py-2">
+                                                @if (attr is not null)
+                                                {
+                                                    @FieldFor(attr)
+                                                }
+                                            </td>
+                                        }
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </section>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public ApplicationValuesModel Instance { get; set; } = new();
+    [Parameter] public bool ReadOnly { get; set; }
+    [Parameter] public EventCallback OnBack { get; set; }
+
+    private bool _busy;
+
+    private SelfInspectionProgress.Result Progress => SelfInspectionProgress.For(Instance);
+
+    private const string FieldCls =
+        "w-full min-w-[7rem] rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-800 disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900";
+
+    private List<SelfInspectionSectionData> VisibleSections
+        => (Instance.Application?.Data?.Sections ?? [])
+            .Where(s => s.IsVisible && ConditionSatisfied(s.VisibleWhen))
+            .OrderBy(s => s.SortOrder)
+            .ThenBy(s => s.Title)
+            .ToList();
+
+    private List<RowModel> VisibleRows(SelfInspectionSectionData section)
+        => (Instance.Application?.Data?.Row ?? [])
+            .Where(r => r.IsVisible && BelongsToSection(r, section) && ConditionSatisfied(r.VisibleWhen))
+            .OrderBy(r => r.SortOrder)
+            .ThenBy(r => r.Name)
+            .ToList();
+
+    private static bool BelongsToSection(RowModel row, SelfInspectionSectionData section)
+    {
+        if (row.SectionId != Guid.Empty)
+            return row.SectionId == section.Id;
+
+        var title = !string.IsNullOrWhiteSpace(row.SectionTitle) ? row.SectionTitle : row.Description;
+        return string.Equals(title?.Trim(), section.Title?.Trim(), StringComparison.OrdinalIgnoreCase);
+    }
+
+    // Column headers per section: the section's own column definitions, or the widest row (legacy).
+    private List<AttributeModel> ColumnsFor(SelfInspectionSectionData section, List<RowModel> rows)
+    {
+        if (section.Columns is { Count: > 0 })
+        {
+            // Section columns are AttributeDTO; header only needs Label/Required/Order.
+            return section.Columns
+                .OrderBy(a => a.Order)
+                .Select(a => new AttributeModel { ID = a.ID, Label = a.Label, Required = a.Required, Order = a.Order })
+                .ToList();
+        }
+
+        return rows
+            .OrderByDescending(r => r.Attributes?.Count ?? 0)
+            .FirstOrDefault()?
+            .Attributes?
+            .OrderBy(a => a.Order)
+            .ToList() ?? [];
+    }
+
+    // Simple visibility conditions — same rule as the builder preview: satisfied when ANY
+    // answered value in the referenced column matches.
+    private bool ConditionSatisfied(SelfInspectionVisibilityCondition? condition)
+    {
+        if (condition is null)
+            return true;
+
+        var answers = (Instance.Application?.Data?.Row ?? [])
+            .SelectMany(r => r.Attributes)
+            .Where(a => a.TemplateColumnId == condition.ColumnId)
+            .Select(a => Instance.Data.Attributes.TryGetValue(a.ID, out var v) ? v : string.Empty)
+            .ToList();
+
+        return condition.Operator switch
+        {
+            "checked" => answers.Any(v => string.Equals(v, "true", StringComparison.OrdinalIgnoreCase)),
+            "notchecked" => !answers.Any(v => string.Equals(v, "true", StringComparison.OrdinalIgnoreCase)),
+            _ => answers.Any(v => string.Equals(v?.Trim(), condition.Value?.Trim(), StringComparison.OrdinalIgnoreCase))
+        };
+    }
+
+    private string GetValue(AttributeModel attr)
+        => Instance.Data.Attributes.TryGetValue(attr.ID, out var v) ? v : string.Empty;
+
+    private void SetValue(AttributeModel attr, string? value)
+        => Instance.Data.Attributes[attr.ID] = value ?? string.Empty;
+
+    private void ToggleBool(AttributeModel attr)
+        => Instance.Data.Attributes[attr.ID] =
+            string.Equals(GetValue(attr), "true", StringComparison.OrdinalIgnoreCase) ? string.Empty : "true";
+
+    private RenderFragment FieldFor(AttributeModel attr) => __builder =>
+    {
+        if (attr.IsComputed)
+        {
+            <div class="@FieldCls italic text-slate-400">Beräknas automatiskt</div>
+            return;
+        }
+
+        switch (attr.AttributeType)
+        {
+            case AttributeType.Bool:
+                <input type="checkbox"
+                       class="h-4 w-4 rounded border-slate-300 text-sky-600 dark:border-slate-600"
+                       checked="@(string.Equals(GetValue(attr), "true", StringComparison.OrdinalIgnoreCase))"
+                       disabled="@ReadOnly"
+                       @onchange="() => ToggleBool(attr)" />
+                break;
+
+            case AttributeType.Select:
+                <select class="@FieldCls" value="@GetValue(attr)" disabled="@ReadOnly"
+                        @onchange="e => SetValue(attr, e.Value?.ToString())">
+                    <option value="">Välj…</option>
+                    @foreach (var option in attr.Options ?? [])
+                    {
+                        <option value="@option">@option</option>
+                    }
+                </select>
+                break;
+
+            case AttributeType.TextArea:
+                <textarea rows="2" class="@FieldCls" disabled="@ReadOnly"
+                          value="@GetValue(attr)"
+                          @onchange="e => SetValue(attr, e.Value?.ToString())"></textarea>
+                break;
+
+            default:
+                <input type="@InputType(attr.AttributeType)" class="@FieldCls" disabled="@ReadOnly"
+                       value="@GetValue(attr)"
+                       @onchange="e => SetValue(attr, e.Value?.ToString())" />
+                break;
+        }
+    };
+
+    private static string InputType(AttributeType type) => type switch
+    {
+        AttributeType.Int or AttributeType.Double => "number",
+        AttributeType.Date => "date",
+        AttributeType.DateTime => "datetime-local",
+        AttributeType.Time => "time",
+        _ => "text"
+    };
+
+    private async Task SaveAsync()
+    {
+        if (_busy || ReadOnly)
+            return;
+
+        _busy = true;
+        try
+        {
+            Instance.LastUpdate = DateTime.Now;
+            var ok = await Repo.Application.UpdateAsync(Instance);
+            if (ok)
+                MHD.ToastInfo("Egenkontrollen har sparats.", string.Empty, true);
+            else
+                MHD.Notifications(ToastType.Update, false);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

@@ -212,7 +212,7 @@
     <value>Kom ihåg me?</value>
   </data>
   <data name="role" xml:space="preserve">
-    <value>Roll</value>
+    <value>Behörighet</value>
   </data>
   <data name="Security_TwoFactorAuthentication" xml:space="preserve">
     <value>Tvåfaktorsautentisering</value>
@@ -295,4 +295,24 @@
   <data name="VerificationCodeLabel" xml:space="preserve">
     <value>Verifieringskod</value>
   </data>
+  <data name="ManageEmailDescription" xml:space="preserve"><value>Ändra den e-postadress som används för ditt konto.</value></data>
+  <data name="EnterOldPassword" xml:space="preserve"><value>Ange nuvarande lösenord</value></data>
+  <data name="EnterNewPassword" xml:space="preserve"><value>Ange nytt lösenord</value></data>
+  <data name="PersonalDataDescription" xml:space="preserve"><value>Ditt konto innehåller personuppgifter som du har lämnat till oss. På den här sidan kan du ladda ner eller radera dessa uppgifter.</value></data>
+  <data name="PersonalDataDeleteWarning" xml:space="preserve"><value>Om du raderar dessa uppgifter tas ditt konto bort permanent och kan inte återställas.</value></data>
+  <data name="ProfileUpdated" xml:space="preserve"><value>Din profil har uppdaterats.</value></data>
+  <data name="PasswordChangedStatus" xml:space="preserve"><value>Ditt lösenord har ändrats.</value></data>
+  <data name="EmailUnchanged" xml:space="preserve"><value>Din e-postadress är oförändrad.</value></data>
+  <data name="ChangeEmailConfirmationSent" xml:space="preserve"><value>En bekräftelselänk för e-poständring har skickats. Kontrollera din e-post.</value></data>
+  <data name="UnnamedPasskey" xml:space="preserve"><value>Namnlös inloggningsnyckel</value></data>
+  <data name="RenamePasskeyHint" xml:space="preserve"><value>Byt namn på denna inloggningsnyckel</value></data>
+  <data name="DeletePasskeyHint" xml:space="preserve"><value>Ta bort denna inloggningsnyckel från ditt konto</value></data>
+  <data name="MaxPasskeysReached" xml:space="preserve"><value>Du har nått det högsta antalet inloggningsnycklar. Ta bort en innan du lägger till en ny.</value></data>
+  <data name="ForgetThisBrowser" xml:space="preserve"><value>Glöm denna webbläsare</value></data>
+  <data name="ResetRecoveryCodes" xml:space="preserve"><value>Återställ återställningskoder</value></data>
+  <data name="RecoveryCodesLeftFormat" xml:space="preserve"><value>Du har {0} återställningskoder kvar.</value></data>
+  <data name="OneRecoveryCodeLeft" xml:space="preserve"><value>Du har 1 återställningskod kvar.</value></data>
+  <data name="NoRecoveryCodesLeft" xml:space="preserve"><value>Du har inga återställningskoder kvar.</value></data>
+  <data name="FailedToSetPhoneNumber" xml:space="preserve"><value>Det gick inte att spara telefonnumret.</value></data>
+  <data name="SendVerificationEmailNote" xml:space="preserve"><value>Skicka verifieringsmejl</value></data>
 </root>

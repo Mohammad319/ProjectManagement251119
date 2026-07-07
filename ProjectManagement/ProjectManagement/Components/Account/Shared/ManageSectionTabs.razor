@@ -1,0 +1,87 @@
+@* Internal tab bar for the profile pages. The left menu only has three main sections
+   (Konto / Säkerhet / Data & juridik); this component shows the section heading,
+   description and the internal tabs for the current section, based on the URL. *@
+@inject NavigationManager Nav
+
+@if (_section is not null)
+{
+    <div class="mx-auto max-w-2xl">
+        <h2 class="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">@_section.Title</h2>
+        <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">@_section.Description</p>
+
+        <div class="mt-3 flex flex-wrap items-end gap-1 border-b border-slate-200 dark:border-slate-800" role="tablist">
+            @foreach (var tab in _section.Tabs)
+            {
+                <a href="@tab.Href"
+                   role="tab"
+                   aria-selected="@(IsActive(tab) ? "true" : "false")"
+                   class="@(IsActive(tab) ? ActiveTabClass : TabClass)">
+                    @tab.Label
+                </a>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private const string TabClass =
+        "rounded-t-lg border-b-2 border-transparent px-3 py-2 text-sm font-medium text-slate-500 transition hover:bg-slate-50 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-200";
+
+    private const string ActiveTabClass =
+        "rounded-t-lg border-b-2 border-sky-600 bg-sky-50/60 px-3 py-2 text-sm font-semibold text-sky-700 dark:border-sky-400 dark:bg-sky-950/40 dark:text-sky-200";
+
+    private sealed record SectionTab(string Label, string Href, string[] Aliases);
+    private sealed record Section(string Title, string Description, SectionTab[] Tabs);
+
+    private static readonly Section Konto = new(
+        "Konto",
+        "Hantera dina kontouppgifter, e-postadress och lösenord.",
+        [
+            new("Profil", "Account/Manage", ["/account/manage"]),
+            new("E-post", "Account/Manage/Email", ["/account/manage/email"]),
+            new("Lösenord", "Account/Manage/ChangePassword", ["/account/manage/changepassword"])
+        ]);
+
+    private static readonly Section Sakerhet = new(
+        "Säkerhet",
+        "Hantera tvåfaktorsautentisering och inloggningsnycklar.",
+        [
+            new("Tvåfaktorsautentisering", "Account/Manage/TwoFactorAuthentication",
+                ["/account/manage/twofactorauthentication", "/account/manage/enableauthenticator", "/account/manage/disable2fa", "/account/manage/resetauthenticator", "/account/manage/generaterecoverycodes"]),
+            new("Inloggningsnycklar / Passkeys", "Account/Manage/Passkeys",
+                ["/account/manage/passkeys", "/account/manage/renamepasskey"])
+        ]);
+
+    private static readonly Section Juridik = new(
+        "Data & juridik",
+        "Personuppgifter och juridisk information.",
+        [
+            new("Personuppgifter", "Account/Manage/PersonalData", ["/account/manage/personaldata"]),
+            new("Integritetspolicy", "Account/Manage/Privacy", ["/account/manage/privacy"]),
+            new("Användarvillkor", "Account/Manage/Terms", ["/account/manage/terms"]),
+            new("Impressum", "Account/Manage/Impressum", ["/account/manage/impressum"]),
+            new("Tredje part", "Account/Manage/Libraries", ["/account/manage/libraries"])
+        ]);
+
+    private Section? _section;
+    private string _path = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        _path = new Uri(Nav.Uri).AbsolutePath.TrimEnd('/').ToLowerInvariant();
+        _section = FindSection(_path);
+    }
+
+    private static Section? FindSection(string path)
+    {
+        foreach (var section in new[] { Konto, Sakerhet, Juridik })
+        {
+            if (section.Tabs.Any(t => t.Aliases.Contains(path)))
+                return section;
+        }
+
+        return null;
+    }
+
+    private bool IsActive(SectionTab tab) => tab.Aliases.Contains(_path);
+}

@@ -1,14 +1,22 @@
 @using System.Globalization
+@using System.Security.Claims
+@using AuthPermissions.Context
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.Components.Routing
 @using Microsoft.JSInterop
 @using ProjectManagement.Client.Pages.Project.ProjectPages
 @using ProjectManagement.Shared
+@using ProjectManagement.Services.UI
+@using ProjectManagement.Shared.Constant
 @implements IDisposable
 @inject MhdServices MHD
 
 @inject NavigationManager _navigationManager
 @inject IJSRuntime JS
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject AuthPermissionDbContext AuthDb
 @inject SignInManager<ApplicationUser> SignInManager
 
 <nav class="relative z-[1000] overflow-visible">
@@ -50,8 +58,8 @@
                     <button class="btn nav-link"
                             @ref="_profileButtonRef"
                             @onclick="ToggleProfileMenu"
-                            title="Användare"
-                            aria-label="Användare"
+                            title="@UserMenuTooltip"
+                            aria-label="Användarmeny"
                             aria-haspopup="menu"
                             aria-expanded="@isProfileMenuOpen">
                         <span aria-hidden="true">@((MarkupString)Icons.Person)</span>
@@ -69,6 +77,12 @@
          style="@ProfileMenuStyle"
          role="menu"
          aria-label="Användarmeny">
+                <div class="border-b border-slate-200 px-3 py-2 text-left dark:border-slate-700">
+            <div class="text-[11px] font-medium text-slate-500 dark:text-slate-400">Inloggad som</div>
+            <div class="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">@CurrentUserDisplayName</div>
+            <div class="mt-0.5 truncate text-xs text-slate-600 dark:text-slate-300">För @CurrentCompanyName</div>
+            <div class="mt-0.5 truncate text-xs text-slate-600 dark:text-slate-300">Behörighet: @CurrentPermissionLabel</div>
+        </div>
         <button type="button"
                 class="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-100 focus:bg-slate-100 focus:outline-none dark:text-slate-200 dark:hover:bg-slate-800 dark:focus:bg-slate-800"
                 role="menuitem"
@@ -122,12 +136,16 @@
     private bool _profileMenuPositioned;
     private ElementReference _profileButtonRef;
     private DotNetObjectReference<NavMenu>? _dotNetRef;
-    private UserMenuPosition _profileMenuPosition = new(44, 8, 176, 320);
+    private UserMenuPosition _profileMenuPosition = new(44, 8, 256, 320);
+    private string CurrentUserDisplayName { get; set; } = "Ej angiven";
+    private string CurrentCompanyName { get; set; } = "Företag saknas";
+    private string CurrentPermissionLabel { get; set; } = PermissionDisplay.MissingPermissionLabel;
+    private string UserMenuTooltip => $"Inloggad som {CurrentUserDisplayName}\nFör {CurrentCompanyName}\nBehörighet: {CurrentPermissionLabel}";
 
     private string ProfileMenuStyle
         => _profileMenuPositioned
             ? $"top:{_profileMenuPosition.Top}px;left:{_profileMenuPosition.Left}px;width:{_profileMenuPosition.Width}px;max-height:{_profileMenuPosition.MaxHeight}px;"
-            : "top:2.75rem;right:0.5rem;width:11rem;max-height:calc(100vh - 3.5rem);";
+            : "top:2.75rem;right:0.5rem;width:16rem;max-height:calc(100vh - 3.5rem);";
 
     [Parameter] public EventCallback<string> OnMenuClick { get; set; }
 
@@ -137,6 +155,70 @@
     {
         currentUrl = _navigationManager.ToBaseRelativePath(_navigationManager.Uri);
         _navigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserMenuInfoAsync();
+    }
+
+    private async Task LoadUserMenuInfoAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated != true)
+            return;
+
+        var email = FirstClaim(user, ClaimTypes.Email, "email", "preferred_username", ClaimTypes.Name);
+        CurrentUserDisplayName = FirstClaim(user, PMClaimsConst.FullName, "name", "display_name", "DisplayName") ?? email ?? "Ej angiven";
+        CurrentCompanyName = FirstClaim(user, "tenant_name", "TenantName", "company", "Company", "company_name", "CompanyName", "organisation", "Organisation", "organization", "Organization")
+            ?? await ResolveTenantNameAsync(user)
+            ?? "Företag saknas";
+        CurrentPermissionLabel = PermissionDisplay.Label(ResolveRole(user));
+    }
+
+    private async Task<string?> ResolveTenantNameAsync(ClaimsPrincipal user)
+    {
+        if (!int.TryParse(user.FindFirst(PMClaimsConst.Tenant)?.Value, out var tenantId) || tenantId <= 0)
+            return null;
+
+        try
+        {
+            return await AuthDb.Tenants.AsNoTracking()
+                .Where(t => t.Id == tenantId)
+                .Select(t => t.Name)
+                .FirstOrDefaultAsync();
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static string? FirstClaim(ClaimsPrincipal user, params string[] claimTypes)
+        => claimTypes
+            .Select(type => user.FindFirst(type)?.Value)
+            .FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
+
+    private static string? ResolveRole(ClaimsPrincipal user)
+    {
+        var knownRoles = new[]
+        {
+            PMRolesConst.Tenant.Admin,
+            PMRolesConst.Tenant.Manger,
+            PMRolesConst.Tenant.User,
+            PMRolesConst.Tenant.Viewer,
+            PMRolesConst.APP.Admin,
+            PMRolesConst.APP.Manger,
+            PMRolesConst.APP.User
+        };
+
+        return user.FindAll(ClaimTypes.Role)
+            .Select(c => c.Value)
+            .FirstOrDefault(role => knownRoles.Contains(role, StringComparer.OrdinalIgnoreCase))
+            ?? knownRoles.FirstOrDefault(user.IsInRole);
     }
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
@@ -278,7 +360,7 @@
                 _profileMenuPosition = await JS.InvokeAsync<UserMenuPosition>(
                     "projectManagementUserMenu.getPosition",
                     _profileButtonRef,
-                    192);
+                    256);
                 _profileMenuPositioned = true;
                 await InvokeAsync(StateHasChanged);
             }

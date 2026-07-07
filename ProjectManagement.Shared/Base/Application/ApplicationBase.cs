@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 
 namespace ProjectManagement.Shared.Base.Application
 {
@@ -42,6 +43,31 @@ namespace ProjectManagement.Shared.Base.Application
         public string SystemTemplateKey { get; set; } = string.Empty;
         public string CopiedFromSystemTemplateKey { get; set; } = string.Empty;
         public List<SelfInspectionSectionData> Sections { get; set; } = [];
+
+        /// <summary>Standard answer columns that new sections start with. Each section can then
+        /// change its own set independently.</summary>
+        public List<ProjectManagement.Shared.DTO.App.AttributeDTO> DefaultColumns { get; set; } = [];
+    }
+
+    /// <summary>
+    /// Simple visibility rule for sections/checkpoints. First version deliberately supports only
+    /// "dropdown equals value" and "checkbox checked / not checked" — no ranges, no AND/OR groups.
+    /// Operators: "equals" | "checked" | "notchecked".
+    /// </summary>
+    public sealed class SelfInspectionVisibilityCondition
+    {
+        public Guid ColumnId { get; set; }
+        public string ColumnLabel { get; set; } = string.Empty;
+        public string Operator { get; set; } = "equals";
+        public string Value { get; set; } = string.Empty;
+
+        public SelfInspectionVisibilityCondition Clone() => new()
+        {
+            ColumnId = ColumnId,
+            ColumnLabel = ColumnLabel ?? string.Empty,
+            Operator = string.IsNullOrWhiteSpace(Operator) ? "equals" : Operator,
+            Value = Value ?? string.Empty
+        };
     }
 
     public sealed class SelfInspectionSectionData
@@ -53,6 +79,12 @@ namespace ProjectManagement.Shared.Base.Application
         public bool IsVisible { get; set; } = true;
         public bool CollapsedByDefault { get; set; }
 
+        /// <summary>Answer columns for this section (each section can have its own set).</summary>
+        public List<ProjectManagement.Shared.DTO.App.AttributeDTO> Columns { get; set; } = [];
+
+        /// <summary>Null = always visible.</summary>
+        public SelfInspectionVisibilityCondition? VisibleWhen { get; set; }
+
         public SelfInspectionSectionData Clone()
         {
             return new SelfInspectionSectionData
@@ -62,7 +94,9 @@ namespace ProjectManagement.Shared.Base.Application
                 Description = Description ?? string.Empty,
                 SortOrder = SortOrder,
                 IsVisible = IsVisible,
-                CollapsedByDefault = CollapsedByDefault
+                CollapsedByDefault = CollapsedByDefault,
+                Columns = Columns?.Select(x => x.Clone()).ToList() ?? [],
+                VisibleWhen = VisibleWhen?.Clone()
             };
         }
     }

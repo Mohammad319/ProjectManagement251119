@@ -17,6 +17,7 @@ namespace ProjectManagement.Shared.Helper
         public static AddressDTO CloneAddress(AddressDTO? value)
             => new()
             {
+                Description = CopyText(value?.Description),
                 Street = CopyText(value?.Street),
                 ZIPCode = CopyText(value?.ZIPCode),
                 Nr = CopyText(value?.Nr),

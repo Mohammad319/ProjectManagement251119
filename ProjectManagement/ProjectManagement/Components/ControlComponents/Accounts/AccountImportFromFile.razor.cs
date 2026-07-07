@@ -1,9 +1,11 @@
 using Application.Feature.Account.Commands;
 using Application.Feature.Account.Queries;
+using BlazorMHD.UI.Core.Services;
 using ClosedXML.Excel;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using ProjectManagement.Client.Shared.ResourceFiles.APP;
+using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Account;
 using System.Text;
 
@@ -13,22 +15,45 @@ public partial class AccountImportFromFile
 {
     [Parameter] public EventCallback<bool> OnSaved { get; set; }
 
-    private enum ImportFormat { Table, WideGroup }
-    private enum DuplicateStrategy { Skip, Update }
+    internal enum ImportFormat { Table, PairColumns }
+    internal enum DuplicateStrategy { Skip, Update }
 
-    private enum PreviewStatus { New, Update, Duplicate, Error }
-
-    private sealed class PreviewRow
+    internal enum PreviewStatus
     {
+        New,            // Ny
+        Update,         // Uppdateras
+        Exists,         // Finns redan (hoppas över)
+        Ignored,        // Ignoreras (t.ex. dubblett i filen)
+        Error,          // Fel: … (blockerande)
+        GroupNew,       // Ny kontogrupp (rubrikrad i kolumnpar-format)
+        GroupExisting   // Kontogrupp (finns redan)
+    }
+
+    internal sealed class PreviewRow
+    {
+        public Guid Id { get; } = Guid.NewGuid();
+        public bool IsGroupRow;
+
+        /// <summary>Pair format: which group-header row this account was read under (drives rename propagation).</summary>
+        public Guid? GroupRowId;
+
+        /// <summary>Set once the admin edits the account's group by hand — stops auto-propagation from the header row.</summary>
+        public bool GroupManuallyEdited;
+
+        public string PairLabel = string.Empty;
+        public int SourceRow;
+
         public string Group = string.Empty;
         public string Code = string.Empty;
         public string Name = string.Empty;
         public string Comment1 = string.Empty;
         public string Comment2 = string.Empty;
+
         public PreviewStatus Status;
         public string? Error;
-        public bool IsValid => Status != PreviewStatus.Error && Status != PreviewStatus.Duplicate;
+
         public bool IsSavable => Status is PreviewStatus.New or PreviewStatus.Update;
+        public bool IsBlocking => Status == PreviewStatus.Error;
     }
 
     private IBrowserFile? File;
@@ -46,25 +71,39 @@ public partial class AccountImportFromFile
     private ImportFormat Format = ImportFormat.Table;
     private DuplicateStrategy Strategy = DuplicateStrategy.Skip;
 
-    // Vanligt tabellformat (one account per row)
+    // Vanligt tabellformat (one account per row, group in an optional column).
+    // Defaults assume the simplest file: data from row 1, code in column 1, name in column 2.
     private int RowStart = 1;
-    private int GroupCol = 1;
-    private int CodeCol = 2;
-    private int NameCol = 3;
-    private int Comment1Col = 0;
-    private int Comment2Col = 0;
+    private int? RowEnd;
+    private int? GroupCol;
+    private int CodeCol = 1;
+    private int NameCol = 2;
+    private int? Comment1Col;
+    private int? Comment2Col;
     private string Separator = ",";
 
-    // Brett gruppformat (several account groups side by side)
-    private int HeaderRow = 1;
-    private int WideRowStart = 2;
+    // Rubrikbaserat kolumnpar (code+name pairs; a row without code but with name starts a new group)
+    private int PairRowStart = 1;
+    private int? PairRowEnd;
     private int FirstCodeCol = 1;
     private int FirstNameCol = 2;
-    private int ColsPerGroup = 2;
+    private int ColsPerPair = 2;
+    private bool ReadAllPairs = true;
+    private bool NameOnlyIsGroup = true;
 
     private readonly List<PreviewRow> Preview = [];
     private bool _previewDone;
+
+    // True once the admin has edited/removed preview rows — closing then needs a confirmation.
+    private bool _previewEdited;
+    private MhdDialogModel? _dialogModel;
+
     private List<string> NewGroupNames = [];
+
+    // Import history ("Senaste importer")
+    private List<AccountImportBatchDTO> Batches = [];
+    private int? _expandedBatchId;
+    private List<AccountImportBatchRowDTO> _batchRows = [];
 
     // Existing data for duplicate/new detection: keyed on (group name, code), both lower-cased.
     private readonly HashSet<(string Group, string Code)> _existingKeys = [];
@@ -72,35 +111,115 @@ public partial class AccountImportFromFile
 
     protected override async Task OnInitializedAsync()
     {
+        // This component is always shown inside a dialog; the topmost dialog at init is ours.
+        // The guard keeps X/ESC/Avbryt working but asks first when preview edits would be lost.
+        _dialogModel = DialogService.Dialogs.Count > 0 ? DialogService.Dialogs[^1] : null;
+        if (_dialogModel is not null)
+            _dialogModel.OnBeforeCloseAsync = ConfirmCloseAsync;
+
+        await LoadExistingAsync();
+        await LoadBatchesAsync();
+    }
+
+    private Task<bool> ConfirmCloseAsync()
+    {
+        if (!_previewDone || !_previewEdited)
+            return Task.FromResult(true);
+
+        MHD.MessageYesNo(
+            "Stäng importen",
+            "Vill du stänga importen? Osparade ändringar i förhandsgranskningen försvinner.",
+            BlazorMHD.UI.Core.DesignSystem.MhdState.Danger,
+            EventCallback.Factory.Create(this, ForceCloseAsync));
+
+        return Task.FromResult(false);
+    }
+
+    private async Task ForceCloseAsync()
+    {
+        if (_dialogModel is not null)
+        {
+            _dialogModel.OnBeforeCloseAsync = null;
+            await DialogService.CloseAsync(_dialogModel);
+        }
+        else
+        {
+            await DialogService.CloseAsync();
+        }
+    }
+
+    private async Task LoadExistingAsync()
+    {
+        _existingKeys.Clear();
+        _existingGroupNames.Clear();
+
         var existing = await Dispatcher.Send(new GetAccountsOverviewQuery()) ?? [];
         foreach (var a in existing)
         {
             _existingGroupNames.Add(a.AccountGroupName);
             _existingKeys.Add((a.AccountGroupName.Trim().ToLowerInvariant(), a.Code.Trim().ToLowerInvariant()));
         }
+
+        var groups = await Dispatcher.Send(new GetAccountGroupsQuery()) ?? [];
+        foreach (var g in groups)
+            _existingGroupNames.Add(g.Name);
     }
 
-    private bool CanImport
+    private async Task LoadBatchesAsync()
+    {
+        Batches = await Dispatcher.Send(new GetAccountImportBatchesQuery(10)) ?? [];
+    }
+
+    // ---------------------------------------------------------------
+    // File selection
+    // ---------------------------------------------------------------
+    private bool CanPreview
         => File is not null && !IsBusy && _fileError is null && RequiredSettingsFilled;
 
     private bool RequiredSettingsFilled => Format switch
     {
-        ImportFormat.Table => RowStart > 0 && GroupCol > 0 && CodeCol > 0 && NameCol > 0,
-        ImportFormat.WideGroup => HeaderRow > 0 && WideRowStart > 0 && FirstCodeCol > 0 && FirstNameCol > 0 && ColsPerGroup > 0,
+        ImportFormat.Table => RowStart > 0 && CodeCol > 0 && NameCol > 0,
+        ImportFormat.PairColumns => PairRowStart > 0 && FirstCodeCol > 0 && FirstNameCol > 0 && ColsPerPair > 0,
         _ => false
     };
 
-    private bool CanSave => _previewDone && Preview.Any(p => p.IsSavable) && !IsBusy;
+    private int SavableCount => Preview.Count(p => !p.IsGroupRow && p.IsSavable);
+    private int NewCount => Preview.Count(p => !p.IsGroupRow && p.Status == PreviewStatus.New);
+    private int UpdateCount => Preview.Count(p => !p.IsGroupRow && p.Status == PreviewStatus.Update);
+    private int BlockingCount => Preview.Count(p => p.IsBlocking);
+    private int ExistsCount => Preview.Count(p => p.Status == PreviewStatus.Exists);
+    private int IgnoredCount => Preview.Count(p => p.Status == PreviewStatus.Ignored);
 
-    private int SavableCount => Preview.Count(p => p.IsSavable);
-    private int ErrorCount => Preview.Count(p => p.Status == PreviewStatus.Error);
-    private int DuplicateCount => Preview.Count(p => p.Status == PreviewStatus.Duplicate);
-    private int SavableGroupCount => Preview.Where(p => p.IsSavable).Select(p => p.Group.Trim().ToLowerInvariant()).Distinct().Count();
+    private int SavableGroupCount => Preview
+        .Where(p => !p.IsGroupRow && p.IsSavable)
+        .Select(p => p.Group.Trim().ToLowerInvariant())
+        .Concat(Preview.Where(p => p.IsGroupRow && p.Name.Trim().Length > 0).Select(p => p.Name.Trim().ToLowerInvariant()))
+        .Distinct()
+        .Count();
+
+    private bool CanSave => _previewDone && !IsBusy && BlockingCount == 0 && SavableCount > 0;
+
+    private string SaveTooltip
+    {
+        get
+        {
+            if (!_previewDone)
+                return "Kör Förhandsgranska import och granska raderna först.";
+            if (BlockingCount > 0)
+                return "Det finns blockerande fel. Korrigera eller ta bort raderna innan du sparar.";
+            if (SavableCount == 0)
+                return "Det finns inga giltiga rader att spara.";
+            return "Sparar giltiga rader från förhandsgranskningen till databasen.";
+        }
+    }
 
     private void CloseModal() => DialogService.CloseAsync();
 
     private async Task OnFileSelection(InputFileChangeEventArgs e)
     {
+        if (IsBusy)
+            return;
+
         ResetPreview();
         _importError = null;
         _fileError = null;
@@ -113,11 +232,16 @@ public partial class AccountImportFromFile
 
         if (!_isExcel && !_isCsv)
         {
-            _fileError = "Filen kunde inte läsas. Kontrollera att filen är en Excel- eller CSV-fil.";
+            _fileError = "Filen kunde inte läsas. Kontrollera att det är en giltig Excel- eller CSV-fil.";
             File = null;
             _fileBytes = null;
             return;
         }
+
+        // Show the file name immediately and block double-selection while the bytes are read,
+        // so the window never looks frozen after picking a file.
+        IsBusy = true;
+        StateHasChanged();
 
         try
         {
@@ -131,9 +255,14 @@ public partial class AccountImportFromFile
         }
         catch
         {
-            _fileError = "Filen kunde inte läsas. Kontrollera att filen är en Excel- eller CSV-fil.";
+            _fileError = "Filen kunde inte läsas. Kontrollera att det är en giltig Excel- eller CSV-fil.";
             File = null;
             _fileBytes = null;
+        }
+        finally
+        {
+            IsBusy = false;
+            StateHasChanged();
         }
     }
 
@@ -158,8 +287,24 @@ public partial class AccountImportFromFile
         Preview.Clear();
         NewGroupNames = [];
         _previewDone = false;
+        _previewEdited = false;
     }
 
+    // ---------------------------------------------------------------
+    // Help windows
+    // ---------------------------------------------------------------
+    private void OpenHelp(bool pairFormat)
+        => DialogService.ShowComponent<AccountImportHelpUI>(
+            pairFormat ? "Hjälp — Rubrikbaserat kolumnpar" : "Hjälp — Vanligt tabellformat",
+            new Dictionary<string, object>
+            {
+                [nameof(AccountImportHelpUI.IsPairFormat)] = pairFormat
+            },
+            BlazorMHD.UI.Core.Services.MhdDialogSize.ExtraLarge);
+
+    // ---------------------------------------------------------------
+    // Preview build
+    // ---------------------------------------------------------------
     private void BuildPreview()
     {
         if (IsBusy)
@@ -173,20 +318,19 @@ public partial class AccountImportFromFile
             return;
         }
 
-        // Format-specific required-field validation with clear Swedish messages.
         if (Format == ImportFormat.Table)
         {
             if (RowStart <= 0) { _importError = "Börja från rad nummer måste vara större än 0."; return; }
             if (CodeCol <= 0) { _importError = "Kod kolumnnummer saknas."; return; }
             if (NameCol <= 0) { _importError = "Namn kolumnnummer saknas."; return; }
-            if (GroupCol <= 0) { _importError = "Kontogrupp kolumnnummer saknas."; return; }
         }
         else
         {
-            if (WideRowStart <= 0) { _importError = "Börja från rad nummer måste vara större än 0."; return; }
+            if (PairRowStart <= 0) { _importError = "Börja från rad nummer måste vara större än 0."; return; }
             if (FirstCodeCol <= 0) { _importError = "Första kodkolumn saknas."; return; }
             if (FirstNameCol <= 0) { _importError = "Första namnkolumn saknas."; return; }
-            if (ColsPerGroup <= 0) { _importError = "Antal kolumner per grupp måste vara större än 0."; return; }
+            if (FirstNameCol == FirstCodeCol) { _importError = "Första namnkolumn måste vara en annan kolumn än första kodkolumn."; return; }
+            if (ColsPerPair <= 0) { _importError = "Antal kolumner per par måste vara större än 0."; return; }
         }
 
         IsBusy = true;
@@ -206,19 +350,13 @@ public partial class AccountImportFromFile
             if (Format == ImportFormat.Table)
                 BuildTablePreview(matrix);
             else
-                BuildWidePreview(matrix);
+                BuildPairPreview(matrix);
 
-            NewGroupNames = Preview
-                .Where(p => p.IsSavable)
-                .Select(p => p.Group.Trim())
-                .Where(g => g.Length > 0 && !_existingGroupNames.Contains(g))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
-
+            ReclassifyAll();
             _previewDone = true;
 
-            if (SavableCount == 0)
-                _importError = "Preview saknar giltiga konton.";
+            if (Preview.Count == 0)
+                _importError = "Inga rader hittades i det valda området. Kontrollera rad- och kolumnnummer.";
         }
         catch
         {
@@ -234,12 +372,7 @@ public partial class AccountImportFromFile
 
     // A 1-based [row][col] view of the file so both formats can address cells by number.
     private List<string[]> ReadMatrix()
-    {
-        if (_isExcel)
-            return ReadExcelMatrix();
-
-        return ReadCsvMatrix();
-    }
+        => _isExcel ? ReadExcelMatrix() : ReadCsvMatrix();
 
     private List<string[]> ReadExcelMatrix()
     {
@@ -280,99 +413,241 @@ public partial class AccountImportFromFile
         return col1 <= cells.Length ? (cells[col1 - 1] ?? string.Empty).Trim() : string.Empty;
     }
 
+    // Empty "Till rad nummer" means: read to the last used row in the sheet.
+    private int EffectiveRowEnd(int? rowEnd, int lastRow)
+        => rowEnd is > 0 ? Math.Min(rowEnd.Value, lastRow) : lastRow;
+
     private void BuildTablePreview(List<string[]> matrix)
     {
-        var seen = new HashSet<(string, string)>();
+        var rowEnd = EffectiveRowEnd(RowEnd, matrix.Count);
 
-        for (var row = RowStart; row <= matrix.Count; row++)
+        for (var row = RowStart; row <= rowEnd; row++)
         {
-            var group = Cell(matrix, row, GroupCol);
+            // 0/empty group column = "används inte"; the group can be filled in from the preview.
+            var group = GroupCol is > 0 ? Cell(matrix, row, GroupCol.Value) : string.Empty;
             var code = Cell(matrix, row, CodeCol);
             var name = Cell(matrix, row, NameCol);
-            var c1 = Comment1Col > 0 ? Cell(matrix, row, Comment1Col) : string.Empty;
-            var c2 = Comment2Col > 0 ? Cell(matrix, row, Comment2Col) : string.Empty;
+            var c1 = Comment1Col is > 0 ? Cell(matrix, row, Comment1Col.Value) : string.Empty;
+            var c2 = Comment2Col is > 0 ? Cell(matrix, row, Comment2Col.Value) : string.Empty;
 
             if (group.Length == 0 && code.Length == 0 && name.Length == 0)
                 continue;
 
-            Preview.Add(Classify(group, code, name, c1, c2, seen));
+            Preview.Add(new PreviewRow
+            {
+                SourceRow = row,
+                Group = group,
+                Code = code,
+                Name = name,
+                Comment1 = c1,
+                Comment2 = c2
+            });
         }
     }
 
-    private void BuildWidePreview(List<string[]> matrix)
+    private void BuildPairPreview(List<string[]> matrix)
     {
-        var seen = new HashSet<(string, string)>();
+        var rowEnd = EffectiveRowEnd(PairRowEnd, matrix.Count);
         var lastCol = matrix.Count == 0 ? 0 : matrix.Max(r => r.Length);
         var nameOffset = FirstNameCol - FirstCodeCol;
+        var lastCodeCol = ReadAllPairs ? lastCol : FirstCodeCol;
 
-        for (var groupCol = FirstCodeCol; groupCol <= lastCol; groupCol += ColsPerGroup)
+        for (var codeCol = FirstCodeCol; codeCol <= lastCodeCol; codeCol += ColsPerPair)
         {
-            var groupName = Cell(matrix, HeaderRow, groupCol);
-            if (groupName.Length == 0)
-                continue;
+            var nameCol = codeCol + nameOffset;
+            var pairLabel = $"{ColumnLetter(codeCol)}+{ColumnLetter(nameCol)}";
+            PreviewRow? currentGroup = null;
 
-            var codeCol = groupCol;
-            var nameCol = groupCol + nameOffset;
-
-            for (var row = WideRowStart; row <= matrix.Count; row++)
+            for (var row = PairRowStart; row <= rowEnd; row++)
             {
                 var code = Cell(matrix, row, codeCol);
                 var name = Cell(matrix, row, nameCol);
 
+                // Both empty → the row is skipped.
                 if (code.Length == 0 && name.Length == 0)
                     continue;
 
-                Preview.Add(Classify(groupName, code, name, string.Empty, string.Empty, seen));
+                // No code but a name → the row is a new account group (when enabled).
+                if (code.Length == 0 && NameOnlyIsGroup)
+                {
+                    var groupRow = new PreviewRow
+                    {
+                        IsGroupRow = true,
+                        PairLabel = pairLabel,
+                        SourceRow = row,
+                        Name = name,
+                        Group = name
+                    };
+                    Preview.Add(groupRow);
+                    currentGroup = groupRow;
+                    continue;
+                }
+
+                Preview.Add(new PreviewRow
+                {
+                    PairLabel = pairLabel,
+                    SourceRow = row,
+                    Code = code,
+                    Name = name,
+                    Group = currentGroup?.Name.Trim() ?? string.Empty,
+                    GroupRowId = currentGroup?.Id
+                });
             }
         }
     }
 
-    private PreviewRow Classify(string group, string code, string name, string c1, string c2, HashSet<(string, string)> seen)
+    internal static string ColumnLetter(int col)
     {
-        var row = new PreviewRow { Group = group, Code = code, Name = name, Comment1 = c1, Comment2 = c2 };
+        if (col <= 0)
+            return "?";
 
-        if (code.Length == 0) { row.Status = PreviewStatus.Error; row.Error = "Kod saknas"; return row; }
-        if (name.Length == 0) { row.Status = PreviewStatus.Error; row.Error = "Namn saknas"; return row; }
-        if (group.Length == 0) { row.Status = PreviewStatus.Error; row.Error = "Kontogrupp saknas"; return row; }
+        var sb = new StringBuilder();
+        while (col > 0)
+        {
+            col--;
+            sb.Insert(0, (char)('A' + col % 26));
+            col /= 26;
+        }
 
-        var key = (group.Trim().ToLowerInvariant(), code.Trim().ToLowerInvariant());
+        return sb.ToString();
+    }
 
-        // Duplicate within the same file → always skipped to avoid ambiguous double-writes.
+    // ---------------------------------------------------------------
+    // Classification (re-run after every edit so statuses stay live)
+    // ---------------------------------------------------------------
+    private void ReclassifyAll()
+    {
+        var seen = new HashSet<(string, string)>();
+
+        foreach (var row in Preview)
+        {
+            if (row.IsGroupRow)
+            {
+                row.Error = null;
+                row.Status = _existingGroupNames.Contains(row.Name.Trim())
+                    ? PreviewStatus.GroupExisting
+                    : PreviewStatus.GroupNew;
+                continue;
+            }
+
+            ClassifyAccountRow(row, seen);
+        }
+
+        NewGroupNames = Preview
+            .Where(p => !p.IsGroupRow && p.IsSavable)
+            .Select(p => p.Group.Trim())
+            .Concat(Preview.Where(p => p.IsGroupRow).Select(p => p.Name.Trim()))
+            .Where(g => g.Length > 0 && !_existingGroupNames.Contains(g))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private void ClassifyAccountRow(PreviewRow row, HashSet<(string, string)> seen)
+    {
+        row.Error = null;
+
+        var code = row.Code.Trim();
+        var name = row.Name.Trim();
+        var group = row.Group.Trim();
+
+        if (code.Length == 0) { row.Status = PreviewStatus.Error; row.Error = "Kod saknas"; return; }
+        if (name.Length == 0) { row.Status = PreviewStatus.Error; row.Error = "Namn saknas"; return; }
+        if (code.Length > FieldLengths.Code) { row.Status = PreviewStatus.Error; row.Error = "Ogiltig kod"; return; }
+        if (group.Length == 0) { row.Status = PreviewStatus.Error; row.Error = "Kontogrupp saknas"; return; }
+
+        var key = (group.ToLowerInvariant(), code.ToLowerInvariant());
+
+        // Duplicate within the same import → ignored to avoid ambiguous double-writes.
         if (!seen.Add(key))
         {
-            row.Status = PreviewStatus.Duplicate;
-            row.Error = "Dubblett kod (i filen)";
-            return row;
+            row.Status = PreviewStatus.Ignored;
+            row.Error = "Dubblett i filen";
+            return;
         }
 
         if (_existingKeys.Contains(key))
         {
-            row.Status = Strategy == DuplicateStrategy.Update ? PreviewStatus.Update : PreviewStatus.Duplicate;
-            if (row.Status == PreviewStatus.Duplicate)
-                row.Error = "Kontot finns redan";
-            return row;
-        }
-
-        row.Status = PreviewStatus.New;
-        return row;
-    }
-
-    private void Save()
-    {
-        if (!_previewDone)
-        {
-            _importError = "Spara kan inte göras innan importen har granskats.";
+            row.Status = Strategy == DuplicateStrategy.Update ? PreviewStatus.Update : PreviewStatus.Exists;
             return;
         }
 
-        if (SavableCount == 0)
+        row.Status = PreviewStatus.New;
+    }
+
+    // ---------------------------------------------------------------
+    // Preview editing
+    // ---------------------------------------------------------------
+    private void OnRowEdited()
+    {
+        _previewEdited = true;
+        ReclassifyAll();
+    }
+
+    private void OnAccountGroupEdited(PreviewRow row)
+    {
+        row.GroupManuallyEdited = true;
+        _previewEdited = true;
+        ReclassifyAll();
+    }
+
+    private void OnGroupRowNameChanged(PreviewRow groupRow, ChangeEventArgs e)
+    {
+        _previewEdited = true;
+        var newName = (e.Value?.ToString() ?? string.Empty).Trim();
+        groupRow.Name = newName;
+        groupRow.Group = newName;
+
+        // Rename propagates to the accounts read under this header — unless the admin
+        // already changed that account's group by hand.
+        foreach (var acc in Preview.Where(p => !p.IsGroupRow && p.GroupRowId == groupRow.Id && !p.GroupManuallyEdited))
+            acc.Group = newName;
+
+        ReclassifyAll();
+    }
+
+    private void RemoveRow(PreviewRow row)
+    {
+        _previewEdited = true;
+        Preview.Remove(row);
+
+        if (row.IsGroupRow)
         {
-            _importError = "Preview saknar giltiga konton.";
+            // Accounts keep their group text; they just lose the rename link to the removed header.
+            foreach (var acc in Preview.Where(p => p.GroupRowId == row.Id))
+                acc.GroupRowId = null;
+        }
+
+        ReclassifyAll();
+    }
+
+    private void OnStrategyChanged(DuplicateStrategy value)
+    {
+        Strategy = value;
+        if (_previewDone)
+            ReclassifyAll();
+    }
+
+    // Summary per column pair, e.g. "A+B: 3 kontogrupper, 42 konton".
+    private IReadOnlyList<(string Pair, int Groups, int Accounts)> PairSummaries
+        => Preview
+            .GroupBy(p => p.PairLabel)
+            .Where(g => g.Key.Length > 0)
+            .Select(g => (g.Key, g.Count(p => p.IsGroupRow), g.Count(p => !p.IsGroupRow)))
+            .ToList();
+
+    // ---------------------------------------------------------------
+    // Save
+    // ---------------------------------------------------------------
+    private void Save()
+    {
+        if (!CanSave)
+        {
+            _importError = SaveTooltip;
             return;
         }
 
         MHD.MessageYesNo(
-            AppLoc[nameof(ResourceApp.save)],
+            "Spara import",
             AppLoc[nameof(ResourceApp.DoYouWanTtoSaveTheListInDatabase)],
             BlazorMHD.UI.Core.DesignSystem.MhdState.Primary,
             EventCallback.Factory.Create(this, SaveConfirmAsync));
@@ -380,7 +655,7 @@ public partial class AccountImportFromFile
 
     private async Task SaveConfirmAsync()
     {
-        if (IsBusy || SavableCount == 0)
+        if (IsBusy || !CanSave)
             return;
 
         IsBusy = true;
@@ -388,8 +663,9 @@ public partial class AccountImportFromFile
 
         try
         {
-            var items = Preview
-                .Where(p => p.IsSavable)
+            var savableAccounts = Preview.Where(p => !p.IsGroupRow && p.IsSavable).ToList();
+
+            var items = savableAccounts
                 .GroupBy(p => p.Group.Trim(), StringComparer.OrdinalIgnoreCase)
                 .Select(g => new PostAccountGroupWithAccountsDTO
                 {
@@ -411,7 +687,35 @@ public partial class AccountImportFromFile
                 })
                 .ToList();
 
-            var result = await Dispatcher.Send(new ImportAccountGroupsCommand(items, Strategy == DuplicateStrategy.Update));
+            // Group-header rows that ended up without accounts are still created as empty groups.
+            var coveredGroupNames = new HashSet<string>(items.Select(i => i.Name), StringComparer.OrdinalIgnoreCase);
+            foreach (var groupRow in Preview.Where(p => p.IsGroupRow))
+            {
+                var name = groupRow.Name.Trim();
+                if (name.Length == 0 || !coveredGroupNames.Add(name))
+                    continue;
+
+                items.Add(new PostAccountGroupWithAccountsDTO { Name = name, Accounts = [] });
+            }
+
+            var batchRows = savableAccounts
+                .Select(p => new AccountImportBatchRowDTO
+                {
+                    Group = p.Group.Trim(),
+                    Code = p.Code.Trim(),
+                    Name = p.Name.Trim(),
+                    Action = p.Status == PreviewStatus.Update ? "Uppdaterad" : "Ny"
+                })
+                .ToList();
+
+            var batchInfo = new AccountImportBatchInfoDTO
+            {
+                FileName = FileName,
+                ImportType = Format == ImportFormat.Table ? "Table" : "PairColumns",
+                Rows = batchRows
+            };
+
+            var result = await Dispatcher.Send(new ImportAccountGroupsCommand(items, Strategy == DuplicateStrategy.Update, batchInfo));
 
             if (result is { Success: true })
             {
@@ -421,6 +725,7 @@ public partial class AccountImportFromFile
                     summary += $" {result.AccountsSkipped} rader hoppades över.";
 
                 MHD.ToastInfo(summary, string.Empty, true);
+                _previewEdited = false;   // saved — closing needs no confirmation anymore
                 await OnSaved.InvokeAsync(true);
                 CloseModal();
             }
@@ -440,6 +745,83 @@ public partial class AccountImportFromFile
             IsBusy = false;
             StateHasChanged();
         }
+    }
+
+    // ---------------------------------------------------------------
+    // Import history ("Senaste importer")
+    // ---------------------------------------------------------------
+    private static string ImportTypeName(string key) => key switch
+    {
+        "PairColumns" => "Rubrikbaserat kolumnpar",
+        _ => "Vanligt tabellformat"
+    };
+
+    private async Task ToggleBatchRowsAsync(AccountImportBatchDTO batch)
+    {
+        if (_expandedBatchId == batch.Id)
+        {
+            _expandedBatchId = null;
+            _batchRows = [];
+            return;
+        }
+
+        _batchRows = await Dispatcher.Send(new GetAccountImportBatchRowsQuery(batch.Id)) ?? [];
+        _expandedBatchId = batch.Id;
+    }
+
+    private void UndoBatch(AccountImportBatchDTO batch)
+    {
+        if (!batch.CanUndo)
+            return;
+
+        MHD.MessageYesNo(
+            "Ångra import",
+            "Vill du ångra denna import? Konton och kontogrupper som skapades av importen tas bort.",
+            BlazorMHD.UI.Core.DesignSystem.MhdState.Danger,
+            EventCallback.Factory.Create(this, () => UndoBatchConfirmAsync(batch)));
+    }
+
+    private async Task UndoBatchConfirmAsync(AccountImportBatchDTO batch)
+    {
+        if (IsBusy)
+            return;
+
+        IsBusy = true;
+        StateHasChanged();
+
+        try
+        {
+            var ok = await Dispatcher.Send(new UndoAccountImportBatchCommand(batch.Id));
+            if (ok)
+            {
+                MHD.ToastInfo("Importen har ångrats.", string.Empty, true);
+                await LoadBatchesAsync();
+                await LoadExistingAsync();
+                if (_previewDone)
+                    ReclassifyAll();
+                await OnSaved.InvokeAsync(true);
+            }
+            else
+            {
+                _importError = "Importen kunde inte ångras.";
+            }
+        }
+        finally
+        {
+            IsBusy = false;
+            StateHasChanged();
+        }
+    }
+
+    private static string UndoTooltip(AccountImportBatchDTO batch)
+    {
+        if (batch.IsUndone)
+            return "Importen är redan ångrad.";
+        if (batch.AccountsUpdated > 0)
+            return "Importen uppdaterade befintliga konton och kan inte ångras utan historik.";
+        if (batch.AccountsCreated == 0 && batch.GroupsCreated == 0)
+            return "Importen skapade inga nya konton eller kontogrupper.";
+        return "Tar bort konton och kontogrupper som skapades av importen.";
     }
 
     private static IReadOnlyList<string> SplitCsv(string line, string separator)

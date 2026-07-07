@@ -522,6 +522,7 @@ namespace ProjectManagement.Client.Shared.Mapping
                 Style = dto.Style ?? string.Empty,
                 StyleRow = dto.StyleRow ?? string.Empty,
                 IsVisible = dto.IsVisible,
+                VisibleWhen = dto.VisibleWhen?.Clone(),
                 Attributes = dto.Attributes?.Select(ToAttributeModel).ToList() ?? []
             };
         }
@@ -541,6 +542,7 @@ namespace ProjectManagement.Client.Shared.Mapping
                 Style = model.Style ?? string.Empty,
                 StyleRow = model.StyleRow ?? string.Empty,
                 IsVisible = model.IsVisible,
+                VisibleWhen = model.VisibleWhen?.Clone(),
                 Attributes = model.Attributes?.Select(ToAttributeDto).ToList() ?? []
             };
         }
@@ -559,7 +561,9 @@ namespace ProjectManagement.Client.Shared.Mapping
                 IsComputed = dto.IsComputed,
                 Validation = dto.Validation ?? string.Empty,
                 Style = dto.Style ?? string.Empty,
-                Value = dto.Value ?? string.Empty
+                Value = dto.Value ?? string.Empty,
+                Options = dto.Options?.ToList() ?? [],
+                TemplateColumnId = dto.TemplateColumnId
             };
         }
 
@@ -577,7 +581,9 @@ namespace ProjectManagement.Client.Shared.Mapping
                 IsComputed = model.IsComputed,
                 Validation = model.Validation ?? string.Empty,
                 Style = model.Style ?? string.Empty,
-                Value = model.Value ?? string.Empty
+                Value = model.Value ?? string.Empty,
+                Options = model.Options?.ToList() ?? [],
+                TemplateColumnId = model.TemplateColumnId
             };
         }
 
