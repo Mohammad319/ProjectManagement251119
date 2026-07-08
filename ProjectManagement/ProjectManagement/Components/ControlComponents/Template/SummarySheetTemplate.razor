@@ -46,7 +46,7 @@
             </div>
 
             <div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
-                <div class="@ColorRowClass">
+                <div class="@ColorRowClass" title="@AppFormatResource.bolder">
                     <label class="@ColorLabelClass">@AppFormatResource.bolder</label>
                     <div class="flex items-center gap-2">
                         <input type="color" class="@ColorInputClass" @bind:event="oninput" @bind="Temp.SummarySheet.Color.Border" />
@@ -54,7 +54,7 @@
                     </div>
                 </div>
 
-                <div class="@ColorRowClass">
+                <div class="@ColorRowClass" title="@AppFormatResource.font">
                     <label class="@ColorLabelClass">@AppFormatResource.font</label>
                     <div class="flex items-center gap-2">
                         <input type="color" class="@ColorInputClass" @bind:event="oninput" @bind="Temp.SummarySheet.Color.Text" />
@@ -62,7 +62,7 @@
                     </div>
                 </div>
 
-                <div class="@ColorRowClass">
+                <div class="@ColorRowClass" title="@ResourceApp.header">
                     <label class="@ColorLabelClass">@ResourceApp.header</label>
                     <div class="flex items-center gap-2">
                         <input type="color" class="@ColorInputClass" @bind:event="oninput" @bind="Temp.SummarySheet.Color.Header" />
@@ -70,7 +70,7 @@
                     </div>
                 </div>
 
-                <div class="@ColorRowClass">
+                <div class="@ColorRowClass" title="@CalcResource.factor">
                     <label class="@ColorLabelClass">@CalcResource.factor</label>
                     <div class="flex items-center gap-2">
                         <input type="color" class="@ColorInputClass" @bind:event="oninput" @bind="Temp.SummarySheet.Color.Factor" />
@@ -78,7 +78,7 @@
                     </div>
                 </div>
 
-                <div class="@ColorRowClass">
+                <div class="@ColorRowClass" title="@CalcResource.sum">
                     <label class="@ColorLabelClass">@CalcResource.sum</label>
                     <div class="flex items-center gap-2">
                         <input type="color" class="@ColorInputClass" @bind:event="oninput" @bind="Temp.SummarySheet.Color.Sum" />

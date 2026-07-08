@@ -216,33 +216,37 @@ public static class TenantSeedCatalog
         if (!dark)
             return data;
 
+        // Nyansdifferentierad mörk palett: samma "roll-färger" som ljusa mallen (grönt sidhuvud,
+        // blå/lila kalkylpost, cyan grundmängd, grön faktor, rosa bilaga ...) men i mörka toner,
+        // så ljus/mörk är tydligt olika utan att radernas betydelse ändras. Ingen hex delas med
+        // den ljusa paletten (TemplateConstBase/NetColor-defaults).
         data.NetCalc.Color = new NetColor
         {
-            Header = "#1f2937",
-            Note = "#374151",
-            Border = "#475569",
+            Header = "#134e4a",                 // rubrik — mörk blågrön (ljus: #e1f0ad)
+            Note = "#1f2937",                   // anteckning — mörk grå (ljus: #f0ebeb)
+            Border = "#4b5563",
             BorderStyle = "solid",
-            Text = "#e5e7eb",
-            Task = "#111827",
-            SubTask = "#1f2937",
-            Resource = "#0f172a",
-            TaskCodeName = "#374151",
-            TaskDetailBaseQuantity = "#1e293b",
-            ResourceParameter = "#334155",
-            ResourceAttachment = "#3f3f46",
-            ResourceTime = "#292524",
+            Text = "#f3f4f6",
+            Task = "#312e81",                   // kalkylpost — mörk indigo (ljus: #bec1f9)
+            SubTask = "#1e3a8a",                // underpost — mörk blå (ljus: #b1d2f7)
+            Resource = "#1e293b",               // resurs — mörk blågrå (ljus: #e2f1fd)
+            TaskCodeName = "#713f12",           // kod/namn — mörk bärnsten (ljus: #fde68a)
+            TaskDetailBaseQuantity = "#164e63", // grundmängdsrad — mörk cyan (ljus: #bae6fd)
+            ResourceParameter = "#14532d",      // mängdstyrande faktor — mörk grön (ljus: #d1fae5)
+            ResourceAttachment = "#831843",     // tillägg/bilagor — mörk vinröd (ljus: #fce7f3)
+            ResourceTime = "#374151",           // timfördelning — mörk grå (ljus: #e2e8f0)
             InactiveText = "#9ca3af",
         };
 
         data.SummarySheet.Color = new SummarySheetColor
         {
-            Header = "#1f2937",
-            Note = "#374151",
-            Border = "#475569",
+            Header = "#134e4a",
+            Note = "#1f2937",
+            Border = "#4b5563",
             BorderStyle = "solid",
-            Text = "#e5e7eb",
-            Sum = "#3730a3",
-            Factor = "#3730a3",
+            Text = "#f3f4f6",
+            Sum = "#312e81",
+            Factor = "#312e81",
         };
 
         return data;

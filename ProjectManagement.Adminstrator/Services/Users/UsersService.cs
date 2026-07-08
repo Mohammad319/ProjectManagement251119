@@ -485,27 +485,64 @@ namespace ProjectManagement.Adminstrator.Services.Users
         }
 
         // Standard, read-only appearance templates (company-level, DepartmentId = null). Idempotent by name.
+        // Existing rows (including the legacy "Mall01"/"Mall02" names shown as "Standard ljus"/"Standard mörk")
+        // get their palettes refreshed in place so ljus/mörk stay clearly different; other metadata
+        // (columns, currency, ...) and user copies ("Kopia av ...", department templates) are untouched.
+        private static readonly (string Name, string LegacyName, bool Dark)[] StandardAppearanceRefresh =
+        [
+            ("Standard ljus", "Mall01", false),
+            ("Standard mörk", "Mall02", true),
+        ];
+
         private static async Task SeedTemplatesAsync(ShardingSingleDbContext ctx)
         {
             var existing = await ctx.Templates.Where(x => !x.DepartmentId.HasValue).ToListAsync();
-            foreach (var (name, dark) in TenantSeedCatalog.StandardAppearanceTemplates)
+            foreach (var (name, legacyName, dark) in StandardAppearanceRefresh)
             {
-                if (existing.Any(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase)))
-                    continue;
+                var match = existing.FirstOrDefault(x =>
+                    string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(x.Name, legacyName, StringComparison.OrdinalIgnoreCase));
 
-                var entity = new TemplateEntity(name, true, null);
-                entity.UpdateMetadata(TenantSeedCatalog.BuildAppearance(dark));
-                ctx.Templates.Add(entity);
+                var seed = TenantSeedCatalog.BuildAppearance(dark);
+
+                if (match is null)
+                {
+                    var entity = new TemplateEntity(name, true, null);
+                    entity.UpdateMetadata(seed);
+                    ctx.Templates.Add(entity);
+                    continue;
+                }
+
+                match.UpdateMetadata(data =>
+                {
+                    data.NetCalc.Color = seed.NetCalc.Color.Clone();
+                    data.SummarySheet.Color = seed.SummarySheet.Color.Clone();
+                });
             }
         }
 
-        // Standard, read-only column templates (company-level, DepartmentId = null). Idempotent by name.
+        // Standard, read-only column templates (company-level, DepartmentId = null). Idempotent by
+        // name, including the legacy "Mall C0x" rows (and their old display names) that older tenants
+        // still have — those count as the standard they map to, so no display duplicates are created.
+        private static readonly Dictionary<string, string[]> LegacyColumnTemplateNames = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Kompakt nettokalkyl"] = ["Mall C01"],
+            ["Ekonomi"] = ["Mall C02", "Kalkyl ekonomi"],
+            ["Anbud"] = ["Mall C03"],
+            ["Produktion"] = ["Mall C04"],
+            ["CO2 / miljö"] = ["Mall C05", "Resurs & CO2"],
+        };
+
         private static async Task SeedTemplateColumnsAsync(ShardingSingleDbContext ctx)
         {
             var existing = await ctx.TemplateColumns.Where(x => !x.DepartmentId.HasValue).ToListAsync();
             foreach (var seed in TenantSeedCatalog.StandardColumnTemplates)
             {
-                if (existing.Any(x => string.Equals(x.Name, seed.Name, StringComparison.OrdinalIgnoreCase)))
+                var knownNames = LegacyColumnTemplateNames.TryGetValue(seed.Name, out var legacy)
+                    ? new[] { seed.Name }.Concat(legacy)
+                    : [seed.Name];
+
+                if (existing.Any(x => knownNames.Any(n => string.Equals(x.Name, n, StringComparison.OrdinalIgnoreCase))))
                     continue;
 
                 ctx.TemplateColumns.Add(new TemplateColumnEntity(seed.Name, true, null, TenantSeedCatalog.BuildColumns(seed.Columns)));
