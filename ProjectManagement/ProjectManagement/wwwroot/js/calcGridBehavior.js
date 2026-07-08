@@ -120,14 +120,24 @@ window.printCalcGrid = function (title) {
     const win = window.open('', '_blank', 'width=1400,height=900');
     if (!win) return;
 
-    win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + (title || 'Print') + '</title><style>' +
-        cssText +
-        'body{margin:6mm;font-family:system-ui,-apple-system,sans-serif;font-size:11px;}' +
-        'table{border-collapse:collapse;width:100%;}' +
-        'thead{display:table-header-group;}' +
-        'tr{page-break-inside:avoid;}' +
-        '</style></head><body>' + table.outerHTML + '</body></html>');
-    win.document.close();
-    win.focus();
-    setTimeout(function () { win.print(); win.close(); }, 400);
+    // Företagsprofilen (från Företagsinställningar) stämplas in som sidhuvud +
+    // diskret "Skapad i ATA COST"-sidfot. pmCompanyBrand definieras i reportExport.js.
+    const brand = window.pmCompanyBrand;
+    const companyPromise = brand ? brand.get() : Promise.resolve(null);
+
+    companyPromise.then(function (company) {
+        const headerHtml = brand ? brand.headerHtml(company) : '';
+        const footerHtml = brand ? brand.footerHtml(company) + brand.brandFooterHtml() : '';
+
+        win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + (title || 'Print') + '</title><style>' +
+            cssText +
+            'body{margin:6mm;font-family:system-ui,-apple-system,sans-serif;font-size:11px;padding-bottom:8mm;}' +
+            'table{border-collapse:collapse;width:100%;}' +
+            'thead{display:table-header-group;}' +
+            'tr{page-break-inside:avoid;}' +
+            '</style></head><body>' + headerHtml + table.outerHTML + footerHtml + '</body></html>');
+        win.document.close();
+        win.focus();
+        setTimeout(function () { win.print(); win.close(); }, 400);
+    });
 };

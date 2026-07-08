@@ -31,6 +31,64 @@
         return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     }
 
+    // ── Företagsprofil (företagsinställningar) ─────────────────────────
+    // Hämtas en gång per sidladdning och stämplas in i utskrifter/PDF-exporter
+    // så att rapporterna bär företagets identitet. Misslyckad hämtning ger
+    // null och rapporten renderas då utan företagshuvud (som tidigare).
+
+    var BRAND_LINE = 'Skapad i ATA COST';
+    var companyInfoPromise = null;
+
+    function getCompanyInfo() {
+        if (!companyInfoPromise) {
+            companyInfoPromise = fetch('/api/v1/CompanyProfile/report', { credentials: 'same-origin' })
+                .then(function (r) {
+                    if (!r.ok || r.status === 204) return null;
+                    return r.json();
+                })
+                .then(function (info) {
+                    return info && info.companyName ? info : null;
+                })
+                .catch(function () { return null; });
+        }
+        return companyInfoPromise;
+    }
+
+    // Delas med andra utskriftsvägar (t.ex. calcGridBehavior.js).
+    window.pmCompanyBrand = {
+        get: getCompanyInfo,
+        brandLine: BRAND_LINE,
+        // Diskret branding som upprepas på varje utskriven sida (position:fixed i print).
+        brandFooterHtml: function () {
+            return '<div style="position:fixed;bottom:2mm;right:0;font-size:8px;color:#94a3b8;font-family:system-ui,sans-serif">' + BRAND_LINE + '</div>';
+        },
+        // Företagshuvud (logotyp + namn + org.nr + kontakt) för utskrifter.
+        headerHtml: function (company) {
+            if (!company) return '';
+            var contact = [company.orgNumber ? 'Org.nr ' + company.orgNumber : null,
+                company.phone, company.email, company.website, company.addressLine]
+                .filter(function (x) { return x; })
+                .map(escapeHtml)
+                .join(' · ');
+            return '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #e2e8f0;padding-bottom:6px;margin-bottom:8px">' +
+                '<div style="min-width:0">' +
+                '<div style="font-size:13px;font-weight:700;color:#0f172a">' + escapeHtml(company.companyName) + '</div>' +
+                (contact ? '<div style="font-size:9px;color:#64748b">' + contact + '</div>' : '') +
+                (company.reportHeaderText ? '<div style="font-size:9px;color:#334155;margin-top:2px">' + escapeHtml(company.reportHeaderText) + '</div>' : '') +
+                '</div>' +
+                (company.logoDataUrl ? '<img src="' + company.logoDataUrl + '" alt="" style="max-height:14mm;max-width:55mm;object-fit:contain"/>' : '') +
+                '</div>';
+        },
+        // Sidfotstext + ansvarsfriskrivning i slutet av dokumentet.
+        footerHtml: function (company) {
+            if (!company) return '';
+            var parts = [];
+            if (company.reportFooterText) parts.push('<div style="font-size:9px;color:#64748b;margin-top:8px">' + escapeHtml(company.reportFooterText) + '</div>');
+            if (company.disclaimerText) parts.push('<div style="font-size:8px;color:#94a3b8;margin-top:4px;white-space:pre-line">' + escapeHtml(company.disclaimerText) + '</div>');
+            return parts.join('');
+        }
+    };
+
     // ── Minimal ZIP writer (STORE, no compression) ─────────────────────
 
     var CRC_TABLE = (function () {
@@ -248,12 +306,16 @@
             '</worksheet>';
     }
 
-    function buildXlsx(header, columns, rows) {
+    function buildXlsx(header, columns, rows, company) {
         var grid = [];
         var date = header.date || todayIso();
 
         grid.push({ cells: [{ v: 'Rapport: ' + (header.title || ''), s: XS.TITLE, forceText: true }] });
-        grid.push({ cells: [{ v: 'Skapad: ' + date, s: XS.META, forceText: true }] });
+        if (company) {
+            var companyLine = company.companyName + (company.orgNumber ? ' · Org.nr ' + company.orgNumber : '');
+            grid.push({ cells: [{ v: companyLine, s: XS.META, forceText: true }] });
+        }
+        grid.push({ cells: [{ v: 'Skapad: ' + date + ' · ' + BRAND_LINE, s: XS.META, forceText: true }] });
 
         (header.sections || []).forEach(function (section) {
             grid.push({ cells: [{ v: section.heading, s: XS.SECTION_HEAD, forceText: true }] });
@@ -328,7 +390,7 @@
 
     // ── Print / PDF ────────────────────────────────────────────────────
 
-    function buildPrintHtml(header, columns, rows, pdfMode) {
+    function buildPrintHtml(header, columns, rows, pdfMode, company) {
         var date = header.date || todayIso();
 
         var sectionsHtml = (header.sections || []).map(function (section) {
@@ -374,12 +436,15 @@
             'tr.sum td{background:#f8fafc;font-weight:600;font-style:italic}' +
             'tr.total td{background:#e2e8f0;font-weight:700}' +
             'tr{page-break-inside:avoid}' +
-            '</style></head><body>' +
+            '</style></head><body style="padding-bottom:8mm">' +
+            window.pmCompanyBrand.headerHtml(company) +
             '<h1>Rapport: ' + escapeHtml(header.title) + '</h1>' +
             '<div class="meta">Skapad: ' + escapeHtml(date) + '</div>' +
             (sectionsHtml ? '<div class="info">' + sectionsHtml + '</div>' : '') +
             (kpiHtml ? '<div class="kpis">' + kpiHtml + '</div>' : '') +
             '<table><thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table>' +
+            window.pmCompanyBrand.footerHtml(company) +
+            window.pmCompanyBrand.brandFooterHtml() +
             '</body></html>';
     }
 
@@ -404,18 +469,48 @@
         };
     }
 
+    // Skriver ut aktuell sida (t.ex. kalkylrapporten) med företagshuvud och diskret
+    // ATA COST-rad tillfälligt injicerade i utskriftsytan (#section-to-print).
+    window.pmPrintPageWithCompany = function () {
+        getCompanyInfo().then(function (company) {
+            var target = document.getElementById('section-to-print') || document.body;
+
+            var headerEl = document.createElement('div');
+            headerEl.innerHTML = window.pmCompanyBrand.headerHtml(company);
+
+            var footerEl = document.createElement('div');
+            footerEl.innerHTML = window.pmCompanyBrand.footerHtml(company) +
+                '<div style="text-align:right;font-size:8px;color:#94a3b8;margin-top:6px">' + BRAND_LINE + '</div>';
+
+            target.insertBefore(headerEl, target.firstChild);
+            target.appendChild(footerEl);
+            try {
+                window.print();
+            } finally {
+                headerEl.remove();
+                footerEl.remove();
+            }
+        });
+    };
+
     window.pmReportExport = {
         excel: function (fileName, header, columns, rows) {
             var h = normalizeHeader(header);
-            download(buildXlsx(h, columns, rows), fileName + '-' + h.date + '.xlsx');
+            getCompanyInfo().then(function (company) {
+                download(buildXlsx(h, columns, rows, company), fileName + '-' + h.date + '.xlsx');
+            });
         },
         print: function (header, columns, rows, pdfMode) {
+            // Fönstret måste öppnas synkront i klickgesten (popup-blockerare);
+            // företagsuppgifterna hämtas/läses därefter från cachen.
             var win = window.open('', '_blank', 'width=1400,height=900');
             if (!win) return;
-            win.document.write(buildPrintHtml(normalizeHeader(header), columns, rows, pdfMode));
-            win.document.close();
-            win.focus();
-            setTimeout(function () { win.print(); win.close(); }, 350);
+            getCompanyInfo().then(function (company) {
+                win.document.write(buildPrintHtml(normalizeHeader(header), columns, rows, pdfMode, company));
+                win.document.close();
+                win.focus();
+                setTimeout(function () { win.print(); win.close(); }, 350);
+            });
         }
     };
 })();

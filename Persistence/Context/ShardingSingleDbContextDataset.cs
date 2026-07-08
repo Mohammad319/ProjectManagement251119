@@ -1,5 +1,6 @@
 ﻿using Domain.Entities.Application;
 using Domain.Entities.Calculation;
+using Domain.Entities.Company;
 using Domain.Entities.Folder;
 using Domain.Entities.Notifications;
 using Domain.Entities.Organisation;
@@ -56,6 +57,7 @@ public partial class ShardingSingleDbContext
     public DbSet<UserListSettingEntity> UserListSettings { get; set; } = default!;
     public DbSet<DropdownSettingEntity> DropdownSettings { get; set; } = default!;
     public DbSet<UserManagementAuditEntity> UserManagementAuditLogs { get; set; } = default!;
+    public DbSet<CompanyProfileEntity> CompanyProfiles { get; set; } = default!;
     public DbSet<NotificationEntity> Notifications { get; set; } = default!;
     public DbSet<Domain.Entities.ChangeLog.ChangeLogEntity> ChangeLogs { get; set; } = default!;
     public DbSet<TenderAttributeDefinitionEntity> AttributeNameTender { get; set; } = default!;

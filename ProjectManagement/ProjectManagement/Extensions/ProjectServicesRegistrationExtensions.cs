@@ -64,6 +64,7 @@ public static class ProjectServicesRegistrationExtensions
         services.AddScoped<IUserSystemRoleProvider, UserSystemRoleProvider>();
         services.AddScoped<ITenantUserService, TenantUserService>();
         services.AddScoped<IUserManagementAuditService, UserManagementAuditService>();
+        services.AddScoped<ICompanyProfileService, CompanyProfileService>();
 
         return services;
     }

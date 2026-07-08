@@ -43,6 +43,7 @@
         {
             // Full admininställningsmeny. "Konto" (nu "Kontoplan") och "Mallar" ligger som flikar
             // under Kalkyl (CalculationControl), inte som egna huvudmenyer.
+            AddTab("companyProfile", "Företagsprofil", "fa fa-id-card", @<ProjectManagement.Components.ControlComponents.CompanyProfile.CompanyProfileUI />);
             AddTab("department", "Avdelningar & användare", "fa fa-building", @<ProjectManagement.Components.ControlComponents.Department.Index />);
             AddTab("project", CalcResource.project, "fa fa-diagram-project", @<ProjectManagement.Components.ControlComponents.Project.ProjectPages.ProjectControl />);
             AddTab("calculation", CalcResource.calculation, "fa fa-calculator", @<ProjectManagement.Components.ControlComponents.Calculation.CalculationControl />);
@@ -53,10 +54,12 @@
         }
         else
         {
-            // Vanliga användare/visare: inga admininställningar. Endast egna mallar och kund-/
-            // leverantörsregistret (skriv-/ändra-åtgärder är gated längre in för visare/gäst).
+            // Vanliga användare/visare: inga admininställningar. Företagsprofilen visas read-only
+            // (CompanyProfileUI gate:ar all redigering på Tenant.Admin, servern likaså), i övrigt
+            // endast egna mallar och kund-/leverantörsregistret.
             AddTab("templates-user", "Mina mallar", "fa fa-layer-group", @<TemplateIndex />);
             AddTab("organisation", "Kunder & leverantörer", "fa fa-address-book", @<ProjectManagement.Components.ControlComponents.Organisation.OrganisationCategory.CategoriesUI />);
+            AddTab("companyProfile", "Företagsprofil", "fa fa-id-card", @<ProjectManagement.Components.ControlComponents.CompanyProfile.CompanyProfileUI />);
         }
 
         EnsureActiveKey();

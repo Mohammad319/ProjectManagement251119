@@ -14,7 +14,7 @@
     <div class="relative flex shrink-0 flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div class="min-w-0">
             <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Aktivitetslogg</h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400">Senaste administrativa ändringar för företagsanvändare.</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Senaste administrativa ändringar för företagsanvändare och företagsprofil.</p>
         </div>
         <div class="ml-auto flex min-w-[18rem] flex-1 items-center justify-end gap-2">
             <div class="relative min-w-0 flex-1 sm:max-w-sm">
@@ -282,6 +282,17 @@
         "user.activated" => WebLoc["AuditUserActivated"].Value,
         "user.department-changed" => WebLoc["AuditDepartmentChanged"].Value,
         "user.role-changed" => WebLoc["AuditRoleChanged"].Value,
+        // Företagsprofil — skrivs alltid med svenska detaljer, så etiketterna hårdkodas här.
+        "company.profile-created" => "Företagsprofil skapad",
+        "company.name-changed" => "Företagsnamn ändrat",
+        "company.name-change-blocked" => "Namnbyte stoppat",
+        "company.orgnumber-set" => "Organisationsnummer registrerat",
+        "company.orgnumber-change-blocked" => "Ändring av org.nr blockerad",
+        "company.logo-updated" => "Logotyp uppdaterad",
+        "company.logo-restored" => "Logotyp återställd",
+        "company.logo-change-blocked" => "Logotypbyte stoppat",
+        "company.contact-updated" => "Kontaktuppgifter ändrade",
+        "company.report-texts-updated" => "Rapporttexter ändrade",
         _ => action
     };
 
